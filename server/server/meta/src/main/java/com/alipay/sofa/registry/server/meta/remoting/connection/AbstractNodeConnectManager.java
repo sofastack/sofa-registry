@@ -19,6 +19,7 @@ package com.alipay.sofa.registry.server.meta.remoting.connection;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
+import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.google.common.collect.Lists;
 import java.net.InetSocketAddress;
@@ -28,7 +29,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public abstract class AbstractNodeConnectManager implements NodeConnectManager {
-  @Autowired protected BoltExchange boltExchange;
+  @Autowired protected Exchange         boltExchange;
   @Autowired protected MetaServerConfig metaServerConfig;
 
   @Override

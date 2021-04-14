@@ -23,6 +23,7 @@ import com.alipay.sofa.registry.exception.*;
 import com.alipay.sofa.registry.lifecycle.impl.AbstractLifecycle;
 import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
 import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
+import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.meta.MetaLeaderService;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
@@ -72,7 +73,7 @@ public class DefaultCrossDcMetaServerManager extends AbstractLifecycle
   @Resource(name = GLOBAL_EXECUTOR)
   private ExecutorService executors;
 
-  @Autowired private BoltExchange boltExchange;
+  @Autowired private Exchange boltExchange;
 
   @PostConstruct
   public void postConstruct() throws Exception {
@@ -178,7 +179,7 @@ public class DefaultCrossDcMetaServerManager extends AbstractLifecycle
   }
 
   @VisibleForTesting
-  DefaultCrossDcMetaServerManager setBoltExchange(BoltExchange boltExchange) {
+  DefaultCrossDcMetaServerManager setExchange(Exchange boltExchange) {
     this.boltExchange = boltExchange;
     return this;
   }

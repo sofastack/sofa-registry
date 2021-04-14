@@ -25,6 +25,7 @@ import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
+import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.remoting.jersey.exchange.JerseyExchange;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.remoting.meta.MetaNodeExchange;
@@ -61,9 +62,9 @@ public class MetaServerBootstrap {
 
   @Autowired private MetaServerConfig metaServerConfig;
 
-  @Autowired private BoltExchange boltExchange;
+  @Autowired private Exchange boltExchange;
 
-  @Autowired private JerseyExchange jerseyExchange;
+  @Autowired private Exchange jerseyExchange;
 
   @Resource(name = "sessionServerHandlers")
   private Collection<AbstractServerHandler> sessionServerHandlers;

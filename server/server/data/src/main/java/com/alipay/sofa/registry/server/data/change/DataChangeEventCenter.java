@@ -455,7 +455,7 @@ public final class DataChangeEventCenter {
   }
 
   @VisibleForTesting
-  void setBoltExchange(Exchange boltExchange) {
+  void setExchange(Exchange boltExchange) {
     this.boltExchange = boltExchange;
   }
 
