@@ -21,6 +21,7 @@ import static org.mockito.Mockito.when;
 import com.alipay.sofa.registry.exception.InitializeException;
 import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
 import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
+import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
@@ -46,7 +47,7 @@ public class CrossDcMetaServerManagerTest extends AbstractMetaServerTestBase {
 
   @Mock private MetaServerConfig metaServerConfig;
 
-  @Mock private BoltExchange boltExchange;
+  @Mock private Exchange boltExchange;
 
   @Before
   public void beforeCrossDcMetaServerManagerTest() {
@@ -54,7 +55,7 @@ public class CrossDcMetaServerManagerTest extends AbstractMetaServerTestBase {
     crossDcMetaServerManager =
         new DefaultCrossDcMetaServerManager()
             .setMetaServerConfig(metaServerConfig)
-            .setBoltExchange(boltExchange)
+            .setExchange(boltExchange)
             .setExecutors(executors)
             .setNodeConfig(nodeConfig)
             .setScheduled(scheduled);

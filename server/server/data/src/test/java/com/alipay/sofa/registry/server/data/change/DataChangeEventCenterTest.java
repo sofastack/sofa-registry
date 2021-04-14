@@ -112,9 +112,9 @@ public class DataChangeEventCenterTest {
     Assert.assertTrue(CHANGE_FAIL_COUNTER.get() == (pre + 1));
 
     channel.setActive(true);
-    BoltExchange exchange = Mockito.mock(BoltExchange.class);
+    Exchange exchange = Mockito.mock(BoltExchange.class);
     Mockito.when(exchange.getServer(Mockito.anyInt())).thenReturn(Mockito.mock(Server.class));
-    center.setBoltExchange(exchange);
+    center.setExchange(exchange);
 
     pre = CHANGE_FAIL_COUNTER.get();
     double spre = CHANGE_SUCCESS_COUNTER.get();
@@ -289,7 +289,7 @@ public class DataChangeEventCenterTest {
     Server server = Mockito.mock(Server.class);
     Mockito.when(exchange.getServer(dataServerConfig.getNotifyPort())).thenReturn(server);
 
-    center.setBoltExchange(exchange);
+    center.setExchange(exchange);
     TestBaseUtils.MockBlotChannel channel = TestBaseUtils.newChannel(9620, "localhost", 1000);
     channel.setActive(false);
     Assert.assertFalse(channel.isConnected());

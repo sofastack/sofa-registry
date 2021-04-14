@@ -21,6 +21,7 @@ import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
+import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.data.TestBaseUtils;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.LocalDatumStorage;
@@ -44,8 +45,8 @@ public class SessionLeaseManagerTest {
     SessionLeaseManager slm = new SessionLeaseManager();
     DataServerConfig cfg = TestBaseUtils.newDataConfig("testDc");
     slm.setDataServerConfig(cfg);
-    BoltExchange boltExchange = Mockito.mock(BoltExchange.class);
-    slm.setBoltExchange(boltExchange);
+    Exchange boltExchange = Mockito.mock(BoltExchange.class);
+    slm.setExchange(boltExchange);
     Set<ProcessId> processIds = slm.getProcessIdsInConnection();
     Assert.assertTrue(processIds.isEmpty());
 
@@ -99,7 +100,7 @@ public class SessionLeaseManagerTest {
   public void testLoop() throws Exception {
     SessionLeaseManager slm = new SessionLeaseManager();
     BoltExchange boltExchange = Mockito.mock(BoltExchange.class);
-    slm.setBoltExchange(boltExchange);
+    slm.setExchange(boltExchange);
     DataServerConfig cfg = TestBaseUtils.newDataConfig("testDc");
     slm.setDataServerConfig(cfg);
     Server server = Mockito.mock(Server.class);
