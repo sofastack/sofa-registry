@@ -19,6 +19,7 @@ package com.alipay.sofa.registry.server.meta.bootstrap;
 import com.alipay.sofa.registry.jdbc.config.JdbcConfiguration;
 import com.alipay.sofa.registry.jraft.config.RaftConfiguration;
 import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
+import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.remoting.jersey.exchange.JerseyExchange;
 import com.alipay.sofa.registry.server.meta.MetaLeaderService.MetaLeaderElectorListener;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
@@ -132,12 +133,12 @@ public class MetaServerConfiguration {
   public static class MetaServerRemotingConfiguration {
 
     @Bean
-    public BoltExchange boltExchange() {
+    public Exchange boltExchange() {
       return new BoltExchange();
     }
 
     @Bean
-    public JerseyExchange jerseyExchange() {
+    public Exchange jerseyExchange() {
       return new JerseyExchange();
     }
 

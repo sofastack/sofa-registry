@@ -26,6 +26,7 @@ import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.bolt.BoltChannel;
 import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
+import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.DatumStorage;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
@@ -54,7 +55,7 @@ public final class SessionLeaseManager {
   @Autowired private DataServerConfig dataServerConfig;
   @Autowired private DatumStorage localDatumStorage;
 
-  @Autowired private BoltExchange boltExchange;
+  @Autowired private Exchange boltExchange;
 
   private final Map<ProcessId, Long> connectIdRenewTimestampMap = new ConcurrentHashMap<>();
 
@@ -188,7 +189,7 @@ public final class SessionLeaseManager {
   }
 
   @VisibleForTesting
-  void setBoltExchange(BoltExchange boltExchange) {
+  void setExchange(Exchange boltExchange) {
     this.boltExchange = boltExchange;
   }
 }
