@@ -70,7 +70,7 @@
 
     <update id="batchHeartbeat" parameterType="java.util.List">
         update app_revision set gmt_modified = CURRENT_TIMESTAMP
-        where data_center=#{item.dataCenter}
+        where data_center=#{dataCenter}
         <if test="revisions != null and revisions.size() > 0">
             and revision in
             <foreach collection="revisions" index="index" item="item" open="(" separator="," close=")">
