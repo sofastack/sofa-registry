@@ -18,7 +18,6 @@ package com.alipay.sofa.registry.server.session.metadata;
 
 import com.alipay.sofa.registry.common.model.store.AppRevision;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import com.alipay.sofa.registry.store.api.driver.RepositoryManager;
 import com.alipay.sofa.registry.store.api.repository.AppRevisionHeartbeatRepository;
 import com.alipay.sofa.registry.store.api.repository.AppRevisionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,19 +28,11 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public class AppRevisionHeartbeatRegistry {
 
-  private AppRevisionRepository appRevisionRepository;
+  @Autowired private AppRevisionRepository appRevisionRepository;
 
-  private AppRevisionHeartbeatRepository appRevisionHeartbeatRepository;
+  @Autowired private AppRevisionHeartbeatRepository appRevisionHeartbeatRepository;
 
   @Autowired private SessionServerConfig sessionServerConfig;
-
-  public AppRevisionHeartbeatRegistry(RepositoryManager repositoryManager) {
-    appRevisionRepository =
-        (AppRevisionRepository) repositoryManager.getRepository(AppRevisionRepository.class);
-    appRevisionHeartbeatRepository =
-        (AppRevisionHeartbeatRepository)
-            repositoryManager.getRepository(AppRevisionHeartbeatRepository.class);
-  }
 
   public AppRevision heartbeat(String revision) {
     return appRevisionRepository.heartbeat(revision);

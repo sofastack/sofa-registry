@@ -20,19 +20,20 @@ import com.alipay.sofa.registry.common.model.appmeta.InterfaceMapping;
 import com.alipay.sofa.registry.common.model.store.AppRevision;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.store.api.driver.RepositoryManager;
 import com.alipay.sofa.registry.store.api.repository.AppRevisionRepository;
 import com.alipay.sofa.registry.store.api.repository.InterfaceAppsRepository;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.LoopRunnable;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Autowired;
 
 public class AppRevisionCacheRegistry {
   private static final Logger LOGGER = LoggerFactory.getLogger(AppRevisionCacheRegistry.class);
-  private final AppRevisionRepository appRevisionRepository;
 
-  private final InterfaceAppsRepository interfaceAppsRepository;
+  @Autowired private AppRevisionRepository appRevisionRepository;
+
+  @Autowired private InterfaceAppsRepository interfaceAppsRepository;
 
   private volatile boolean startWatch;
 
@@ -58,16 +59,8 @@ public class AppRevisionCacheRegistry {
 
   @PostConstruct
   public void init() {
-    // fixme bean加载时raftClient还未完成初始化
     ConcurrentUtils.createDaemonThread("SessionRefreshRevisionWatchDog", new RevisionWatchDog())
         .start();
-  }
-
-  public AppRevisionCacheRegistry(RepositoryManager repositoryManager) {
-    appRevisionRepository =
-        (AppRevisionRepository) repositoryManager.getRepository(AppRevisionRepository.class);
-    interfaceAppsRepository =
-        (InterfaceAppsRepository) repositoryManager.getRepository(InterfaceAppsRepository.class);
   }
 
   public void loadMetadata() {

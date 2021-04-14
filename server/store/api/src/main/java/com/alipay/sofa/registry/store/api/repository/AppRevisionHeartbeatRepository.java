@@ -16,18 +16,11 @@
  */
 package com.alipay.sofa.registry.store.api.repository;
 
-import com.alipay.sofa.registry.store.api.driver.RegistryRepository;
-
 /**
  * @author xiaojian.xj
  * @version $Id: AppRevisionHeartbeatRepository.java, v 0.1 2021年02月09日 17:09 xiaojian.xj Exp $
  */
-public interface AppRevisionHeartbeatRepository extends RegistryRepository {
-
-  @Override
-  default Class<?> getInterfaceClass() {
-    return AppRevisionHeartbeatRepository.class;
-  }
+public interface AppRevisionHeartbeatRepository {
 
   public void doAppRevisionHeartbeat();
 
