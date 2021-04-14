@@ -19,10 +19,13 @@ package com.alipay.sofa.registry.server.meta.lease.impl;
 import static com.alipay.sofa.registry.server.meta.bootstrap.MetaServerConfiguration.GLOBAL_EXECUTOR;
 import static com.alipay.sofa.registry.server.meta.bootstrap.MetaServerConfiguration.SHARED_SCHEDULE_EXECUTOR;
 
-import com.alipay.sofa.registry.exception.*;
+import com.alipay.sofa.registry.exception.DisposeException;
+import com.alipay.sofa.registry.exception.InitializeException;
+import com.alipay.sofa.registry.exception.SofaRegistryRuntimeException;
+import com.alipay.sofa.registry.exception.StartException;
+import com.alipay.sofa.registry.exception.StopException;
 import com.alipay.sofa.registry.lifecycle.impl.AbstractLifecycle;
 import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
-import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.meta.MetaLeaderService;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;

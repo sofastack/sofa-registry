@@ -20,7 +20,6 @@ import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
-import com.alipay.sofa.registry.remoting.jersey.exchange.JerseyExchange;
 import com.alipay.sofa.registry.server.meta.bootstrap.MetaServerConfiguration;
 import java.io.IOException;
 import java.lang.annotation.Annotation;

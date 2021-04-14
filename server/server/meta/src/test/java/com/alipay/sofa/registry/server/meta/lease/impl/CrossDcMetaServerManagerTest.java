@@ -20,7 +20,6 @@ import static org.mockito.Mockito.when;
 
 import com.alipay.sofa.registry.exception.InitializeException;
 import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
-import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
