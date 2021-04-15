@@ -141,11 +141,6 @@ public class ExecutorManager {
         sessionServerConfig.getRevisionHeartbeatInitialDelayMinutes(),
         sessionServerConfig.getRevisionHeartbeatMinutes(),
         TimeUnit.MINUTES);
-    scheduler.scheduleWithFixedDelay(
-        () -> appRevisionHeartbeatRegistry.doRevisionGc(),
-        sessionServerConfig.getRevisionGcInitialDelaySecs(),
-        sessionServerConfig.getRevisionGcSecs(),
-        TimeUnit.SECONDS);
   }
 
   public void stopScheduler() {

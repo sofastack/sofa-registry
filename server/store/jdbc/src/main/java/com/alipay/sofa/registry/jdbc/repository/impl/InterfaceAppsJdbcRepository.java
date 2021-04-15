@@ -30,6 +30,7 @@ import com.alipay.sofa.registry.util.BatchCallableRunnable.InvokeFuture;
 import com.alipay.sofa.registry.util.BatchCallableRunnable.TaskEvent;
 import com.alipay.sofa.registry.util.MathUtils;
 import com.alipay.sofa.registry.util.TimestampUtil;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import java.util.List;
 import java.util.Map;
@@ -221,5 +222,10 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository {
       LOG.info("skip update maxId {}, got={}", maxId, max.getId());
     }
     return afters.size();
+  }
+
+  @VisibleForTesting
+  public Map<String, InterfaceMapping> getInterfaceApps() {
+    return interfaceApps;
   }
 }

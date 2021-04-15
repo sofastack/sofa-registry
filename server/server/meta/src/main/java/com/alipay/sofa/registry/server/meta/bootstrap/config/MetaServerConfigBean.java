@@ -55,13 +55,22 @@ public class MetaServerConfigBean implements MetaServerConfig {
 
   private int expireCheckIntervalMillis = 1000;
 
+  private int revisionGcSilenceHour = 24;
+
+  private int revisionGcInitialDelayMillis = 60 * 1000;
+
+  private int revisionGcMillis = 60 * 1000;
+
   private long metaLeaderWarmupMillis =
       Long.getLong(
           "registry.elector.warm.up.millis",
           TimeUnit.SECONDS.toMillis(Lease.DEFAULT_DURATION_SECS * 3 / 2));
 
   private long dataReplicateMaxGapMillis =
-      Long.getLong("registry.data.replicate.max.gap.millis", 3 * 60 * 1000);;
+      Long.getLong("registry.data.replicate.max.gap.millis", 3 * 60 * 1000);
+
+
+
   /**
    * Gets get session server port.
    *
@@ -330,5 +339,59 @@ public class MetaServerConfigBean implements MetaServerConfig {
   @Override
   public long getDataReplicateMaxGapMillis() {
     return dataReplicateMaxGapMillis;
+  }
+
+  /**
+   * Getter method for property <tt>revisionGcSilenceHour</tt>.
+   *
+   * @return property value of revisionGcSilenceHour
+   */
+  public int getRevisionGcSilenceHour() {
+    return revisionGcSilenceHour;
+  }
+
+  /**
+   * Setter method for property <tt>revisionGcSilenceHour</tt>.
+   *
+   * @param revisionGcSilenceHour value to be assigned to property revisionGcSilenceHour
+   */
+  public void setRevisionGcSilenceHour(int revisionGcSilenceHour) {
+    this.revisionGcSilenceHour = revisionGcSilenceHour;
+  }
+
+  /**
+   * Getter method for property <tt>revisionGcInitialDelayMillis</tt>.
+   *
+   * @return property value of revisionGcInitialDelayMillis
+   */
+  public int getRevisionGcInitialDelayMillis() {
+    return revisionGcInitialDelayMillis;
+  }
+
+  /**
+   * Setter method for property <tt>revisionGcInitialDelayMillis</tt>.
+   *
+   * @param revisionGcInitialDelayMillis value to be assigned to property revisionGcInitialDelayMillis
+   */
+  public void setRevisionGcInitialDelayMillis(int revisionGcInitialDelayMillis) {
+    this.revisionGcInitialDelayMillis = revisionGcInitialDelayMillis;
+  }
+
+  /**
+   * Getter method for property <tt>revisionGcMillis</tt>.
+   *
+   * @return property value of revisionGcMillis
+   */
+  public int getRevisionGcMillis() {
+    return revisionGcMillis;
+  }
+
+  /**
+   * Setter method for property <tt>revisionGcMillis</tt>.
+   *
+   * @param revisionGcMillis value to be assigned to property revisionGcMillis
+   */
+  public void setRevisionGcMillis(int revisionGcMillis) {
+    this.revisionGcMillis = revisionGcMillis;
   }
 }
