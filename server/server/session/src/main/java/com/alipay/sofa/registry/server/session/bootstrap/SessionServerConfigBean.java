@@ -164,7 +164,6 @@ public class SessionServerConfigBean implements SessionServerConfig {
   private int cacheDatumExpireSecs = 60 * 3;
 
   // metadata config start
-  private int revisionGcSilenceHour = 24;
 
   private int heartbeatCacheCheckerInitialDelaySecs = 60;
 
@@ -173,10 +172,6 @@ public class SessionServerConfigBean implements SessionServerConfig {
   private int revisionHeartbeatInitialDelayMinutes = 10;
 
   private int revisionHeartbeatMinutes = 10;
-
-  private int revisionGcInitialDelaySecs = 60;
-
-  private int revisionGcSecs = 60;
 
   // metadata config end
 
@@ -1158,23 +1153,6 @@ public class SessionServerConfigBean implements SessionServerConfig {
     this.syncSessionIOHighWaterMark = syncSessionIOHighWaterMark;
   }
 
-  /**
-   * Getter method for property <tt>revisionGcSilenceHour</tt>.
-   *
-   * @return property value of revisionGcSilenceHour
-   */
-  public int getRevisionGcSilenceHour() {
-    return revisionGcSilenceHour;
-  }
-
-  /**
-   * Setter method for property <tt>revisionGcSilenceHour</tt>.
-   *
-   * @param revisionGcSilenceHour value to be assigned to property revisionGcSilenceHour
-   */
-  public void setRevisionGcSilenceHour(int revisionGcSilenceHour) {
-    this.revisionGcSilenceHour = revisionGcSilenceHour;
-  }
 
   /**
    * Getter method for property <tt>heartbeatCacheCheckerInitialDelaySecs</tt>.
@@ -1250,39 +1228,4 @@ public class SessionServerConfigBean implements SessionServerConfig {
     this.revisionHeartbeatMinutes = revisionHeartbeatMinutes;
   }
 
-  /**
-   * Getter method for property <tt>revisionGcInitialDelaySecs</tt>.
-   *
-   * @return property value of revisionGcInitialDelaySecs
-   */
-  public int getRevisionGcInitialDelaySecs() {
-    return revisionGcInitialDelaySecs;
-  }
-
-  /**
-   * Setter method for property <tt>revisionGcInitialDelaySecs</tt>.
-   *
-   * @param revisionGcInitialDelaySecs value to be assigned to property revisionGcInitialDelaySecs
-   */
-  public void setRevisionGcInitialDelaySecs(int revisionGcInitialDelaySecs) {
-    this.revisionGcInitialDelaySecs = revisionGcInitialDelaySecs;
-  }
-
-  /**
-   * Getter method for property <tt>revisionGcSecs</tt>.
-   *
-   * @return property value of revisionGcSecs
-   */
-  public int getRevisionGcSecs() {
-    return revisionGcSecs;
-  }
-
-  /**
-   * Setter method for property <tt>revisionGcSecs</tt>.
-   *
-   * @param revisionGcSecs value to be assigned to property revisionGcSecs
-   */
-  public void setRevisionGcSecs(int revisionGcSecs) {
-    this.revisionGcSecs = revisionGcSecs;
-  }
 }

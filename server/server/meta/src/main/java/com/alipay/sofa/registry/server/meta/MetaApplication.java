@@ -22,6 +22,7 @@ import com.alipay.sofa.registry.server.meta.bootstrap.EnableMetaServer;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * @author zhuoyu.sjw
@@ -29,6 +30,7 @@ import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
  */
 @EnableMetaServer
 @SpringBootApplication(exclude = {DataSourceAutoConfiguration.class})
+@EnableScheduling
 public class MetaApplication {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(MetaApplication.class);

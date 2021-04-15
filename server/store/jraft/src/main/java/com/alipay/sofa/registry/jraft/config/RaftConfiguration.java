@@ -17,8 +17,10 @@
 package com.alipay.sofa.registry.jraft.config;
 
 import com.alipay.sofa.registry.jraft.repository.impl.AppRevisionHeartbeatRaftRepository;
+import com.alipay.sofa.registry.jraft.repository.impl.AppRevisionRaftRepository;
 import com.alipay.sofa.registry.jraft.repository.impl.InterfaceAppsRaftRepository;
 import com.alipay.sofa.registry.store.api.repository.AppRevisionHeartbeatRepository;
+import com.alipay.sofa.registry.store.api.repository.AppRevisionRepository;
 import com.alipay.sofa.registry.store.api.repository.InterfaceAppsRepository;
 import com.alipay.sofa.registry.store.api.spring.SpringContext;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -39,6 +41,11 @@ public class RaftConfiguration {
 
   @Configuration
   public static class RepositoryBeanConfiguration {
+    @Bean
+    public AppRevisionRepository appRevisionRaftRepository() {
+      return new AppRevisionRaftRepository();
+    }
+
     @Bean
     public InterfaceAppsRepository interfaceAppsRaftRepository() {
       return new InterfaceAppsRaftRepository();

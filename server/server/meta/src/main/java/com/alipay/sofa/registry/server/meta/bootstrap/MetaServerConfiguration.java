@@ -50,6 +50,7 @@ import com.alipay.sofa.registry.server.meta.resource.SlotSyncResource;
 import com.alipay.sofa.registry.server.meta.resource.SlotTableResource;
 import com.alipay.sofa.registry.server.meta.resource.StopPushDataResource;
 import com.alipay.sofa.registry.server.meta.resource.filter.LeaderAwareFilter;
+import com.alipay.sofa.registry.server.meta.revision.AppRevisionHeartbeatService;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.alipay.sofa.registry.server.shared.resource.MetricsResource;
 import com.alipay.sofa.registry.server.shared.resource.SlotGenericResource;
@@ -179,10 +180,6 @@ public class MetaServerConfiguration {
       return list;
     }
 
-    @Bean(name = "metaLeaderListeners")
-    public Collection<MetaLeaderElectorListener> metaLeaderListeners() {
-      return Lists.newArrayList(provideDataService());
-    }
 
     @Bean
     public SessionConnectionManager sessionConnectionManager() {
@@ -239,11 +236,28 @@ public class MetaServerConfiguration {
       return new MetaServerRenewService();
     }
 
+  }
+
+  @Configuration
+  public static class MetadataConfiguration {
+
+    @Bean(name = "metaLeaderListeners")
+    public Collection<MetaLeaderElectorListener> metaLeaderListeners() {
+      return Lists.newArrayList(provideDataService());
+    }
+
     @Bean
     public ProvideDataService provideDataService() {
       return new DefaultProvideDataService();
     }
+
+    @Bean
+    public AppRevisionHeartbeatService appRevisionHeartbeatService() {
+      return new AppRevisionHeartbeatService();
+    }
+
   }
+
 
   @Configuration
   public static class ResourceConfiguration {
