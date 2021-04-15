@@ -66,7 +66,7 @@ public class SessionDigestResourceTest extends BaseIntegrationTest {
     SubscriberRegistration subReg = new SubscriberRegistration(dataId, observer);
     subReg.setScopeEnum(ScopeEnum.dataCenter);
     registryClient1.register(subReg);
-    Thread.sleep(2000L);
+    Thread.sleep(3000L);
 
     assertEquals(dataId, observer.dataId);
     assertEquals(LOCAL_REGION, observer.userData.getLocalZone());

@@ -17,7 +17,6 @@
 package com.alipay.sofa.registry.remoting.bolt;
 
 import com.alipay.remoting.*;
-import com.alipay.remoting.exception.RemotingException;
 import com.alipay.remoting.rpc.RpcServer;
 import com.alipay.remoting.rpc.protocol.AsyncUserProcessor;
 import com.alipay.remoting.rpc.protocol.SyncUserProcessor;
@@ -31,12 +30,13 @@ import com.alipay.sofa.registry.remoting.ChannelHandler.HandlerType;
 import com.alipay.sofa.registry.remoting.ChannelHandler.InvokeType;
 import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.util.CollectionUtils;
-import com.alipay.sofa.registry.util.StringFormatter;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.net.InetSocketAddress;
-import java.util.*;
-import java.util.concurrent.Executor;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -129,29 +129,16 @@ public class BoltServer implements Server {
   }
 
   protected ConnectionEventProcessor newConnectionEventProcessor(ConnectionEventType type) {
-    return new ConnectionEventAdapter(type, getConnectionEventHandler());
-  }
-
-  protected ChannelHandler getConnectionEventHandler() {
-    if (channelHandlers != null) {
-      for (ChannelHandler channelHandler : channelHandlers) {
-        if (HandlerType.LISENTER.equals(channelHandler.getType())) {
-          return channelHandler;
-        }
-      }
-    }
-    return null;
+    return new ConnectionEventAdapter(type, BoltUtil.getListenerHandlers(channelHandlers));
   }
 
   private void registerUserProcessorHandler() {
-    if (channelHandlers != null) {
-      for (ChannelHandler channelHandler : channelHandlers) {
-        if (HandlerType.PROCESSER.equals(channelHandler.getType())) {
-          if (InvokeType.SYNC.equals(channelHandler.getInvokeType())) {
-            boltServer.registerUserProcessor(newSyncUserProcessorAdapter(channelHandler));
-          } else {
-            boltServer.registerUserProcessor(newAsyncUserProcessorAdapter(channelHandler));
-          }
+    for (ChannelHandler channelHandler : channelHandlers) {
+      if (HandlerType.PROCESSER.equals(channelHandler.getType())) {
+        if (InvokeType.SYNC.equals(channelHandler.getInvokeType())) {
+          boltServer.registerUserProcessor(newSyncUserProcessorAdapter(channelHandler));
+        } else {
+          boltServer.registerUserProcessor(newAsyncUserProcessorAdapter(channelHandler));
         }
       }
     }
@@ -254,89 +241,33 @@ public class BoltServer implements Server {
     return !isStarted.get();
   }
 
-  private void handleException(Url boltUrl, Throwable e, String op) {
-    if (e instanceof RemotingException) {
-      String msg =
-          StringFormatter.format("Bolt Server {} RemotingException! target url:{}", op, boltUrl);
-      LOGGER.error(msg, e);
-      throw new RuntimeException(msg, e);
-    }
-    if (e instanceof InterruptedException) {
-      String msg =
-          StringFormatter.format("Bolt Server {} InterruptedException! target url:{}", op, boltUrl);
-      LOGGER.error(msg, e);
-      throw new RuntimeException(msg, e);
-    }
-    String msg = StringFormatter.format("Bolt Server {} Exception! target url:{}", op, boltUrl);
-    LOGGER.error(msg, e);
-    throw new RuntimeException(msg, e);
-  }
-
   @Override
   public Object sendSync(Channel channel, Object message, int timeoutMillis) {
-    if (channel != null && channel.isConnected()) {
-      Url boltUrl = null;
-      try {
-        boltUrl =
-            new Url(
-                channel.getRemoteAddress().getAddress().getHostAddress(),
-                channel.getRemoteAddress().getPort());
-
-        if (LOGGER.isDebugEnabled()) {
-          LOGGER.debug("Bolt Server sendSync message:{} , target url:{}", message, boltUrl);
-        }
-
-        return boltServer.invokeSync(boltUrl, message, newInvokeContext(message), timeoutMillis);
-      } catch (Throwable e) {
-        handleException(boltUrl, e, "sendSync");
-      }
+    BoltUtil.checkChannelConnected(channel);
+    try {
+      Url boltUrl = BoltUtil.createTargetUrl(channel);
+      return boltServer.invokeSync(boltUrl, message, newInvokeContext(message), timeoutMillis);
+    } catch (Throwable e) {
+      throw BoltUtil.handleException("BoltServer", channel, e, "sendSync");
     }
-    throw new IllegalArgumentException(
-        "Send message connection can not be null or connection not be connected!");
   }
 
   @Override
   public void sendCallback(
       Channel channel, Object message, CallbackHandler callbackHandler, int timeoutMillis) {
-    if (channel != null && channel.isConnected()) {
-      Url boltUrl = null;
-      try {
-        boltUrl =
-            new Url(
-                channel.getRemoteAddress().getAddress().getHostAddress(),
-                channel.getRemoteAddress().getPort());
-
-        if (LOGGER.isDebugEnabled()) {
-          LOGGER.debug("Bolt Server sendSync message:{} , target url:{}", message, boltUrl);
-        }
-        boltServer.invokeWithCallback(
-            boltUrl,
-            message,
-            newInvokeContext(message),
-            new InvokeCallback() {
-              @Override
-              public void onResponse(Object result) {
-                callbackHandler.onCallback(channel, result);
-              }
-
-              @Override
-              public void onException(Throwable e) {
-                callbackHandler.onException(channel, e);
-              }
-
-              @Override
-              public Executor getExecutor() {
-                return callbackHandler.getExecutor();
-              }
-            },
-            timeoutMillis);
-        return;
-      } catch (Throwable e) {
-        handleException(boltUrl, e, "invokeCallback");
-      }
+    BoltUtil.checkChannelConnected(channel);
+    try {
+      Url boltUrl = BoltUtil.createTargetUrl(channel);
+      boltServer.invokeWithCallback(
+          boltUrl,
+          message,
+          newInvokeContext(message),
+          new InvokeCallbackHandler(channel, callbackHandler),
+          timeoutMillis);
+      return;
+    } catch (Throwable e) {
+      throw BoltUtil.handleException("BoltServer", channel, e, "invokeCallback");
     }
-    throw new IllegalArgumentException(
-        "InvokeCallback message connection can not be null or connection not be connected!");
   }
 
   protected InvokeContext newInvokeContext(Object request) {

@@ -16,9 +16,11 @@
  */
 package com.alipay.sofa.registry.remoting.bolt;
 
+import com.alipay.remoting.exception.RemotingException;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.remoting.Channel;
 import java.net.InetSocketAddress;
+import java.util.Collections;
 import java.util.Map;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -31,11 +33,17 @@ import org.junit.Test;
  */
 public class BoltServerTest {
   private static URL url = new URL("0.0.0.0", 12345);
-  private static BoltServer server = new BoltServer(url, null);
+  private static BoltServer server = new BoltServer(url, Collections.emptyList());
 
   @BeforeClass
   public static void before() {
+    server.configWaterMark(1024 * 32, 1024 * 64);
+    server.initServer();
+    Assert.assertFalse(server.isOpen());
+    Assert.assertTrue(server.isClosed());
     server.startServer();
+    Assert.assertTrue(server.isOpen());
+    Assert.assertFalse(server.isClosed());
   }
 
   @AfterClass
@@ -45,6 +53,15 @@ public class BoltServerTest {
 
   @Test
   public void testChannel() throws Exception {
+    // newInvokeContext do nothing
+    Assert.assertNull(server.newInvokeContext(null));
+
+    Assert.assertNotNull(server.getRpcServer());
+    Assert.assertEquals(server.getChannels().size(), 0);
+    Assert.assertEquals(server.selectAvailableChannelsForHostAddress().size(), 0);
+    Assert.assertEquals(server.getLocalAddress().getPort(), 12345);
+    server.close(null);
+
     BoltClient client1 = new BoltClient(2);
     client1.connect(url);
 
@@ -74,5 +91,25 @@ public class BoltServerTest {
                 chn.getRemoteAddress().getPort()));
     Assert.assertNotNull(channel);
     Assert.assertTrue(channel.isConnected());
+    server.close(channel);
+    Thread.sleep(100);
+    Assert.assertFalse(channel.isConnected());
+  }
+
+  @Test
+  public void testException() {
+    Assert.assertEquals(
+        BoltUtil.handleException(null, null, new RemotingException("t"), "t").getCause().getClass(),
+        RemotingException.class);
+    Assert.assertEquals(
+        BoltUtil.handleException(null, null, new InterruptedException("t"), "t")
+            .getCause()
+            .getClass(),
+        InterruptedException.class);
+    Assert.assertEquals(
+        BoltUtil.handleException(null, null, new IllegalArgumentException("t"), "t")
+            .getCause()
+            .getClass(),
+        IllegalArgumentException.class);
   }
 }

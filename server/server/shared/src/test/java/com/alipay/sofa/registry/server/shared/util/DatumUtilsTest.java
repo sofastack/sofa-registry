@@ -16,9 +16,18 @@
  */
 package com.alipay.sofa.registry.server.shared.util;
 
+import com.alipay.sofa.registry.common.model.PublishSource;
+import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
+import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
+import com.alipay.sofa.registry.common.model.store.Publisher;
+import com.alipay.sofa.registry.common.model.store.SubDatum;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
+import org.junit.Assert;
 import org.junit.Test;
+
+import java.util.Collections;
+import java.util.Map;
 
 /**
  * @author xuanbei
@@ -26,14 +35,61 @@ import org.junit.Test;
  */
 public class DatumUtilsTest {
   @Test
-  public void testNewDatumIfNull() {
-    Datum datum = new Datum();
-    datum.setVersion(19092L);
-    datum.setDataId("test-dataId");
-    datum.setDataCenter("test-dataCenter");
-
+  public void testNewEmptySubDatum() {
     Subscriber subscriber = new Subscriber();
     subscriber.setDataId("subscriber-dataId");
     subscriber.setGroup("DEFAULT_GROUP");
+    subscriber.setInstanceId("InstanceId");
+    subscriber.setDataInfoId("dataInfoId");
+    SubDatum subDatum = DatumUtils.newEmptySubDatum(subscriber, "testDc");
+    Assert.assertEquals(subDatum.getDataCenter(), "testDc");
+    Assert.assertEquals(subDatum.getDataInfoId(), subscriber.getDataInfoId());
+    Assert.assertEquals(subDatum.getDataId(), subscriber.getDataId());
+    Assert.assertEquals(subDatum.getInstanceId(), subscriber.getInstanceId());
+    Assert.assertEquals(subDatum.getGroup(), subscriber.getGroup());
+    Assert.assertEquals(subDatum.getVersion(), ValueConstants.DEFAULT_NO_DATUM_VERSION);
+    Assert.assertTrue(subDatum.getPublishers().isEmpty());
+  }
+
+  @Test
+  public void testIntern() {
+    Map<String, DatumVersion> m = Collections.singletonMap("test", DatumVersion.of(100));
+    Assert.assertEquals(DatumUtils.intern(m), m);
+  }
+
+  @Test
+  public void testDatum() {
+    Datum datum = new Datum();
+    Publisher publisher = new Publisher();
+    publisher.setRegisterId("testRegisterId");
+    publisher.setCell("testCell");
+    publisher.setDataList(Collections.emptyList());
+    publisher.setVersion(100);
+    publisher.setRegisterTimestamp(System.currentTimeMillis());
+    publisher.setPublishSource(PublishSource.CLIENT);
+    datum.addPublisher(publisher);
+    datum.setDataCenter("testDc");
+    datum.setDataId("testDataId");
+    datum.setVersion(200);
+    datum.setInstanceId("testInstanceId");
+    datum.setGroup("testGroup");
+    datum.setDataInfoId("testDataInfoId");
+    SubDatum subDatum = DatumUtils.of(datum);
+
+    Assert.assertEquals(subDatum.getDataCenter(), datum.getDataCenter());
+    Assert.assertEquals(subDatum.getDataInfoId(), datum.getDataInfoId());
+    Assert.assertEquals(subDatum.getDataId(), datum.getDataId());
+    Assert.assertEquals(subDatum.getInstanceId(), datum.getInstanceId());
+    Assert.assertEquals(subDatum.getGroup(), datum.getGroup());
+    Assert.assertEquals(subDatum.getVersion(), datum.getVersion());
+
+    Publisher p = datum.getPubMap().get(publisher.getRegisterId());
+
+    Assert.assertEquals(p.getRegisterId(), publisher.getRegisterId());
+    Assert.assertEquals(p.getCell(), publisher.getCell());
+    Assert.assertEquals(p.getDataList(), publisher.getDataList());
+    Assert.assertEquals(p.getVersion(), publisher.getVersion());
+    Assert.assertEquals(p.getRegisterTimestamp(), publisher.getRegisterTimestamp());
+    Assert.assertEquals(p.getPublishSource(), publisher.getPublishSource());
   }
 }

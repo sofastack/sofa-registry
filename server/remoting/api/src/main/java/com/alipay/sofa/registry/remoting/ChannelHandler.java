@@ -26,7 +26,7 @@ public interface ChannelHandler<T> {
 
   /** The enum Handler type. */
   enum HandlerType {
-    LISENTER,
+    LISTENER,
     PROCESSER
   }
 
