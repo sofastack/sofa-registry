@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.common.model.elector;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * @author xiaojian.xj
@@ -25,11 +26,9 @@ import java.io.Serializable;
 public class LeaderInfo implements Serializable {
 
   private static final long serialVersionUID = -1851792034078553148L;
-  private long epoch;
+  private final long epoch;
 
-  private String leader;
-
-  public LeaderInfo() {}
+  private final String leader;
 
   public LeaderInfo(long epoch, String leader) {
     this.leader = leader;
@@ -54,22 +53,17 @@ public class LeaderInfo implements Serializable {
     return leader;
   }
 
-  /**
-   * Setter method for property <tt>epoch</tt>.
-   *
-   * @param epoch value to be assigned to property epoch
-   */
-  public void setEpoch(long epoch) {
-    this.epoch = epoch;
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    LeaderInfo that = (LeaderInfo) o;
+    return epoch == that.epoch && Objects.equals(leader, that.leader);
   }
 
-  /**
-   * Setter method for property <tt>leader</tt>.
-   *
-   * @param leader value to be assigned to property leader
-   */
-  public void setLeader(String leader) {
-    this.leader = leader;
+  @Override
+  public int hashCode() {
+    return Objects.hash(epoch, leader);
   }
 
   @Override

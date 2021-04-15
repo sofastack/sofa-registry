@@ -42,8 +42,18 @@ public class BoltExchangeTest {
     Assert.assertNull(exchange.getServer(9999));
     Server srv = null;
     try {
-      srv = exchange.open(new URL("localhost", 9999), new ChannelHandler[0]);
+      srv = exchange.open(new URL("localhost", 9999), 1024, 1024 * 2, new ChannelHandler[0]);
       Assert.assertEquals(exchange.getServer(9999), srv);
+    } finally {
+      if (srv != null) {
+        srv.close();
+      }
+    }
+
+    Assert.assertNull(exchange.getServer(9998));
+    try {
+      srv = exchange.open(new URL("localhost", 9998), new ChannelHandler[0]);
+      Assert.assertEquals(exchange.getServer(9998), srv);
     } finally {
       if (srv != null) {
         srv.close();

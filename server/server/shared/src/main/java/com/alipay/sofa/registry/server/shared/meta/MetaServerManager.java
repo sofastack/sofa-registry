@@ -20,17 +20,12 @@ import com.alipay.sofa.registry.common.model.elector.LeaderInfo;
 import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.BaseHeartBeatResponse;
 import com.alipay.sofa.registry.remoting.exchange.RequestException;
 import com.alipay.sofa.registry.remoting.exchange.message.Response;
-import java.util.List;
 
 /**
  * @author chen.zhu
  *     <p>Mar 15, 2021
  */
 public interface MetaServerManager {
-
-  List<String> getDefaultMetaServerList();
-
-  // List<String> getRuntimeMetaServerList();
 
   LeaderInfo resetLeaderFromRestServer();
 
