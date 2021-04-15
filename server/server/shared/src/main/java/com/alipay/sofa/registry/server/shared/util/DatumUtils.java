@@ -58,19 +58,6 @@ public final class DatumUtils {
     return datum;
   }
 
-  public static SubDatum newEmptySubDatum(DataInfo dataInfo, String datacenter) {
-    SubDatum datum =
-        new SubDatum(
-            dataInfo.getDataInfoId(),
-            datacenter,
-            ValueConstants.DEFAULT_NO_DATUM_VERSION,
-            Collections.emptyList(),
-            dataInfo.getDataId(),
-            dataInfo.getInstanceId(),
-            dataInfo.getGroup());
-    return datum;
-  }
-
   public static SubDatum of(Datum datum) {
     List<SubPublisher> publishers = Lists.newArrayListWithCapacity(datum.publisherSize());
     for (Publisher publisher : datum.getPubMap().values()) {

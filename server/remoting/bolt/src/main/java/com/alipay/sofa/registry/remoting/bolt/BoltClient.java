@@ -34,7 +34,6 @@ import com.alipay.sofa.registry.remoting.Client;
 import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -83,13 +82,7 @@ public class BoltClient implements Client {
    * @param channelHandlers value to be assigned to property channelHandlers
    */
   public void initHandlers(List<ChannelHandler> channelHandlers) {
-    ChannelHandler connectionEventHandler = null;
-    for (ChannelHandler channelHandler : channelHandlers) {
-      if (HandlerType.LISENTER.equals(channelHandler.getType())) {
-        connectionEventHandler = channelHandler;
-        break;
-      }
-    }
+    final ChannelHandler connectionEventHandler = BoltUtil.getListenerHandlers(channelHandlers);
 
     rpcClient.addConnectionEventProcessor(
         ConnectionEventType.CONNECT,
@@ -132,12 +125,9 @@ public class BoltClient implements Client {
     }
     try {
       Connection connection = getBoltConnection(rpcClient, url);
-      BoltChannel channel = new BoltChannel(connection);
-      return channel;
-
-    } catch (RemotingException e) {
-      LOGGER.error("Bolt client connect server got a RemotingException! target url:" + url, e);
-      throw new RuntimeException("Bolt client connect server got a RemotingException!", e);
+      return new BoltChannel(connection);
+    } catch (Throwable e) {
+      throw BoltUtil.handleException("BoltClient", url, e, "connect");
     }
   }
 
@@ -153,8 +143,7 @@ public class BoltClient implements Client {
       }
       return connection;
     } catch (InterruptedException e) {
-      throw new RuntimeException(
-          "BoltClient rpcClient.getConnection InterruptedException! target boltUrl:" + boltUrl, e);
+      throw BoltUtil.handleException("BoltClient", boltUrl, e, "getConnection");
     }
   }
 
@@ -172,9 +161,8 @@ public class BoltClient implements Client {
       Connection connection = getBoltConnection(rpcClient, url);
       BoltChannel channel = new BoltChannel(connection);
       return channel;
-    } catch (RemotingException e) {
-      LOGGER.error("Bolt client connect server got a RemotingException! target url:" + url, e);
-      throw new RuntimeException("Bolt client connect server got a RemotingException!", e);
+    } catch (Throwable e) {
+      throw BoltUtil.handleException("BoltClient", url, e, "getChannel");
     }
   }
 
@@ -198,41 +186,21 @@ public class BoltClient implements Client {
   @Override
   public Object sendSync(URL url, Object message, int timeoutMillis) {
     try {
-      return rpcClient.invokeSync(createBoltUrl(url), message, timeoutMillis);
-    } catch (RemotingException e) {
-      String msg = "Bolt Client sendSync message RemotingException! target url:" + url;
-      LOGGER.error(msg, e);
-      throw new RuntimeException(msg, e);
-    } catch (InterruptedException e) {
-      throw new RuntimeException(
-          "Bolt Client sendSync message InterruptedException! target url:" + url, e);
+      Url boltUrl = createBoltUrl(url);
+      return rpcClient.invokeSync(boltUrl, message, timeoutMillis);
+    } catch (Throwable e) {
+      throw BoltUtil.handleException("BoltClient", url, e, "sendSync");
     }
   }
 
   @Override
   public Object sendSync(Channel channel, Object message, int timeoutMillis) {
-    if (channel != null && channel.isConnected()) {
-      BoltChannel boltChannel = (BoltChannel) channel;
-      try {
-        return rpcClient.invokeSync(boltChannel.getConnection(), message, timeoutMillis);
-      } catch (RemotingException e) {
-        LOGGER.error(
-            "Bolt Client sendSync message RemotingException! target boltUrl:"
-                + boltChannel.getRemoteAddress(),
-            e);
-        throw new RuntimeException("Bolt Client sendSync message RemotingException!", e);
-      } catch (InterruptedException e) {
-        LOGGER.error(
-            "Bolt Client sendSync message InterruptedException! target boltUrl:"
-                + boltChannel.getRemoteAddress(),
-            e);
-        throw new RuntimeException("Bolt Client sendSync message InterruptedException!", e);
-      }
+    BoltUtil.checkChannelConnected(channel);
+    try {
+      return rpcClient.invokeSync(((BoltChannel) channel).getConnection(), message, timeoutMillis);
+    } catch (Throwable e) {
+      throw BoltUtil.handleException("BoltClient", channel, e, "sendSync");
     }
-    throw new IllegalArgumentException(
-        "Input channel: "
-            + channel
-            + " error! channel cannot be null,or channel must be connected!");
   }
 
   @Override
@@ -240,33 +208,14 @@ public class BoltClient implements Client {
       URL url, Object message, CallbackHandler callbackHandler, int timeoutMillis) {
     try {
       Connection connection = getBoltConnection(rpcClient, url);
-      BoltChannel channel = new BoltChannel(connection);
       rpcClient.invokeWithCallback(
           connection,
           message,
-          new InvokeCallback() {
-
-            @Override
-            public void onResponse(Object result) {
-              callbackHandler.onCallback(channel, result);
-            }
-
-            @Override
-            public void onException(Throwable e) {
-              callbackHandler.onException(channel, e);
-            }
-
-            @Override
-            public Executor getExecutor() {
-              return callbackHandler.getExecutor();
-            }
-          },
+          new InvokeCallbackHandler(new BoltChannel(connection), callbackHandler),
           timeoutMillis);
       return;
     } catch (RemotingException e) {
-      String msg = "Bolt Client sendSync message RemotingException! target url:" + url;
-      LOGGER.error(msg, e);
-      throw new RuntimeException(msg, e);
+      throw BoltUtil.handleException("BoltClient", url, e, "sendCallback");
     }
   }
 }

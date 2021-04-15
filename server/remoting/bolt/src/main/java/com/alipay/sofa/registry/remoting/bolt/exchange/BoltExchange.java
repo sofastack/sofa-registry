@@ -33,9 +33,9 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class BoltExchange implements Exchange<ChannelHandler> {
 
-  private Map<String, Client> clients = new ConcurrentHashMap<>();
+  private final Map<String, Client> clients = new ConcurrentHashMap<>();
 
-  private ConcurrentHashMap<Integer, Server> serverMap = new ConcurrentHashMap<>();
+  private final ConcurrentHashMap<Integer, Server> serverMap = new ConcurrentHashMap<>();
 
   @Override
   public Client connect(String serverType, URL serverUrl, ChannelHandler... channelHandlers) {

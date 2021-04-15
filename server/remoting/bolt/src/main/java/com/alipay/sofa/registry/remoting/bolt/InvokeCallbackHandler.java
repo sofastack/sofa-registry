@@ -14,33 +14,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.shared.remoting;
+package com.alipay.sofa.registry.remoting.bolt;
 
+import com.alipay.remoting.InvokeCallback;
+import com.alipay.sofa.registry.remoting.CallbackHandler;
 import com.alipay.sofa.registry.remoting.Channel;
+import java.util.concurrent.Executor;
 
-/**
- * @author yuzhi.lyz
- * @version v 0.1 2020-12-14 14:42 yuzhi.lyz Exp $
- */
-public abstract class ListenServerChannelHandler extends AbstractServerHandler {
+public final class InvokeCallbackHandler implements InvokeCallback {
+  private final Channel channel;
+  private final CallbackHandler callbackHandler;
 
-  @Override
-  public Object doHandle(Channel channel, Object request) {
-    throw new UnsupportedOperationException();
+  public InvokeCallbackHandler(Channel channel, CallbackHandler callbackHandler) {
+    this.channel = channel;
+    this.callbackHandler = callbackHandler;
   }
 
   @Override
-  public Object buildFailedResponse(String msg) {
-    throw new UnsupportedOperationException();
+  public void onResponse(Object result) {
+    callbackHandler.onCallback(channel, result);
   }
 
   @Override
-  public Class interest() {
-    return null;
+  public void onException(Throwable e) {
+    callbackHandler.onException(channel, e);
   }
 
   @Override
-  public HandlerType getType() {
-    return HandlerType.LISTENER;
+  public Executor getExecutor() {
+    return callbackHandler.getExecutor();
   }
 }
