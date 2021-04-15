@@ -63,7 +63,13 @@ public class BoltServerTest {
     server.close(null);
 
     BoltClient client1 = new BoltClient(2);
+    Assert.assertEquals(client1.getConnections().size(), 0);
+    TestUtils.assertException(IllegalArgumentException.class, () -> client1.connect(null));
+    Assert.assertFalse(client1.isClosed());
     client1.connect(url);
+    Assert.assertEquals(client1.getConnections().size(), 1);
+    Assert.assertEquals(client1.getConnections().values().iterator().next().size(), 2);
+    Assert.assertNotNull(client1.getLocalAddress());
 
     BoltClient client2 = new BoltClient(3);
     client2.connect(url);
@@ -92,8 +98,10 @@ public class BoltServerTest {
     Assert.assertNotNull(channel);
     Assert.assertTrue(channel.isConnected());
     server.close(channel);
+    client1.close();
     Thread.sleep(100);
     Assert.assertFalse(channel.isConnected());
+    Assert.assertTrue(client1.isClosed());
   }
 
   @Test

@@ -16,37 +16,27 @@
  */
 package com.alipay.sofa.registry.server.session.node.service;
 
+import com.alipay.sofa.registry.server.session.TestUtils;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import com.alipay.sofa.registry.server.shared.meta.AbstractMetaServerManager;
-import com.google.common.annotations.VisibleForTesting;
-import java.util.Collection;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.junit.Assert;
+import org.junit.Test;
 
-/**
- * @author chen.zhu
- *     <p>Mar 15, 2021
- */
-public class SessionMetaServerManager extends AbstractMetaServerManager {
+public class SessionMetaServerManagerTest {
+  private SessionMetaServerManager sessionMetaServerManager;
+  private SessionServerConfig cfg;
 
-  @Autowired private SessionServerConfig sessionServerConfig;
-
-  @Override
-  protected Collection<String> getConfiguredMetaServerDomains() {
-    return sessionServerConfig.getMetaServerAddresses();
+  private void init() {
+    sessionMetaServerManager = new SessionMetaServerManager();
+    cfg = TestUtils.newSessionConfig("testDc");
+    sessionMetaServerManager.setSessionServerConfig(cfg);
   }
 
-  @Override
-  public int getRpcTimeoutMillis() {
-    return sessionServerConfig.getMetaNodeExchangeTimeoutMillis();
-  }
-
-  @Override
-  public int getServerPort() {
-    return sessionServerConfig.getMetaServerPort();
-  }
-
-  @VisibleForTesting
-  void setSessionServerConfig(SessionServerConfig sessionServerConfig) {
-    this.sessionServerConfig = sessionServerConfig;
+  @Test
+  public void testConfig() {
+    init();
+    Assert.assertEquals(1, sessionMetaServerManager.getConnNum());
+    Assert.assertEquals(cfg.getMetaServerPort(), sessionMetaServerManager.getServerPort());
+    Assert.assertEquals(
+        cfg.getMetaNodeExchangeTimeoutMillis(), sessionMetaServerManager.getRpcTimeoutMillis());
   }
 }

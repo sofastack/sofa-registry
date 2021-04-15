@@ -41,7 +41,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class DataNodeExchanger extends ClientSideExchanger {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(DataNodeExchanger.class);
-  private static final Logger EXCHANGE_LOGGER = LoggerFactory.getLogger("SESSION-EXCHANGE");
 
   @Autowired private SessionServerConfig sessionServerConfig;
 
@@ -53,8 +52,6 @@ public class DataNodeExchanger extends ClientSideExchanger {
   @Override
   public Response request(Request request) throws RequestException {
     URL url = request.getRequestUrl();
-    EXCHANGE_LOGGER.info("DataNode Exchanger request={}, url={}", request.getRequestBody(), url);
-
     try {
       return super.request(request);
     } catch (RequestException e) {

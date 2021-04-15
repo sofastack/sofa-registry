@@ -18,7 +18,7 @@ package com.alipay.sofa.registry.server.data.remoting.metaserver;
 
 import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.metaserver.cluster.VersionedList;
-import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.DataHeartBeatResponse;
+import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.BaseHeartBeatResponse;
 import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.HeartbeatRequest;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.BaseSlotStatus;
@@ -93,8 +93,9 @@ public class MetaServerServiceImplTest {
     Mockito.when(impl.getSessionServerList()).thenReturn(Sets.newHashSet("s1", "s2"));
     Mockito.when(impl.getDataServerList()).thenReturn(Sets.newHashSet("d1", "d2"));
 
-    DataHeartBeatResponse resp =
-        new DataHeartBeatResponse(
+    BaseHeartBeatResponse resp =
+        new BaseHeartBeatResponse(
+            false,
             new VersionedList(10, Collections.emptyList()),
             null,
             new VersionedList(10, Collections.emptyList()),
@@ -108,7 +109,8 @@ public class MetaServerServiceImplTest {
 
     SlotTable slotTable = new SlotTable(10, Collections.emptyList());
     resp =
-        new DataHeartBeatResponse(
+        new BaseHeartBeatResponse(
+            false,
             new VersionedList(10, Collections.emptyList()),
             slotTable,
             new VersionedList(10, Collections.emptyList()),

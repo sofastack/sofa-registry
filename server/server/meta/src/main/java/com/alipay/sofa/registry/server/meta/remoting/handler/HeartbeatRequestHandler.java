@@ -20,9 +20,7 @@ import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.metaserver.cluster.VersionedList;
 import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.BaseHeartBeatResponse;
-import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.DataHeartBeatResponse;
 import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.HeartbeatRequest;
-import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.SessionHeartBeatResponse;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.MetaNode;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
@@ -102,7 +100,8 @@ public class HeartbeatRequestHandler extends BaseMetaServerHandler<HeartbeatRequ
       switch (renewNode.getNodeType()) {
         case SESSION:
           response =
-              new SessionHeartBeatResponse(
+              new BaseHeartBeatResponse(
+                  true,
                   metaServerInfo,
                   slotTable,
                   sessionMetaInfo,
@@ -112,7 +111,8 @@ public class HeartbeatRequestHandler extends BaseMetaServerHandler<HeartbeatRequ
         case DATA:
           slotTable = transferDataNodeSlotToSlotTable((DataNode) renewNode, slotTable);
           response =
-              new DataHeartBeatResponse(
+              new BaseHeartBeatResponse(
+                  true,
                   metaServerInfo,
                   slotTable,
                   sessionMetaInfo,
