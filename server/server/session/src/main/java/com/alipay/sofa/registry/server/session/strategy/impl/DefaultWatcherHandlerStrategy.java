@@ -26,7 +26,7 @@ import com.alipay.sofa.registry.core.model.RegisterResponse;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.remoting.bolt.BoltChannelUtil;
+import com.alipay.sofa.registry.remoting.bolt.BoltUtil;
 import com.alipay.sofa.registry.server.session.converter.SubscriberConverter;
 import com.alipay.sofa.registry.server.session.registry.Registry;
 import com.alipay.sofa.registry.server.session.strategy.WatcherHandlerStrategy;
@@ -72,7 +72,7 @@ public class DefaultWatcherHandlerStrategy implements WatcherHandlerStrategy {
       ConfiguratorRegister register,
       RegisterResponse registerResponse) {
     watcher.setSourceAddress(
-        new URL(channel.getRemoteAddress(), BoltChannelUtil.getBoltCustomSerializer(channel)));
+        new URL(channel.getRemoteAddress(), BoltUtil.getBoltCustomSerializer(channel)));
     watcher.setTargetAddress(new URL(channel.getLocalAddress()));
 
     final String eventType = register.getEventType();

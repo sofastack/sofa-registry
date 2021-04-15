@@ -37,6 +37,15 @@ public class TestUtils {
     }
   }
 
+  public static void assertRunExceptionCause(Class<? extends Throwable> eclazz, RunError runnable) {
+    try {
+      runnable.run();
+      Assert.fail();
+    } catch (Throwable exception) {
+      Assert.assertEquals(exception.getCause().getClass(), eclazz);
+    }
+  }
+
   public interface RunError {
     void run() throws Exception;
   }

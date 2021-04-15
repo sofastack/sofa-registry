@@ -27,7 +27,7 @@ import com.alipay.sofa.registry.core.model.SubscriberRegister;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.remoting.bolt.BoltChannelUtil;
+import com.alipay.sofa.registry.remoting.bolt.BoltUtil;
 import com.alipay.sofa.registry.server.session.converter.SubscriberConverter;
 import com.alipay.sofa.registry.server.session.registry.Registry;
 import com.alipay.sofa.registry.server.session.strategy.SubscriberHandlerStrategy;
@@ -76,7 +76,7 @@ public class DefaultSubscriberHandlerStrategy implements SubscriberHandlerStrate
       SubscriberRegister subscriberRegister,
       RegisterResponse registerResponse) {
     subscriber.setSourceAddress(
-        new URL(channel.getRemoteAddress(), BoltChannelUtil.getBoltCustomSerializer(channel)));
+        new URL(channel.getRemoteAddress(), BoltUtil.getBoltCustomSerializer(channel)));
     subscriber.setTargetAddress(new URL(channel.getLocalAddress()));
 
     final String eventType = subscriberRegister.getEventType();
