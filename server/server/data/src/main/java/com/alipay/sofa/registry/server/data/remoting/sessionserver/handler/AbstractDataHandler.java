@@ -133,4 +133,12 @@ public abstract class AbstractDataHandler<T> extends AbstractServerHandler<T> {
   protected Node.NodeType getConnectNodeType() {
     return Node.NodeType.SESSION;
   }
+
+  public static String getRemoteAddress(Channel channel) {
+    try {
+      return channel.getRemoteAddress().getAddress().getHostAddress();
+    } catch (Throwable exception) {
+      return "unknown";
+    }
+  }
 }

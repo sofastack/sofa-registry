@@ -17,7 +17,6 @@
 package com.alipay.sofa.registry.server.session.slot;
 
 import com.alipay.sofa.registry.common.model.slot.Slot;
-import com.alipay.sofa.registry.common.model.slot.SlotConfig;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.common.model.slot.func.SlotFunction;
 import com.alipay.sofa.registry.common.model.slot.func.SlotFunctionRegistry;
@@ -26,6 +25,7 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.shared.resource.SlotGenericResource;
 import com.alipay.sofa.registry.server.shared.slot.DiskSlotTableRecorder;
 import com.alipay.sofa.registry.server.shared.slot.SlotTableRecorder;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import java.util.List;
 import javax.annotation.PostConstruct;
@@ -65,12 +65,6 @@ public final class SlotTableCacheImpl implements SlotTableCache {
   @Override
   public Slot getSlot(int slotId) {
     return slotTable.getSlot(slotId);
-  }
-
-  @Override
-  public String getLeader(String dataInfoId) {
-    final Slot slot = getSlot(dataInfoId);
-    return slot == null ? null : slot.getLeader();
   }
 
   @Override
@@ -116,12 +110,12 @@ public final class SlotTableCacheImpl implements SlotTableCache {
   }
 
   @Override
-  public int slotNum() {
-    return SlotConfig.SLOT_NUM;
-  }
-
-  @Override
   public SlotTable currentSlotTable() {
     return new SlotTable(slotTable.getEpoch(), slotTable.getSlots());
+  }
+
+  @VisibleForTesting
+  public void setSlotGenericResource(SlotGenericResource slotGenericResource) {
+    this.slotGenericResource = slotGenericResource;
   }
 }

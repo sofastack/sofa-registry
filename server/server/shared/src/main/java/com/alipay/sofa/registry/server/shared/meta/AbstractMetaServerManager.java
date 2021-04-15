@@ -20,7 +20,7 @@ import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.elector.LeaderInfo;
 import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.BaseHeartBeatResponse;
 import com.alipay.sofa.registry.common.model.store.URL;
-import com.alipay.sofa.registry.exception.SofaRegistryRuntimeException;
+import com.alipay.sofa.registry.exception.MetaLeaderQueryException;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
@@ -35,6 +35,7 @@ import com.github.rholder.retry.Retryer;
 import com.github.rholder.retry.RetryerBuilder;
 import com.github.rholder.retry.StopStrategies;
 import com.github.rholder.retry.WaitStrategies;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Predicate;
 import java.util.Collection;
 import java.util.Collections;
@@ -42,6 +43,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+import javax.ws.rs.client.Client;
 import org.apache.commons.lang.StringUtils;
 
 /**
@@ -73,9 +75,11 @@ public abstract class AbstractMetaServerManager extends ClientSideExchanger
                   return input == null;
                 }
               })
-          .withWaitStrategy(WaitStrategies.exponentialWait(1000, 5000, TimeUnit.MILLISECONDS))
+          .withWaitStrategy(WaitStrategies.exponentialWait(1000, 3000, TimeUnit.MILLISECONDS))
           .withStopStrategy(StopStrategies.stopAfterAttempt(5))
           .build();
+
+  private javax.ws.rs.client.Client rsClient;
 
   protected AbstractMetaServerManager() {
     super(Exchange.META_SERVER_TYPE);
@@ -84,6 +88,7 @@ public abstract class AbstractMetaServerManager extends ClientSideExchanger
   @PostConstruct
   public void init() {
     super.init();
+    rsClient = JerseyClient.getInstance().getClient();
     resetLeaderFromRestServer();
   }
 
@@ -149,7 +154,13 @@ public abstract class AbstractMetaServerManager extends ClientSideExchanger
     return metaClientHandlers;
   }
 
-  private boolean setLeader(LeaderInfo leader) {
+  private void setLeader(LeaderInfo leader) {
+    if (trySetLeader(leader)) {
+      LOGGER.info("update leader {}", leader);
+    }
+  }
+
+  private boolean trySetLeader(LeaderInfo leader) {
     synchronized (this) {
       if (metaLeaderInfo == null || metaLeaderInfo.getEpoch() < leader.getEpoch()) {
         this.metaLeaderInfo = leader;
@@ -167,14 +178,9 @@ public abstract class AbstractMetaServerManager extends ClientSideExchanger
     LeaderInfo leaderInfo = null;
     Collection<String> metaDomains = getConfiguredMetaServerDomains();
     try {
-      leaderInfo =
-          retryer.call(() -> queryLeaderInfo(metaDomains, JerseyClient.getInstance().getClient()));
+      leaderInfo = retryer.call(() -> queryLeaderInfo(metaDomains, rsClient));
     } catch (Throwable e) {
-      throw new SofaRegistryRuntimeException("query meta leader error", e);
-    }
-
-    if (leaderInfo == null) {
-      throw new SofaRegistryRuntimeException("could not find leader from " + metaDomains);
+      throw new MetaLeaderQueryException("query meta leader error from " + metaDomains, e);
     }
     // connect to meta leader
     connect(new URL(leaderInfo.getLeader(), getServerPort()));
@@ -224,5 +230,10 @@ public abstract class AbstractMetaServerManager extends ClientSideExchanger
       }
     }
     return null;
+  }
+
+  @VisibleForTesting
+  void setRsClient(Client rsClient) {
+    this.rsClient = rsClient;
   }
 }

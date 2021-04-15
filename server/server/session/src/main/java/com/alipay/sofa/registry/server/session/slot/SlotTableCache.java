@@ -30,15 +30,11 @@ public interface SlotTableCache {
 
   Slot getSlot(int slotId);
 
-  String getLeader(String dataInfoId);
-
   String getLeader(int slotId);
 
   long getEpoch();
 
   boolean updateSlotTable(SlotTable slotTable);
-
-  int slotNum();
 
   SlotTable currentSlotTable();
 }

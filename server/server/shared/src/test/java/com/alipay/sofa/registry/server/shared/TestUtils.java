@@ -14,25 +14,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat;
+package com.alipay.sofa.registry.server.shared;
 
-import com.alipay.sofa.registry.common.model.metaserver.cluster.VersionedList;
-import com.alipay.sofa.registry.common.model.metaserver.nodes.MetaNode;
-import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
-import com.alipay.sofa.registry.common.model.slot.SlotTable;
+import org.junit.Assert;
 
-/**
- * @author chen.zhu
- *     <p>Nov 27, 2020
- */
-public class SessionHeartBeatResponse extends BaseHeartBeatResponse {
+public class TestUtils {
 
-  public SessionHeartBeatResponse(
-      VersionedList<MetaNode> metaNodes,
-      SlotTable slotTable,
-      VersionedList<SessionNode> sessionNodes,
-      String metaLeader,
-      long metaLeaderEpoch) {
-    super(true, metaNodes, slotTable, sessionNodes, metaLeader, metaLeaderEpoch);
+  public static void assertRunException(Class<? extends Throwable> eclazz, RunError runnable) {
+    try {
+      runnable.run();
+      Assert.fail();
+    } catch (Throwable exception) {
+      Assert.assertEquals(exception.getClass(), eclazz);
+    }
+  }
+
+  public interface RunError {
+    void run() throws Exception;
   }
 }

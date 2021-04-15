@@ -17,7 +17,7 @@
 package com.alipay.sofa.registry.server.data.remoting.metaserver;
 
 import com.alipay.sofa.registry.common.model.Tuple;
-import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.DataHeartBeatResponse;
+import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.BaseHeartBeatResponse;
 import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.HeartbeatRequest;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.BaseSlotStatus;
@@ -40,7 +40,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @author qian.lqlq
  * @version $Id: MetaServiceImpl.java, v 0.1 2018－03－07 20:41 qian.lqlq Exp $
  */
-public class MetaServerServiceImpl extends AbstractMetaServerService<DataHeartBeatResponse> {
+public class MetaServerServiceImpl extends AbstractMetaServerService<BaseHeartBeatResponse> {
 
   @Autowired private SlotManager slotManager;
 
@@ -61,7 +61,7 @@ public class MetaServerServiceImpl extends AbstractMetaServerService<DataHeartBe
   }
 
   @Override
-  protected void handleRenewResult(DataHeartBeatResponse result) {
+  protected void handleRenewResult(BaseHeartBeatResponse result) {
     // the data/session list has updated in renewNode
     Set<String> dataServerList = getDataServerList();
     if (!CollectionUtils.isEmpty(dataServerList)) {
