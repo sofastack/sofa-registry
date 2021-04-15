@@ -61,6 +61,7 @@ public class BatchPutDataHandler extends AbstractDataHandler<BatchRequest> {
   public Object doHandle(Channel channel, BatchRequest request) {
     final ProcessId sessionProcessId = request.getSessionProcessId();
     processSessionProcessId(channel, sessionProcessId);
+    final String remoteAddress = getRemoteAddress(channel);
     final SlotAccess slotAccess =
         checkAccess(request.getSlotId(), request.getSlotTableEpoch(), request.getSlotLeaderEpoch());
     if (slotAccess.isMoved() || slotAccess.isMisMatch()) {
@@ -77,20 +78,22 @@ public class BatchPutDataHandler extends AbstractDataHandler<BatchRequest> {
           changeDataInfoIds.addAll(doHandle(publisher));
           if (publisher instanceof UnPublisher) {
             LOGGER.info(
-                "unpub,{},{},{},{},{}",
+                "unpub,{},{},{},{},{},{}",
                 slotIdStr,
                 publisher.getDataInfoId(),
                 publisher.getRegisterId(),
                 publisher.getVersion(),
-                publisher.getRegisterTimestamp());
+                publisher.getRegisterTimestamp(),
+                remoteAddress);
           } else {
             LOGGER.info(
-                "pub,{},{},{},{},{}",
+                "pub,{},{},{},{},{},{}",
                 slotIdStr,
                 publisher.getDataInfoId(),
                 publisher.getRegisterId(),
                 publisher.getVersion(),
-                publisher.getRegisterTimestamp());
+                publisher.getRegisterTimestamp(),
+                remoteAddress);
           }
         } else if (req instanceof ClientOffPublisher) {
           ClientOffPublisher clientOff = (ClientOffPublisher) req;
@@ -101,12 +104,13 @@ public class BatchPutDataHandler extends AbstractDataHandler<BatchRequest> {
             for (Map.Entry<String, RegisterVersion> ver : e.getValue().entrySet()) {
               RegisterVersion version = ver.getValue();
               LOGGER.info(
-                  "off,{},{},{},{},{}",
+                  "off,{},{},{},{},{},{}",
                   slotIdStr,
                   dataInfoId,
                   ver.getKey(),
                   version.getVersion(),
-                  version.getRegisterTimestamp());
+                  version.getRegisterTimestamp(),
+                  remoteAddress);
             }
           }
         } else {

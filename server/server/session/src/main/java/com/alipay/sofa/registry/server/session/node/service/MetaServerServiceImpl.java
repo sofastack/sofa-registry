@@ -17,8 +17,8 @@
 package com.alipay.sofa.registry.server.session.node.service;
 
 import com.alipay.sofa.registry.common.model.Node;
+import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.BaseHeartBeatResponse;
 import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.HeartbeatRequest;
-import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.SessionHeartBeatResponse;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 import com.alipay.sofa.registry.common.model.slot.SlotConfig;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
@@ -37,8 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @author yuzhi.lyz
  * @version v 0.1 2020-11-28 20:05 yuzhi.lyz Exp $
  */
-public final class MetaServerServiceImpl
-    extends AbstractMetaServerService<SessionHeartBeatResponse> {
+public class MetaServerServiceImpl extends AbstractMetaServerService<BaseHeartBeatResponse> {
 
   @Autowired private SessionServerConfig sessionServerConfig;
 
@@ -59,7 +58,7 @@ public final class MetaServerServiceImpl
   }
 
   @Override
-  protected void handleRenewResult(SessionHeartBeatResponse result) {
+  protected void handleRenewResult(BaseHeartBeatResponse result) {
     Set<String> dataServerList = getDataServerList();
     if (dataServerList != null && !dataServerList.isEmpty()) {
       dataNodeNotifyExchanger.setServerIps(dataServerList);

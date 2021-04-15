@@ -19,7 +19,6 @@ package com.alipay.sofa.registry.server.shared.resource;
 import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.server.shared.slot.SlotTableRecorder;
-import java.util.concurrent.atomic.AtomicReference;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -32,26 +31,25 @@ import javax.ws.rs.core.MediaType;
 @Path("openapi/v1/slot/table")
 public class SlotGenericResource implements SlotTableRecorder {
 
-  private AtomicReference<SlotTable> slotTableRef = new AtomicReference<>(SlotTable.INIT);
+  private volatile SlotTable slotTableRef = SlotTable.INIT;
 
   @GET
   @Path("/content")
   @Produces(MediaType.APPLICATION_JSON)
   public GenericResponse<SlotTable> slotTable() {
-    SlotTable slotTable = slotTableRef.get();
-    return new GenericResponse<SlotTable>().fillSucceed(slotTable);
+    return new GenericResponse<SlotTable>().fillSucceed(slotTableRef);
   }
 
   @GET
   @Path("/epoch")
   @Produces(MediaType.APPLICATION_JSON)
   public GenericResponse<Long> epoch() {
-    Long epoch = slotTableRef.get().getEpoch();
+    long epoch = slotTableRef.getEpoch();
     return new GenericResponse<Long>().fillSucceed(epoch);
   }
 
   @Override
   public void record(SlotTable slotTable) {
-    this.slotTableRef.set(slotTable);
+    slotTableRef = slotTable;
   }
 }

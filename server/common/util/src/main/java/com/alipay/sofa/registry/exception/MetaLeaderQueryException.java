@@ -21,7 +21,7 @@ package com.alipay.sofa.registry.exception;
  * @version $Id: MetaLeaderQueryException.java, v 0.1 2021年03月22日 14:30 xiaojian.xj Exp $
  */
 public class MetaLeaderQueryException extends SofaRegistryRuntimeException {
-  public MetaLeaderQueryException(String message) {
-    super(message);
+  public MetaLeaderQueryException(String message, Throwable cause) {
+    super(message, cause);
   }
 }
