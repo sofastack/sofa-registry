@@ -16,45 +16,30 @@
  */
 package com.alipay.sofa.registry.server.shared.meta;
 
-import com.alipay.sofa.common.profile.StringUtil;
 import com.alipay.sofa.registry.common.model.GenericResponse;
-import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.elector.LeaderInfo;
 import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.BaseHeartBeatResponse;
 import com.alipay.sofa.registry.common.model.store.URL;
-import com.alipay.sofa.registry.exception.MetaLeaderQueryException;
 import com.alipay.sofa.registry.exception.SofaRegistryRuntimeException;
-import com.alipay.sofa.registry.lifecycle.Initializable;
-import com.alipay.sofa.registry.lifecycle.Startable;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.remoting.exchange.RequestException;
 import com.alipay.sofa.registry.remoting.exchange.message.Request;
 import com.alipay.sofa.registry.remoting.exchange.message.Response;
 import com.alipay.sofa.registry.remoting.jersey.JerseyClient;
-import com.alipay.sofa.registry.server.shared.comparator.ComparatorVisitor;
-import com.alipay.sofa.registry.server.shared.comparator.NodeComparator;
 import com.alipay.sofa.registry.server.shared.remoting.ClientSideExchanger;
 import com.alipay.sofa.registry.util.JsonUtils;
 import com.github.rholder.retry.Retryer;
 import com.github.rholder.retry.RetryerBuilder;
 import com.github.rholder.retry.StopStrategies;
 import com.github.rholder.retry.WaitStrategies;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Predicate;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Set;
+import java.util.Collections;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import org.apache.commons.lang.StringUtils;
@@ -64,36 +49,28 @@ import org.apache.commons.lang.StringUtils;
  *     <p>Mar 15, 2021
  */
 public abstract class AbstractMetaServerManager extends ClientSideExchanger
-    implements MetaServerManager, Initializable, Startable {
-
-  private static final long INIT_META_LEADER_EPOCH = -1L;
+    implements MetaServerManager {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(AbstractMetaServerManager.class);
 
   @Resource(name = "metaClientHandlers")
   private Collection<ChannelHandler> metaClientHandlers;
 
-  private final ReadWriteLock lock = new ReentrantReadWriteLock();
+  protected volatile LeaderInfo metaLeaderInfo;
 
-  protected volatile List<String> defaultMetaServers;
+  protected static final String META_LEADER_QUERY_URL = "http://%s:9615/meta/leader/query";
 
-  protected volatile String metaLeader;
+  static final String LEADER_KEY = "leader";
+  static final String EPOCH_KEY = "epoch";
 
-  protected volatile long metaLeaderEpoch = INIT_META_LEADER_EPOCH;
-
-  protected static final String metaLeaderQueryUrl = "http://%s:9615/meta/leader/query";
-
-  private static final String leaderKey = "leader";
-  private static final String epochKey = "epoch";
-
-  private final Retryer<Boolean> retryer =
-      RetryerBuilder.<Boolean>newBuilder()
+  private final Retryer<LeaderInfo> retryer =
+      RetryerBuilder.<LeaderInfo>newBuilder()
           .retryIfException()
           .retryIfResult(
-              new Predicate<Boolean>() {
+              new Predicate<LeaderInfo>() {
                 @Override
-                public boolean apply(Boolean input) {
-                  return !input;
+                public boolean apply(LeaderInfo input) {
+                  return input == null;
                 }
               })
           .withWaitStrategy(WaitStrategies.exponentialWait(1000, 5000, TimeUnit.MILLISECONDS))
@@ -105,100 +82,29 @@ public abstract class AbstractMetaServerManager extends ClientSideExchanger
   }
 
   @PostConstruct
-  public void postConstruct() {
-    initialize();
-    start();
-  }
-
-  @Override
-  public void initialize() {
-    defaultMetaServers = getConfiguredMetaIp();
-    // this.runtimeMetaServers = Lists.newArrayList(defaultMetaServers);
-  }
-
-  @Override
-  public void start() {
-    // this.serverIps = Sets.newHashSet(runtimeMetaServers);
-    connectServer();
-  }
-
-  @Override
-  public List<String> getDefaultMetaServerList() {
-    try {
-      lock.readLock().lock();
-      return Lists.newArrayList(defaultMetaServers);
-    } finally {
-      lock.readLock().unlock();
-    }
+  public void init() {
+    super.init();
+    resetLeaderFromRestServer();
   }
 
   @Override
   public String getMetaServerLeader() {
-
-    if (StringUtils.isEmpty(metaLeader) || metaLeaderEpoch == INIT_META_LEADER_EPOCH) {
-      LeaderInfo leaderInfo = resetLeaderFromRestServer();
-      if (leaderInfo == null || StringUtil.isEmpty(leaderInfo.getLeader())) {
-        throw new MetaLeaderQueryException("query meta leader fail.");
-      }
+    if (metaLeaderInfo == null) {
+      resetLeaderFromRestServer();
     }
-    return getLeader();
+    return metaLeaderInfo.getLeader();
   }
 
   @Override
   public void refresh(BaseHeartBeatResponse heartBeatResp) {
     String futureLeader = heartBeatResp.getMetaLeader();
     long futureEpoch = heartBeatResp.getMetaLeaderEpoch();
-
-    List<String> metaServers = new ArrayList<>();
-    metaServers.add(heartBeatResp.getMetaLeader());
-    doRefreshConnections(metaServers);
-
+    if (StringUtils.isBlank(futureLeader)) {
+      LOGGER.warn("heartbeat response not contains leader");
+      return;
+    }
     // set leader
-    setLeader(futureLeader, futureEpoch);
-  }
-
-  @VisibleForTesting
-  protected void doRefreshConnections(List<String> metaServers) {
-    Set<String> future = Sets.newHashSet(metaServers);
-    NodeComparator diff = new NodeComparator(this.serverIps, future);
-    diff.accept(
-        new ComparatorVisitor<String>() {
-          @Override
-          public void visitAdded(String added) {
-            try {
-              LOGGER.info("[visitAdded] connect new meta-server: {}", added);
-              URL url = new URL(added, getServerPort());
-              connect(url);
-            } catch (Throwable th) {
-              LOGGER.error("[visitAdded]", th);
-            }
-          }
-
-          @Override
-          public void visitModified(Tuple<String, String> modified) {
-            // do nothing
-          }
-
-          @Override
-          public void visitRemoved(String removed) {
-            try {
-              LOGGER.info("[visitRemoved] close meta-server connection: {}", removed);
-              boltExchange
-                  .getClient(serverType)
-                  .getChannel(new URL(removed, getServerPort()))
-                  .close();
-            } catch (Throwable th) {
-              LOGGER.error("[visitRemoved]", th);
-            }
-          }
-
-          @Override
-          public void visitRemaining(String remain) {
-            // do nothing
-          }
-        });
-
-    setServerIps(metaServers);
+    setLeader(new LeaderInfo(futureEpoch, futureLeader));
   }
 
   @Override
@@ -229,6 +135,7 @@ public abstract class AbstractMetaServerManager extends ClientSideExchanger
       return super.request(request);
     } catch (Throwable e) {
       // retry
+      resetLeaderFromRestServer();
       URL url = new URL(getMetaServerLeader(), getServerPort());
       LOGGER.warn(
           "[request] MetaNode Exchanger request send error!It will be retry once!Request url:{}",
@@ -242,102 +149,80 @@ public abstract class AbstractMetaServerManager extends ClientSideExchanger
     return metaClientHandlers;
   }
 
-  protected void setLeader(String leader, long epoch) {
-    try {
-      lock.writeLock().lock();
-      if (StringUtils.isNotEmpty(leader) && epoch >= metaLeaderEpoch) {
-        metaLeader = leader;
-        metaLeaderEpoch = epoch;
+  private boolean setLeader(LeaderInfo leader) {
+    synchronized (this) {
+      if (metaLeaderInfo == null || metaLeaderInfo.getEpoch() < leader.getEpoch()) {
+        this.metaLeaderInfo = leader;
+        // do not need to refresh the connect, the daemon connector will to this
+        // TODO now not close the conn which is not leader, the num of conn is small
+        this.setServerIps(Collections.singleton(leader.getLeader()));
+        return true;
       }
-    } finally {
-      lock.writeLock().unlock();
+      return false;
     }
-  }
-
-  private String getLeader() {
-
-    try {
-      lock.readLock().lock();
-      return metaLeader;
-    } finally {
-      lock.readLock().unlock();
-    }
-  }
-
-  private List<String> getConfiguredMetaIp() {
-    Set<String> set = Sets.newHashSet();
-    Collection<String> metaDomains = getConfiguredMetaServerDomains();
-    metaDomains.forEach(
-        domain -> {
-          String ip = NetUtil.getIPAddressFromDomain(domain);
-          if (ip == null) {
-            throw new SofaRegistryRuntimeException(
-                "Node config convert domain {" + domain + "} error!");
-          }
-          set.add(ip);
-        });
-    return Lists.newArrayList(set);
   }
 
   @Override
   public LeaderInfo resetLeaderFromRestServer() {
-    LeaderInfo leaderInfo = new LeaderInfo();
-
+    LeaderInfo leaderInfo = null;
+    Collection<String> metaDomains = getConfiguredMetaServerDomains();
     try {
-      retryer.call(
-          () -> {
-            Collection<String> metaDomains = getConfiguredMetaServerDomains();
-            for (String metaDomain : metaDomains) {
-
-              String url = String.format(metaLeaderQueryUrl, metaDomain);
-              javax.ws.rs.core.Response resp =
-                  JerseyClient.getInstance().getClient().target(url).request().buildGet().invoke();
-
-              if (resp.getStatus() != javax.ws.rs.core.Response.Status.OK.getStatusCode()) {
-                if (LOGGER.isInfoEnabled()) {
-                  LOGGER.info(
-                      "[resetLeaderFromRestServer] query from url: {}, resp status: {}",
-                      url,
-                      resp.getStatus());
-                }
-                continue;
-              }
-              GenericResponse genericResponse = new GenericResponse<>();
-              genericResponse = resp.readEntity(genericResponse.getClass());
-
-              if (!genericResponse.isSuccess() || genericResponse.getData() == null) {
-                if (LOGGER.isInfoEnabled()) {
-                  LOGGER.info(
-                      "[resetLeaderFromRestServer] query from url: {}, resp: {}",
-                      url,
-                      JsonUtils.writeValueAsString(genericResponse));
-                }
-                continue;
-              }
-              LinkedHashMap data = (LinkedHashMap) genericResponse.getData();
-              Long epoch = (Long) data.get(epochKey);
-              String leader = (String) data.get(leaderKey);
-              leaderInfo.setEpoch(epoch);
-              leaderInfo.setLeader(leader);
-              if (LOGGER.isInfoEnabled()) {
-                LOGGER.info(
-                    "[resetLeaderFromRestServer] query from url: {}, meta leader:{}",
-                    url,
-                    leaderInfo);
-              }
-              return StringUtil.isNotEmpty(leader);
-            }
-            return false;
-          });
-    } catch (Exception e) {
-      LOGGER.error("query meta leader error.");
+      leaderInfo =
+          retryer.call(() -> queryLeaderInfo(metaDomains, JerseyClient.getInstance().getClient()));
+    } catch (Throwable e) {
+      throw new SofaRegistryRuntimeException("query meta leader error", e);
     }
 
+    if (leaderInfo == null) {
+      throw new SofaRegistryRuntimeException("could not find leader from " + metaDomains);
+    }
     // connect to meta leader
     connect(new URL(leaderInfo.getLeader(), getServerPort()));
-    setLeader(leaderInfo.getLeader(), leaderInfo.getEpoch());
-    return leaderInfo;
+    setLeader(leaderInfo);
+    return this.metaLeaderInfo;
   }
 
   protected abstract Collection<String> getConfiguredMetaServerDomains();
+
+  static LeaderInfo queryLeaderInfo(
+      Collection<String> metaDomains, javax.ws.rs.client.Client client) {
+    for (String metaDomain : metaDomains) {
+      String url = String.format(META_LEADER_QUERY_URL, metaDomain);
+      try {
+        javax.ws.rs.core.Response resp = client.target(url).request().buildGet().invoke();
+        if (resp.getStatus() != javax.ws.rs.core.Response.Status.OK.getStatusCode()) {
+          LOGGER.error(
+              "[resetLeaderFromRestServer] failed to query from url: {}, resp status: {}",
+              url,
+              resp.getStatus());
+          continue;
+        }
+        GenericResponse genericResponse = new GenericResponse<>();
+        genericResponse = resp.readEntity(genericResponse.getClass());
+
+        if (!genericResponse.isSuccess() || genericResponse.getData() == null) {
+          LOGGER.error(
+              "[resetLeaderFromRestServer] failed to query from url: {}, resp: {}",
+              url,
+              JsonUtils.writeValueAsString(genericResponse));
+          continue;
+        }
+        Map data = (Map) genericResponse.getData();
+        Long epoch = (Long) data.get(EPOCH_KEY);
+        String leader = (String) data.get(LEADER_KEY);
+        if (StringUtils.isBlank(leader)) {
+          continue;
+        }
+        LeaderInfo query = new LeaderInfo(epoch, leader);
+        if (LOGGER.isInfoEnabled()) {
+          LOGGER.info("[resetLeaderFromRestServer] query from url: {}, meta leader:{}", url, query);
+        }
+        return query;
+      } catch (Throwable e) {
+        LOGGER.error("[resetLeaderFromRestServer] failed to query from url: {}", url, e);
+        continue;
+      }
+    }
+    return null;
+  }
 }

@@ -22,14 +22,23 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class DataMetaServerManagerTest {
-  @Test
-  public void test() {
-    DataMetaServerManager dataMetaServerManager = new DataMetaServerManager();
-    DataServerConfig cfg = TestBaseUtils.newDataConfig("testDc");
-    dataMetaServerManager.setDataServerConfig(cfg);
+  private DataMetaServerManager dataMetaServerManager;
+  private DataServerConfig cfg;
 
+  private void init() {
+    dataMetaServerManager = new DataMetaServerManager();
+    cfg = TestBaseUtils.newDataConfig("testDc");
+    dataMetaServerManager.setDataServerConfig(cfg);
+  }
+
+  @Test
+  public void testConfig() {
+    init();
     Assert.assertEquals(1, dataMetaServerManager.getConnNum());
     Assert.assertEquals(cfg.getMetaServerPort(), dataMetaServerManager.getServerPort());
     Assert.assertEquals(cfg.getRpcTimeoutMillis(), dataMetaServerManager.getRpcTimeoutMillis());
   }
+
+  @Test
+  public void test() {}
 }
