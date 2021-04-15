@@ -14,33 +14,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.metadata;
+package com.alipay.sofa.registry.server.meta.revision;
 
-import com.alipay.sofa.registry.common.model.store.AppRevision;
+import com.alipay.sofa.registry.server.meta.MetaLeaderService;
+import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.store.api.repository.AppRevisionHeartbeatRepository;
-import com.alipay.sofa.registry.store.api.repository.AppRevisionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 
 /**
  * @author xiaojian.xj
- * @version $Id: AppRevisionHeartbeatRegistry.java, v 0.1 2021年02月09日 15:47 xiaojian.xj Exp $
+ * @version $Id: AppRevisionHeartbeatService.java, v 0.1 2021年04月15日 17:52 xiaojian.xj Exp $
  */
-public class AppRevisionHeartbeatRegistry {
-
-  @Autowired private AppRevisionRepository appRevisionRepository;
+public class AppRevisionHeartbeatService {
 
   @Autowired private AppRevisionHeartbeatRepository appRevisionHeartbeatRepository;
 
-  public AppRevision heartbeat(String revision) {
-    return appRevisionRepository.heartbeat(revision);
-  }
+  @Autowired private MetaServerConfig metaServerConfig;
 
-  public void doRevisionHeartbeat() {
-    appRevisionHeartbeatRepository.doAppRevisionHeartbeat();
-  }
+  @Autowired private MetaLeaderService metaLeaderService;
 
-  public void doHeartbeatCacheChecker() {
-    appRevisionHeartbeatRepository.doHeartbeatCacheChecker();
+  @Scheduled(
+      initialDelayString = "${meta.server.revisionGcInitialDelayMillis}",
+      fixedDelayString = "${meta.server.revisionGcMillis}")
+  public void doRevisionGc() {
+    if (metaLeaderService.amIStableAsLeader()) {
+      appRevisionHeartbeatRepository.doAppRevisionGc(metaServerConfig.getRevisionGcSilenceHour());
+    }
   }
-
 }

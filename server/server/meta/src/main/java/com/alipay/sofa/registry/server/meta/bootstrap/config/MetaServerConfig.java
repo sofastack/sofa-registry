@@ -50,4 +50,10 @@ public interface MetaServerConfig {
   int getSchedulerHeartbeatIntervalSecs();
 
   long getDataReplicateMaxGapMillis();
+
+  int getRevisionGcSilenceHour();
+
+  int getRevisionGcInitialDelayMillis();
+
+  int getRevisionGcMillis();
 }
