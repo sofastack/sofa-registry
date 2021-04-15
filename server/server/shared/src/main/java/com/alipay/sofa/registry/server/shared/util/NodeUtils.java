@@ -26,7 +26,7 @@ import java.util.List;
  *     <p>Jan 12, 2021
  */
 public final class NodeUtils {
-  private NodeUtils(){ }
+  private NodeUtils() {}
 
   public static <T extends Node> List<String> transferNodeToIpList(Collection<T> nodes) {
     List<String> result = new ArrayList<>(nodes.size());
