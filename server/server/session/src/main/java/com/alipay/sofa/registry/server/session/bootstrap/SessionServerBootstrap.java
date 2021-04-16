@@ -300,7 +300,7 @@ public class SessionServerBootstrap {
 
   private void fetchStopPushSwitch() {
     ProvideData data = metaNodeService.fetchData(ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID);
-    if (data != null) {
+    if (data != null && data.getProvideData() != null) {
       provideDataProcessorManager.fetchDataProcess(data);
     } else {
       LOGGER.info("Fetch session stop push switch data null,config not change!");

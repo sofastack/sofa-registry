@@ -72,9 +72,9 @@ public class MetaDigestResourceTest {
 
   @Test
   public void testGetPushSwitch() {
-    String key = "pushSwitch";
+    String key = "stopPush";
     String val = metaDigestResource.getPushSwitch().get(key);
-    Assert.assertEquals("open", val);
+    Assert.assertNull(val);
 
     DataInfo dataInfo = DataInfo.valueOf(ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID);
     PersistenceData persistenceData = new PersistenceData();
@@ -84,14 +84,14 @@ public class MetaDigestResourceTest {
     persistenceData.setVersion(System.currentTimeMillis());
     provideDataService.saveProvideData(persistenceData);
     val = metaDigestResource.getPushSwitch().get(key);
-    Assert.assertEquals("open", val);
+    Assert.assertNull(val);
 
     stopPushDataResource.closePush();
     val = metaDigestResource.getPushSwitch().get(key);
-    Assert.assertEquals("closed", val);
+    Assert.assertEquals("true", val);
 
     stopPushDataResource.openPush();
     val = metaDigestResource.getPushSwitch().get(key);
-    Assert.assertEquals("open", val);
+    Assert.assertEquals("false", val);
   }
 }

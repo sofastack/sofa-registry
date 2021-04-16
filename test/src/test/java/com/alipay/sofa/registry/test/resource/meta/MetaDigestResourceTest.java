@@ -21,6 +21,8 @@ import static org.junit.Assert.assertTrue;
 
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
 import java.util.Map;
+
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -69,6 +71,7 @@ public class MetaDigestResourceTest extends BaseIntegrationTest {
             .path("digest/pushSwitch")
             .request(APPLICATION_JSON)
             .get(Map.class);
-    assertTrue("open".equals(map.get("pushSwitch")));
+
+    Assert.assertNull(map.get("stopPush"));
   }
 }
