@@ -56,7 +56,7 @@ public class ProvideDataJdbcRepositoryTest extends AbstractH2DbTestBase {
     Assert.assertEquals("val", provideDataJdbcRepository.get(dataInfoId).getData());
     Assert.assertEquals(
         persistenceData.getVersion(), provideDataJdbcRepository.get(dataInfoId).getVersion());
-    boolean remove = provideDataJdbcRepository.remove(dataInfoId, version);
+    boolean remove = provideDataJdbcRepository.remove(dataInfoId, persistenceData.getVersion());
 
     Assert.assertTrue(remove);
     Assert.assertTrue(provideDataJdbcRepository.get(dataInfoId) == null);
