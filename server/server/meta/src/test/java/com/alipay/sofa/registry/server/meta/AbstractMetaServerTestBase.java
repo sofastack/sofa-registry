@@ -631,8 +631,8 @@ public class AbstractMetaServerTestBase extends AbstractTestBase {
 
     @Override
     public boolean saveProvideData(PersistenceData data) {
-      PersistenceData put = localRepo.put(PersistenceDataBuilder.getDataInfoId(data), data);
-      return put != null;
+      localRepo.put(PersistenceDataBuilder.getDataInfoId(data), data);
+      return true;
     }
 
     @Override

@@ -62,18 +62,21 @@ public class ProvideDataResource {
     String dataInfoId =
         DataInfo.toDataInfoId(data.getDataId(), data.getInstanceId(), data.getGroup());
 
+    boolean ret;
     try {
-      boolean ret = provideDataService.saveProvideData(data);
+      ret = provideDataService.saveProvideData(data);
       DB_LOGGER.info("put Persistence Data {} to DB result {}!", data, ret);
     } catch (Throwable e) {
       DB_LOGGER.error("error put Persistence Data {} to DB!", data, e);
       throw new RuntimeException("Put Persistence Data " + data + " to DB error!", e);
     }
 
-    fireDataChangeNotify(data.getVersion(), dataInfoId);
+    if (ret) {
+      fireDataChangeNotify(data.getVersion(), dataInfoId);
+    }
 
     Result result = new Result();
-    result.setSuccess(true);
+    result.setSuccess(ret);
     return result;
   }
 
@@ -88,18 +91,21 @@ public class ProvideDataResource {
     String dataInfoId =
         DataInfo.toDataInfoId(data.getDataId(), data.getInstanceId(), data.getGroup());
 
+    boolean ret;
     try {
-      boolean ret = provideDataService.removeProvideData(dataInfoId);
+      ret = provideDataService.removeProvideData(dataInfoId);
       DB_LOGGER.info("remove Persistence Data {} from DB result {}!", data, ret);
     } catch (Exception e) {
       DB_LOGGER.error("error remove Persistence Data {} from DB!", data);
       throw new RuntimeException("Remove Persistence Data " + data + " from DB error!");
     }
 
-    fireDataChangeNotify(data.getVersion(), dataInfoId);
+    if (ret) {
+      fireDataChangeNotify(data.getVersion(), dataInfoId);
+    }
 
     Result result = new Result();
-    result.setSuccess(true);
+    result.setSuccess(ret);
     return result;
   }
 

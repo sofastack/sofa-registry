@@ -91,19 +91,23 @@ public class StopPushDataResource {
         PersistenceDataBuilder.createPersistenceData(
             ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID, "false");
     persistenceData.setData("false");
+
+    boolean ret;
     try {
-      boolean ret = provideDataService.saveProvideData(persistenceData);
+      ret = provideDataService.saveProvideData(persistenceData);
       DB_LOGGER.info("close stop push data switch to DB result {}!", ret);
     } catch (Exception e) {
       DB_LOGGER.error("error close stop push data switch from DB!");
       throw new RuntimeException("Close stop push data switch from DB error!");
     }
 
-    fireDataChangeNotify(
-        persistenceData.getVersion(), ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID);
+    if (ret) {
+      fireDataChangeNotify(
+          persistenceData.getVersion(), ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID);
+    }
 
     Result result = new Result();
-    result.setSuccess(true);
+    result.setSuccess(ret);
     return result;
   }
 
