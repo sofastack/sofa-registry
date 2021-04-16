@@ -17,6 +17,9 @@
 package com.alipay.sofa.registry.common.model.metaserver;
 
 import com.alipay.sofa.registry.common.model.ServerDataBox;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.util.Assert;
+
 import java.io.Serializable;
 
 /**
@@ -80,6 +83,8 @@ public class ProvideData implements Serializable {
 
   public static Boolean toBool(ProvideData provideData) {
     String obj = ProvideData.toString(provideData);
+    Assert.isTrue(StringUtils.equals("true", obj) || StringUtils.equals("false", obj),
+            String.format("provideDataKey: %s, value: %s toBool error.", provideData.dataInfoId, obj));
     return obj != null ? Boolean.parseBoolean(obj) : null;
   }
 

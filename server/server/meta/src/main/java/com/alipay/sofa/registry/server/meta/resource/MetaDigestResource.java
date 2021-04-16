@@ -96,13 +96,12 @@ public class MetaDigestResource {
       if (ret.getOperationStatus() == OperationStatus.SUCCESS) {
         String result = getEntityData(ret);
         if (result != null && !result.isEmpty()) {
-          resultMap.put("pushSwitch", "false".equalsIgnoreCase(result) ? "open" : "closed");
+          resultMap.put("stopPush", result);
         } else {
-          resultMap.put("pushSwitch", "open");
+          resultMap.put("stopPush", result);
           resultMap.put("msg", "data is empty");
         }
       } else if (ret.getOperationStatus() == OperationStatus.NOTFOUND) {
-        resultMap.put("pushSwitch", "open");
         resultMap.put("msg", "OperationStatus is NOTFOUND");
       }
       DB_LOGGER.info("[getPushSwitch] {}", resultMap);
