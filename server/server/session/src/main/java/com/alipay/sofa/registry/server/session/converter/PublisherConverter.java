@@ -62,7 +62,7 @@ public class PublisherConverter {
 
     publisher.setClientRegisterTimestamp(source.getTimestamp());
     publisher.setSourceAddress(new URL(source.getIp(), source.getPort()));
-
+    publisher.setAttributes(source.getAttributes());
     publisher.setClientVersion(ClientVersion.StoreData);
 
     DataInfo dataInfo = new DataInfo(source.getInstanceId(), source.getDataId(), source.getGroup());
