@@ -58,7 +58,7 @@ public class SubscriberConverter {
           subscriber.setClientRegisterTimestamp(source.getTimestamp());
           subscriber.setScope(ScopeEnumConverter.convertToScope(source.getScope()));
           subscriber.setSourceAddress(new URL(source.getIp(), source.getPort()));
-
+          subscriber.setAttributes(source.getAttributes());
           subscriber.setClientVersion(ClientVersion.StoreData);
 
           DataInfo dataInfo =
@@ -90,6 +90,7 @@ public class SubscriberConverter {
           watcher.setRegisterId(source.getRegistId());
           watcher.setProcessId(source.getProcessId());
           watcher.setVersion(source.getVersion());
+          watcher.setAttributes(source.getAttributes());
           watcher.setRegisterTimestamp(source.getTimestamp());
           watcher.setSourceAddress(new URL(source.getIp(), source.getPort()));
 
