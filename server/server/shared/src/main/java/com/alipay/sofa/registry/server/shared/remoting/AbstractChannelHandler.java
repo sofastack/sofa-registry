@@ -96,7 +96,7 @@ public abstract class AbstractChannelHandler<T> implements ChannelHandler<T> {
    * @return
    */
   public Object buildFailedResponse(String msg) {
-    throw new RuntimeException(msg);
+    throw new UnsupportedOperationException(msg);
   }
 
   /**

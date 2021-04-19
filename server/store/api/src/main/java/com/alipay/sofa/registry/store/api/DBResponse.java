@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.store.api;
 
+import com.alipay.sofa.registry.util.ParaCheckUtil;
 import java.io.Serializable;
 
 /**
@@ -101,8 +102,6 @@ public class DBResponse<T> implements Serializable {
 
   /** DBResponseBuilder */
   public static class DBResponseBuilder<T> {
-    private static final DBResponseBuilder instance = new DBResponseBuilder();
-
     private DBResponseBuilder() {}
 
     /**
@@ -111,7 +110,7 @@ public class DBResponse<T> implements Serializable {
      * @return
      */
     public static DBResponseBuilder getInstance() {
-      return instance;
+      return new DBResponseBuilder();
     }
 
     private T entity;
@@ -124,16 +123,8 @@ public class DBResponse<T> implements Serializable {
      * @return
      */
     public DBResponse build() {
-      final DBResponse r = new DBResponse(entity, operationStatus);
-      reset();
-      return r;
+      return new DBResponse(entity, operationStatus);
     }
-
-    private void reset() {
-      operationStatus = null;
-      entity = null;
-    }
-
     /**
      * set operationStatus status
      *
@@ -141,9 +132,7 @@ public class DBResponse<T> implements Serializable {
      * @return
      */
     public DBResponseBuilder status(OperationStatus status) {
-      if (status == null) {
-        throw new IllegalArgumentException();
-      }
+      ParaCheckUtil.checkNotNull(status, "OperationStatus");
       this.operationStatus = status;
       return this;
     }

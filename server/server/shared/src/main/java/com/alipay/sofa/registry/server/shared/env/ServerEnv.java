@@ -18,12 +18,11 @@ package com.alipay.sofa.registry.server.shared.env;
 
 import com.alipay.sofa.registry.common.model.ProcessId;
 import com.alipay.sofa.registry.net.NetUtil;
+import com.alipay.sofa.registry.util.ParaCheckUtil;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Random;
-import java.util.Set;
 import org.apache.commons.lang.StringUtils;
-import org.glassfish.jersey.internal.guava.Sets;
 
 /**
  * @author yuzhi.lyz
@@ -61,38 +60,14 @@ public final class ServerEnv {
 
   public static Collection<String> getMetaAddresses(
       Map<String, Collection<String>> metaMap, String localDataCenter) {
-    if (metaMap == null) {
-      throw new RuntimeException("metaNodes is null");
-    }
-    if (localDataCenter == null) {
-      throw new RuntimeException("local datacenter is null");
-    }
+    ParaCheckUtil.checkNotNull(metaMap, "metaNodes");
+    ParaCheckUtil.checkNotNull(localDataCenter, "localDataCenter");
+
     Collection<String> addresses = metaMap.get(localDataCenter);
     if (addresses == null || addresses.isEmpty()) {
       throw new RuntimeException(
           String.format("LocalDataCenter(%s) is not in metaNode", localDataCenter));
     }
     return addresses;
-  }
-
-  public static Set<String> transferMetaIps(
-      Map<String, Collection<String>> metaMap, String localDataCenter) {
-    Set<String> metaIps = Sets.newHashSet();
-    if (metaMap != null && !metaMap.isEmpty()) {
-      if (localDataCenter != null && !localDataCenter.isEmpty()) {
-        Collection<String> metas = metaMap.get(localDataCenter);
-        if (metas != null && !metas.isEmpty()) {
-          metas.forEach(
-              domain -> {
-                String ip = NetUtil.getIPAddressFromDomain(domain);
-                if (ip == null) {
-                  throw new RuntimeException("Meta convert domain {" + domain + "} error!");
-                }
-                metaIps.add(ip);
-              });
-        }
-      }
-    }
-    return metaIps;
   }
 }

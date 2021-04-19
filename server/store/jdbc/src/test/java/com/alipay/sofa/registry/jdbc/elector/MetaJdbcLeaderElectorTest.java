@@ -21,10 +21,12 @@ import com.alipay.sofa.registry.jdbc.config.DefaultCommonConfig;
 import com.alipay.sofa.registry.jdbc.domain.DistributeLockDomain;
 import com.alipay.sofa.registry.jdbc.mapper.DistributeLockMapper;
 import com.alipay.sofa.registry.store.api.elector.AbstractLeaderElector;
-import java.util.concurrent.TimeoutException;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.Date;
+import java.util.concurrent.TimeoutException;
 
 /**
  * @author zhuchen
@@ -40,7 +42,6 @@ public class MetaJdbcLeaderElectorTest extends AbstractH2DbTestBase {
 
   @Before
   public void beforeMetaJdbcLeaderElectorTest() {
-
     leaderElector = applicationContext.getBean(MetaJdbcLeaderElector.class);
     distributeLockMapper = applicationContext.getBean(DistributeLockMapper.class);
     defaultCommonConfig = applicationContext.getBean(DefaultCommonConfig.class);
@@ -71,5 +72,19 @@ public class MetaJdbcLeaderElectorTest extends AbstractH2DbTestBase {
         distributeLockMapper.queryDistLock(defaultCommonConfig.getClusterId(), "META-MASTER");
     domain.setDuration(0L);
     leaderElector.onFollowWorking(domain, leaderElector.myself());
+  }
+
+  @Test
+  public void testLeaderInfo() {
+    DistributeLockDomain lock = new DistributeLockDomain();
+    lock.setOwner("testOwner");
+    lock.setGmtModified(new Date());
+    lock.setDuration(1000);
+
+    AbstractLeaderElector.LeaderInfo leaderInfo = MetaJdbcLeaderElector.leaderFrom(lock);
+    Assert.assertEquals(leaderInfo.getLeader(), lock.getOwner());
+    Assert.assertEquals(leaderInfo.getEpoch(), lock.getGmtModified().getTime());
+    Assert.assertEquals(
+        leaderInfo.getExpireTimestamp(), lock.getGmtModified().getTime() + 1000 / 2);
   }
 }

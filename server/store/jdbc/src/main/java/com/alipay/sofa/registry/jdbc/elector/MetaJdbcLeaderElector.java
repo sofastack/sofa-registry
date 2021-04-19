@@ -64,13 +64,7 @@ public class MetaJdbcLeaderElector extends AbstractLeaderElector {
     } else {
       lock = onFollowWorking(lock, myself());
     }
-
-    LeaderInfo result =
-        new LeaderInfo(
-            lock.getGmtModified().getTime(),
-            lock.getOwner(),
-            lock.getGmtModified(),
-            lock.getDuration());
+    LeaderInfo result = leaderFrom(lock);
     if (LOG.isInfoEnabled()) {
       LOG.info("meta role : {}, leaderInfo: {}", role, result);
     }
@@ -103,13 +97,16 @@ public class MetaJdbcLeaderElector extends AbstractLeaderElector {
         LOG.info("meta: {} compete error, leader is: {}.", myself(), lock.getOwner());
       }
     }
-    return new LeaderInfo(
-        lock.getGmtModified().getTime(),
+    return leaderFrom(lock);
+  }
+
+  static LeaderInfo leaderFrom(DistributeLockDomain lock) {
+    return calcLeaderInfo(
         lock.getOwner(),
+        lock.getGmtModified().getTime(),
         lock.getGmtModified(),
         lock.getDuration());
   }
-
   /**
    * query current leader
    *
@@ -120,14 +117,10 @@ public class MetaJdbcLeaderElector extends AbstractLeaderElector {
     DistributeLockDomain lock =
         distributeLockMapper.queryDistLock(defaultCommonConfig.getClusterId(), lockName);
     if (lock == null) {
-      return LeaderInfo.hasNoLeader;
+      return LeaderInfo.HAS_NO_LEADER;
     }
 
-    return new LeaderInfo(
-        lock.getGmtModified().getTime(),
-        lock.getOwner(),
-        lock.getGmtModified(),
-        lock.getDuration());
+    return leaderFrom(lock);
   }
 
   private DistributeLockDomain onLeaderWorking(DistributeLockDomain lock, String myself) {
@@ -166,31 +159,5 @@ public class MetaJdbcLeaderElector extends AbstractLeaderElector {
       return newLock;
     }
     return lock;
-  }
-  /**
-   * Setter method for property <tt>distributeLockMapper</tt>.
-   *
-   * @param distributeLockMapper value to be assigned to property distributeLockMapper
-   */
-  public void setDistributeLockMapper(DistributeLockMapper distributeLockMapper) {
-    this.distributeLockMapper = distributeLockMapper;
-  }
-
-  /**
-   * Setter method for property <tt>metaElectorConfig</tt>.
-   *
-   * @param metaElectorConfig value to be assigned to property metaElectorConfig
-   */
-  public void setMetaElectorConfig(MetaElectorConfig metaElectorConfig) {
-    this.metaElectorConfig = metaElectorConfig;
-  }
-
-  /**
-   * Setter method for property <tt>defaultCommonConfig</tt>.
-   *
-   * @param defaultCommonConfig value to be assigned to property defaultCommonConfig
-   */
-  public void setDefaultCommonConfig(DefaultCommonConfig defaultCommonConfig) {
-    this.defaultCommonConfig = defaultCommonConfig;
   }
 }

@@ -14,56 +14,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.store.api.elector;
+package com.alipay.sofa.registry.server.shared.env;
 
-/**
- * @author chen.zhu
- *     <p>Mar 09, 2021
- */
-public interface LeaderElector {
+import com.alipay.sofa.registry.server.shared.TestUtils;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Set;
+import org.junit.Assert;
+import org.junit.Test;
 
-  void registerLeaderAware(LeaderAware leaderAware);
-
-  String myself();
-
-  /**
-   * start compete leader
-   *
-   * @return
-   */
-  void change2Follow();
-
-  /**
-   * stop compete leader
-   *
-   * @return
-   */
-  void change2Observer();
-
-  /**
-   * Am i elector boolean.
-   *
-   * @return the boolean
-   */
-  boolean amILeader();
-
-  /**
-   * Gets get elector.
-   *
-   * @return the get elector
-   */
-  String getLeader();
-
-  /**
-   * Gets get elector epoch.
-   *
-   * @return the get elector epoch
-   */
-  long getLeaderEpoch();
-
-  enum ElectorRole {
-    LEADER,
-    FOLLOWER,
-    ;
+public class ServerEnvTest {
+  @Test
+  public void testMetas() {
+    Map<String, Collection<String>> m = Maps.newHashMap();
+    m.put("localDc", Collections.EMPTY_LIST);
+    TestUtils.assertRunException(
+        RuntimeException.class, () -> ServerEnv.getMetaAddresses(m, "localDc"));
+    Set<String> meta = Sets.newHashSet("test");
+    m.put("localDc", meta);
+    Collection<String> ret = ServerEnv.getMetaAddresses(m, "localDc");
+    Assert.assertEquals(ret, meta);
   }
 }
