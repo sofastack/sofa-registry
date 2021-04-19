@@ -32,8 +32,9 @@ public class CancelAddressRequest implements Serializable {
 
   private List<ConnectId> connectIds;
 
-  public CancelAddressRequest() {}
-
+  // the bean used in http facade, need no-arg construct
+  public CancelAddressRequest(){
+  }
   /**
    * Constructor.
    *

@@ -19,6 +19,7 @@ package com.alipay.sofa.registry.test.resource.meta;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.junit.Assert.assertTrue;
 
+import com.alipay.sofa.registry.core.model.Result;
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
 import java.util.Map;
 import org.junit.Assert;
@@ -64,6 +65,13 @@ public class MetaDigestResourceTest extends BaseIntegrationTest {
 
   @Test
   public void testGetPushSwitch() {
+    Result result =
+        metaChannel
+            .getWebTarget()
+            .path("stopPushDataSwitch/close")
+            .request(APPLICATION_JSON)
+            .get(Result.class);
+    Assert.assertTrue(result.isSuccess());
     Map map =
         metaChannel
             .getWebTarget()
@@ -71,6 +79,6 @@ public class MetaDigestResourceTest extends BaseIntegrationTest {
             .request(APPLICATION_JSON)
             .get(Map.class);
 
-    Assert.assertNull(map.get("stopPush"));
+    Assert.assertEquals(map.get("stopPush"), "false");
   }
 }

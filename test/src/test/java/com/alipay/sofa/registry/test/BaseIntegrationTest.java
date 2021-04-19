@@ -69,9 +69,9 @@ public class BaseIntegrationTest extends AbstractTest {
   public static final String LOCAL_DATACENTER = "DefaultDataCenter";
   public static final String LOCAL_REGION = "DEFAULT_ZONE";
   private static final int CLIENT_OFF_MAX_WAIT_TIME = 30;
-  protected static ConfigurableApplicationContext metaApplicationContext;
-  protected static ConfigurableApplicationContext sessionApplicationContext;
-  protected static ConfigurableApplicationContext dataApplicationContext;
+  protected static volatile ConfigurableApplicationContext metaApplicationContext;
+  protected static volatile ConfigurableApplicationContext sessionApplicationContext;
+  protected static volatile ConfigurableApplicationContext dataApplicationContext;
 
   protected static volatile DefaultRegistryClient registryClient1;
 
@@ -96,17 +96,20 @@ public class BaseIntegrationTest extends AbstractTest {
   protected Server h2Server = new Server();
 
   @BeforeClass
-  public static void beforeClass() throws Exception {
+  public static void beforeBaseIntegrationClass() throws Exception {
     System.setProperty(
         LoggingSystem.SYSTEM_PROPERTY,
         "org.springframework.boot.logging.log4j2.Log4J2LoggingSystem");
     System.setProperty("spring.profiles.active", "integrate");
     System.setProperty(Lease.LEASE_DURATION, "2");
     System.setProperty(SlotConfig.KEY_DATA_SLOT_NUM, "16");
+
+    startServerIfNecessary();
+    initRegistryClientAndChannel();
   }
 
   @Before
-  public void before() throws Exception {
+  public void beforeBaseIntegration() throws Exception {
     //        h2Server.start();
     //        Class.forName("org.h2.driver");
     startServerIfNecessary();
@@ -130,7 +133,7 @@ public class BaseIntegrationTest extends AbstractTest {
     }
   }
 
-  private static void initRegistryClientAndChannel() {
+  private static void initRegistryClientAndChannel() throws Exception {
     if (registryClient1 == null) {
       RegistryClientConfig config =
           DefaultRegistryClientConfigBuilder.start()

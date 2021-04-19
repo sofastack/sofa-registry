@@ -255,7 +255,7 @@ public final class TestBaseUtils {
   public static void assertException(Class<? extends Throwable> eclazz, Runnable runnable) {
     try {
       runnable.run();
-      Assert.assertTrue(false);
+      Assert.fail("except exception");
     } catch (Throwable exception) {
       Assert.assertEquals(exception.getClass(), eclazz);
     }
