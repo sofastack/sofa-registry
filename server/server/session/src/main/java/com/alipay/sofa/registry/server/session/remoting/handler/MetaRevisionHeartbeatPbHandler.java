@@ -16,39 +16,28 @@
  */
 package com.alipay.sofa.registry.server.session.remoting.handler;
 
-import com.alipay.sofa.registry.common.model.Node;
-import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.client.pb.MetaHeartbeatRequest;
 import com.alipay.sofa.registry.common.model.client.pb.MetaHeartbeatResponse;
 import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.server.session.strategy.AppRevisionHandlerStrategy;
-import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import java.util.List;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author xiaojian.xj
  * @version $Id: MetaRevisionHeartbeatPbHandler.java, v 0.1 2021年02月04日 22:49 xiaojian.xj Exp $
  */
-public class MetaRevisionHeartbeatPbHandler extends AbstractServerHandler<MetaHeartbeatRequest> {
-
-  @Autowired private AppRevisionHandlerStrategy appRevisionHandlerStrategy;
-
-  @Override
-  protected NodeType getConnectNodeType() {
-    return Node.NodeType.CLIENT;
-  }
+public class MetaRevisionHeartbeatPbHandler
+    extends AbstractClientMetadataRequestHandler<MetaHeartbeatRequest> {
 
   @Override
   public void checkParam(MetaHeartbeatRequest request) {
-    ParaCheckUtil.checkNotNull(request, "metaHeartbeatRequest");
-    ParaCheckUtil.checkNotEmpty(request.getRevisionsList(), "metaHeartbeatRequest revisions");
+    ParaCheckUtil.checkNotNull(request, "request");
+    ParaCheckUtil.checkNotEmpty(request.getRevisionsList(), "request.revisions");
   }
 
   @Override
   public Object doHandle(Channel channel, MetaHeartbeatRequest request) {
-    List<String> revisions = request.getRevisionsList().subList(0, request.getRevisionsCount());
+    List<String> revisions = request.getRevisionsList();
     MetaHeartbeatResponse response = appRevisionHandlerStrategy.heartbeat(revisions);
     return response;
   }

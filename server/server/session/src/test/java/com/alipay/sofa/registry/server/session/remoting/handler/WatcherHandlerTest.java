@@ -16,38 +16,46 @@
  */
 package com.alipay.sofa.registry.server.session.remoting.handler;
 
-import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyObject;
 import static org.mockito.Mockito.*;
 
 import com.alipay.sofa.registry.common.model.Node;
-import com.alipay.sofa.registry.remoting.Channel;
+import com.alipay.sofa.registry.core.model.ConfiguratorRegister;
+import com.alipay.sofa.registry.core.model.RegisterResponse;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.server.session.TestUtils;
 import com.alipay.sofa.registry.server.session.bootstrap.ExecutorManager;
-import com.alipay.sofa.registry.server.session.registry.Registry;
+import com.alipay.sofa.registry.server.session.strategy.WatcherHandlerStrategy;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class ClientNodeConnectionHandlerTest {
+public class WatcherHandlerTest {
 
-  private ClientNodeConnectionHandler newHandler() {
-    ClientNodeConnectionHandler handler = new ClientNodeConnectionHandler();
-    Assert.assertNull(handler.getExecutor());
-    Assert.assertEquals(handler.interest(), null);
+  private WatcherHandler newHandler() {
+    WatcherHandler handler = new WatcherHandler();
+    handler.executorManager = new ExecutorManager(TestUtils.newSessionConfig("testDc"));
+    Assert.assertNotNull(handler.getExecutor());
+    Assert.assertEquals(handler.interest(), ConfiguratorRegister.class);
     Assert.assertEquals(handler.getConnectNodeType(), Node.NodeType.CLIENT);
-    Assert.assertEquals(handler.getType(), ChannelHandler.HandlerType.LISTENER);
-    TestUtils.assertRunException(RuntimeException.class, () -> handler.buildFailedResponse("msg"));
+    Assert.assertEquals(handler.getType(), ChannelHandler.HandlerType.PROCESSER);
+    Assert.assertEquals(handler.getInvokeType(), ChannelHandler.InvokeType.SYNC);
+    handler.watcherHandlerStrategy = mock(WatcherHandlerStrategy.class);
     return handler;
   }
 
   @Test
   public void testHandle() {
-    ClientNodeConnectionHandler handler = newHandler();
-    handler.sessionRegistry = mock(Registry.class);
-    handler.executorManager = new ExecutorManager(TestUtils.newSessionConfig("testDc"));
-    Channel channel = TestUtils.newChannel(9600, "127.0.0.1", 9888);
-    handler.cancel(channel);
-    verify(handler.sessionRegistry, times(1)).cancel(anyList());
-    handler.disconnected(channel);
+    WatcherHandler handler = newHandler();
+
+    RegisterResponse response = (RegisterResponse) handler.doHandle(null, request());
+    Assert.assertFalse(response.isSuccess());
+    verify(handler.watcherHandlerStrategy, times(1))
+        .handleConfiguratorRegister(anyObject(), anyObject(), any());
+  }
+
+  private static ConfiguratorRegister request() {
+    ConfiguratorRegister register = new ConfiguratorRegister();
+    return register;
   }
 }

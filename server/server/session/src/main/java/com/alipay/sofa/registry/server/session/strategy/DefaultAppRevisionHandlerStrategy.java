@@ -29,10 +29,9 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.converter.pb.AppRevisionConvertor;
 import com.alipay.sofa.registry.server.session.metadata.AppRevisionCacheRegistry;
 import com.alipay.sofa.registry.server.session.metadata.AppRevisionHeartbeatRegistry;
-import java.util.ArrayList;
+import com.alipay.sofa.registry.util.ParaCheckUtil;
+import com.alipay.sofa.registry.util.StringFormatter;
 import java.util.List;
-import java.util.Optional;
-import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class DefaultAppRevisionHandlerStrategy implements AppRevisionHandlerStrategy {
@@ -53,18 +52,20 @@ public class DefaultAppRevisionHandlerStrategy implements AppRevisionHandlerStra
       response.setMessage("app revision register success!");
     } catch (Throwable e) {
       response.setSuccess(false);
-      response.setMessage("app revision register failed!");
-      LOG.error("app revision register error.", e);
+      String msg = StringFormatter.format("app revision register failed! {}", e.getMessage());
+      response.setMessage(msg);
+      LOG.error(msg, e);
     }
   }
 
   @Override
   public ServiceAppMappingResponse queryApps(List<String> services) {
+    ParaCheckUtil.checkNotEmpty(services, "services");
     ServiceAppMappingResponse.Builder builder = ServiceAppMappingResponse.newBuilder();
 
     int statusCode = ValueConstants.METADATA_STATUS_PROCESS_SUCCESS;
     try {
-      for (String service : Optional.ofNullable(services).orElse(new ArrayList<>())) {
+      for (String service : services) {
         InterfaceMapping appNames = appRevisionCacheService.getAppNames(service);
         AppList.Builder build = AppList.newBuilder().addAllApps(appNames.getApps());
         build.setVersion(appNames.getNanosVersion());
@@ -72,8 +73,11 @@ public class DefaultAppRevisionHandlerStrategy implements AppRevisionHandlerStra
       }
     } catch (Throwable e) {
       statusCode = ValueConstants.METADATA_STATUS_PROCESS_ERROR;
-      builder.setMessage(String.format("query apps by services error. service: %s.", services));
-      LOG.error(String.format("query apps by services error. service: %s", services), e);
+      String msg =
+          StringFormatter.format(
+              "query apps by services error. service: {}, {}", services, e.getMessage());
+      builder.setMessage(msg);
+      LOG.error(msg, e);
     }
     builder.setStatusCode(statusCode);
     return builder.build();
@@ -81,22 +85,29 @@ public class DefaultAppRevisionHandlerStrategy implements AppRevisionHandlerStra
 
   @Override
   public GetRevisionsResponse queryRevision(List<String> revisions) {
+    ParaCheckUtil.checkNotEmpty(revisions, "revisions");
     GetRevisionsResponse.Builder builder = GetRevisionsResponse.newBuilder();
     int statusCode = ValueConstants.METADATA_STATUS_PROCESS_SUCCESS;
+    String queryRevision = null;
     try {
-      for (String revision : Optional.ofNullable(revisions).orElse(new ArrayList<>())) {
+      for (String revision : revisions) {
+        queryRevision = revision;
         AppRevision appRevision = appRevisionCacheService.getRevision(revision);
         if (appRevision == null) {
           statusCode = ValueConstants.METADATA_STATUS_DATA_NOT_FOUND;
-          builder.setMessage(String.format("query revision: %s fail.", revision));
-          LOG.error("query revision {} fail", revision);
+          String msg = StringFormatter.format("query revision not found, {}", revision);
+          builder.setMessage(msg);
+          LOG.error(msg);
+        } else {
+          builder.putRevisions(revision, AppRevisionConvertor.convert2Pb(appRevision));
         }
-        builder.putRevisions(revision, AppRevisionConvertor.convert2Pb(appRevision));
       }
     } catch (Throwable e) {
       statusCode = ValueConstants.METADATA_STATUS_PROCESS_ERROR;
-      builder.setMessage(String.format("query revisions: %s error.", revisions));
-      LOG.error("query revision {} error", revisions, e);
+      String msg =
+          StringFormatter.format("query revision {} error : {}", queryRevision, e.getMessage());
+      builder.setMessage(msg);
+      LOG.error(msg, e);
     }
     builder.setStatusCode(statusCode);
     return builder.build();
@@ -104,33 +115,33 @@ public class DefaultAppRevisionHandlerStrategy implements AppRevisionHandlerStra
 
   @Override
   public MetaHeartbeatResponse heartbeat(List<String> revisions) {
-
+    ParaCheckUtil.checkNotEmpty(revisions, "revisions");
     MetaHeartbeatResponse.Builder builder = MetaHeartbeatResponse.newBuilder();
     int statusCode = ValueConstants.METADATA_STATUS_PROCESS_SUCCESS;
-    try {
-      for (String revision : Optional.ofNullable(revisions).orElse(new ArrayList<>())) {
+    for (String revision : revisions) {
+      // avoid the error break the heartbeat of next revisions
+      try {
         AppRevision appRevision = appRevisionHeartbeatRegistry.heartbeat(revision);
         if (appRevision == null) {
           statusCode = ValueConstants.METADATA_STATUS_DATA_NOT_FOUND;
-          builder.setMessage(String.format("revision: %s heartbeat fail.", revision));
-          LOG.error("revision heartbeat {} fail", revision);
+          String msg = StringFormatter.format("heartbeat revision not found, {}", revision);
+          builder.setMessage(msg);
+          LOG.error(msg);
         }
+      } catch (Throwable e) {
+        statusCode = ValueConstants.METADATA_STATUS_PROCESS_ERROR;
+        String msg =
+            StringFormatter.format("revisions {} heartbeat error: {}", revision, e.getMessage());
+        builder.setMessage(msg);
+        LOG.error(msg, e);
       }
-    } catch (Throwable e) {
-      statusCode = ValueConstants.METADATA_STATUS_PROCESS_ERROR;
-      builder.setMessage(String.format("revisions: %s heartbeat error.", revisions));
-      LOG.error("revision heartbeat {} error", revisions, e);
     }
     builder.setStatusCode(statusCode);
     return builder.build();
   }
 
   private void validate(AppRevision appRevision) {
-    if (StringUtils.isBlank(appRevision.getAppName())) {
-      throw new IllegalArgumentException("register appName is empty");
-    }
-    if (StringUtils.isBlank(appRevision.getRevision())) {
-      throw new IllegalArgumentException("register revision is empty");
-    }
+    ParaCheckUtil.checkNotBlank(appRevision.getAppName(), "appRevision.appName");
+    ParaCheckUtil.checkNotBlank(appRevision.getRevision(), "appRevision.revision");
   }
 }

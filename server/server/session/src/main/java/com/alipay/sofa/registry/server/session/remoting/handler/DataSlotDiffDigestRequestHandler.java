@@ -31,6 +31,8 @@ import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
 import com.alipay.sofa.registry.server.session.store.DataStore;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
+import com.alipay.sofa.registry.util.ParaCheckUtil;
+import com.alipay.sofa.registry.util.StringFormatter;
 import java.util.Map;
 import java.util.concurrent.Executor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,11 +46,17 @@ public class DataSlotDiffDigestRequestHandler
   private static final Logger LOGGER =
       LoggerFactory.getLogger(DataSlotDiffDigestRequestHandler.class);
 
-  @Autowired private ExecutorManager executorManager;
+  @Autowired ExecutorManager executorManager;
 
-  @Autowired private DataStore sessionDataStore;
+  @Autowired DataStore sessionDataStore;
 
-  @Autowired private SlotTableCache slotTableCache;
+  @Autowired SlotTableCache slotTableCache;
+
+  @Override
+  public void checkParam(DataSlotDiffDigestRequest request) {
+    ParaCheckUtil.checkNonNegative(request.getSlotId(), "request.slotId");
+    ParaCheckUtil.checkNotNull(request.getDatumDigest(), "request.datumDigest");
+  }
 
   @Override
   public Object doHandle(Channel channel, DataSlotDiffDigestRequest request) {
@@ -62,9 +70,16 @@ public class DataSlotDiffDigestRequestHandler
       result.setSessionProcessId(ServerEnv.PROCESS_ID);
       return new GenericResponse().fillSucceed(result);
     } catch (Throwable e) {
-      LOGGER.error("DiffSync dataInfoIds Request error for slot {}", request.getSlotId(), e);
-      throw new RuntimeException("DiffSync Request error!", e);
+      String msg =
+          StringFormatter.format("DiffSyncDigest request error for slot {}", request.getSlotId());
+      LOGGER.error(msg, e);
+      return new GenericResponse().fillFailed(msg);
     }
+  }
+
+  @Override
+  public Object buildFailedResponse(String msg) {
+    return new GenericResponse().fillFailed(msg);
   }
 
   private DataSlotDiffDigestResult calcDiffResult(
