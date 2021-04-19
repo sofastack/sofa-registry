@@ -94,9 +94,9 @@ public class DataDigestResourceTest extends BaseIntegrationTest {
             .queryParam("dataCenter", LOCAL_DATACENTER)
             .request(APPLICATION_JSON)
             .get(new GenericType<Map<String, Datum>>() {});
-    assertTrue(datumMap.size() == 1);
-    assertEquals(dataId, datumMap.get(LOCAL_DATACENTER).getDataId());
-    assertEquals(1, datumMap.get(LOCAL_DATACENTER).publisherSize());
+    assertTrue(datumMap.toString(), datumMap.size() == 1);
+    assertEquals(datumMap.toString(), dataId, datumMap.get(LOCAL_DATACENTER).getDataId());
+    assertEquals(datumMap.toString(), 1, datumMap.get(LOCAL_DATACENTER).publisherSize());
     assertEquals(
         value,
         bytes2Object(
@@ -169,7 +169,9 @@ public class DataDigestResourceTest extends BaseIntegrationTest {
             .path("digest/datum/count")
             .request(APPLICATION_JSON)
             .get(String.class);
-    assertTrue(countResult.contains("[Publisher] size of publisher in DefaultDataCenter is 1"));
+    assertTrue(
+        countResult,
+        countResult.contains("[Publisher] size of publisher in DefaultDataCenter is 1"));
   }
 
   @Test

@@ -57,20 +57,20 @@ public class SyncClientsHeartbeatTask {
   public static final String SYMBOLIC1 = "  ├─ ";
   public static final String SYMBOLIC2 = "  └─ ";
 
-  @Autowired private Exchange boltExchange;
+  @Autowired Exchange boltExchange;
 
-  @Autowired private SessionServerConfig sessionServerConfig;
+  @Autowired SessionServerConfig sessionServerConfig;
 
   /** store subscribers */
-  @Autowired private Interests sessionInterests;
+  @Autowired Interests sessionInterests;
 
   /** store watchers */
-  @Autowired private Watchers sessionWatchers;
+  @Autowired Watchers sessionWatchers;
 
   /** store publishers */
-  @Autowired private DataStore sessionDataStore;
+  @Autowired DataStore sessionDataStore;
 
-  @Autowired private ExecutorManager executorManager;
+  @Autowired ExecutorManager executorManager;
 
   @Scheduled(
       initialDelayString = "${session.server.syncHeartbeat.fixedDelay}",

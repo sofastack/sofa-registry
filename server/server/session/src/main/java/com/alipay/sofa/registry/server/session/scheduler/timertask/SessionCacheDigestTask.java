@@ -41,18 +41,18 @@ public class SessionCacheDigestTask {
 
   private static final Logger LOGGER = LoggerFactory.getLogger("CACHE-DIGEST");
 
-  @Autowired private DataStore sessionDataStore;
+  @Autowired DataStore sessionDataStore;
 
-  @Autowired private Interests sessionInterests;
+  @Autowired Interests sessionInterests;
 
-  @Autowired private SessionServerConfig sessionServerConfig;
+  @Autowired SessionServerConfig sessionServerConfig;
 
   @PostConstruct
-  public void init() {
+  public boolean init() {
     final int intervalMinutes = sessionServerConfig.getCacheDigestIntervalMinutes();
     if (intervalMinutes <= 0) {
       LOGGER.info("cache digest off with intervalMinutes={}", intervalMinutes);
-      return;
+      return false;
     }
     Date firstDate = new Date();
     firstDate = DateUtils.round(firstDate, Calendar.MINUTE);
@@ -67,9 +67,10 @@ public class SessionCacheDigestTask {
           }
         };
     timer.scheduleAtFixedRate(task, firstDate, intervalMinutes * 60 * 1000);
+    return true;
   }
 
-  private void dump() {
+  boolean dump() {
     try {
       Collection<String> storeDataInfoIds = sessionDataStore.getDataInfoIds();
       Collection<String> interestDataInfoIds = sessionInterests.getDataInfoIds();
@@ -95,9 +96,10 @@ public class SessionCacheDigestTask {
                 // avoid io is too busy
                 ConcurrentUtils.sleepUninterruptibly(2, TimeUnit.MILLISECONDS);
               });
-
+      return true;
     } catch (Throwable t) {
       LOGGER.error("[CacheDigestTask] cache digest error", t);
+      return false;
     }
   }
 

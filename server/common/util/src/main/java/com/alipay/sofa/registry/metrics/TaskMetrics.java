@@ -16,8 +16,12 @@
  */
 package com.alipay.sofa.registry.metrics;
 
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
 import com.codahale.metrics.Gauge;
+import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricRegistry;
+import java.util.Map;
 import java.util.concurrent.ThreadPoolExecutor;
 
 /**
@@ -25,6 +29,7 @@ import java.util.concurrent.ThreadPoolExecutor;
  * @version $Id: ThreadMetrics.java, v 0.1 2018-11-18 15:19 shangyu.wh Exp $
  */
 public class TaskMetrics {
+  private static final Logger LOGGER = LoggerFactory.getLogger(TaskMetrics.class);
 
   private final MetricRegistry metrics = new MetricRegistry();
 
@@ -42,21 +47,31 @@ public class TaskMetrics {
 
   public void registerThreadExecutor(String executorName, ThreadPoolExecutor executor) {
 
-    metrics.register(
+    registerIfAbsent(
         MetricRegistry.name(executorName, "queue"),
         (Gauge<Integer>) () -> executor.getQueue().size());
 
-    metrics.register(
+    registerIfAbsent(
         MetricRegistry.name(executorName, "current"), (Gauge<Integer>) executor::getPoolSize);
 
-    metrics.register(
+    registerIfAbsent(
         MetricRegistry.name(executorName, "active"), (Gauge<Integer>) executor::getActiveCount);
 
-    metrics.register(
+    registerIfAbsent(
         MetricRegistry.name(executorName, "completed"),
         (Gauge<Long>) executor::getCompletedTaskCount);
 
-    metrics.register(
+    registerIfAbsent(
         MetricRegistry.name(executorName, "task"), (Gauge<Long>) executor::getTaskCount);
+  }
+
+  private boolean registerIfAbsent(String executorName, Metric metric) {
+    Map<String, Metric> metricMap = metrics.getMetrics();
+    if (metricMap.containsKey(executorName)) {
+      LOGGER.warn("executor.metric exists {}", executorName);
+      return false;
+    }
+    metrics.register(executorName, metric);
+    return true;
   }
 }

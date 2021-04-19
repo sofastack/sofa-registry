@@ -19,6 +19,7 @@ package com.alipay.sofa.registry.server.session.cache;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
+import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.google.common.cache.*;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -71,9 +72,8 @@ public class SessionCacheService implements CacheService {
   }
 
   private Value generatePayload(Key key) {
-    if (key == null || key.getEntityType() == null) {
-      throw new IllegalArgumentException("Generator key input error!");
-    }
+    ParaCheckUtil.checkNotNull(key, "generatePayload.key");
+    ParaCheckUtil.checkNotNull(key.getEntityType(), "generatePayload.key.entityType");
 
     EntityType entityType = key.getEntityType();
     CacheGenerator cacheGenerator = cacheGenerators.get(entityType.getClass().getName());

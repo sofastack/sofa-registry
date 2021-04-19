@@ -40,6 +40,7 @@ public class SessionCacheServiceTest {
     cacheService.init();
     DatumKey datumKey = new DatumKey(dataInfoId, dataCenter);
     Key key = new Key(DatumKey.class.getName(), datumKey);
+    Assert.assertEquals(key, new Key(DatumKey.class.getName(), datumKey));
     Assert.assertTrue(key.toString(), key.toString().contains(dataInfoId));
     Assert.assertEquals(key.getEntityName(), DatumKey.class.getName());
     Assert.assertEquals(key.getEntityType(), datumKey);
@@ -73,5 +74,12 @@ public class SessionCacheServiceTest {
 
     value = cacheService.getValueIfPresent(key);
     Assert.assertNull(value);
+
+    // touch remove listener
+    for (int i = 0; i < cacheService.sessionServerConfig.getCacheDatumMaxNums() * 2; i++) {
+      datumKey = new DatumKey(dataInfoId + ":" + i, dataCenter);
+      key = new Key(DatumKey.class.getName(), datumKey);
+      cacheService.getValue(key);
+    }
   }
 }
