@@ -32,6 +32,8 @@ import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
 import com.alipay.sofa.registry.server.session.store.DataStore;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
+import com.alipay.sofa.registry.util.ParaCheckUtil;
+import com.alipay.sofa.registry.util.StringFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
@@ -47,13 +49,19 @@ public class DataSlotDiffPublisherRequestHandler
   private static final Logger LOGGER =
       LoggerFactory.getLogger(DataSlotDiffPublisherRequestHandler.class);
 
-  @Autowired private SessionServerConfig sessionServerConfig;
+  @Autowired SessionServerConfig sessionServerConfig;
 
-  @Autowired private ExecutorManager executorManager;
+  @Autowired ExecutorManager executorManager;
 
-  @Autowired private DataStore sessionDataStore;
+  @Autowired DataStore sessionDataStore;
 
-  @Autowired private SlotTableCache slotTableCache;
+  @Autowired SlotTableCache slotTableCache;
+
+  @Override
+  public void checkParam(DataSlotDiffPublisherRequest request) {
+    ParaCheckUtil.checkNonNegative(request.getSlotId(), "request.slotId");
+    ParaCheckUtil.checkNotNull(request.getDatumSummaries(), "request.datumSummaries");
+  }
 
   @Override
   public Object doHandle(Channel channel, DataSlotDiffPublisherRequest request) {
@@ -68,8 +76,11 @@ public class DataSlotDiffPublisherRequestHandler
       result.setSessionProcessId(ServerEnv.PROCESS_ID);
       return new GenericResponse().fillSucceed(result);
     } catch (Throwable e) {
-      LOGGER.error("DiffSync publisher Request error for slot {}", request.getSlotId(), e);
-      throw new RuntimeException("DiffSync Request error!", e);
+      String msg =
+          StringFormatter.format(
+              "DiffSyncPublisher request error for slot {}", request.getSlotId());
+      LOGGER.error(msg, e);
+      return new GenericResponse().fillFailed(msg);
     }
   }
 
@@ -82,6 +93,10 @@ public class DataSlotDiffPublisherRequestHandler
             datumSummaries, existingPublishers, sessionServerConfig.getSlotSyncPublisherMaxNum());
     DataSlotDiffUtils.logDiffResult(result, targetSlot);
     return result;
+  }
+
+  public Object buildFailedResponse(String msg) {
+    return new GenericResponse().fillFailed(msg);
   }
 
   @Override

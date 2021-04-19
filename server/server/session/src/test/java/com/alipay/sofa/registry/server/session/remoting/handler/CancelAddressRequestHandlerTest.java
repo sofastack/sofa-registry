@@ -24,6 +24,7 @@ import com.alipay.sofa.registry.common.model.sessionserver.CancelAddressRequest;
 import com.alipay.sofa.registry.core.model.Result;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.server.session.registry.Registry;
+import java.util.List;
 import org.assertj.core.util.Lists;
 import org.junit.Assert;
 import org.junit.Test;
@@ -57,6 +58,14 @@ public class CancelAddressRequestHandlerTest {
   }
 
   private static CancelAddressRequest request() {
-    return new CancelAddressRequest(Lists.newArrayList(ConnectId.of("xxx:1111", "yyyy:2222")));
+    List<ConnectId> list = Lists.newArrayList(ConnectId.of("xxx:1111", "yyyy:2222"));
+    CancelAddressRequest request = new CancelAddressRequest(list);
+    Assert.assertTrue(request.toString(), request.toString().contains("xxx:111"));
+
+    CancelAddressRequest request2 = new CancelAddressRequest();
+    request2.setConnectIds(list);
+    Assert.assertEquals(request.getConnectIds(), request2.getConnectIds());
+
+    return request;
   }
 }

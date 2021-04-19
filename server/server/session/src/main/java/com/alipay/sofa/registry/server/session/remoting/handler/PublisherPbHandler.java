@@ -24,7 +24,6 @@ import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.RemotingException;
 import com.alipay.sofa.registry.server.session.converter.pb.PublisherRegisterConvertor;
 import com.alipay.sofa.registry.server.session.converter.pb.RegisterResponseConvertor;
-import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import java.util.concurrent.Executor;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -34,9 +33,9 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @author zhuoyu.sjw
  * @version $Id: PublisherPBHandler.java, v 0.1 2018-04-02 15:52 zhuoyu.sjw Exp $$
  */
-public class PublisherPbHandler extends AbstractServerHandler<PublisherRegisterPb> {
+public class PublisherPbHandler extends AbstractClientDataRequestHandler<PublisherRegisterPb> {
 
-  @Autowired private PublisherHandler publisherHandler;
+  @Autowired PublisherHandler publisherHandler;
 
   @Override
   protected Node.NodeType getConnectNodeType() {
@@ -63,12 +62,6 @@ public class PublisherPbHandler extends AbstractServerHandler<PublisherRegisterP
 
     return RegisterResponseConvertor.convert2Pb((RegisterResponse) response);
   }
-
-  @Override
-  protected void logRequest(Channel channel, PublisherRegisterPb request) {
-    // not log
-  }
-
   /**
    * Interest class.
    *

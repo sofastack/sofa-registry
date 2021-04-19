@@ -45,6 +45,7 @@ public class ExecutorManager {
   private final ThreadPoolExecutor dataChangeRequestExecutor;
   private final ThreadPoolExecutor dataSlotSyncRequestExecutor;
   private final ThreadPoolExecutor connectClientExecutor;
+  private final ThreadPoolExecutor accessMetadataExecutor;
 
   @Autowired protected SessionServerConfig sessionServerConfig;
 
@@ -56,11 +57,13 @@ public class ExecutorManager {
 
   private static final String ACCESS_DATA_EXECUTOR = "AccessDataExecutor";
 
-  private static final String DATA_CHANGE_REQUEST_EXECUTOR = "DataChangeRequestExecutor";
+  private static final String DATA_CHANGE_REQUEST_EXECUTOR = "DataChangeExecutor";
 
-  private static final String DATA_SLOT_MIGRATE_REQUEST_EXECUTOR = "DataSlotMigrateRequestExecutor";
+  private static final String DATA_SLOT_SYNC_REQUEST_EXECUTOR = "SlotSyncExecutor";
 
   private static final String CONNECT_CLIENT_EXECUTOR = "ConnectClientExecutor";
+
+  private static final String ACCESS_METADATA_EXECUTOR = "AccessMetadataExecutor";
 
   public ExecutorManager(SessionServerConfig sessionServerConfig) {
     scheduler =
@@ -79,7 +82,7 @@ public class ExecutorManager {
                     sessionServerConfig.getAccessDataExecutorKeepAliveTime(),
                     TimeUnit.SECONDS,
                     new ArrayBlockingQueue<>(sessionServerConfig.getAccessDataExecutorQueueSize()),
-                    new NamedThreadFactory("AccessExecutor", true),
+                    new NamedThreadFactory(ACCESS_DATA_EXECUTOR, true),
                     (r, executor) -> {
                       String msg =
                           String.format(
@@ -99,21 +102,33 @@ public class ExecutorManager {
                     sessionServerConfig.getDataChangeExecutorKeepAliveTime(),
                     TimeUnit.SECONDS,
                     new ArrayBlockingQueue<>(sessionServerConfig.getDataChangeExecutorQueueSize()),
-                    new NamedThreadFactory("DataChangeExecutor", true)));
+                    new NamedThreadFactory(DATA_CHANGE_REQUEST_EXECUTOR, true)));
 
     dataSlotSyncRequestExecutor =
         reportExecutors.computeIfAbsent(
-            DATA_SLOT_MIGRATE_REQUEST_EXECUTOR,
+            DATA_SLOT_SYNC_REQUEST_EXECUTOR,
             k ->
                 new MetricsableThreadPoolExecutor(
-                    DATA_SLOT_MIGRATE_REQUEST_EXECUTOR,
+                    DATA_SLOT_SYNC_REQUEST_EXECUTOR,
                     sessionServerConfig.getSlotSyncWorkerSize(),
                     sessionServerConfig.getSlotSyncWorkerSize(),
                     60,
                     TimeUnit.SECONDS,
                     new ArrayBlockingQueue<>(sessionServerConfig.getSlotSyncMaxBufferSize()),
-                    new NamedThreadFactory("SlotSyncExecutor", true)));
+                    new NamedThreadFactory(DATA_SLOT_SYNC_REQUEST_EXECUTOR, true)));
 
+    accessMetadataExecutor =
+        reportExecutors.computeIfAbsent(
+            ACCESS_METADATA_EXECUTOR,
+            k ->
+                new MetricsableThreadPoolExecutor(
+                    ACCESS_METADATA_EXECUTOR,
+                    sessionServerConfig.getAccessMetadataWorkerSize(),
+                    sessionServerConfig.getAccessMetadataWorkerSize(),
+                    60,
+                    TimeUnit.SECONDS,
+                    new ArrayBlockingQueue<>(sessionServerConfig.getAccessMetadataMaxBufferSize()),
+                    new NamedThreadFactory(ACCESS_METADATA_EXECUTOR, true)));
     connectClientExecutor =
         reportExecutors.computeIfAbsent(
             CONNECT_CLIENT_EXECUTOR,
@@ -126,7 +141,7 @@ public class ExecutorManager {
                     TimeUnit.SECONDS,
                     new LinkedBlockingQueue(
                         sessionServerConfig.getConnectClientExecutorQueueSize()),
-                    new NamedThreadFactory("DisconnectCliExecutor", true)));
+                    new NamedThreadFactory(CONNECT_CLIENT_EXECUTOR, true)));
   }
 
   public void startScheduler() {
@@ -182,5 +197,9 @@ public class ExecutorManager {
 
   public ThreadPoolExecutor getConnectClientExecutor() {
     return connectClientExecutor;
+  }
+
+  public ThreadPoolExecutor getAccessMetadataExecutor() {
+    return accessMetadataExecutor;
   }
 }

@@ -14,33 +14,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.shared.remoting;
+package com.alipay.sofa.registry.server.session.remoting.handler;
 
+import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.remoting.Channel;
+import com.alipay.sofa.registry.server.session.bootstrap.ExecutorManager;
+import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
+import java.util.concurrent.Executor;
+import org.springframework.beans.factory.annotation.Autowired;
 
-/**
- * @author yuzhi.lyz
- * @version v 0.1 2020-12-14 14:42 yuzhi.lyz Exp $
- */
-public abstract class ListenServerChannelHandler extends AbstractServerHandler {
+public abstract class AbstractClientDataRequestHandler<T> extends AbstractServerHandler<T> {
+  @Autowired protected ExecutorManager executorManager;
 
   @Override
-  public Object doHandle(Channel channel, Object request) {
-    throw new UnsupportedOperationException();
+  protected Node.NodeType getConnectNodeType() {
+    return Node.NodeType.CLIENT;
   }
 
   @Override
-  public Object buildFailedResponse(String msg) {
-    throw new RuntimeException(msg);
+  public Executor getExecutor() {
+    return executorManager.getAccessDataExecutor();
   }
 
   @Override
-  public Class interest() {
-    return null;
+  public InvokeType getInvokeType() {
+    return InvokeType.SYNC;
   }
 
   @Override
-  public HandlerType getType() {
-    return HandlerType.LISTENER;
+  protected void logRequest(Channel channel, T request) {
+    // not log
   }
 }

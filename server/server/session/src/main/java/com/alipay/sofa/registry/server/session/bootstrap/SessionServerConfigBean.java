@@ -91,6 +91,10 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
   private int slotSyncWorkerSize = OsUtils.getCpuCount() * 4;
 
+  private int accessMetadataMaxBufferSize = 10000;
+
+  private int accessMetadataWorkerSize = OsUtils.getCpuCount() * 4;
+
   private int clientNodeExchangeTimeoutMillis =
       1000; // time out cause netty HashedWheelTimer occupy a lot of mem
 
@@ -1225,5 +1229,23 @@ public class SessionServerConfigBean implements SessionServerConfig {
    */
   public void setRevisionHeartbeatMinutes(int revisionHeartbeatMinutes) {
     this.revisionHeartbeatMinutes = revisionHeartbeatMinutes;
+  }
+
+  @Override
+  public int getAccessMetadataMaxBufferSize() {
+    return accessMetadataMaxBufferSize;
+  }
+
+  public void setAccessMetadataMaxBufferSize(int accessMetadataMaxBufferSize) {
+    this.accessMetadataMaxBufferSize = accessMetadataMaxBufferSize;
+  }
+
+  @Override
+  public int getAccessMetadataWorkerSize() {
+    return accessMetadataWorkerSize;
+  }
+
+  public void setAccessMetadataWorkerSize(int accessMetadataWorkerSize) {
+    this.accessMetadataWorkerSize = accessMetadataWorkerSize;
   }
 }

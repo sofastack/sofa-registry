@@ -16,45 +16,29 @@
  */
 package com.alipay.sofa.registry.server.session.remoting.handler;
 
-import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.core.model.ConfiguratorRegister;
 import com.alipay.sofa.registry.core.model.RegisterResponse;
 import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.server.session.bootstrap.ExecutorManager;
 import com.alipay.sofa.registry.server.session.strategy.WatcherHandlerStrategy;
-import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
-import java.util.concurrent.Executor;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author shangyu.wh
  * @version $Id: SubscriberHandler.java, v 0.1 2017-11-30 15:01 shangyu.wh Exp $
  */
-public class WatcherHandler extends AbstractServerHandler<ConfiguratorRegister> {
-  @Autowired private ExecutorManager executorManager;
+public class WatcherHandler extends AbstractClientDataRequestHandler<ConfiguratorRegister> {
 
-  @Autowired private WatcherHandlerStrategy watcherHandlerStrategy;
+  @Autowired WatcherHandlerStrategy watcherHandlerStrategy;
 
   @Override
   public Object doHandle(Channel channel, ConfiguratorRegister message) {
     RegisterResponse result = new RegisterResponse();
-    ConfiguratorRegister configuratorRegister = (ConfiguratorRegister) message;
-    watcherHandlerStrategy.handleConfiguratorRegister(channel, configuratorRegister, result);
+    watcherHandlerStrategy.handleConfiguratorRegister(channel, message, result);
     return result;
   }
 
   @Override
   public Class interest() {
     return ConfiguratorRegister.class;
-  }
-
-  @Override
-  public Executor getExecutor() {
-    return executorManager.getAccessDataExecutor();
-  }
-
-  @Override
-  protected Node.NodeType getConnectNodeType() {
-    return Node.NodeType.CLIENT;
   }
 }

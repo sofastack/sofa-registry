@@ -25,7 +25,6 @@ import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.RemotingException;
 import com.alipay.sofa.registry.server.session.converter.pb.SyncConfigRequestConvertor;
 import com.alipay.sofa.registry.server.session.converter.pb.SyncConfigResponseConvertor;
-import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import java.util.concurrent.Executor;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -33,9 +32,9 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @author zhuoyu.sjw
  * @version $Id: SyncConfigPbHandler.java, v 0.1 2018-04-02 17:13 zhuoyu.sjw Exp $$
  */
-public class SyncConfigPbHandler extends AbstractServerHandler<SyncConfigRequestPb> {
+public class SyncConfigPbHandler extends AbstractClientDataRequestHandler<SyncConfigRequestPb> {
 
-  @Autowired private SyncConfigHandler syncConfigHandler;
+  @Autowired SyncConfigHandler syncConfigHandler;
 
   @Override
   protected Node.NodeType getConnectNodeType() {
@@ -52,21 +51,24 @@ public class SyncConfigPbHandler extends AbstractServerHandler<SyncConfigRequest
    */
   @Override
   public Object doHandle(Channel channel, SyncConfigRequestPb message) {
-    SyncConfigResponsePb.Builder builder = SyncConfigResponsePb.newBuilder();
-
     Object response =
         syncConfigHandler.doHandle(channel, SyncConfigRequestConvertor.convert2Java(message));
     if (!(response instanceof SyncConfigResponse)) {
-      return builder
-          .setResult(
-              ResultPb.newBuilder()
-                  .setSuccess(false)
-                  .setMessage("Unknown sync config response type")
-                  .build())
-          .build();
+      return fail();
     }
 
     return SyncConfigResponseConvertor.convert2Pb((SyncConfigResponse) response);
+  }
+
+  static SyncConfigResponsePb fail() {
+    SyncConfigResponsePb.Builder builder = SyncConfigResponsePb.newBuilder();
+    return builder
+        .setResult(
+            ResultPb.newBuilder()
+                .setSuccess(false)
+                .setMessage("Unknown sync config response type")
+                .build())
+        .build();
   }
 
   /**

@@ -16,33 +16,28 @@
  */
 package com.alipay.sofa.registry.server.session.remoting.handler;
 
-import com.alipay.sofa.registry.common.model.Node;
-import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.client.pb.ServiceAppMappingRequest;
 import com.alipay.sofa.registry.common.model.client.pb.ServiceAppMappingResponse;
 import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.server.session.strategy.AppRevisionHandlerStrategy;
-import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
+import com.alipay.sofa.registry.util.ParaCheckUtil;
 import java.util.List;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author xiaojian.xj
  * @version $Id: ServiceAppMappingPbHandler.java, v 0.1 2021年02月04日 20:18 xiaojian.xj Exp $
  */
-public class ServiceAppMappingPbHandler extends AbstractServerHandler<ServiceAppMappingRequest> {
-
-  @Autowired private AppRevisionHandlerStrategy appRevisionHandlerStrategy;
+public class ServiceAppMappingPbHandler
+    extends AbstractClientMetadataRequestHandler<ServiceAppMappingRequest> {
 
   @Override
-  protected NodeType getConnectNodeType() {
-    return Node.NodeType.CLIENT;
+  public void checkParam(ServiceAppMappingRequest request) {
+    ParaCheckUtil.checkNotNull(request, "request");
+    ParaCheckUtil.checkNotEmpty(request.getServiceIdsList(), "request.serviceIds");
   }
 
   @Override
   public Object doHandle(Channel channel, ServiceAppMappingRequest request) {
-
-    List<String> services = request.getServiceIdsList().subList(0, request.getServiceIdsCount());
+    List<String> services = request.getServiceIdsList();
     ServiceAppMappingResponse response = appRevisionHandlerStrategy.queryApps(services);
     return response;
   }

@@ -165,6 +165,7 @@ public class BaseIntegrationTest extends AbstractTest {
       sessionChannel = JerseyClient.getInstance().connect(new URL(LOCAL_ADDRESS, sessionPort));
       dataChannel = JerseyClient.getInstance().connect(new URL(LOCAL_ADDRESS, dataPort));
       metaChannel = JerseyClient.getInstance().connect(new URL(LOCAL_ADDRESS, metaPort));
+      LOGGER.info("init Channel: {}, {}, {}", sessionChannel, dataChannel, metaChannel);
     }
     ParaCheckUtil.checkNotNull(sessionChannel.getWebTarget(), "sessionChannel");
     ParaCheckUtil.checkNotNull(dataChannel.getWebTarget(), "dataChannel");

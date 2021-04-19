@@ -144,6 +144,10 @@ public interface SessionServerConfig {
 
   int getSlotSyncWorkerSize();
 
+  int getAccessMetadataMaxBufferSize();
+
+  int getAccessMetadataWorkerSize();
+
   int getCacheDigestIntervalMinutes();
 
   int getCacheCountIntervalSecs();

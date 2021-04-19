@@ -21,8 +21,12 @@ import com.alipay.sofa.registry.common.model.sessionserver.DataPushRequest;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
+import com.alipay.sofa.registry.server.session.bootstrap.ExecutorManager;
+import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.push.FirePushService;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractClientHandler;
+import com.alipay.sofa.registry.util.ParaCheckUtil;
+import java.util.concurrent.Executor;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -35,7 +39,21 @@ public class DataPushRequestHandler extends AbstractClientHandler<DataPushReques
 
   private static final Logger LOGGER = LoggerFactory.getLogger(DataPushRequestHandler.class);
 
-  @Autowired private FirePushService firePushService;
+  @Autowired FirePushService firePushService;
+
+  @Autowired ExecutorManager executorManager;
+
+  @Autowired SessionServerConfig sessionServerConfig;
+
+  @Override
+  public Executor getExecutor() {
+    return executorManager.getDataChangeRequestExecutor();
+  }
+
+  @Override
+  public void checkParam(DataPushRequest request) {
+    ParaCheckUtil.checkNotNull(request.getDatum(), "request.datum");
+  }
 
   @Override
   protected NodeType getConnectNodeType() {
@@ -44,6 +62,9 @@ public class DataPushRequestHandler extends AbstractClientHandler<DataPushReques
 
   @Override
   public Object doHandle(Channel channel, DataPushRequest request) {
+    if (sessionServerConfig.isStopPushSwitch()) {
+      return null;
+    }
     try {
       firePushService.fireOnDatum(request.getDatum());
     } catch (Throwable e) {

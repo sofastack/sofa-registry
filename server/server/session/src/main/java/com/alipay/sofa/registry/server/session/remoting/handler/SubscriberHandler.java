@@ -16,24 +16,19 @@
  */
 package com.alipay.sofa.registry.server.session.remoting.handler;
 
-import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.core.model.RegisterResponse;
 import com.alipay.sofa.registry.core.model.SubscriberRegister;
 import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.server.session.bootstrap.ExecutorManager;
 import com.alipay.sofa.registry.server.session.strategy.SubscriberHandlerStrategy;
-import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
-import java.util.concurrent.Executor;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author shangyu.wh
  * @version $Id: SubscriberHandler.java, v 0.1 2017-11-30 15:01 shangyu.wh Exp $
  */
-public class SubscriberHandler extends AbstractServerHandler<SubscriberRegister> {
-  @Autowired private ExecutorManager executorManager;
+public class SubscriberHandler extends AbstractClientDataRequestHandler<SubscriberRegister> {
 
-  @Autowired private SubscriberHandlerStrategy subscriberHandlerStrategy;
+  @Autowired SubscriberHandlerStrategy subscriberHandlerStrategy;
 
   @Override
   public Object doHandle(Channel channel, SubscriberRegister subscriberRegister) {
@@ -44,22 +39,7 @@ public class SubscriberHandler extends AbstractServerHandler<SubscriberRegister>
   }
 
   @Override
-  protected void logRequest(Channel channel, SubscriberRegister request) {
-    // not log
-  }
-
-  @Override
   public Class interest() {
     return SubscriberRegister.class;
-  }
-
-  @Override
-  public Executor getExecutor() {
-    return executorManager.getAccessDataExecutor();
-  }
-
-  @Override
-  protected Node.NodeType getConnectNodeType() {
-    return Node.NodeType.CLIENT;
   }
 }

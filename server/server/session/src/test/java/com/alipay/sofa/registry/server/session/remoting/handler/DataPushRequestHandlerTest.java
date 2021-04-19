@@ -16,32 +16,32 @@
  */
 package com.alipay.sofa.registry.server.session.remoting.handler;
 
+import static org.mockito.Matchers.anyLong;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.*;
 
 import com.alipay.sofa.registry.common.model.Node;
-import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
-import com.alipay.sofa.registry.common.model.sessionserver.DataChangeRequest;
+import com.alipay.sofa.registry.common.model.sessionserver.DataPushRequest;
+import com.alipay.sofa.registry.common.model.store.SubDatum;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.server.session.TestUtils;
 import com.alipay.sofa.registry.server.session.bootstrap.ExecutorManager;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfigBean;
 import com.alipay.sofa.registry.server.session.push.FirePushService;
-import com.alipay.sofa.registry.server.session.store.Interests;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Collections;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class DataChangeRequestHandlerTest {
+public class DataPushRequestHandlerTest {
   @Test
   public void testCheckParam() {
-    DataChangeRequestHandler handler = newHandler();
+    DataPushRequestHandler handler = newHandler();
     handler.checkParam(request());
   }
 
-  private DataChangeRequestHandler newHandler() {
-    DataChangeRequestHandler handler = new DataChangeRequestHandler();
-    Assert.assertEquals(handler.interest(), DataChangeRequest.class);
+  private DataPushRequestHandler newHandler() {
+    DataPushRequestHandler handler = new DataPushRequestHandler();
+    Assert.assertEquals(handler.interest(), DataPushRequest.class);
     Assert.assertEquals(handler.getConnectNodeType(), Node.NodeType.DATA);
     Assert.assertEquals(handler.getType(), ChannelHandler.HandlerType.PROCESSER);
     Assert.assertEquals(handler.getInvokeType(), ChannelHandler.InvokeType.SYNC);
@@ -50,12 +50,11 @@ public class DataChangeRequestHandlerTest {
 
   @Test
   public void testHandle() {
-    DataChangeRequestHandler handler = newHandler();
+    DataPushRequestHandler handler = newHandler();
     SessionServerConfigBean serverConfigBean = TestUtils.newSessionConfig("testDc");
     handler.sessionServerConfig = serverConfigBean;
     handler.executorManager = new ExecutorManager(serverConfigBean);
-    handler.firePushService = mock(FirePushService.class);
-    handler.sessionInterests = mock(Interests.class);
+    Assert.assertNotNull(handler.getExecutor());
 
     handler.sessionServerConfig.setStopPushSwitch(true);
     // no npe, stopPush skip the handle
@@ -63,25 +62,27 @@ public class DataChangeRequestHandlerTest {
     Assert.assertNull(obj);
 
     handler.sessionServerConfig.setStopPushSwitch(false);
-    when(handler.sessionInterests.checkInterestVersion(anyString(), anyString(), anyLong()))
-        .thenReturn(Interests.InterestVersionCheck.Obsolete);
+    // npe
+    TestUtils.assertRunException(RuntimeException.class, () -> handler.doHandle(null, request()));
+    handler.firePushService = mock(FirePushService.class);
     obj = handler.doHandle(null, request());
     Assert.assertNull(obj);
     verify(handler.firePushService, times(0)).fireOnChange(anyString(), anyString(), anyLong());
-
-    when(handler.sessionInterests.checkInterestVersion(anyString(), anyString(), anyLong()))
-        .thenReturn(Interests.InterestVersionCheck.Interested);
-    obj = handler.doHandle(null, request());
-    Assert.assertNull(obj);
-    verify(handler.firePushService, times(2)).fireOnChange(anyString(), anyString(), anyLong());
   }
 
-  private static DataChangeRequest request() {
-    Map<String, DatumVersion> dataInfoIds = new HashMap<>();
-    dataInfoIds.put("testId1", new DatumVersion(100));
-    dataInfoIds.put("testId2", new DatumVersion(200));
-    DataChangeRequest request = new DataChangeRequest("testDc", dataInfoIds);
-    Assert.assertTrue(request.toString(), request.toString().contains("testDc"));
+  private static DataPushRequest request() {
+    SubDatum subDatum =
+        new SubDatum(
+            "dataInfoId",
+            "dataCenter",
+            100,
+            Collections.emptyList(),
+            "testDataId",
+            "testInstanceId",
+            "testGroup");
+    DataPushRequest request = new DataPushRequest(subDatum);
+    Assert.assertTrue(request.toString(), request.toString().contains("dataInfoId"));
+    Assert.assertEquals(request.getDatum(), subDatum);
     return request;
   }
 }
