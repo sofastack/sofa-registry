@@ -30,6 +30,7 @@ import com.alipay.sofa.registry.server.data.remoting.SessionNodeExchanger;
 import com.alipay.sofa.registry.server.data.slot.SlotManager;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.meta.AbstractMetaServerService;
+import com.alipay.sofa.registry.server.shared.slot.SlotTableRecorder;
 import com.google.common.annotations.VisibleForTesting;
 import java.util.List;
 import java.util.Set;
@@ -40,7 +41,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @author qian.lqlq
  * @version $Id: MetaServiceImpl.java, v 0.1 2018－03－07 20:41 qian.lqlq Exp $
  */
-public class MetaServerServiceImpl extends AbstractMetaServerService<BaseHeartBeatResponse> {
+public class MetaServerServiceImpl extends AbstractMetaServerService<BaseHeartBeatResponse> implements SlotTableRecorder {
 
   @Autowired private SlotManager slotManager;
 
@@ -49,6 +50,8 @@ public class MetaServerServiceImpl extends AbstractMetaServerService<BaseHeartBe
   @Autowired private SessionNodeExchanger sessionNodeExchanger;
 
   @Autowired private DataServerConfig dataServerConfig;
+
+  private volatile SlotTable currentSlotTable;
 
   @Override
   protected long getCurrentSlotTableEpoch() {
@@ -86,13 +89,17 @@ public class MetaServerServiceImpl extends AbstractMetaServerService<BaseHeartBe
     Tuple<Long, List<BaseSlotStatus>> tuple = slotManager.getSlotTableEpochAndStatuses();
     final long slotTableEpoch = tuple.o1;
     final List<BaseSlotStatus> slotStatuses = tuple.o2;
-    return new HeartbeatRequest<>(
+    HeartbeatRequest<DataNode> request = new HeartbeatRequest<>(
         createNode(),
         slotTableEpoch,
         dataServerConfig.getLocalDataCenter(),
         System.currentTimeMillis(),
         SlotConfig.slotBasicInfo(),
         slotStatuses);
+    synchronized (this) {
+      request.setSlotTable(currentSlotTable);
+    }
+    return request;
   }
 
   private DataNode createNode() {
@@ -117,5 +124,12 @@ public class MetaServerServiceImpl extends AbstractMetaServerService<BaseHeartBe
   @VisibleForTesting
   void setDataServerConfig(DataServerConfig dataServerConfig) {
     this.dataServerConfig = dataServerConfig;
+  }
+
+  @Override
+  public void record(SlotTable slotTable) {
+    synchronized (this) {
+      currentSlotTable = new SlotTable(slotTable.getEpoch(), slotTable.getSlots());
+    }
   }
 }

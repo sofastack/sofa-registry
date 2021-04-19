@@ -80,9 +80,8 @@ public final class SlotManagerImpl implements SlotManager {
 
   @Autowired private SessionLeaseManager sessionLeaseManager;
 
-  @Autowired private SlotGenericResource slotGenericResource;
-
-  private List<SlotTableRecorder> recorders = Collections.EMPTY_LIST;
+  @Autowired(required = false)
+  private List<SlotTableRecorder> recorders;
 
   private final List<SlotChangeListener> slotChangeListeners = new ArrayList<>();
 
@@ -102,7 +101,6 @@ public final class SlotManagerImpl implements SlotManager {
 
   @PostConstruct
   public void init() {
-    recorders = Lists.newArrayList(slotGenericResource, new DiskSlotTableRecorder());
     initSlotChangeListener();
     initExecutors();
     ConcurrentUtils.createDaemonThread("SyncingWatchDog", watchDog).start();
@@ -264,6 +262,9 @@ public final class SlotManagerImpl implements SlotManager {
   }
 
   private void recordSlotTable(SlotTable slotTable) {
+    if (recorders == null) {
+      return;
+    }
     for (SlotTableRecorder recorder : recorders) {
       recorder.record(slotTable);
     }
@@ -810,7 +811,8 @@ public final class SlotManagerImpl implements SlotManager {
   }
 
   @VisibleForTesting
-  void setSlotGenericResource(SlotGenericResource slotGenericResource) {
-    this.slotGenericResource = slotGenericResource;
+  SlotManagerImpl setRecorders(List<SlotTableRecorder> recorders) {
+    this.recorders = recorders;
+    return this;
   }
 }

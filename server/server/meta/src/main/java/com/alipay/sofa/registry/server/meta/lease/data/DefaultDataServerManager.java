@@ -20,6 +20,8 @@ import com.alipay.sofa.registry.common.model.metaserver.Lease;
 import com.alipay.sofa.registry.common.model.metaserver.cluster.VersionedList;
 import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.HeartbeatRequest;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
+import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
+import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
 import com.alipay.sofa.registry.server.meta.MetaLeaderService;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
@@ -28,6 +30,7 @@ import com.alipay.sofa.registry.server.meta.cluster.node.NodeRemoved;
 import com.alipay.sofa.registry.server.meta.lease.impl.AbstractEvictableFilterableLeaseManager;
 import com.alipay.sofa.registry.server.meta.monitor.Metrics;
 import com.alipay.sofa.registry.server.meta.monitor.data.DataServerStats;
+import com.alipay.sofa.registry.server.meta.slot.SlotManager;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -48,6 +51,8 @@ public class DefaultDataServerManager extends AbstractEvictableFilterableLeaseMa
     implements DataServerManager {
 
   @Autowired private MetaServerConfig metaServerConfig;
+
+  @Autowired private SlotManager slotManager;
 
   private final Map<String, DataServerStats> dataServerStatses = Maps.newConcurrentMap();
 
@@ -125,6 +130,11 @@ public class DefaultDataServerManager extends AbstractEvictableFilterableLeaseMa
     return this;
   }
 
+  @VisibleForTesting DefaultDataServerManager setSlotManager(SlotManager slotManager) {
+    this.slotManager = slotManager;
+    return this;
+  }
+
   /**
    * To string string.
    *
@@ -146,6 +156,15 @@ public class DefaultDataServerManager extends AbstractEvictableFilterableLeaseMa
     dataServerStatses.put(
         dataServer,
         new DataServerStats(dataServer, heartbeat.getSlotTableEpoch(), heartbeat.getSlotStatus()));
+    learnFromData(heartbeat);
+  }
+
+  protected void learnFromData(HeartbeatRequest<DataNode> heartbeat) {
+    if (amILeader() && !metaLeaderService.isWarmuped()) {
+
+      SlotTable slotTable = heartbeat.getSlotTable();
+      slotManager.refresh(slotTable);
+    }
   }
 
   @Override
