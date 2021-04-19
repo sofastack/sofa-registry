@@ -14,56 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.store.api.elector;
+package com.alipay.sofa.registry.server.shared.resource;
 
-/**
- * @author chen.zhu
- *     <p>Mar 09, 2021
- */
-public interface LeaderElector {
+import javax.ws.rs.core.Response;
+import org.junit.Assert;
+import org.junit.Test;
 
-  void registerLeaderAware(LeaderAware leaderAware);
-
-  String myself();
-
-  /**
-   * start compete leader
-   *
-   * @return
-   */
-  void change2Follow();
-
-  /**
-   * stop compete leader
-   *
-   * @return
-   */
-  void change2Observer();
-
-  /**
-   * Am i elector boolean.
-   *
-   * @return the boolean
-   */
-  boolean amILeader();
-
-  /**
-   * Gets get elector.
-   *
-   * @return the get elector
-   */
-  String getLeader();
-
-  /**
-   * Gets get elector epoch.
-   *
-   * @return the get elector epoch
-   */
-  long getLeaderEpoch();
-
-  enum ElectorRole {
-    LEADER,
-    FOLLOWER,
-    ;
+public class MetricsResourceTest {
+  @Test
+  public void test() {
+    MetricsResource resource = new MetricsResource();
+    Response response = resource.metrics();
+    Assert.assertEquals(response.getStatus(), 200);
   }
 }

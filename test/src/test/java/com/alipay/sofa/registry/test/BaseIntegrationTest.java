@@ -42,6 +42,7 @@ import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.jersey.JerseyClient;
 import com.alipay.sofa.registry.server.test.TestRegistryMain;
+import com.alipay.sofa.registry.util.ParaCheckUtil;
 import java.io.*;
 import java.lang.reflect.Field;
 import java.util.*;
@@ -72,15 +73,15 @@ public class BaseIntegrationTest extends AbstractTest {
   protected static ConfigurableApplicationContext sessionApplicationContext;
   protected static ConfigurableApplicationContext dataApplicationContext;
 
-  protected static DefaultRegistryClient registryClient1;
+  protected static volatile DefaultRegistryClient registryClient1;
 
-  protected static DefaultRegistryClient registryClient2;
+  protected static volatile DefaultRegistryClient registryClient2;
 
-  protected static Channel sessionChannel;
+  protected static volatile Channel sessionChannel;
 
-  protected static Channel dataChannel;
+  protected static volatile Channel dataChannel;
 
-  protected static Channel metaChannel;
+  protected static volatile Channel metaChannel;
 
   protected static int sessionPort = 9603;
   protected static int metaPort = 9615;
@@ -162,6 +163,9 @@ public class BaseIntegrationTest extends AbstractTest {
       dataChannel = JerseyClient.getInstance().connect(new URL(LOCAL_ADDRESS, dataPort));
       metaChannel = JerseyClient.getInstance().connect(new URL(LOCAL_ADDRESS, metaPort));
     }
+    ParaCheckUtil.checkNotNull(sessionChannel.getWebTarget(), "sessionChannel");
+    ParaCheckUtil.checkNotNull(dataChannel.getWebTarget(), "dataChannel");
+    ParaCheckUtil.checkNotNull(metaChannel.getWebTarget(), "metaChannel");
   }
 
   public static class MySubscriberDataObserver implements SubscriberDataObserver {

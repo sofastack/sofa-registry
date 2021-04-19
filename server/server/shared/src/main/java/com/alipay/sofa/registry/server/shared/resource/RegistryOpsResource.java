@@ -36,7 +36,7 @@ public class RegistryOpsResource {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(RegistryOpsResource.class);
 
-  @Autowired private MetaServerService metaServerService;
+  @Autowired MetaServerService metaServerService;
 
   @PUT
   @Path("/server/group/quit")
@@ -44,7 +44,7 @@ public class RegistryOpsResource {
   public CommonResponse kickOffMyself() {
     try {
       metaServerService.addSelfToMetaBlacklist();
-      metaServerService.stopRenewer();
+      metaServerService.suspendRenewer();
       return GenericResponse.buildSuccessResponse();
     } catch (Throwable th) {
       LOGGER.error("[kickOffMyself]", th);
@@ -57,7 +57,7 @@ public class RegistryOpsResource {
   @Produces(MediaType.APPLICATION_JSON)
   public CommonResponse putMyselfBack() {
     try {
-      //            do not need to do start renewer, as we will run
+      metaServerService.resumeRenewer();
       metaServerService.removeSelfFromMetaBlacklist();
       return GenericResponse.buildSuccessResponse();
     } catch (Throwable th) {

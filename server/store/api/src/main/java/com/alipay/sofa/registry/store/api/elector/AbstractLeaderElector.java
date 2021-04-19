@@ -27,19 +27,17 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
 
 /**
  * @author chen.zhu
  *     <p>Mar 10, 2021
  */
 public abstract class AbstractLeaderElector implements LeaderElector {
-  private static final Logger LOG =
-      LoggerFactory.getLogger("META-ELECTOR", "[MetaJdbcLeaderElector]");
+  private static final Logger LOG = LoggerFactory.getLogger("META-ELECTOR");
 
   private final List<LeaderAware> leaderAwares = Lists.newCopyOnWriteArrayList();
 
-  private volatile LeaderInfo leaderInfo = LeaderInfo.hasNoLeader;
+  private volatile LeaderInfo leaderInfo = LeaderInfo.HAS_NO_LEADER;
 
   private volatile boolean startElector = false;
 
@@ -57,21 +55,17 @@ public abstract class AbstractLeaderElector implements LeaderElector {
     ConcurrentUtils.createDaemonThread("LeaderElectorTrigger", leaderElectorTrigger).start();
   }
 
-  @PreDestroy
-  public void dispose() {
-    try {
-      leaderElectorTrigger.close();
-    } catch (Throwable throwable) {
-      LOG.error("[dispose]", throwable);
-    }
-  }
-
   private class LeaderElectorTrigger extends LoopRunnable {
 
     @Override
     public void runUnthrowable() {
       if (startElector) {
-        elect();
+        try {
+          elect();
+          LOG.info("after elect, leader={}", leaderInfo);
+        } catch (Throwable e) {
+          LOG.error("failed to do elect", e);
+        }
       }
     }
 
@@ -142,21 +136,11 @@ public abstract class AbstractLeaderElector implements LeaderElector {
    */
   @Override
   public boolean amILeader() {
-    return leaderInfo != null
-        && StringUtil.equals(myself(), leaderInfo.leader)
-        && System.currentTimeMillis() < leaderInfo.expireTimestamp;
+    return amILeader(leaderInfo.leader);
   }
 
   protected boolean amILeader(String leader) {
     long current = System.currentTimeMillis();
-    if (LOG.isInfoEnabled()) {
-      LOG.info(
-          "myself is: {}, current timestamp: {}, leader is: {}, leader expireTimestamp: {}",
-          myself(),
-          current,
-          leader,
-          leaderInfo.expireTimestamp);
-    }
     return StringUtil.equals(myself(), leader) && current < leaderInfo.expireTimestamp;
   }
 
@@ -167,9 +151,6 @@ public abstract class AbstractLeaderElector implements LeaderElector {
    */
   @Override
   public String getLeader() {
-    if (leaderInfo == null) {
-      return LeaderInfo.hasNoLeader.leader;
-    }
     return leaderInfo.leader;
   }
 
@@ -180,9 +161,6 @@ public abstract class AbstractLeaderElector implements LeaderElector {
    */
   @Override
   public long getLeaderEpoch() {
-    if (leaderInfo == null) {
-      return LeaderInfo.hasNoLeader.epoch;
-    }
     return leaderInfo.epoch;
   }
 
@@ -200,25 +178,27 @@ public abstract class AbstractLeaderElector implements LeaderElector {
     }
   }
 
+  protected static LeaderInfo calcLeaderInfo(
+      String leader, long epoch, Date lastHeartbeat, long duration) {
+    final long expireTimestamp = lastHeartbeat.getTime() + duration / 2;
+    return new LeaderInfo(epoch, leader, expireTimestamp);
+  }
+
   public static class LeaderInfo {
 
-    public static final long initEpoch = -1L;
-    public static final LeaderInfo hasNoLeader = new LeaderInfo(initEpoch);
+    private static final long INIT_EPOCH = -1L;
+    public static final LeaderInfo HAS_NO_LEADER = new LeaderInfo(INIT_EPOCH, null, 0);
 
-    private long epoch;
+    private final long epoch;
 
-    private String leader;
+    private final String leader;
 
-    private long expireTimestamp;
+    private final long expireTimestamp;
 
-    public LeaderInfo(long epoch) {
-      this.epoch = epoch;
-    }
-
-    public LeaderInfo(long epoch, String leader, Date lastHeartbeat, long duration) {
+    public LeaderInfo(long epoch, String leader, long expireTimestamp) {
       this.leader = leader;
       this.epoch = epoch;
-      this.expireTimestamp = lastHeartbeat.getTime() + duration / 2;
+      this.expireTimestamp = expireTimestamp;
     }
 
     /**

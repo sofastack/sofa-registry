@@ -25,7 +25,7 @@ public class TestUtils {
       runnable.run();
       Assert.fail();
     } catch (Throwable exception) {
-      Assert.assertEquals(exception.getClass(), eclazz);
+      Assert.assertEquals(eclazz, exception.getClass());
     }
   }
 

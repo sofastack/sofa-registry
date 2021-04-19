@@ -34,14 +34,8 @@ import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import com.google.common.annotations.VisibleForTesting;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import javax.annotation.PreDestroy;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -57,15 +51,10 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
 
   protected volatile State state = State.NULL;
 
-  private final Renewer renewer = new Renewer();
+  final Renewer renewer = new Renewer();
 
   final AtomicInteger renewFailCounter = new AtomicInteger(0);
-  private static final int MAX_RENEW_FAIL_COUNT = 3;
-
-  @PreDestroy
-  public void dispose() {
-    stopRenewer();
-  }
+  static final int MAX_RENEW_FAIL_COUNT = 3;
 
   @Override
   public synchronized void startRenewer() {
@@ -73,8 +62,15 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
   }
 
   @Override
-  public void stopRenewer() {
-    renewer.close();
+  public void suspendRenewer() {
+    renewer.suspend();
+    LOGGER.info("suspend the renewer");
+  }
+
+  @Override
+  public void resumeRenewer() {
+    renewer.resume();
+    LOGGER.info("resume the renewer");
   }
 
   public abstract int getRenewIntervalSecs();
@@ -113,14 +109,7 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
     @Override
     public void runUnthrowable() {
       try {
-        if (renewFailCounter.get() >= MAX_RENEW_FAIL_COUNT) {
-          LOGGER.error(
-              "renewNode failed [{}] times, prepare to reset leader from rest api.",
-              renewFailCounter.get());
-          metaServerManager.resetLeaderFromRestServer();
-          renewFailCounter.set(0);
-        }
-
+        checkRenewFailCounter();
         renewNode();
       } catch (Throwable e) {
         LOGGER.error("failed to renewNode", e);
@@ -144,6 +133,18 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
     } catch (Throwable e) {
       handleHeartbeatFailed(leaderIp, e);
     }
+  }
+
+  boolean checkRenewFailCounter() {
+    if (renewFailCounter.get() >= MAX_RENEW_FAIL_COUNT) {
+      LOGGER.error(
+          "renewNode failed [{}] times, prepare to reset leader from rest api.",
+          renewFailCounter.get());
+      metaServerManager.resetLeaderFromRestServer();
+      renewFailCounter.set(0);
+      return true;
+    }
+    return false;
   }
 
   void handleHeartbeatResponse(GenericResponse<T> resp) {
@@ -224,7 +225,7 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
         LOGGER.error("fetch null provider data from {}", leaderIp);
         throw new RuntimeException("metaServerService fetch null provider data!");
       }
-    } catch (Exception e) {
+    } catch (Throwable e) {
       LOGGER.error("fetch provider data error from {}", leaderIp, e);
       throw new RuntimeException("fetch provider data error! " + e.getMessage(), e);
     }

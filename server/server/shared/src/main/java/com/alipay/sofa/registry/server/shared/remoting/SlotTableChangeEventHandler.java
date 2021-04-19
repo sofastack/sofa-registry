@@ -30,7 +30,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public class SlotTableChangeEventHandler extends AbstractClientHandler<SlotTableChangeEvent> {
 
-  @Autowired private MetaServerService metaServerService;
+  @Autowired MetaServerService metaServerService;
 
   @Override
   protected Node.NodeType getConnectNodeType() {
@@ -39,8 +39,10 @@ public class SlotTableChangeEventHandler extends AbstractClientHandler<SlotTable
 
   @Override
   public void checkParam(SlotTableChangeEvent request) {
-    super.checkParam(request);
     ParaCheckUtil.checkNotNull(request, "SlotTableChangeEvent");
+    super.checkParam(request);
+    ParaCheckUtil.checkIsPositive(
+        request.getSlotTableEpoch(), "SlotTableChangeEvent.slotTableEpoch");
   }
 
   @Override
