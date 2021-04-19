@@ -95,10 +95,7 @@ public class MetaServerServiceImpl extends AbstractMetaServerService<BaseHeartBe
         dataServerConfig.getLocalDataCenter(),
         System.currentTimeMillis(),
         SlotConfig.slotBasicInfo(),
-        slotStatuses);
-    synchronized (this) {
-      request.setSlotTable(currentSlotTable);
-    }
+        slotStatuses).setSlotTable(currentSlotTable);
     return request;
   }
 
@@ -128,8 +125,6 @@ public class MetaServerServiceImpl extends AbstractMetaServerService<BaseHeartBe
 
   @Override
   public void record(SlotTable slotTable) {
-    synchronized (this) {
-      currentSlotTable = new SlotTable(slotTable.getEpoch(), slotTable.getSlots());
-    }
+    currentSlotTable = new SlotTable(slotTable.getEpoch(), slotTable.getSlots());
   }
 }
