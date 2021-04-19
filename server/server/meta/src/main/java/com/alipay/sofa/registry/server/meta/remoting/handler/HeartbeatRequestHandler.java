@@ -294,6 +294,18 @@ public class HeartbeatRequestHandler extends BaseMetaServerHandler<HeartbeatRequ
   }
 
   /**
+   * Sets set current dc meta server.
+   *
+   * @param currentDcMetaServer the current dc meta server
+   * @return the set current dc meta server
+   */
+  public HeartbeatRequestHandler setCurrentDcMetaServer(
+      DefaultCurrentDcMetaServer currentDcMetaServer) {
+    this.currentDcMetaServer = currentDcMetaServer;
+    return this;
+  }
+
+  /**
    * Sets set node config.
    *
    * @param nodeConfig the node config
