@@ -64,6 +64,7 @@ public class InterfaceAppsJdbcRepositoryTest extends AbstractH2DbTestBase {
     }
 
     Map<String, InterfaceMapping> interfaceApps = interfaceAppsJdbcRepository.getInterfaceApps();
+    interfaceApps.clear();
     interfaceAppsJdbcRepository.batchSave(app, new HashSet<>(services));
     Assert.assertEquals(interfaceApps.size(), 0);
 
