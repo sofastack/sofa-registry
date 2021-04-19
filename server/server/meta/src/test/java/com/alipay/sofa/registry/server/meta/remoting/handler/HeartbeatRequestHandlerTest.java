@@ -61,9 +61,7 @@ public class HeartbeatRequestHandlerTest extends AbstractMetaServerTestBase {
     handler.setNodeConfig(nodeConfig);
     when(nodeConfig.getLocalDataCenter()).thenReturn(getDc());
     slotManager = new DefaultSlotManager(metaLeaderService);
-    handler
-        .setCurrentDcMetaServer(currentDcMetaServer)
-        .setMetaLeaderElector(metaLeaderService);
+    handler.setCurrentDcMetaServer(currentDcMetaServer).setMetaLeaderElector(metaLeaderService);
     when(currentDcMetaServer.getDataServerManager()).thenReturn(dataServerManager);
     when(currentDcMetaServer.getSessionServerManager()).thenReturn(sessionServerManager);
     when(currentDcMetaServer.getSlotTable()).thenReturn(slotManager.getSlotTable());

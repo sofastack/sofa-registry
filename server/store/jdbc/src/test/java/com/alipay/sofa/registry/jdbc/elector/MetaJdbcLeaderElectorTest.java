@@ -21,12 +21,11 @@ import com.alipay.sofa.registry.jdbc.config.DefaultCommonConfig;
 import com.alipay.sofa.registry.jdbc.domain.DistributeLockDomain;
 import com.alipay.sofa.registry.jdbc.mapper.DistributeLockMapper;
 import com.alipay.sofa.registry.store.api.elector.AbstractLeaderElector;
+import java.util.Date;
+import java.util.concurrent.TimeoutException;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.util.Date;
-import java.util.concurrent.TimeoutException;
 
 /**
  * @author zhuchen

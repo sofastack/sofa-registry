@@ -16,12 +16,12 @@
  */
 package com.alipay.sofa.registry.server.session;
 
+import static org.mockito.Mockito.spy;
+
 import com.alipay.sofa.registry.common.model.ElementType;
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.ProcessId;
 import com.alipay.sofa.registry.common.model.PublishType;
-import com.alipay.sofa.registry.common.model.console.PersistenceData;
-import com.alipay.sofa.registry.common.model.console.PersistenceDataBuilder;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.common.model.slot.SlotConfig;
@@ -35,34 +35,26 @@ import com.alipay.sofa.registry.remoting.Client;
 import com.alipay.sofa.registry.server.session.bootstrap.CommonConfig;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfigBean;
-import com.alipay.sofa.registry.store.api.DBResponse;
-import com.alipay.sofa.registry.store.api.OperationStatus;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
 import com.alipay.sofa.registry.util.JsonUtils;
-import com.alipay.sofa.registry.util.MathUtils;
 import com.alipay.sofa.registry.util.ObjectFactory;
 import com.google.common.collect.Maps;
-import org.assertj.core.util.Lists;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.rules.TestName;
-
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BooleanSupplier;
-
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
+import org.assertj.core.util.Lists;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.rules.TestName;
 
 /**
  * @author chen.zhu
@@ -72,11 +64,11 @@ public class AbstractSessionServerTestBase extends AbstractTestBase {
 
   @Rule public TestName name = new TestName();
 
-  protected SessionServerConfig sessionServerConfig = spy(new SessionServerConfigBean(new CommonConfig()));
+  protected SessionServerConfig sessionServerConfig =
+      spy(new SessionServerConfigBean(new CommonConfig()));
 
   @Before
-  public void beforeAbstractMetaServerTest() {
-  }
+  public void beforeAbstractMetaServerTest() {}
 
   public static void setFinalStatic(Field field, Object newValue) throws Exception {
     field.setAccessible(true);
@@ -211,7 +203,6 @@ public class AbstractSessionServerTestBase extends AbstractTestBase {
     }
   }
 
-
   protected void assertSlotTableNoDupLeaderFollower(SlotTable slotTable) {
     slotTable
         .getSlotMap()
@@ -225,8 +216,6 @@ public class AbstractSessionServerTestBase extends AbstractTestBase {
     Integer prev = counter.get(ip);
     counter.put(ip, prev == null ? 1 : prev + 1);
   }
-
-
 
   public static class MockRpcClient implements Client {
 
@@ -537,7 +526,8 @@ public class AbstractSessionServerTestBase extends AbstractTestBase {
     Publisher publisher = new Publisher();
     initBaseInfo(publisher);
     publisher.setPublishType(PublishType.NORMAL);
-    publisher.setSessionProcessId(new ProcessId(randomIp(), System.currentTimeMillis(), randomInt(1024), randomInt()));
+    publisher.setSessionProcessId(
+        new ProcessId(randomIp(), System.currentTimeMillis(), randomInt(1024), randomInt()));
     return publisher;
   }
 
@@ -553,7 +543,9 @@ public class AbstractSessionServerTestBase extends AbstractTestBase {
     Subscriber subscriber = randomSubscriber();
     subscriber.setDataId(dataInfo);
     subscriber.setInstanceId(instanceId);
-    subscriber.setDataInfoId(DataInfo.toDataInfoId(subscriber.getDataId(), subscriber.getInstanceId(), subscriber.getGroup()));
+    subscriber.setDataInfoId(
+        DataInfo.toDataInfoId(
+            subscriber.getDataId(), subscriber.getInstanceId(), subscriber.getGroup()));
     return subscriber;
   }
 
@@ -566,9 +558,9 @@ public class AbstractSessionServerTestBase extends AbstractTestBase {
     baseInfo.setInstanceId(randomString(10));
     baseInfo.setRegisterId(randomIp());
     baseInfo.setProcessId(randomInt(1024) + "");
-    baseInfo.setDataInfoId(DataInfo.toDataInfoId(baseInfo.getDataId(), baseInfo.getInstanceId(), baseInfo.getGroup()));
+    baseInfo.setDataInfoId(
+        DataInfo.toDataInfoId(baseInfo.getDataId(), baseInfo.getInstanceId(), baseInfo.getGroup()));
   }
-
 
   public static class SimpleNode implements Node {
 

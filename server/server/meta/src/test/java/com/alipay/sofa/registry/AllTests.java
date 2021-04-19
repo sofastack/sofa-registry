@@ -25,7 +25,6 @@ import com.alipay.sofa.registry.server.meta.cluster.node.NodeModifiedTest;
 import com.alipay.sofa.registry.server.meta.cluster.node.TestAbstractNodeEventTest;
 import com.alipay.sofa.registry.server.meta.lease.LeaseTest;
 import com.alipay.sofa.registry.server.meta.lease.data.DefaultDataServerManagerTest;
-import com.alipay.sofa.registry.server.meta.lease.filter.DefaultForbiddenServerManager;
 import com.alipay.sofa.registry.server.meta.lease.filter.DefaultRegistryForbiddenServerManagerTest;
 import com.alipay.sofa.registry.server.meta.lease.impl.*;
 import com.alipay.sofa.registry.server.meta.lease.session.DefaultSessionServerManagerTest;

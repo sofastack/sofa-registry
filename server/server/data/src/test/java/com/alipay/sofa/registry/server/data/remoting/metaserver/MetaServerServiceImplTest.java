@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.server.data.remoting.metaserver;
 
+import static org.mockito.Mockito.when;
+
 import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.metaserver.cluster.VersionedList;
 import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.BaseHeartBeatResponse;
@@ -33,7 +35,6 @@ import com.alipay.sofa.registry.server.data.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.server.data.remoting.SessionNodeExchanger;
 import com.alipay.sofa.registry.server.data.slot.SlotManager;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
-import com.alipay.sofa.registry.server.shared.slot.SlotTableUtils;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.util.Collections;
@@ -42,9 +43,6 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.springframework.context.annotation.Bean;
-
-import static org.mockito.Mockito.when;
 
 public class MetaServerServiceImplTest {
   private static final Logger LOGGER = LoggerFactory.getLogger(MetaServerServiceImplTest.class);
@@ -131,7 +129,8 @@ public class MetaServerServiceImplTest {
 
   @Test
   public void testNotifySlotTable() {
-    when(slotManager.getSlotTableEpochAndStatuses()).thenReturn(new Tuple<>(1L, Lists.newArrayList()));
+    when(slotManager.getSlotTableEpochAndStatuses())
+        .thenReturn(new Tuple<>(1L, Lists.newArrayList()));
     impl.record(new SlotTable(1L, Lists.newArrayList()));
     long slotTableEpoch = impl.createRequest().getSlotTableEpoch();
     Assert.assertEquals(1L, slotTableEpoch);

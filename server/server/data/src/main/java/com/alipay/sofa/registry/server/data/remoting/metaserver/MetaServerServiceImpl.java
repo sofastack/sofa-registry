@@ -41,7 +41,8 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @author qian.lqlq
  * @version $Id: MetaServiceImpl.java, v 0.1 2018－03－07 20:41 qian.lqlq Exp $
  */
-public class MetaServerServiceImpl extends AbstractMetaServerService<BaseHeartBeatResponse> implements SlotTableRecorder {
+public class MetaServerServiceImpl extends AbstractMetaServerService<BaseHeartBeatResponse>
+    implements SlotTableRecorder {
 
   @Autowired private SlotManager slotManager;
 
@@ -89,13 +90,15 @@ public class MetaServerServiceImpl extends AbstractMetaServerService<BaseHeartBe
     Tuple<Long, List<BaseSlotStatus>> tuple = slotManager.getSlotTableEpochAndStatuses();
     final long slotTableEpoch = tuple.o1;
     final List<BaseSlotStatus> slotStatuses = tuple.o2;
-    HeartbeatRequest<DataNode> request = new HeartbeatRequest<>(
-        createNode(),
-        slotTableEpoch,
-        dataServerConfig.getLocalDataCenter(),
-        System.currentTimeMillis(),
-        SlotConfig.slotBasicInfo(),
-        slotStatuses).setSlotTable(currentSlotTable);
+    HeartbeatRequest<DataNode> request =
+        new HeartbeatRequest<>(
+                createNode(),
+                slotTableEpoch,
+                dataServerConfig.getLocalDataCenter(),
+                System.currentTimeMillis(),
+                SlotConfig.slotBasicInfo(),
+                slotStatuses)
+            .setSlotTable(currentSlotTable);
     return request;
   }
 
