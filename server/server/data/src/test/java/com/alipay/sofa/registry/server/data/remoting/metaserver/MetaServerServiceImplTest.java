@@ -33,13 +33,18 @@ import com.alipay.sofa.registry.server.data.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.server.data.remoting.SessionNodeExchanger;
 import com.alipay.sofa.registry.server.data.slot.SlotManager;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
+import com.alipay.sofa.registry.server.shared.slot.SlotTableUtils;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.util.Collections;
 import java.util.List;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.springframework.context.annotation.Bean;
+
+import static org.mockito.Mockito.when;
 
 public class MetaServerServiceImplTest {
   private static final Logger LOGGER = LoggerFactory.getLogger(MetaServerServiceImplTest.class);
@@ -47,9 +52,13 @@ public class MetaServerServiceImplTest {
   private DataServerConfig dataServerConfig;
   private SlotManager slotManager;
 
+  @Before
+  public void beforeMetaServerServiceImplTest() {
+    init();
+  }
+
   @Test
   public void testCreateRequest() {
-    init();
     LeaderSlotStatus leaderSlotStatus =
         new LeaderSlotStatus(10, 20, "xxx", BaseSlotStatus.LeaderStatus.HEALTHY);
     FollowerSlotStatus followerSlotStatus =
@@ -58,7 +67,7 @@ public class MetaServerServiceImplTest {
     LOGGER.info("leaderStatus={}, followerStatus={}", leaderSlotStatus, followerSlotStatus);
 
     List<BaseSlotStatus> list = Lists.newArrayList(leaderSlotStatus, followerSlotStatus);
-    Mockito.when(slotManager.getSlotTableEpochAndStatuses()).thenReturn(Tuple.of(100L, list));
+    when(slotManager.getSlotTableEpochAndStatuses()).thenReturn(Tuple.of(100L, list));
 
     Assert.assertEquals(impl.getCurrentSlotTableEpoch(), slotManager.getSlotTableEpoch());
     final long now = System.currentTimeMillis();
@@ -83,15 +92,14 @@ public class MetaServerServiceImplTest {
 
   @Test
   public void testHandle() {
-    init();
     impl = Mockito.spy(impl);
     DataNodeExchanger dataNodeExchanger = new DataNodeExchanger();
     SessionNodeExchanger sessionNodeExchanger = new SessionNodeExchanger();
     impl.setDataNodeExchanger(dataNodeExchanger);
     impl.setSessionNodeExchanger(sessionNodeExchanger);
 
-    Mockito.when(impl.getSessionServerList()).thenReturn(Sets.newHashSet("s1", "s2"));
-    Mockito.when(impl.getDataServerList()).thenReturn(Sets.newHashSet("d1", "d2"));
+    when(impl.getSessionServerList()).thenReturn(Sets.newHashSet("s1", "s2"));
+    when(impl.getDataServerList()).thenReturn(Sets.newHashSet("d1", "d2"));
 
     BaseHeartBeatResponse resp =
         new BaseHeartBeatResponse(
@@ -119,6 +127,15 @@ public class MetaServerServiceImplTest {
 
     impl.handleRenewResult(resp);
     Mockito.verify(slotManager, Mockito.times(1)).updateSlotTable(Mockito.anyObject());
+  }
+
+  @Test
+  public void testNotifySlotTable() {
+    when(slotManager.getSlotTableEpochAndStatuses()).thenReturn(new Tuple<>(1L, Lists.newArrayList()));
+    impl.record(new SlotTable(1L, Lists.newArrayList()));
+    long slotTableEpoch = impl.createRequest().getSlotTableEpoch();
+    Assert.assertEquals(1L, slotTableEpoch);
+    Assert.assertEquals(1L, impl.createRequest().getSlotTable().getEpoch());
   }
 
   private void init() {
