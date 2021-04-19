@@ -69,8 +69,6 @@ public class MetaServerConfigBean implements MetaServerConfig {
   private long dataReplicateMaxGapMillis =
       Long.getLong("registry.data.replicate.max.gap.millis", 3 * 60 * 1000);
 
-
-
   /**
    * Gets get session server port.
    *
@@ -371,7 +369,8 @@ public class MetaServerConfigBean implements MetaServerConfig {
   /**
    * Setter method for property <tt>revisionGcInitialDelayMillis</tt>.
    *
-   * @param revisionGcInitialDelayMillis value to be assigned to property revisionGcInitialDelayMillis
+   * @param revisionGcInitialDelayMillis value to be assigned to property
+   *     revisionGcInitialDelayMillis
    */
   public void setRevisionGcInitialDelayMillis(int revisionGcInitialDelayMillis) {
     this.revisionGcInitialDelayMillis = revisionGcInitialDelayMillis;

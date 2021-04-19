@@ -180,7 +180,6 @@ public class MetaServerConfiguration {
       return list;
     }
 
-
     @Bean
     public SessionConnectionManager sessionConnectionManager() {
       return new SessionConnectionManager();
@@ -235,7 +234,6 @@ public class MetaServerConfiguration {
     public MetaServerRenewService metaServerRenewService() {
       return new MetaServerRenewService();
     }
-
   }
 
   @Configuration
@@ -255,9 +253,7 @@ public class MetaServerConfiguration {
     public AppRevisionHeartbeatService appRevisionHeartbeatService() {
       return new AppRevisionHeartbeatService();
     }
-
   }
-
 
   @Configuration
   public static class ResourceConfiguration {
