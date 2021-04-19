@@ -18,7 +18,6 @@ package com.alipay.sofa.registry.jdbc.elector;
 
 import com.alipay.sofa.registry.jdbc.AbstractH2DbTestBase;
 import com.alipay.sofa.registry.jdbc.config.DefaultCommonConfig;
-import com.alipay.sofa.registry.jdbc.config.MetaElectorConfig;
 import com.alipay.sofa.registry.jdbc.domain.DistributeLockDomain;
 import com.alipay.sofa.registry.jdbc.mapper.DistributeLockMapper;
 import com.alipay.sofa.registry.store.api.elector.AbstractLeaderElector;
@@ -26,10 +25,6 @@ import java.util.concurrent.TimeoutException;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-
-import static org.mockito.Mockito.when;
 
 /**
  * @author zhuchen
@@ -72,9 +67,9 @@ public class MetaJdbcLeaderElectorTest extends AbstractH2DbTestBase {
     leaderElector.change2Follow();
     waitConditionUntilTimeOut(() -> leaderElector.amILeader(), 5000);
 
-    DistributeLockDomain domain = distributeLockMapper.queryDistLock(defaultCommonConfig.getClusterId(), "META-MASTER");
+    DistributeLockDomain domain =
+        distributeLockMapper.queryDistLock(defaultCommonConfig.getClusterId(), "META-MASTER");
     domain.setDuration(0L);
     leaderElector.onFollowWorking(domain, leaderElector.myself());
-
   }
 }

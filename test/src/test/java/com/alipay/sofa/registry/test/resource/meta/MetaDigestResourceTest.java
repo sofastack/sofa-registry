@@ -21,7 +21,6 @@ import static org.junit.Assert.assertTrue;
 
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
 import java.util.Map;
-
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;

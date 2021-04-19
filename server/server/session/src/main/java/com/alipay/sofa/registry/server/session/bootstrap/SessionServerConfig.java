@@ -159,6 +159,4 @@ public interface SessionServerConfig {
   int getRevisionHeartbeatInitialDelayMinutes();
 
   int getRevisionHeartbeatMinutes();
-
-
 }

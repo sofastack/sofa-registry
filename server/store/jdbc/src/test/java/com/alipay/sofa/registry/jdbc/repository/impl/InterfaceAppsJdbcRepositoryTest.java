@@ -18,15 +18,13 @@ package com.alipay.sofa.registry.jdbc.repository.impl;
 
 import com.alipay.sofa.registry.common.model.appmeta.InterfaceMapping;
 import com.alipay.sofa.registry.jdbc.AbstractH2DbTestBase;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * @author xiaojian.xj
@@ -59,10 +57,10 @@ public class InterfaceAppsJdbcRepositoryTest extends AbstractH2DbTestBase {
 
   @Test
   public void loadMetadataTest() {
-    String app = "batchSaveApp";
+    String app = "loadMetadataTest";
     List<String> services = new ArrayList<>();
     for (int i = 0; i < 100; i++) {
-      services.add(i + "batchSaveService-" + System.currentTimeMillis());
+      services.add(i + "loadMetadataTest-" + System.currentTimeMillis());
     }
 
     Map<String, InterfaceMapping> interfaceApps = interfaceAppsJdbcRepository.getInterfaceApps();

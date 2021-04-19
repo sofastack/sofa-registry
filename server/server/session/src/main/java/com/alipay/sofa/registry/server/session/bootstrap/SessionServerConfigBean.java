@@ -1153,7 +1153,6 @@ public class SessionServerConfigBean implements SessionServerConfig {
     this.syncSessionIOHighWaterMark = syncSessionIOHighWaterMark;
   }
 
-
   /**
    * Getter method for property <tt>heartbeatCacheCheckerInitialDelaySecs</tt>.
    *
@@ -1227,5 +1226,4 @@ public class SessionServerConfigBean implements SessionServerConfig {
   public void setRevisionHeartbeatMinutes(int revisionHeartbeatMinutes) {
     this.revisionHeartbeatMinutes = revisionHeartbeatMinutes;
   }
-
 }

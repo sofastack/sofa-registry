@@ -66,13 +66,21 @@ public class ProvideDataJdbcRepository implements ProvideDataRepository {
       } else {
         affect = provideDataMapper.update(domain, expectVersion);
         if (LOG.isInfoEnabled()) {
-          LOG.info("update provideData: {}, expectVersion: {}, affect rows: {}", domain, expectVersion, affect);
+          LOG.info(
+              "update provideData: {}, expectVersion: {}, affect rows: {}",
+              domain,
+              expectVersion,
+              affect);
         }
       }
 
       if (affect == 0) {
         PersistenceData query = get(domain.getDataKey());
-        LOG.error("put provideData fail, query: {}, update: {}, expectVersion: {}", query, domain, expectVersion);
+        LOG.error(
+            "put provideData fail, query: {}, update: {}, expectVersion: {}",
+            query,
+            domain,
+            expectVersion);
       }
 
     } catch (Throwable t) {

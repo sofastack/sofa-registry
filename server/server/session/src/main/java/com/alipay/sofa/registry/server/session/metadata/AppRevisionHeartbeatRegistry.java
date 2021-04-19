@@ -42,5 +42,4 @@ public class AppRevisionHeartbeatRegistry {
   public void doHeartbeatCacheChecker() {
     appRevisionHeartbeatRepository.doHeartbeatCacheChecker();
   }
-
 }
