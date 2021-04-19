@@ -208,7 +208,9 @@ public class SessionDigestResourceTest extends BaseIntegrationTest {
             .request(APPLICATION_JSON)
             .get(Set.class);
 
-    assertTrue(result.contains(DataInfo.toDataInfoId(dataId, DEFAULT_INSTANCE_ID, DEFAULT_GROUP)));
+    assertTrue(
+        result.toString(),
+        result.contains(DataInfo.toDataInfoId(dataId, DEFAULT_INSTANCE_ID, DEFAULT_GROUP)));
   }
 
   @Test
@@ -219,6 +221,6 @@ public class SessionDigestResourceTest extends BaseIntegrationTest {
             .path("digest/checkSumDataInfoIdList")
             .request(APPLICATION_JSON)
             .get(int.class);
-    assertTrue(result != 0);
+    assertTrue(String.valueOf(result), result != 0);
   }
 }

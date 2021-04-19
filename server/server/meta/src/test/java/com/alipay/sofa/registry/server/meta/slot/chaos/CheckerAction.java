@@ -23,6 +23,7 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.shared.slot.SlotTableUtils;
 import com.alipay.sofa.registry.test.TestUtils;
 import com.alipay.sofa.registry.util.MathUtils;
+import com.alipay.sofa.registry.util.StringFormatter;
 import java.util.*;
 import java.util.Map.Entry;
 import org.junit.Assert;
@@ -67,7 +68,12 @@ class SlotLeaderChecker implements CheckerAction {
 
     Map<String, Integer> leaderCount = SlotTableUtils.getSlotTableLeaderCount(slotTable);
     logger.info("[slot leader checker] leaderCount: " + leaderCount);
-    Assert.assertEquals(dataNodes.size(), leaderCount.size());
+    String msg =
+        StringFormatter.format(
+            "datas={},counts={}",
+            new TreeSet<String>(dataNodes),
+            new TreeSet<String>(leaderCount.keySet()));
+    Assert.assertEquals(msg, dataNodes.size(), leaderCount.size());
     Assert.assertTrue(leaderCount.keySet().containsAll(dataNodes));
     Tuple<String, Integer> max = max(leaderCount);
     Tuple<String, Integer> min = min(leaderCount);

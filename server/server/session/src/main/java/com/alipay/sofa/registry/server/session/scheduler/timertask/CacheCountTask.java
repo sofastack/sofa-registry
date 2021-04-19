@@ -47,64 +47,61 @@ public class CacheCountTask {
       LoggerFactory.getLogger(CacheCountTask.class, "[CacheCountTask]");
   private static final Logger COUNT_LOGGER = LoggerFactory.getLogger("CACHE-COUNT");
 
-  @Autowired private DataStore sessionDataStore;
+  @Autowired DataStore sessionDataStore;
 
-  @Autowired private Interests sessionInterests;
+  @Autowired Interests sessionInterests;
 
-  @Autowired private Watchers sessionWatchers;
+  @Autowired Watchers sessionWatchers;
 
-  @Autowired private SessionServerConfig sessionServerConfig;
+  @Autowired SessionServerConfig sessionServerConfig;
 
   @PostConstruct
-  public void init() {
+  public boolean init() {
     final int intervalSec = sessionServerConfig.getCacheCountIntervalSecs();
     if (intervalSec <= 0) {
       LOGGER.info("cache count off with intervalSecs={}", intervalSec);
-      return;
+      return false;
     }
     ScheduledExecutorService executor =
         new ScheduledThreadPoolExecutor(1, new NamedThreadFactory("CacheCountTask"));
-    executor.scheduleWithFixedDelay(
-        () -> {
-          try {
-            syncCount();
-          } catch (Throwable t) {
-            LOGGER.error("cache count error", t);
-          }
-        },
-        intervalSec,
-        intervalSec,
-        TimeUnit.SECONDS);
+    executor.scheduleWithFixedDelay(() -> syncCount(), intervalSec, intervalSec, TimeUnit.SECONDS);
+    return true;
   }
 
-  public void syncCount() {
-    List<Publisher> pubs = sessionDataStore.getDataList();
-    List<Subscriber> subs = sessionInterests.getDataList();
-    List<Watcher> wats = sessionWatchers.getDataList();
+  boolean syncCount() {
+    try {
+      List<Publisher> pubs = sessionDataStore.getDataList();
+      List<Subscriber> subs = sessionInterests.getDataList();
+      List<Watcher> wats = sessionWatchers.getDataList();
 
-    Map<String, Map<String, Tuple<Integer, Integer>>> pubGroupCounts =
-        DataUtils.countGroupByInstanceIdGroup(pubs);
-    printInstanceIdGroupCount("[PubGroup]", pubGroupCounts);
+      Map<String, Map<String, Tuple<Integer, Integer>>> pubGroupCounts =
+          DataUtils.countGroupByInstanceIdGroup(pubs);
+      printInstanceIdGroupCount("[PubGroup]", pubGroupCounts);
 
-    Map<String, Map<String, Tuple<Integer, Integer>>> subGroupCounts =
-        DataUtils.countGroupByInstanceIdGroup(subs);
-    printInstanceIdGroupCount("[SubGroup]", subGroupCounts);
+      Map<String, Map<String, Tuple<Integer, Integer>>> subGroupCounts =
+          DataUtils.countGroupByInstanceIdGroup(subs);
+      printInstanceIdGroupCount("[SubGroup]", subGroupCounts);
 
-    Map<String, Map<String, Tuple<Integer, Integer>>> watGroupCounts =
-        DataUtils.countGroupByInstanceIdGroup(wats);
-    printInstanceIdGroupCount("[WatGroup]", watGroupCounts);
+      Map<String, Map<String, Tuple<Integer, Integer>>> watGroupCounts =
+          DataUtils.countGroupByInstanceIdGroup(wats);
+      printInstanceIdGroupCount("[WatGroup]", watGroupCounts);
 
-    Map<String, Map<String, Map<String, Tuple<Integer, Integer>>>> pubCounts =
-        DataUtils.countGroupByInstanceIdGroupApp(pubs);
-    printInstanceIdGroupAppCount("[Pub]", pubCounts);
+      Map<String, Map<String, Map<String, Tuple<Integer, Integer>>>> pubCounts =
+          DataUtils.countGroupByInstanceIdGroupApp(pubs);
+      printInstanceIdGroupAppCount("[Pub]", pubCounts);
 
-    Map<String, Map<String, Map<String, Tuple<Integer, Integer>>>> subCounts =
-        DataUtils.countGroupByInstanceIdGroupApp(subs);
-    printInstanceIdGroupAppCount("[Sub]", subCounts);
+      Map<String, Map<String, Map<String, Tuple<Integer, Integer>>>> subCounts =
+          DataUtils.countGroupByInstanceIdGroupApp(subs);
+      printInstanceIdGroupAppCount("[Sub]", subCounts);
 
-    Map<String, Map<String, Map<String, Tuple<Integer, Integer>>>> watCounts =
-        DataUtils.countGroupByInstanceIdGroupApp(wats);
-    printInstanceIdGroupAppCount("[Wat]", watCounts);
+      Map<String, Map<String, Map<String, Tuple<Integer, Integer>>>> watCounts =
+          DataUtils.countGroupByInstanceIdGroupApp(wats);
+      printInstanceIdGroupAppCount("[Wat]", watCounts);
+      return true;
+    } catch (Throwable e) {
+      LOGGER.error("cache count error", e);
+      return false;
+    }
   }
 
   private static void printInstanceIdGroupAppCount(

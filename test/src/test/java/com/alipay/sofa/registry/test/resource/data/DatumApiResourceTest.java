@@ -184,8 +184,8 @@ public class DatumApiResourceTest extends BaseIntegrationTest {
               .post(Entity.entity(datumParam, MediaType.APPLICATION_JSON), CommonResponse.class);
 
       LOGGER.info("testAddPub:" + response);
-      Assert.assertTrue(response.getMessage().contains(dataId));
-      Assert.assertTrue(response.getMessage().contains(testZone));
+      Assert.assertTrue(response.getMessage(), response.getMessage().contains(dataId));
+      Assert.assertTrue(response.getMessage(), response.getMessage().contains(testZone));
     }
     // delete
     {

@@ -27,6 +27,7 @@ import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.push.FirePushService;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractClientHandler;
+import com.alipay.sofa.registry.util.ParaCheckUtil;
 import java.util.Map;
 import java.util.concurrent.Executor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,13 +41,13 @@ public class DataChangeRequestHandler extends AbstractClientHandler<DataChangeRe
 
   private static final Logger LOGGER = LoggerFactory.getLogger(DataChangeRequestHandler.class);
   /** store subscribers */
-  @Autowired private Interests sessionInterests;
+  @Autowired Interests sessionInterests;
 
-  @Autowired private SessionServerConfig sessionServerConfig;
+  @Autowired SessionServerConfig sessionServerConfig;
 
-  @Autowired private ExecutorManager executorManager;
+  @Autowired ExecutorManager executorManager;
 
-  @Autowired private FirePushService firePushService;
+  @Autowired FirePushService firePushService;
 
   @Override
   protected NodeType getConnectNodeType() {
@@ -56,6 +57,12 @@ public class DataChangeRequestHandler extends AbstractClientHandler<DataChangeRe
   @Override
   public Executor getExecutor() {
     return executorManager.getDataChangeRequestExecutor();
+  }
+
+  @Override
+  public void checkParam(DataChangeRequest request) {
+    ParaCheckUtil.checkNotBlank(request.getDataCenter(), "request.dataCenter");
+    ParaCheckUtil.checkNotNull(request.getDataInfoIds(), "request.dataInfoIds");
   }
 
   @Override

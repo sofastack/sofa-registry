@@ -31,7 +31,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public class CancelAddressRequestHandler extends AbstractServerHandler<CancelAddressRequest> {
 
-  @Autowired private Registry sessionRegistry;
+  @Autowired Registry sessionRegistry;
 
   @Override
   public Class interest() {

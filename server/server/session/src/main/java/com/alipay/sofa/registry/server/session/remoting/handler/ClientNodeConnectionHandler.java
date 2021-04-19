@@ -31,9 +31,9 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public class ClientNodeConnectionHandler extends ListenServerChannelHandler {
 
-  @Autowired private Registry sessionRegistry;
+  @Autowired Registry sessionRegistry;
 
-  @Autowired private ExecutorManager executorManager;
+  @Autowired ExecutorManager executorManager;
 
   @Override
   public void disconnected(Channel channel) {
@@ -46,15 +46,13 @@ public class ClientNodeConnectionHandler extends ListenServerChannelHandler {
     return Node.NodeType.CLIENT;
   }
 
+  void cancel(Channel channel) {
+    ConnectId connectId = ConnectId.of(channel.getRemoteAddress(), channel.getLocalAddress());
+    sessionRegistry.cancel(Collections.singletonList(connectId));
+  }
+
   private void fireCancelClient(Channel channel) {
     // avoid block connect ConnectionEventExecutor thread pool
-    executorManager
-        .getConnectClientExecutor()
-        .execute(
-            () -> {
-              ConnectId connectId =
-                  ConnectId.of(channel.getRemoteAddress(), channel.getLocalAddress());
-              sessionRegistry.cancel(Collections.singletonList(connectId));
-            });
+    executorManager.getConnectClientExecutor().execute(() -> cancel(channel));
   }
 }
