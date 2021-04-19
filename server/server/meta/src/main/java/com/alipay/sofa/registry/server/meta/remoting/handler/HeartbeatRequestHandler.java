@@ -24,8 +24,6 @@ import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.Heartbea
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.MetaNode;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
-import com.alipay.sofa.registry.common.model.slot.DataNodeSlot;
-import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.common.model.slot.SlotConfig;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.exception.SofaRegistryMetaLeaderException;
@@ -42,8 +40,6 @@ import com.alipay.sofa.registry.server.meta.slot.SlotManager;
 import com.alipay.sofa.registry.server.meta.slot.manager.DefaultSlotManager;
 import com.alipay.sofa.registry.server.shared.slot.SlotTableUtils;
 import java.util.List;
-import java.util.Set;
-import org.glassfish.jersey.internal.guava.Sets;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
