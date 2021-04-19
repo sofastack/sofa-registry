@@ -19,7 +19,7 @@ package com.alipay.sofa.registry.server.session.strategy.impl;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.core.model.SyncConfigResponse;
 import com.alipay.sofa.registry.server.session.strategy.SyncConfigHandlerStrategy;
-import java.util.ArrayList;
+import com.google.common.collect.Lists;
 import java.util.List;
 
 /**
@@ -29,8 +29,7 @@ import java.util.List;
 public class DefaultSyncConfigHandlerStrategy implements SyncConfigHandlerStrategy {
   @Override
   public void handleSyncConfigResponse(SyncConfigResponse syncConfigResponse) {
-    List<String> list = new ArrayList<>();
-    list.add(ValueConstants.DEFAULT_DATA_CENTER);
+    List<String> list = Lists.newArrayList(ValueConstants.DEFAULT_DATA_CENTER);
     syncConfigResponse.setAvailableSegments(list);
   }
 }

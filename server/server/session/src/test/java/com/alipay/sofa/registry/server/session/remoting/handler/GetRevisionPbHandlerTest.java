@@ -16,38 +16,47 @@
  */
 package com.alipay.sofa.registry.server.session.remoting.handler;
 
-import static org.mockito.Matchers.anyList;
 import static org.mockito.Mockito.*;
 
 import com.alipay.sofa.registry.common.model.Node;
-import com.alipay.sofa.registry.remoting.Channel;
+import com.alipay.sofa.registry.common.model.client.pb.GetRevisionsRequest;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.server.session.TestUtils;
 import com.alipay.sofa.registry.server.session.bootstrap.ExecutorManager;
-import com.alipay.sofa.registry.server.session.registry.Registry;
+import com.alipay.sofa.registry.server.session.strategy.AppRevisionHandlerStrategy;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class ClientNodeConnectionHandlerTest {
+public class GetRevisionPbHandlerTest {
+  @Test
+  public void testCheckParam() {
+    GetRevisionPbHandler handler = newHandler();
+    handler.checkParam(request());
+  }
 
-  private ClientNodeConnectionHandler newHandler() {
-    ClientNodeConnectionHandler handler = new ClientNodeConnectionHandler();
-    Assert.assertNull(handler.getExecutor());
-    Assert.assertEquals(handler.interest(), null);
+  private GetRevisionPbHandler newHandler() {
+    GetRevisionPbHandler handler = new GetRevisionPbHandler();
+    handler.executorManager = new ExecutorManager(TestUtils.newSessionConfig("testDc"));
+    Assert.assertNotNull(handler.getExecutor());
+    Assert.assertEquals(handler.interest(), GetRevisionsRequest.class);
     Assert.assertEquals(handler.getConnectNodeType(), Node.NodeType.CLIENT);
-    Assert.assertEquals(handler.getType(), ChannelHandler.HandlerType.LISTENER);
-    TestUtils.assertRunException(RuntimeException.class, () -> handler.buildFailedResponse("msg"));
+    Assert.assertEquals(handler.getType(), ChannelHandler.HandlerType.PROCESSER);
+    Assert.assertEquals(handler.getInvokeType(), ChannelHandler.InvokeType.SYNC);
+    handler.appRevisionHandlerStrategy = mock(AppRevisionHandlerStrategy.class);
     return handler;
   }
 
   @Test
   public void testHandle() {
-    ClientNodeConnectionHandler handler = newHandler();
-    handler.sessionRegistry = mock(Registry.class);
-    handler.executorManager = new ExecutorManager(TestUtils.newSessionConfig("testDc"));
-    Channel channel = TestUtils.newChannel(9600, "127.0.0.1", 9888);
-    handler.cancel(channel);
-    verify(handler.sessionRegistry, times(1)).cancel(anyList());
-    handler.disconnected(channel);
+    GetRevisionPbHandler handler = newHandler();
+
+    handler.doHandle(null, request());
+    verify(handler.appRevisionHandlerStrategy, times(1)).queryRevision(anyList());
+  }
+
+  private static GetRevisionsRequest request() {
+    GetRevisionsRequest.Builder builder = GetRevisionsRequest.newBuilder();
+    builder.addRevisions("testRevision");
+    return builder.build();
   }
 }

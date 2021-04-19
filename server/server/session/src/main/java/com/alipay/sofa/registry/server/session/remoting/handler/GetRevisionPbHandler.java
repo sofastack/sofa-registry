@@ -16,32 +16,28 @@
  */
 package com.alipay.sofa.registry.server.session.remoting.handler;
 
-import com.alipay.sofa.registry.common.model.Node;
-import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.client.pb.GetRevisionsRequest;
 import com.alipay.sofa.registry.common.model.client.pb.GetRevisionsResponse;
 import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.server.session.strategy.AppRevisionHandlerStrategy;
-import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
+import com.alipay.sofa.registry.util.ParaCheckUtil;
 import java.util.List;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author xiaojian.xj
  * @version $Id: GetRevisionPbHandler.java, v 0.1 2021年02月04日 21:55 xiaojian.xj Exp $
  */
-public class GetRevisionPbHandler extends AbstractServerHandler<GetRevisionsRequest> {
-
-  @Autowired private AppRevisionHandlerStrategy appRevisionHandlerStrategy;
+public class GetRevisionPbHandler
+    extends AbstractClientMetadataRequestHandler<GetRevisionsRequest> {
 
   @Override
-  protected NodeType getConnectNodeType() {
-    return Node.NodeType.CLIENT;
+  public void checkParam(GetRevisionsRequest request) {
+    ParaCheckUtil.checkNotNull(request, "request");
+    ParaCheckUtil.checkNotEmpty(request.getRevisionsList(), "request.revisions");
   }
 
   @Override
   public Object doHandle(Channel channel, GetRevisionsRequest request) {
-    List<String> revisions = request.getRevisionsList().subList(0, request.getRevisionsCount());
+    List<String> revisions = request.getRevisionsList();
     GetRevisionsResponse response = appRevisionHandlerStrategy.queryRevision(revisions);
     return response;
   }

@@ -28,7 +28,6 @@ import com.alipay.sofa.registry.remoting.bolt.BoltChannel;
 import com.alipay.sofa.registry.remoting.bolt.serializer.ProtobufSerializer;
 import com.alipay.sofa.registry.server.session.converter.pb.RegisterResponseConvertor;
 import com.alipay.sofa.registry.server.session.converter.pb.SubscriberRegisterConvertor;
-import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import java.util.concurrent.Executor;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -36,9 +35,9 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @author zhuoyu.sjw
  * @version $Id: SubscriberPbHandler.java, v 0.1 2018-04-02 16:03 zhuoyu.sjw Exp $$
  */
-public class SubscriberPbHandler extends AbstractServerHandler<SubscriberRegisterPb> {
+public class SubscriberPbHandler extends AbstractClientDataRequestHandler<SubscriberRegisterPb> {
 
-  @Autowired private SubscriberHandler subscriberHandler;
+  @Autowired SubscriberHandler subscriberHandler;
 
   @Override
   protected Node.NodeType getConnectNodeType() {
@@ -78,11 +77,6 @@ public class SubscriberPbHandler extends AbstractServerHandler<SubscriberRegiste
     }
 
     return RegisterResponseConvertor.convert2Pb((RegisterResponse) response);
-  }
-
-  @Override
-  protected void logRequest(Channel channel, SubscriberRegisterPb request) {
-    // not log
   }
 
   /**

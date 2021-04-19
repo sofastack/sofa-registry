@@ -37,7 +37,6 @@ public class ListenServerChannelHandlerTest {
     TestUtils.assertRunException(
         UnsupportedOperationException.class, () -> handler.doHandle(null, null));
 
-    TestUtils.assertRunException(
-        UnsupportedOperationException.class, () -> handler.buildFailedResponse(null));
+    TestUtils.assertRunException(RuntimeException.class, () -> handler.buildFailedResponse(null));
   }
 }

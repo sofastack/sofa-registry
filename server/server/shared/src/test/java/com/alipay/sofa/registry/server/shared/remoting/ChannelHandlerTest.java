@@ -35,11 +35,9 @@ public class ChannelHandlerTest {
     TestUtils.assertRunException(
         UnsupportedOperationException.class, () -> handler.received(null, null));
 
-    TestUtils.assertRunException(
-        UnsupportedOperationException.class, () -> handler.reply(null, null));
+    TestUtils.assertRunException(IllegalStateException.class, () -> handler.doHandle(null, null));
 
-    TestUtils.assertRunException(
-        UnsupportedOperationException.class, () -> handler.buildFailedResponse(null));
+    TestUtils.assertRunException(RuntimeException.class, () -> handler.buildFailedResponse(null));
   }
 
   private static class MockHandler extends AbstractChannelHandler {

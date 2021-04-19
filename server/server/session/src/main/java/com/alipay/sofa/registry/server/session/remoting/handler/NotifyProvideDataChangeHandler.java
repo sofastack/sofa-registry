@@ -42,10 +42,10 @@ public class NotifyProvideDataChangeHandler extends AbstractClientHandler<Provid
   private static final Logger TASK_LOGGER =
       LoggerFactory.getLogger(NotifyProvideDataChangeHandler.class, "[Task]");
   /** store watchers */
-  @Autowired private Watchers sessionWatchers;
+  @Autowired Watchers sessionWatchers;
 
   /** trigger task com.alipay.sofa.registry.server.meta.listener process */
-  @Autowired private TaskListenerManager taskListenerManager;
+  @Autowired TaskListenerManager taskListenerManager;
 
   @Override
   protected NodeType getConnectNodeType() {
