@@ -50,6 +50,7 @@ import com.alipay.sofa.registry.server.shared.remoting.SlotTableChangeEventHandl
 import com.alipay.sofa.registry.server.shared.resource.MetricsResource;
 import com.alipay.sofa.registry.server.shared.resource.RegistryOpsResource;
 import com.alipay.sofa.registry.server.shared.resource.SlotGenericResource;
+import com.alipay.sofa.registry.server.shared.slot.DiskSlotTableRecorder;
 import com.alipay.sofa.registry.task.MetricsableThreadPoolExecutor;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
 import com.alipay.sofa.registry.util.PropertySplitter;
@@ -126,6 +127,11 @@ public class DataServerBeanConfiguration {
     @ConditionalOnMissingBean
     public SessionLeaseManager sessionLeaseManager() {
       return new SessionLeaseManager();
+    }
+
+    @Bean
+    public DiskSlotTableRecorder diskSlotTableRecorder() {
+      return new DiskSlotTableRecorder();
     }
   }
 

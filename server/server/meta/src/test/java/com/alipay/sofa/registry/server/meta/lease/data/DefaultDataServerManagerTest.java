@@ -28,6 +28,8 @@ import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.monitor.data.DataServerStats;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
+
+import com.alipay.sofa.registry.server.meta.slot.manager.SimpleSlotManager;
 import org.assertj.core.util.Lists;
 import org.junit.After;
 import org.junit.Assert;
@@ -47,7 +49,7 @@ public class DefaultDataServerManagerTest extends AbstractMetaServerTestBase {
     MockitoAnnotations.initMocks(this);
     makeMetaLeader();
     dataServerManager = new DefaultDataServerManager(metaServerConfig, metaLeaderService);
-    dataServerManager.setMetaServerConfig(metaServerConfig);
+    dataServerManager.setMetaServerConfig(metaServerConfig).setSlotManager(new SimpleSlotManager());
     when(metaServerConfig.getExpireCheckIntervalMillis()).thenReturn(60);
   }
 
@@ -94,7 +96,7 @@ public class DefaultDataServerManagerTest extends AbstractMetaServerTestBase {
             getDc(),
             System.currentTimeMillis(),
             SlotConfig.slotBasicInfo(),
-            slotStatuses);
+            slotStatuses).setSlotTable(slotTable);
     dataServerManager.onHeartbeat(heartbeat);
     List<DataServerStats> dataServerStats = dataServerManager.getDataServersStats();
     Assert.assertFalse(dataServerStats.isEmpty());

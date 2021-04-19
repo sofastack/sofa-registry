@@ -99,17 +99,7 @@ public class HeartbeatRequestHandler extends BaseMetaServerHandler<HeartbeatRequ
 
       switch (renewNode.getNodeType()) {
         case SESSION:
-          response =
-              new BaseHeartBeatResponse(
-                  true,
-                  metaServerInfo,
-                  slotTable,
-                  sessionMetaInfo,
-                  metaLeaderService.getLeader(),
-                  metaLeaderService.getLeaderEpoch());
-          break;
         case DATA:
-          slotTable = transferDataNodeSlotToSlotTable((DataNode) renewNode, slotTable);
           response =
               new BaseHeartBeatResponse(
                   true,
@@ -197,16 +187,6 @@ public class HeartbeatRequestHandler extends BaseMetaServerHandler<HeartbeatRequ
             logger.error("[onDataHeartbeat]", th);
           }
         });
-  }
-
-  private SlotTable transferDataNodeSlotToSlotTable(DataNode node, SlotTable slotTable) {
-    DataNodeSlot dataNodeSlot = slotManager.getDataNodeManagedSlot(node.getIp(), false);
-    Set<Slot> result = Sets.newHashSet();
-    dataNodeSlot.getLeaders().forEach(leaderSlotId -> result.add(slotTable.getSlot(leaderSlotId)));
-    dataNodeSlot
-        .getFollowers()
-        .forEach(followerSlotId -> result.add(slotTable.getSlot(followerSlotId)));
-    return new SlotTable(slotTable.getEpoch(), result);
   }
 
   /**
