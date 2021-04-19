@@ -21,12 +21,10 @@ import com.alipay.sofa.registry.common.model.console.PersistenceDataBuilder;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.jdbc.AbstractH2DbTestBase;
 import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
-import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
+import java.util.Collection;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.Collection;
 
 public class ProvideDataJdbcRepositoryTest extends AbstractH2DbTestBase {
 
@@ -71,18 +69,14 @@ public class ProvideDataJdbcRepositoryTest extends AbstractH2DbTestBase {
 
     String dataInfoId = DataInfo.toDataInfoId("testGetAll" + version, "DEFAULT", "DEFAULT");
     PersistenceData persistenceData =
-            PersistenceDataBuilder.createPersistenceData(dataInfoId, "val");
+        PersistenceDataBuilder.createPersistenceData(dataInfoId, "val");
     boolean success = provideDataJdbcRepository.put(persistenceData, persistenceData.getVersion());
     Assert.assertTrue(success);
     Assert.assertEquals("val", provideDataJdbcRepository.get(dataInfoId).getData());
     Assert.assertEquals(
-            persistenceData.getVersion(), provideDataJdbcRepository.get(dataInfoId).getVersion());
+        persistenceData.getVersion(), provideDataJdbcRepository.get(dataInfoId).getVersion());
 
     Collection<PersistenceData> all = provideDataJdbcRepository.getAll();
-    Assert.assertEquals(all.size(), 1);
-    PersistenceData data = all.stream().findFirst().get();
-    Assert.assertEquals("val", data.getData());
-    Assert.assertEquals(
-            persistenceData.getVersion(), data.getVersion());
+    Assert.assertTrue(all.contains(persistenceData));
   }
 }

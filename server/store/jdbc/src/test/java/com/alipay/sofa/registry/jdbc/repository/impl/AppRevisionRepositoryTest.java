@@ -161,6 +161,11 @@ public class AppRevisionRepositoryTest extends AbstractH2DbTestBase {
 
   @Test
   public void revisionLoad() throws Exception {
+    appRevisionJdbcRepository
+        .getRevisions()
+        .asMap()
+        .forEach((key, value) -> appRevisionJdbcRepository.getRevisions().invalidate(key));
+
     registerAndQuery();
 
     LoadingCache<String, AppRevision> cache = appRevisionJdbcRepository.getRevisions();
@@ -276,10 +281,9 @@ public class AppRevisionRepositoryTest extends AbstractH2DbTestBase {
 
     for (AppRevision appRevision : appRevisionList) {
       AppRevisionDomain query =
-              appRevisionMapper.queryRevision(
-                      defaultCommonConfig.getClusterId(), appRevision.getRevision());
+          appRevisionMapper.queryRevision(
+              defaultCommonConfig.getClusterId(), appRevision.getRevision());
       Assert.assertTrue(query == null);
     }
-
   }
 }
