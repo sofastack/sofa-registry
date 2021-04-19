@@ -22,7 +22,7 @@ import com.alipay.sofa.registry.metrics.TaskMetrics;
 import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
+import com.alipay.sofa.registry.server.session.bootstrap.ExecutorManager;
 import com.alipay.sofa.registry.server.session.store.DataStore;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.session.store.Watchers;

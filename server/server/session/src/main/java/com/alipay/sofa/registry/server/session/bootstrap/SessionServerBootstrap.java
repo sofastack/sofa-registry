@@ -37,7 +37,6 @@ import com.alipay.sofa.registry.server.session.filter.blacklist.BlacklistManager
 import com.alipay.sofa.registry.server.session.metadata.AppRevisionCacheRegistry;
 import com.alipay.sofa.registry.server.session.provideData.ProvideDataProcessor;
 import com.alipay.sofa.registry.server.session.registry.SessionRegistry;
-import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
 import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
@@ -151,7 +150,7 @@ public class SessionServerBootstrap {
       // wait until slot table is get
       retryer.call(
           () -> {
-            return slotTableCache.currentSlotTable().getEpoch() != SlotTable.INIT.getEpoch();
+            return slotTableCache.getCurrentSlotTable().getEpoch() != SlotTable.INIT.getEpoch();
           });
 
       // load metadata

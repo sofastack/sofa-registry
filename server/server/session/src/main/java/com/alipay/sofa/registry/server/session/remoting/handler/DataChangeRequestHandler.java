@@ -24,7 +24,7 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.push.FirePushService;
-import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
+import com.alipay.sofa.registry.server.session.bootstrap.ExecutorManager;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractClientHandler;
 import java.util.Map;

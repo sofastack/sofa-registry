@@ -92,7 +92,7 @@ import com.alipay.sofa.registry.server.session.resource.ConnectionsResource;
 import com.alipay.sofa.registry.server.session.resource.HealthResource;
 import com.alipay.sofa.registry.server.session.resource.SessionDigestResource;
 import com.alipay.sofa.registry.server.session.resource.SessionOpenResource;
-import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
+
 import com.alipay.sofa.registry.server.session.scheduler.timertask.CacheCountTask;
 import com.alipay.sofa.registry.server.session.scheduler.timertask.SessionCacheDigestTask;
 import com.alipay.sofa.registry.server.session.scheduler.timertask.SyncClientsHeartbeatTask;
@@ -131,6 +131,8 @@ import com.alipay.sofa.registry.server.shared.remoting.SlotTableChangeEventHandl
 import com.alipay.sofa.registry.server.shared.resource.MetricsResource;
 import com.alipay.sofa.registry.server.shared.resource.RegistryOpsResource;
 import com.alipay.sofa.registry.server.shared.resource.SlotGenericResource;
+
+import com.alipay.sofa.registry.server.shared.slot.DiskSlotTableRecorder;
 import com.alipay.sofa.registry.task.batcher.TaskProcessor;
 import com.alipay.sofa.registry.task.listener.DefaultTaskListenerManager;
 import com.alipay.sofa.registry.task.listener.TaskListener;
@@ -177,6 +179,11 @@ public class SessionServerConfiguration {
     @Bean(name = "PropertySplitter")
     public PropertySplitter propertySplitter() {
       return new PropertySplitter();
+    }
+
+    @Bean
+    public DiskSlotTableRecorder diskSlotTableRecorder() {
+      return new DiskSlotTableRecorder();
     }
   }
 

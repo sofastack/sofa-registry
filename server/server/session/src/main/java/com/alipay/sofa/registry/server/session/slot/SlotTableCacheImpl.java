@@ -22,13 +22,12 @@ import com.alipay.sofa.registry.common.model.slot.func.SlotFunction;
 import com.alipay.sofa.registry.common.model.slot.func.SlotFunctionRegistry;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.server.shared.resource.SlotGenericResource;
-import com.alipay.sofa.registry.server.shared.slot.DiskSlotTableRecorder;
 import com.alipay.sofa.registry.server.shared.slot.SlotTableRecorder;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
 import java.util.List;
-import javax.annotation.PostConstruct;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -40,16 +39,12 @@ public final class SlotTableCacheImpl implements SlotTableCache {
   private static final Logger LOGGER = LoggerFactory.getLogger(SlotTableCacheImpl.class);
 
   private final SlotFunction slotFunction = SlotFunctionRegistry.getFunc();
+
   private volatile SlotTable slotTable = SlotTable.INIT;
 
-  @Autowired private SlotGenericResource slotGenericResource;
+  private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
-  private List<SlotTableRecorder> recorders;
-
-  @PostConstruct
-  public void init() {
-    recorders = Lists.newArrayList(slotGenericResource, new DiskSlotTableRecorder());
-  }
+  @Autowired(required = false) private List<SlotTableRecorder> recorders;
 
   @Override
   public int slotOf(String dataInfoId) {
@@ -59,63 +54,101 @@ public final class SlotTableCacheImpl implements SlotTableCache {
   @Override
   public Slot getSlot(String dataInfoId) {
     int slotId = slotOf(dataInfoId);
-    return slotTable.getSlot(slotId);
+    lock.readLock().lock();
+    try {
+      return slotTable.getSlot(slotId);
+    } finally {
+      lock.readLock().unlock();
+    }
   }
 
   @Override
   public Slot getSlot(int slotId) {
-    return slotTable.getSlot(slotId);
+    lock.readLock().lock();
+    try {
+      return slotTable.getSlot(slotId);
+    } finally {
+      lock.readLock().unlock();
+    }
   }
 
   @Override
   public String getLeader(int slotId) {
-    final Slot slot = slotTable.getSlot(slotId);
-    return slot == null ? null : slot.getLeader();
+    lock.readLock().lock();
+    try {
+      final Slot slot = slotTable.getSlot(slotId);
+      return slot == null ? null : slot.getLeader();
+    } finally {
+      lock.readLock().unlock();
+    }
   }
 
   @Override
   public long getEpoch() {
-    return slotTable.getEpoch();
+    lock.readLock().lock();
+    try {
+      return slotTable.getEpoch();
+    } finally {
+      lock.readLock().unlock();
+    }
   }
 
   @Override
-  public synchronized boolean updateSlotTable(SlotTable slotTable) {
-    final long curEpoch = this.slotTable.getEpoch();
-    if (curEpoch >= slotTable.getEpoch()) {
-      LOGGER.info("skip update, current={}, update={}", curEpoch, slotTable.getEpoch());
-      return false;
+  public boolean updateSlotTable(SlotTable slotTable) {
+    lock.writeLock().lock();
+    final long curEpoch;
+    try {
+      curEpoch = this.slotTable.getEpoch();
+      if (curEpoch >= slotTable.getEpoch()) {
+        LOGGER.info("skip update, current={}, update={}", curEpoch, slotTable.getEpoch());
+        return false;
+      }
+      recordSlotTable(slotTable);
+      this.slotTable = slotTable;
+    } finally {
+      lock.writeLock().unlock();
     }
-    recordSlotTable(slotTable);
-    this.slotTable = slotTable;
+    checkForSlotTable(curEpoch);
+    return true;
+  }
+
+  private void recordSlotTable(SlotTable slotTable) {
+    if (recorders == null) {
+      return;
+    }
+    for (SlotTableRecorder recorder : recorders) {
+      if (recorder != null) {
+        recorder.record(slotTable);
+      }
+    }
+  }
+
+  protected void checkForSlotTable(long curEpoch) {
     for (Slot slot : this.slotTable.getSlots()) {
       if (StringUtils.isBlank(slot.getLeader())) {
         LOGGER.error("[NoLeader] {}", slot);
       }
     }
     LOGGER.info(
-        "updating slot table, expect={}, current={}, {}",
-        slotTable.getEpoch(),
-        curEpoch,
-        this.slotTable);
-    return true;
-  }
-
-  private void recordSlotTable(SlotTable slotTable) {
-    recorders.forEach(
-        recorder -> {
-          if (recorder != null) {
-            recorder.record(slotTable);
-          }
-        });
+            "updating slot table, expect={}, current={}, {}",
+            slotTable.getEpoch(),
+            curEpoch,
+            this.slotTable);
   }
 
   @Override
-  public SlotTable currentSlotTable() {
-    return new SlotTable(slotTable.getEpoch(), slotTable.getSlots());
+  public SlotTable getCurrentSlotTable() {
+    lock.readLock().lock();
+    try {
+      return new SlotTable(slotTable.getEpoch(), slotTable.getSlots());
+    } finally {
+      lock.readLock().unlock();
+    }
   }
 
   @VisibleForTesting
-  public void setSlotGenericResource(SlotGenericResource slotGenericResource) {
-    this.slotGenericResource = slotGenericResource;
+  protected SlotTableCacheImpl setRecorders(List<SlotTableRecorder> recorders) {
+    this.recorders = recorders;
+    return this;
   }
 }
