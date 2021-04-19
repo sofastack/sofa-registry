@@ -14,11 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.scheduler;
+package com.alipay.sofa.registry.server.session.bootstrap;
 
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.metadata.AppRevisionHeartbeatRegistry;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.task.MetricsableThreadPoolExecutor;

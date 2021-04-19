@@ -81,7 +81,7 @@ public class MetaServerServiceImpl extends AbstractMetaServerService<BaseHeartBe
             sessionServerConfig.getSessionServerDataCenter(),
             System.currentTimeMillis(),
             SlotConfig.slotBasicInfo())
-        .setSlotTable(slotTableCache.currentSlotTable());
+        .setSlotTable(slotTableCache.getCurrentSlotTable());
   }
 
   private Node createNode() {

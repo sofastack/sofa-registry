@@ -20,7 +20,7 @@ import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.core.model.ConfiguratorRegister;
 import com.alipay.sofa.registry.core.model.RegisterResponse;
 import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
+import com.alipay.sofa.registry.server.session.bootstrap.ExecutorManager;
 import com.alipay.sofa.registry.server.session.strategy.WatcherHandlerStrategy;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import java.util.concurrent.Executor;

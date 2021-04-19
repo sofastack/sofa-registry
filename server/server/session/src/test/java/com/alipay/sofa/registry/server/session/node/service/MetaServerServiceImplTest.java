@@ -105,14 +105,14 @@ public class MetaServerServiceImplTest {
             "xxx",
             100);
 
-    SlotTable slotTable = slotTableCache.currentSlotTable();
+    SlotTable slotTable = slotTableCache.getCurrentSlotTable();
     // resp table is null, not modify the cache.table
     impl.handleRenewResult(resp);
 
     Assert.assertEquals(dataNodeNotifyExchanger.getServerIps(), impl.getDataServerList());
     Assert.assertEquals(dataNodeExchanger.getServerIps(), impl.getDataServerList());
     Assert.assertEquals(dataNodeExchanger.getServerIps(), impl.getDataServerList());
-    Assert.assertEquals(slotTable, slotTableCache.currentSlotTable());
+    Assert.assertEquals(slotTable, slotTableCache.getCurrentSlotTable());
 
     slotTable = new SlotTable(20, Collections.emptyList());
     resp =
@@ -125,7 +125,7 @@ public class MetaServerServiceImplTest {
             100);
 
     impl.handleRenewResult(resp);
-    Assert.assertEquals(slotTable, slotTableCache.currentSlotTable());
+    Assert.assertEquals(slotTable, slotTableCache.getCurrentSlotTable());
   }
 
   private void init() {
@@ -139,8 +139,6 @@ public class MetaServerServiceImplTest {
     SlotTable slotTable = new SlotTable(10, Collections.emptyList());
     SlotGenericResource slotGenericResource = new SlotGenericResource();
     slotGenericResource.record(slotTable);
-    slotTableCache.setSlotGenericResource(slotGenericResource);
-    slotTableCache.init();
     slotTableCache.updateSlotTable(slotTable);
     impl.setSlotTableCache(slotTableCache);
   }

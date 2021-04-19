@@ -2,13 +2,13 @@
 <configuration status="info" shutdownHook="disable" monitorInterval="5">
 
     <Properties>
-        <Property name="SESSION_LOG_HOME">${user.home}/logs/registry/session</Property>
+        <Property name="SESSION_LOG_HOME">~/logs/registry/session</Property>
         <Property name="LOG_LEVEL">INFO</Property>
     </Properties>
 
     <appenders>
         <console name="STDOUT-APPENDER" target="SYSTEM_OUT">
-            <PatternLayout pattern="[%d{HH:mm:ss:SSS}][%p][%t][%c{1}]%m%xpEx%n"/>
+            <PatternLayout pattern="[%d{HH:mm:ss:SSS}][%p][%t][%c{1}]%m%n"/>
         </console>
 
         <RollingRandomAccessFile name="COMMON-ERROR-APPENDER" fileName="${SESSION_LOG_HOME}/common-error.log"
@@ -212,21 +212,10 @@
             <appender-ref ref="COMMON-ERROR-APPENDER"/>
         </root>
 
-        <!-- common loggers -->
-
-        <logger name="com.alipay.sofa.registry.jraft" level="${LOG_LEVEL}" additivity="false">
-            <appender-ref ref="JRAFT-APPENDER"/>
-            <appender-ref ref="COMMON-ERROR-APPENDER"/>
-        </logger>
-
-        <logger name="com.alipay.sofa.jraft" level="${LOG_LEVEL}" additivity="false">
-            <appender-ref ref="JRAFT-APPENDER"/>
-            <appender-ref ref="COMMON-ERROR-APPENDER"/>
-        </logger>
-
         <!-- session loggers -->
         <logger name="com.alipay.sofa.registry.server.session" level="${LOG_LEVEL}" additivity="false">
             <appender-ref ref="SESSION-DEFAULT-APPENDER"/>
+            <appender-ref ref="STDOUT-APPENDER"/>
             <appender-ref ref="COMMON-ERROR-APPENDER"/>
         </logger>
 
