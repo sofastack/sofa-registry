@@ -77,7 +77,8 @@ public class DefaultSessionRegistryStrategy implements SessionRegistryStrategy {
   }
 
   @VisibleForTesting
-  public DefaultSessionRegistryStrategy setTaskListenerManager(TaskListenerManager taskListenerManager) {
+  public DefaultSessionRegistryStrategy setTaskListenerManager(
+      TaskListenerManager taskListenerManager) {
     this.taskListenerManager = taskListenerManager;
     return this;
   }
@@ -89,7 +90,8 @@ public class DefaultSessionRegistryStrategy implements SessionRegistryStrategy {
   }
 
   @VisibleForTesting
-  public DefaultSessionRegistryStrategy setSessionServerConfig(SessionServerConfig sessionServerConfig) {
+  public DefaultSessionRegistryStrategy setSessionServerConfig(
+      SessionServerConfig sessionServerConfig) {
     this.sessionServerConfig = sessionServerConfig;
     return this;
   }

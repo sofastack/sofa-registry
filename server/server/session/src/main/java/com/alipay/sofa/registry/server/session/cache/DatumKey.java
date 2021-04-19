@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.server.session.cache;
 
 import com.alipay.sofa.registry.common.model.store.WordCache;
+import com.alipay.sofa.registry.util.StringFormatter;
 
 /**
  * @author shangyu.wh
@@ -28,28 +29,34 @@ public class DatumKey implements EntityType {
 
   private final String dataCenter;
 
+  private final String uniqueKey;
+
   public DatumKey(String dataInfoId, String dataCenter) {
     this.dataInfoId = WordCache.getWordCache(dataInfoId);
     this.dataCenter = WordCache.getWordCache(dataCenter);
+    this.uniqueKey = WordCache.getWordCache(createUniqueKey());
   }
 
   @Override
   public String getUniqueKey() {
-    StringBuilder sb = new StringBuilder(dataCenter);
-    sb.append(COMMA).append(dataInfoId);
+    return uniqueKey;
+  }
+
+  private String createUniqueKey() {
+    StringBuilder sb = new StringBuilder(dataCenter.length() + dataInfoId.length() + 1);
+    sb.append(dataCenter).append(COMMA).append(dataInfoId);
     return sb.toString();
   }
 
   @Override
   public int hashCode() {
-    String hashKey = getUniqueKey();
-    return hashKey.hashCode();
+    return uniqueKey.hashCode();
   }
 
   @Override
   public boolean equals(Object other) {
     if (other instanceof DatumKey) {
-      return getUniqueKey().equals(((DatumKey) other).getUniqueKey());
+      return uniqueKey.equals(((DatumKey) other).uniqueKey);
     } else {
       return false;
     }
@@ -75,10 +82,6 @@ public class DatumKey implements EntityType {
 
   @Override
   public String toString() {
-    final StringBuilder sb = new StringBuilder("DatumKey{");
-    sb.append("dataInfoId='").append(dataInfoId).append('\'');
-    sb.append(", dataCenter='").append(dataCenter).append('\'');
-    sb.append('}');
-    return sb.toString();
+    return StringFormatter.format("DatumKey{{}}", uniqueKey);
   }
 }

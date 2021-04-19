@@ -23,17 +23,8 @@ package com.alipay.sofa.registry.server.session.cache;
  * @version $Id: CacheAccessException.java, v 0.1 2019-09-02 17:55 kezhu.wukz Exp $
  */
 public class CacheAccessException extends RuntimeException {
-  public CacheAccessException() {}
-
-  public CacheAccessException(String message) {
-    super(message);
-  }
 
   public CacheAccessException(String message, Throwable cause) {
     super(message, cause);
-  }
-
-  public CacheAccessException(Throwable cause) {
-    super(cause);
   }
 }

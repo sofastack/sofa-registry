@@ -30,7 +30,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class DatumCacheGenerator implements CacheGenerator {
   private static final Logger LOGGER = LoggerFactory.getLogger("CACHE-GEN");
   /** DataNode service */
-  @Autowired private DataNodeService dataNodeService;
+  @Autowired DataNodeService dataNodeService;
 
   @Override
   public Value generatePayload(Key key) {
@@ -47,10 +47,11 @@ public class DatumCacheGenerator implements CacheGenerator {
         LOGGER.info("loadNil,{},{}", dataInfoId, dataCenter);
       } else {
         LOGGER.info(
-            "load,{},{},{},{}",
+            "load,{},{},{},{},{}",
             dataInfoId,
             dataCenter,
             datum.getPublishers().size(),
+            datum.getDataBoxBytes(),
             datum.getVersion());
       }
       return new Value(datum);

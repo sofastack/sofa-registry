@@ -129,7 +129,8 @@ public class DefaultDataServerManager extends AbstractEvictableFilterableLeaseMa
     return this;
   }
 
-  @VisibleForTesting DefaultDataServerManager setSlotManager(SlotManager slotManager) {
+  @VisibleForTesting
+  DefaultDataServerManager setSlotManager(SlotManager slotManager) {
     this.slotManager = slotManager;
     return this;
   }

@@ -31,10 +31,9 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public class SessionCacheService implements CacheService {
   private static final Logger CACHE_LOGGER = LoggerFactory.getLogger("CACHE-GEN");
-  private static final Logger LOGGER = LoggerFactory.getLogger(SessionCacheService.class);
 
   private LoadingCache<Key, Value> readWriteCacheMap;
-  @Autowired private SessionServerConfig sessionServerConfig;
+  @Autowired SessionServerConfig sessionServerConfig;
   /** injectQ */
   private Map<String, CacheGenerator> cacheGenerators;
 
@@ -54,7 +53,7 @@ public class SessionCacheService implements CacheService {
                 });
   }
 
-  private final class RemoveListener implements RemovalListener<Key, Value> {
+  static final class RemoveListener implements RemovalListener<Key, Value> {
 
     @Override
     public void onRemoval(RemovalNotification<Key, Value> notification) {
@@ -97,21 +96,8 @@ public class SessionCacheService implements CacheService {
   }
 
   @Override
-  public Map<Key, Value> getValues(final Iterable<Key> keys) throws CacheAccessException {
-    try {
-      return readWriteCacheMap.getAll(keys);
-    } catch (Throwable e) {
-      String msg = "Cannot get value for keys are:" + keys;
-      throw new CacheAccessException(msg, e);
-    }
-  }
-
-  @Override
   public void invalidate(Key... keys) {
     for (Key key : keys) {
-      if (LOGGER.isDebugEnabled()) {
-        LOGGER.debug("Invalidating cache key: {} {}", key.getEntityType(), key.getEntityName());
-      }
       readWriteCacheMap.invalidate(key);
     }
   }

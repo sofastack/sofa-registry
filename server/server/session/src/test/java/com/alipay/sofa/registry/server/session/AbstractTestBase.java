@@ -23,12 +23,6 @@ import com.alipay.sofa.registry.observer.Observable;
 import com.alipay.sofa.registry.observer.UnblockingObserver;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
 import io.netty.util.ResourceLeakDetector;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.rules.TestName;
-
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -42,6 +36,11 @@ import java.util.Set;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BooleanSupplier;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Rule;
+import org.junit.rules.TestName;
 
 /**
  * @author chen.zhu
@@ -298,8 +297,13 @@ public class AbstractTestBase {
 
     protected final int producerNum;
 
-    private ConsumerProducer(int tasks, ExecutorService executors, Runnable consumer, Runnable producer,
-                            int consumerNum, int producerNum) {
+    private ConsumerProducer(
+        int tasks,
+        ExecutorService executors,
+        Runnable consumer,
+        Runnable producer,
+        int consumerNum,
+        int producerNum) {
       super(tasks, executors);
       this.consumer = consumer;
       this.producer = producer;
@@ -318,33 +322,33 @@ public class AbstractTestBase {
       }
       for (int i = 0; i < consumerNum; i++) {
         executors.execute(
-                new Runnable() {
-                  @Override
-                  public void run() {
-                    try {
-                      barrier.await();
-                      consumer.run();
-                    } catch (Exception ignore) {
-                    }
+            new Runnable() {
+              @Override
+              public void run() {
+                try {
+                  barrier.await();
+                  consumer.run();
+                } catch (Exception ignore) {
+                }
 
-                    latch.countDown();
-                  }
-                });
+                latch.countDown();
+              }
+            });
       }
       for (int i = 0; i < producerNum; i++) {
         executors.execute(
-                new Runnable() {
-                  @Override
-                  public void run() {
-                    try {
-                      barrier.await();
-                      producer.run();
-                    } catch (Exception ignore) {
-                    }
+            new Runnable() {
+              @Override
+              public void run() {
+                try {
+                  barrier.await();
+                  producer.run();
+                } catch (Exception ignore) {
+                }
 
-                    latch.countDown();
-                  }
-                });
+                latch.countDown();
+              }
+            });
       }
       try {
         latch.await();
@@ -390,8 +394,13 @@ public class AbstractTestBase {
       }
 
       public ConsumerProducer build() {
-        return new ConsumerProducer(producerNum + consumerNum, executorService,
-                consumer, producer, consumerNum, producerNum);
+        return new ConsumerProducer(
+            producerNum + consumerNum,
+            executorService,
+            consumer,
+            producer,
+            consumerNum,
+            producerNum);
       }
     }
   }

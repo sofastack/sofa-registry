@@ -27,7 +27,6 @@ import com.google.common.annotations.VisibleForTesting;
 import java.util.List;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -44,7 +43,8 @@ public final class SlotTableCacheImpl implements SlotTableCache {
 
   private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
-  @Autowired(required = false) private List<SlotTableRecorder> recorders;
+  @Autowired(required = false)
+  private List<SlotTableRecorder> recorders;
 
   @Override
   public int slotOf(String dataInfoId) {
@@ -130,10 +130,10 @@ public final class SlotTableCacheImpl implements SlotTableCache {
       }
     }
     LOGGER.info(
-            "updating slot table, expect={}, current={}, {}",
-            slotTable.getEpoch(),
-            curEpoch,
-            this.slotTable);
+        "updating slot table, expect={}, current={}, {}",
+        slotTable.getEpoch(),
+        curEpoch,
+        this.slotTable);
   }
 
   @Override
