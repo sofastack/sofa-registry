@@ -76,7 +76,7 @@ public class SlotTableUtils {
     return checkNoDupLeaderAndFollowers(slotTable) && checkNoLeaderEmpty(slotTable);
   }
 
-  private static boolean checkNoDupLeaderAndFollowers(SlotTable slotTable) {
+  public static boolean checkNoDupLeaderAndFollowers(SlotTable slotTable) {
     for (Map.Entry<Integer, Slot> entry : slotTable.getSlotMap().entrySet()) {
       Slot slot = entry.getValue();
       if (slot.getFollowers().contains(slot.getLeader())) {
@@ -88,7 +88,7 @@ public class SlotTableUtils {
     return true;
   }
 
-  private static boolean checkNoLeaderEmpty(SlotTable slotTable) {
+  public static boolean checkNoLeaderEmpty(SlotTable slotTable) {
     for (Map.Entry<Integer, Slot> entry : slotTable.getSlotMap().entrySet()) {
       Slot slot = entry.getValue();
       if (StringUtils.isEmpty(slot.getLeader())) {

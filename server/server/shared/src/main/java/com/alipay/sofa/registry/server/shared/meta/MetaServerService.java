@@ -29,8 +29,11 @@ public interface MetaServerService {
   /** Start renewer. */
   void startRenewer();
 
-  /** Stop renewer. */
-  void stopRenewer();
+  /** suspend renewer. */
+  void suspendRenewer();
+
+  /** resume renewer. */
+  void resumeRenewer();
 
   /** update data server expireTime */
   void renewNode();

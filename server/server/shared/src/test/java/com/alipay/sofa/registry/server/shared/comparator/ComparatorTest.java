@@ -14,56 +14,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.store.api.elector;
+package com.alipay.sofa.registry.server.shared.comparator;
 
-/**
- * @author chen.zhu
- *     <p>Mar 09, 2021
- */
-public interface LeaderElector {
+import com.google.common.collect.Sets;
+import java.util.Set;
+import org.junit.Assert;
+import org.junit.Test;
 
-  void registerLeaderAware(LeaderAware leaderAware);
+public class ComparatorTest {
+  @Test
+  public void test() {
+    Set<String> prev = Sets.newHashSet("1", "2");
+    Set<String> cur = Sets.newHashSet("2", "3");
 
-  String myself();
-
-  /**
-   * start compete leader
-   *
-   * @return
-   */
-  void change2Follow();
-
-  /**
-   * stop compete leader
-   *
-   * @return
-   */
-  void change2Observer();
-
-  /**
-   * Am i elector boolean.
-   *
-   * @return the boolean
-   */
-  boolean amILeader();
-
-  /**
-   * Gets get elector.
-   *
-   * @return the get elector
-   */
-  String getLeader();
-
-  /**
-   * Gets get elector epoch.
-   *
-   * @return the get elector epoch
-   */
-  long getLeaderEpoch();
-
-  enum ElectorRole {
-    LEADER,
-    FOLLOWER,
-    ;
+    NodeComparator comparator = new NodeComparator(prev, cur);
+    Assert.assertEquals(comparator.totalChange(), 2);
+    Assert.assertTrue(comparator.hasAnyChange());
+    Assert.assertEquals(comparator.getAdded(), Sets.newHashSet("3"));
+    Assert.assertEquals(comparator.getRemoved(), Sets.newHashSet("1"));
   }
 }

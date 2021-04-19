@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.registry.server.shared.comparator;
 
-import com.alipay.sofa.registry.common.model.Tuple;
 import java.util.Set;
 
 /**
@@ -28,16 +27,6 @@ public interface Comparator<T> {
   Set<T> getAdded();
 
   Set<T> getRemoved();
-
-  Set<Tuple<T, T>> getModified();
-
-  void accept(ComparatorVisitor<T> visitor);
-
-  void acceptAdded(ComparatorVisitor<T> visitor);
-
-  void acceptRemoved(ComparatorVisitor<T> visitor);
-
-  void acceptRemains(ComparatorVisitor<T> visitor);
 
   boolean hasAnyChange();
 

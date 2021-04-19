@@ -113,11 +113,23 @@ public class MetaServerManagerTest {
     TestUtils.assertRunException(MetaLeaderQueryException.class, () -> mockServerManager.init());
   }
 
+  @Test
+  public void testConnect() {
+    MockServerManager mgr = new MockServerManager();
+    mgr.connectFailed = true;
+    mgr.setServerIps(Lists.newArrayList("ip1"));
+    TestUtils.assertRunException(RuntimeException.class, () -> mgr.connectServer());
+  }
+
   private static final class MockServerManager extends AbstractMetaServerManager {
     List<String> domains = Collections.emptyList();
+    boolean connectFailed;
 
     @Override
     public Channel connect(URL url) {
+      if (connectFailed) {
+        throw new IllegalStateException();
+      }
       return null;
     }
 

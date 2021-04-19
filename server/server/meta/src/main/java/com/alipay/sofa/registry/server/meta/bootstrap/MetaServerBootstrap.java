@@ -29,7 +29,6 @@ import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.remoting.meta.MetaNodeExchange;
 import com.alipay.sofa.registry.server.meta.remoting.meta.MetaServerRenewService;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
-import com.alipay.sofa.registry.store.api.elector.AbstractLeaderElector;
 import com.alipay.sofa.registry.store.api.elector.LeaderElector;
 import com.github.rholder.retry.Retryer;
 import com.github.rholder.retry.RetryerBuilder;
@@ -135,8 +134,7 @@ public class MetaServerBootstrap {
                 "[MetaBootstrap] retry elector meta leader: {}, epoch:{}",
                 leaderElector.getLeader(),
                 leaderElector.getLeaderEpoch());
-            return !StringUtils.isEmpty(leaderElector.getLeader())
-                && leaderElector.getLeaderEpoch() != AbstractLeaderElector.LeaderInfo.initEpoch;
+            return !StringUtils.isEmpty(leaderElector.getLeader());
           });
 
       // start renew node

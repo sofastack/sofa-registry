@@ -14,21 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.shared.comparator;
+package com.alipay.sofa.registry.store.api;
 
-import com.alipay.sofa.registry.common.model.Tuple;
+import org.junit.Assert;
+import org.junit.Test;
 
-/**
- * @author chen.zhu
- *     <p>Jan 12, 2021
- */
-public interface ComparatorVisitor<T> {
-
-  void visitAdded(T added);
-
-  void visitModified(Tuple<T, T> modified);
-
-  void visitRemoved(T removed);
-
-  void visitRemaining(T remain);
+public class DBResponseTest {
+  @Test
+  public void test() {
+    Object obj1 = new Object();
+    DBResponse.DBResponseBuilder builder = DBResponse.ok(obj1);
+    Object obj2 = new Object();
+    builder.entity(obj2);
+    DBResponse response = builder.build();
+    Assert.assertEquals(response.getEntity(), obj2);
+  }
 }
