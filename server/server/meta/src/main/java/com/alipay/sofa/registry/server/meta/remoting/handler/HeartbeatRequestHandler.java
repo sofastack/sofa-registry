@@ -36,8 +36,6 @@ import com.alipay.sofa.registry.server.meta.metaserver.impl.DefaultCurrentDcMeta
 import com.alipay.sofa.registry.server.meta.monitor.data.DataMessageListener;
 import com.alipay.sofa.registry.server.meta.monitor.heartbeat.HeartbeatListener;
 import com.alipay.sofa.registry.server.meta.monitor.session.SessionMessageListener;
-import com.alipay.sofa.registry.server.meta.slot.SlotManager;
-import com.alipay.sofa.registry.server.meta.slot.manager.DefaultSlotManager;
 import com.alipay.sofa.registry.server.shared.slot.SlotTableUtils;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,8 +53,6 @@ public class HeartbeatRequestHandler extends BaseMetaServerHandler<HeartbeatRequ
   private static final Logger logger = LoggerFactory.getLogger(HeartbeatRequestHandler.class);
 
   @Autowired private DefaultCurrentDcMetaServer currentDcMetaServer;
-
-  @Autowired private SlotManager slotManager;
 
   @Autowired private MetaLeaderService metaLeaderService;
 
@@ -298,53 +294,6 @@ public class HeartbeatRequestHandler extends BaseMetaServerHandler<HeartbeatRequ
   }
 
   /**
-   * Sets set current dc meta server.
-   *
-   * @param currentDcMetaServer the current dc meta server
-   * @return the set current dc meta server
-   */
-  public HeartbeatRequestHandler setCurrentDcMetaServer(
-      DefaultCurrentDcMetaServer currentDcMetaServer) {
-    this.currentDcMetaServer = currentDcMetaServer;
-    return this;
-  }
-
-  /**
-   * Sets set default slot manager.
-   *
-   * @param defaultSlotManager the default slot manager
-   * @return the set default slot manager
-   */
-  public HeartbeatRequestHandler setDefaultSlotManager(DefaultSlotManager defaultSlotManager) {
-    this.slotManager = defaultSlotManager;
-    return this;
-  }
-
-  /**
-   * Sets set data message listeners.
-   *
-   * @param dataMessageListeners the data message listeners
-   * @return the set data message listeners
-   */
-  public HeartbeatRequestHandler setDataMessageListeners(
-      List<DataMessageListener> dataMessageListeners) {
-    this.dataMessageListeners = dataMessageListeners;
-    return this;
-  }
-
-  /**
-   * Sets set session message listeners.
-   *
-   * @param sessionMessageListeners the session message listeners
-   * @return the set session message listeners
-   */
-  public HeartbeatRequestHandler setSessionMessageListeners(
-      List<SessionMessageListener> sessionMessageListeners) {
-    this.sessionMessageListeners = sessionMessageListeners;
-    return this;
-  }
-
-  /**
    * Sets set node config.
    *
    * @param nodeConfig the node config
@@ -352,17 +301,6 @@ public class HeartbeatRequestHandler extends BaseMetaServerHandler<HeartbeatRequ
    */
   public HeartbeatRequestHandler setNodeConfig(NodeConfig nodeConfig) {
     this.nodeConfig = nodeConfig;
-    return this;
-  }
-
-  /**
-   * Sets set slot manager.
-   *
-   * @param slotManager the slot manager
-   * @return the set slot manager
-   */
-  public HeartbeatRequestHandler setSlotManager(SlotManager slotManager) {
-    this.slotManager = slotManager;
     return this;
   }
 
