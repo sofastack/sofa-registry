@@ -20,7 +20,7 @@ import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.session.registry.Registry;
-import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
+import com.alipay.sofa.registry.server.session.bootstrap.ExecutorManager;
 import com.alipay.sofa.registry.server.shared.remoting.ListenServerChannelHandler;
 import java.util.Collections;
 import org.springframework.beans.factory.annotation.Autowired;

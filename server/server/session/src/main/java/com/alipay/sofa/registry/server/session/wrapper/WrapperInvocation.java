@@ -28,14 +28,12 @@ public class WrapperInvocation<T, R> {
 
   private final Wrapper<T, R> target;
 
-  private List<WrapperInterceptor> interceptorChain;
-
   private Iterator<WrapperInterceptor> iterator;
 
   public WrapperInvocation(
       Wrapper<T, R> target, WrapperInterceptorManager wrapperInterceptorManager) {
-    this.interceptorChain = wrapperInterceptorManager.getInterceptorChain();
-    this.iterator = this.interceptorChain.iterator();
+    List<WrapperInterceptor> interceptorChain = wrapperInterceptorManager.getInterceptorChain();
+    this.iterator = interceptorChain.iterator();
     this.target = target;
   }
 

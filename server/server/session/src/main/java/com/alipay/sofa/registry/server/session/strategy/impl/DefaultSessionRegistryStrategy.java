@@ -26,6 +26,7 @@ import com.alipay.sofa.registry.server.session.push.FirePushService;
 import com.alipay.sofa.registry.server.session.strategy.SessionRegistryStrategy;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
+import com.google.common.annotations.VisibleForTesting;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -73,5 +74,23 @@ public class DefaultSessionRegistryStrategy implements SessionRegistryStrategy {
     TaskEvent taskEvent = new TaskEvent(watcher, TaskEvent.TaskType.WATCHER_REGISTER_FETCH_TASK);
     taskLogger.info("send " + taskEvent.getTaskType() + " taskEvent:{}", taskEvent);
     taskListenerManager.sendTaskEvent(taskEvent);
+  }
+
+  @VisibleForTesting
+  public DefaultSessionRegistryStrategy setTaskListenerManager(TaskListenerManager taskListenerManager) {
+    this.taskListenerManager = taskListenerManager;
+    return this;
+  }
+
+  @VisibleForTesting
+  public DefaultSessionRegistryStrategy setFirePushService(FirePushService firePushService) {
+    this.firePushService = firePushService;
+    return this;
+  }
+
+  @VisibleForTesting
+  public DefaultSessionRegistryStrategy setSessionServerConfig(SessionServerConfig sessionServerConfig) {
+    this.sessionServerConfig = sessionServerConfig;
+    return this;
   }
 }
