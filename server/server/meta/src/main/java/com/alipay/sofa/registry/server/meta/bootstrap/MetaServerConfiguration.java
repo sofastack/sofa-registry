@@ -344,5 +344,10 @@ public class MetaServerConfiguration {
       defaultRequestExecutor.allowCoreThreadTimeOut(true);
       return defaultRequestExecutor;
     }
+
+    @Bean
+    public ExecutorManager executorManager(MetaServerConfig metaServerConfig) {
+      return new ExecutorManager(metaServerConfig);
+    }
   }
 }
