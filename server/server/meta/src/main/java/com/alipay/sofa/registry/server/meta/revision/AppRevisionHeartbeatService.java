@@ -20,7 +20,6 @@ import com.alipay.sofa.registry.server.meta.MetaLeaderService;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.store.api.repository.AppRevisionHeartbeatRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
 
 /**
  * @author xiaojian.xj
@@ -34,9 +33,6 @@ public class AppRevisionHeartbeatService {
 
   @Autowired private MetaLeaderService metaLeaderService;
 
-  @Scheduled(
-      initialDelayString = "${meta.server.revisionGcInitialDelayMillis}",
-      fixedDelayString = "${meta.server.revisionGcMillis}")
   public void doRevisionGc() {
     if (metaLeaderService.amIStableAsLeader()) {
       appRevisionHeartbeatRepository.doAppRevisionGc(metaServerConfig.getRevisionGcSilenceHour());

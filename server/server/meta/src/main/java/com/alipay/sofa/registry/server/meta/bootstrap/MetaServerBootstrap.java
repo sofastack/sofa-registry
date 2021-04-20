@@ -63,6 +63,8 @@ public class MetaServerBootstrap {
 
   @Autowired private Exchange jerseyExchange;
 
+  @Autowired private ExecutorManager executorManager;
+
   @Resource(name = "sessionServerHandlers")
   private Collection<AbstractServerHandler> sessionServerHandlers;
 
@@ -97,6 +99,8 @@ public class MetaServerBootstrap {
   private final AtomicBoolean rpcServerForMetaStarted = new AtomicBoolean(false);
 
   private final AtomicBoolean httpServerStarted = new AtomicBoolean(false);
+
+  private final AtomicBoolean schedulerStart = new AtomicBoolean(false);
 
   private final Retryer<Boolean> retryer =
       RetryerBuilder.<Boolean>newBuilder()
@@ -137,6 +141,8 @@ public class MetaServerBootstrap {
             return !StringUtils.isEmpty(leaderElector.getLeader());
           });
 
+      startScheduler();
+
       // start renew node
       renewNode();
       retryer.call(
@@ -164,6 +170,20 @@ public class MetaServerBootstrap {
     leaderElector.change2Follow();
   }
 
+  private void startScheduler() {
+
+    try {
+      if (schedulerStart.compareAndSet(false, true)) {
+        executorManager.startScheduler();
+        LOGGER.info("Meta Scheduler started!");
+      }
+    } catch (Exception e) {
+      schedulerStart.set(false);
+      LOGGER.error("Meta Scheduler start error!", e);
+      throw new RuntimeException("Meta Scheduler start error!", e);
+    }
+  }
+
   public void destroy() {
     doStop();
   }
@@ -172,6 +192,7 @@ public class MetaServerBootstrap {
     try {
       LOGGER.info("{} Shutting down Meta Server..", new Date().toString());
 
+      executorManager.stopScheduler();
       stopServer();
 
     } catch (Throwable e) {

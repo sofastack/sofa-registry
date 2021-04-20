@@ -53,7 +53,9 @@ public interface MetaServerConfig {
 
   int getRevisionGcSilenceHour();
 
-  int getRevisionGcInitialDelayMillis();
+  int getRevisionGcInitialDelaySecs();
 
-  int getRevisionGcMillis();
+  int getRevisionGcSecs();
+
+  int getMetaSchedulerPoolSize();
 }
