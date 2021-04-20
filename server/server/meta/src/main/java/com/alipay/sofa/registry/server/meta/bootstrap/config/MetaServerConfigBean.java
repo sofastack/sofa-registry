@@ -57,9 +57,9 @@ public class MetaServerConfigBean implements MetaServerConfig {
 
   private int revisionGcSilenceHour = 24;
 
-  private int revisionGcInitialDelayMillis = 60 * 1000;
+  private int revisionGcInitialDelaySecs = 60;
 
-  private int revisionGcMillis = 60 * 1000;
+  private int revisionGcSecs = 60;
 
   private long metaLeaderWarmupMillis =
       Long.getLong(
@@ -68,6 +68,8 @@ public class MetaServerConfigBean implements MetaServerConfig {
 
   private long dataReplicateMaxGapMillis =
       Long.getLong("registry.data.replicate.max.gap.millis", 3 * 60 * 1000);
+
+  private int metaSchedulerPoolSize = OsUtils.getCpuCount();
 
   /**
    * Gets get session server port.
@@ -358,39 +360,59 @@ public class MetaServerConfigBean implements MetaServerConfig {
   }
 
   /**
-   * Getter method for property <tt>revisionGcInitialDelayMillis</tt>.
+   * Getter method for property <tt>revisionGcInitialDelaySecs</tt>.
    *
-   * @return property value of revisionGcInitialDelayMillis
+   * @return property value of revisionGcInitialDelaySecs
    */
-  public int getRevisionGcInitialDelayMillis() {
-    return revisionGcInitialDelayMillis;
+  @Override
+  public int getRevisionGcInitialDelaySecs() {
+    return revisionGcInitialDelaySecs;
   }
 
   /**
-   * Setter method for property <tt>revisionGcInitialDelayMillis</tt>.
+   * Setter method for property <tt>revisionGcInitialDelaySecs</tt>.
    *
-   * @param revisionGcInitialDelayMillis value to be assigned to property
-   *     revisionGcInitialDelayMillis
+   * @param revisionGcInitialDelaySecs value to be assigned to property revisionGcInitialDelaySecs
    */
-  public void setRevisionGcInitialDelayMillis(int revisionGcInitialDelayMillis) {
-    this.revisionGcInitialDelayMillis = revisionGcInitialDelayMillis;
+  public void setRevisionGcInitialDelaySecs(int revisionGcInitialDelaySecs) {
+    this.revisionGcInitialDelaySecs = revisionGcInitialDelaySecs;
   }
 
   /**
-   * Getter method for property <tt>revisionGcMillis</tt>.
+   * Getter method for property <tt>revisionGcSecs</tt>.
    *
-   * @return property value of revisionGcMillis
+   * @return property value of revisionGcSecs
    */
-  public int getRevisionGcMillis() {
-    return revisionGcMillis;
+  @Override
+  public int getRevisionGcSecs() {
+    return revisionGcSecs;
   }
 
   /**
-   * Setter method for property <tt>revisionGcMillis</tt>.
+   * Setter method for property <tt>revisionGcSecs</tt>.
    *
-   * @param revisionGcMillis value to be assigned to property revisionGcMillis
+   * @param revisionGcSecs value to be assigned to property revisionGcSecs
    */
-  public void setRevisionGcMillis(int revisionGcMillis) {
-    this.revisionGcMillis = revisionGcMillis;
+  public void setRevisionGcSecs(int revisionGcSecs) {
+    this.revisionGcSecs = revisionGcSecs;
+  }
+
+  /**
+   * Getter method for property <tt>metaSchedulerPoolSize</tt>.
+   *
+   * @return property value of metaSchedulerPoolSize
+   */
+  @Override
+  public int getMetaSchedulerPoolSize() {
+    return metaSchedulerPoolSize;
+  }
+
+  /**
+   * Setter method for property <tt>metaSchedulerPoolSize</tt>.
+   *
+   * @param metaSchedulerPoolSize value to be assigned to property metaSchedulerPoolSize
+   */
+  public void setMetaSchedulerPoolSize(int metaSchedulerPoolSize) {
+    this.metaSchedulerPoolSize = metaSchedulerPoolSize;
   }
 }
