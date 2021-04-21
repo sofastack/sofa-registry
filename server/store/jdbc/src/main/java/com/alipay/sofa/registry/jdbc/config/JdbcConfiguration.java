@@ -48,6 +48,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 import javax.sql.DataSource;
+import org.apache.ibatis.mapping.DatabaseIdProvider;
+import org.apache.ibatis.mapping.VendorDatabaseIdProvider;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.annotation.MapperScan;
@@ -130,6 +132,16 @@ public class JdbcConfiguration {
       return dataSource;
     }
 
+    @Bean
+    public DatabaseIdProvider databaseIdProvider() {
+      DatabaseIdProvider databaseIdProvider = new VendorDatabaseIdProvider();
+      Properties p = new Properties();
+      p.setProperty("MySQL", "mysql");
+      p.setProperty("H2", "h2");
+      databaseIdProvider.setProperties(p);
+      return databaseIdProvider;
+    }
+
     /**
      * create sqlSessionFactory
      *
@@ -139,9 +151,13 @@ public class JdbcConfiguration {
      */
     @Bean
     public SqlSessionFactory sqlSessionFactory(
-        DataSource dataSource, JdbcDriverConfig jdbcDriverConfig) throws Exception {
+        DataSource dataSource,
+        JdbcDriverConfig jdbcDriverConfig,
+        DatabaseIdProvider databaseIdProvider)
+        throws Exception {
       SqlSessionFactoryBean factoryBean = new SqlSessionFactoryBean();
       factoryBean.setDataSource(dataSource);
+      factoryBean.setDatabaseIdProvider(databaseIdProvider);
       // factoryBean.setTypeAliasesPackage(jdbcDriverConfig.getTypeAliasesPackage());
       ResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
 
