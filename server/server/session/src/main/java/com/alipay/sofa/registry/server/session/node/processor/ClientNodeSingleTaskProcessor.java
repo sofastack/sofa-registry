@@ -36,8 +36,7 @@ public class ClientNodeSingleTaskProcessor implements TaskProcessor<SessionTask>
       task.execute();
       return ProcessingResult.Success;
     } catch (Throwable throwable) {
-      LOGGER.error("Client node SingleTask Process error! Task:" + task, throwable);
-
+      LOGGER.error("Client node SingleTask Process error! Task: {}", task, throwable);
       return ProcessingResult.PermanentError;
     }
   }

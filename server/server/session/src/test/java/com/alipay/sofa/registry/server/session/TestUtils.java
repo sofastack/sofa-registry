@@ -20,25 +20,43 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.alipay.remoting.Connection;
+import com.alipay.sofa.registry.common.model.ElementType;
+import com.alipay.sofa.registry.common.model.PublishSource;
+import com.alipay.sofa.registry.common.model.store.*;
+import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.remoting.bolt.BoltChannel;
 import com.alipay.sofa.registry.server.session.bootstrap.CommonConfig;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfigBean;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
+import com.alipay.sofa.registry.util.StringFormatter;
 import io.netty.channel.Channel;
 import io.netty.util.Attribute;
 import io.netty.util.AttributeKey;
 import java.net.InetSocketAddress;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import org.junit.Assert;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 public class TestUtils {
+  private static final AtomicLong REGISTER_ID_SEQ = new AtomicLong();
 
   public static SessionServerConfigBean newSessionConfig(String dataCenter) {
     CommonConfig commonConfig = mock(CommonConfig.class);
     when(commonConfig.getLocalDataCenter()).thenReturn(dataCenter);
+    when(commonConfig.getLocalRegion()).thenReturn("DEF_ZONE");
+    SessionServerConfigBean configBean = new SessionServerConfigBean(commonConfig);
+    return configBean;
+  }
+
+  public static SessionServerConfigBean newSessionConfig(String dataCenter, String region) {
+    CommonConfig commonConfig = mock(CommonConfig.class);
+    when(commonConfig.getLocalDataCenter()).thenReturn(dataCenter);
+    when(commonConfig.getLocalRegion()).thenReturn(region);
     SessionServerConfigBean configBean = new SessionServerConfigBean(commonConfig);
     return configBean;
   }
@@ -48,7 +66,10 @@ public class TestUtils {
       runnable.run();
       Assert.fail();
     } catch (Throwable exception) {
-      Assert.assertEquals(eclazz, exception.getClass());
+      if (!eclazz.equals(exception.getClass())) {
+        exception.printStackTrace();
+        Assert.fail();
+      }
     }
   }
 
@@ -109,5 +130,44 @@ public class TestUtils {
     public void setActive(boolean b) {
       active.set(b);
     }
+  }
+
+  public static void assertBetween(long v, long low, long high) {
+    Assert.assertTrue(StringFormatter.format("v={}, low={}"), v >= low);
+    Assert.assertTrue(StringFormatter.format("v={}, high={}"), v <= high);
+  }
+
+  public static SubPublisher newSubPublisher(long version, long timestamp) {
+    String registerId = "testRegisterId-" + REGISTER_ID_SEQ.incrementAndGet();
+    SubPublisher publisher =
+        new SubPublisher(
+            registerId,
+            "testCell",
+            Collections.emptyList(),
+            "testClient",
+            version,
+            "192.168.0.1:8888",
+            timestamp,
+            PublishSource.CLIENT);
+    return publisher;
+  }
+
+  public static SubDatum newSubDatum(String dataId, long version, List<SubPublisher> publishers) {
+    String dataInfo = DataInfo.toDataInfoId(dataId, "testInstance", "testGroup");
+    SubDatum subDatum =
+        new SubDatum(
+            dataInfo, "dataCenter", version, publishers, dataId, "testInstance", "testGroup");
+    return subDatum;
+  }
+
+  public static Subscriber newZoneSubscriber(String cell) {
+    Subscriber subscriber = new Subscriber();
+    subscriber.setRegisterId("test-Subscriber-" + REGISTER_ID_SEQ.incrementAndGet());
+    subscriber.setScope(ScopeEnum.zone);
+    subscriber.setElementType(ElementType.SUBSCRIBER);
+    subscriber.setClientVersion(BaseInfo.ClientVersion.StoreData);
+    subscriber.setCell(cell);
+    subscriber.setSourceAddress(new URL("192.168.1.1", 8888));
+    return subscriber;
   }
 }

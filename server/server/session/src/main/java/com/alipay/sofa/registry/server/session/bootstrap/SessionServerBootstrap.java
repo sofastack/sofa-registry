@@ -153,10 +153,10 @@ public class SessionServerBootstrap {
 
       // load metadata
       retryer.call(
-              ()->{
-                appRevisionCacheRegistry.loadMetadata();
-                return true;
-              });
+          () -> {
+            appRevisionCacheRegistry.loadMetadata();
+            return true;
+          });
 
       startScheduler();
 

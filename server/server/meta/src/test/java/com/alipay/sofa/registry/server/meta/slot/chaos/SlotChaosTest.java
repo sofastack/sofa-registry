@@ -108,7 +108,7 @@ public class SlotChaosTest extends AbstractMetaServerTestBase {
     }
     logger.info("[slot-chaos slot] begin balance");
     int count = 0;
-    for (; count < slotManager.getSlotNums() * 2; count++) {
+    for (; count < slotManager.getSlotNums() * 4; count++) {
       if (!scheduledSlotArranger.arrangeSync()) {
         break;
       }

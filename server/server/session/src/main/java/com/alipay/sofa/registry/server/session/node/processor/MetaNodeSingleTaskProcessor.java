@@ -35,12 +35,12 @@ public class MetaNodeSingleTaskProcessor implements TaskProcessor<SessionTask> {
   @Override
   public ProcessingResult process(SessionTask task) {
     try {
-      LOGGER.info("execute " + task);
+      LOGGER.info("execute {}", task);
       task.execute();
-      LOGGER.info("end " + task);
+      LOGGER.info("end {}", task);
       return ProcessingResult.Success;
     } catch (Throwable throwable) {
-      LOGGER.error("Meta node SingleTask Process error! Task:" + task, throwable);
+      LOGGER.error("Meta node SingleTask Process error! Task: {}", task, throwable);
       if (task instanceof Retryable) {
         Retryable retryAbleTask = (Retryable) task;
         if (retryAbleTask.checkRetryTimes()) {

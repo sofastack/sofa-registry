@@ -108,8 +108,10 @@ public class JerseyExchangeTest {
         new InetSocketAddress(JERSEY_TEST_PORT), jerseyJettyServer.getLocalAddress());
     Assert.assertFalse(jerseyJettyServer.isClosed());
 
-    jerseyJettyServer.sendCallback(new JerseyChannel(), new Object(), callbackHandler, 1000);
-    Assert.assertNull(jerseyJettyServer.sendSync(new JerseyChannel(), new Object(), 1000));
+    jerseyJettyServer.sendCallback(
+        new JerseyChannel(null, null), new Object(), callbackHandler, 1000);
+    Assert.assertNull(
+        jerseyJettyServer.sendSync(new JerseyChannel(null, null), new Object(), 1000));
   }
 
   private void testJerseyClient(
