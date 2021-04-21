@@ -18,9 +18,7 @@ package com.alipay.sofa.registry.test.resource.meta;
 
 import static com.alipay.sofa.registry.client.constants.ValueConstants.DEFAULT_GROUP;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import com.alipay.sofa.registry.client.api.model.RegistryType;
 import com.alipay.sofa.registry.client.api.model.UserData;
@@ -30,7 +28,9 @@ import com.alipay.sofa.registry.core.model.Result;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
+import com.alipay.sofa.registry.util.ParaCheckUtil;
 import java.util.concurrent.atomic.AtomicReference;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -46,9 +46,16 @@ public class StopPushDataSwitchTest extends BaseIntegrationTest {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(StopPushDataSwitchTest.class);
 
+  @Before
+  public void before() throws Exception {
+    beforeInit();
+    LOGGER.info("StopPushDataSwitchTest beforeCall");
+  }
+
   @Test
   public void testStopPushDataSwitch() throws Exception {
     // open stop push switch
+    ParaCheckUtil.checkNotNull(metaChannel, "metaChannel");
     assertTrue(
         metaChannel
             .getWebTarget()

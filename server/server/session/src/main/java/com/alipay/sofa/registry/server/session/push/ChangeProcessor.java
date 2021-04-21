@@ -33,18 +33,16 @@ public class ChangeProcessor {
 
   @Autowired SessionServerConfig sessionServerConfig;
 
-  private Worker[] workers;
-  private int changeDebouncingMillis;
-  private int changeDebouncingMaxMillis;
+  Worker[] workers;
 
   @PostConstruct
   public void init() {
-    this.changeDebouncingMillis = sessionServerConfig.getDataChangeDebouncingMillis();
-    this.changeDebouncingMaxMillis = sessionServerConfig.getDataChangeMaxDebouncingMillis();
-
     this.workers = new Worker[sessionServerConfig.getDataChangeFetchTaskWorkerSize()];
     for (int i = 0; i < workers.length; i++) {
-      workers[i] = new Worker();
+      workers[i] =
+          new Worker(
+              sessionServerConfig.getDataChangeDebouncingMillis(),
+              sessionServerConfig.getDataChangeMaxDebouncingMillis());
       ConcurrentUtils.createDaemonThread("ChangeExecutor-" + i, workers[i]).start();
     }
   }
@@ -60,7 +58,7 @@ public class ChangeProcessor {
     void onChange(String dataCenter, String dataInfoId, long expectDatumVersion);
   }
 
-  private static final class ChangeTask {
+  static final class ChangeTask {
     final ChangeKey key;
     final ChangeHandler changeHandler;
     long expectDatumVersion;
@@ -94,14 +92,29 @@ public class ChangeProcessor {
     }
   }
 
-  private final class Worker extends WakeUpLoopRunnable {
+  static final class Worker extends WakeUpLoopRunnable {
+    // task sorted by expire probably
     final LinkedHashMap<ChangeKey, ChangeTask> tasks = Maps.newLinkedHashMap();
+    final int changeDebouncingMillis;
+    final int changeDebouncingMaxMillis;
+
+    Worker(int changeDebouncingMillis, int changeDebouncingMaxMillis) {
+      this.changeDebouncingMillis = changeDebouncingMillis;
+      this.changeDebouncingMaxMillis = changeDebouncingMaxMillis;
+    }
+
+    ChangeTask get(ChangeKey key) {
+      synchronized (tasks) {
+        return tasks.get(key);
+      }
+    }
 
     boolean commitChange(ChangeKey key, ChangeHandler handler, long expectDatumVersion) {
+      final long now = System.currentTimeMillis();
+      final ChangeTask task =
+          new ChangeTask(key, expectDatumVersion, handler, now + changeDebouncingMillis);
+
       synchronized (tasks) {
-        final long now = System.currentTimeMillis();
-        final ChangeTask task =
-            new ChangeTask(key, expectDatumVersion, handler, now + changeDebouncingMillis);
         final ChangeTask exist = tasks.get(key);
         if (exist == null) {
           task.expireDeadlineTimestamp = now + changeDebouncingMaxMillis;
@@ -111,14 +124,15 @@ public class ChangeProcessor {
         if (task.expectDatumVersion <= exist.expectDatumVersion) {
           return false;
         }
-
+        // compare with exist
         if (task.expireTimestamp <= exist.expireDeadlineTimestamp) {
-          // requeue, expire is before deadline, remove first, unlink the list
+          // not reach deadline, requeue to wait
           task.expireDeadlineTimestamp = exist.expireDeadlineTimestamp;
+          // tasks is linkedMap, must remove the exist first, then enqueue in the tail
           tasks.remove(key);
           tasks.put(key, task);
         } else {
-          // reach deadline, could not requeue, replace the exist
+          // reach deadline, could not requeue, use exist.expire as newTask.expire
           exist.expectDatumVersion = task.expectDatumVersion;
         }
         return true;
@@ -162,7 +176,7 @@ public class ChangeProcessor {
     }
   }
 
-  private static final class ChangeKey {
+  static final class ChangeKey {
     final String dataInfoId;
     final String dataCenter;
 
@@ -191,7 +205,7 @@ public class ChangeProcessor {
     }
   }
 
-  private Worker workerOf(ChangeKey key) {
+  Worker workerOf(ChangeKey key) {
     int n = (key.hashCode() & 0x7fffffff) % workers.length;
     return workers[n];
   }

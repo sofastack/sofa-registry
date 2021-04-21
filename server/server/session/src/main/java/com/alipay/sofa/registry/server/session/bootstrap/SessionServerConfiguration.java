@@ -46,8 +46,6 @@ import com.alipay.sofa.registry.server.session.mapper.ConnectionMapper;
 import com.alipay.sofa.registry.server.session.metadata.AppRevisionCacheRegistry;
 import com.alipay.sofa.registry.server.session.metadata.AppRevisionHeartbeatRegistry;
 import com.alipay.sofa.registry.server.session.node.processor.ClientNodeSingleTaskProcessor;
-import com.alipay.sofa.registry.server.session.node.processor.ConsoleSyncSingleTaskProcessor;
-import com.alipay.sofa.registry.server.session.node.processor.DataNodeSingleTaskProcessor;
 import com.alipay.sofa.registry.server.session.node.processor.MetaNodeSingleTaskProcessor;
 import com.alipay.sofa.registry.server.session.node.service.ClientNodeService;
 import com.alipay.sofa.registry.server.session.node.service.ClientNodeServiceImpl;
@@ -523,11 +521,6 @@ public class SessionServerConfiguration {
   public static class SessionTaskConfiguration {
 
     @Bean
-    public TaskProcessor dataNodeSingleTaskProcessor() {
-      return new DataNodeSingleTaskProcessor();
-    }
-
-    @Bean
     public TaskProcessor metaNodeSingleTaskProcessor() {
       return new MetaNodeSingleTaskProcessor();
     }
@@ -535,11 +528,6 @@ public class SessionServerConfiguration {
     @Bean
     public TaskProcessor clientNodeSingleTaskProcessor() {
       return new ClientNodeSingleTaskProcessor();
-    }
-
-    @Bean
-    public TaskProcessor consoleSyncSingleTaskProcessor() {
-      return new ConsoleSyncSingleTaskProcessor();
     }
 
     @Bean

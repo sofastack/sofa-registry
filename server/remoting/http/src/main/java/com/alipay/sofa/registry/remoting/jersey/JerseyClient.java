@@ -66,10 +66,7 @@ public class JerseyClient implements Client {
   @Override
   public Channel connect(URL url) {
     try {
-
-      JerseyChannel channel = new JerseyChannel();
-      channel.setWebTarget(getTarget(url));
-      channel.setClient(getClient());
+      JerseyChannel channel = new JerseyChannel(getTarget(url), getClient());
       channels.put(url.getAddressString(), channel);
       return channel;
     } catch (Exception e) {

@@ -77,7 +77,8 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository {
     // eg: records insert after interfaceAppsIndexMapper.getTotalCount
     // and beyond refreshCount will not be load in this method, they will be load in next schedule
     final int total = interfaceAppsIndexMapper.getTotalCount(defaultCommonConfig.getClusterId());
-    final int refreshCount = MathUtils.divideCeil(total, refreshLimit);
+    // add 100, query the new mappings which inserted when scanning
+    final int refreshCount = MathUtils.divideCeil(total, refreshLimit) + 100;
     LOG.info(
         "begin load metadata, total count mapping {}, rounds={}, dataCenter={}",
         total,

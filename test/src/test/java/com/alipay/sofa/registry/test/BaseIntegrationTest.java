@@ -45,7 +45,10 @@ import com.alipay.sofa.registry.server.test.TestRegistryMain;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import java.io.*;
 import java.lang.reflect.Field;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
@@ -104,14 +107,18 @@ public class BaseIntegrationTest extends AbstractTest {
     System.setProperty(Lease.LEASE_DURATION, "2");
     System.setProperty(SlotConfig.KEY_DATA_SLOT_NUM, "16");
 
-    startServerIfNecessary();
-    initRegistryClientAndChannel();
+    beforeInit();
   }
 
   @Before
   public void beforeBaseIntegration() throws Exception {
     //        h2Server.start();
     //        Class.forName("org.h2.driver");
+    LOGGER.info("beforeBaseIntegrationCalled");
+    beforeInit();
+  }
+
+  protected static void beforeInit() throws Exception {
     startServerIfNecessary();
     initRegistryClientAndChannel();
   }
@@ -129,11 +136,12 @@ public class BaseIntegrationTest extends AbstractTest {
       sessionApplicationContext = testRegistryMain.getSessionApplicationContext();
       dataApplicationContext = testRegistryMain.getDataApplicationContext();
       initRegistryClientAndChannel();
+      LOGGER.info("startServerNecessary", new Exception("for trace"));
       Thread.sleep(1000 * 20);
     }
   }
 
-  private static void initRegistryClientAndChannel() throws Exception {
+  protected static void initRegistryClientAndChannel() throws Exception {
     if (registryClient1 == null) {
       RegistryClientConfig config =
           DefaultRegistryClientConfigBuilder.start()
@@ -161,11 +169,32 @@ public class BaseIntegrationTest extends AbstractTest {
       registryClient2.init();
     }
 
-    if (sessionChannel == null || dataChannel == null || metaChannel == null) {
+    if (sessionChannel == null) {
       sessionChannel = JerseyClient.getInstance().connect(new URL(LOCAL_ADDRESS, sessionPort));
+      LOGGER.info(
+          "init Channel for session: {}, {}, {}",
+          sessionChannel,
+          dataChannel,
+          metaChannel,
+          new Exception("for trace"));
+    }
+    if (dataChannel == null) {
       dataChannel = JerseyClient.getInstance().connect(new URL(LOCAL_ADDRESS, dataPort));
+      LOGGER.info(
+          "init Channel for data: {}, {}, {}",
+          sessionChannel,
+          dataChannel,
+          metaChannel,
+          new Exception("for trace"));
+    }
+    if (metaChannel == null) {
       metaChannel = JerseyClient.getInstance().connect(new URL(LOCAL_ADDRESS, metaPort));
-      LOGGER.info("init Channel: {}, {}, {}", sessionChannel, dataChannel, metaChannel);
+      LOGGER.info(
+          "init Channel for meta: {}, {}, {}",
+          sessionChannel,
+          dataChannel,
+          metaChannel,
+          new Exception("for trace"));
     }
     ParaCheckUtil.checkNotNull(sessionChannel.getWebTarget(), "sessionChannel");
     ParaCheckUtil.checkNotNull(dataChannel.getWebTarget(), "dataChannel");

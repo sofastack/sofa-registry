@@ -35,15 +35,12 @@ import com.alipay.sofa.registry.server.session.filter.blacklist.BlacklistConstan
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Maps;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -54,6 +51,13 @@ import org.springframework.test.context.junit4.SpringRunner;
  */
 @RunWith(SpringRunner.class)
 public class BlacklistTest extends BaseIntegrationTest {
+
+  @Before
+  public void before() throws Exception {
+    beforeInit();
+    LOGGER.info("BlacklistTest beforeCall");
+  }
+
   @Test
   public void testBlacklistUpdate() throws Exception {
 

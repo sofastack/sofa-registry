@@ -17,7 +17,10 @@
 package com.alipay.sofa.registry.server.session.push;
 
 import com.alipay.sofa.registry.common.model.SubscriberUtils;
-import com.alipay.sofa.registry.common.model.store.*;
+import com.alipay.sofa.registry.common.model.store.BaseInfo;
+import com.alipay.sofa.registry.common.model.store.SubDatum;
+import com.alipay.sofa.registry.common.model.store.Subscriber;
+import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.core.model.ReceivedData;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.converter.ReceivedDataConverter;
@@ -30,16 +33,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 public class PushDataGenerator {
 
-  @Autowired private SessionServerConfig sessionServerConfig;
+  @Autowired SessionServerConfig sessionServerConfig;
 
   public Object createPushData(SubDatum datum, Map<String, Subscriber> subscriberMap) {
     SubscriberUtils.getAndAssertHasSameScope(subscriberMap.values());
-    final Subscriber subscriber = subscriberMap.values().iterator().next();
-    BaseInfo.ClientVersion clientVersion = subscriber.getClientVersion();
     // only supported 4.x
-    if (BaseInfo.ClientVersion.StoreData != clientVersion) {
-      throw new IllegalArgumentException("unsupported clientVersion:" + clientVersion);
-    }
+    SubscriberUtils.assertClientVersion(subscriberMap.values(), BaseInfo.ClientVersion.StoreData);
+
+    final Subscriber subscriber = subscriberMap.values().iterator().next();
     String dataId = datum.getDataId();
     String clientCell = sessionServerConfig.getClientCell(subscriber.getCell());
     Predicate<String> zonePredicate =
