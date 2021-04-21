@@ -29,17 +29,19 @@ import javax.ws.rs.client.WebTarget;
  */
 public class JerseyChannel implements Channel {
 
-  private WebTarget webTarget;
+  private final WebTarget webTarget;
 
-  private Client client;
+  private final Client client;
+
+  public JerseyChannel(WebTarget webTarget, Client client) {
+    this.webTarget = webTarget;
+    this.client = client;
+  }
 
   @Override
   public InetSocketAddress getRemoteAddress() {
-    if (webTarget != null) {
-      URI uri = webTarget.getUri();
-      return new InetSocketAddress(uri.getHost(), uri.getPort());
-    }
-    return null;
+    URI uri = webTarget.getUri();
+    return new InetSocketAddress(uri.getHost(), uri.getPort());
   }
 
   @Override
@@ -76,23 +78,5 @@ public class JerseyChannel implements Channel {
   @Override
   public void close() {
     client.close();
-  }
-
-  /**
-   * Setter method for property <tt>webTarget</tt>.
-   *
-   * @param webTarget value to be assigned to property webTarget
-   */
-  public void setWebTarget(WebTarget webTarget) {
-    this.webTarget = webTarget;
-  }
-
-  /**
-   * Setter method for property <tt>client</tt>.
-   *
-   * @param client value to be assigned to property client
-   */
-  public void setClient(Client client) {
-    this.client = client;
   }
 }

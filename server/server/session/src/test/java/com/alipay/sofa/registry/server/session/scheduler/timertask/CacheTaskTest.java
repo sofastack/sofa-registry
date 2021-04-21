@@ -23,7 +23,7 @@ import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
 import com.alipay.sofa.registry.server.session.TestUtils;
 import com.alipay.sofa.registry.server.session.bootstrap.ExecutorManager;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfigBean;
-import com.alipay.sofa.registry.server.session.node.processor.ConsoleSyncSingleTaskProcessor;
+import com.alipay.sofa.registry.server.session.node.processor.ClientNodeSingleTaskProcessor;
 import com.alipay.sofa.registry.server.session.store.DataStore;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.session.store.Watchers;
@@ -131,7 +131,7 @@ public class CacheTaskTest {
     BoltExchange boltExchange = Mockito.mock(BoltExchange.class);
     task.boltExchange = boltExchange;
     task.executorManager = new ExecutorManager(serverConfigBean);
-    TaskDispatchers.createDefaultSingleTaskDispatcher("test", new ConsoleSyncSingleTaskProcessor());
+    TaskDispatchers.createDefaultSingleTaskDispatcher("test", new ClientNodeSingleTaskProcessor());
     try {
       task.syncCount();
       task.printTaskExecute();

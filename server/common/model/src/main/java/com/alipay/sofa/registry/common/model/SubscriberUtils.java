@@ -16,14 +16,19 @@
  */
 package com.alipay.sofa.registry.common.model;
 
+import com.alipay.sofa.registry.common.model.store.BaseInfo;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.net.InetSocketAddress;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 public final class SubscriberUtils {
   private static final Logger LOGGER = LoggerFactory.getLogger(SubscriberUtils.class);
@@ -73,6 +78,13 @@ public final class SubscriberUtils {
       }
     }
     return scope;
+  }
+
+  public static void assertClientVersion(
+      Collection<Subscriber> subscribers, BaseInfo.ClientVersion clientVersion) {
+    for (Subscriber sub : subscribers) {
+      ParaCheckUtil.checkEquals(sub.getClientVersion(), clientVersion, "subscriber.clientVersion");
+    }
   }
 
   public static long getMaxPushedVersion(String dataCenter, Collection<Subscriber> subscribers) {

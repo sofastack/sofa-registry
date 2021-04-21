@@ -110,7 +110,7 @@ class SlotChecker implements CheckerAction {
         min.getFirst(),
         min.getSecond(),
         (int) average);
-    TestUtils.assertBalance(slotTable, dataNodes, slotNum, replicas, true, "");
+    TestUtils.assertBalance(slotTable, dataNodes, slotNum, replicas, false, "");
     return max.getSecond() < min.getSecond() * 2;
   }
 }

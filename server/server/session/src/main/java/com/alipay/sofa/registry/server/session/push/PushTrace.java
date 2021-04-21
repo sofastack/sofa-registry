@@ -33,8 +33,8 @@ public final class PushTrace {
   private static final Logger LOGGER = LoggerFactory.getLogger("PUSH-TRACE");
 
   private final SubDatum datum;
-  private final long modifyTimestamp;
-  private final long pushCommitTimestamp = System.currentTimeMillis();
+  final long modifyTimestamp;
+  final long pushCommitTimestamp = System.currentTimeMillis();
 
   private long subscriberPushedVersion;
   private final String subApp;
@@ -47,20 +47,20 @@ public final class PushTrace {
   private long pushFinishTimestamp;
 
   // push.finish - datum.modify
-  private long datumTotalDelayMillis;
+  long datumTotalDelayMillis;
   // commit - datum.modify
-  private long datumPushCommitSpanMillis;
+  long datumPushCommitSpanMillis;
   // push.start - fetch.finish
-  private long datumPushStartSpanMillis;
+  long datumPushStartSpanMillis;
   // push.finish - push.start
-  private long datumPushFinishSpanMillis;
+  long datumPushFinishSpanMillis;
 
   // pub after last push
-  private int newPublisherNum;
+  int newPublisherNum;
   // push.finish - firstPub.registerTimestamp
-  private long firstPubPushDelayMillis;
+  long firstPubPushDelayMillis;
   // push.finish - lastPub.registerTimestamp
-  private long lastPubPushDelayMillis;
+  long lastPubPushDelayMillis;
 
   private PushTrace(SubDatum datum, InetSocketAddress address, String subApp, boolean noDelay) {
     this.datum = datum;
@@ -141,12 +141,12 @@ public final class PushTrace {
     Timeout,
   }
 
-  private List<SubPublisher> findNewPublishers(
+  static List<SubPublisher> findNewPublishers(
       List<SubPublisher> publishers, long minRegisterTimestamp) {
     if (publishers.isEmpty()) {
       return Collections.emptyList();
     }
-    List<SubPublisher> news = Lists.newArrayList();
+    List<SubPublisher> news = Lists.newArrayListWithCapacity(128);
     for (SubPublisher p : publishers) {
       if (p.getRegisterTimestamp() > minRegisterTimestamp) {
         news.add(p);
