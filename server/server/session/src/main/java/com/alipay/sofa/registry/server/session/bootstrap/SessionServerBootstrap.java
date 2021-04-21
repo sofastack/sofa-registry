@@ -149,12 +149,14 @@ public class SessionServerBootstrap {
 
       // wait until slot table is get
       retryer.call(
-          () -> {
-            return slotTableCache.getCurrentSlotTable().getEpoch() != SlotTable.INIT.getEpoch();
-          });
+          () -> slotTableCache.getCurrentSlotTable().getEpoch() != SlotTable.INIT.getEpoch());
 
       // load metadata
-      appRevisionCacheRegistry.loadMetadata();
+      retryer.call(
+              ()->{
+                appRevisionCacheRegistry.loadMetadata();
+                return true;
+              });
 
       startScheduler();
 
