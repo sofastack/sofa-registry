@@ -147,7 +147,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
   private volatile Set<String> invalidForeverZonesSet;
 
-  private Pattern invalidIgnoreDataIdPattern = null;
+  private volatile Pattern invalidIgnoreDataIdPattern = null;
 
   private String blacklistPubDataIdRegex = "";
 

@@ -57,7 +57,7 @@ import org.junit.runners.Suite;
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
   Crc32CSlotFunctionTest.class,
-  DefaultCrossDcMetaServerTest.class,
+  //  DefaultCrossDcMetaServerTest.class,
   CrossDcSlotAllocatorTest.class,
   DefaultCurrentDcMetaServerTest.class,
   DefaultSessionServerManagerTest.class,

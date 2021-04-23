@@ -28,7 +28,7 @@ public class NodeClusterViewRequest implements Serializable {
   private final NodeType nodeType;
 
   /** get list data dataCenter */
-  private String dataCenterId;
+  private final String dataCenterId;
 
   /**
    * constructor
@@ -48,15 +48,6 @@ public class NodeClusterViewRequest implements Serializable {
    */
   public String getDataCenterId() {
     return dataCenterId;
-  }
-
-  /**
-   * Setter method for property <tt>dataCenterId</tt>.
-   *
-   * @param dataCenterId value to be assigned to property dataCenterId
-   */
-  public void setDataCenterId(String dataCenterId) {
-    this.dataCenterId = dataCenterId;
   }
 
   /**

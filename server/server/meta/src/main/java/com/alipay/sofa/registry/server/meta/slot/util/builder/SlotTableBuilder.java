@@ -41,7 +41,7 @@ public class SlotTableBuilder implements Builder<SlotTable> {
 
   private static final Logger logger = LoggerFactory.getLogger(SlotTableBuilder.class);
 
-  private final Map<Integer, SlotBuilder> buildingSlots = Maps.newHashMap();
+  private final Map<Integer, SlotBuilder> buildingSlots = Maps.newHashMapWithExpectedSize(256);
 
   private final Map<String, DataNodeSlot> reverseMap = Maps.newHashMap();
 
@@ -60,8 +60,7 @@ public class SlotTableBuilder implements Builder<SlotTable> {
   }
 
   public SlotBuilder getOrCreate(int slotId) {
-    buildingSlots.putIfAbsent(slotId, new SlotBuilder(slotId, followerNums));
-    return buildingSlots.get(slotId);
+    return buildingSlots.computeIfAbsent(slotId, k -> new SlotBuilder(slotId, followerNums));
   }
 
   public void init(List<String> dataServers) {

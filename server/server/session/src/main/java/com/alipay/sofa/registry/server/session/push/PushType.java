@@ -14,21 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.node.processor;
+package com.alipay.sofa.registry.server.session.push;
 
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
+public enum PushType {
+  Sub(false),
+  Reg(true),
+  Temp(true),
+  Empty(true);
 
-/**
- * @author shangyu.wh
- * @version $Id: DataNodeSingleTaskProcessor.java, v 0.1 2017-12-11 19:35 shangyu.wh Exp $
- */
-public class MetaNodeSingleTaskProcessor extends AbstractRetrySingleTaskProcessor {
+  public final boolean noDelay;
 
-  private static final Logger LOGGER =
-      LoggerFactory.getLogger(MetaNodeSingleTaskProcessor.class, "[Task]");
-
-  public MetaNodeSingleTaskProcessor() {
-    super(LOGGER);
+  private PushType(boolean noDelay) {
+    this.noDelay = noDelay;
   }
 }

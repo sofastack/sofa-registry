@@ -24,11 +24,11 @@ import java.io.Serializable;
  */
 public class GetSlotTableRequest implements Serializable {
   private static final long serialVersionUID = 2478663577413212315L;
-  private long epochOfNode;
+  private final long epochOfNode;
   // session node not care the followers
-  private boolean ignoredFollowers;
+  private final boolean ignoredFollowers;
   // data node only care self, if not set, get all
-  private String targetDataNode;
+  private final String targetDataNode;
 
   public GetSlotTableRequest(long epochOfNode, String targetDataNode, boolean ignoredFollowers) {
     this.epochOfNode = epochOfNode;
@@ -46,15 +46,6 @@ public class GetSlotTableRequest implements Serializable {
   }
 
   /**
-   * Setter method for property <tt>epochOfNode</tt>.
-   *
-   * @param epochOfNode value to be assigned to property epochOfNode
-   */
-  public void setEpochOfNode(long epochOfNode) {
-    this.epochOfNode = epochOfNode;
-  }
-
-  /**
    * Getter method for property <tt>targetDataNode</tt>.
    *
    * @return property value of targetDataNode
@@ -63,21 +54,8 @@ public class GetSlotTableRequest implements Serializable {
     return targetDataNode;
   }
 
-  /**
-   * Setter method for property <tt>targetDataNode</tt>.
-   *
-   * @param targetDataNode value to be assigned to property targetDataNode
-   */
-  public void setTargetDataNode(String targetDataNode) {
-    this.targetDataNode = targetDataNode;
-  }
-
   public boolean isIgnoredFollowers() {
     return ignoredFollowers;
-  }
-
-  public void setIgnoredFollowers(boolean v) {
-    this.ignoredFollowers = v;
   }
 
   @Override

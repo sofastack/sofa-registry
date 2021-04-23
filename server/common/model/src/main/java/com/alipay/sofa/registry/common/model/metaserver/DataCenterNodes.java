@@ -18,9 +18,7 @@ package com.alipay.sofa.registry.common.model.metaserver;
 
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.Node.NodeType;
-import com.google.common.collect.Maps;
 import java.io.Serializable;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -31,9 +29,9 @@ public class DataCenterNodes<T extends Node> implements Serializable {
 
   private final NodeType nodeType;
 
-  private Long version;
+  private final long version;
 
-  private String dataCenterId;
+  private final String dataCenterId;
 
   private Map<String /*ipAddress*/, T> nodes;
 
@@ -50,35 +48,13 @@ public class DataCenterNodes<T extends Node> implements Serializable {
     this.dataCenterId = dataCenterId;
   }
 
-  public static <T extends Node> DataCenterNodes<T> transferFrom(
-      long epoch, String dc, List<T> nodes) {
-    if (nodes == null || nodes.isEmpty()) {
-      return new DataCenterNodes<>(null, epoch, dc);
-    }
-    NodeType type = nodes.get(0).getNodeType();
-    Map<String, T> nodeMap = Maps.newHashMap();
-    nodes.forEach(node -> nodeMap.put(node.getNodeUrl().getIpAddress(), node));
-    DataCenterNodes<T> result = new DataCenterNodes<T>(type, epoch, dc);
-    result.setNodes(nodeMap);
-    return result;
-  }
-
   /**
    * Getter method for property <tt>version</tt>.
    *
    * @return property value of version
    */
-  public Long getVersion() {
+  public long getVersion() {
     return version;
-  }
-
-  /**
-   * Setter method for property <tt>version</tt>.
-   *
-   * @param version value to be assigned to property version
-   */
-  public void setVersion(Long version) {
-    this.version = version;
   }
 
   /**
@@ -88,15 +64,6 @@ public class DataCenterNodes<T extends Node> implements Serializable {
    */
   public String getDataCenterId() {
     return dataCenterId;
-  }
-
-  /**
-   * Setter method for property <tt>dataCenterId</tt>.
-   *
-   * @param dataCenterId value to be assigned to property dataCenterId
-   */
-  public void setDataCenterId(String dataCenterId) {
-    this.dataCenterId = dataCenterId;
   }
 
   /**

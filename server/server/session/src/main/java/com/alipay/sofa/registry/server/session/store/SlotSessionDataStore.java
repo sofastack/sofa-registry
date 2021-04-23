@@ -32,7 +32,7 @@ import org.springframework.util.CollectionUtils;
  */
 public class SlotSessionDataStore implements DataStore {
 
-  @Autowired private SlotTableCache slotTableCache;
+  @Autowired SlotTableCache slotTableCache;
 
   private final Map<Integer, DataStore> slot2DataStores = new ConcurrentHashMap<>();
 
@@ -49,13 +49,10 @@ public class SlotSessionDataStore implements DataStore {
 
   @Override
   public List<Publisher> getDataList() {
-    List<Publisher> ret = new ArrayList<>(2048);
-    slot2DataStores
-        .values()
-        .forEach(
-            ds -> {
-              ret.addAll(ds.getDataList());
-            });
+    List<Publisher> ret = new ArrayList<>(4096);
+    for (DataStore ds : slot2DataStores.values()) {
+      ret.addAll(ds.getDataList());
+    }
     return ret;
   }
 
@@ -67,13 +64,10 @@ public class SlotSessionDataStore implements DataStore {
 
   @Override
   public Collection<String> getDataInfoIds() {
-    Set<String> set = new HashSet<>(128);
-    slot2DataStores
-        .values()
-        .forEach(
-            ds -> {
-              set.addAll(ds.getDataInfoIds());
-            });
+    Set<String> set = Sets.newHashSetWithExpectedSize(1024);
+    for (DataStore ds : slot2DataStores.values()) {
+      set.addAll(ds.getDataInfoIds());
+    }
     return set;
   }
 
@@ -125,16 +119,13 @@ public class SlotSessionDataStore implements DataStore {
 
   @Override
   public Map<String, Publisher> queryByConnectId(ConnectId connectId) {
-    Map<String, Publisher> ret = new HashMap<>(128);
-    slot2DataStores
-        .values()
-        .forEach(
-            ds -> {
-              Map<String, Publisher> m = ds.queryByConnectId(connectId);
-              if (!CollectionUtils.isEmpty(m)) {
-                ret.putAll(m);
-              }
-            });
+    Map<String, Publisher> ret = Maps.newHashMapWithExpectedSize(128);
+    for (DataStore ds : slot2DataStores.values()) {
+      Map<String, Publisher> m = ds.queryByConnectId(connectId);
+      if (!CollectionUtils.isEmpty(m)) {
+        ret.putAll(m);
+      }
+    }
     return ret;
   }
 

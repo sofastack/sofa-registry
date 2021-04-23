@@ -14,21 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.node.processor;
+package com.alipay.sofa.registry.server.session.store;
 
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
+import org.junit.Test;
+import org.mockito.Mockito;
 
-/**
- * @author shangyu.wh
- * @version $Id: DataNodeSingleTaskProcessor.java, v 0.1 2017-12-11 19:35 shangyu.wh Exp $
- */
-public class MetaNodeSingleTaskProcessor extends AbstractRetrySingleTaskProcessor {
-
-  private static final Logger LOGGER =
-      LoggerFactory.getLogger(MetaNodeSingleTaskProcessor.class, "[Task]");
-
-  public MetaNodeSingleTaskProcessor() {
-    super(LOGGER);
+public class SlotSessionDataStoreTest {
+  @Test
+  public void test() {
+    SlotSessionDataStore store = new SlotSessionDataStore();
+    store.slotTableCache = Mockito.mock(SlotTableCache.class);
   }
 }

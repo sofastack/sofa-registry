@@ -57,7 +57,6 @@ public class DatumApiResourceTest extends BaseIntegrationTest {
 
   @Before
   public void before() throws Exception {
-    beforeInit();
     LOGGER.info("DatumApiResourceTest beforeCall");
 
     clientOff();
