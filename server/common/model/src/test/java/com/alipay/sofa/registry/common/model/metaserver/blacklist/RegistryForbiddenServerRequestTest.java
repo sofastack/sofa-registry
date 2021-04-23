@@ -17,49 +17,16 @@
 package com.alipay.sofa.registry.common.model.metaserver.blacklist;
 
 import com.alipay.sofa.registry.common.model.metaserver.DataOperation;
-import java.io.Serializable;
+import org.junit.Assert;
+import org.junit.Test;
 
-/**
- * @author chen.zhu
- *     <p>Mar 18, 2021
- */
-public class RegistryForbiddenServerRequest implements Serializable {
-
-  private final DataOperation operation;
-
-  private final String ip;
-
-  /**
-   * Constructor.
-   *
-   * @param operation the operation
-   * @param ip the ip
-   */
-  public RegistryForbiddenServerRequest(DataOperation operation, String ip) {
-    this.operation = operation;
-    this.ip = ip;
-  }
-
-  /**
-   * Gets get operation.
-   *
-   * @return the get operation
-   */
-  public DataOperation getOperation() {
-    return operation;
-  }
-
-  /**
-   * Gets get ip.
-   *
-   * @return the get ip
-   */
-  public String getIp() {
-    return ip;
-  }
-
-  @Override
-  public String toString() {
-    return "ForbiddenServerRequest{" + "operation=" + operation + ", ip='" + ip + '\'' + '}';
+public class RegistryForbiddenServerRequestTest {
+  @Test
+  public void test() {
+    RegistryForbiddenServerRequest request =
+        new RegistryForbiddenServerRequest(DataOperation.ADD, "test");
+    Assert.assertEquals(request.getOperation(), DataOperation.ADD);
+    Assert.assertEquals(request.getIp(), "test");
+    Assert.assertTrue(request.toString(), request.toString().contains("test"));
   }
 }

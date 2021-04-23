@@ -30,7 +30,6 @@ import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import java.util.concurrent.atomic.AtomicReference;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -45,12 +44,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 public class StopPushDataSwitchTest extends BaseIntegrationTest {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(StopPushDataSwitchTest.class);
-
-  @Before
-  public void before() throws Exception {
-    beforeInit();
-    LOGGER.info("StopPushDataSwitchTest beforeCall");
-  }
 
   @Test
   public void testStopPushDataSwitch() throws Exception {
@@ -94,7 +87,7 @@ public class StopPushDataSwitchTest extends BaseIntegrationTest {
             });
     subReg.setScopeEnum(ScopeEnum.dataCenter);
     registryClient1.register(subReg);
-    Thread.sleep(1000L);
+    Thread.sleep(3000L);
     assertNull(dataIdResult.get());
 
     // close stop push switch

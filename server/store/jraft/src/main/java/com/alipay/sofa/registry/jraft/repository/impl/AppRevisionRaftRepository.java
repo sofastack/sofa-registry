@@ -17,8 +17,6 @@
 package com.alipay.sofa.registry.jraft.repository.impl;
 
 import com.alipay.sofa.registry.common.model.store.AppRevision;
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.store.api.repository.AppRevisionRepository;
 import java.util.Date;
 import java.util.Map;
@@ -29,8 +27,6 @@ import java.util.concurrent.ConcurrentHashMap;
  * @version $Id: AppRevisionRaftRepository.java, v 0.1 2021年01月17日 15:57 xiaojian.xj Exp $
  */
 public class AppRevisionRaftRepository implements AppRevisionRepository {
-
-  private static final Logger LOG = LoggerFactory.getLogger(AppRevisionRaftRepository.class);
 
   /** map: <revision, AppRevision> */
   private final Map<String, AppRevision> registry = new ConcurrentHashMap<>();
@@ -47,7 +43,6 @@ public class AppRevisionRaftRepository implements AppRevisionRepository {
 
   @Override
   public AppRevision queryRevision(String revision) {
-
     return registry.get(revision);
   }
 

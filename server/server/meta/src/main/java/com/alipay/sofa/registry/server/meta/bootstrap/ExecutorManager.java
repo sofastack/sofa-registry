@@ -16,8 +16,6 @@
  */
 package com.alipay.sofa.registry.server.meta.bootstrap;
 
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.revision.AppRevisionHeartbeatService;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
@@ -30,8 +28,6 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @version $Id: ExecutorManager.java, v 0.1 2021年04月20日 14:15 xiaojian.xj Exp $
  */
 public class ExecutorManager {
-
-  private static final Logger LOGGER = LoggerFactory.getLogger(ExecutorManager.class);
 
   private final ScheduledThreadPoolExecutor scheduler;
 

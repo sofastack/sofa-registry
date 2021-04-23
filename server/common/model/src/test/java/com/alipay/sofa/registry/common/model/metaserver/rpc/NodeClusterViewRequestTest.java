@@ -14,21 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.node.processor;
+package com.alipay.sofa.registry.common.model.metaserver.rpc;
 
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.common.model.Node;
+import org.junit.Assert;
+import org.junit.Test;
 
-/**
- * @author shangyu.wh
- * @version $Id: DataNodeSingleTaskProcessor.java, v 0.1 2017-12-11 19:35 shangyu.wh Exp $
- */
-public class MetaNodeSingleTaskProcessor extends AbstractRetrySingleTaskProcessor {
-
-  private static final Logger LOGGER =
-      LoggerFactory.getLogger(MetaNodeSingleTaskProcessor.class, "[Task]");
-
-  public MetaNodeSingleTaskProcessor() {
-    super(LOGGER);
+public class NodeClusterViewRequestTest {
+  @Test
+  public void test() {
+    final String dc = "testDc";
+    NodeClusterViewRequest request = new NodeClusterViewRequest(Node.NodeType.CLIENT, dc);
+    Assert.assertEquals(request.getNodeType(), Node.NodeType.CLIENT);
+    Assert.assertEquals(request.getDataCenterId(), dc);
+    Assert.assertTrue(request.toString(), request.toString().contains(dc));
   }
 }

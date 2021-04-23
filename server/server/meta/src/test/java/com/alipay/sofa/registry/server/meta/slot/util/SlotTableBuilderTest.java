@@ -29,8 +29,6 @@ import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.CyclicBarrier;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -44,28 +42,11 @@ public class SlotTableBuilderTest extends AbstractMetaServerTestBase {
   public void testGetOrCreate() throws InterruptedException {
     int slotId = random.nextInt(16);
     int tasks = 10;
-    CyclicBarrier barrier = new CyclicBarrier(tasks);
-    CountDownLatch latch = new CountDownLatch(tasks);
     List<SlotBuilder> result = new ArrayList<>(tasks);
     SlotTableBuilder slotTableBuilder = new SlotTableBuilder(null, 16, 2);
     for (int i = 0; i < tasks; i++) {
-      final int index = i;
-      executors.execute(
-          new Runnable() {
-            @Override
-            public void run() {
-              try {
-                barrier.await();
-                result.add(index, slotTableBuilder.getOrCreate(slotId));
-              } catch (Exception ignore) {
-
-              } finally {
-                latch.countDown();
-              }
-            }
-          });
+      result.add(i, slotTableBuilder.getOrCreate(slotId));
     }
-    latch.await();
     SlotBuilder sample = slotTableBuilder.getOrCreate(slotId);
     for (SlotBuilder sb : result) {
       assertSame(sb, sample);

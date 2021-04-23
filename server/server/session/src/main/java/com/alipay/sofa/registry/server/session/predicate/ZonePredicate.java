@@ -24,7 +24,8 @@ import java.util.function.Predicate;
  * @author xiaojian.xj
  * @version $Id: ZonePredicate.java, v 0.1 2020年11月12日 21:57 xiaojian.xj Exp $
  */
-public class ZonePredicate {
+public final class ZonePredicate {
+  private ZonePredicate() {}
 
   public static Predicate<String> zonePredicate(
       String dataId,
