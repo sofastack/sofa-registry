@@ -24,8 +24,8 @@ import java.util.List;
  * @version v 0.1 2020-11-11 13:48 yuzhi.lyz Exp $
  */
 public class GetSlotTableResult {
-  private long epoch;
-  private List<DataNodeSlot> slots;
+  private final long epoch;
+  private final List<DataNodeSlot> slots;
 
   public GetSlotTableResult(long epoch, List<DataNodeSlot> slots) {
     this.epoch = epoch;
@@ -42,30 +42,12 @@ public class GetSlotTableResult {
   }
 
   /**
-   * Setter method for property <tt>epoch</tt>.
-   *
-   * @param epoch value to be assigned to property epoch
-   */
-  public void setEpoch(long epoch) {
-    this.epoch = epoch;
-  }
-
-  /**
    * Getter method for property <tt>slots</tt>.
    *
    * @return property value of slots
    */
   public List<DataNodeSlot> getSlots() {
     return slots;
-  }
-
-  /**
-   * Setter method for property <tt>slots</tt>.
-   *
-   * @param slots value to be assigned to property slots
-   */
-  public void setSlots(List<DataNodeSlot> slots) {
-    this.slots = slots;
   }
 
   @Override

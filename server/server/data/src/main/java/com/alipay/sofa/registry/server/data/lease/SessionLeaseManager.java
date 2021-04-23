@@ -144,6 +144,7 @@ public final class SessionLeaseManager {
         ret.add(processId);
       }
     }
+    LOGGER.info("find processId from channels={}, {}", channels.size(), ret);
     return ret;
   }
 

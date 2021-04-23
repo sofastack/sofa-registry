@@ -51,10 +51,10 @@ public class PushProcessor {
   private static final Logger LOGGER = LoggerFactory.getLogger(PushProcessor.class);
 
   private KeyedThreadPoolExecutor pushExecutor;
-  private final Map<PendingTaskKey, PushTask> pendingTasks = Maps.newConcurrentMap();
+  final Map<PendingTaskKey, PushTask> pendingTasks = Maps.newConcurrentMap();
   private final Lock pendingLock = new ReentrantLock();
 
-  private final Map<PushingTaskKey, PushTask> pushingTasks = Maps.newConcurrentMap();
+  final Map<PushingTaskKey, PushTask> pushingTasks = Maps.newConcurrentMap();
 
   @Autowired SessionServerConfig sessionServerConfig;
 
@@ -62,7 +62,7 @@ public class PushProcessor {
 
   @Autowired ClientNodeService clientNodeService;
 
-  private final WatchDog watchDog = new WatchDog();
+  final WatchDog watchDog = new WatchDog();
 
   private final ThreadPoolExecutor pushCallbackExecutor =
       MetricsableThreadPoolExecutor.newExecutor(
@@ -82,6 +82,9 @@ public class PushProcessor {
     PendingTaskKey key = pushTask.pendingKeyOf();
     if (pendingTasks.putIfAbsent(key, pushTask) == null) {
       // fast path
+      if (pushTask.pushCause.pushType.noDelay) {
+        watchDog.wakeup();
+      }
       PENDING_NEW_COUNTER.inc();
       return true;
     }
@@ -105,7 +108,7 @@ public class PushProcessor {
       pendingLock.unlock();
     }
     if (!skip) {
-      if (pushTask.noDelay) {
+      if (pushTask.pushCause.pushType.noDelay) {
         watchDog.wakeup();
       }
       return true;
@@ -124,22 +127,22 @@ public class PushProcessor {
   }
 
   protected List<PushTask> createPushTask(
-      boolean noDelay,
+      PushCause pushCause,
       InetSocketAddress addr,
       Map<String, Subscriber> subscriberMap,
       SubDatum datum) {
-    PushTask pushTask = new PushTask(noDelay, addr, subscriberMap, datum);
+    PushTask pushTask = new PushTask(pushCause, addr, subscriberMap, datum);
     // set expireTimestamp, wait to merge to debouncing
     pushTask.expireAfter(sessionServerConfig.getPushDataTaskDebouncingMillis());
     return Collections.singletonList(pushTask);
   }
 
   void firePush(
-      boolean noDelay,
+      PushCause pushCause,
       InetSocketAddress addr,
       Map<String, Subscriber> subscriberMap,
       SubDatum datum) {
-    List<PushTask> fires = createPushTask(noDelay, addr, subscriberMap, datum);
+    List<PushTask> fires = createPushTask(pushCause, addr, subscriberMap, datum);
     for (PushTask task : fires) {
       boolean fire = firePush(task);
       LOGGER.info("fire push={}, {}", fire, task);
@@ -158,27 +161,39 @@ public class PushProcessor {
     }
   }
 
-  private final class WatchDog extends WakeUpLoopRunnable {
+  final class WatchDog extends WakeUpLoopRunnable {
 
     @Override
     public void runUnthrowable() {
-      List<PushTask> pending = transferAndMerge();
-      if (sessionServerConfig.isStopPushSwitch()) {
-        return;
-      }
-      if (pending.isEmpty()) {
-        return;
-      }
-      LOGGER.info("process push tasks {}", pending.size());
-      for (PushTask task : pending) {
-        commitTask(task);
-      }
+      watchCommit();
     }
 
     @Override
     public int getWaitingMillis() {
       return 100;
     }
+  }
+
+  List<PushTask> watchCommit() {
+    if (sessionServerConfig.isStopPushSwitch()) {
+      // stop push, clean the task
+      pendingLock.lock();
+      try {
+        pendingTasks.clear();
+      } finally {
+        pendingLock.unlock();
+      }
+      return Collections.emptyList();
+    }
+    List<PushTask> pending = transferAndMerge();
+    List<PushTask> committed = Lists.newArrayListWithCapacity(pending.size());
+    LOGGER.info("process push tasks {}", pending.size());
+    for (PushTask task : pending) {
+      if (commitTask(task)) {
+        committed.add(task);
+      }
+    }
+    return committed;
   }
 
   private List<PushTask> transferAndMerge() {
@@ -190,7 +205,8 @@ public class PushProcessor {
       while (it.hasNext()) {
         Map.Entry<PendingTaskKey, PushTask> e = it.next();
         PushTask task = e.getValue();
-        if (task.noDelay || task.expireTimestamp <= now) {
+        // no delay or expire, push immediately
+        if (task.pushCause.pushType.noDelay || task.expireTimestamp <= now) {
           pending.add(task);
           it.remove();
         }
@@ -201,7 +217,8 @@ public class PushProcessor {
     return pending;
   }
 
-  private boolean checkPushing(PushTask task, PushingTaskKey pushingTaskKey) {
+  boolean checkPushing(PushTask task) {
+    final PushingTaskKey pushingTaskKey = task.pushingTaskKey;
     // check the pushing task
     final PushTask prev = pushingTasks.get(pushingTaskKey);
     if (prev == null) {
@@ -223,7 +240,7 @@ public class PushProcessor {
       }
       return true;
     }
-    // task after the prev, but prev.pushclient not callback, retry
+    // task after the prev, but prev.pushClient not callback, retry
     retry(task, "waiting");
     return false;
   }
@@ -252,8 +269,54 @@ public class PushProcessor {
 
   // check push empty, some group maybe could not tolerate push empty
   protected boolean interruptOnPushEmpty(
-      SubDatum datum, boolean noDelay, Subscriber sub, InetSocketAddress addr) {
+      SubDatum datum, PushCause pushCause, Subscriber sub, InetSocketAddress addr) {
     return false;
+  }
+
+  boolean doPush(PushTask task) {
+    if (sessionServerConfig.isStopPushSwitch()) {
+      return false;
+    }
+
+    try {
+      if (!checkPushing(task)) {
+        return false;
+      }
+      if (interruptOnPushEmpty(task.datum, task.pushCause, task.subscriber, task.addr)) {
+        return false;
+      }
+      Object data = task.createPushData();
+      task.updatePushTimestamp();
+      task.trace.startPush(
+          SubscriberUtils.getMaxPushedVersion(task.dataCenter, task.subscriberMap.values()),
+          task.pushTimestamp);
+      pushingTasks.put(task.pushingTaskKey, task);
+      clientNodeService.pushWithCallback(
+          data, task.subscriber.getSourceAddress(), new PushClientCallback(task));
+      PUSH_CLIENT_PUSHING_COUNTER.inc();
+      LOGGER.info("{}, pushing {}", task.taskID, task.pushingTaskKey);
+      return true;
+    } catch (Throwable e) {
+      handleDoPushException(task, e);
+    }
+    return false;
+  }
+
+  void handleDoPushException(PushTask task, Throwable e) {
+    // try to delete self
+    boolean cleaned = pushingTasks.remove(task.pushingTaskKey) != null;
+    task.trace.finishPush(PushTrace.PushStatus.Fail, System.currentTimeMillis()).print();
+    if (e instanceof RequestChannelClosedException) {
+      LOGGER.error(
+          "{}, failed to pushing {}, cleaned={}, {}",
+          task.taskID,
+          task.pushingTaskKey,
+          cleaned,
+          e.getMessage());
+      return;
+    }
+    LOGGER.error(
+        "{}, failed to pushing {}, cleaned={}", task.taskID, task.pushingTaskKey, cleaned, e);
   }
 
   class PushTask implements Runnable {
@@ -262,7 +325,7 @@ public class PushProcessor {
     volatile long expireTimestamp;
     volatile long pushTimestamp;
 
-    final boolean noDelay;
+    final PushCause pushCause;
     final String dataCenter;
     final SubDatum datum;
     final InetSocketAddress addr;
@@ -274,18 +337,18 @@ public class PushProcessor {
     final PushTrace trace;
 
     PushTask(
-        boolean noDelay,
+        PushCause pushCause,
         InetSocketAddress addr,
         Map<String, Subscriber> subscriberMap,
         SubDatum datum) {
       this.taskID = TraceID.newTraceID();
-      this.noDelay = noDelay;
+      this.pushCause = pushCause;
       this.dataCenter = datum.getDataCenter();
       this.datum = datum;
       this.addr = addr;
       this.subscriberMap = subscriberMap;
       this.subscriber = subscriberMap.values().iterator().next();
-      this.trace = PushTrace.trace(datum, addr, subscriber.getAppName(), noDelay);
+      this.trace = PushTrace.trace(datum, addr, subscriber.getAppName(), pushCause);
       this.pushingTaskKey =
           new PushingTaskKey(
               subscriber.getDataInfoId(),
@@ -312,43 +375,7 @@ public class PushProcessor {
 
     @Override
     public void run() {
-      if (sessionServerConfig.isStopPushSwitch()) {
-        return;
-      }
-
-      try {
-        if (!checkPushing(this, pushingTaskKey)) {
-          return;
-        }
-        if (interruptOnPushEmpty(datum, noDelay, subscriber, addr)) {
-          return;
-        }
-        Object data = createPushData();
-        updatePushTimestamp();
-        trace.startPush(
-            SubscriberUtils.getMaxPushedVersion(dataCenter, subscriberMap.values()),
-            this.pushTimestamp);
-        pushingTasks.put(pushingTaskKey, this);
-        clientNodeService.pushWithCallback(
-            data, subscriber.getSourceAddress(), new PushClientCallback(this, pushingTaskKey));
-        PUSH_CLIENT_PUSHING_COUNTER.inc();
-        LOGGER.info("{}, pushing {}", taskID, pushingTaskKey);
-      } catch (RequestChannelClosedException e) {
-        // try to delete self
-        trace.finishPush(PushTrace.PushStatus.Fail, System.currentTimeMillis()).print();
-        boolean cleaned = pushingTasks.remove(pushingTaskKey) != null;
-        LOGGER.error(
-            "{}, failed to pushing {}, cleaned={}, {}",
-            taskID,
-            pushingTaskKey,
-            cleaned,
-            e.getMessage());
-      } catch (Throwable e) {
-        trace.finishPush(PushTrace.PushStatus.Fail, System.currentTimeMillis()).print();
-        // try to delete self
-        boolean cleaned = pushingTasks.remove(pushingTaskKey) != null;
-        LOGGER.error("{}, failed to pushing {}, cleaned={}", taskID, pushingTaskKey, cleaned, e);
-      }
+      doPush(this);
     }
 
     PendingTaskKey pendingKeyOf() {
@@ -385,14 +412,14 @@ public class PushProcessor {
     }
   }
 
-  private final class PushClientCallback implements CallbackHandler {
+  final class PushClientCallback implements CallbackHandler {
     final PushTask pushTask;
     final PushingTaskKey pushingTaskKey;
     long finishedTimestamp;
 
-    PushClientCallback(PushTask pushTask, PushingTaskKey pushingTaskKey) {
+    PushClientCallback(PushTask pushTask) {
       this.pushTask = pushTask;
-      this.pushingTaskKey = pushingTaskKey;
+      this.pushingTaskKey = pushTask.pushingTaskKey;
     }
 
     @Override
@@ -412,8 +439,6 @@ public class PushProcessor {
       } catch (Throwable e) {
         LOGGER.error("error push.onCallback, {}, {}", pushTask.taskID, pushTask.pushingTaskKey, e);
       } finally {
-        // TODO should use remove(k, exceptV). but in some case,
-        // after removed=true, the value aslo in the map
         cleaned = pushingTasks.remove(pushingTaskKey, pushTask);
       }
       this.pushTask.trace.finishPush(PushTrace.PushStatus.OK, this.finishedTimestamp).print();
@@ -432,8 +457,6 @@ public class PushProcessor {
       PUSH_CLIENT_FAIL_COUNTER.inc();
       boolean cleaned = false;
       try {
-        // TODO should use remove(k, exceptV). but in some case,
-        // after removed=true, the value aslo in the map
         cleaned = pushingTasks.remove(pushingTaskKey, pushTask);
         if (channel.isConnected()) {
           retry(pushTask, "callbackErr");
@@ -472,11 +495,11 @@ public class PushProcessor {
       }
     }
 
-    private long pushSpanMillis() {
+    long pushSpanMillis() {
       return finishedTimestamp - pushTask.pushTimestamp;
     }
 
-    private long totalSpanMillis() {
+    long totalSpanMillis() {
       return finishedTimestamp - pushTask.createTimestamp;
     }
 
@@ -486,7 +509,7 @@ public class PushProcessor {
     }
   }
 
-  private static final class PendingTaskKey {
+  static final class PendingTaskKey {
     final String dataCenter;
     final String dataInfoId;
     final InetSocketAddress addr;
@@ -530,7 +553,7 @@ public class PushProcessor {
     }
   }
 
-  private static final class PushingTaskKey {
+  static final class PushingTaskKey {
     final InetSocketAddress addr;
     final String dataInfoId;
     final ScopeEnum scopeEnum;
@@ -569,14 +592,14 @@ public class PushProcessor {
     }
   }
 
-  private static final class CallRunHandler extends ThreadPoolExecutor.CallerRunsPolicy {
+  static final class CallRunHandler extends ThreadPoolExecutor.CallerRunsPolicy {
     public void rejectedExecution(Runnable r, ThreadPoolExecutor e) {
       super.rejectedExecution(r, e);
       LOGGER.warn("push callback busy");
     }
   }
 
-  private int getRetryBackoffTime(int retry) {
+  int getRetryBackoffTime(int retry) {
     final int initialSleepTime = sessionServerConfig.getPushDataTaskRetryFirstDelayMillis();
     if (retry == 0) {
       return initialSleepTime;

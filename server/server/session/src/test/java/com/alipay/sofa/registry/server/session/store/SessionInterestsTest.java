@@ -16,8 +16,6 @@
  */
 package com.alipay.sofa.registry.server.session.store;
 
-import static org.junit.Assert.*;
-
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.server.session.AbstractSessionServerTestBase;

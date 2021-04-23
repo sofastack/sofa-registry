@@ -40,7 +40,6 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import org.junit.AfterClass;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -51,12 +50,6 @@ import org.springframework.test.context.junit4.SpringRunner;
  */
 @RunWith(SpringRunner.class)
 public class BlacklistTest extends BaseIntegrationTest {
-
-  @Before
-  public void before() throws Exception {
-    beforeInit();
-    LOGGER.info("BlacklistTest beforeCall");
-  }
 
   @Test
   public void testBlacklistUpdate() throws Exception {

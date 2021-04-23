@@ -33,6 +33,7 @@ import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.shared.util.DatumUtils;
+import com.alipay.sofa.registry.task.FastRejectedExecutionException;
 import com.alipay.sofa.registry.task.KeyedThreadPoolExecutor;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.LoopRunnable;
@@ -42,7 +43,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.util.*;
-import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -297,7 +297,7 @@ public final class DataChangeEventCenter {
               Tuple.of(datum.getDataInfoId(), channel.getRemoteAddress()),
               new TempNotifier(channel, datum));
           CHANGETEMP_COMMIT_COUNTER.inc();
-        } catch (RejectedExecutionException e) {
+        } catch (FastRejectedExecutionException e) {
           CHANGETEMP_SKIP_COUNTER.inc();
           LOGGER.warn("commit notify temp full, {}, {}, {}", channel, datum, e.getMessage());
         } catch (Throwable e) {
@@ -358,7 +358,7 @@ public final class DataChangeEventCenter {
               channel.getRemoteAddress(),
               new ChangeNotifier(channel, event.getDataCenter(), changes));
           CHANGE_COMMIT_COUNTER.inc();
-        } catch (RejectedExecutionException e) {
+        } catch (FastRejectedExecutionException e) {
           CHANGE_SKIP_COUNTER.inc();
           LOGGER.warn("commit notify full, {}, {}, {}", channel, changes.size(), e.getMessage());
         } catch (Throwable e) {
@@ -377,7 +377,7 @@ public final class DataChangeEventCenter {
       try {
         notifyExecutor.execute(retry.channel.getRemoteAddress(), retry);
         CHANGE_COMMIT_COUNTER.inc();
-      } catch (RejectedExecutionException e) {
+      } catch (FastRejectedExecutionException e) {
         CHANGE_SKIP_COUNTER.inc();
         LOGGER.warn(
             "commit retry notify full, {}, {}, {}",

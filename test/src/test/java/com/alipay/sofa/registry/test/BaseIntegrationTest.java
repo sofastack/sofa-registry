@@ -106,7 +106,6 @@ public class BaseIntegrationTest extends AbstractTest {
     System.setProperty("spring.profiles.active", "integrate");
     System.setProperty(Lease.LEASE_DURATION, "2");
     System.setProperty(SlotConfig.KEY_DATA_SLOT_NUM, "16");
-
     beforeInit();
   }
 
@@ -136,7 +135,11 @@ public class BaseIntegrationTest extends AbstractTest {
       sessionApplicationContext = testRegistryMain.getSessionApplicationContext();
       dataApplicationContext = testRegistryMain.getDataApplicationContext();
       initRegistryClientAndChannel();
-      LOGGER.info("startServerNecessary", new Exception("for trace"));
+      LOGGER.info(
+          "startServerNecessary, {} loaded by {}",
+          BaseIntegrationTest.class,
+          BaseIntegrationTest.class.getClassLoader(),
+          new Exception("for trace"));
       Thread.sleep(1000 * 20);
     }
   }

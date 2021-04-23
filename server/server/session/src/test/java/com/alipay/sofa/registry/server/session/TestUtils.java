@@ -44,6 +44,8 @@ import org.mockito.stubbing.Answer;
 
 public class TestUtils {
   private static final AtomicLong REGISTER_ID_SEQ = new AtomicLong();
+  private static final String GROUP = "testGroup";
+  private static final String INSTANCE = "testInstance";
 
   public static SessionServerConfigBean newSessionConfig(String dataCenter) {
     CommonConfig commonConfig = mock(CommonConfig.class);
@@ -153,7 +155,7 @@ public class TestUtils {
   }
 
   public static SubDatum newSubDatum(String dataId, long version, List<SubPublisher> publishers) {
-    String dataInfo = DataInfo.toDataInfoId(dataId, "testInstance", "testGroup");
+    String dataInfo = DataInfo.toDataInfoId(dataId, INSTANCE, GROUP);
     SubDatum subDatum =
         new SubDatum(
             dataInfo, "dataCenter", version, publishers, dataId, "testInstance", "testGroup");
@@ -167,7 +169,18 @@ public class TestUtils {
     subscriber.setElementType(ElementType.SUBSCRIBER);
     subscriber.setClientVersion(BaseInfo.ClientVersion.StoreData);
     subscriber.setCell(cell);
+    subscriber.setGroup(GROUP);
+    subscriber.setInstanceId(INSTANCE);
     subscriber.setSourceAddress(new URL("192.168.1.1", 8888));
+    return subscriber;
+  }
+
+  public static Subscriber newZoneSubscriber(String dataId, String cell) {
+    Subscriber subscriber = newZoneSubscriber(cell);
+    subscriber.setDataId(dataId);
+    String dataInfoId =
+        DataInfo.toDataInfoId(dataId, subscriber.getInstanceId(), subscriber.getGroup());
+    subscriber.setDataInfoId(dataInfoId);
     return subscriber;
   }
 }

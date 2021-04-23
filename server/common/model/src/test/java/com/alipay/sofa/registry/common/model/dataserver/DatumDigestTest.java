@@ -14,21 +14,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.node.processor;
+package com.alipay.sofa.registry.common.model.dataserver;
 
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
+import org.junit.Assert;
+import org.junit.Test;
 
-/**
- * @author shangyu.wh
- * @version $Id: DataNodeSingleTaskProcessor.java, v 0.1 2017-12-11 19:35 shangyu.wh Exp $
- */
-public class MetaNodeSingleTaskProcessor extends AbstractRetrySingleTaskProcessor {
+public class DatumDigestTest {
+  @Test
+  public void test() {
+    DatumDigest datumDigest1 = new DatumDigest(1, 2, 3, 4, (short) 5, (short) 6);
+    DatumDigest datumDigest2 = new DatumDigest(1, 2, 3, 4, (short) 5, (short) 6);
+    Assert.assertEquals(datumDigest1, datumDigest2);
+    Assert.assertEquals(datumDigest1.hashCode(), datumDigest2.hashCode());
+    Assert.assertEquals(datumDigest1.toString(), datumDigest2.toString());
 
-  private static final Logger LOGGER =
-      LoggerFactory.getLogger(MetaNodeSingleTaskProcessor.class, "[Task]");
-
-  public MetaNodeSingleTaskProcessor() {
-    super(LOGGER);
+    DatumDigest datumDigest3 = new DatumDigest(2, 2, 3, 4, (short) 5, (short) 6);
+    Assert.assertNotEquals(datumDigest1, datumDigest3);
+    Assert.assertNotEquals(datumDigest1.toString(), datumDigest3.toString());
   }
 }

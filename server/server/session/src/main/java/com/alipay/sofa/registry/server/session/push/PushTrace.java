@@ -33,13 +33,12 @@ public final class PushTrace {
   private static final Logger LOGGER = LoggerFactory.getLogger("PUSH-TRACE");
 
   private final SubDatum datum;
-  final long modifyTimestamp;
   final long pushCommitTimestamp = System.currentTimeMillis();
 
   private long subscriberPushedVersion;
   private final String subApp;
   private final InetSocketAddress subAddress;
-  private final boolean noDelay;
+  final PushCause pushCause;
 
   private long pushStartTimestamp;
 
@@ -62,20 +61,16 @@ public final class PushTrace {
   // push.finish - lastPub.registerTimestamp
   long lastPubPushDelayMillis;
 
-  private PushTrace(SubDatum datum, InetSocketAddress address, String subApp, boolean noDelay) {
+  private PushTrace(SubDatum datum, InetSocketAddress address, String subApp, PushCause pushCause) {
     this.datum = datum;
-    this.modifyTimestamp =
-        datum.getVersion() <= ValueConstants.DEFAULT_NO_DATUM_VERSION
-            ? System.currentTimeMillis()
-            : DatumVersionUtil.getRealTimestamp(datum.getVersion());
+    this.pushCause = pushCause;
     this.subAddress = address;
     this.subApp = subApp;
-    this.noDelay = noDelay;
   }
 
   public static PushTrace trace(
-      SubDatum datum, InetSocketAddress address, String subApp, boolean noDelay) {
-    return new PushTrace(datum, address, subApp, noDelay);
+      SubDatum datum, InetSocketAddress address, String subApp, PushCause pushCause) {
+    return new PushTrace(datum, address, subApp, pushCause);
   }
 
   public PushTrace startPush(long subscriberPushedVersion, long startPushTimestamp) {
@@ -93,13 +88,13 @@ public final class PushTrace {
   public void print() {
     calc();
     LOGGER.info(
-        "{},{},{},{},{},noDelay={},pubNum={},pubBytes={},pubNew={},delay={},{},{},{},firstPubDelay={},lastPubDelay={},addr={}",
+        "{},{},{},{},{},cause={},pubNum={},pubBytes={},pubNew={},delay={},{},{},{},firstPubDelay={},lastPubDelay={},addr={}",
         status,
         datum.getDataInfoId(),
         datum.getVersion(),
         subApp,
         datum.getDataCenter(),
-        noDelay,
+        pushCause.pushType,
         datum.getPublishers().size(),
         datum.getDataBoxBytes(),
         newPublisherNum,
@@ -115,8 +110,8 @@ public final class PushTrace {
   private void calc() {
     // try find the earliest and the latest publisher after the subPushedVersion
     // that means the modify after last push, but this could not handle the publisher.remove
-    this.datumTotalDelayMillis = pushFinishTimestamp - modifyTimestamp;
-    this.datumPushCommitSpanMillis = pushCommitTimestamp - modifyTimestamp;
+    this.datumTotalDelayMillis = pushFinishTimestamp - pushCause.triggerTimestamp;
+    this.datumPushCommitSpanMillis = pushCommitTimestamp - pushCause.triggerTimestamp;
     this.datumPushStartSpanMillis = pushStartTimestamp - pushCommitTimestamp;
     this.datumPushFinishSpanMillis = pushFinishTimestamp - pushStartTimestamp;
 
@@ -160,5 +155,13 @@ public final class PushTrace {
           }
         });
     return news;
+  }
+
+  static long getTriggerPushTimestamp(SubDatum datum) {
+    long ts =
+        datum.getVersion() <= ValueConstants.DEFAULT_NO_DATUM_VERSION
+            ? System.currentTimeMillis()
+            : DatumVersionUtil.getRealTimestamp(datum.getVersion());
+    return ts;
   }
 }

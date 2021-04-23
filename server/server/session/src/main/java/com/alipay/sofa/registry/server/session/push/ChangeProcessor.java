@@ -55,7 +55,7 @@ public class ChangeProcessor {
   }
 
   interface ChangeHandler {
-    void onChange(String dataCenter, String dataInfoId, long expectDatumVersion);
+    boolean onChange(String dataCenter, String dataInfoId, long expectDatumVersion);
   }
 
   static final class ChangeTask {

@@ -20,15 +20,13 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 
 /**
- * @author shangyu.wh
- * @version $Id: DataNodeSingleTaskProcessor.java, v 0.1 2017-12-11 19:35 shangyu.wh Exp $
+ * @author zhuoyu.sjw
+ * @version $Id: ConsoleSyncSingleTaskProcessor.java, v 0.1 2018-03-31 16:46 zhuoyu.sjw Exp $$
  */
-public class MetaNodeSingleTaskProcessor extends AbstractRetrySingleTaskProcessor {
+public class ConsoleSyncSingleTaskProcessor extends AbstractRetrySingleTaskProcessor {
+  private static final Logger CONSOLE_LOGGER = LoggerFactory.getLogger("SESSION-CONSOLE", "[Sync]");
 
-  private static final Logger LOGGER =
-      LoggerFactory.getLogger(MetaNodeSingleTaskProcessor.class, "[Task]");
-
-  public MetaNodeSingleTaskProcessor() {
-    super(LOGGER);
+  public ConsoleSyncSingleTaskProcessor() {
+    super(CONSOLE_LOGGER);
   }
 }
