@@ -409,6 +409,12 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
+                <groupId>com.alipay.common</groupId>
+                <artifactId>tracer</artifactId>
+                <version>1.0.55</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
                 <groupId>org.rocksdb</groupId>
                 <artifactId>rocksdbjni</artifactId>
                 <version>${rocksdbjni.version}</version>
