@@ -22,6 +22,8 @@ import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.Heartbea
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.MetaLeaderService;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.cluster.node.NodeAdded;
@@ -48,6 +50,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class DefaultDataServerManager extends AbstractEvictableFilterableLeaseManager<DataNode>
     implements DataServerManager {
+
+  private static final Logger logger = LoggerFactory.getLogger(DefaultDataServerManager.class);
 
   @Autowired private MetaServerConfig metaServerConfig;
 
@@ -160,11 +164,23 @@ public class DefaultDataServerManager extends AbstractEvictableFilterableLeaseMa
   }
 
   protected void learnFromData(HeartbeatRequest<DataNode> heartbeat) {
-    if (amILeader() && !metaLeaderService.isWarmuped()) {
-
-      SlotTable slotTable = heartbeat.getSlotTable();
-      slotManager.refresh(slotTable);
+    if (!amILeader()) {
+      logger.info("data server heartbeat on follower.leader is:{}", metaLeaderService.getLeader());
+      return;
     }
+
+    if (!metaLeaderService.isWarmuped()) {
+      logger.info("leader:{} is warming up.", metaLeaderService.getLeader());
+      return;
+    }
+
+    if (heartbeat.getSlotTable() == null) {
+      logger.info("data server:{} heartbeat slotTable is null.", heartbeat.getNode().getIp());
+      return;
+    }
+
+    SlotTable slotTable = heartbeat.getSlotTable();
+    slotManager.refresh(slotTable);
   }
 
   @Override
