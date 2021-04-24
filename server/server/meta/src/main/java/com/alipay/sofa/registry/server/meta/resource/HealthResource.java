@@ -91,7 +91,9 @@ public class HealthResource {
 
     boolean leaderNotEmpty = StringUtil.isNotBlank(metaLeaderService.getLeader());
     ret = ret && leaderNotEmpty;
+
     sb.append(", role:").append(metaLeaderService.amILeader() ? "leader" : "follower");
+    sb.append(", warmuped:").append(metaLeaderService.isWarmuped());
     sb.append(", leader:").append(metaLeaderService.getLeader());
     sb.append(", meta-servers:").append(currentDcMetaServer.getClusterMembers());
 
