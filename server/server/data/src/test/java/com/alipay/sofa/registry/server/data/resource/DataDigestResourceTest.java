@@ -60,7 +60,8 @@ public class DataDigestResourceTest {
     Assert.assertEquals(pub, datum.getPubMap().get(pub.getRegisterId()));
 
     Map<String, Map<String, Publisher>> mapMap =
-        resource.getPublishersByConnectId(Collections.singletonMap("xxx:100", "yyy:200"));
+        resource.getPublishersByConnectId(
+            Collections.singletonMap("192.168.1.1:100", "192.168.1.2:200"));
     Assert.assertEquals(0, mapMap.size());
 
     mapMap =

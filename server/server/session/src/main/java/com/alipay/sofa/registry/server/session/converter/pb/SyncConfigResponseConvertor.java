@@ -24,7 +24,8 @@ import com.alipay.sofa.registry.core.model.SyncConfigResponse;
  * @author bystander
  * @version $Id: SyncConfigResponseConvertor.java, v 0.1 2018年03月21日 2:06 PM bystander Exp $
  */
-public class SyncConfigResponseConvertor {
+public final class SyncConfigResponseConvertor {
+  private SyncConfigResponseConvertor() {}
 
   public static SyncConfigResponse convert2Java(SyncConfigResponsePb syncConfigResponsePb) {
 

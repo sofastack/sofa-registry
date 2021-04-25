@@ -202,14 +202,14 @@ public class DatumApiResourceTest {
   public void testBuild() {
     DatumApiResource resource = newResource();
     DatumParam param = newParam("testDataInfoId");
-    param.setPublisherConnectId("xxx");
+    param.setPublisherConnectId("192.168.1.1");
     TestBaseUtils.assertException(
         IllegalArgumentException.class, () -> resource.buildPublisher(null, param));
 
-    param.setPublisherConnectId("xxx:123_yyy:456");
+    param.setPublisherConnectId("192.168.1.1:123_192.168.1.2:456");
     Publisher publisher = resource.buildPublisher(null, param);
     Assert.assertEquals(param.getDataInfoId(), publisher.getDataInfoId());
-    Assert.assertEquals("xxx:123", publisher.getSourceAddress().getAddressString());
-    Assert.assertEquals("yyy:456", publisher.getTargetAddress().getAddressString());
+    Assert.assertEquals("192.168.1.1:123", publisher.getSourceAddress().getAddressString());
+    Assert.assertEquals("192.168.1.2:456", publisher.getTargetAddress().getAddressString());
   }
 }

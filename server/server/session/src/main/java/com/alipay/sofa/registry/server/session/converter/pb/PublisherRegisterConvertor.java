@@ -24,7 +24,8 @@ import com.alipay.sofa.registry.core.model.PublisherRegister;
  * @author bystander
  * @version $Id: PublisherRegisterConvertor.java, v 0.1 2018年03月21日 2:06 PM bystander Exp $
  */
-public class PublisherRegisterConvertor {
+public final class PublisherRegisterConvertor {
+  private PublisherRegisterConvertor() {}
 
   public static PublisherRegisterPb convert2Pb(PublisherRegister publisherRegisterJava) {
 

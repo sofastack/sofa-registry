@@ -45,7 +45,9 @@ public final class PushTrace {
   private PushStatus status;
   private long pushFinishTimestamp;
 
-  // push.finish - datum.modify
+  // push.finish- first.newly.publisher.registryTs
+  long datumModifyDelayMillis;
+  // push.finish - datum.versionTs
   long datumTotalDelayMillis;
   // commit - datum.modify
   long datumPushCommitSpanMillis;
@@ -88,7 +90,7 @@ public final class PushTrace {
   public void print() {
     calc();
     LOGGER.info(
-        "{},{},{},{},{},cause={},pubNum={},pubBytes={},pubNew={},delay={},{},{},{},firstPubDelay={},lastPubDelay={},addr={}",
+        "{},{},{},{},{},cause={},pubNum={},pubBytes={},pubNew={},delay={},{},{},{},{},firstPubDelay={},lastPubDelay={},addr={}",
         status,
         datum.getDataInfoId(),
         datum.getVersion(),
@@ -98,6 +100,7 @@ public final class PushTrace {
         datum.getPublishers().size(),
         datum.getDataBoxBytes(),
         newPublisherNum,
+        datumModifyDelayMillis,
         datumTotalDelayMillis,
         datumPushCommitSpanMillis,
         datumPushStartSpanMillis,
@@ -128,6 +131,11 @@ public final class PushTrace {
         first == null ? 0 : pushFinishTimestamp - first.getRegisterTimestamp();
     this.lastPubPushDelayMillis =
         last == null ? 0 : pushFinishTimestamp - last.getRegisterTimestamp();
+    if (first != null) {
+      datumModifyDelayMillis = firstPubPushDelayMillis;
+    } else {
+      datumModifyDelayMillis = datumTotalDelayMillis;
+    }
   }
 
   enum PushStatus {
