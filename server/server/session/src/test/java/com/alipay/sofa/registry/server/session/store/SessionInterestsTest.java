@@ -16,9 +16,12 @@
  */
 package com.alipay.sofa.registry.server.session.store;
 
+import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.server.session.AbstractSessionServerTestBase;
+import java.util.Collection;
+import java.util.Map;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,26 +45,43 @@ public class SessionInterestsTest extends AbstractSessionServerTestBase {
 
   @Test
   public void testCheckInterestVersion() {
+    Map<String, DatumVersion> map = interests.getInterestVersions(getDc());
+    Assert.assertEquals(0, map.size());
+
     Assert.assertSame(
         Interests.InterestVersionCheck.NoSub,
         interests.checkInterestVersion(getDc(), randomSubscriber().getDataInfoId(), 1L));
     String dataInfo = randomString(10);
     String instanceId = randomString(10);
-    interests.add(randomSubscriber(dataInfo, instanceId));
+    Subscriber subscriber = randomSubscriber(dataInfo, instanceId);
+    interests.add(subscriber);
     Assert.assertEquals(
         Interests.InterestVersionCheck.Interested,
         interests.checkInterestVersion(
             getDc(),
             DataInfo.toDataInfoId(dataInfo, instanceId, "default-group"),
             System.currentTimeMillis() + 100));
+
+    Assert.assertTrue(subscriber.checkAndUpdateVersion(getDc(), 100));
+    Assert.assertEquals(
+        Interests.InterestVersionCheck.Obsolete,
+        interests.checkInterestVersion(
+            getDc(), DataInfo.toDataInfoId(dataInfo, instanceId, "default-group"), 80));
+
+    Subscriber subscriber2 = randomSubscriber(dataInfo, instanceId);
+    interests.add(subscriber2);
+    Collection<Subscriber> neverPushed = interests.getInterestsNeverPushed();
+    Assert.assertEquals(neverPushed.size(), 1);
+    Assert.assertEquals(neverPushed.iterator().next(), subscriber2);
+
+    subscriber2.checkAndUpdateVersion(getDc(), 80);
+
+    map = interests.getInterestVersions(getDc() + "1");
+    Assert.assertEquals(map.size(), 1);
+    Assert.assertEquals(map.get(subscriber.getDataInfoId()).getValue(), 0);
+
+    map = interests.getInterestVersions(getDc());
+    Assert.assertEquals(map.size(), 1);
+    Assert.assertEquals(map.get(subscriber.getDataInfoId()).getValue(), 100);
   }
-
-  @Test
-  public void testGetInterests() {}
-
-  @Test
-  public void testGetInterestVersions() {}
-
-  @Test
-  public void testGetInterestsNeverPushed() {}
 }

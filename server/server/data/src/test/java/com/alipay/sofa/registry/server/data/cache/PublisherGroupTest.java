@@ -222,7 +222,7 @@ public class PublisherGroupTest {
         new ProcessId(ServerEnv.PROCESS_ID.getHostAddress(), System.currentTimeMillis(), 1, 1);
 
     Publisher add = TestBaseUtils.createTestPublisher(dataId);
-    add.setTargetAddress(URL.valueOf("xxx:1000"));
+    add.setTargetAddress(URL.valueOf("192.168.1.1:1000"));
     add.setSessionProcessId(mockProcessId);
     v = group.put(Lists.newArrayList(add));
     Assert.assertNotNull(v);

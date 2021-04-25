@@ -24,7 +24,8 @@ import com.alipay.sofa.registry.core.model.SubscriberRegister;
  * @author bystander
  * @version $Id: SubscriberRegisterConvertor.java, v 0.1 2018年03月21日 2:07 PM bystander Exp $
  */
-public class SubscriberRegisterConvertor {
+public final class SubscriberRegisterConvertor {
+  private SubscriberRegisterConvertor() {}
 
   public static SubscriberRegister convert2Java(SubscriberRegisterPb subscriberRegisterPb) {
 

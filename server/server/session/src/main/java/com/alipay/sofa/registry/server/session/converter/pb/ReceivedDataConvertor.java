@@ -25,7 +25,8 @@ import com.alipay.sofa.registry.core.model.ReceivedData;
  * @author bystander
  * @version $Id: ReceivedDataConvertor.java, v 0.1 2018年03月21日 2:07 PM bystander Exp $
  */
-public class ReceivedDataConvertor {
+public final class ReceivedDataConvertor {
+  private ReceivedDataConvertor() {}
 
   public static ReceivedData convert2Java(ReceivedDataPb receivedDataPb) {
 

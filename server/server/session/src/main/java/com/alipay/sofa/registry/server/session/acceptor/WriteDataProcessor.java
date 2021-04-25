@@ -40,32 +40,19 @@ public class WriteDataProcessor {
   }
 
   public void process(WriteDataRequest request) {
-    if (LOGGER.isDebugEnabled()) {
-      LOGGER.debug(
-          "process: connectId={}, requestType={}, requestBody={}",
-          connectId,
-          request.getRequestType(),
-          request.getRequestBody());
-    }
     doHandle(request);
   }
 
   private void doHandle(WriteDataRequest request) {
     switch (request.getRequestType()) {
       case PUBLISHER:
-        {
-          doPublishAsync(request);
-        }
+        doPublishAsync(request);
         break;
       case UN_PUBLISHER:
-        {
-          doUnPublishAsync(request);
-        }
+        doUnPublishAsync(request);
         break;
       case CLIENT_OFF:
-        {
-          doClientOffAsync(request);
-        }
+        doClientOffAsync(request);
         break;
       default:
         LOGGER.warn(
@@ -77,37 +64,16 @@ public class WriteDataProcessor {
   }
 
   private void doClientOffAsync(WriteDataRequest request) {
-    if (LOGGER.isDebugEnabled()) {
-      LOGGER.debug(
-          "doClientOffAsync: connectId={}, requestType={}, requestBody={}",
-          connectId,
-          request.getRequestType(),
-          request.getRequestBody());
-    }
     ClientOffWriteDataRequest req = (ClientOffWriteDataRequest) request;
     dataNodeService.clientOff(req.getRequestBody());
   }
 
   private void doUnPublishAsync(WriteDataRequest request) {
-    if (LOGGER.isDebugEnabled()) {
-      LOGGER.debug(
-          "doUnPublishAsync: connectId={}, requestType={}, requestBody={}",
-          connectId,
-          request.getRequestType(),
-          request.getRequestBody());
-    }
     PublisherWriteDataRequest req = (PublisherWriteDataRequest) request;
     dataNodeService.unregister(req.getRequestBody());
   }
 
   private void doPublishAsync(WriteDataRequest request) {
-    if (LOGGER.isDebugEnabled()) {
-      LOGGER.debug(
-          "doPublishAsync: connectId={}, requestType={}, requestBody={}",
-          connectId,
-          request.getRequestType(),
-          request.getRequestBody());
-    }
     PublisherWriteDataRequest req = (PublisherWriteDataRequest) request;
     dataNodeService.register(req.getRequestBody());
   }

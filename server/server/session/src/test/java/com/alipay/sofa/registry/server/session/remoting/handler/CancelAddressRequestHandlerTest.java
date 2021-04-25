@@ -58,9 +58,9 @@ public class CancelAddressRequestHandlerTest {
   }
 
   private static CancelAddressRequest request() {
-    List<ConnectId> list = Lists.newArrayList(ConnectId.of("xxx:1111", "yyyy:2222"));
+    List<ConnectId> list = Lists.newArrayList(ConnectId.of("127.0.0.1:1111", "127.0.0.1:2222"));
     CancelAddressRequest request = new CancelAddressRequest(list);
-    Assert.assertTrue(request.toString(), request.toString().contains("xxx:111"));
+    Assert.assertTrue(request.toString(), request.toString().contains("127.0.0.1:111"));
 
     CancelAddressRequest request2 = new CancelAddressRequest();
     request2.setConnectIds(list);
