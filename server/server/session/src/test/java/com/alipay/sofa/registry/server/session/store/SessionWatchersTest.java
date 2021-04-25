@@ -17,19 +17,22 @@
 package com.alipay.sofa.registry.server.session.store;
 
 import com.alipay.sofa.registry.common.model.store.Watcher;
+import org.junit.Assert;
+import org.junit.Test;
 
-/**
- * @author shangyu.wh
- * @version $Id: SessionInterests.java, v 0.1 2017-11-30 15:53 shangyu.wh Exp $
- */
-public interface Watchers extends DataManager<Watcher, String, String> {
+public class SessionWatchersTest {
 
-  /**
-   * check watchers interest dataInfoId version if not exist add else check and update bigger one
-   *
-   * @param dataInfoId
-   * @param version
-   * @return
-   */
-  boolean checkWatcherVersions(String dataInfoId, long version);
+  @Test
+  public void test() {
+    final String dataInfoId = "testDataId";
+    SessionWatchers watchers = new SessionWatchers();
+    Assert.assertFalse(watchers.checkWatcherVersions(dataInfoId, 100));
+    Watcher watcher = new Watcher();
+    watcher.setDataInfoId(dataInfoId);
+    watcher.setRegisterId("testRegisterId");
+    watchers.add(watcher);
+    Assert.assertTrue(watchers.checkWatcherVersions(dataInfoId, 100));
+    Assert.assertFalse(watchers.checkWatcherVersions(dataInfoId, 80));
+    Assert.assertTrue(watchers.checkWatcherVersions(dataInfoId, 200));
+  }
 }

@@ -59,19 +59,13 @@ public class SessionWatchers extends AbstractDataManager<Watcher> implements Wat
   }
 
   @Override
-  public boolean checkWatcherVersions(String dataInfoId, Long version) {
-    read.lock();
-    try {
-      Map<String, Watcher> watcherMap = stores.get(dataInfoId);
-      if (MapUtils.isEmpty(watcherMap)) {
-        LOGGER.info(
-            "There are not Watcher Existed! Who are interest with dataInfoId {} !", dataInfoId);
-        return false;
-      }
-
-      return VersionsMapUtils.checkAndUpdateVersions(watcherVersions, dataInfoId, version);
-    } finally {
-      read.unlock();
+  public boolean checkWatcherVersions(String dataInfoId, long version) {
+    Map<String, Watcher> watcherMap = stores.get(dataInfoId);
+    if (MapUtils.isEmpty(watcherMap)) {
+      LOGGER.info(
+          "There are not Watcher Existed! Who are interest with dataInfoId {} !", dataInfoId);
+      return false;
     }
+    return VersionsMapUtils.checkAndUpdateVersions(watcherVersions, dataInfoId, version);
   }
 }

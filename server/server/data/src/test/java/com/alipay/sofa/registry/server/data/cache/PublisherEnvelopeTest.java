@@ -55,7 +55,7 @@ public class PublisherEnvelopeTest {
     Assert.assertEquals(Long.MAX_VALUE, envelope.tombstoneTimestamp);
     Assert.assertTrue(envelope.isPub());
     Assert.assertTrue(envelope.isConnectId(publisher.connectId()));
-    Assert.assertFalse(envelope.isConnectId(ConnectId.of("127.0.0.1:9999", "xxx:9997")));
+    Assert.assertFalse(envelope.isConnectId(ConnectId.of("127.0.0.1:9999", "127.0.0.2:9997")));
 
     UnPublisher unPublisher = UnPublisher.of(publisher);
     envelope = PublisherEnvelope.of(unPublisher);
@@ -67,6 +67,6 @@ public class PublisherEnvelopeTest {
     Assert.assertTrue(envelope.tombstoneTimestamp <= System.currentTimeMillis());
     Assert.assertFalse(envelope.isPub());
     Assert.assertFalse(envelope.isConnectId(publisher.connectId()));
-    Assert.assertFalse(envelope.isConnectId(ConnectId.of("127.0.0.1:9999", "xxx:9997")));
+    Assert.assertFalse(envelope.isConnectId(ConnectId.of("127.0.0.1:9999", "127.0.0.2:9997")));
   }
 }

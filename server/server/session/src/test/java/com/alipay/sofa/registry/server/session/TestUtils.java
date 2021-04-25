@@ -20,15 +20,19 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.alipay.remoting.Connection;
+import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.ElementType;
 import com.alipay.sofa.registry.common.model.PublishSource;
+import com.alipay.sofa.registry.common.model.slot.func.SlotFunctionRegistry;
 import com.alipay.sofa.registry.common.model.store.*;
+import com.alipay.sofa.registry.core.model.BaseRegister;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.remoting.bolt.BoltChannel;
 import com.alipay.sofa.registry.server.session.bootstrap.CommonConfig;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfigBean;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.util.StringFormatter;
+import com.google.common.collect.Lists;
 import io.netty.channel.Channel;
 import io.netty.util.Attribute;
 import io.netty.util.AttributeKey;
@@ -37,6 +41,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import org.assertj.core.util.Maps;
 import org.junit.Assert;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
@@ -44,8 +49,22 @@ import org.mockito.stubbing.Answer;
 
 public class TestUtils {
   private static final AtomicLong REGISTER_ID_SEQ = new AtomicLong();
-  private static final String GROUP = "testGroup";
-  private static final String INSTANCE = "testInstance";
+  public static final String GROUP = "testGroup";
+  public static final String INSTANCE = "testInstance";
+
+  private static final AtomicLong CLIENT_VERSION = new AtomicLong();
+
+  public static final String TEST_DATA_ID = "testDataId";
+  public static final String TEST_DATA_INFO_ID;
+
+  private static final String TEST_REGISTER_ID = "testRegisterId";
+
+  private static final AtomicLong DATA_ID_SEQ = new AtomicLong();
+
+  static {
+    Publisher p = createTestPublisher(TEST_DATA_ID);
+    TEST_DATA_INFO_ID = p.getDataInfoId();
+  }
 
   public static SessionServerConfigBean newSessionConfig(String dataCenter) {
     CommonConfig commonConfig = mock(CommonConfig.class);
@@ -61,6 +80,54 @@ public class TestUtils {
     when(commonConfig.getLocalRegion()).thenReturn(region);
     SessionServerConfigBean configBean = new SessionServerConfigBean(commonConfig);
     return configBean;
+  }
+
+  public static Publisher createTestPublisher(String dataId) {
+    Publisher publisher = new Publisher();
+    DataInfo dataInfo = DataInfo.valueOf(DataInfo.toDataInfoId(dataId, INSTANCE, GROUP));
+    publisher.setDataInfoId(dataInfo.getDataInfoId());
+    publisher.setDataId(dataInfo.getDataId());
+    publisher.setInstanceId(dataInfo.getInstanceId());
+    publisher.setGroup(dataInfo.getGroup());
+    publisher.setRegisterId(TEST_REGISTER_ID + REGISTER_ID_SEQ.incrementAndGet());
+    publisher.setSessionProcessId(ServerEnv.PROCESS_ID);
+    publisher.setProcessId("process-" + REGISTER_ID_SEQ.get());
+    publisher.setRegisterTimestamp(System.currentTimeMillis());
+    publisher.setVersion(100 + CLIENT_VERSION.incrementAndGet());
+    ConnectId connectId =
+        ConnectId.of(
+            ServerEnv.PROCESS_ID.getHostAddress() + ":9999",
+            ServerEnv.PROCESS_ID.getHostAddress() + ":9998");
+    publisher.setSourceAddress(URL.valueOf(connectId.clientAddress()));
+    publisher.setTargetAddress(URL.valueOf(connectId.sessionAddress()));
+    return publisher;
+  }
+
+  public static List<Publisher> createTestPublishers(int slotId, int count) {
+    List<Publisher> list = Lists.newArrayListWithCapacity(count);
+    for (int i = 0; i < Integer.MAX_VALUE; i++) {
+      Publisher p =
+          createTestPublisher(TEST_DATA_ID + "-" + DATA_ID_SEQ.incrementAndGet() + "-" + i);
+      int id = SlotFunctionRegistry.getFunc().slotOf(p.getDataInfoId());
+      if (id == slotId) {
+        // find the slotId
+        list.add(p);
+        for (int j = 1; j < count; j++) {
+          list.add(createTestPublisher(p.getDataId()));
+        }
+        break;
+      }
+    }
+    return list;
+  }
+
+  public static Publisher cloneBase(Publisher publisher) {
+    Publisher clone = createTestPublisher(publisher.getDataId());
+    clone.setRegisterId(publisher.getRegisterId());
+    clone.setVersion(publisher.getVersion());
+    clone.setRegisterTimestamp(publisher.getRegisterTimestamp());
+    clone.setSessionProcessId(publisher.getSessionProcessId());
+    return clone;
   }
 
   public static void assertRunException(Class<? extends Throwable> eclazz, RunError runnable) {
@@ -182,5 +249,41 @@ public class TestUtils {
         DataInfo.toDataInfoId(dataId, subscriber.getInstanceId(), subscriber.getGroup());
     subscriber.setDataInfoId(dataInfoId);
     return subscriber;
+  }
+
+  public static void setField(BaseRegister register) {
+    register.setAppName("testApp");
+    register.setClientId("testClientId");
+    register.setDataId("testDataId");
+    register.setDataInfoId("testDataInfoId");
+    register.setEventType("testEventType");
+    register.setGroup("testGroup");
+    register.setInstanceId("testInstanceId");
+    register.setIp("testIp");
+    register.setPort(8888);
+    register.setProcessId("testProcessId");
+    register.setRegistId("testRegisterId");
+    register.setVersion(100L);
+    register.setTimestamp(System.currentTimeMillis());
+    register.setZone("testZone");
+    register.setAttributes(Maps.newHashMap("testAttrKey", "testAttrVal"));
+  }
+
+  public static void assertEquals(BaseRegister left, BaseRegister right) {
+    Assert.assertEquals(left.getAppName(), right.getAppName());
+    Assert.assertEquals(left.getClientId(), right.getClientId());
+    Assert.assertEquals(left.getDataId(), right.getDataId());
+    Assert.assertEquals(left.getDataInfoId(), right.getDataInfoId());
+    Assert.assertEquals(left.getEventType(), right.getEventType());
+    Assert.assertEquals(left.getGroup(), right.getGroup());
+    Assert.assertEquals(left.getInstanceId(), right.getInstanceId());
+    Assert.assertEquals(left.getIp(), right.getIp());
+    Assert.assertEquals(left.getPort(), right.getPort());
+    Assert.assertEquals(left.getProcessId(), right.getProcessId());
+    Assert.assertEquals(left.getRegistId(), right.getRegistId());
+    Assert.assertEquals(left.getVersion(), right.getVersion());
+    Assert.assertEquals(left.getTimestamp(), right.getTimestamp());
+    Assert.assertEquals(left.getZone(), right.getZone());
+    Assert.assertEquals(left.getAttributes(), right.getAttributes());
   }
 }
