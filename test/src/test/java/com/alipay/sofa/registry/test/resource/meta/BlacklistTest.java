@@ -74,7 +74,7 @@ public class BlacklistTest extends BaseIntegrationTest {
     ObjectMapper mapper = new ObjectMapper();
 
     Result response =
-        metaChannel
+        getMetaChannel()
             .getWebTarget()
             .path("blacklist/update")
             .request()
@@ -106,7 +106,7 @@ public class BlacklistTest extends BaseIntegrationTest {
     ObjectMapper mapper = new ObjectMapper();
 
     Result response =
-        metaChannel
+        getMetaChannel()
             .getWebTarget()
             .path("blacklist/update")
             .request()
@@ -178,9 +178,8 @@ public class BlacklistTest extends BaseIntegrationTest {
     map.put(BlacklistConstants.FORBIDDEN_SUB_BY_PREFIX, map2);
 
     ObjectMapper mapper = new ObjectMapper();
-
     Result response =
-        metaChannel
+        getMetaChannel()
             .getWebTarget()
             .path("blacklist/update")
             .request()

@@ -28,23 +28,24 @@ import com.alipay.sofa.registry.server.session.store.DataStore;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.session.store.Watchers;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import java.util.*;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class ConnectionsService {
 
-  @Autowired private Exchange boltExchange;
+  @Autowired Exchange boltExchange;
 
-  @Autowired private DataStore sessionDataStore;
+  @Autowired DataStore sessionDataStore;
 
-  @Autowired private Interests sessionInterests;
+  @Autowired Interests sessionInterests;
 
-  @Autowired private Watchers sessionWatchers;
+  @Autowired Watchers sessionWatchers;
 
-  @Autowired private SessionServerConfig sessionServerConfig;
+  @Autowired SessionServerConfig sessionServerConfig;
 
-  @Autowired private ConnectionMapper connectionMapper;
+  @Autowired ConnectionMapper connectionMapper;
 
   public List<String> getConnections() {
     Server server = boltExchange.getServer(sessionServerConfig.getServerPort());
@@ -79,19 +80,18 @@ public class ConnectionsService {
    * @return
    */
   public List<ConnectId> getIpConnects(List<String> _ipList) {
-
     Server sessionServer = boltExchange.getServer(sessionServerConfig.getServerPort());
-
+    if (sessionServer == null) {
+      return Collections.emptyList();
+    }
     List<ConnectId> connections = Lists.newArrayList();
-
-    if (sessionServer != null) {
-      Collection<Channel> channels = sessionServer.getChannels();
-      for (Channel channel : channels) {
-        String key = NetUtil.toAddressString(channel.getRemoteAddress());
-        String ip = getIpFromConnectId(key);
-        if (_ipList.contains(ip)) {
-          connections.add(ConnectId.of(key, NetUtil.toAddressString(channel.getLocalAddress())));
-        }
+    Set<String> ipSet = Sets.newHashSet(_ipList);
+    Collection<Channel> channels = sessionServer.getChannels();
+    for (Channel channel : channels) {
+      String key = NetUtil.toAddressString(channel.getRemoteAddress());
+      String ip = getIpFromConnectId(key);
+      if (ipSet.contains(ip)) {
+        connections.add(ConnectId.of(key, NetUtil.toAddressString(channel.getLocalAddress())));
       }
     }
 
@@ -105,26 +105,24 @@ public class ConnectionsService {
    * @return
    */
   public List<String> closeIpConnects(List<String> _ipList) {
-
     Server sessionServer = boltExchange.getServer(sessionServerConfig.getServerPort());
-
+    if (sessionServer == null) {
+      return Collections.emptyList();
+    }
     List<String> connections = new ArrayList<>();
-
-    if (sessionServer != null) {
-      Collection<Channel> channels = sessionServer.getChannels();
-      for (Channel channel : channels) {
-        String key = NetUtil.toAddressString(channel.getRemoteAddress());
-        String ip = getIpFromConnectId(key);
-        if (_ipList.contains(ip)) {
-          sessionServer.close(channel);
-          connections.add(
-              key
-                  + ValueConstants.CONNECT_ID_SPLIT
-                  + NetUtil.toAddressString(channel.getLocalAddress()));
-        }
+    Collection<Channel> channels = sessionServer.getChannels();
+    Set<String> ipSet = Sets.newHashSet(_ipList);
+    for (Channel channel : channels) {
+      String key = NetUtil.toAddressString(channel.getRemoteAddress());
+      String ip = getIpFromConnectId(key);
+      if (ipSet.contains(ip)) {
+        sessionServer.close(channel);
+        connections.add(
+            key
+                + ValueConstants.CONNECT_ID_SPLIT
+                + NetUtil.toAddressString(channel.getLocalAddress()));
       }
     }
-
     return connections;
   }
 

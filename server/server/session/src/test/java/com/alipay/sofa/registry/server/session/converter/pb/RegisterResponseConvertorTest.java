@@ -16,31 +16,32 @@
  */
 package com.alipay.sofa.registry.server.session.converter.pb;
 
-import com.alipay.sofa.registry.common.model.client.pb.SyncConfigResponsePb;
-import com.alipay.sofa.registry.core.model.SyncConfigResponse;
-import com.google.common.collect.Lists;
+import com.alipay.sofa.registry.common.model.client.pb.RegisterResponsePb;
+import com.alipay.sofa.registry.core.model.RegisterResponse;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class SyncConfigResponseConvertorTest {
+public class RegisterResponseConvertorTest {
   @Test
   public void test() {
-    Assert.assertNull(SyncConfigResponseConvertor.convert2Pb(null));
-    Assert.assertNull(SyncConfigResponseConvertor.convert2Java(null));
-    SyncConfigResponse registerJava = new SyncConfigResponse();
+    Assert.assertNull(RegisterResponseConvertor.convert2Pb(null));
+    Assert.assertNull(RegisterResponseConvertor.convert2Java(null));
+    RegisterResponse registerJava = new RegisterResponse();
 
-    registerJava.setRetryInterval(100);
-    registerJava.setAvailableSegments(Lists.newArrayList("testSeg"));
+    registerJava.setVersion(100);
+    registerJava.setRegistId("testRegisterId");
     registerJava.setMessage("testMsg");
     registerJava.setSuccess(true);
+    registerJava.setRefused(true);
 
-    SyncConfigResponsePb pb = SyncConfigResponseConvertor.convert2Pb(registerJava);
-    SyncConfigResponse convertJava = SyncConfigResponseConvertor.convert2Java(pb);
+    RegisterResponsePb pb = RegisterResponseConvertor.convert2Pb(registerJava);
+    RegisterResponse convertJava = RegisterResponseConvertor.convert2Java(pb);
 
-    Assert.assertEquals(registerJava.getRetryInterval(), convertJava.getRetryInterval());
+    Assert.assertEquals(registerJava.getVersion(), convertJava.getVersion());
     Assert.assertEquals(registerJava.getMessage(), convertJava.getMessage());
     Assert.assertEquals(registerJava.isSuccess(), convertJava.isSuccess());
-    Assert.assertEquals(registerJava.getAvailableSegments(), convertJava.getAvailableSegments());
+    Assert.assertEquals(registerJava.getRegistId(), convertJava.getRegistId());
+    Assert.assertEquals(registerJava.isRefused(), convertJava.isRefused());
 
     Assert.assertEquals(registerJava.toString(), convertJava.toString());
   }

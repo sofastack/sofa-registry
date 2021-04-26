@@ -36,6 +36,7 @@ public class PublisherRegisterConvertorTest {
     PublisherRegisterPb pb = PublisherRegisterConvertor.convert2Pb(registerJava);
     PublisherRegister convertJava = PublisherRegisterConvertor.convert2Java(pb);
     TestUtils.assertEquals(registerJava, convertJava);
+    Assert.assertEquals(registerJava.toString(), convertJava.toString());
 
     Assert.assertEquals(registerJava.getDataList().size(), 1);
     Assert.assertEquals(registerJava.getDataList().size(), convertJava.getDataList().size());

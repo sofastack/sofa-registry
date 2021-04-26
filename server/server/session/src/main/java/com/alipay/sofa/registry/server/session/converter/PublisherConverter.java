@@ -30,7 +30,8 @@ import java.util.List;
  * @author shangyu.wh
  * @version $Id: PublisherConvert.java, v 0.1 2017-11-30 17:54 shangyu.wh Exp $
  */
-public class PublisherConverter {
+public final class PublisherConverter {
+  private PublisherConverter() {}
 
   private static final Converter<PublisherRegister, Publisher> publisherConverter =
       source -> {
