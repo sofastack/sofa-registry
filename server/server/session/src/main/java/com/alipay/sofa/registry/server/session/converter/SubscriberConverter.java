@@ -31,8 +31,8 @@ import com.alipay.sofa.registry.core.model.SubscriberRegister;
  * @author shangyu.wh
  * @version $Id : SubscriberConverter.java, v 0.1 2017-12-05 11:00 shangyu.wh Exp $
  */
-public class SubscriberConverter {
-
+public final class SubscriberConverter {
+  private SubscriberConverter() {}
   /**
    * Convert subscriber.
    *
@@ -91,6 +91,9 @@ public class SubscriberConverter {
           watcher.setProcessId(source.getProcessId());
           watcher.setVersion(source.getVersion());
           watcher.setAttributes(source.getAttributes());
+          if (source.getTimestamp() != null) {
+            watcher.setClientRegisterTimestamp(source.getTimestamp());
+          }
           watcher.setRegisterTimestamp(source.getTimestamp());
           watcher.setSourceAddress(new URL(source.getIp(), source.getPort()));
 

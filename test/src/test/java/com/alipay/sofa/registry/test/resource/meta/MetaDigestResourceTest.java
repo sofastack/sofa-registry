@@ -37,7 +37,7 @@ public class MetaDigestResourceTest extends BaseIntegrationTest {
   @Test
   public void testGetRegisterNodeByType() {
     Map map =
-        metaChannel
+        getMetaChannel()
             .getWebTarget()
             .path("digest/data/node/query")
             .request(APPLICATION_JSON)
@@ -46,7 +46,7 @@ public class MetaDigestResourceTest extends BaseIntegrationTest {
     assertTrue(map.toString(), ((Map) map.get(LOCAL_DATACENTER)).containsKey(LOCAL_ADDRESS));
 
     map =
-        metaChannel
+        getMetaChannel()
             .getWebTarget()
             .path("digest/meta/node/query")
             .request(APPLICATION_JSON)
@@ -55,7 +55,7 @@ public class MetaDigestResourceTest extends BaseIntegrationTest {
     assertTrue(map.toString(), ((Map) map.get(LOCAL_DATACENTER)).containsKey(LOCAL_ADDRESS));
 
     map =
-        metaChannel
+        getMetaChannel()
             .getWebTarget()
             .path("digest/session/node/query")
             .request(APPLICATION_JSON)
@@ -67,14 +67,14 @@ public class MetaDigestResourceTest extends BaseIntegrationTest {
   @Test
   public void testGetPushSwitch() {
     Result result =
-        metaChannel
+        getMetaChannel()
             .getWebTarget()
             .path("stopPushDataSwitch/close")
             .request(APPLICATION_JSON)
             .get(Result.class);
     Assert.assertTrue(result.isSuccess());
     Map map =
-        metaChannel
+        getMetaChannel()
             .getWebTarget()
             .path("digest/pushSwitch")
             .request(APPLICATION_JSON)

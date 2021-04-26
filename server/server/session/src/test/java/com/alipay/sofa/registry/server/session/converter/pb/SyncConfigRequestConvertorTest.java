@@ -16,24 +16,26 @@
  */
 package com.alipay.sofa.registry.server.session.converter.pb;
 
-import com.alipay.sofa.registry.common.model.client.pb.SubscriberRegisterPb;
-import com.alipay.sofa.registry.core.model.SubscriberRegister;
-import com.alipay.sofa.registry.server.session.TestUtils;
+import com.alipay.sofa.registry.common.model.client.pb.SyncConfigRequestPb;
+import com.alipay.sofa.registry.core.model.SyncConfigRequest;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class SubscriberRegisterConvertorTest {
+public class SyncConfigRequestConvertorTest {
   @Test
   public void test() {
-    Assert.assertNull(SubscriberRegisterConvertor.convert2Pb(null));
-    Assert.assertNull(SubscriberRegisterConvertor.convert2Java(null));
-    SubscriberRegister registerJava = new SubscriberRegister();
-    TestUtils.setField(registerJava);
-    registerJava.setScope("testScope");
-    SubscriberRegisterPb pb = SubscriberRegisterConvertor.convert2Pb(registerJava);
-    SubscriberRegister convertJava = SubscriberRegisterConvertor.convert2Java(pb);
-    TestUtils.assertEquals(registerJava, convertJava);
-    Assert.assertEquals(registerJava.getScope(), convertJava.getScope());
+    Assert.assertNull(SyncConfigRequestConvertor.convert2Pb(null));
+    Assert.assertNull(SyncConfigRequestConvertor.convert2Java(null));
+    SyncConfigRequest registerJava = new SyncConfigRequest();
+
+    registerJava.setDataCenter("testDataCenter");
+    registerJava.setZone("testZone");
+
+    SyncConfigRequestPb pb = SyncConfigRequestConvertor.convert2Pb(registerJava);
+    SyncConfigRequest convertJava = SyncConfigRequestConvertor.convert2Java(pb);
+
+    Assert.assertEquals(registerJava.getDataCenter(), convertJava.getDataCenter());
+    Assert.assertEquals(registerJava.getZone(), convertJava.getZone());
     Assert.assertEquals(registerJava.toString(), convertJava.toString());
   }
 }

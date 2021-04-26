@@ -23,6 +23,7 @@ import com.alipay.remoting.Connection;
 import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.ElementType;
 import com.alipay.sofa.registry.common.model.PublishSource;
+import com.alipay.sofa.registry.common.model.ServerDataBox;
 import com.alipay.sofa.registry.common.model.slot.func.SlotFunctionRegistry;
 import com.alipay.sofa.registry.common.model.store.*;
 import com.alipay.sofa.registry.core.model.BaseRegister;
@@ -37,7 +38,6 @@ import io.netty.channel.Channel;
 import io.netty.util.Attribute;
 import io.netty.util.AttributeKey;
 import java.net.InetSocketAddress;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
@@ -208,11 +208,13 @@ public class TestUtils {
 
   public static SubPublisher newSubPublisher(long version, long timestamp) {
     String registerId = "testRegisterId-" + REGISTER_ID_SEQ.incrementAndGet();
+    List<ServerDataBox> dataList = Lists.newArrayList();
+    dataList.add(new ServerDataBox("testDataBox"));
     SubPublisher publisher =
         new SubPublisher(
             registerId,
             "testCell",
-            Collections.emptyList(),
+            dataList,
             "testClient",
             version,
             "192.168.0.1:8888",
@@ -255,11 +257,13 @@ public class TestUtils {
     register.setAppName("testApp");
     register.setClientId("testClientId");
     register.setDataId("testDataId");
-    register.setDataInfoId("testDataInfoId");
     register.setEventType("testEventType");
     register.setGroup("testGroup");
     register.setInstanceId("testInstanceId");
-    register.setIp("testIp");
+    String dataInfoId =
+        DataInfo.toDataInfoId(register.getDataId(), register.getInstanceId(), register.getGroup());
+    register.setDataInfoId(dataInfoId);
+    register.setIp("192.168.1.1");
     register.setPort(8888);
     register.setProcessId("testProcessId");
     register.setRegistId("testRegisterId");
@@ -285,5 +289,23 @@ public class TestUtils {
     Assert.assertEquals(left.getTimestamp(), right.getTimestamp());
     Assert.assertEquals(left.getZone(), right.getZone());
     Assert.assertEquals(left.getAttributes(), right.getAttributes());
+  }
+
+  public static void assertEquals(BaseRegister left, BaseInfo right) {
+    Assert.assertEquals(left.getAppName(), right.getAppName());
+    Assert.assertEquals(left.getClientId(), right.getClientId());
+    Assert.assertEquals(left.getDataId(), right.getDataId());
+    Assert.assertEquals(left.getDataInfoId(), right.getDataInfoId());
+    Assert.assertEquals(left.getGroup(), right.getGroup());
+    Assert.assertEquals(left.getInstanceId(), right.getInstanceId());
+    Assert.assertEquals(left.getProcessId(), right.getProcessId());
+    Assert.assertEquals(left.getRegistId(), right.getRegisterId());
+    Assert.assertEquals(left.getVersion().longValue(), right.getVersion());
+    Assert.assertEquals(left.getTimestamp().longValue(), right.getClientRegisterTimestamp());
+    Assert.assertEquals(left.getZone(), right.getCell());
+    Assert.assertEquals(left.getAttributes(), right.getAttributes());
+    Assert.assertEquals(left.getIp(), right.getSourceAddress().getIpAddress());
+    Assert.assertEquals(left.getPort().intValue(), right.getSourceAddress().getPort());
+    Assert.assertEquals(right.getClientVersion(), BaseInfo.ClientVersion.StoreData);
   }
 }

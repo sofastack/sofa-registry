@@ -16,9 +16,6 @@
  */
 package com.alipay.sofa.registry.test;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static org.junit.Assert.assertTrue;
-
 import com.alipay.remoting.Connection;
 import com.alipay.sofa.registry.client.api.RegistryClientConfig;
 import com.alipay.sofa.registry.client.api.SubscriberDataObserver;
@@ -43,15 +40,7 @@ import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.jersey.JerseyClient;
 import com.alipay.sofa.registry.server.test.TestRegistryMain;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
-import java.io.*;
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.MediaType;
+import com.alipay.sofa.registry.util.StringFormatter;
 import org.h2.tools.Server;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -60,6 +49,19 @@ import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.logging.LoggingSystem;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ConfigurableApplicationContext;
+
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.MediaType;
+import java.io.*;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.junit.Assert.assertTrue;
 
 /** @author xuanbei 18/12/1 */
 @SpringBootConfiguration
@@ -98,6 +100,22 @@ public class BaseIntegrationTest extends AbstractTest {
 
   protected Server h2Server = new Server();
 
+  private Channel checkChannel(Channel channel) {
+    if (channel == null) {
+      String msg =
+          StringFormatter.format(
+              "channel is null, {}, {}",
+              this.getClass().getSimpleName(),
+              System.identityHashCode(this));
+      throw new NullPointerException(msg);
+    }
+    return channel;
+  }
+
+  protected Channel getMetaChannel() {
+    return checkChannel(metaChannel);
+  }
+
   @BeforeClass
   public static void beforeBaseIntegrationClass() throws Exception {
     System.setProperty(
@@ -113,7 +131,10 @@ public class BaseIntegrationTest extends AbstractTest {
   public void beforeBaseIntegration() throws Exception {
     //        h2Server.start();
     //        Class.forName("org.h2.driver");
-    LOGGER.info("beforeBaseIntegrationCalled");
+    LOGGER.info(
+        "beforeBaseIntegrationCalled, {}, {}",
+        this.getClass().getSimpleName(),
+        System.identityHashCode(this));
     beforeInit();
   }
 

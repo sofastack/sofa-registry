@@ -39,28 +39,25 @@ public class WriteDataProcessor {
     this.dataNodeService = dataNodeService;
   }
 
-  public void process(WriteDataRequest request) {
-    doHandle(request);
-  }
-
-  private void doHandle(WriteDataRequest request) {
+  public boolean process(WriteDataRequest request) {
     switch (request.getRequestType()) {
       case PUBLISHER:
         doPublishAsync(request);
-        break;
+        return true;
       case UN_PUBLISHER:
         doUnPublishAsync(request);
-        break;
+        return true;
       case CLIENT_OFF:
         doClientOffAsync(request);
-        break;
+        return true;
       default:
-        LOGGER.warn(
+        LOGGER.error(
             "Unknown request type, connectId={}, requestType={}, requestBody={}",
             connectId,
             request.getRequestType(),
             request.getRequestBody());
     }
+    return false;
   }
 
   private void doClientOffAsync(WriteDataRequest request) {

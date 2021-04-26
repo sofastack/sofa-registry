@@ -29,7 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public class DefaultIPMatchStrategy implements IPMatchStrategy<String> {
 
-  @Autowired private BlacklistManager blacklistManager;
+  @Autowired BlacklistManager blacklistManager;
 
   @Override
   public boolean match(String IP, Supplier<String> getOperatorType) {
