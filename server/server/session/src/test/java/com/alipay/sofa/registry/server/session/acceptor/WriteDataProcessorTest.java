@@ -33,6 +33,9 @@ public class WriteDataProcessorTest {
     DataNodeService dataNodeService = Mockito.mock(DataNodeService.class);
     Publisher p = TestUtils.createTestPublisher("testDataId");
     ConnectId connectId = p.connectId();
+    WriteDataAcceptorImpl impl = new WriteDataAcceptorImpl();
+    impl.dataNodeService = Mockito.mock(DataNodeService.class);
+
     WriteDataProcessor processor = new WriteDataProcessor(connectId, dataNodeService);
 
     ClientOffWriteDataRequest off = new ClientOffWriteDataRequest(connectId, Lists.newArrayList(p));
@@ -44,22 +47,28 @@ public class WriteDataProcessorTest {
     Assert.assertEquals(offPublishers.getPublishers().get(0), p);
     Assert.assertFalse(offPublishers.isEmpty());
 
-    processor.process(off);
+    Assert.assertTrue(processor.process(off));
+    impl.accept(off);
     Mockito.verify(dataNodeService, Mockito.times(1)).clientOff(offPublishers);
+    Mockito.verify(impl.dataNodeService, Mockito.times(1)).clientOff(offPublishers);
 
     PublisherWriteDataRequest pub =
         new PublisherWriteDataRequest(p, WriteDataRequest.WriteDataRequestType.PUBLISHER);
     Assert.assertEquals(pub.getConnectId(), connectId);
     Assert.assertEquals(pub.getRequestType(), WriteDataRequest.WriteDataRequestType.PUBLISHER);
     Assert.assertEquals(pub.getConnectId(), connectId);
-    processor.process(pub);
+    Assert.assertTrue(processor.process(pub));
+    impl.accept(pub);
     Mockito.verify(dataNodeService, Mockito.times(1)).register(p);
+    Mockito.verify(impl.dataNodeService, Mockito.times(1)).register(p);
 
     pub = new PublisherWriteDataRequest(p, WriteDataRequest.WriteDataRequestType.UN_PUBLISHER);
     Assert.assertEquals(pub.getConnectId(), connectId);
     Assert.assertEquals(pub.getRequestType(), WriteDataRequest.WriteDataRequestType.UN_PUBLISHER);
     Assert.assertEquals(pub.getConnectId(), connectId);
-    processor.process(pub);
+    Assert.assertTrue(processor.process(pub));
+    impl.accept(pub);
     Mockito.verify(dataNodeService, Mockito.times(1)).unregister(p);
+    Mockito.verify(impl.dataNodeService, Mockito.times(1)).register(p);
   }
 }

@@ -42,7 +42,7 @@ public class DataCenterNodes<T extends Node> implements Serializable {
    * @param version
    * @param dataCenterId
    */
-  public DataCenterNodes(NodeType nodeType, Long version, String dataCenterId) {
+  public DataCenterNodes(NodeType nodeType, long version, String dataCenterId) {
     this.nodeType = nodeType;
     this.version = version;
     this.dataCenterId = dataCenterId;

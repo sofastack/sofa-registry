@@ -14,33 +14,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.filter.blacklist;
+package com.alipay.sofa.registry.server.session.mapper;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.Collections;
+import org.junit.Assert;
+import org.junit.Test;
 
-/**
- * @author shangyu.wh
- * @version 1.0: BlacklistManager.java, v 0.1 2019-06-19 18:27 shangyu.wh Exp $
- */
-public interface BlacklistManager {
-  /** load list first */
-  void load();
-
-  /**
-   * get list
-   *
-   * @return
-   */
-  List<BlacklistConfig> getBlacklistConfigList();
-
-  /**
-   * convert blacklist map to blacklist config list
-   *
-   * @param config
-   * @return blacklistConfigMap key:blacklist type Map<String, Set<String>> key:MatchType set:match
-   *     patterns
-   */
-  Map<String, Map<String, Set<String>>> convertBlacklistConfig(String config);
+public class ConnectionMapperTest {
+  @Test
+  public void test() {
+    final String key = "testKey";
+    final String val = "testVal";
+    ConnectionMapper mapper = new ConnectionMapper();
+    mapper.add(key, val);
+    Assert.assertTrue(mapper.contains(key));
+    Assert.assertEquals(mapper.get(key), val);
+    Assert.assertNotEquals(mapper.get(key + "1"), val);
+    Assert.assertEquals(mapper.size(), 1);
+    Assert.assertEquals(mapper.get(), Collections.singletonMap(key, val));
+    mapper.remove(key + "1");
+    Assert.assertEquals(mapper.size(), 1);
+    mapper.remove(key);
+    Assert.assertNull(mapper.get(key));
+  }
 }

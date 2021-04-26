@@ -72,4 +72,9 @@ public class BlacklistConfig implements Serializable {
   public void setMatchTypes(List<MatchType> matchTypes) {
     this.matchTypes = matchTypes;
   }
+
+  @Override
+  public String toString() {
+    return "BlacklistConfig{" + "type='" + type + '\'' + ", match=" + matchTypes + '}';
+  }
 }

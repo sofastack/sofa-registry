@@ -28,7 +28,8 @@ import org.apache.commons.lang.StringUtils;
 public class ConnectionMapper {
 
   /** <connectionIp:connectionPort, clientIp > * */
-  private ConcurrentHashMap<String, String> connectionToClientIpMap = new ConcurrentHashMap<>();
+  private final ConcurrentHashMap<String, String> connectionToClientIpMap =
+      new ConcurrentHashMap<>();
 
   /**
    * 添加连接到 clientIp 的映射

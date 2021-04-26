@@ -46,7 +46,7 @@ public class ProvideDataResourceTest extends BaseIntegrationTest {
     persistenceData.setInstanceId(DEFAULT_INSTANCE_ID);
 
     Result response =
-        metaChannel
+        getMetaChannel()
             .getWebTarget()
             .path("persistentData/put")
             .request()
@@ -55,7 +55,7 @@ public class ProvideDataResourceTest extends BaseIntegrationTest {
     Thread.sleep(500);
 
     response =
-        metaChannel
+        getMetaChannel()
             .getWebTarget()
             .path("persistentData/remove")
             .request()

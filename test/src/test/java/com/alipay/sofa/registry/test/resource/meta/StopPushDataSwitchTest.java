@@ -50,7 +50,7 @@ public class StopPushDataSwitchTest extends BaseIntegrationTest {
     // open stop push switch
     ParaCheckUtil.checkNotNull(metaChannel, "metaChannel");
     assertTrue(
-        metaChannel
+        getMetaChannel()
             .getWebTarget()
             .path("stopPushDataSwitch/open")
             .request(APPLICATION_JSON)
@@ -92,7 +92,7 @@ public class StopPushDataSwitchTest extends BaseIntegrationTest {
 
     // close stop push switch
     assertTrue(
-        metaChannel
+        getMetaChannel()
             .getWebTarget()
             .path("stopPushDataSwitch/close")
             .request(APPLICATION_JSON)

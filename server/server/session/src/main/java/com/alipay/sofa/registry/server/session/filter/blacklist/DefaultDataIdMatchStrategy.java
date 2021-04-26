@@ -30,6 +30,7 @@ public class DefaultDataIdMatchStrategy implements DataIdMatchStrategy<String> {
   @Override
   public boolean match(String dataId, Supplier<String> getOperatorType) {
     if (StringUtils.hasText(dataId) && StringUtils.hasText(getOperatorType.get())) {
+      // TODO pre compile pattern
       return Pattern.matches(getOperatorType.get(), dataId);
     }
     return true;

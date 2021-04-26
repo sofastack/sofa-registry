@@ -38,9 +38,10 @@ import java.util.function.Predicate;
  * @author shangyu.wh
  * @version $Id : ReceivedDataConverter.java, v 0.1 2017-12-13 13:42 shangyu.wh Exp $
  */
-public class ReceivedDataConverter {
+public final class ReceivedDataConverter {
   private static final Logger LOGGER = LoggerFactory.getLogger(ReceivedDataConverter.class);
 
+  private ReceivedDataConverter() {}
   /**
    * Standard RunEnv
    *

@@ -69,7 +69,7 @@ public class BlackListProvideDataProcessor implements ProvideDataProcessor {
   }
 
   private void clientOffBlackIp(Map<String, Map<String, Set<String>>> blacklistConfigMap) {
-
+    // TODO use the same handler with BlackListManager
     if (blacklistConfigMap != null) {
       Set<String> ipSet = new HashSet();
 

@@ -56,6 +56,7 @@ public class AppRevisionConvertorTest {
     Assert.assertEquals(appRevision.getRevision(), revision.getRevision());
     Assert.assertEquals(appRevision.getBaseParams().size(), revision.getBaseParams().size());
     Assert.assertEquals(appRevision.getInterfaceMap().size(), revision.getInterfaceMap().size());
+    Assert.assertTrue(revision.toString(), revision.toString().contains(revision.getRevision()));
 
     AppRevisionInterface f1 = appRevision.getInterfaceMap().get("svc1");
     Assert.assertEquals(f1.getId(), inf1.getId());
