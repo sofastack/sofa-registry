@@ -25,9 +25,12 @@
 
     <insert id="insertOnReplace" parameterType="com.alipay.sofa.registry.jdbc.domain.InterfaceAppsIndexDomain">
             <![CDATA[
-            replace into interface_apps_index(data_center, interface_name, app_name, reference, hashcode, gmt_create,
+                delete from interface_apps_index where data_center=#{dataCenter} and app_name=#{appName} and hashcode=#{hashcode};
+            ]]>
+            <![CDATA[
+            insert into interface_apps_index(data_center, interface_name, app_name, reference, hashcode, gmt_create,
             gmt_modified)
-            values (#{dataCenter},#{interfaceName},#{appName}, true , #{hashcode}, NOW(6), NOW(6))
+            values (#{dataCenter},#{interfaceName},#{appName}, true , #{hashcode}, NOW(6), NOW(6)) on duplicate key update reference=true;
         ]]>
     </insert>
 
