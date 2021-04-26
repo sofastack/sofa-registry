@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.alipay.sofa.registry.jdbc.mapper.AppRevisionMapper">
+
+    <resultMap type="com.alipay.sofa.registry.jdbc.domain.AppRevisionDomain" id="appRevisionResultMap">
+        <id property="id" column="id" javaType="long" jdbcType="BIGINT"/>
+        <result property="dataCenter" column="data_center" javaType="java.lang.String" jdbcType="VARCHAR"/>
+        <result property="revision" column="revision" javaType="java.lang.String" jdbcType="VARCHAR"/>
+        <result property="appName" column="app_name" javaType="java.lang.String" jdbcType="VARCHAR"/>
+        <result property="clientVersion" column="client_version" javaType="java.lang.String" jdbcType="VARCHAR"/>
+        <result property="baseParams" column="base_params" javaType="java.lang.String" jdbcType="LONGVARCHAR"/>
+        <result property="serviceParams" column="service_params" javaType="java.lang.String" jdbcType="LONGVARCHAR"/>
+        <result property="gmtCreate" column="gmt_create" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
+        <result property="gmtModify" column="gmt_modified" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.alipay.sofa.registry.jdbc.domain.AppRevisionDomain">
+        <![CDATA[
+
+               INSERT INTO app_revision
+               (
+                   data_center,
+                   revision,
+                   app_name,
+                   client_version,
+                   base_params,
+                   service_params,
+                   gmt_create,
+                   gmt_modified
+               )
+               VALUES
+               (
+                   #{dataCenter},
+                   #{revision},
+                   #{appName},
+                   #{clientVersion},
+                   #{baseParams},
+                   #{serviceParams},
+                   CURRENT_TIMESTAMP,
+                   CURRENT_TIMESTAMP
+               )
+               ON DUPLICATE KEY UPDATE gmt_modified = CURRENT_TIMESTAMP
+
+        ]]>
+    </insert>
+
+    <select id="queryRevision" resultMap="appRevisionResultMap">
+        <![CDATA[
+         select * from app_revision
+                          where data_center = #{dataCenter} and revision = #{revision}
+
+        ]]>
+    </select>
+
+    <select id="batchQuery" parameterType="java.util.List" resultMap="appRevisionResultMap">
+        select * from app_revision where data_center = #{dataCenter}
+        <if test="revisions != null and revisions.size() > 0">
+            and revision in
+            <foreach collection="revisions" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="checkExist" parameterType="com.alipay.sofa.registry.jdbc.domain.AppRevisionDomain" resultMap="appRevisionResultMap">
+        select data_center, revision, gmt_modified from app_revision where data_center = #{dataCenter} and revision = #{revision}
+    </select>
+
+
+    <update id="batchHeartbeat" parameterType="java.util.List">
+        update app_revision set gmt_modified = CURRENT_TIMESTAMP
+        where data_center=#{dataCenter}
+        <if test="revisions != null and revisions.size() > 0">
+            and revision in
+            <foreach collection="revisions" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+    </update>
+
+
+    <select id="queryGcRevision" resultMap="appRevisionResultMap">
+        <![CDATA[
+         select * from app_revision
+                          where data_center = #{dataCenter} and gmt_modified < #{date} limit #{limitCount}
+
+        ]]>
+    </select>
+
+    <select id="batchCheck" parameterType="java.util.List" resultType="java.lang.String">
+        select revision from app_revision where data_center = #{dataCenter}
+        <if test="revisions != null and revisions.size() > 0">
+            and revision in
+            <foreach collection="revisions" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+
+    <delete id="deleteAppRevision">
+        delete from app_revision where data_center = #{dataCenter} and revision = #{revision}
+    </delete>
+
+</mapper>
