@@ -24,6 +24,7 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Longs;
+
 import java.net.InetSocketAddress;
 import java.util.Collections;
 import java.util.Comparator;
@@ -131,10 +132,11 @@ public final class PushTrace {
         first == null ? 0 : pushFinishTimestamp - first.getRegisterTimestamp();
     this.lastPubPushDelayMillis =
         last == null ? 0 : pushFinishTimestamp - last.getRegisterTimestamp();
-    if (first != null) {
+
+    this.datumModifyDelayMillis = datumTotalDelayMillis;
+    if (pushCause.pushType == PushType.Sub && first != null) {
+      // if sub, use first.publisher.registerTs as modifyTs
       datumModifyDelayMillis = firstPubPushDelayMillis;
-    } else {
-      datumModifyDelayMillis = datumTotalDelayMillis;
     }
   }
 
