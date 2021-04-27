@@ -145,7 +145,7 @@ public class PushProcessorTest {
   }
 
   @Test
-  public void testPush() {
+  public void testPush() throws Exception{
     PushProcessor processor = new PushProcessor();
     SessionServerConfigBean config = TestUtils.newSessionConfig("testDc");
     processor.sessionServerConfig = config;
@@ -220,6 +220,7 @@ public class PushProcessorTest {
     Assert.assertEquals(processor.pushingTasks.size(), 1);
     // push too long, trigger force push
     config.setClientNodeExchangeTimeoutMillis(0);
+    Thread.sleep(1);
     Assert.assertTrue(processor.checkPushing(task));
     Assert.assertEquals(processor.pushingTasks.size(), 0);
 
