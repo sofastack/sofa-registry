@@ -27,32 +27,63 @@ public class MetadataMetrics {
   private MetadataMetrics() {}
 
   static final class Fetch {
-    static final Counter METADATA_FETCH_COUNTER =
+    static final Counter FETCH_REVISION_COUNTER =
         Counter.build()
             .namespace("metadata")
-            .subsystem("fetch")
-            .name("metadata_fetch_total")
-            .help("metadata query revision and apps")
+            .subsystem("revision")
+            .name("fetch_revision_total")
+            .help("fetch revision")
+            .labelNames("hit")
             .register();
+    static final Counter.Child REVISION_CACHE_HIT_COUNTER = FETCH_REVISION_COUNTER.labels("Y");
+    static final Counter.Child REVISION_CACHE_MISS_COUNTER = FETCH_REVISION_COUNTER.labels("N");
 
-    static final Counter.Child FETCH_REVISION_COUNTER = METADATA_FETCH_COUNTER.labels("revision");
-    static final Counter.Child FETCH_APPS_COUNTER = METADATA_FETCH_COUNTER.labels("apps");
+
+    static final Counter FETCH_APPS_COUNTER =
+            Counter.build()
+                    .namespace("metadata")
+                    .subsystem("apps")
+                    .name("fetch_apps_total")
+                    .help("query apps")
+                    .register();
+    static final Counter.Child APPS_CACHE_HIT_COUNTER = FETCH_APPS_COUNTER.labels("Y");
+    static final Counter.Child APPS_CACHE_MISS_COUNTER = FETCH_APPS_COUNTER.labels("N");
+
   }
 
   static final class Register {
 
-    static final Counter METADATA_REGISTER_COUNTER =
+    static final Counter REVISION_REGISTER_COUNTER =
         Counter.build()
             .namespace("metadata")
-            .subsystem("register")
-            .name("metadata_register_total")
-            .help("metadata revision register and heartbeat")
+            .subsystem("revision")
+            .name("revision_register_total")
+            .help("revision register")
             .register();
 
-    static final Counter.Child REVISION_REGISTER_COUNTER =
-        METADATA_REGISTER_COUNTER.labels("register");
+    static final Counter REVISION_HEARTBEAT_COUNTER =
+            Counter.build()
+                    .namespace("metadata")
+                    .subsystem("revision")
+                    .name("revision_heartbeat_total")
+                    .help("revision register")
+                    .register();
 
-    static final Counter.Child REVISION_HEARTBEAT_COUNTER =
-        METADATA_REGISTER_COUNTER.labels("heartbeat");
+    static final Counter REVISION_GC_COUNTER =
+            Counter.build()
+                    .namespace("metadata")
+                    .subsystem("revision")
+                    .name("revision_delete_total")
+                    .help("revision delete")
+                    .register();
+
+
+    static final Counter INTERFACE_APPS_REGISTER_COUNTER =
+            Counter.build()
+                    .namespace("metadata")
+                    .subsystem("apps")
+                    .name("apps_register_total")
+                    .help("apps register")
+                    .register();
   }
 }
