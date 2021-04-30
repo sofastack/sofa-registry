@@ -25,10 +25,11 @@ import com.alipay.sofa.registry.server.meta.MetaLeaderService;
 import com.alipay.sofa.registry.server.meta.remoting.notifier.Notifier;
 import com.alipay.sofa.registry.server.meta.slot.SlotManager;
 import com.google.common.annotations.VisibleForTesting;
-import java.util.List;
-import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import javax.annotation.PostConstruct;
+import java.util.List;
 
 /**
  * @author chen.zhu
@@ -61,6 +62,13 @@ public class DefaultSlotManager extends SimpleSlotManager implements SlotManager
 
   @Override
   public void refresh(SlotTable slotTable) {
+    // if we are not leader, could not refresh table
+    // this maybe happens in fgc:
+    // before arrange we are leader, but calc takes too much time
+    if (!metaLeaderService.amILeader()) {
+      throw new IllegalStateException(
+          "not leader, concurrent leader is:" + metaLeaderService.getLeader());
+    }
     super.refresh(slotTable);
     if (metaLeaderService.amIStableAsLeader()) {
       notifyObservers(slotTable);
