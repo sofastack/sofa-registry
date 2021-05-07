@@ -341,7 +341,7 @@ public final class DataChangeEventCenter {
       return false;
     }
     for (DataChangeEvent event : events) {
-      final Map<String, DatumVersion> changes = Maps.newHashMapWithExpectedSize(events.size());
+      final Map<String, DatumVersion> changes = Maps.newHashMapWithExpectedSize(event.getDataInfoIds().size());
       final String dataCenter = event.getDataCenter();
       for (String dataInfoId : event.getDataInfoIds()) {
         DatumVersion datumVersion = datumCache.getVersion(dataCenter, dataInfoId);
