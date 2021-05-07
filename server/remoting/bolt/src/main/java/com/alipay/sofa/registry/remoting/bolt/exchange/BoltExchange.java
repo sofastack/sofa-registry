@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.remoting.bolt.exchange;
 
+import com.alipay.remoting.config.Configs;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.remoting.Client;
@@ -23,6 +24,8 @@ import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.bolt.BoltClient;
 import com.alipay.sofa.registry.remoting.bolt.BoltServer;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
+import com.alipay.sofa.registry.util.OsUtils;
+
 import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -36,6 +39,12 @@ public class BoltExchange implements Exchange<ChannelHandler> {
   private final Map<String, Client> clients = new ConcurrentHashMap<>();
 
   private final ConcurrentHashMap<Integer, Server> serverMap = new ConcurrentHashMap<>();
+
+  static {
+    // def size=400, it is too big
+    System.setProperty(Configs.TP_MIN_SIZE, String.valueOf(OsUtils.getCpuCount() * 10));
+    System.setProperty(Configs.TP_MAX_SIZE, String.valueOf(OsUtils.getCpuCount() * 10));
+  }
 
   @Override
   public Client connect(String serverType, URL serverUrl, ChannelHandler... channelHandlers) {
