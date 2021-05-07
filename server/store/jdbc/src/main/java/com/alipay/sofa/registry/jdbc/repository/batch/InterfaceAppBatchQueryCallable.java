@@ -49,7 +49,7 @@ public class InterfaceAppBatchQueryCallable
   @Autowired private DefaultCommonConfig defaultCommonConfig;
 
   public InterfaceAppBatchQueryCallable() {
-    super(20, TimeUnit.MILLISECONDS, 200);
+    super(100, TimeUnit.MILLISECONDS, 200);
   }
 
   @Override

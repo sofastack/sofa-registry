@@ -25,11 +25,10 @@ import com.alipay.sofa.registry.server.meta.MetaLeaderService;
 import com.alipay.sofa.registry.server.meta.remoting.notifier.Notifier;
 import com.alipay.sofa.registry.server.meta.slot.SlotManager;
 import com.google.common.annotations.VisibleForTesting;
+import java.util.List;
+import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import javax.annotation.PostConstruct;
-import java.util.List;
 
 /**
  * @author chen.zhu

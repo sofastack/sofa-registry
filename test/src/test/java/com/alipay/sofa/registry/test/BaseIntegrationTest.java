@@ -16,6 +16,9 @@
  */
 package com.alipay.sofa.registry.test;
 
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.junit.Assert.assertTrue;
+
 import com.alipay.remoting.Connection;
 import com.alipay.sofa.registry.client.api.RegistryClientConfig;
 import com.alipay.sofa.registry.client.api.SubscriberDataObserver;
@@ -41,6 +44,15 @@ import com.alipay.sofa.registry.remoting.jersey.JerseyClient;
 import com.alipay.sofa.registry.server.test.TestRegistryMain;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.alipay.sofa.registry.util.StringFormatter;
+import java.io.*;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.MediaType;
 import org.h2.tools.Server;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -49,19 +61,6 @@ import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.logging.LoggingSystem;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ConfigurableApplicationContext;
-
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.MediaType;
-import java.io.*;
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static org.junit.Assert.assertTrue;
 
 /** @author xuanbei 18/12/1 */
 @SpringBootConfiguration
