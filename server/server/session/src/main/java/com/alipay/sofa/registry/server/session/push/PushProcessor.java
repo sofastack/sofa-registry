@@ -16,8 +16,6 @@
  */
 package com.alipay.sofa.registry.server.session.push;
 
-import static com.alipay.sofa.registry.server.session.push.PushMetrics.Push.*;
-
 import com.alipay.remoting.rpc.exception.InvokeTimeoutException;
 import com.alipay.sofa.registry.common.model.SubscriberUtils;
 import com.alipay.sofa.registry.common.model.store.BaseInfo;
@@ -35,17 +33,22 @@ import com.alipay.sofa.registry.task.KeyedThreadPoolExecutor;
 import com.alipay.sofa.registry.task.MetricsableThreadPoolExecutor;
 import com.alipay.sofa.registry.trace.TraceID;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
+import com.alipay.sofa.registry.util.OsUtils;
 import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import javax.annotation.PostConstruct;
 import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.Executor;
+import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import javax.annotation.PostConstruct;
-import org.springframework.beans.factory.annotation.Autowired;
+
+import static com.alipay.sofa.registry.server.session.push.PushMetrics.Push.*;
 
 public class PushProcessor {
   private static final Logger LOGGER = LoggerFactory.getLogger(PushProcessor.class);
@@ -66,7 +69,7 @@ public class PushProcessor {
 
   private final ThreadPoolExecutor pushCallbackExecutor =
       MetricsableThreadPoolExecutor.newExecutor(
-          "PushCallbackExecutor", 2, 1000, new CallRunHandler());
+          "PushCallback", OsUtils.getCpuCount() * 4, 20000, new DiscardRunHandler());
 
   @PostConstruct
   public void init() {
@@ -430,7 +433,7 @@ public class PushProcessor {
       try {
         for (Subscriber subscriber : pushTask.subscriberMap.values()) {
           if (!subscriber.checkAndUpdateVersion(pushTask.dataCenter, pushTask.datum.getVersion())) {
-            LOGGER.warn(
+            LOGGER.info(
                 "PushY, but failed to updateVersion, {}, {}",
                 pushTask.taskID,
                 pushTask.pushingTaskKey);
@@ -461,7 +464,7 @@ public class PushProcessor {
         if (channel.isConnected()) {
           retry(pushTask, "callbackErr");
         } else {
-          LOGGER.warn("PushN, channel closed, {}, {}", pushTask.taskID, pushingTaskKey);
+          LOGGER.info("PushN, channel closed, {}, {}", pushTask.taskID, pushingTaskKey);
         }
       } catch (Throwable e) {
         LOGGER.error("error push.onException, {}, {}", pushTask.taskID, pushingTaskKey, e);
@@ -592,10 +595,9 @@ public class PushProcessor {
     }
   }
 
-  static final class CallRunHandler extends ThreadPoolExecutor.CallerRunsPolicy {
+  static final class DiscardRunHandler implements RejectedExecutionHandler {
     public void rejectedExecution(Runnable r, ThreadPoolExecutor e) {
-      super.rejectedExecution(r, e);
-      LOGGER.warn("push callback busy");
+      LOGGER.info("[pushCallbackBusy]");
     }
   }
 

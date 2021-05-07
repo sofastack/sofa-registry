@@ -24,7 +24,6 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Longs;
-
 import java.net.InetSocketAddress;
 import java.util.Collections;
 import java.util.Comparator;
