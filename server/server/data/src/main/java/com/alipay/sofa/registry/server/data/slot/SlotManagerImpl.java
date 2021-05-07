@@ -253,11 +253,13 @@ public final class SlotManagerImpl implements SlotManager {
 
     // do that async, not block the heartbeat
     // v2 > v1, compareAndSet to avoid v1 cover v2
-    updatingSlotTable.compareAndSet(updating, update);
-    watchDog.wakeup();
-    LOGGER.info(
-        "updating slot table, new={}, current={}", update.getEpoch(), curSlotTable.getEpoch());
-    return true;
+    if (updatingSlotTable.compareAndSet(updating, update)) {
+      watchDog.wakeup();
+      LOGGER.info(
+          "updating slot table, new={}, current={}", update.getEpoch(), curSlotTable.getEpoch());
+      return true;
+    }
+    return false;
   }
 
   private void recordSlotTable(SlotTable slotTable) {
