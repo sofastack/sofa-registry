@@ -41,7 +41,8 @@ public class BoltExchange implements Exchange<ChannelHandler> {
   private final ConcurrentHashMap<Integer, Server> serverMap = new ConcurrentHashMap<>();
 
   static {
-    // def size=400, it is too big
+    // def size=400, it is too big, and queueSize is too small
+    System.setProperty(Configs.TP_QUEUE_SIZE, String.valueOf(1000 * 10));
     System.setProperty(Configs.TP_MIN_SIZE, String.valueOf(OsUtils.getCpuCount() * 10));
     System.setProperty(Configs.TP_MAX_SIZE, String.valueOf(OsUtils.getCpuCount() * 10));
   }
