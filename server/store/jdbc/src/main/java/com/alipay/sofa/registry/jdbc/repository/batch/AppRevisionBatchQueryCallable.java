@@ -46,7 +46,7 @@ public class AppRevisionBatchQueryCallable extends BatchCallableRunnable<String,
   @Autowired private DefaultCommonConfig defaultCommonConfig;
 
   public AppRevisionBatchQueryCallable() {
-    super(20, TimeUnit.MILLISECONDS, 200);
+    super(100, TimeUnit.MILLISECONDS, 200);
   }
   /**
    * batch query app_revision

@@ -145,7 +145,7 @@ public class PushProcessorTest {
   }
 
   @Test
-  public void testPush() throws Exception{
+  public void testPush() throws Exception {
     PushProcessor processor = new PushProcessor();
     SessionServerConfigBean config = TestUtils.newSessionConfig("testDc");
     processor.sessionServerConfig = config;
@@ -253,11 +253,11 @@ public class PushProcessorTest {
   }
 
   @Test
-  public void testCallerRun() {
-    PushProcessor.CallRunHandler callRunHandler = new PushProcessor.CallRunHandler();
+  public void testRun() {
+    PushProcessor.DiscardRunHandler discardRunHandler = new PushProcessor.DiscardRunHandler();
     Thread t = Thread.currentThread();
     final AtomicReference<Thread> runT = new AtomicReference<>();
-    callRunHandler.rejectedExecution(
+    discardRunHandler.rejectedExecution(
         new Runnable() {
           @Override
           public void run() {
@@ -265,7 +265,7 @@ public class PushProcessorTest {
           }
         },
         (ThreadPoolExecutor) Executors.newCachedThreadPool());
-    Assert.assertEquals(t, runT.get());
+    Assert.assertNull(runT.get());
   }
 
   @Test
