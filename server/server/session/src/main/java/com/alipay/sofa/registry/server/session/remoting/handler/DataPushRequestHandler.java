@@ -24,6 +24,7 @@ import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.session.bootstrap.ExecutorManager;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.push.FirePushService;
+import com.alipay.sofa.registry.server.session.push.PushSwitchService;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractClientHandler;
 import com.alipay.sofa.registry.server.shared.remoting.RemotingHelper;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
@@ -46,6 +47,8 @@ public class DataPushRequestHandler extends AbstractClientHandler<DataPushReques
 
   @Autowired SessionServerConfig sessionServerConfig;
 
+  @Autowired PushSwitchService pushSwitchService;
+
   @Override
   public Executor getExecutor() {
     return executorManager.getDataChangeRequestExecutor();
@@ -63,7 +66,7 @@ public class DataPushRequestHandler extends AbstractClientHandler<DataPushReques
 
   @Override
   public Object doHandle(Channel channel, DataPushRequest request) {
-    if (sessionServerConfig.isStopPushSwitch()) {
+    if (!pushSwitchService.canPush()) {
       return null;
     }
     try {

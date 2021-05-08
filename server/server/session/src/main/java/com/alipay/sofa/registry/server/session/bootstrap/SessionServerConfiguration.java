@@ -56,11 +56,9 @@ import com.alipay.sofa.registry.server.session.node.service.SessionMetaServerMan
 import com.alipay.sofa.registry.server.session.provideData.ProvideDataProcessor;
 import com.alipay.sofa.registry.server.session.provideData.ProvideDataProcessorManager;
 import com.alipay.sofa.registry.server.session.provideData.processor.BlackListProvideDataProcessor;
+import com.alipay.sofa.registry.server.session.provideData.processor.GrayPushSwitchProvideDataProcessor;
 import com.alipay.sofa.registry.server.session.provideData.processor.StopPushProvideDataProcessor;
-import com.alipay.sofa.registry.server.session.push.ChangeProcessor;
-import com.alipay.sofa.registry.server.session.push.FirePushService;
-import com.alipay.sofa.registry.server.session.push.PushDataGenerator;
-import com.alipay.sofa.registry.server.session.push.PushProcessor;
+import com.alipay.sofa.registry.server.session.push.*;
 import com.alipay.sofa.registry.server.session.registry.Registry;
 import com.alipay.sofa.registry.server.session.registry.SessionRegistry;
 import com.alipay.sofa.registry.server.session.remoting.ClientNodeExchanger;
@@ -496,6 +494,11 @@ public class SessionServerConfiguration {
     public PushDataGenerator pushDataGenerator() {
       return new PushDataGenerator();
     }
+
+    @Bean
+    public PushSwitchService pushSwitchService() {
+      return new PushSwitchService();
+    }
   }
 
   @Configuration
@@ -761,6 +764,16 @@ public class SessionServerConfiguration {
       ((ProvideDataProcessorManager) provideDataProcessorManager)
           .addProvideDataProcessor(stopPushProvideDataProcessor);
       return stopPushProvideDataProcessor;
+    }
+
+    @Bean
+    public ProvideDataProcessor grayPushSwitchProvideDataProcessor(
+        ProvideDataProcessor provideDataProcessorManager) {
+      ProvideDataProcessor grayPushSwitchProvideDataProcessor =
+          new GrayPushSwitchProvideDataProcessor();
+      ((ProvideDataProcessorManager) provideDataProcessorManager)
+          .addProvideDataProcessor(grayPushSwitchProvideDataProcessor);
+      return grayPushSwitchProvideDataProcessor;
     }
   }
 }

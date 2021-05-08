@@ -61,6 +61,12 @@ public class ValueConstants {
           SESSION_PROVIDE_DATA_INSTANCE_ID,
           SESSION_PROVIDE_DATA_GROUP);
 
+  public static final String PUSH_SWITCH_GRAY_OPEN_DATA_ID =
+      DataInfo.toDataInfoId(
+          "session.push.switch.gray.open",
+          SESSION_PROVIDE_DATA_INSTANCE_ID,
+          SESSION_PROVIDE_DATA_GROUP);
+
   public static final String BLACK_LIST_DATA_ID =
       DataInfo.toDataInfoId(
           "session.blacklist.data", SESSION_PROVIDE_DATA_INSTANCE_ID, SESSION_PROVIDE_DATA_GROUP);

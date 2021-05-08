@@ -39,6 +39,7 @@ public class FirePushServiceTest {
     FirePushService svc = new FirePushService();
     SessionServerConfigBean config = TestUtils.newSessionConfig("testDc");
     svc.sessionServerConfig = config;
+    svc.pushSwitchService = new PushSwitchService(config);
     svc.sessionInterests = Mockito.mock(Interests.class);
     svc.pushProcessor = Mockito.mock(PushProcessor.class);
     TriggerPushContext ctx =
@@ -112,6 +113,7 @@ public class FirePushServiceTest {
     Mockito.when(svc.sessionCacheService.getValueIfPresent(Mockito.anyObject())).thenReturn(v);
     Mockito.when(svc.sessionInterests.getDatas(Mockito.anyObject()))
         .thenReturn(Collections.singletonList(subscriber));
+    svc.pushSwitchService = new PushSwitchService(svc.sessionServerConfig);
     Assert.assertTrue(svc.doExecuteOnChange("testDataId", ctx));
     Mockito.verify(svc.pushProcessor, Mockito.times(1))
         .firePush(

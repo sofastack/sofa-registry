@@ -18,6 +18,7 @@ package com.alipay.sofa.registry.server.session.listener;
 
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.node.service.ClientNodeService;
+import com.alipay.sofa.registry.server.session.push.PushSwitchService;
 import com.alipay.sofa.registry.server.session.scheduler.task.ReceivedConfigDataPushTask;
 import com.alipay.sofa.registry.server.session.scheduler.task.SessionTask;
 import com.alipay.sofa.registry.server.session.strategy.ReceivedConfigDataPushTaskStrategy;
@@ -36,6 +37,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class ReceivedConfigDataPushTaskListener implements TaskListener {
 
   @Autowired private SessionServerConfig sessionServerConfig;
+
+  @Autowired private PushSwitchService pushSwitchService;
 
   @Autowired private ClientNodeService clientNodeService;
 
@@ -73,7 +76,10 @@ public class ReceivedConfigDataPushTaskListener implements TaskListener {
 
     SessionTask receivedConfigDataPushTask =
         new ReceivedConfigDataPushTask(
-            sessionServerConfig, clientNodeService, receivedConfigDataPushTaskStrategy);
+            sessionServerConfig,
+            pushSwitchService,
+            clientNodeService,
+            receivedConfigDataPushTaskStrategy);
     receivedConfigDataPushTask.setTaskEvent(event);
     getSingleTaskDispatcher()
         .dispatch(

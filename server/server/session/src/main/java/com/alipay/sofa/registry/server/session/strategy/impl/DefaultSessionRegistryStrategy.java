@@ -23,6 +23,7 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.push.FirePushService;
+import com.alipay.sofa.registry.server.session.push.PushSwitchService;
 import com.alipay.sofa.registry.server.session.strategy.SessionRegistryStrategy;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
@@ -45,12 +46,14 @@ public class DefaultSessionRegistryStrategy implements SessionRegistryStrategy {
 
   @Autowired private SessionServerConfig sessionServerConfig;
 
+  @Autowired private PushSwitchService pushSwitchService;
+
   @Override
   public void afterPublisherRegister(Publisher publisher) {}
 
   @Override
   public void afterSubscriberRegister(Subscriber subscriber) {
-    if (!sessionServerConfig.isStopPushSwitch()) {
+    if (pushSwitchService.canPush()) {
       firePushService.fireOnRegister(subscriber);
     }
   }

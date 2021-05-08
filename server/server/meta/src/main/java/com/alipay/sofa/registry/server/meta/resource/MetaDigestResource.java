@@ -89,30 +89,48 @@ public class MetaDigestResource {
   @Produces(MediaType.APPLICATION_JSON)
   public Map<String, String> getPushSwitch() {
     Map<String, String> resultMap = new HashMap<>(1);
-    try {
-      DBResponse<PersistenceData> ret =
-          provideDataService.queryProvideData(ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID);
+      resultMap.putAll(globalPushSwitch());
+      resultMap.putAll(grayPushSwitch());
+    return resultMap;
+  }
 
-      if (ret.getOperationStatus() == OperationStatus.SUCCESS) {
-        String result = getEntityData(ret);
-        if (result != null && !result.isEmpty()) {
-          resultMap.put("stopPush", result);
-        } else {
-          resultMap.put("stopPush", result);
-          resultMap.put("msg", "data is empty");
-        }
-      } else if (ret.getOperationStatus() == OperationStatus.NOTFOUND) {
-        resultMap.put("msg", "OperationStatus is NOTFOUND");
+  public Map<String, String> globalPushSwitch() {
+    DBResponse<PersistenceData> ret =
+        provideDataService.queryProvideData(ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID);
+
+    Map<String, String> resultMap = new HashMap<>(1);
+    if (ret.getOperationStatus() == OperationStatus.SUCCESS) {
+      String result = getEntityData(ret);
+      if (result != null && !result.isEmpty()) {
+        resultMap.put("stopPush", result);
+      } else {
+        resultMap.put("stopPush", result);
+        resultMap.put("msg", "data is empty");
       }
-      DB_LOGGER.info("[getPushSwitch] {}", resultMap);
-    } catch (Exception e) {
-      DB_LOGGER.error(
-          "get persistence Data dataInfoId {} from db error!",
-          ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID,
-          e);
-      throw new RuntimeException("Get persistence Data from db error!", e);
+    } else if (ret.getOperationStatus() == OperationStatus.NOTFOUND) {
+      resultMap.put("msg", "(global push switch)OperationStatus is NOTFOUND");
     }
+    DB_LOGGER.info("[getPushSwitch] {}", resultMap);
+    return resultMap;
+  }
 
+  public Map<String, String> grayPushSwitch() {
+    DBResponse<PersistenceData> ret =
+        provideDataService.queryProvideData(ValueConstants.PUSH_SWITCH_GRAY_OPEN_DATA_ID);
+
+    Map<String, String> resultMap = new HashMap<>(1);
+    if (ret.getOperationStatus() == OperationStatus.SUCCESS) {
+      String result = getEntityData(ret);
+      if (result != null && !result.isEmpty()) {
+        resultMap.put("grayPushSwitch", result);
+      } else {
+        resultMap.put("grayPushSwitch", result);
+        resultMap.put("gray push switch msg", "data is empty");
+      }
+    } else if (ret.getOperationStatus() == OperationStatus.NOTFOUND) {
+      resultMap.put("gray push switch msg", "OperationStatus is NOTFOUND");
+    }
+    DB_LOGGER.info("[getGrayPushSwitch] {}", resultMap);
     return resultMap;
   }
 

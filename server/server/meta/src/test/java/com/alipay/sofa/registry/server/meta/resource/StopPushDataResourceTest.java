@@ -25,13 +25,17 @@ import static org.mockito.Mockito.verify;
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.console.PersistenceData;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
+import com.alipay.sofa.registry.common.model.sessionserver.GrayOpenPushSwitchRequest;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
 import com.alipay.sofa.registry.server.meta.provide.data.DefaultProvideDataNotifier;
 import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataService;
 import com.alipay.sofa.registry.store.api.DBResponse;
 import com.alipay.sofa.registry.store.api.OperationStatus;
+import com.alipay.sofa.registry.util.JsonUtils;
 import com.google.common.collect.Sets;
+import java.util.Arrays;
+import java.util.List;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -57,7 +61,7 @@ public class StopPushDataResourceTest {
   @Test
   public void testClosePush() {
     stopPushDataResource.closePush();
-    verify(dataNotifier, times(1)).notifyProvideDataChange(any());
+    verify(dataNotifier, times(2)).notifyProvideDataChange(any());
     DBResponse<PersistenceData> dbResponse =
         provideDataService.queryProvideData(
             DataInfo.valueOf(ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID).getDataInfoId());
@@ -69,7 +73,7 @@ public class StopPushDataResourceTest {
   @Test
   public void testOpenPush() {
     stopPushDataResource.openPush();
-    verify(dataNotifier, times(1)).notifyProvideDataChange(any());
+    verify(dataNotifier, times(2)).notifyProvideDataChange(any());
     DBResponse<PersistenceData> dbResponse =
         provideDataService.queryProvideData(
             DataInfo.valueOf(ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID).getDataInfoId());
@@ -82,5 +86,29 @@ public class StopPushDataResourceTest {
   public void testGetNodeTypes() {
     Assert.assertEquals(
         Sets.newHashSet(Node.NodeType.SESSION), stopPushDataResource.getNodeTypes());
+  }
+
+  @Test
+  public void testGrayOpenPush() {
+    GrayOpenPushSwitchRequest req = new GrayOpenPushSwitchRequest();
+    List<String> ips = Arrays.asList("127.0.0.1", "192.168.0.1");
+    req.setIps(ips);
+    stopPushDataResource.grayOpenPush(req);
+    verify(dataNotifier, times(1)).notifyProvideDataChange(any());
+    DBResponse<PersistenceData> dbResponse =
+        provideDataService.queryProvideData(
+            DataInfo.valueOf(ValueConstants.PUSH_SWITCH_GRAY_OPEN_DATA_ID).getDataInfoId());
+    Assert.assertEquals(OperationStatus.SUCCESS, dbResponse.getOperationStatus());
+    PersistenceData persistenceData = dbResponse.getEntity();
+    GrayOpenPushSwitchRequest req2;
+    try {
+      req2 =
+          JsonUtils.getJacksonObjectMapper()
+              .readValue(persistenceData.getData(), GrayOpenPushSwitchRequest.class);
+    } catch (Exception e) {
+      Assert.fail("parse gray push data failed");
+      return;
+    }
+    Assert.assertEquals(ips, req2.getIps());
   }
 }

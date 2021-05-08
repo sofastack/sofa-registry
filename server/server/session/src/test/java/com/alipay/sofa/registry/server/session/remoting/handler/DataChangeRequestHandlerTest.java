@@ -26,6 +26,7 @@ import com.alipay.sofa.registry.server.session.TestUtils;
 import com.alipay.sofa.registry.server.session.bootstrap.ExecutorManager;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfigBean;
 import com.alipay.sofa.registry.server.session.push.FirePushService;
+import com.alipay.sofa.registry.server.session.push.PushSwitchService;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import java.util.HashMap;
 import java.util.Map;
@@ -53,6 +54,7 @@ public class DataChangeRequestHandlerTest {
     DataChangeRequestHandler handler = newHandler();
     SessionServerConfigBean serverConfigBean = TestUtils.newSessionConfig("testDc");
     handler.sessionServerConfig = serverConfigBean;
+    handler.pushSwitchService = new PushSwitchService(handler.sessionServerConfig);
     handler.executorManager = new ExecutorManager(serverConfigBean);
     handler.firePushService = mock(FirePushService.class);
     handler.sessionInterests = mock(Interests.class);
