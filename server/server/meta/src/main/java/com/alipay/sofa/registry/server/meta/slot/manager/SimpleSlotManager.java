@@ -54,7 +54,7 @@ public class SimpleSlotManager extends AbstractLifecycleObservable implements Sl
   }
 
   @Override
-  public void refresh(SlotTable slotTable) {
+  public boolean refresh(SlotTable slotTable) {
     lock.writeLock().lock();
     try {
       if (slotTable.getEpoch() <= localRepo.slotTable.getEpoch()) {
@@ -64,12 +64,13 @@ public class SimpleSlotManager extends AbstractLifecycleObservable implements Sl
               slotTable.getEpoch(),
               localRepo.slotTable.getEpoch());
         }
-        return;
+        return false;
       }
       setSlotTableCacheWrapper(new SlotTableCacheWrapper(slotTable, refreshReverseMap(slotTable)));
     } finally {
       lock.writeLock().unlock();
     }
+    return true;
   }
 
   private Map<String, DataNodeSlot> refreshReverseMap(SlotTable slotTable) {

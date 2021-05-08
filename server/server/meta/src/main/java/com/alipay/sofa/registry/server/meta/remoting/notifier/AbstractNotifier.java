@@ -27,6 +27,7 @@ import com.alipay.sofa.registry.remoting.CallbackHandler;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
 import com.alipay.sofa.registry.remoting.exchange.message.Request;
+import com.alipay.sofa.registry.server.meta.MetaLeaderService;
 import com.alipay.sofa.registry.server.meta.remoting.connection.NodeConnectManager;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.DefaultExecutorFactory;
@@ -40,6 +41,7 @@ import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author chen.zhu
@@ -48,6 +50,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 public abstract class AbstractNotifier<T extends Node> implements Notifier {
 
   protected final Logger logger = LoggerFactory.getLogger(getClass());
+
+  @Autowired private MetaLeaderService metaLeaderService;
 
   private Executor executors =
       DefaultExecutorFactory.createCachedThreadPoolFactory(
@@ -59,8 +63,10 @@ public abstract class AbstractNotifier<T extends Node> implements Notifier {
 
   @Override
   public void notifySlotTableChange(SlotTable slotTable) {
-    new NotifyTemplate<SlotTableChangeEvent>()
-        .broadcast(new SlotTableChangeEvent(slotTable.getEpoch()));
+    if (metaLeaderService.amIStableAsLeader()) {
+      new NotifyTemplate<SlotTableChangeEvent>()
+          .broadcast(new SlotTableChangeEvent(slotTable.getEpoch()));
+    }
   }
 
   @Override
@@ -167,5 +173,11 @@ public abstract class AbstractNotifier<T extends Node> implements Notifier {
     public AtomicInteger getRetryTimes() {
       return new AtomicInteger(3);
     }
+  }
+
+  @VisibleForTesting
+  AbstractNotifier<T> setMetaLeaderService(MetaLeaderService metaLeaderService) {
+    this.metaLeaderService = metaLeaderService;
+    return this;
   }
 }
