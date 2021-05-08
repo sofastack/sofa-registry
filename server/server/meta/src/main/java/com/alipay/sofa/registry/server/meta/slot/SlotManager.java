@@ -31,7 +31,7 @@ public interface SlotManager extends SlotTableAware, Observable {
    *
    * @param slotTable the slot table
    */
-  void refresh(SlotTable slotTable);
+  boolean refresh(SlotTable slotTable);
 
   /**
    * Gets get slot nums.
