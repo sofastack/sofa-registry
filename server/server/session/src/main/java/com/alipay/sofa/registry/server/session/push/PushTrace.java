@@ -37,6 +37,8 @@ public final class PushTrace {
 
   private long subscriberPushedVersion;
   private final String subApp;
+  private final int subNum;
+  private final long subRegTimestamp;
   private final InetSocketAddress subAddress;
   final PushCause pushCause;
 
@@ -63,16 +65,29 @@ public final class PushTrace {
   // push.finish - lastPub.registerTimestamp
   long lastPubPushDelayMillis;
 
-  private PushTrace(SubDatum datum, InetSocketAddress address, String subApp, PushCause pushCause) {
+  private PushTrace(
+      SubDatum datum,
+      InetSocketAddress address,
+      String subApp,
+      PushCause pushCause,
+      int subNum,
+      long subRegTimestamp) {
     this.datum = datum;
     this.pushCause = pushCause;
     this.subAddress = address;
     this.subApp = subApp;
+    this.subNum = subNum;
+    this.subRegTimestamp = subRegTimestamp;
   }
 
   public static PushTrace trace(
-      SubDatum datum, InetSocketAddress address, String subApp, PushCause pushCause) {
-    return new PushTrace(datum, address, subApp, pushCause);
+      SubDatum datum,
+      InetSocketAddress address,
+      String subApp,
+      PushCause pushCause,
+      int subNum,
+      long subRegTimestamp) {
+    return new PushTrace(datum, address, subApp, pushCause, subNum, subRegTimestamp);
   }
 
   public PushTrace startPush(long subscriberPushedVersion, long startPushTimestamp) {
@@ -90,7 +105,7 @@ public final class PushTrace {
   public void print() {
     calc();
     LOGGER.info(
-        "{},{},{},{},{},cause={},pubNum={},pubBytes={},pubNew={},delay={},{},{},{},{},firstPubDelay={},lastPubDelay={},addr={}",
+        "{},{},{},{},{},cause={},pubNum={},pubBytes={},pubNew={},delay={},{},{},{},{},firstPubDelay={},lastPubDelay={},subNum={},addr={}",
         status,
         datum.getDataInfoId(),
         datum.getVersion(),
@@ -107,6 +122,7 @@ public final class PushTrace {
         datumPushFinishSpanMillis,
         firstPubPushDelayMillis,
         lastPubPushDelayMillis,
+        subNum,
         subAddress);
   }
 
@@ -121,7 +137,7 @@ public final class PushTrace {
     final List<SubPublisher> publishers = datum.getPublishers();
     final long lastPushTimestamp =
         subscriberPushedVersion <= ValueConstants.DEFAULT_NO_DATUM_VERSION
-            ? 0
+            ? subRegTimestamp
             : DatumVersionUtil.getRealTimestamp(subscriberPushedVersion);
     final List<SubPublisher> news = findNewPublishers(publishers, lastPushTimestamp);
     final SubPublisher first = news.isEmpty() ? null : news.get(0);
@@ -143,6 +159,7 @@ public final class PushTrace {
     OK,
     Fail,
     Timeout,
+    Busy,
   }
 
   static List<SubPublisher> findNewPublishers(

@@ -19,9 +19,8 @@ package com.alipay.sofa.registry.jraft.revision;
 import com.alipay.sofa.registry.common.model.store.AppRevision;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
 
 public class AppRevisionRegistry {
   @Autowired private AppRevisionService appRevisionService;

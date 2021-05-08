@@ -44,7 +44,12 @@ public class PushTraceTest {
     long now1 = System.currentTimeMillis();
     PushTrace trace =
         PushTrace.trace(
-            subDatum, NetUtil.getLocalSocketAddress(), "subApp", new PushCause(PushType.Sub, now1));
+            subDatum,
+            NetUtil.getLocalSocketAddress(),
+            "subApp",
+            new PushCause(PushType.Sub, now1),
+            1,
+            System.currentTimeMillis() - 100);
     long now2 = System.currentTimeMillis();
 
     // new.sub=2
