@@ -22,11 +22,9 @@ import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
 import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
 import com.alipay.sofa.registry.server.meta.remoting.connection.NodeConnectManager;
-
 import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
-
 import org.assertj.core.util.Lists;
 import org.junit.Before;
 import org.junit.Test;
@@ -46,8 +44,10 @@ public class AbstractNotifierTest extends AbstractMetaServerTestBase {
     MockitoAnnotations.initMocks(this);
     List<DataNode> nodes = randomDataNodes(2);
     when(nodeConnectManager.getConnections(any()))
-            .thenReturn(Lists.newArrayList(new InetSocketAddress(nodes.get(0).getIp(), 8080),
-                    new InetSocketAddress(nodes.get(1).getIp(), 8080)));
+        .thenReturn(
+            Lists.newArrayList(
+                new InetSocketAddress(nodes.get(0).getIp(), 8080),
+                new InetSocketAddress(nodes.get(1).getIp(), 8080)));
     notifier =
         new AbstractNotifier<DataNode>() {
           @Override
@@ -65,7 +65,7 @@ public class AbstractNotifierTest extends AbstractMetaServerTestBase {
             return nodeConnectManager;
           }
         };
-      notifier.setMetaLeaderService(metaLeaderService);
+    notifier.setMetaLeaderService(metaLeaderService);
   }
 
   @Test
