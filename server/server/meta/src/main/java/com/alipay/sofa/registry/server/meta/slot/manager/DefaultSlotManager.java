@@ -60,7 +60,7 @@ public class DefaultSlotManager extends SimpleSlotManager implements SlotManager
   }
 
   @Override
-  public void refresh(SlotTable slotTable) {
+  public boolean refresh(SlotTable slotTable) {
     // if we are not leader, could not refresh table
     // this maybe happens in fgc:
     // before arrange we are leader, but calc takes too much time
@@ -68,10 +68,11 @@ public class DefaultSlotManager extends SimpleSlotManager implements SlotManager
       throw new IllegalStateException(
           "not leader, concurrent leader is:" + metaLeaderService.getLeader());
     }
-    super.refresh(slotTable);
-    if (metaLeaderService.amIStableAsLeader()) {
+    if (super.refresh(slotTable)) {
       notifyObservers(slotTable);
+      return true;
     }
+    return false;
   }
 
   private final class SlotTableChangeNotification implements UnblockingObserver {
