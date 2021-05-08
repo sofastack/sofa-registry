@@ -97,4 +97,15 @@ public final class SubscriberUtils {
     }
     return max;
   }
+
+  public static long getMaxRegisterTimestamp(Collection<Subscriber> subscribers) {
+    long max = 0;
+    for (Subscriber sub : subscribers) {
+      long v = sub.getRegisterTimestamp();
+      if (max < v) {
+        max = v;
+      }
+    }
+    return max;
+  }
 }

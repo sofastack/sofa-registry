@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.server.session.push;
 
+import static com.alipay.sofa.registry.server.session.push.PushMetrics.Push.*;
+
 import com.alipay.remoting.rpc.exception.InvokeTimeoutException;
 import com.alipay.sofa.registry.common.model.SubscriberUtils;
 import com.alipay.sofa.registry.common.model.store.BaseInfo;
@@ -37,9 +39,6 @@ import com.alipay.sofa.registry.util.OsUtils;
 import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import javax.annotation.PostConstruct;
 import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.Executor;
@@ -47,8 +46,8 @@ import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-
-import static com.alipay.sofa.registry.server.session.push.PushMetrics.Push.*;
+import javax.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Autowired;
 
 public class PushProcessor {
   private static final Logger LOGGER = LoggerFactory.getLogger(PushProcessor.class);
@@ -229,7 +228,8 @@ public class PushProcessor {
     }
     final long now = System.currentTimeMillis();
     final long span = now - prev.pushTimestamp;
-    if (span > sessionServerConfig.getClientNodeExchangeTimeoutMillis() * 2) {
+    if (span > sessionServerConfig.getClientNodeExchangeTimeoutMillis() * 3) {
+      // this happens when the callbackExecutor is too busy and the callback task is discarded
       // force to remove the prev task
       final boolean cleaned = pushingTasks.remove(pushingTaskKey) != null;
       LOGGER.warn(
@@ -239,7 +239,7 @@ public class PushProcessor {
           prev.taskID,
           task.taskID);
       if (cleaned) {
-        prev.trace.finishPush(PushTrace.PushStatus.Timeout, now).print();
+        prev.trace.finishPush(PushTrace.PushStatus.Busy, now).print();
       }
       return true;
     }
@@ -351,7 +351,14 @@ public class PushProcessor {
       this.addr = addr;
       this.subscriberMap = subscriberMap;
       this.subscriber = subscriberMap.values().iterator().next();
-      this.trace = PushTrace.trace(datum, addr, subscriber.getAppName(), pushCause);
+      this.trace =
+          PushTrace.trace(
+              datum,
+              addr,
+              subscriber.getAppName(),
+              pushCause,
+              subscriberMap.size(),
+              SubscriberUtils.getMaxRegisterTimestamp(subscriberMap.values()));
       this.pushingTaskKey =
           new PushingTaskKey(
               subscriber.getDataInfoId(),
