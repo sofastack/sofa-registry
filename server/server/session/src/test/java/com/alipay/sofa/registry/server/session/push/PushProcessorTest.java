@@ -44,6 +44,7 @@ public class PushProcessorTest {
   public void testFire() throws Exception {
     PushProcessor processor = new PushProcessor();
     processor.sessionServerConfig = TestUtils.newSessionConfig("testDc");
+    processor.pushSwitchService = new PushSwitchService(processor.sessionServerConfig);
     Assert.assertTrue(processor.watchDog.getWaitingMillis() < 200);
 
     Assert.assertEquals(processor.watchCommit().size(), 0);
@@ -150,6 +151,7 @@ public class PushProcessorTest {
     PushProcessor processor = new PushProcessor();
     SessionServerConfigBean config = TestUtils.newSessionConfig("testDc");
     processor.sessionServerConfig = config;
+    processor.pushSwitchService = new PushSwitchService(config);
     processor.pushDataGenerator = new PushDataGenerator();
     processor.pushDataGenerator.sessionServerConfig = config;
     TriggerPushContext ctx =
@@ -304,6 +306,7 @@ public class PushProcessorTest {
     SessionServerConfigBean config = TestUtils.newSessionConfig("testDc");
     processor.sessionServerConfig = config;
     processor.clientNodeService = Mockito.mock(ClientNodeService.class);
+    processor.pushSwitchService = new PushSwitchService(config);
     processor.pushDataGenerator = new PushDataGenerator();
     processor.pushDataGenerator.sessionServerConfig = config;
     return processor;

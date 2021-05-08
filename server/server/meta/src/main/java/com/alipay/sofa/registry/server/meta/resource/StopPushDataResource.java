@@ -21,18 +21,20 @@ import com.alipay.sofa.registry.common.model.console.PersistenceData;
 import com.alipay.sofa.registry.common.model.console.PersistenceDataBuilder;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideDataChangeEvent;
+import com.alipay.sofa.registry.common.model.sessionserver.GrayOpenPushSwitchRequest;
 import com.alipay.sofa.registry.core.model.Result;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.provide.data.DefaultProvideDataNotifier;
 import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataService;
 import com.alipay.sofa.registry.server.meta.resource.filter.LeaderAwareRestController;
+import com.alipay.sofa.registry.util.JsonUtils;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import java.util.Set;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -59,11 +61,19 @@ public class StopPushDataResource {
   @Path("open")
   @Produces(MediaType.APPLICATION_JSON)
   public Result closePush() {
+    boolean ret;
+    Result result = new Result();
+
+    ret = resetGrayOpenPushSwitch();
+    if (!ret) {
+      result.setSuccess(false);
+      return result;
+    }
+
     PersistenceData persistenceData =
         PersistenceDataBuilder.createPersistenceData(
             ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID, "true");
 
-    boolean ret;
     try {
       ret = provideDataService.saveProvideData(persistenceData);
       DB_LOGGER.info("open stop push data switch to DB result {}!", ret);
@@ -77,7 +87,6 @@ public class StopPushDataResource {
           persistenceData.getVersion(), ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID);
     }
 
-    Result result = new Result();
     result.setSuccess(ret);
     return result;
   }
@@ -87,12 +96,20 @@ public class StopPushDataResource {
   @Path("close")
   @Produces(MediaType.APPLICATION_JSON)
   public Result openPush() {
+    boolean ret;
+    Result result = new Result();
+
+    ret = resetGrayOpenPushSwitch();
+    if (!ret) {
+      result.setSuccess(false);
+      return result;
+    }
+
     PersistenceData persistenceData =
         PersistenceDataBuilder.createPersistenceData(
             ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID, "false");
     persistenceData.setData("false");
 
-    boolean ret;
     try {
       ret = provideDataService.saveProvideData(persistenceData);
       DB_LOGGER.info("close stop push data switch to DB result {}!", ret);
@@ -106,9 +123,62 @@ public class StopPushDataResource {
           persistenceData.getVersion(), ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID);
     }
 
-    Result result = new Result();
     result.setSuccess(ret);
     return result;
+  }
+
+  @POST
+  @Path("grayOpen")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  public Result grayOpenPush(GrayOpenPushSwitchRequest request) {
+    ObjectMapper mapper = JsonUtils.getJacksonObjectMapper();
+    Result result = new Result();
+    String data;
+    try {
+      data = mapper.writeValueAsString(request);
+    } catch (JsonProcessingException e) {
+      DB_LOGGER.error("encoding gray open request error", e);
+      result.setSuccess(false);
+      result.setMessage(e.getMessage());
+      return result;
+    }
+    PersistenceData persistenceData =
+        PersistenceDataBuilder.createPersistenceData(
+            ValueConstants.PUSH_SWITCH_GRAY_OPEN_DATA_ID, data);
+    boolean ret;
+    try {
+      ret = provideDataService.saveProvideData(persistenceData);
+    } catch (Exception e) {
+      result.setSuccess(false);
+      result.setMessage(e.getMessage());
+      return result;
+    }
+    if (ret) {
+      fireDataChangeNotify(
+          persistenceData.getVersion(), ValueConstants.PUSH_SWITCH_GRAY_OPEN_DATA_ID);
+    }
+    result.setSuccess(ret);
+    return result;
+  }
+
+  private boolean resetGrayOpenPushSwitch() {
+    PersistenceData persistenceData =
+        PersistenceDataBuilder.createPersistenceData(
+            ValueConstants.PUSH_SWITCH_GRAY_OPEN_DATA_ID, "");
+    boolean ret;
+    try {
+      ret = provideDataService.saveProvideData(persistenceData);
+      DB_LOGGER.info("reset gray open push switch to DB result {}!", ret);
+    } catch (Exception e) {
+      DB_LOGGER.error("error reset gray open push switch to DB!", e);
+      throw new RuntimeException("reset gray open push switch to DB error");
+    }
+    if (ret) {
+      fireDataChangeNotify(
+          persistenceData.getVersion(), ValueConstants.PUSH_SWITCH_GRAY_OPEN_DATA_ID);
+    }
+    return ret;
   }
 
   private void fireDataChangeNotify(Long version, String dataInfoId) {

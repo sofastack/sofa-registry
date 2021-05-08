@@ -49,6 +49,7 @@ import org.springframework.util.CollectionUtils;
 public class FirePushService {
   private static final Logger LOGGER = LoggerFactory.getLogger(FirePushService.class);
 
+  @Autowired PushSwitchService pushSwitchService;
   @Autowired SessionServerConfig sessionServerConfig;
 
   @Autowired CacheService sessionCacheService;
@@ -171,7 +172,7 @@ public class FirePushService {
 
   private boolean processPush(
       PushCause pushCause, SubDatum datum, Collection<Subscriber> subscriberList) {
-    if (sessionServerConfig.isStopPushSwitch()) {
+    if (!pushSwitchService.canPush()) {
       return false;
     }
     if (subscriberList.isEmpty()) {
@@ -186,6 +187,9 @@ public class FirePushService {
         SubscriberUtils.groupBySourceAddress(subscriberList);
     for (Map.Entry<InetSocketAddress, Map<String, Subscriber>> e : group.entrySet()) {
       final InetSocketAddress addr = e.getKey();
+      if (!pushSwitchService.canIpPush(addr.getAddress().getHostAddress())) {
+        continue;
+      }
       final Map<String, Subscriber> subscriberMap = e.getValue();
       pushProcessor.firePush(pushCause, addr, subscriberMap, datum);
     }

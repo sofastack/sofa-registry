@@ -61,6 +61,8 @@ public class PushProcessor {
 
   @Autowired SessionServerConfig sessionServerConfig;
 
+  @Autowired PushSwitchService pushSwitchService;
+
   @Autowired PushDataGenerator pushDataGenerator;
 
   @Autowired ClientNodeService clientNodeService;
@@ -203,7 +205,7 @@ public class PushProcessor {
   }
 
   List<PushTask> watchCommit() {
-    if (sessionServerConfig.isStopPushSwitch()) {
+    if (!pushSwitchService.canPush()) {
       // stop push, clean the task
       pendingLock.lock();
       try {
@@ -336,7 +338,7 @@ public class PushProcessor {
   }
 
   boolean doPush(PushTask task) {
-    if (sessionServerConfig.isStopPushSwitch()) {
+    if (!pushSwitchService.canPush()) {
       return false;
     }
 

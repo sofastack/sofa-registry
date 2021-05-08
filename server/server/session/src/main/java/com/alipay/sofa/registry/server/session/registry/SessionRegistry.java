@@ -33,6 +33,7 @@ import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.filter.DataIdMatchStrategy;
 import com.alipay.sofa.registry.server.session.node.service.DataNodeService;
 import com.alipay.sofa.registry.server.session.push.FirePushService;
+import com.alipay.sofa.registry.server.session.push.PushSwitchService;
 import com.alipay.sofa.registry.server.session.push.TriggerPushContext;
 import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
 import com.alipay.sofa.registry.server.session.store.DataStore;
@@ -83,6 +84,8 @@ public class SessionRegistry implements Registry {
   @Autowired private TaskListenerManager taskListenerManager;
 
   @Autowired private SessionServerConfig sessionServerConfig;
+
+  @Autowired private PushSwitchService pushSwitchService;
 
   @Autowired private Exchange boltExchange;
 
@@ -250,7 +253,7 @@ public class SessionRegistry implements Registry {
     @Override
     public void runUnthrowable() {
       try {
-        final boolean stop = sessionServerConfig.isStopPushSwitch();
+        final boolean stop = !pushSwitchService.canPush();
         // could not start scan ver at begin
         // 1. stopPush.val = false in session.default
         // 2. stopPush.val = true in meta

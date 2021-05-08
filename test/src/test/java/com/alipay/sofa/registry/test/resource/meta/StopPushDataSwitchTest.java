@@ -24,12 +24,19 @@ import com.alipay.sofa.registry.client.api.model.RegistryType;
 import com.alipay.sofa.registry.client.api.model.UserData;
 import com.alipay.sofa.registry.client.api.registration.PublisherRegistration;
 import com.alipay.sofa.registry.client.api.registration.SubscriberRegistration;
+import com.alipay.sofa.registry.common.model.sessionserver.GrayOpenPushSwitchRequest;
 import com.alipay.sofa.registry.core.model.Result;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
+import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
+import com.alipay.sofa.registry.server.session.push.PushSwitchService;
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
+import com.alipay.sofa.registry.util.JsonUtils;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
+import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicReference;
+import javax.ws.rs.client.Entity;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -110,6 +117,102 @@ public class StopPushDataSwitchTest extends BaseIntegrationTest {
     assertEquals(1, userDataResult.get().getZoneData().get(LOCAL_REGION).size());
     assertEquals(value, userDataResult.get().getZoneData().get(LOCAL_REGION).get(0));
 
+    // unregister Publisher & Subscriber
+    registryClient1.unregister(dataId, DEFAULT_GROUP, RegistryType.SUBSCRIBER);
+    registryClient1.unregister(dataId, DEFAULT_GROUP, RegistryType.PUBLISHER);
+  }
+
+  @Test
+  public void testGrayOpenPushSwitch() throws Exception {
+    ParaCheckUtil.checkNotNull(metaChannel, "metaChannel");
+    assertTrue(
+        getMetaChannel()
+            .getWebTarget()
+            .path("stopPushDataSwitch/open")
+            .request(APPLICATION_JSON)
+            .get(Result.class)
+            .isSuccess());
+    Thread.sleep(2000L);
+    String localAddress = NetUtil.getLocalAddress().getHostAddress();
+    String otherAddress = "127.0.0.2";
+
+    GrayOpenPushSwitchRequest req = new GrayOpenPushSwitchRequest();
+    req.setIps(Arrays.asList(otherAddress));
+    Assert.assertEquals(
+        getMetaChannel()
+            .getWebTarget()
+            .path("stopPushDataSwitch/grayOpen")
+            .request(APPLICATION_JSON)
+            .post(Entity.json(JsonUtils.getJacksonObjectMapper().writeValueAsString(req)))
+            .getStatus(),
+        200);
+    Thread.sleep(2000L);
+
+    AtomicReference<String> dataIdResult = new AtomicReference<>();
+    AtomicReference<UserData> userDataResult = new AtomicReference<>();
+
+    // register Publisher & Subscriber, Subscriber get no data
+    String dataId = "test-dataId-" + System.currentTimeMillis();
+    String value = "test stop publish data switch";
+
+    LOGGER.info("dataidIn:" + dataId);
+
+    PushSwitchService pushSwitchService =
+        sessionApplicationContext.getBean(PushSwitchService.class);
+    SessionServerConfig sessionServerConfig =
+        sessionApplicationContext.getBean(SessionServerConfig.class);
+
+    waitConditionUntilTimeOut(sessionServerConfig::isStopPushSwitch, 6000);
+    waitConditionUntilTimeOut(() -> pushSwitchService.canIpPush(otherAddress), 6000);
+    Assert.assertFalse(pushSwitchService.canIpPush(localAddress));
+
+    PublisherRegistration registration = new PublisherRegistration(dataId);
+    registryClient1.register(registration, value);
+    Thread.sleep(2000L);
+
+    SubscriberRegistration subReg =
+        new SubscriberRegistration(
+            dataId,
+            (dataIdOb, data) -> {
+              LOGGER.info("sub:" + data);
+              dataIdResult.set(dataIdOb);
+              userDataResult.set(data);
+            });
+    subReg.setScopeEnum(ScopeEnum.dataCenter);
+    registryClient1.register(subReg);
+    Thread.sleep(3000L);
+    assertNull(dataIdResult.get());
+
+    req.setIps(Arrays.asList(localAddress));
+    Assert.assertEquals(
+        getMetaChannel()
+            .getWebTarget()
+            .path("stopPushDataSwitch/grayOpen")
+            .request(APPLICATION_JSON)
+            .post(Entity.json(JsonUtils.getJacksonObjectMapper().writeValueAsString(req)))
+            .getStatus(),
+        200);
+
+    waitConditionUntilTimeOut(() -> dataIdResult.get() != null, 6000);
+
+    // Subscriber get data, test data
+    assertEquals(dataId, dataIdResult.get());
+    assertEquals(LOCAL_REGION, userDataResult.get().getLocalZone());
+    assertEquals(1, userDataResult.get().getZoneData().size());
+    assertEquals(1, userDataResult.get().getZoneData().values().size());
+    assertEquals(true, userDataResult.get().getZoneData().containsKey(LOCAL_REGION));
+    assertEquals(1, userDataResult.get().getZoneData().get(LOCAL_REGION).size());
+    assertEquals(value, userDataResult.get().getZoneData().get(LOCAL_REGION).get(0));
+
+    assertTrue(
+        getMetaChannel()
+            .getWebTarget()
+            .path("stopPushDataSwitch/close")
+            .request(APPLICATION_JSON)
+            .get(Result.class)
+            .isSuccess());
+
+    waitConditionUntilTimeOut(() -> !sessionServerConfig.isStopPushSwitch(), 6000);
     // unregister Publisher & Subscriber
     registryClient1.unregister(dataId, DEFAULT_GROUP, RegistryType.SUBSCRIBER);
     registryClient1.unregister(dataId, DEFAULT_GROUP, RegistryType.PUBLISHER);

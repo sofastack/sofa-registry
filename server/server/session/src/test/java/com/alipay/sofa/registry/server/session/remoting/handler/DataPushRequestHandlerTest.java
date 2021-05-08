@@ -27,6 +27,7 @@ import com.alipay.sofa.registry.server.session.TestUtils;
 import com.alipay.sofa.registry.server.session.bootstrap.ExecutorManager;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfigBean;
 import com.alipay.sofa.registry.server.session.push.FirePushService;
+import com.alipay.sofa.registry.server.session.push.PushSwitchService;
 import java.util.Collections;
 import org.junit.Assert;
 import org.junit.Test;
@@ -52,6 +53,7 @@ public class DataPushRequestHandlerTest {
     DataPushRequestHandler handler = newHandler();
     SessionServerConfigBean serverConfigBean = TestUtils.newSessionConfig("testDc");
     handler.sessionServerConfig = serverConfigBean;
+    handler.pushSwitchService = new PushSwitchService(serverConfigBean);
     handler.executorManager = new ExecutorManager(serverConfigBean);
     Assert.assertNotNull(handler.getExecutor());
 
