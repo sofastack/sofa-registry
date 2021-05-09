@@ -26,6 +26,9 @@ import com.alipay.sofa.registry.common.model.metaserver.ProvideDataChangeEvent;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.server.session.store.Watchers;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -33,6 +36,9 @@ public class NotifyProvideDataChangeHandlerTest {
 
   private NotifyProvideDataChangeHandler newHandler() {
     NotifyProvideDataChangeHandler handler = new NotifyProvideDataChangeHandler();
+    handler.metaNodeExecutor =
+        new ThreadPoolExecutor(10, 10, 10, TimeUnit.MINUTES, new LinkedBlockingQueue<>());
+    Assert.assertNotNull(handler.getExecutor());
     Assert.assertEquals(handler.interest(), ProvideDataChangeEvent.class);
     Assert.assertEquals(handler.getConnectNodeType(), Node.NodeType.META);
     Assert.assertEquals(handler.getType(), ChannelHandler.HandlerType.PROCESSER);

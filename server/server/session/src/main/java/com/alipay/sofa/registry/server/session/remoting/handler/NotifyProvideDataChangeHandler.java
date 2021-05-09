@@ -28,6 +28,8 @@ import com.alipay.sofa.registry.server.shared.remoting.AbstractClientHandler;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ThreadPoolExecutor;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -46,6 +48,8 @@ public class NotifyProvideDataChangeHandler extends AbstractClientHandler<Provid
 
   /** trigger task com.alipay.sofa.registry.server.meta.listener process */
   @Autowired TaskListenerManager taskListenerManager;
+
+  @Autowired ThreadPoolExecutor metaNodeExecutor;
 
   @Override
   protected NodeType getConnectNodeType() {
@@ -91,5 +95,10 @@ public class NotifyProvideDataChangeHandler extends AbstractClientHandler<Provid
   @Override
   public Class interest() {
     return ProvideDataChangeEvent.class;
+  }
+
+  @Override
+  public Executor getExecutor() {
+    return metaNodeExecutor;
   }
 }
