@@ -357,7 +357,8 @@ public class PublisherGroupsTest {
     groups.updateVersion();
     Assert.assertTrue(groups.getVersion(publisher2.getDataInfoId()).getValue() > v.getValue());
 
-    Map<String, DatumVersion> map = groups.clean(new ProcessId("xxx", 100, 100, 100));
+    Map<String, DatumVersion> map =
+        groups.clean(new ProcessId("xxx", 100, 100, 100), CleanContinues.ALWAYS);
     Assert.assertTrue(map.isEmpty());
 
     publishers = groups.getAllPublisher();
@@ -367,7 +368,7 @@ public class PublisherGroupsTest {
     Assert.assertEquals(publishers.get(publisher3.getDataInfoId()).size(), 0);
 
     // remain publisher2
-    map = groups.clean(publisher1.getSessionProcessId());
+    map = groups.clean(publisher1.getSessionProcessId(), CleanContinues.ALWAYS);
     Assert.assertTrue(map.isEmpty());
 
     publishers = groups.getAllPublisher();
@@ -376,7 +377,7 @@ public class PublisherGroupsTest {
     Assert.assertTrue(publishers.get(publisher2.getDataInfoId()).contains(publisher2));
     Assert.assertEquals(publishers.get(publisher3.getDataInfoId()).size(), 0);
 
-    map = groups.clean(publisher2.getSessionProcessId());
+    map = groups.clean(publisher2.getSessionProcessId(), CleanContinues.ALWAYS);
     Assert.assertTrue(map.get(publisher2.getDataInfoId()).getValue() > v.getValue());
 
     publishers = groups.getAllPublisher();
@@ -395,7 +396,7 @@ public class PublisherGroupsTest {
     compacts = groups.compact(Long.MAX_VALUE);
     Assert.assertEquals(compacts.size(), 0);
 
-    map = groups.clean(null);
+    map = groups.clean(null, CleanContinues.ALWAYS);
     Assert.assertTrue(map.get(publisher2.getDataInfoId()).getValue() > v.getValue());
 
     publishers = groups.getAllPublisher();

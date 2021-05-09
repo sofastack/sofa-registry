@@ -135,12 +135,15 @@ public final class LocalDatumStorage implements DatumStorage {
   }
 
   @Override
-  public Map<String, DatumVersion> clean(ProcessId sessionProcessId) {
+  public Map<String, DatumVersion> clean(
+      int slotId, ProcessId sessionProcessId, CleanContinues cleanContinues) {
     // clean by sessionProcessId, the sessionProcessId could not be null
     ParaCheckUtil.checkNotNull(sessionProcessId, "sessionProcessId");
-    Map<String, DatumVersion> versionMap = Maps.newHashMapWithExpectedSize(32);
-    publisherGroupsMap.values().forEach(g -> versionMap.putAll(g.clean(sessionProcessId)));
-    return versionMap;
+    PublisherGroups groups = getPublisherGroups(slotId);
+    if (groups == null) {
+      return Collections.emptyMap();
+    }
+    return groups.clean(sessionProcessId, cleanContinues);
   }
 
   // only for http testapi

@@ -31,8 +31,9 @@ import java.util.Map;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.ws.rs.ProcessingException;
-import org.eclipse.jetty.server.Connector;
-import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.server.*;
+import org.eclipse.jetty.util.log.Log;
+import org.eclipse.jetty.util.log.Slf4jLog;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.glassfish.jersey.internal.guava.ThreadFactoryBuilder;
 import org.glassfish.jersey.jetty.JettyHttpContainer;
@@ -47,7 +48,7 @@ import org.glassfish.jersey.server.spi.Container;
  * @version $Id: Jersey.java, v 0.1 2018-01-29 17:57 shangyu.wh Exp $
  */
 public class JerseyJettyServer implements Server {
-
+  private static final String NCSA_FORMAT = "%{client}a \"%r\" %s %O";
   private static final Logger LOGGER = LoggerFactory.getLogger(JerseyJettyServer.class);
 
   private final ResourceConfig resourceConfig;
@@ -73,6 +74,7 @@ public class JerseyJettyServer implements Server {
   public void startServer() {
     if (isStarted.compareAndSet(false, true)) {
       try {
+        Log.setLog(new Slf4jLog());
         server = createServer(getBaseUri(), resourceConfig, true);
       } catch (Throwable e) {
         isStarted.set(false);
@@ -97,11 +99,13 @@ public class JerseyJettyServer implements Server {
 
     final org.eclipse.jetty.server.Server server =
         new org.eclipse.jetty.server.Server(new JettyConnectorThreadPool());
-
+    // init requestLog
+    Slf4jRequestLogWriter writer = new Slf4jRequestLogWriter();
+    CustomRequestLog log = new CustomRequestLog(writer, NCSA_FORMAT);
+    server.setRequestLog(log);
     final ServerConnector http = new ServerConnector(server, new HttpConnectionCustomFactory());
     http.setPort(port);
     server.setConnectors(new Connector[] {http});
-
     if (handler != null) {
       server.setHandler(handler);
     }

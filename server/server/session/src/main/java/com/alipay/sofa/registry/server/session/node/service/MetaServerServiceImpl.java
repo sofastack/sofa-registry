@@ -85,8 +85,8 @@ public class MetaServerServiceImpl extends AbstractMetaServerService<BaseHeartBe
   }
 
   private Node createNode() {
-    return new SessionNode(new URL(ServerEnv.IP), sessionServerConfig.getSessionServerRegion())
-        .setProcessId(ServerEnv.PROCESS_ID);
+    return new SessionNode(
+        new URL(ServerEnv.IP), sessionServerConfig.getSessionServerRegion(), ServerEnv.PROCESS_ID);
   }
 
   @VisibleForTesting

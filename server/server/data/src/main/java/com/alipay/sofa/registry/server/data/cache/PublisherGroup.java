@@ -168,24 +168,42 @@ public final class PublisherGroup {
     }
   }
 
-  DatumVersion clean(ProcessId sessionProcessId) {
+  DatumVersion clean(ProcessId sessionProcessId, CleanContinues cleanContinues) {
     sessionProcessId = ProcessIdCache.cache(sessionProcessId);
+    if (sessionProcessId == null) {
+      // not check continues
+      lock.writeLock().lock();
+      try {
+        final int size = pubMap.size();
+        if (size == 0) {
+          return null;
+        }
+        cleanContinues.onClean(size);
+        pubMap.clear();
+        return updateVersion();
+      } finally {
+        lock.writeLock().unlock();
+      }
+    }
+    // collect the pub of the processId without lock
+    Map<String, PublisherEnvelope> cleans = Maps.newHashMapWithExpectedSize(64);
+    for (Map.Entry<String, PublisherEnvelope> pub : pubMap.entrySet()) {
+      PublisherEnvelope envelope = pub.getValue();
+      if (envelope.isPub() && envelope.sessionProcessId.equals(sessionProcessId)) {
+        cleans.put(pub.getKey(), envelope);
+      }
+    }
+    // clean modify the version, need to lock
     lock.writeLock().lock();
     try {
       boolean modified = false;
-      if (sessionProcessId == null) {
-        modified = !pubMap.isEmpty();
-        pubMap.clear();
-      } else {
-        // clean by session processId, could not increase the pub version
-        // the publisher from the session maybe sync again after clean, could not reject that
-        Iterator<Map.Entry<String, PublisherEnvelope>> it = pubMap.entrySet().iterator();
-        while (it.hasNext()) {
-          PublisherEnvelope envelope = it.next().getValue();
-          if (envelope.isPub() && envelope.sessionProcessId.equals(sessionProcessId)) {
-            it.remove();
-            modified = true;
-          }
+      for (Map.Entry<String, PublisherEnvelope> clean : cleans.entrySet()) {
+        if (!cleanContinues.continues()) {
+          break;
+        }
+        if (pubMap.remove(clean.getKey(), clean.getValue())) {
+          cleanContinues.onClean(1);
+          modified = true;
         }
       }
       return modified ? updateVersion() : null;

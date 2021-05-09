@@ -29,6 +29,7 @@ import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.lease.data.DataServerManager;
 import com.alipay.sofa.registry.server.meta.lease.session.SessionServerManager;
 import com.alipay.sofa.registry.server.meta.slot.SlotManager;
+import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
 import com.google.common.collect.ImmutableMap;
 import java.util.List;
@@ -81,7 +82,8 @@ public class DefaultCurrentDcMetaServerTest extends AbstractMetaServerTestBase {
             new VersionedList<>(
                 DatumVersionUtil.nextId(),
                 Lists.newArrayList(
-                    new SessionNode(randomURL(), getDc()), new SessionNode(randomURL(), getDc()))));
+                    new SessionNode(randomURL(), getDc(), ServerEnv.PROCESS_ID),
+                    new SessionNode(randomURL(), getDc(), ServerEnv.PROCESS_ID))));
     Assert.assertEquals(
         2,
         metaServer.getSessionServerManager().getSessionServerMetaInfo().getClusterMembers().size());
