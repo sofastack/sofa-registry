@@ -20,8 +20,10 @@ import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.slot.Slot;
+import com.alipay.sofa.registry.common.model.slot.SlotConfig;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.server.data.TestBaseUtils;
+import com.alipay.sofa.registry.server.data.cache.CleanContinues;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.BatchPutDataHandler;
 import com.alipay.sofa.registry.server.data.slot.SlotManager;
@@ -148,7 +150,9 @@ public class DatumApiResourceTest {
         .thenAnswer(
             new Answer<Object>() {
               public Object answer(InvocationOnMock var1) throws Throwable {
-                resource.localDatumStorage.clean(ServerEnv.PROCESS_ID);
+                for (int i = 0; i < SlotConfig.SLOT_NUM; i++) {
+                  resource.localDatumStorage.clean(i, ServerEnv.PROCESS_ID, CleanContinues.ALWAYS);
+                }
                 return null;
               }
             });

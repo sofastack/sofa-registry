@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.shared.meta;
 
+import com.alipay.sofa.registry.common.model.ProcessId;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.common.model.metaserver.SlotTableChangeEvent;
 import java.util.List;
@@ -66,6 +67,7 @@ public interface MetaServerService {
    */
   List<String> getSessionServerList(String zonename);
 
+  Set<ProcessId> getSessionProcessIds();
   /**
    * Gets get data server list.
    *

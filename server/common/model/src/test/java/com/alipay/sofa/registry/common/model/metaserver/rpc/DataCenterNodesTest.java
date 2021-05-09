@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.common.model.metaserver.rpc;
 
 import com.alipay.sofa.registry.common.model.Node;
+import com.alipay.sofa.registry.common.model.ProcessId;
 import com.alipay.sofa.registry.common.model.metaserver.DataCenterNodes;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 import com.alipay.sofa.registry.common.model.store.URL;
@@ -27,9 +28,10 @@ import org.junit.Test;
 public class DataCenterNodesTest {
   @Test
   public void test() {
+    ProcessId processId1 = new ProcessId("test", 1, 2, 3);
     final String dataId = "testDataId";
     DataCenterNodes request = new DataCenterNodes(Node.NodeType.CLIENT, 10, dataId);
-    SessionNode sessionNode = new SessionNode(new URL("192.168.1.1", 8888), "testZone");
+    SessionNode sessionNode = new SessionNode(new URL("192.168.1.1", 8888), "testZone", processId1);
     request.setNodes(Collections.singletonMap("testKey", sessionNode));
     Assert.assertEquals(request.getDataCenterId(), dataId);
     Assert.assertEquals(request.getVersion(), 10);

@@ -84,6 +84,7 @@ public class DataServerConfig {
 
   private volatile int sessionLeaseSecs = 30;
   private int sessionLeaseCheckIntervalSecs = 5;
+  private int sessionLeaseCleanDeadlineSecs = 5;
 
   private int datumCompactDelaySecs = 60 * 3;
 
@@ -841,6 +842,14 @@ public class DataServerConfig {
 
   public void setMetaNodeExecutorQueueSize(int metaNodeExecutorQueueSize) {
     this.metaNodeExecutorQueueSize = metaNodeExecutorQueueSize;
+  }
+
+  public int getSessionLeaseCleanDeadlineSecs() {
+    return sessionLeaseCleanDeadlineSecs;
+  }
+
+  public void setSessionLeaseCleanDeadlineSecs(int sessionLeaseCleanDeadlineSecs) {
+    this.sessionLeaseCleanDeadlineSecs = sessionLeaseCleanDeadlineSecs;
   }
 
   @Override

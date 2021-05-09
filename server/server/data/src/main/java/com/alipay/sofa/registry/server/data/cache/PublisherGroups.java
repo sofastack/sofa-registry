@@ -100,23 +100,20 @@ public final class PublisherGroups {
         dataInfoId, k -> new PublisherGroup(dataInfoId, dataCenter));
   }
 
-  Map<String, DatumVersion> clean(ProcessId sessionProcessId) {
+  Map<String, DatumVersion> clean(ProcessId sessionProcessId, CleanContinues cleanContinues) {
     Map<String, DatumVersion> versionMap = Maps.newHashMapWithExpectedSize(64);
-    publisherGroupMap
-        .values()
-        .forEach(
-            g -> {
-              DatumVersion ver = g.clean(sessionProcessId);
-              if (ver != null) {
-                versionMap.put(g.dataInfoId, ver);
-              }
-            });
+    for (PublisherGroup g : publisherGroupMap.values()) {
+      DatumVersion ver = g.clean(sessionProcessId, cleanContinues);
+      if (ver != null) {
+        versionMap.put(g.dataInfoId, ver);
+      }
+    }
     return versionMap;
   }
 
   DatumVersion remove(String dataInfoId, ProcessId sessionProcessId) {
     PublisherGroup group = publisherGroupMap.get(dataInfoId);
-    return group == null ? null : group.clean(sessionProcessId);
+    return group == null ? null : group.clean(sessionProcessId, CleanContinues.ALWAYS);
   }
 
   DatumVersion put(String dataInfoId, List<Publisher> publishers) {

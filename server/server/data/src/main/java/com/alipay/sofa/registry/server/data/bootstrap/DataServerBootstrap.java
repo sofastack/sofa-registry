@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.data.bootstrap;
 
+import com.alipay.sofa.registry.common.model.ProcessId;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
@@ -28,6 +29,7 @@ import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.data.change.DataChangeEventCenter;
+import com.alipay.sofa.registry.server.data.lease.SessionLeaseManager;
 import com.alipay.sofa.registry.server.data.slot.SlotManager;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
@@ -73,6 +75,8 @@ public class DataServerBootstrap {
   @Autowired private Exchange boltExchange;
 
   @Autowired private DataChangeEventCenter dataChangeEventCenter;
+
+  @Autowired private SessionLeaseManager sessionLeaseManager;
 
   @Resource(name = "serverHandlers")
   private Collection<AbstractServerHandler> serverHandlers;
@@ -214,6 +218,10 @@ public class DataServerBootstrap {
 
   private void renewNode() {
     metaServerService.renewNode();
+    // init session lease with first renew
+    for (ProcessId processId : metaServerService.getSessionProcessIds()) {
+      sessionLeaseManager.renewSession(processId);
+    }
     metaServerService.startRenewer();
   }
 

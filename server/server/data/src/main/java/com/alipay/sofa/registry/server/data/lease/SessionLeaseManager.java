@@ -19,6 +19,7 @@ package com.alipay.sofa.registry.server.data.lease;
 import com.alipay.sofa.registry.common.model.ProcessId;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
+import com.alipay.sofa.registry.common.model.slot.SlotConfig;
 import com.alipay.sofa.registry.common.model.store.ProcessIdCache;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -27,23 +28,21 @@ import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.bolt.BoltChannel;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
+import com.alipay.sofa.registry.server.data.cache.CleanContinues;
 import com.alipay.sofa.registry.server.data.cache.DatumStorage;
+import com.alipay.sofa.registry.server.data.slot.SlotManager;
+import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.LoopRunnable;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import javax.annotation.PostConstruct;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
-import javax.annotation.PostConstruct;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author yuzhi.lyz
@@ -56,10 +55,14 @@ public final class SessionLeaseManager {
 
   private static final int MIN_LEASE_SEC = 5;
 
-  @Autowired private DataServerConfig dataServerConfig;
-  @Autowired private DatumStorage localDatumStorage;
+  @Autowired DataServerConfig dataServerConfig;
+  @Autowired DatumStorage localDatumStorage;
 
-  @Autowired private Exchange boltExchange;
+  @Autowired Exchange boltExchange;
+
+  @Autowired SlotManager slotManager;
+
+  @Autowired MetaServerService metaServerService;
 
   private final Map<ProcessId, Long> connectIdRenewTimestampMap = new ConcurrentHashMap<>();
 
@@ -96,33 +99,117 @@ public final class SessionLeaseManager {
     return expires;
   }
 
-  private List<ProcessId> cleanExpire(
-      Set<ProcessId> connProcessIds, Collection<ProcessId> expires) {
-    List<ProcessId> cleans = Lists.newArrayList();
-    for (ProcessId p : expires) {
+  private List<ProcessId> cleanExpireLease(
+      int leaseMs, Set<ProcessId> connProcessIds, Set<ProcessId> metaProcessIds) {
+    final long lastRenew = System.currentTimeMillis() - leaseMs;
+    Map<ProcessId, Long> expires = Maps.newHashMap();
+    for (Map.Entry<ProcessId, Long> e : connectIdRenewTimestampMap.entrySet()) {
+      if (e.getValue() < lastRenew) {
+        expires.put(e.getKey(), e.getValue());
+      }
+    }
+    if (expires.isEmpty()) {
+      return Collections.emptyList();
+    }
+
+    LOGGER.info("[collectExpire]expires={}, {}", expires.size(), expires);
+    List<ProcessId> cleans = Lists.newArrayListWithCapacity(expires.size());
+    for (Map.Entry<ProcessId, Long> expire : expires.entrySet()) {
+      final ProcessId p = expire.getKey();
       if (connProcessIds.contains(p)) {
-        LOGGER.warn("expire session has conn, {}", p);
+        renewSession(p);
+        // maybe happens in fullGc or high load scenario
+        LOGGER.info("[expireHasConn]{}", expire);
         continue;
       }
-      connectIdRenewTimestampMap.remove(p);
-      cleans.add(p);
+      if (metaProcessIds.contains(p)) {
+        renewSession(p);
+        // maybe happens in fullGc or or high load scenario
+        LOGGER.info("[expireHasMeta]{}", expire);
+        continue;
+      }
+      // only remove the expire with the collect timestamp
+      // maybe renew happens in the cleaning
+      if (connectIdRenewTimestampMap.remove(p, expire.getValue())) {
+        LOGGER.info("[cleanExpire]{}", expire);
+        cleans.add(p);
+      }
     }
     return cleans;
   }
 
-  private void cleanStorage() {
+  void cleanStorage() {
     // make sure the existing processId be clean
     Set<ProcessId> stores = localDatumStorage.getSessionProcessIds();
-    for (ProcessId p : stores) {
-      if (!connectIdRenewTimestampMap.containsKey(p)) {
-        Map<String, DatumVersion> versionMap = localDatumStorage.clean(p);
-        LOGGER.info("expire session correct, {}, datums={}", p, versionMap.size());
+    final int deadlineMillis = dataServerConfig.getSessionLeaseCleanDeadlineSecs() * 1000;
+    for (int i = 0; i < SlotConfig.SLOT_NUM; i++) {
+      if (slotManager.isFollower(i)) {
+        LOGGER.info("skip clean for follower, slotId={}", i);
+        continue;
+      }
+      if (slotManager.isLeader(i)) {
+        // own the slot and is leader
+        for (ProcessId p : stores) {
+          if (!connectIdRenewTimestampMap.containsKey(p)) {
+            // double check with newly meta.processIds
+            long start = System.currentTimeMillis();
+            if (metaServerService.getSessionProcessIds().contains(p)) {
+              LOGGER.info("[expireHasMeta]{}", p);
+              continue;
+            }
+
+            // in fullGC case, the cleaning maybe very slow
+            // after double check, the session.processId is insert, but cleanup not know it
+            // deadlineTs, ensure that the cleanup ends within the expected time
+            final long deadlineTimestamp = start + deadlineMillis;
+            CleanLeaseContinues continues = new CleanLeaseContinues(deadlineTimestamp);
+            Map<String, DatumVersion> versionMap = localDatumStorage.clean(i, p, continues);
+            LOGGER.info(
+                "[cleanSession]broken={},slotId={},datas={},pubs={},span={},{}",
+                continues.broken,
+                i,
+                versionMap.size(),
+                continues.cleanNum,
+                System.currentTimeMillis() - start,
+                p);
+          }
+        }
       }
     }
   }
 
-  private void renewByConnection(Set<ProcessId> connProcessIds) {
-    for (ProcessId processId : connProcessIds) {
+  static final class CleanLeaseContinues implements CleanContinues {
+    private final long deadlineTimestamp;
+    private int cleanNum;
+    volatile boolean broken;
+
+    CleanLeaseContinues(long deadlineTimestamp) {
+      this.deadlineTimestamp = deadlineTimestamp;
+    }
+
+    @Override
+    public boolean continues() {
+      final long now = System.currentTimeMillis();
+      // make sure at lease clean one item
+      if (cleanNum != 0 && now > deadlineTimestamp) {
+        this.broken = true;
+        return false;
+      }
+      return true;
+    }
+
+    boolean isBroken() {
+      return broken;
+    }
+
+    @Override
+    public void onClean(int num) {
+      cleanNum += num;
+    }
+  }
+
+  private void renewBy(Set<ProcessId> processIds) {
+    for (ProcessId processId : processIds) {
       renewSession(processId);
     }
   }
@@ -163,17 +250,16 @@ public final class SessionLeaseManager {
   }
 
   void clean() {
-    Set<ProcessId> processIds = getProcessIdsInConnection();
-    renewByConnection(processIds);
-    Map<ProcessId, Date> expires =
-        getExpireProcessId(dataServerConfig.getSessionLeaseSecs() * 1000);
-    LOGGER.info("lease expire sessions, {}", expires);
+    // 1. renew the lease by conn and meta
+    Set<ProcessId> connProcessIds = getProcessIdsInConnection();
+    renewBy(connProcessIds);
+    Set<ProcessId> metaProcessIds = metaServerService.getSessionProcessIds();
+    renewBy(metaProcessIds);
+    // 2. update the processId again, if has full gc,
+    connProcessIds = getProcessIdsInConnection();
+    metaProcessIds = metaServerService.getSessionProcessIds();
 
-    if (!expires.isEmpty()) {
-      List<ProcessId> cleans = cleanExpire(processIds, expires.keySet());
-      LOGGER.info("expire sessions clean, {}", cleans);
-    }
-
+    cleanExpireLease(dataServerConfig.getSessionLeaseSecs() * 1000, connProcessIds, metaProcessIds);
     cleanStorage();
 
     // compact the unpub
@@ -181,20 +267,5 @@ public final class SessionLeaseManager {
         System.currentTimeMillis() - dataServerConfig.getDatumCompactDelaySecs() * 1000;
     Map<String, Integer> compacted = localDatumStorage.compact(tombstoneTimestamp);
     COMPACT_LOGGER.info("compact datum, {}", compacted);
-  }
-
-  @VisibleForTesting
-  void setDataServerConfig(DataServerConfig dataServerConfig) {
-    this.dataServerConfig = dataServerConfig;
-  }
-
-  @VisibleForTesting
-  void setLocalDatumStorage(DatumStorage localDatumStorage) {
-    this.localDatumStorage = localDatumStorage;
-  }
-
-  @VisibleForTesting
-  void setExchange(Exchange boltExchange) {
-    this.boltExchange = boltExchange;
   }
 }
