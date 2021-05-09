@@ -10,7 +10,7 @@
         <result property="appName" column="app_name" javaType="java.lang.String" jdbcType="VARCHAR"/>
         <result property="revision" column="revision" javaType="java.lang.String" jdbcType="VARCHAR"/>
         <result property="hashcode" column="hashcode" javaType="java.lang.String" jdbcType="VARCHAR"/>
-        <result property="gmtCreate" column="gmt_create" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
+        <result property="gmtCreate" column="gmt_create" javaType="java.sql.Timestamp" jdbcType="TIMESTAMP"/>
         <result property="gmtModify" column="gmt_modified" javaType="java.sql.Timestamp" jdbcType="TIMESTAMP"/>
     </resultMap>
 

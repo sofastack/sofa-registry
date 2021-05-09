@@ -154,7 +154,7 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository {
   /** refresh interfaceNames index */
   private synchronized void triggerRefreshCache(InterfaceAppsIndexDomain domain) {
     InterfaceMapping mapping = interfaceApps.get(domain.getInterfaceName());
-    final long nanosLong = TimestampUtil.getNanosLong(domain.getGmtModify());
+    final long nanosLong = TimestampUtil.getNanosLong(domain.getGmtCreate());
     if (mapping == null) {
       if (domain.isReference()) {
         mapping = new InterfaceMapping(nanosLong, domain.getAppName());
@@ -172,7 +172,7 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository {
       interfaceApps.put(domain.getInterfaceName(), mapping);
       return;
     }
-    if (nanosLong >= mapping.getNanosVersion()) {
+    if (nanosLong > mapping.getNanosVersion()) {
       InterfaceMapping newMapping = null;
       if (domain.isReference()) {
         newMapping = new InterfaceMapping(nanosLong, mapping.getApps(), domain.getAppName());
@@ -192,7 +192,11 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository {
       }
       interfaceApps.put(domain.getInterfaceName(), newMapping);
     } else {
-      LOG.info("ignored refresh index {}, current mapping={}", domain, mapping);
+      LOG.error(
+          "[IgnoreUpdateCache]ignored refresh index, interfac={}, newVersion={} , current mapping={}",
+          domain.getInterfaceName(),
+          nanosLong,
+          mapping);
     }
   }
 

@@ -18,7 +18,6 @@ package com.alipay.sofa.registry.jdbc.domain;
 
 import com.alipay.sofa.registry.util.MessageDigests;
 import java.sql.Timestamp;
-import java.util.Date;
 
 /**
  * @author xiaojian.xj
@@ -45,7 +44,7 @@ public class InterfaceAppsIndexDomain {
   private String hashcode;
 
   /** create time */
-  private Date gmtCreate;
+  private Timestamp gmtCreate;
 
   /** last update time */
   private Timestamp gmtModify;
@@ -150,7 +149,7 @@ public class InterfaceAppsIndexDomain {
    *
    * @return property value of gmtCreate
    */
-  public Date getGmtCreate() {
+  public Timestamp getGmtCreate() {
     return gmtCreate;
   }
 
@@ -159,7 +158,7 @@ public class InterfaceAppsIndexDomain {
    *
    * @param gmtCreate value to be assigned to property gmtCreate
    */
-  public void setGmtCreate(Date gmtCreate) {
+  public void setGmtCreate(Timestamp gmtCreate) {
     this.gmtCreate = gmtCreate;
   }
 
