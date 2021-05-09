@@ -76,9 +76,15 @@ public class InterfaceAppBatchQueryCallable
               .add(domain.getAppName());
 
           Long v1 = versionResult.get(domain.getInterfaceName());
-          long v2 = TimestampUtil.getNanosLong(domain.getGmtModify());
+          long v2 = TimestampUtil.getNanosLong(domain.getGmtCreate());
           if (v1 == null || v2 > v1) {
             versionResult.put(domain.getInterfaceName(), v2);
+          } else {
+            LOG.error(
+                "[IgnoreUpdateCache]ignored query index, interfac={}, currentVersion={}, newVersion={}",
+                domain.getInterfaceName(),
+                v1,
+                v2);
           }
         });
 
