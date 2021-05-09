@@ -78,12 +78,12 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository {
                     if (future.isSuccess()) {
                       Object response = future.getResponse();
                       if (response == null) {
-                        throw new RevisionNotExistException(revision);
+                         throw new RevisionNotExistException(revision);
                       }
                       AppRevision appRevision = (AppRevision) response;
                       return appRevision;
                     } else {
-                      throw new RevisionNotExistException(revision);
+                       throw new RevisionNotExistException(revision);
                     }
                   }
                 });
@@ -126,9 +126,9 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository {
       }
     } catch (Throwable e) {
       if (e.getCause() instanceof RevisionNotExistException) {
-        LOG.info(String.format("new revision: %s register.", appRevision.getRevision()));
+        LOG.info("new revision:{} register.", appRevision.getRevision());
       } else {
-        LOG.error(String.format("new revision: %s register error.", appRevision.getRevision()), e);
+        LOG.error("new revision:{} register error.", appRevision.getRevision(), e);
         throw e;
       }
     }
@@ -167,7 +167,7 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository {
     try {
       return registry.get(revision);
     } catch (ExecutionException e) {
-      LOG.error(String.format("jdbc refresh revision failed, revision: %s", revision), e);
+      LOG.error("jdbc refresh revision failed, revision: {}", revision, e);
       throw new RuntimeException("jdbc refresh revision failed", e);
     }
   }
@@ -184,9 +184,10 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository {
       return appRevision;
     } catch (Throwable e) {
       if (e.getCause() instanceof RevisionNotExistException) {
-        LOG.info(String.format("revision: %s heartbeat, not exist in db.", revision));
+        LOG.info("revision: {} heartbeat, not exist in db.", revision);
+        return null;
       }
-      LOG.error(String.format("jdbc revision heartbeat failed, revision: %s", revision), e);
+      LOG.error("jdbc revision heartbeat failed, revision: %{}", revision, e);
       return null;
     }
   }
