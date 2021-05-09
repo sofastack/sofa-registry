@@ -91,12 +91,15 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
   private int slotSyncWorkerSize = OsUtils.getCpuCount() * 4;
 
+  private int metaNodeBufferSize = 2000;
+
+  private int metaNodeWorkerSize = OsUtils.getCpuCount() * 4;
+
   private int accessMetadataMaxBufferSize = 10000;
 
   private int accessMetadataWorkerSize = OsUtils.getCpuCount() * 4;
 
-  private int clientNodeExchangeTimeoutMillis =
-      1000; // time out cause netty HashedWheelTimer occupy a lot of mem
+  private int clientNodeExchangeTimeoutMillis = 1000;
 
   private int dataNodeExchangeTimeoutMillis = 3000;
 
@@ -1247,5 +1250,23 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
   public void setAccessMetadataWorkerSize(int accessMetadataWorkerSize) {
     this.accessMetadataWorkerSize = accessMetadataWorkerSize;
+  }
+
+  @Override
+  public int getMetaNodeBufferSize() {
+    return metaNodeBufferSize;
+  }
+
+  public void setMetaNodeBufferSize(int metaNodeBufferSize) {
+    this.metaNodeBufferSize = metaNodeBufferSize;
+  }
+
+  @Override
+  public int getMetaNodeWorkerSize() {
+    return metaNodeWorkerSize;
+  }
+
+  public void setMetaNodeWorkerSize(int metaNodeWorkerSize) {
+    this.metaNodeWorkerSize = metaNodeWorkerSize;
   }
 }

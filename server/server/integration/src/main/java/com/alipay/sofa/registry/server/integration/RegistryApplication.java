@@ -63,7 +63,7 @@ public class RegistryApplication {
 
   public static void main(String[] args) throws Exception {
     System.setProperty("spring.profiles.active", "integrate");
-    System.setProperty("registry.lease.duration.secs", "2");
+    System.setProperty("registry.lease.duration.secs", "10");
     System.setProperty("registry.elector.warm.up.millis", "2000");
     // setup DefaultUncaughtExceptionHandler
     Thread.setDefaultUncaughtExceptionHandler(

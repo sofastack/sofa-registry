@@ -116,7 +116,6 @@ public class ExecutorManager {
                     TimeUnit.SECONDS,
                     new ArrayBlockingQueue<>(sessionServerConfig.getSlotSyncMaxBufferSize()),
                     new NamedThreadFactory(DATA_SLOT_SYNC_REQUEST_EXECUTOR, true)));
-
     accessMetadataExecutor =
         reportExecutors.computeIfAbsent(
             ACCESS_METADATA_EXECUTOR,
