@@ -341,6 +341,18 @@ public class DataServerBeanConfiguration {
           new ArrayBlockingQueue<>(dataServerConfig.getSlotSyncRequestExecutorQueueSize()),
           new NamedThreadFactory("SyncExecutor", true));
     }
+
+    @Bean(name = "metaNodeExecutor")
+    public ThreadPoolExecutor metaNodeExecutor(DataServerConfig dataServerConfig) {
+      return new MetricsableThreadPoolExecutor(
+          "metaExecutor",
+          dataServerConfig.getMetaNodeExecutorPoolSize(),
+          dataServerConfig.getMetaNodeExecutorPoolSize(),
+          300,
+          TimeUnit.SECONDS,
+          new ArrayBlockingQueue<>(dataServerConfig.getMetaNodeExecutorQueueSize()),
+          new NamedThreadFactory("metaExecutor", true));
+    }
   }
 
   @Configuration

@@ -71,7 +71,7 @@ public class StopPushDataSwitchTest extends BaseIntegrationTest {
         sessionApplicationContext.getBean(SessionServerConfig.class);
 
     LOGGER.info("sessionServerConfig.isStopPushSwitch:" + sessionServerConfig.isStopPushSwitch());
-    waitConditionUntilTimeOut(sessionServerConfig::isStopPushSwitch, 5000);
+    waitConditionUntilTimeOut(sessionServerConfig::isStopPushSwitch, 6000);
 
     PublisherRegistration registration = new PublisherRegistration(dataId);
     registryClient1.register(registration, value);
@@ -99,7 +99,7 @@ public class StopPushDataSwitchTest extends BaseIntegrationTest {
             .get(Result.class)
             .isSuccess());
 
-    waitConditionUntilTimeOut(() -> dataIdResult.get() != null, 3000);
+    waitConditionUntilTimeOut(() -> dataIdResult.get() != null, 6000);
 
     // Subscriber get data, test data
     assertEquals(dataId, dataIdResult.get());

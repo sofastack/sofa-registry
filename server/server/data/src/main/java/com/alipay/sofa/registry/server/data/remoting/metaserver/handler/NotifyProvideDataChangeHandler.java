@@ -26,6 +26,8 @@ import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractClientHandler;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.google.common.annotations.VisibleForTesting;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ThreadPoolExecutor;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -37,6 +39,8 @@ public class NotifyProvideDataChangeHandler extends AbstractClientHandler<Provid
   @Autowired private MetaServerService metaServerService;
 
   @Autowired private ProvideDataProcessor provideDataProcessorManager;
+
+  @Autowired private ThreadPoolExecutor metaNodeExecutor;
 
   @Override
   protected NodeType getConnectNodeType() {
@@ -74,5 +78,10 @@ public class NotifyProvideDataChangeHandler extends AbstractClientHandler<Provid
   @VisibleForTesting
   void setProvideDataProcessorManager(ProvideDataProcessor provideDataProcessorManager) {
     this.provideDataProcessorManager = provideDataProcessorManager;
+  }
+
+  @Override
+  public Executor getExecutor() {
+    return metaNodeExecutor;
   }
 }

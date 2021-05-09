@@ -144,6 +144,10 @@ public interface SessionServerConfig {
 
   int getSlotSyncWorkerSize();
 
+  int getMetaNodeBufferSize();
+
+  int getMetaNodeWorkerSize();
+
   int getAccessMetadataMaxBufferSize();
 
   int getAccessMetadataWorkerSize();

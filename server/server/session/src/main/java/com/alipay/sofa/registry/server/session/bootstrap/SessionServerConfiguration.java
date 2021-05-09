@@ -130,13 +130,18 @@ import com.alipay.sofa.registry.server.shared.resource.MetricsResource;
 import com.alipay.sofa.registry.server.shared.resource.RegistryOpsResource;
 import com.alipay.sofa.registry.server.shared.resource.SlotGenericResource;
 import com.alipay.sofa.registry.server.shared.slot.DiskSlotTableRecorder;
+import com.alipay.sofa.registry.task.MetricsableThreadPoolExecutor;
 import com.alipay.sofa.registry.task.batcher.TaskProcessor;
 import com.alipay.sofa.registry.task.listener.DefaultTaskListenerManager;
 import com.alipay.sofa.registry.task.listener.TaskListener;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
+import com.alipay.sofa.registry.util.NamedThreadFactory;
 import com.alipay.sofa.registry.util.PropertySplitter;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -570,6 +575,18 @@ public class SessionServerConfiguration {
 
   @Configuration
   public static class ExecutorConfiguration {
+
+    @Bean(name = "metaNodeExecutor")
+    public ThreadPoolExecutor metaNodeExecutor(SessionServerConfig sessionServerConfig) {
+      return new MetricsableThreadPoolExecutor(
+          "metaExecutor",
+          sessionServerConfig.getMetaNodeWorkerSize(),
+          sessionServerConfig.getMetaNodeWorkerSize(),
+          300,
+          TimeUnit.SECONDS,
+          new ArrayBlockingQueue<>(sessionServerConfig.getMetaNodeBufferSize()),
+          new NamedThreadFactory("metaExecutor", true));
+    }
 
     @Bean
     public ExecutorManager executorManager(SessionServerConfig sessionServerConfig) {

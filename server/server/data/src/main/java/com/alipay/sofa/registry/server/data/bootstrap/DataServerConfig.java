@@ -106,6 +106,10 @@ public class DataServerConfig {
 
   private int slotSyncRequestExecutorQueueSize = 1000;
 
+  private int metaNodeExecutorPoolSize = OsUtils.getCpuCount() * 3;
+
+  private int metaNodeExecutorQueueSize = 1000;
+
   private int schedulerHeartbeatIntervalSecs = 1;
 
   private boolean enableTestApi = false;
@@ -821,6 +825,22 @@ public class DataServerConfig {
 
   public void setSyncSessionConnNum(int syncSessionConnNum) {
     this.syncSessionConnNum = syncSessionConnNum;
+  }
+
+  public int getMetaNodeExecutorPoolSize() {
+    return metaNodeExecutorPoolSize;
+  }
+
+  public void setMetaNodeExecutorPoolSize(int metaNodeExecutorPoolSize) {
+    this.metaNodeExecutorPoolSize = metaNodeExecutorPoolSize;
+  }
+
+  public int getMetaNodeExecutorQueueSize() {
+    return metaNodeExecutorQueueSize;
+  }
+
+  public void setMetaNodeExecutorQueueSize(int metaNodeExecutorQueueSize) {
+    this.metaNodeExecutorQueueSize = metaNodeExecutorQueueSize;
   }
 
   @Override

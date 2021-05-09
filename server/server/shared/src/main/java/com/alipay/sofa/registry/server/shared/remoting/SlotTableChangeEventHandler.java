@@ -22,6 +22,8 @@ import com.alipay.sofa.registry.common.model.metaserver.SlotTableChangeEvent;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ThreadPoolExecutor;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -31,6 +33,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class SlotTableChangeEventHandler extends AbstractClientHandler<SlotTableChangeEvent> {
 
   @Autowired MetaServerService metaServerService;
+
+  @Autowired ThreadPoolExecutor metaNodeExecutor;
 
   @Override
   protected Node.NodeType getConnectNodeType() {
@@ -64,5 +68,10 @@ public class SlotTableChangeEventHandler extends AbstractClientHandler<SlotTable
   @Override
   public Class interest() {
     return SlotTableChangeEvent.class;
+  }
+
+  @Override
+  public Executor getExecutor() {
+    return metaNodeExecutor;
   }
 }
