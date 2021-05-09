@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.server.shared.meta;
 
 import com.alipay.sofa.registry.common.model.GenericResponse;
+import com.alipay.sofa.registry.common.model.ProcessId;
 import com.alipay.sofa.registry.common.model.elector.LeaderInfo;
 import com.alipay.sofa.registry.common.model.metaserver.DataOperation;
 import com.alipay.sofa.registry.common.model.metaserver.FetchProvideDataRequest;
@@ -34,6 +35,7 @@ import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Sets;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.commons.lang.StringUtils;
@@ -229,6 +231,15 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
       LOGGER.error("fetch provider data error from {}", leaderIp, e);
       throw new RuntimeException("fetch provider data error! " + e.getMessage(), e);
     }
+  }
+
+  @Override
+  public Set<ProcessId> getSessionProcessIds() {
+    Set<ProcessId> processIds = Sets.newHashSetWithExpectedSize(state.sessionNodes.size());
+    for (SessionNode session : state.sessionNodes.values()) {
+      processIds.add(session.getProcessId());
+    }
+    return processIds;
   }
 
   public Map<String, SessionNode> getSessionNodes() {

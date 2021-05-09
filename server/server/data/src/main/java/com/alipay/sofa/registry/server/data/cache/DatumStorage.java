@@ -34,6 +34,7 @@ import java.util.Set;
  * @version v 0.1 2020-12-02 19:52 yuzhi.lyz Exp $
  */
 public interface DatumStorage {
+
   /**
    * get datum by specific dataInfoId
    *
@@ -63,7 +64,8 @@ public interface DatumStorage {
 
   DatumVersion createEmptyDatumIfAbsent(String dataInfoId, String dataCenter);
 
-  Map<String, DatumVersion> clean(ProcessId sessionProcessId);
+  Map<String, DatumVersion> clean(
+      int slotId, ProcessId sessionProcessId, CleanContinues cleanContinues);
 
   DatumVersion remove(String dataInfoId, ProcessId sessionProcessId);
 

@@ -30,6 +30,7 @@ import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
 import com.alipay.sofa.registry.server.meta.lease.session.SessionServerManager;
 import com.alipay.sofa.registry.server.meta.remoting.SessionNodeExchanger;
 import com.alipay.sofa.registry.server.meta.remoting.connection.SessionConnectionManager;
+import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
 import java.net.InetSocketAddress;
 import java.util.concurrent.TimeoutException;
@@ -90,9 +91,9 @@ public class DefaultSessionServerServiceTest extends AbstractMetaServerTestBase 
             new VersionedList<>(
                 DatumVersionUtil.nextId(),
                 Lists.newArrayList(
-                    new SessionNode(randomURL(ip1), getDc()),
-                    new SessionNode(randomURL(ip2), getDc()),
-                    new SessionNode(randomURL(randomIp()), getDc()))));
+                    new SessionNode(randomURL(ip1), getDc(), ServerEnv.PROCESS_ID),
+                    new SessionNode(randomURL(ip2), getDc(), ServerEnv.PROCESS_ID),
+                    new SessionNode(randomURL(randomIp()), getDc(), ServerEnv.PROCESS_ID))));
     notifier.notifyProvideDataChange(
         new ProvideDataChangeEvent(ValueConstants.BLACK_LIST_DATA_ID, System.currentTimeMillis()));
     Thread.sleep(100);
@@ -113,9 +114,9 @@ public class DefaultSessionServerServiceTest extends AbstractMetaServerTestBase 
             new VersionedList<>(
                 DatumVersionUtil.nextId(),
                 Lists.newArrayList(
-                    new SessionNode(randomURL(ip1), getDc()),
-                    new SessionNode(randomURL(ip2), getDc()),
-                    new SessionNode(randomURL(randomIp()), getDc()))));
+                    new SessionNode(randomURL(ip1), getDc(), ServerEnv.PROCESS_ID),
+                    new SessionNode(randomURL(ip2), getDc(), ServerEnv.PROCESS_ID),
+                    new SessionNode(randomURL(randomIp()), getDc(), ServerEnv.PROCESS_ID))));
     Client client2 = spy(getRpcClient(scheduled, 10, "Response"));
     SessionNodeExchanger otherNodeExchanger = mock(SessionNodeExchanger.class);
     when(otherNodeExchanger.request(any(Request.class)))

@@ -25,7 +25,7 @@ import com.alipay.sofa.registry.common.model.store.URL;
  */
 public class SessionNode extends AbstractNode {
 
-  private ProcessId processId;
+  private final ProcessId processId;
 
   /**
    * constructor
@@ -33,8 +33,9 @@ public class SessionNode extends AbstractNode {
    * @param nodeUrl
    * @param regionId
    */
-  public SessionNode(URL nodeUrl, String regionId) {
+  public SessionNode(URL nodeUrl, String regionId, ProcessId processId) {
     super(null, nodeUrl, regionId);
+    this.processId = processId;
   }
 
   @Override
@@ -57,11 +58,6 @@ public class SessionNode extends AbstractNode {
 
   public ProcessId getProcessId() {
     return processId;
-  }
-
-  public SessionNode setProcessId(ProcessId processId) {
-    this.processId = processId;
-    return this;
   }
 
   /**

@@ -94,15 +94,15 @@ public class PublisherGroupTest {
     Assert.assertTrue(group.getPublishers().get(0) == newer);
 
     final ProcessId mockProcessId = new ProcessId("xxx", System.currentTimeMillis(), 1, 1);
-    v = group.clean(mockProcessId);
+    v = group.clean(mockProcessId, CleanContinues.ALWAYS);
     Assert.assertNull(v);
 
-    v = group.clean(null);
+    v = group.clean(null, CleanContinues.ALWAYS);
     Assert.assertNotNull(v);
     Assert.assertTrue(group.getPublishers().isEmpty());
 
     group.addPublisher(newer);
-    v = group.clean(ServerEnv.PROCESS_ID);
+    v = group.clean(ServerEnv.PROCESS_ID, CleanContinues.ALWAYS);
     Assert.assertNotNull(v);
     Assert.assertTrue(group.getPublishers().isEmpty());
 

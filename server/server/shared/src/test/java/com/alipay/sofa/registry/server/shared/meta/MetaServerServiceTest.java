@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.server.shared.meta;
 
 import com.alipay.sofa.registry.common.model.GenericResponse;
+import com.alipay.sofa.registry.common.model.ProcessId;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.common.model.metaserver.cluster.VersionedList;
 import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.BaseHeartBeatResponse;
@@ -27,6 +28,7 @@ import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.remoting.exchange.message.Response;
 import com.alipay.sofa.registry.server.shared.TestUtils;
+import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -93,8 +95,9 @@ public class MetaServerServiceTest {
             new VersionedList(
                 1,
                 Lists.newArrayList(
-                    new SessionNode(new URL("sessionNode1"), "zoneA"),
-                    new SessionNode(new URL("sessionNode2"), "zoneB"))),
+                    new SessionNode(new URL("sessionNode1"), "zoneA", ServerEnv.PROCESS_ID),
+                    new SessionNode(
+                        new URL("sessionNode2"), "zoneB", new ProcessId("test", 1, 1, 1)))),
             "test",
             100);
     resp.setData(heartBeatResponse);
@@ -121,6 +124,8 @@ public class MetaServerServiceTest {
     Assert.assertTrue(zones.contains("sessionNode1"));
     Assert.assertTrue(zones.contains("sessionNode2"));
 
+    Assert.assertEquals(2, mockServerService.getSessionProcessIds().size());
+    Assert.assertTrue(mockServerService.getSessionProcessIds().contains(ServerEnv.PROCESS_ID));
     zones = mockServerService.getSessionServerList("zoneC");
     Assert.assertEquals(zones.size(), 0);
 

@@ -216,7 +216,11 @@ public class LocalDatumStorageTest {
     storage.put(publisher);
     storage.put(publisher2);
 
-    Map<String, DatumVersion> versionMap = storage.clean(publisher.getSessionProcessId());
+    int slotId = SlotFunctionRegistry.getFunc().slotOf(publisher.getDataInfoId());
+    Map<String, DatumVersion> versionMap =
+        storage.clean(slotId + 1, publisher.getSessionProcessId(), CleanContinues.ALWAYS);
+    Assert.assertEquals(versionMap.size(), 0);
+    versionMap = storage.clean(slotId, publisher.getSessionProcessId(), CleanContinues.ALWAYS);
     Assert.assertEquals(versionMap.size(), 1);
     Assert.assertTrue(versionMap.containsKey(publisher.getDataInfoId()));
     Map<String, List<Publisher>> map = storage.getAllPublisher();
