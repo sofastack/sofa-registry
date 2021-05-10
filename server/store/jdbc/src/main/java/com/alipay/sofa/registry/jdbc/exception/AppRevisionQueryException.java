@@ -18,11 +18,11 @@ package com.alipay.sofa.registry.jdbc.exception;
 
 /**
  * @author xiaojian.xj
- * @version $Id: RevisionNotExistException.java, v 0.1 2021年02月03日 15:59 xiaojian.xj Exp $
+ * @version $Id: AppRevisionQueryException.java, v 0.1 2021年02月03日 15:59 xiaojian.xj Exp $
  */
-public class AppInterfaceQueryException extends RuntimeException {
+public class AppRevisionQueryException extends RuntimeException {
 
-  public AppInterfaceQueryException(String app) {
-    super(String.format("query interfaces by app: %s error.", app));
+  public AppRevisionQueryException(String revision, String msg) {
+    super(String.format("query revision: %s error, errorMsg: %s", revision, msg));
   }
 }
