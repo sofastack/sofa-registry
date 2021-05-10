@@ -20,6 +20,7 @@ import com.alipay.sofa.registry.common.model.store.AppRevision;
 import com.alipay.sofa.registry.jdbc.config.DefaultCommonConfig;
 import com.alipay.sofa.registry.jdbc.convertor.AppRevisionDomainConvertor;
 import com.alipay.sofa.registry.jdbc.domain.AppRevisionDomain;
+import com.alipay.sofa.registry.jdbc.exception.AppRevisionQueryException;
 import com.alipay.sofa.registry.jdbc.exception.RevisionNotExistException;
 import com.alipay.sofa.registry.jdbc.mapper.AppRevisionMapper;
 import com.alipay.sofa.registry.jdbc.repository.batch.AppRevisionBatchQueryCallable;
@@ -83,7 +84,7 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository {
                       AppRevision appRevision = (AppRevision) response;
                       return appRevision;
                     } else {
-                       throw new RevisionNotExistException(revision);
+                       throw new AppRevisionQueryException(revision, future.getMessage());
                     }
                   }
                 });
