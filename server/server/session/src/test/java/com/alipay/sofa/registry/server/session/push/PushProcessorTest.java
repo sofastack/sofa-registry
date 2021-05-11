@@ -48,7 +48,8 @@ public class PushProcessorTest {
 
     Assert.assertEquals(processor.watchCommit().size(), 0);
 
-    PushCause pushCause = new PushCause(PushType.Reg, System.currentTimeMillis());
+    PushCause pushCause =
+        new PushCause(System.currentTimeMillis(), PushType.Reg, System.currentTimeMillis());
     Subscriber subscriber = TestUtils.newZoneSubscriber(dataId, zone);
     SubDatum datum = TestUtils.newSubDatum(subscriber.getDataId(), 100, Collections.emptyList());
     Assert.assertTrue(processor.pendingTasks.isEmpty());
@@ -120,7 +121,7 @@ public class PushProcessorTest {
 
     // noDelay=false
     processor.firePush(
-        new PushCause(PushType.Sub, System.currentTimeMillis()),
+        new PushCause(System.currentTimeMillis(), PushType.Sub, System.currentTimeMillis()),
         NetUtil.getLocalSocketAddress(),
         Collections.singletonMap(subscriber.getRegisterId() + "-test", subscriber),
         datum);
@@ -152,7 +153,8 @@ public class PushProcessorTest {
     processor.pushDataGenerator = new PushDataGenerator();
     processor.pushDataGenerator.sessionServerConfig = config;
 
-    PushCause pushCause = new PushCause(PushType.Reg, System.currentTimeMillis());
+    PushCause pushCause =
+        new PushCause(System.currentTimeMillis(), PushType.Reg, System.currentTimeMillis());
     Subscriber subscriber = TestUtils.newZoneSubscriber(dataId, zone);
     SubDatum datum = TestUtils.newSubDatum(subscriber.getDataId(), 100, Collections.emptyList());
 
@@ -271,7 +273,8 @@ public class PushProcessorTest {
   @Test
   public void testOnCallback() throws Exception {
     PushProcessor processor = newProcessor();
-    PushCause pushCause = new PushCause(PushType.Reg, System.currentTimeMillis());
+    PushCause pushCause =
+        new PushCause(System.currentTimeMillis(), PushType.Reg, System.currentTimeMillis());
     Subscriber subscriber = TestUtils.newZoneSubscriber(dataId, zone);
     SubDatum datum = TestUtils.newSubDatum(subscriber.getDataId(), 100, Collections.emptyList());
 
@@ -312,7 +315,8 @@ public class PushProcessorTest {
   public void testOnException() throws Exception {
     PushProcessor processor = newProcessor();
 
-    PushCause pushCause = new PushCause(PushType.Reg, System.currentTimeMillis());
+    PushCause pushCause =
+        new PushCause(System.currentTimeMillis(), PushType.Reg, System.currentTimeMillis());
     Subscriber subscriber = TestUtils.newZoneSubscriber(dataId, zone);
     SubDatum datum = TestUtils.newSubDatum(subscriber.getDataId(), 100, Collections.emptyList());
 

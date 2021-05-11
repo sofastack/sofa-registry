@@ -47,7 +47,7 @@ public class PushTraceTest {
             subDatum,
             NetUtil.getLocalSocketAddress(),
             "subApp",
-            new PushCause(PushType.Sub, now1),
+            new PushCause(now1, PushType.Sub, now1),
             1,
             System.currentTimeMillis() - 100);
     long now2 = System.currentTimeMillis();

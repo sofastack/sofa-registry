@@ -55,10 +55,12 @@ public class ChangeProcessor {
   }
 
   interface ChangeHandler {
-    boolean onChange(String dataCenter, String dataInfoId, long expectDatumVersion);
+    boolean onChange(
+        long startTimestamp, String dataCenter, String dataInfoId, long expectDatumVersion);
   }
 
   static final class ChangeTask {
+    long startTimestamp;
     final ChangeKey key;
     final ChangeHandler changeHandler;
     long expectDatumVersion;
@@ -74,7 +76,7 @@ public class ChangeProcessor {
     }
 
     void doChange() {
-      changeHandler.onChange(key.dataCenter, key.dataInfoId, expectDatumVersion);
+      changeHandler.onChange(startTimestamp, key.dataCenter, key.dataInfoId, expectDatumVersion);
     }
 
     @Override
@@ -113,6 +115,7 @@ public class ChangeProcessor {
       final long now = System.currentTimeMillis();
       final ChangeTask task =
           new ChangeTask(key, expectDatumVersion, handler, now + changeDebouncingMillis);
+      task.startTimestamp = now;
 
       synchronized (tasks) {
         final ChangeTask exist = tasks.get(key);
@@ -128,6 +131,7 @@ public class ChangeProcessor {
         if (task.expireTimestamp <= exist.expireDeadlineTimestamp) {
           // not reach deadline, requeue to wait
           task.expireDeadlineTimestamp = exist.expireDeadlineTimestamp;
+          task.startTimestamp = exist.startTimestamp;
           // tasks is linkedMap, must remove the exist first, then enqueue in the tail
           tasks.remove(key);
           tasks.put(key, task);

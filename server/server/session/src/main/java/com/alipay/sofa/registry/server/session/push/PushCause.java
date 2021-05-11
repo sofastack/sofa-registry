@@ -16,17 +16,22 @@
  */
 package com.alipay.sofa.registry.server.session.push;
 
+import com.alipay.sofa.registry.util.StringFormatter;
+
 public final class PushCause {
+  final long startTimestamp;
   final long triggerTimestamp;
   final PushType pushType;
 
-  PushCause(PushType pushType, long triggerTimestamp) {
+  PushCause(long startTimestamp, PushType pushType, long triggerTimestamp) {
     this.pushType = pushType;
     this.triggerTimestamp = triggerTimestamp;
+    this.startTimestamp = startTimestamp;
   }
 
   @Override
   public String toString() {
-    return "PushCause{" + "triggerTs=" + triggerTimestamp + ", type=" + pushType + '}';
+    return StringFormatter.format(
+        "PushCause{startTs={},triggerTs={},type={}}", startTimestamp, triggerTimestamp, pushType);
   }
 }
