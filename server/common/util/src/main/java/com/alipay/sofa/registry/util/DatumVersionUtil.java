@@ -33,7 +33,7 @@ public final class DatumVersionUtil {
 
   static final String DATUM_VERSION_TYPE_CONFREG = "confreg";
   static final String DATUM_VERSION_TYPE_REGISTRY = "registry";
-  static final String datumVersionType =
+  static String datumVersionType =
       SystemUtils.getSystem("registry.data.datumVersionType", DATUM_VERSION_TYPE_REGISTRY);
 
   private DatumVersionUtil() {}
@@ -106,6 +106,17 @@ public final class DatumVersionUtil {
           timestamp);
     }
     return lastVersion + 1;
+  }
+
+  public static long transferDatumVersion(long version) {
+    if (version <= 1) {
+      // empty datum
+      return version;
+    }
+    if (useConfregVersionGen()) {
+      return getRealTimestamp(version);
+    }
+    return version;
   }
 
   @VisibleForTesting
