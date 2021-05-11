@@ -190,8 +190,8 @@ public class AppRevisionRepositoryTest extends AbstractH2DbTestBase {
     @Override
     public void runUnthrowable() {
       for (AppRevision appRevision : appRevisionList) {
-        AppRevision response = appRevisionJdbcRepository.heartbeat(appRevision.getRevision());
-        if (response == null) {
+        boolean success = appRevisionJdbcRepository.heartbeat(appRevision.getRevision());
+        if (!success) {
           try {
             appRevisionJdbcRepository.register(appRevision);
           } catch (Exception e) {
@@ -214,13 +214,13 @@ public class AppRevisionRepositoryTest extends AbstractH2DbTestBase {
 
     for (AppRevision appRevision : appRevisionList) {
 
-      AppRevision before = appRevisionJdbcRepository.heartbeat(appRevision.getRevision());
-      Assert.assertEquals(appRevision.getRevision(), before.getRevision());
+      boolean before = appRevisionJdbcRepository.heartbeat(appRevision.getRevision());
+      Assert.assertTrue(before);
       appRevisionMapper.deleteAppRevision(
           defaultCommonConfig.getClusterId(), appRevision.getRevision());
 
-      AppRevision after = appRevisionJdbcRepository.heartbeat(appRevision.getRevision());
-      Assert.assertEquals(appRevision.getRevision(), after.getRevision());
+      boolean after = appRevisionJdbcRepository.heartbeat(appRevision.getRevision());
+      Assert.assertTrue(after);
       AppRevisionDomain query =
           appRevisionMapper.queryRevision(
               defaultCommonConfig.getClusterId(), appRevision.getRevision());
@@ -229,46 +229,18 @@ public class AppRevisionRepositoryTest extends AbstractH2DbTestBase {
     appRevisionHeartbeatJdbcRepository.doHeartbeatCacheChecker();
 
     for (AppRevision appRevision : appRevisionList) {
-      AppRevision r = appRevisionJdbcRepository.heartbeat(appRevision.getRevision());
-      Assert.assertTrue(r == null);
+      boolean success = appRevisionJdbcRepository.heartbeat(appRevision.getRevision());
+      Assert.assertFalse(success);
     }
 
     ConcurrentUtils.createDaemonThread("heartbeatClean-test", new HeartbeatRunner()).start();
     Thread.sleep(3000);
     for (AppRevision appRevision : appRevisionList) {
 
-      AppRevision r = appRevisionJdbcRepository.heartbeat(appRevision.getRevision());
-      Assert.assertTrue(r != null);
-      Assert.assertEquals(appRevision.getRevision(), r.getRevision());
+      boolean success = appRevisionJdbcRepository.heartbeat(appRevision.getRevision());
+      Assert.assertTrue(success);
       appRevisionMapper.deleteAppRevision(
           defaultCommonConfig.getClusterId(), appRevision.getRevision());
-    }
-  }
-
-  @Test
-  public void revisionHeartbeat() throws Exception {
-    registerAndQuery();
-    for (AppRevision appRevision : appRevisionList) {
-      appRevisionJdbcRepository.heartbeat(appRevision.getRevision());
-
-      AppRevisionDomain before =
-          appRevisionMapper.queryRevision(
-              defaultCommonConfig.getClusterId(), appRevision.getRevision());
-      AppRevision heartbeat =
-          appRevisionJdbcRepository.getHeartbeatMap().get(appRevision.getRevision());
-      Assert.assertTrue(before.getGmtModify().before(heartbeat.getLastHeartbeat()));
-    }
-
-    appRevisionHeartbeatJdbcRepository.doAppRevisionHeartbeat();
-
-    for (AppRevision appRevision : appRevisionList) {
-
-      AppRevisionDomain after =
-          appRevisionMapper.queryRevision(
-              defaultCommonConfig.getClusterId(), appRevision.getRevision());
-      AppRevision heartbeat =
-          appRevisionJdbcRepository.getHeartbeatMap().get(appRevision.getRevision());
-      Assert.assertTrue(after.getGmtModify().after(heartbeat.getLastHeartbeat()));
     }
   }
 

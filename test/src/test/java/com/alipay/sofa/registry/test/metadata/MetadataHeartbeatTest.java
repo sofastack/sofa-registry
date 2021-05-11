@@ -62,25 +62,24 @@ public class MetadataHeartbeatTest extends MetadataTest {
 
     for (AppRevision appRevision : appRevisionList) {
 
-      AppRevision r = appRevisionHeartbeatRegistry.heartbeat(appRevision.getRevision());
-      Assert.assertEquals(appRevision.getRevision(), r.getRevision());
+      boolean success = appRevisionHeartbeatRegistry.heartbeat(appRevision.getRevision());
+      Assert.assertTrue(success);
       appRevisionMapper.deleteAppRevision(
           defaultCommonConfig.getClusterId(), appRevision.getRevision());
     }
     appRevisionHeartbeatRegistry.doHeartbeatCacheChecker();
 
     for (AppRevision appRevision : appRevisionList) {
-      AppRevision r = appRevisionHeartbeatRegistry.heartbeat(appRevision.getRevision());
-      Assert.assertTrue(r == null);
+      boolean success = appRevisionHeartbeatRegistry.heartbeat(appRevision.getRevision());
+      Assert.assertFalse(success);
     }
 
     ConcurrentUtils.createDaemonThread("heartbeat-runner-test", new HeartbeatRunner()).start();
     Thread.sleep(3000);
     for (AppRevision appRevision : appRevisionList) {
 
-      AppRevision r = appRevisionHeartbeatRegistry.heartbeat(appRevision.getRevision());
-      Assert.assertTrue(r != null);
-      Assert.assertEquals(appRevision.getRevision(), r.getRevision());
+      boolean success = appRevisionHeartbeatRegistry.heartbeat(appRevision.getRevision());
+      Assert.assertTrue(success);
       appRevisionMapper.deleteAppRevision(
           defaultCommonConfig.getClusterId(), appRevision.getRevision());
     }

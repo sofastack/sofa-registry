@@ -16,10 +16,8 @@
  */
 package com.alipay.sofa.registry.jdbc.repository.impl;
 
-import com.alipay.sofa.registry.common.model.store.AppRevision;
 import com.alipay.sofa.registry.jdbc.config.DefaultCommonConfig;
 import com.alipay.sofa.registry.jdbc.config.MetadataConfig;
-import com.alipay.sofa.registry.jdbc.convertor.AppRevisionDomainConvertor;
 import com.alipay.sofa.registry.jdbc.mapper.AppRevisionMapper;
 import com.alipay.sofa.registry.jdbc.repository.batch.AppRevisionHeartbeatBatchCallable;
 import com.alipay.sofa.registry.log.Logger;
@@ -38,6 +36,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -81,15 +80,16 @@ public class AppRevisionHeartbeatJdbcRepository implements AppRevisionHeartbeatR
       singleFlight.execute(
           "app_revision_heartbeat",
           () -> {
-            Map<String, AppRevision> heartbeatMap =
-                new ConcurrentHashMap<>(appRevisionJdbcRepository.getHeartbeatMap());
-
             Map<String, InvokeFuture> futureMap = new HashMap<>();
-            for (Entry<String, AppRevision> entry : heartbeatMap.entrySet()) {
-              TaskEvent taskEvent =
-                  appRevisionHeartbeatBatchCallable.new TaskEvent(entry.getValue());
+
+            Set<String> heartbeatSet =
+                appRevisionJdbcRepository
+                    .getHeartbeatSet()
+                    .getAndSet(new ConcurrentHashMap<>().newKeySet());
+            for (String revision : heartbeatSet) {
+              TaskEvent taskEvent = appRevisionHeartbeatBatchCallable.new TaskEvent(revision);
               InvokeFuture future = appRevisionHeartbeatBatchCallable.commit(taskEvent);
-              futureMap.put(entry.getKey(), future);
+              futureMap.put(revision, future);
             }
 
             for (Entry<String, InvokeFuture> entry : futureMap.entrySet()) {
@@ -98,7 +98,7 @@ public class AppRevisionHeartbeatJdbcRepository implements AppRevisionHeartbeatR
               try {
                 future.getResponse();
               } catch (InterruptedException e) {
-                LOG.error(String.format("app_revision: %s heartbeat error.", entry.getKey()), e);
+                LOG.error("app_revision: {} heartbeat error.", entry.getKey(), e);
               }
             }
             return null;
@@ -112,7 +112,8 @@ public class AppRevisionHeartbeatJdbcRepository implements AppRevisionHeartbeatR
   public void doHeartbeatCacheChecker() {
     try {
 
-      List<String> revisions = new ArrayList(appRevisionJdbcRepository.getHeartbeatMap().keySet());
+      Set<String> heartbeatSet = appRevisionJdbcRepository.getHeartbeatSet().get();
+      List<String> revisions = new ArrayList(heartbeatSet);
 
       List<String> exists = new ArrayList<>();
       int round = MathUtils.divideCeil(revisions.size(), heartbeatCheckerSize);
@@ -144,18 +145,16 @@ public class AppRevisionHeartbeatJdbcRepository implements AppRevisionHeartbeatR
           "app_revision_gc",
           () -> {
             Date date = DateUtils.addHours(new Date(), -silenceHour);
-            List<AppRevision> appRevisions =
-                AppRevisionDomainConvertor.convert2Revisions(
-                    appRevisionMapper.queryGcRevision(
-                        defaultCommonConfig.getClusterId(), date, REVISION_GC_LIMIT));
+            List<String> revisions =
+                appRevisionMapper.queryGcRevision(
+                    defaultCommonConfig.getClusterId(), date, REVISION_GC_LIMIT);
 
             if (LOG.isInfoEnabled()) {
-              LOG.info("app_revision tobe gc size: " + appRevisions.size());
+              LOG.info("app_revision tobe gc size: {}, revisions: {}", revisions.size(), revisions);
             }
-            for (AppRevision appRevision : appRevisions) {
+            for (String revision : revisions) {
               // delete app_revision
-              appRevisionMapper.deleteAppRevision(
-                  defaultCommonConfig.getClusterId(), appRevision.getRevision());
+              appRevisionMapper.deleteAppRevision(defaultCommonConfig.getClusterId(), revision);
             }
 
             return null;

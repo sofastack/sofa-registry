@@ -34,10 +34,10 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import java.util.Collection;
-import java.util.Date;
-import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -53,7 +53,8 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository {
   private final LoadingCache<String, AppRevision> registry;
 
   /** map: <revision, AppRevision> */
-  private final LoadingCache<String, AppRevision> heartbeatMap;
+  private final AtomicReference<ConcurrentHashMap.KeySetView> heartbeatSet =
+      new AtomicReference<>();
 
   @Autowired private AppRevisionMapper appRevisionMapper;
 
@@ -89,24 +90,7 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository {
                   }
                 });
 
-    this.heartbeatMap =
-        CacheBuilder.newBuilder()
-            .expireAfterAccess(10, TimeUnit.MINUTES)
-            .build(
-                new CacheLoader<String, AppRevision>() {
-                  @Override
-                  public AppRevision load(String revision) throws RevisionNotExistException {
-
-                    AppRevisionDomain domain =
-                        appRevisionMapper.checkExist(defaultCommonConfig.getClusterId(), revision);
-                    if (domain == null) {
-                      throw new RevisionNotExistException(revision);
-                    } else {
-                      return new AppRevision(
-                          domain.getDataCenter(), domain.getRevision(), domain.getGmtModify());
-                    }
-                  }
-                });
+    heartbeatSet.set(new ConcurrentHashMap<>().newKeySet());
   }
 
   @Override
@@ -115,23 +99,17 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository {
       throw new RuntimeException("jdbc register app revision error, appRevision is null.");
     }
 
-    // query cache, if not exist then query database
+    // query database
     try {
-      AppRevision revision = registry.get(appRevision.getRevision());
+      AppRevisionDomain revision =
+          appRevisionMapper.checkExist(
+              defaultCommonConfig.getClusterId(), appRevision.getRevision());
       if (revision != null) {
-        heartbeatMap.put(
-            appRevision.getRevision(),
-            new AppRevision(
-                defaultCommonConfig.getClusterId(), appRevision.getRevision(), new Date()));
         return;
       }
     } catch (Throwable e) {
-      if (e.getCause() instanceof RevisionNotExistException) {
-        LOG.info("new revision:{} register.", appRevision.getRevision());
-      } else {
-        LOG.error("new revision:{} register error.", appRevision.getRevision(), e);
-        throw e;
-      }
+      LOG.error("new revision:{} register error.", appRevision.getRevision(), e);
+      throw e;
     }
 
     // new revision, save into database
@@ -143,12 +121,6 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository {
     // it will ignore ON DUPLICATE KEY
     appRevisionMapper.insert(
         AppRevisionDomainConvertor.convert2Domain(defaultCommonConfig.getClusterId(), appRevision));
-
-    registry.put(appRevision.getRevision(), appRevision);
-
-    heartbeatMap.put(
-        appRevision.getRevision(),
-        new AppRevision(appRevision.getDataCenter(), appRevision.getRevision(), new Date()));
   }
 
   @Override
@@ -168,28 +140,34 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository {
     try {
       return registry.get(revision);
     } catch (ExecutionException e) {
-      LOG.error("jdbc refresh revision failed, revision: {}", revision, e);
+      if (e.getCause() instanceof RevisionNotExistException) {
+        LOG.info("jdbc query revision failed, revision: {} not exist in db", revision, e);
+        return null;
+      }
+
+      LOG.error("jdbc query revision error, revision: {}", revision, e);
       throw new RuntimeException("jdbc refresh revision failed", e);
     }
   }
 
   @Override
-  public AppRevision heartbeat(String revision) {
+  public boolean heartbeat(String revision) {
 
     try {
-      AppRevision appRevision = heartbeatMap.get(revision);
-      if (appRevision != null) {
-        appRevision.setLastHeartbeat(new Date());
-        heartbeatMap.put(revision, appRevision);
+      if (heartbeatSet.get().contains(revision)) {
+        return true;
       }
-      return appRevision;
+      AppRevisionDomain domain =
+          appRevisionMapper.checkExist(defaultCommonConfig.getClusterId(), revision);
+
+      if (domain != null) {
+        heartbeatSet.get().add(revision);
+        return true;
+      }
+      return false;
     } catch (Throwable e) {
-      if (e.getCause() instanceof RevisionNotExistException) {
-        LOG.info("revision: {} heartbeat, not exist in db.", revision);
-        return null;
-      }
       LOG.error("jdbc revision heartbeat failed, revision: %{}", revision, e);
-      return null;
+      return false;
     }
   }
 
@@ -198,17 +176,16 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository {
    *
    * @return property value of heartbeatMap
    */
-  public Map<String, AppRevision> getHeartbeatMap() {
-    return heartbeatMap.asMap();
+  public AtomicReference<ConcurrentHashMap.KeySetView> getHeartbeatSet() {
+
+    return heartbeatSet;
   }
 
   public void invalidateHeartbeat(Collection<String> keys) {
-    for (String key : keys) {
-      if (LOG.isInfoEnabled()) {
-        LOG.info("Invalidating heartbeat cache key: {} {}", key);
-      }
-      heartbeatMap.invalidate(key);
+    if (LOG.isInfoEnabled()) {
+      LOG.info("Invalidating heartbeat cache keys: {}", keys);
     }
+    heartbeatSet.get().removeAll(keys);
   }
 
   @VisibleForTesting

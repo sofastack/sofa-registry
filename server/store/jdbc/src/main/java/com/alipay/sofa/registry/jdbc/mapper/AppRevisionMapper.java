@@ -79,7 +79,7 @@ public interface AppRevisionMapper {
    * @param date
    * @return
    */
-  public List<AppRevisionDomain> queryGcRevision(
+  public List<String> queryGcRevision(
       @Param("dataCenter") String dataCenter,
       @Param("date") Date date,
       @Param("limitCount") int limitCount);

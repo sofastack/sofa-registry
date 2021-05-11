@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.registry.jdbc.repository.batch;
 
-import com.alipay.sofa.registry.common.model.store.AppRevision;
 import com.alipay.sofa.registry.jdbc.config.DefaultCommonConfig;
 import com.alipay.sofa.registry.jdbc.mapper.AppRevisionMapper;
 import com.alipay.sofa.registry.log.Logger;
@@ -32,8 +31,7 @@ import org.springframework.util.CollectionUtils;
  * @author xiaojian.xj
  * @version $Id: AppRevisionHeartbeatBatchCallable.java, v 0.1 2021年02月09日 17:52 xiaojian.xj Exp $
  */
-public class AppRevisionHeartbeatBatchCallable
-    extends BatchCallableRunnable<AppRevision, AppRevision> {
+public class AppRevisionHeartbeatBatchCallable extends BatchCallableRunnable<String, String> {
 
   private static final Logger LOG =
       LoggerFactory.getLogger("METADATA-EXCHANGE", "[AppRevisionHeartbeatBatch]");
@@ -61,12 +59,12 @@ public class AppRevisionHeartbeatBatchCallable
       LOG.info("update app_revision gmt_modified, task size: " + tasks.size());
     }
     List<String> revisions =
-        tasks.stream().map(task -> task.getData().getRevision()).collect(Collectors.toList());
+        tasks.stream().map(task -> task.getData()).collect(Collectors.toList());
 
     appRevisionMapper.batchHeartbeat(defaultCommonConfig.getClusterId(), revisions);
     tasks.forEach(
         taskEvent -> {
-          InvokeFuture<AppRevision> future = taskEvent.getFuture();
+          InvokeFuture<String> future = taskEvent.getFuture();
           future.putResponse(taskEvent.getData());
         });
 
