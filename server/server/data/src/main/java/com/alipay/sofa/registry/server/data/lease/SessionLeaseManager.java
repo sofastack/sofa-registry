@@ -37,12 +37,11 @@ import com.alipay.sofa.registry.util.LoopRunnable;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import javax.annotation.PostConstruct;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import javax.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author yuzhi.lyz

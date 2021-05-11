@@ -79,12 +79,12 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository {
                     if (future.isSuccess()) {
                       Object response = future.getResponse();
                       if (response == null) {
-                         throw new RevisionNotExistException(revision);
+                        throw new RevisionNotExistException(revision);
                       }
                       AppRevision appRevision = (AppRevision) response;
                       return appRevision;
                     } else {
-                       throw new AppRevisionQueryException(revision, future.getMessage());
+                      throw new AppRevisionQueryException(revision, future.getMessage());
                     }
                   }
                 });

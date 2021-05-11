@@ -95,7 +95,11 @@ public class Datum implements Serializable {
   }
 
   public void updateVersion() {
-    this.version = DatumVersionUtil.nextId();
+    if (DatumVersionUtil.useConfregVersionGen()) {
+      this.version = DatumVersionUtil.confregNextId(0);
+    } else {
+      this.version = DatumVersionUtil.nextId();
+    }
   }
 
   /**
