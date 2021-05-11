@@ -87,17 +87,6 @@ public final class SessionLeaseManager {
     return connectIdRenewTimestampMap.containsKey(sessionProcessId);
   }
 
-  private Map<ProcessId, Date> getExpireProcessId(int leaseMs) {
-    Map<ProcessId, Date> expires = Maps.newHashMap();
-    final long lastRenew = System.currentTimeMillis() - leaseMs;
-    for (Map.Entry<ProcessId, Long> e : connectIdRenewTimestampMap.entrySet()) {
-      if (e.getValue() < lastRenew) {
-        expires.put(e.getKey(), new Date(e.getValue()));
-      }
-    }
-    return expires;
-  }
-
   private List<ProcessId> cleanExpireLease(
       int leaseMs, Set<ProcessId> connProcessIds, Set<ProcessId> metaProcessIds) {
     final long lastRenew = System.currentTimeMillis() - leaseMs;
@@ -195,10 +184,6 @@ public final class SessionLeaseManager {
         return false;
       }
       return true;
-    }
-
-    boolean isBroken() {
-      return broken;
     }
 
     @Override
