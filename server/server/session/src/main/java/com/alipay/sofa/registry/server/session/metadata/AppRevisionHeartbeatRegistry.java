@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.registry.server.session.metadata;
 
-import com.alipay.sofa.registry.common.model.store.AppRevision;
 import com.alipay.sofa.registry.store.api.repository.AppRevisionHeartbeatRepository;
 import com.alipay.sofa.registry.store.api.repository.AppRevisionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,7 +30,7 @@ public class AppRevisionHeartbeatRegistry {
 
   @Autowired private AppRevisionHeartbeatRepository appRevisionHeartbeatRepository;
 
-  public AppRevision heartbeat(String revision) {
+  public boolean heartbeat(String revision) {
     return appRevisionRepository.heartbeat(revision);
   }
 
