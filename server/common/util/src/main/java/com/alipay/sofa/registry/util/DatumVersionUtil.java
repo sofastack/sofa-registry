@@ -16,6 +16,10 @@
  */
 package com.alipay.sofa.registry.util;
 
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
+import com.google.common.annotations.VisibleForTesting;
+
 /**
  * generates ID: 49 bit millisecond timestamp + 15 bit incremental ID
  *
@@ -25,22 +29,33 @@ package com.alipay.sofa.registry.util;
  * @version $Id: DatumVersionUtil.java, v 0.1 2019-07-04 22:05 kezhu.wukz Exp $
  */
 public final class DatumVersionUtil {
+  private static final Logger LOG = LoggerFactory.getLogger(DatumVersionUtil.class);
+
+  static final String DATUM_VERSION_TYPE_CONFREG = "confreg";
+  static final String DATUM_VERSION_TYPE_REGISTRY = "registry";
+  static final String datumVersionType =
+      SystemUtils.getSystem("registry.data.datumVersionType", DATUM_VERSION_TYPE_REGISTRY);
+
   private DatumVersionUtil() {}
 
   private static long sequence = 0L;
 
   /** Tue Jan 01 00:00:00 CST 2019 */
-  private static long twepoch = 1546272000000L;
+  private static final long twepoch = 1546272000000L;
 
-  private static long sequenceBits = 15L;
-  private static long timestampLeftShift = sequenceBits;
-  private static long sequenceMask = -1L ^ (-1L << sequenceBits);
+  /** Tue Jan 01 00:00:00 CST 2021 */
+  private static final long timeStart = 1609459200000L;
+
+  private static final long sequenceBits = 15L;
+  private static final long timestampLeftShift = sequenceBits;
+  private static final long sequenceMask = -1L ^ (-1L << sequenceBits);
 
   private static long lastTimestamp = -1L;
 
+  private static final long registryMinVersion = (timeStart - twepoch) << timestampLeftShift;
+
   public static synchronized long nextId() {
     long timestamp = timeGen();
-
     if (timestamp < lastTimestamp) {
       throw new RuntimeException(
           String.format(
@@ -56,13 +71,14 @@ public final class DatumVersionUtil {
     } else {
       sequence = 0L;
     }
-
     lastTimestamp = timestamp;
-
     return ((timestamp - twepoch) << timestampLeftShift) | sequence;
   }
 
   public static long getRealTimestamp(long id) {
+    if (versionType(id).equals(DATUM_VERSION_TYPE_CONFREG)) {
+      return id;
+    }
     return (id >> timestampLeftShift) + twepoch;
   }
 
@@ -72,6 +88,32 @@ public final class DatumVersionUtil {
       timestamp = timeGen();
     }
     return timestamp;
+  }
+
+  public static boolean useConfregVersionGen() {
+    return datumVersionType.equals(DATUM_VERSION_TYPE_CONFREG);
+  }
+
+  public static long confregNextId(long lastVersion) {
+    long timestamp = timeGen();
+    if (lastVersion < timestamp) {
+      return timestamp;
+    }
+    if (lastVersion > timestamp + 10) {
+      LOG.warn(
+          "[DatumVersion] last version {} is higher than currentTimestamp {}",
+          lastVersion,
+          timestamp);
+    }
+    return lastVersion + 1;
+  }
+
+  @VisibleForTesting
+  static String versionType(long version) {
+    if (version > registryMinVersion) {
+      return DATUM_VERSION_TYPE_REGISTRY;
+    }
+    return DATUM_VERSION_TYPE_CONFREG;
   }
 
   private static long timeGen() {

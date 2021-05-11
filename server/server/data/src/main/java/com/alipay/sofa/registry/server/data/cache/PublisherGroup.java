@@ -69,7 +69,11 @@ public final class PublisherGroup {
     this.dataId = WordCache.getWordCache(dataInfo.getDataId());
     this.instanceId = WordCache.getWordCache(dataInfo.getInstanceId());
     this.group = WordCache.getWordCache(dataInfo.getGroup());
-    this.version = DatumVersionUtil.nextId();
+    if (DatumVersionUtil.useConfregVersionGen()) {
+      this.version = DatumVersionUtil.confregNextId(0);
+    } else {
+      this.version = DatumVersionUtil.nextId();
+    }
   }
 
   DatumVersion getVersion() {
@@ -122,12 +126,18 @@ public final class PublisherGroup {
   }
 
   DatumVersion updateVersion() {
-    this.version = DatumVersionUtil.nextId();
+    if (DatumVersionUtil.useConfregVersionGen()) {
+      long lastVersion = this.version;
+      this.version = DatumVersionUtil.confregNextId(lastVersion);
+    } else {
+      this.version = DatumVersionUtil.nextId();
+    }
     return new DatumVersion(version);
   }
 
   private boolean tryAddPublisher(Publisher publisher) {
     PublisherEnvelope exist = pubMap.get(publisher.getRegisterId());
+
     final RegisterVersion registerVersion = publisher.registerVersion();
     if (exist != null) {
       if (exist.registerVersion.equals(registerVersion)) {
