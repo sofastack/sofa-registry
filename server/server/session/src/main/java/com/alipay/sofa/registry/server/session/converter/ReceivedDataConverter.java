@@ -26,6 +26,7 @@ import com.alipay.sofa.registry.core.model.ReceivedData;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.util.DatumVersionUtil;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -130,8 +131,7 @@ public final class ReceivedDataConverter {
     receivedConfigData.setDataId(dataInfo.getDataId());
     receivedConfigData.setGroup(dataInfo.getGroup());
     receivedConfigData.setInstanceId(dataInfo.getInstanceId());
-    receivedConfigData.setVersion(version);
-
+    receivedConfigData.setVersion(DatumVersionUtil.transferDatumVersion(version));
     return receivedConfigData;
   }
 }
