@@ -42,5 +42,5 @@ public interface AppRevisionRepository {
    */
   public AppRevision queryRevision(String revision);
 
-  public AppRevision heartbeat(String revision);
+  public boolean heartbeat(String revision);
 }

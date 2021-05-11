@@ -80,9 +80,9 @@
     </update>
 
 
-    <select id="queryGcRevision" resultMap="appRevisionResultMap">
+    <select id="queryGcRevision" resultType="java.lang.String">
         <![CDATA[
-         select * from app_revision
+         select revision from app_revision
                           where data_center = #{dataCenter} and gmt_modified < #{date} limit #{limitCount}
 
         ]]>

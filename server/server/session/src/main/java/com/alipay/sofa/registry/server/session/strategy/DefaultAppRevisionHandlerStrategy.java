@@ -92,7 +92,13 @@ public class DefaultAppRevisionHandlerStrategy implements AppRevisionHandlerStra
     try {
       for (String revision : revisions) {
         queryRevision = revision;
-        AppRevision appRevision = appRevisionCacheService.getRevision(revision);
+        AppRevision appRevision;
+        try {
+          appRevision = appRevisionCacheService.getRevision(revision);
+        } catch (Throwable e) {
+          LOG.error("query revision {} error", queryRevision, e);
+          continue;
+        }
         if (appRevision == null) {
           statusCode = ValueConstants.METADATA_STATUS_DATA_NOT_FOUND;
           String msg = StringFormatter.format("query revision not found, {}", revision);
@@ -121,8 +127,8 @@ public class DefaultAppRevisionHandlerStrategy implements AppRevisionHandlerStra
     for (String revision : revisions) {
       // avoid the error break the heartbeat of next revisions
       try {
-        AppRevision appRevision = appRevisionHeartbeatRegistry.heartbeat(revision);
-        if (appRevision == null) {
+        boolean success = appRevisionHeartbeatRegistry.heartbeat(revision);
+        if (!success) {
           statusCode = ValueConstants.METADATA_STATUS_DATA_NOT_FOUND;
           String msg = StringFormatter.format("heartbeat revision not found, {}", revision);
           builder.setMessage(msg);

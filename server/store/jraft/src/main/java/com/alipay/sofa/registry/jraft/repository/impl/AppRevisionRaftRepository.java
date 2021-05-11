@@ -18,7 +18,6 @@ package com.alipay.sofa.registry.jraft.repository.impl;
 
 import com.alipay.sofa.registry.common.model.store.AppRevision;
 import com.alipay.sofa.registry.store.api.repository.AppRevisionRepository;
-import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -47,11 +46,7 @@ public class AppRevisionRaftRepository implements AppRevisionRepository {
   }
 
   @Override
-  public AppRevision heartbeat(String revision) {
-    AppRevision appRevision = registry.get(revision);
-    if (appRevision != null) {
-      appRevision.setLastHeartbeat(new Date());
-    }
-    return appRevision;
+  public boolean heartbeat(String revision) {
+    return false;
   }
 }
