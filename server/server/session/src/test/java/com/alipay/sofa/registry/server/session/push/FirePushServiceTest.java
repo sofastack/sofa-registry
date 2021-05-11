@@ -99,8 +99,9 @@ public class FirePushServiceTest {
   public void testExecuteOnChange() {
     FirePushService svc = mockFirePushService();
 
+    final long now = System.currentTimeMillis();
     // datum is null
-    Assert.assertFalse(svc.doExecuteOnChange("testDc", "testDataId", 100));
+    Assert.assertFalse(svc.doExecuteOnChange(now, "testDc", "testDataId", 100));
     SubDatum datum = TestUtils.newSubDatum("testDataId", 200, Collections.emptyList());
 
     // get the datum
@@ -109,7 +110,7 @@ public class FirePushServiceTest {
         .thenReturn(new Value(datum));
     Mockito.when(svc.sessionInterests.getDatas(Mockito.anyObject()))
         .thenReturn(Collections.singletonList(subscriber));
-    Assert.assertTrue(svc.doExecuteOnChange("testDc", "testDataId", 100));
+    Assert.assertTrue(svc.doExecuteOnChange(now, "testDc", "testDataId", 100));
     Mockito.verify(svc.pushProcessor, Mockito.times(1))
         .firePush(
             Mockito.anyObject(), Mockito.anyObject(), Mockito.anyObject(), Mockito.anyObject());
@@ -120,19 +121,20 @@ public class FirePushServiceTest {
         .thenReturn(new Value(datum));
     Mockito.when(svc.sessionCacheService.getValue(Mockito.anyObject()))
         .thenReturn(new Value(datum));
-    Assert.assertFalse(svc.doExecuteOnChange("testDc", "testDataId", 100));
+    Assert.assertFalse(svc.doExecuteOnChange(now, "testDc", "testDataId", 100));
   }
 
   @Test
   public void testChangeHandler() {
+    final long now = System.currentTimeMillis();
     FirePushService svc = mockFirePushService();
     Mockito.when(svc.sessionCacheService.getValue(Mockito.anyObject()))
         .thenThrow(new RuntimeException());
-    Assert.assertFalse(svc.changeHandler.onChange("testDc", "testDataId", 100));
+    Assert.assertFalse(svc.changeHandler.onChange(now, "testDc", "testDataId", 100));
     SubDatum datum = TestUtils.newSubDatum("testDataId", 200, Collections.emptyList());
     Mockito.when(svc.sessionCacheService.getValueIfPresent(Mockito.anyObject()))
         .thenReturn(new Value(datum));
-    Assert.assertTrue(svc.changeHandler.onChange("testDc", "testDataId", 100));
+    Assert.assertTrue(svc.changeHandler.onChange(now, "testDc", "testDataId", 100));
   }
 
   @Test

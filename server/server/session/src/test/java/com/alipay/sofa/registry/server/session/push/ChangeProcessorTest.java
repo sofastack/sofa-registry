@@ -75,7 +75,7 @@ public class ChangeProcessorTest {
     Assert.assertTrue(replaceTask == overwriteTask);
     Assert.assertEquals(overwriteTask.expectDatumVersion, 1200);
     worker.runUnthrowable();
-    verify(handler, times(1)).onChange(anyString(), anyString(), anyLong());
+    verify(handler, times(1)).onChange(anyLong(), anyString(), anyString(), anyLong());
   }
 
   @Test
@@ -101,7 +101,7 @@ public class ChangeProcessorTest {
     Assert.assertNotNull(processor.workerOf(key));
     processor.fireChange(dataCenter, dataInfoId, handler, 100);
     Thread.sleep(configBean.getDataChangeDebouncingMillis() + 100);
-    verify(handler, times(1)).onChange(anyString(), anyString(), anyLong());
+    verify(handler, times(1)).onChange(anyLong(), anyString(), anyString(), anyLong());
   }
 
   @Test

@@ -51,7 +51,9 @@ public final class PushTrace {
   long datumModifyDelayMillis;
   // push.finish - datum.versionTs
   long datumTotalDelayMillis;
-  // commit - datum.modify
+  // exec.start - datum.modify
+  long datumPushTriggerSpanMillis;
+  // commit - exec.start
   long datumPushCommitSpanMillis;
   // push.start - fetch.finish
   long datumPushStartSpanMillis;
@@ -105,7 +107,7 @@ public final class PushTrace {
   public void print() {
     calc();
     LOGGER.info(
-        "{},{},{},{},{},cause={},pubNum={},pubBytes={},pubNew={},delay={},{},{},{},{},firstPubDelay={},lastPubDelay={},subNum={},addr={}",
+        "{},{},{},{},{},{},cause={},pubNum={},pubBytes={},pubNew={},delay={},{},{},{},{},firstPubDelay={},lastPubDelay={},subNum={},addr={}",
         status,
         datum.getDataInfoId(),
         datum.getVersion(),
@@ -117,6 +119,7 @@ public final class PushTrace {
         newPublisherNum,
         datumModifyDelayMillis,
         datumTotalDelayMillis,
+        datumPushTriggerSpanMillis,
         datumPushCommitSpanMillis,
         datumPushStartSpanMillis,
         datumPushFinishSpanMillis,
@@ -130,7 +133,9 @@ public final class PushTrace {
     // try find the earliest and the latest publisher after the subPushedVersion
     // that means the modify after last push, but this could not handle the publisher.remove
     this.datumTotalDelayMillis = pushFinishTimestamp - pushCause.triggerTimestamp;
-    this.datumPushCommitSpanMillis = pushCommitTimestamp - pushCause.triggerTimestamp;
+    this.datumPushTriggerSpanMillis =
+        Math.max(pushCause.startTimestamp - pushCause.triggerTimestamp, 0);
+    this.datumPushCommitSpanMillis = pushCommitTimestamp - pushCause.startTimestamp;
     this.datumPushStartSpanMillis = pushStartTimestamp - pushCommitTimestamp;
     this.datumPushFinishSpanMillis = pushFinishTimestamp - pushStartTimestamp;
 

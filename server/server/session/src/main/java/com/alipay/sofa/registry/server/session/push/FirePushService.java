@@ -87,7 +87,8 @@ public class FirePushService {
 
   public boolean fireOnPushEmpty(Subscriber subscriber) {
     SubDatum emptyDatum = DatumUtils.newEmptySubDatum(subscriber, getDataCenterWhenPushEmpty());
-    PushCause cause = new PushCause(PushType.Empty, System.currentTimeMillis());
+    final long now = System.currentTimeMillis();
+    PushCause cause = new PushCause(now, PushType.Empty, now);
     processPush(cause, emptyDatum, Collections.singletonList(subscriber));
     PUSH_EMPTY_COUNTER.inc();
     LOGGER.info("firePushEmpty, {}", subscriber);
@@ -121,7 +122,8 @@ public class FirePushService {
     try {
       DataInfo dataInfo = DataInfo.valueOf(datum.getDataInfoId());
       Collection<Subscriber> subscribers = sessionInterests.getInterests(dataInfo.getDataInfoId());
-      final PushCause cause = new PushCause(PushType.Temp, System.currentTimeMillis());
+      final long now = System.currentTimeMillis();
+      final PushCause cause = new PushCause(now, PushType.Temp, now);
       processPush(cause, datum, subscribers);
       PUSH_TEMP_COUNTER.inc();
       return true;
@@ -136,7 +138,8 @@ public class FirePushService {
     return sessionServerConfig.getSessionServerDataCenter();
   }
 
-  boolean doExecuteOnChange(String dataCenter, String changeDataInfoId, long expectVersion) {
+  boolean doExecuteOnChange(
+      long startTimestamp, String dataCenter, String changeDataInfoId, long expectVersion) {
     final SubDatum datum = getDatum(dataCenter, changeDataInfoId, expectVersion);
     if (datum == null) {
       // datum change, but get null datum, should not happen
@@ -152,15 +155,15 @@ public class FirePushService {
           expectVersion);
       return false;
     }
-    onDatumChange(datum);
+    onDatumChange(startTimestamp, datum);
     return true;
   }
 
-  private void onDatumChange(SubDatum datum) {
+  private void onDatumChange(long startTimestamp, SubDatum datum) {
     Map<ScopeEnum, List<Subscriber>> scopes =
         SubscriberUtils.groupByScope(sessionInterests.getDatas(datum.getDataInfoId()));
     final long triggerPushTs = PushTrace.getTriggerPushTimestamp(datum);
-    final PushCause cause = new PushCause(PushType.Sub, triggerPushTs);
+    final PushCause cause = new PushCause(startTimestamp, PushType.Sub, triggerPushTs);
     for (Map.Entry<ScopeEnum, List<Subscriber>> scope : scopes.entrySet()) {
       processPush(cause, datum, scope.getValue());
     }
@@ -221,10 +224,11 @@ public class FirePushService {
   final class ChangeHandler implements ChangeProcessor.ChangeHandler {
 
     @Override
-    public boolean onChange(String dataCenter, String dataInfoId, long expectDatumVersion) {
+    public boolean onChange(
+        long startTimestamp, String dataCenter, String dataInfoId, long expectDatumVersion) {
       try {
         CHANGE_TASK_EXEC_COUNTER.inc();
-        doExecuteOnChange(dataCenter, dataInfoId, expectDatumVersion);
+        doExecuteOnChange(startTimestamp, dataCenter, dataInfoId, expectDatumVersion);
         return true;
       } catch (Throwable e) {
         LOGGER.error(
@@ -249,7 +253,8 @@ public class FirePushService {
       LOGGER.warn("[registerEmptyPush] {},{},{}", subDataInfoId, dataCenter, subscriber);
     }
 
-    PushCause cause = new PushCause(PushType.Reg, subscriber.getRegisterTimestamp());
+    PushCause cause =
+        new PushCause(System.currentTimeMillis(), PushType.Reg, subscriber.getRegisterTimestamp());
     processPush(cause, datum, Collections.singletonList(subscriber));
     return true;
   }
