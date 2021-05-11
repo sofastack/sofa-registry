@@ -67,4 +67,23 @@ public class DatumVersionUtilTest {
         DatumVersionUtil.versionType(DatumVersionUtil.nextId()),
         DatumVersionUtil.DATUM_VERSION_TYPE_REGISTRY);
   }
+
+  @Test
+  public void testTransferDatumVersion() {
+    DatumVersionUtil.datumVersionType = DatumVersionUtil.DATUM_VERSION_TYPE_CONFREG;
+    Assert.assertEquals(DatumVersionUtil.transferDatumVersion(0), 0);
+    Assert.assertEquals(DatumVersionUtil.transferDatumVersion(1), 1);
+    long timestamp = System.currentTimeMillis();
+    Assert.assertEquals(DatumVersionUtil.transferDatumVersion(timestamp), timestamp);
+    long version = DatumVersionUtil.nextId();
+    Assert.assertEquals(
+        DatumVersionUtil.transferDatumVersion(version), DatumVersionUtil.getRealTimestamp(version));
+
+    DatumVersionUtil.datumVersionType = DatumVersionUtil.DATUM_VERSION_TYPE_REGISTRY;
+    Assert.assertEquals(DatumVersionUtil.transferDatumVersion(0), 0);
+    Assert.assertEquals(DatumVersionUtil.transferDatumVersion(1), 1);
+
+    version = DatumVersionUtil.nextId();
+    Assert.assertEquals(DatumVersionUtil.transferDatumVersion(version), version);
+  }
 }
