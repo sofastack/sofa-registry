@@ -42,27 +42,35 @@ public class RegistryOpsResource {
   @Path("/server/group/quit")
   @Produces(MediaType.APPLICATION_JSON)
   public CommonResponse kickOffMyself() {
+    LOGGER.info("[kickOffMyself] begin");
+    CommonResponse response = null;
     try {
       metaServerService.addSelfToMetaBlacklist();
       metaServerService.suspendRenewer();
-      return GenericResponse.buildSuccessResponse();
+      response = GenericResponse.buildSuccessResponse();
     } catch (Throwable th) {
       LOGGER.error("[kickOffMyself]", th);
-      return GenericResponse.buildFailedResponse(th.getMessage());
+      response = GenericResponse.buildFailedResponse(th.getMessage());
     }
+    LOGGER.info("[kickOffMyself] end, response: {}", response);
+    return response;
   }
 
   @PUT
   @Path("/server/group/join")
   @Produces(MediaType.APPLICATION_JSON)
   public CommonResponse putMyselfBack() {
+    LOGGER.info("[putMyselfBack] begin");
+    CommonResponse response = null;
     try {
       metaServerService.resumeRenewer();
       metaServerService.removeSelfFromMetaBlacklist();
-      return GenericResponse.buildSuccessResponse();
+      response = GenericResponse.buildSuccessResponse();
     } catch (Throwable th) {
       LOGGER.error("[putMyselfBack]", th);
-      return GenericResponse.buildFailedResponse(th.getMessage());
+      response = GenericResponse.buildFailedResponse(th.getMessage());
     }
+    LOGGER.info("[putMyselfBack] end, response: {}", response);
+    return response;
   }
 }
