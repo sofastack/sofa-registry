@@ -20,10 +20,13 @@ import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.metaserver.Lease;
 import com.alipay.sofa.registry.exception.DisposeException;
 import com.alipay.sofa.registry.exception.InitializeException;
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.lease.Evictable;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import com.google.common.collect.Lists;
+
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -33,6 +36,7 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public abstract class AbstractEvictableLeaseManager<T extends Node>
     extends LeaderAwareLeaseManager<T> implements Evictable {
+  private static final Logger EVICT_LOG = LoggerFactory.getLogger("EVICT");
 
   private final AtomicLong lastEvictTime = new AtomicLong();
 
@@ -65,7 +69,7 @@ public abstract class AbstractEvictableLeaseManager<T extends Node>
     for (Lease<T> lease : expirations) {
       Lease<T> doubleCheck = getLease(lease.getRenewal());
       if (doubleCheck.isExpired()) {
-        logger.warn("[evict] node evict [{}], cancel it and refresh epoch", doubleCheck);
+        EVICT_LOG.info("[evict]{},{}", doubleCheck.getRenewal().getNodeType(), doubleCheck);
         try {
           cancel(lease);
         } catch (Throwable th) {
@@ -85,23 +89,22 @@ public abstract class AbstractEvictableLeaseManager<T extends Node>
     return expires;
   }
 
-  protected abstract long getEvictBetweenMilli();
+  protected abstract int getEvictBetweenMilli();
 
-  protected abstract long getIntervalMilli();
+  protected abstract int getIntervalMilli();
 
   private final class EvictTask extends WakeUpLoopRunnable {
 
     @Override
     public int getWaitingMillis() {
-      return (int) getIntervalMilli();
+      return getIntervalMilli();
     }
 
     @Override
     public void runUnthrowable() {
       if (amILeader() && metaLeaderService.amIStableAsLeader()) {
-        logger.debug("[evict] begin");
+        logger.info("[evict] begin");
         evict();
-        logger.debug("[evict] end");
       }
     }
   }
