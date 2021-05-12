@@ -44,6 +44,7 @@ public class RegistryForbiddenServerHandler
 
   @Override
   public Object doHandle(Channel channel, RegistryForbiddenServerRequest request) {
+    LOGGER.info("[doHandle] from {}, request: {}", channel.getRemoteAddress().getHostName(), request);
     if (!metaLeaderService.amILeader()) {
       buildFailedResponse("not leader");
     }
