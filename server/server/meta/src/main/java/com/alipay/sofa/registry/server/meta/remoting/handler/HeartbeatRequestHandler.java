@@ -49,8 +49,8 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class HeartbeatRequestHandler extends BaseMetaServerHandler<HeartbeatRequest<Node>> {
-
-  private static final Logger logger = LoggerFactory.getLogger(HeartbeatRequestHandler.class);
+  private static final Logger HEARTBEAT_LOG = LoggerFactory.getLogger("HEARTBEAT");
+  private static final Logger LOGGER = LoggerFactory.getLogger(HeartbeatRequestHandler.class);
 
   @Autowired private DefaultCurrentDcMetaServer currentDcMetaServer;
 
@@ -73,9 +73,9 @@ public class HeartbeatRequestHandler extends BaseMetaServerHandler<HeartbeatRequ
    */
   @Override
   public Object doHandle(Channel channel, HeartbeatRequest<Node> heartbeat) {
-    Node renewNode = null;
+    boolean success = false;
+    final Node renewNode = heartbeat.getNode();
     try {
-      renewNode = heartbeat.getNode();
       onHeartbeat(heartbeat, channel);
 
       SlotTable slotTable = currentDcMetaServer.getSlotTable();
@@ -113,7 +113,7 @@ public class HeartbeatRequestHandler extends BaseMetaServerHandler<HeartbeatRequ
         default:
           break;
       }
-
+      success = true;
       return new GenericResponse<BaseHeartBeatResponse>().fillSucceed(response);
     } catch (Throwable e) {
       if (e instanceof SofaRegistryMetaLeaderException) {
@@ -123,9 +123,15 @@ public class HeartbeatRequestHandler extends BaseMetaServerHandler<HeartbeatRequ
         return new GenericResponse<BaseHeartBeatResponse>().fillFailData(response);
       }
 
-      logger.error("Node {} renew error!", renewNode, e);
+      LOGGER.error("Node {} renew error!", renewNode, e);
       return new GenericResponse<BaseHeartBeatResponse>()
           .fillFailed("Node " + renewNode + "renew error!");
+    } finally {
+      HEARTBEAT_LOG.info(
+          "{},{},addr={}",
+          success ? 'Y' : 'N',
+          renewNode.getNodeType(),
+          channel.getRemoteAddress());
     }
   }
 
@@ -162,7 +168,7 @@ public class HeartbeatRequestHandler extends BaseMetaServerHandler<HeartbeatRequ
           try {
             listener.onHeartbeat(heartbeat);
           } catch (Throwable th) {
-            logger.error("[onDataHeartbeat]", th);
+            LOGGER.error("[onDataHeartbeat]", th);
           }
         });
   }
@@ -176,7 +182,7 @@ public class HeartbeatRequestHandler extends BaseMetaServerHandler<HeartbeatRequ
           try {
             listener.onHeartbeat(heartbeat);
           } catch (Throwable th) {
-            logger.error("[onDataHeartbeat]", th);
+            LOGGER.error("[onDataHeartbeat]", th);
           }
         });
   }

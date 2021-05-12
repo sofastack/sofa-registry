@@ -33,6 +33,7 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.exchange.message.Response;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
+import com.alipay.sofa.registry.util.StringFormatter;
 import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
@@ -48,6 +49,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
     implements MetaServerService {
   protected final Logger LOGGER = LoggerFactory.getLogger(getClass());
+  protected final Logger RENEW_ERROR_LOG = LoggerFactory.getLogger("RENEW-ERROR");
 
   @Autowired protected MetaServerManager metaServerManager;
 
@@ -150,44 +152,42 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
   }
 
   void handleHeartbeatResponse(GenericResponse<T> resp) {
-    if (resp != null) {
-      if (resp.isSuccess()) {
-        updateState(resp.getData());
-        metaServerManager.refresh(resp.getData());
-        handleRenewResult(resp.getData());
-        renewFailCounter.set(0);
-      } else {
-        T data = resp.getData();
-        if (data == null) {
-          // could no get data, trigger the counter inc
-          throw new RuntimeException(
-              "renew node to metaServer error, resp.data is null, msg:" + resp.getMessage());
-        }
-        // heartbeat on follow, refresh leader;
-        // it will renewNode on leader next time;
-        if (!data.isHeartbeatOnLeader()) {
-          metaServerManager.refresh(data);
-          // refresh the leader from follower, but the info maybe is incorrect
-          // throw the exception to trigger the counter inc
-          // if the info is correct, the counter would be reset after heartbeat
-          throw new RuntimeException(
-              "renew node to metaServer.follower, leader is "
-                  + new LeaderInfo(data.getMetaLeaderEpoch(), data.getMetaLeader()));
-        } else {
-          LOGGER.error(
-              "[RenewNodeTask] renew node to metaServer.leader error, msg={}, data={}",
-              resp.getMessage(),
-              data);
-        }
-      }
-    } else {
+    if (resp == null) {
       throw new RuntimeException("renew node to metaServer error : resp is null");
+    }
+    if (resp.isSuccess()) {
+      updateState(resp.getData());
+      metaServerManager.refresh(resp.getData());
+      handleRenewResult(resp.getData());
+      renewFailCounter.set(0);
+    } else {
+      T data = resp.getData();
+      if (data == null) {
+        // could no get data, trigger the counter inc
+        throw new RuntimeException(
+            "renew node to metaServer error, resp.data is null, msg:" + resp.getMessage());
+      }
+      // heartbeat on follow, refresh leader;
+      // it will renewNode on leader next time;
+      if (!data.isHeartbeatOnLeader()) {
+        metaServerManager.refresh(data);
+        // refresh the leader from follower, but the info maybe is incorrect
+        // throw the exception to trigger the counter inc
+        // if the info is correct, the counter would be reset after heartbeat
+        throw new RuntimeException(
+            "renew node to metaServer.follower, leader is "
+                + new LeaderInfo(data.getMetaLeaderEpoch(), data.getMetaLeader()));
+      } else {
+        throw new RuntimeException(
+            StringFormatter.format(
+                "renew node to metaServer.leader error, msg={}, data={}", resp.getMessage(), data));
+      }
     }
   }
 
   void handleHeartbeatFailed(String leaderIp, Throwable e) {
     renewFailCounter.incrementAndGet();
-    LOGGER.error(
+    RENEW_ERROR_LOG.error(
         "[RenewNodeTask] renew node to metaServer error, fail count:{}, leader: {}",
         renewFailCounter.get(),
         leaderIp,

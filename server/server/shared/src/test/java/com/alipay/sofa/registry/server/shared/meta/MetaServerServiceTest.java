@@ -90,18 +90,19 @@ public class MetaServerServiceTest {
     heartBeatResponse =
         new BaseHeartBeatResponse(
             true,
-            new VersionedList(2, Lists.newArrayList(new MetaNode(new URL("metaNode1"), "dc1"))),
+            new VersionedList(2, Lists.newArrayList(new MetaNode(new URL("192.168.1.1"), "dc1"))),
             new SlotTable(10, Collections.emptyList()),
             new VersionedList(
                 1,
                 Lists.newArrayList(
-                    new SessionNode(new URL("sessionNode1"), "zoneA", ServerEnv.PROCESS_ID),
+                    new SessionNode(new URL("192.168.1.2"), "zoneA", ServerEnv.PROCESS_ID),
                     new SessionNode(
-                        new URL("sessionNode2"), "zoneB", new ProcessId("test", 1, 1, 1)))),
+                        new URL("192.168.1.3"), "zoneB", new ProcessId("test", 1, 1, 1)))),
             "test",
             100);
     resp.setData(heartBeatResponse);
-    mockServerService.handleHeartbeatResponse(resp);
+    TestUtils.assertRunException(
+            RuntimeException.class, () -> mockServerService.handleHeartbeatResponse(resp));
     Mockito.verify(mockServerService.metaServerManager, Mockito.times(1))
         .refresh(Mockito.anyObject());
 
@@ -114,15 +115,15 @@ public class MetaServerServiceTest {
     Assert.assertEquals(mockServerService.renewFailCounter.get(), 0);
     Assert.assertEquals(1, mockServerService.getSessionServerEpoch());
     Assert.assertEquals(
-        mockServerService.getSessionServerList(), Sets.newHashSet("sessionNode1", "sessionNode2"));
+        mockServerService.getSessionServerList(), Sets.newHashSet("192.168.1.2", "192.168.1.3"));
     Assert.assertEquals(mockServerService.getDataCenters(), Sets.newHashSet("dc1"));
     Map<String, SessionNode> sessionNodeMap = mockServerService.getSessionNodes();
     Assert.assertEquals(sessionNodeMap.size(), 2);
     Assert.assertEquals(sessionNodeMap.keySet(), mockServerService.getSessionServerList());
     List<String> zones = mockServerService.getSessionServerList("");
     Assert.assertEquals(zones.size(), 2);
-    Assert.assertTrue(zones.contains("sessionNode1"));
-    Assert.assertTrue(zones.contains("sessionNode2"));
+    Assert.assertTrue(zones.contains("192.168.1.2"));
+    Assert.assertTrue(zones.contains("192.168.1.3"));
 
     Assert.assertEquals(2, mockServerService.getSessionProcessIds().size());
     Assert.assertTrue(mockServerService.getSessionProcessIds().contains(ServerEnv.PROCESS_ID));
@@ -131,7 +132,7 @@ public class MetaServerServiceTest {
 
     zones = mockServerService.getSessionServerList("zoneA");
     Assert.assertEquals(zones.size(), 1);
-    Assert.assertTrue(zones.contains("sessionNode1"));
+    Assert.assertTrue(zones.contains("192.168.1.2"));
   }
 
   @Test
