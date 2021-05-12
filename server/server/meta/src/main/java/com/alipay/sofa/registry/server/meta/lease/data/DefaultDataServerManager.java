@@ -118,12 +118,12 @@ public class DefaultDataServerManager extends AbstractEvictableFilterableLeaseMa
   }
 
   @Override
-  protected long getIntervalMilli() {
+  protected int getIntervalMilli() {
     return metaServerConfig.getExpireCheckIntervalMillis();
   }
 
   @Override
-  protected long getEvictBetweenMilli() {
+  protected int getEvictBetweenMilli() {
     return metaServerConfig.getExpireCheckIntervalMillis();
   }
 

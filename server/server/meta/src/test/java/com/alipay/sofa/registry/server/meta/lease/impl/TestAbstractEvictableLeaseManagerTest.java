@@ -44,12 +44,12 @@ public class TestAbstractEvictableLeaseManagerTest extends AbstractMetaServerTes
     leaseManager =
         new AbstractEvictableFilterableLeaseManager<SimpleNode>() {
           @Override
-          protected long getEvictBetweenMilli() {
+          protected int getEvictBetweenMilli() {
             return evictTime.get();
           }
 
           @Override
-          protected long getIntervalMilli() {
+          protected int getIntervalMilli() {
             return 60 * 1000;
           }
         };

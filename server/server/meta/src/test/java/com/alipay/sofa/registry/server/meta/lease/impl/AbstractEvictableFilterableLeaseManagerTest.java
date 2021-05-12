@@ -40,12 +40,12 @@ public class AbstractEvictableFilterableLeaseManagerTest extends AbstractMetaSer
     leaseManager =
         new AbstractEvictableFilterableLeaseManager() {
           @Override
-          protected long getEvictBetweenMilli() {
+          protected int getEvictBetweenMilli() {
             return 10;
           }
 
           @Override
-          protected long getIntervalMilli() {
+          protected int getIntervalMilli() {
             return 1000;
           }
         };
