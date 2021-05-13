@@ -102,7 +102,7 @@ public class MetaServerServiceTest {
             100);
     resp.setData(heartBeatResponse);
     TestUtils.assertRunException(
-            RuntimeException.class, () -> mockServerService.handleHeartbeatResponse(resp));
+        RuntimeException.class, () -> mockServerService.handleHeartbeatResponse(resp));
     Mockito.verify(mockServerService.metaServerManager, Mockito.times(1))
         .refresh(Mockito.anyObject());
 

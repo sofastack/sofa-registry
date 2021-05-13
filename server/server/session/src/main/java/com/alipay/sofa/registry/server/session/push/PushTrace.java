@@ -60,6 +60,9 @@ public final class PushTrace {
   // push.finish - push.start
   long datumPushFinishSpanMillis;
 
+  // push.start - exec.start
+  long datumPushSessionSpanMillis;
+
   // pub after last push
   int newPublisherNum;
   // push.finish - firstPub.registerTimestamp
@@ -107,7 +110,7 @@ public final class PushTrace {
   public void print() {
     calc();
     LOGGER.info(
-        "{},{},{},{},{},{},cause={},pubNum={},pubBytes={},pubNew={},delay={},{},{},{},{},firstPubDelay={},lastPubDelay={},subNum={},addr={}",
+        "{},{},{},{},{},cause={},pubNum={},pubBytes={},pubNew={},delay={},{},{},{},{},session={},cliIO={},firstPubDelay={},lastPubDelay={},subNum={},addr={}",
         status,
         datum.getDataInfoId(),
         datum.getVersion(),
@@ -122,6 +125,7 @@ public final class PushTrace {
         datumPushTriggerSpanMillis,
         datumPushCommitSpanMillis,
         datumPushStartSpanMillis,
+        datumPushSessionSpanMillis,
         datumPushFinishSpanMillis,
         firstPubPushDelayMillis,
         lastPubPushDelayMillis,
@@ -138,7 +142,7 @@ public final class PushTrace {
     this.datumPushCommitSpanMillis = pushCommitTimestamp - pushCause.startTimestamp;
     this.datumPushStartSpanMillis = pushStartTimestamp - pushCommitTimestamp;
     this.datumPushFinishSpanMillis = pushFinishTimestamp - pushStartTimestamp;
-
+    this.datumPushSessionSpanMillis = pushStartTimestamp - pushCause.startTimestamp;
     final List<SubPublisher> publishers = datum.getPublishers();
     final long lastPushTimestamp =
         subscriberPushedVersion <= ValueConstants.DEFAULT_NO_DATUM_VERSION
