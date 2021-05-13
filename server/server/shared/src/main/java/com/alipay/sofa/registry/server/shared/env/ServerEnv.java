@@ -17,11 +17,13 @@
 package com.alipay.sofa.registry.server.shared.env;
 
 import com.alipay.sofa.registry.common.model.ProcessId;
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
-import java.util.Collection;
-import java.util.Map;
-import java.util.Random;
+import java.io.InputStream;
+import java.util.*;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 
 /**
@@ -29,8 +31,11 @@ import org.apache.commons.lang.StringUtils;
  * @version v 0.1 2020-11-28 15:25 yuzhi.lyz Exp $
  */
 public final class ServerEnv {
+  private static final Logger LOGGER = LoggerFactory.getLogger(ServerEnv.class);
+
   private ServerEnv() {}
 
+  private static final String GIT_PROPS_FILE = "git.properties";
   public static final String IP = NetUtil.getLocalAddress().getHostAddress();
   public static final int PID = getPID();
   public static final ProcessId PROCESS_ID = createProcessId();
@@ -69,5 +74,23 @@ public final class ServerEnv {
           String.format("LocalDataCenter(%s) is not in metaNode", localDataCenter));
     }
     return addresses;
+  }
+
+  public static Map<String, Object> getReleaseProps() {
+    InputStream inputStream = ServerEnv.class.getClassLoader().getResourceAsStream(GIT_PROPS_FILE);
+    Properties properties = new Properties();
+    if (inputStream != null) {
+      try {
+        properties.load(inputStream);
+      } catch (Throwable e) {
+        LOGGER.warn("failed to load release props file");
+      } finally {
+        IOUtils.closeQuietly(inputStream);
+      }
+    } else {
+      LOGGER.warn(
+          "release props file not found:{}", ServerEnv.class.getClassLoader().getResource("/"));
+    }
+    return new TreeMap<String, Object>((Map) properties);
   }
 }
