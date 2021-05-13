@@ -28,6 +28,7 @@ import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.remoting.meta.MetaNodeExchange;
 import com.alipay.sofa.registry.server.meta.remoting.meta.MetaServerRenewService;
+import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.alipay.sofa.registry.store.api.elector.LeaderElector;
 import com.github.rholder.retry.Retryer;
@@ -118,6 +119,7 @@ public class MetaServerBootstrap {
   /** Do initialized. */
   public void start() {
     try {
+      LOGGER.info("release properties: {}", ServerEnv.getReleaseProps());
       LOGGER.info("the configuration items are as follows: " + metaServerConfig.toString());
       ReporterUtils.enablePrometheusDefaultExports();
 

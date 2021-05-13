@@ -38,4 +38,11 @@ public class ServerEnvTest {
     Collection<String> ret = ServerEnv.getMetaAddresses(m, "localDc");
     Assert.assertEquals(ret, meta);
   }
+
+  @Test
+  public void testRelease() {
+    Map<String, Object> m = ServerEnv.getReleaseProps();
+    Assert.assertFalse(m.toString(), m.isEmpty());
+    System.out.println(m);
+  }
 }
