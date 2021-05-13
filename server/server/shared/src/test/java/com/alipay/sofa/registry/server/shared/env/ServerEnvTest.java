@@ -19,12 +19,13 @@ package com.alipay.sofa.registry.server.shared.env;
 import com.alipay.sofa.registry.server.shared.TestUtils;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import org.junit.Assert;
+import org.junit.Test;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
-import org.junit.Assert;
-import org.junit.Test;
 
 public class ServerEnvTest {
   @Test
@@ -42,7 +43,6 @@ public class ServerEnvTest {
   @Test
   public void testRelease() {
     Map<String, Object> m = ServerEnv.getReleaseProps();
-    Assert.assertFalse(m.toString(), m.isEmpty());
-    System.out.println(m);
+    System.out.println("release:" + m);
   }
 }
