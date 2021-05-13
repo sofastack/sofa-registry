@@ -26,7 +26,6 @@ import com.alipay.sofa.registry.server.meta.lease.Evictable;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import com.google.common.collect.Lists;
-
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
