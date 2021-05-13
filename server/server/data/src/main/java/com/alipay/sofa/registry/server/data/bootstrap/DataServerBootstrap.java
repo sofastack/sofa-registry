@@ -31,6 +31,7 @@ import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.data.change.DataChangeEventCenter;
 import com.alipay.sofa.registry.server.data.lease.SessionLeaseManager;
 import com.alipay.sofa.registry.server.data.slot.SlotManager;
+import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.github.rholder.retry.Retryer;
@@ -118,7 +119,7 @@ public class DataServerBootstrap {
   public void start() {
     try {
       LOGGER.info("begin start server");
-
+      LOGGER.info("release properties: {}", ServerEnv.getReleaseProps());
       LOGGER.info("the configuration items are as follows: " + dataServerConfig.toString());
 
       ReporterUtils.enablePrometheusDefaultExports();

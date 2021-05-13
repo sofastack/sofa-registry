@@ -134,6 +134,7 @@ public class SessionServerBootstrap {
   /** Do initialized. */
   public void start() {
     try {
+      LOGGER.info("release properties: {}", ServerEnv.getReleaseProps());
       LOGGER.info("the configuration items are as follows: " + sessionServerConfig.toString());
 
       initEnvironment();
