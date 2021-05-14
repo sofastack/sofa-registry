@@ -41,6 +41,11 @@ import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import static com.alipay.sofa.registry.jdbc.repository.impl.MetadataMetrics.Fetch.REVISION_CACHE_HIT_COUNTER;
+import static com.alipay.sofa.registry.jdbc.repository.impl.MetadataMetrics.Fetch.REVISION_CACHE_MISS_COUNTER;
+import static com.alipay.sofa.registry.jdbc.repository.impl.MetadataMetrics.Register.REVISION_HEARTBEAT_COUNTER;
+import static com.alipay.sofa.registry.jdbc.repository.impl.MetadataMetrics.Register.REVISION_REGISTER_COUNTER;
+
 /**
  * @author xiaojian.xj
  * @version $Id: AppRevisionJdbcRepository.java, v 0.1 2021年01月17日 15:45 xiaojian.xj Exp $
@@ -74,6 +79,7 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository {
                   @Override
                   public AppRevision load(String revision) throws InterruptedException {
 
+                    REVISION_CACHE_MISS_COUNTER.inc();
                     TaskEvent task = appRevisionBatchQueryCallable.new TaskEvent(revision);
                     InvokeFuture future = appRevisionBatchQueryCallable.commit(task);
 
@@ -113,6 +119,7 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository {
     }
 
     // new revision, save into database
+    REVISION_REGISTER_COUNTER.inc();
 
     // it will ignore ON DUPLICATE KEY, return effect rows number
     interfaceAppsJdbcRepository.batchSave(
@@ -138,6 +145,11 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository {
   public AppRevision queryRevision(String revision) {
 
     try {
+      AppRevision appRevision = registry.getIfPresent(revision);
+      if (appRevision != null) {
+        REVISION_CACHE_HIT_COUNTER.inc();
+        return appRevision;
+      }
       return registry.get(revision);
     } catch (ExecutionException e) {
       if (e.getCause() instanceof RevisionNotExistException) {

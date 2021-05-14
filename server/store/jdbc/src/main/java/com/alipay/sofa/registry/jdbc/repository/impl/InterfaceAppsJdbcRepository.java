@@ -40,6 +40,10 @@ import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 
+import static com.alipay.sofa.registry.jdbc.repository.impl.MetadataMetrics.Fetch.APPS_CACHE_HIT_COUNTER;
+import static com.alipay.sofa.registry.jdbc.repository.impl.MetadataMetrics.Fetch.APPS_CACHE_MISS_COUNTER;
+import static com.alipay.sofa.registry.jdbc.repository.impl.MetadataMetrics.Register.INTERFACE_APPS_REGISTER_COUNTER;
+
 /**
  * @author xiaojian.xj
  * @version $Id: InterfaceAppsJdbcRepository.java, v 0.1 2021年01月24日 19:57 xiaojian.xj Exp $
@@ -106,9 +110,11 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository {
   public InterfaceMapping getAppNames(String dataInfoId) {
     InterfaceMapping appNames = interfaceApps.get(dataInfoId);
     if (appNames != null) {
+      APPS_CACHE_HIT_COUNTER.inc();
       return appNames;
     }
 
+    APPS_CACHE_MISS_COUNTER.inc();
     TaskEvent task = interfaceAppBatchQueryCallable.new TaskEvent(dataInfoId);
     InvokeFuture future = interfaceAppBatchQueryCallable.commit(task);
     try {
@@ -148,6 +154,7 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository {
       if (effectRows == 0) {
         interfaceAppsIndexMapper.insertOnReplace(interfaceApps);
       }
+      INTERFACE_APPS_REGISTER_COUNTER.inc();
     }
   }
 

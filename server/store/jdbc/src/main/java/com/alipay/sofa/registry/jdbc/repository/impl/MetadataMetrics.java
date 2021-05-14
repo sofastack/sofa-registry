@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.metadata;
+package com.alipay.sofa.registry.jdbc.repository.impl;
 
 import io.prometheus.client.Counter;
 
@@ -51,9 +51,9 @@ public class MetadataMetrics {
 
   }
 
-  static final class Register {
+  public static final class Register {
 
-    static final Counter REVISION_REGISTER_COUNTER =
+    public static final Counter REVISION_REGISTER_COUNTER =
         Counter.build()
             .namespace("metadata")
             .subsystem("revision")
@@ -61,7 +61,7 @@ public class MetadataMetrics {
             .help("revision register")
             .register();
 
-    static final Counter REVISION_HEARTBEAT_COUNTER =
+    public static final Counter REVISION_HEARTBEAT_COUNTER =
             Counter.build()
                     .namespace("metadata")
                     .subsystem("revision")
@@ -69,7 +69,7 @@ public class MetadataMetrics {
                     .help("revision register")
                     .register();
 
-    static final Counter REVISION_GC_COUNTER =
+    public static final Counter REVISION_GC_COUNTER =
             Counter.build()
                     .namespace("metadata")
                     .subsystem("revision")
@@ -78,7 +78,7 @@ public class MetadataMetrics {
                     .register();
 
 
-    static final Counter INTERFACE_APPS_REGISTER_COUNTER =
+    public static final Counter INTERFACE_APPS_REGISTER_COUNTER =
             Counter.build()
                     .namespace("metadata")
                     .subsystem("apps")
