@@ -20,6 +20,7 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
+import com.alipay.sofa.registry.util.StringFormatter;
 import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import com.google.common.collect.Maps;
 import java.util.Iterator;
@@ -47,50 +48,46 @@ public class ChangeProcessor {
     }
   }
 
-  boolean fireChange(
-      String dataCenter, String dataInfoId, ChangeHandler handler, long expectDatumVersion) {
-    ChangeKey key = new ChangeKey(dataCenter, dataInfoId);
+  boolean fireChange(String dataInfoId, ChangeHandler handler, TriggerPushContext changeCtx) {
+    ChangeKey key = new ChangeKey(changeCtx.dataCenter, dataInfoId);
     Worker worker = workerOf(key);
-    return worker.commitChange(key, handler, expectDatumVersion);
+    return worker.commitChange(key, handler, changeCtx);
   }
 
   interface ChangeHandler {
-    boolean onChange(
-        long startTimestamp, String dataCenter, String dataInfoId, long expectDatumVersion);
+    boolean onChange(String dataInfoId, TriggerPushContext changeCtx);
   }
 
   static final class ChangeTask {
-    long startTimestamp;
+    final TriggerPushContext changeCtx;
     final ChangeKey key;
     final ChangeHandler changeHandler;
-    long expectDatumVersion;
     final long expireTimestamp;
     long expireDeadlineTimestamp;
 
     ChangeTask(
-        ChangeKey key, long expectDatumVersion, ChangeHandler changeHandler, long expireTimestamp) {
+        ChangeKey key,
+        TriggerPushContext changeCtx,
+        ChangeHandler changeHandler,
+        long expireTimestamp) {
       this.key = key;
       this.changeHandler = changeHandler;
-      this.expectDatumVersion = expectDatumVersion;
+      this.changeCtx = changeCtx;
       this.expireTimestamp = expireTimestamp;
     }
 
     void doChange() {
-      changeHandler.onChange(startTimestamp, key.dataCenter, key.dataInfoId, expectDatumVersion);
+      changeHandler.onChange(key.dataInfoId, changeCtx);
     }
 
     @Override
     public String toString() {
-      return "ChangeTask{"
-          + "key="
-          + key
-          + ", version="
-          + expectDatumVersion
-          + ", expire="
-          + expireTimestamp
-          + ", deadline="
-          + expireDeadlineTimestamp
-          + '}';
+      return StringFormatter.format(
+          "ChangeTask{{},ver={},expire={},deadline={}}",
+          key,
+          changeCtx.getExpectDatumVersion(),
+          expireTimestamp,
+          expireDeadlineTimestamp);
     }
   }
 
@@ -111,11 +108,9 @@ public class ChangeProcessor {
       }
     }
 
-    boolean commitChange(ChangeKey key, ChangeHandler handler, long expectDatumVersion) {
+    boolean commitChange(ChangeKey key, ChangeHandler handler, TriggerPushContext changeCtx) {
       final long now = System.currentTimeMillis();
-      final ChangeTask task =
-          new ChangeTask(key, expectDatumVersion, handler, now + changeDebouncingMillis);
-      task.startTimestamp = now;
+      final ChangeTask task = new ChangeTask(key, changeCtx, handler, now + changeDebouncingMillis);
 
       synchronized (tasks) {
         final ChangeTask exist = tasks.get(key);
@@ -124,20 +119,21 @@ public class ChangeProcessor {
           tasks.put(key, task);
           return true;
         }
-        if (task.expectDatumVersion <= exist.expectDatumVersion) {
+        if (task.changeCtx.getExpectDatumVersion() <= exist.changeCtx.getExpectDatumVersion()) {
           return false;
         }
         // compare with exist
         if (task.expireTimestamp <= exist.expireDeadlineTimestamp) {
           // not reach deadline, requeue to wait
           task.expireDeadlineTimestamp = exist.expireDeadlineTimestamp;
-          task.startTimestamp = exist.startTimestamp;
+          // merge change, use exist.changeTs as current.changeTs
+          task.changeCtx.setTriggerSessionTimestamp(exist.changeCtx.getTriggerSessionTimestamp());
           // tasks is linkedMap, must remove the exist first, then enqueue in the tail
           tasks.remove(key);
           tasks.put(key, task);
         } else {
           // reach deadline, could not requeue, use exist.expire as newTask.expire
-          exist.expectDatumVersion = task.expectDatumVersion;
+          exist.changeCtx.setExpectDatumVersion(task.changeCtx.getExpectDatumVersion());
         }
         return true;
       }

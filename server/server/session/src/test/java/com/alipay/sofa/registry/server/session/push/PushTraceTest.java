@@ -42,12 +42,13 @@ public class PushTraceTest {
 
     SubDatum subDatum = TestUtils.newSubDatum("testDataId", DatumVersionUtil.nextId(), list);
     long now1 = System.currentTimeMillis();
+    TriggerPushContext ctx = new TriggerPushContext("testDc", 100, null, now1);
     PushTrace trace =
         PushTrace.trace(
             subDatum,
             NetUtil.getLocalSocketAddress(),
             "subApp",
-            new PushCause(now1, PushType.Sub, now1),
+            new PushCause(ctx, PushType.Sub, now1),
             1,
             System.currentTimeMillis() - 100);
     long now2 = System.currentTimeMillis();
@@ -59,10 +60,10 @@ public class PushTraceTest {
 
     trace.print();
 
-    Assert.assertEquals(trace.datumTotalDelayMillis, finish - trace.pushCause.triggerTimestamp);
+    Assert.assertEquals(trace.datumTotalDelayMillis, finish - trace.pushCause.datumTimestamp);
     Assert.assertEquals(
         trace.datumPushCommitSpanMillis,
-        trace.pushCommitTimestamp - trace.pushCause.triggerTimestamp);
+        trace.pushCommitTimestamp - trace.pushCause.datumTimestamp);
     Assert.assertEquals(trace.datumPushStartSpanMillis, now2 - trace.pushCommitTimestamp);
     Assert.assertEquals(trace.datumPushFinishSpanMillis, finish - now2);
 

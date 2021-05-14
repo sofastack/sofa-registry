@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.registry.server.session.remoting.handler;
 
-import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.*;
 
@@ -67,7 +66,7 @@ public class DataPushRequestHandlerTest {
     handler.firePushService = mock(FirePushService.class);
     obj = handler.doHandle(null, request());
     Assert.assertNull(obj);
-    verify(handler.firePushService, times(0)).fireOnChange(anyString(), anyString(), anyLong());
+    verify(handler.firePushService, times(0)).fireOnChange(anyString(), anyObject());
   }
 
   private static DataPushRequest request() {

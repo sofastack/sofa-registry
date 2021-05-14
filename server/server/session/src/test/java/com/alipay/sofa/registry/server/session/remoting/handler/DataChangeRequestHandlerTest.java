@@ -67,13 +67,13 @@ public class DataChangeRequestHandlerTest {
         .thenReturn(Interests.InterestVersionCheck.Obsolete);
     obj = handler.doHandle(null, request());
     Assert.assertNull(obj);
-    verify(handler.firePushService, times(0)).fireOnChange(anyString(), anyString(), anyLong());
+    verify(handler.firePushService, times(0)).fireOnChange(anyString(), anyObject());
 
     when(handler.sessionInterests.checkInterestVersion(anyString(), anyString(), anyLong()))
         .thenReturn(Interests.InterestVersionCheck.Interested);
     obj = handler.doHandle(null, request());
     Assert.assertNull(obj);
-    verify(handler.firePushService, times(2)).fireOnChange(anyString(), anyString(), anyLong());
+    verify(handler.firePushService, times(2)).fireOnChange(anyString(), anyObject());
   }
 
   private static DataChangeRequest request() {

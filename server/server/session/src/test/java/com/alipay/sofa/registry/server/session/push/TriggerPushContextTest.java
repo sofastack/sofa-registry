@@ -16,22 +16,24 @@
  */
 package com.alipay.sofa.registry.server.session.push;
 
-import com.alipay.sofa.registry.util.StringFormatter;
+import org.junit.Assert;
+import org.junit.Test;
 
-public final class PushCause {
-  final TriggerPushContext triggerPushCtx;
-  final long datumTimestamp;
-  final PushType pushType;
+public class TriggerPushContextTest {
+  @Test
+  public void test() {
+    TriggerPushContext ctx = new TriggerPushContext("testDc", 100, "testData", 200);
+    Assert.assertTrue(ctx.toString(), ctx.toString().contains("100"));
 
-  PushCause(TriggerPushContext triggerPushCtx, PushType pushType, long datumTimestamp) {
-    this.pushType = pushType;
-    this.datumTimestamp = datumTimestamp;
-    this.triggerPushCtx = triggerPushCtx;
-  }
+    Assert.assertEquals(ctx.dataCenter, "testDc");
+    Assert.assertEquals(ctx.dataNode, "testData");
+    Assert.assertEquals(ctx.getExpectDatumVersion(), 100);
+    Assert.assertEquals(ctx.getTriggerSessionTimestamp(), 200);
 
-  @Override
-  public String toString() {
-    return StringFormatter.format(
-        "PushCause{{},datumTs={},triggerPushCtx={}}", pushType, datumTimestamp, triggerPushCtx);
+    ctx.setExpectDatumVersion(300);
+    ctx.setTriggerSessionTimestamp(500);
+
+    Assert.assertEquals(ctx.getExpectDatumVersion(), 300);
+    Assert.assertEquals(ctx.getTriggerSessionTimestamp(), 500);
   }
 }

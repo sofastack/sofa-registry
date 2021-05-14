@@ -33,6 +33,7 @@ import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.filter.DataIdMatchStrategy;
 import com.alipay.sofa.registry.server.session.node.service.DataNodeService;
 import com.alipay.sofa.registry.server.session.push.FirePushService;
+import com.alipay.sofa.registry.server.session.push.TriggerPushContext;
 import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
 import com.alipay.sofa.registry.server.session.store.DataStore;
 import com.alipay.sofa.registry.server.session.store.Interests;
@@ -346,11 +347,13 @@ public class SessionRegistry implements Registry {
         dataVersions.size());
     Map<String, DatumVersion> mergedVersions = new HashMap<>(interestVersions);
     mergedVersions.putAll(dataVersions);
+    final long now = System.currentTimeMillis();
     for (Map.Entry<String, DatumVersion> version : mergedVersions.entrySet()) {
       final String dataInfoId = version.getKey();
       final long verVal = version.getValue().getValue();
       if (sessionInterests.checkInterestVersion(dataCenter, dataInfoId, verVal).interested) {
-        firePushService.fireOnChange(dataCenter, dataInfoId, verVal);
+        TriggerPushContext ctx = new TriggerPushContext(dataCenter, verVal, leader, now);
+        firePushService.fireOnChange(dataInfoId, ctx);
         SCAN_VER_LOGGER.info(
             "[fetchSlotVerNotify]{},{},{},{}", slotId, dataInfoId, dataCenter, verVal);
       }

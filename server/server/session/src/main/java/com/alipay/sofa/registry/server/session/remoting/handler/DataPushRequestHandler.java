@@ -25,6 +25,7 @@ import com.alipay.sofa.registry.server.session.bootstrap.ExecutorManager;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.push.FirePushService;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractClientHandler;
+import com.alipay.sofa.registry.server.shared.util.ChannelUtils;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import java.util.concurrent.Executor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -66,7 +67,7 @@ public class DataPushRequestHandler extends AbstractClientHandler<DataPushReques
       return null;
     }
     try {
-      firePushService.fireOnDatum(request.getDatum());
+      firePushService.fireOnDatum(request.getDatum(), ChannelUtils.getRemoteHostAddress(channel));
     } catch (Throwable e) {
       LOGGER.error("DataPush Request error!", e);
       throw new RuntimeException("DataPush Request error!", e);

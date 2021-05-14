@@ -70,29 +70,26 @@ public class FirePushService {
             sessionServerConfig.getDataChangeFetchTaskMaxBufferSize());
   }
 
-  public boolean fireOnChange(String dataCenter, String dataInfoId, long expectVersion) {
+  public boolean fireOnChange(String dataInfoId, TriggerPushContext changeCtx) {
     try {
       // TODO only supported local dataCenter
-      changeProcessor.fireChange(dataCenter, dataInfoId, changeHandler, expectVersion);
+      changeProcessor.fireChange(dataInfoId, changeHandler, changeCtx);
       CHANGE_TASK_COUNTER.inc();
       return true;
     } catch (Throwable e) {
-      LOGGER.error(
-          "failed to fireOnChange {}, dataCenter={}, expectVer={}",
-          dataInfoId,
-          dataCenter,
-          expectVersion,
-          e);
+      LOGGER.error("failed to fireOnChange {}, changeCtx={}", dataInfoId, changeCtx, e);
       return false;
     }
   }
 
   public boolean fireOnPushEmpty(Subscriber subscriber) {
+    final String dataCenter = getDataCenterWhenPushEmpty();
     SubDatum emptyDatum =
-        DatumUtils.newEmptySubDatum(
-            subscriber, getDataCenterWhenPushEmpty(), DatumVersionUtil.nextId());
+        DatumUtils.newEmptySubDatum(subscriber, dataCenter, DatumVersionUtil.nextId());
     final long now = System.currentTimeMillis();
-    PushCause cause = new PushCause(now, PushType.Empty, now);
+    TriggerPushContext pushCtx =
+        new TriggerPushContext(dataCenter, emptyDatum.getVersion(), null, now);
+    PushCause cause = new PushCause(pushCtx, PushType.Empty, now);
     processPush(cause, emptyDatum, Collections.singletonList(subscriber));
     PUSH_EMPTY_COUNTER.inc();
     LOGGER.info("firePushEmpty, {}", subscriber);
@@ -122,12 +119,15 @@ public class FirePushService {
     LOGGER.error("failed to fireOnRegister {}, {}", subscriber.getDataInfoId(), subscriber, e);
   }
 
-  public boolean fireOnDatum(SubDatum datum) {
+  public boolean fireOnDatum(SubDatum datum, String dataNode) {
     try {
       DataInfo dataInfo = DataInfo.valueOf(datum.getDataInfoId());
       Collection<Subscriber> subscribers = sessionInterests.getInterests(dataInfo.getDataInfoId());
       final long now = System.currentTimeMillis();
-      final PushCause cause = new PushCause(now, PushType.Temp, now);
+      TriggerPushContext pushCtx =
+          new TriggerPushContext(datum.getDataCenter(), datum.getVersion(), dataNode, now);
+      final long datumTimestamp = PushTrace.getTriggerPushTimestamp(datum);
+      final PushCause cause = new PushCause(pushCtx, PushType.Temp, datumTimestamp);
       processPush(cause, datum, subscribers);
       PUSH_TEMP_COUNTER.inc();
       return true;
@@ -142,32 +142,32 @@ public class FirePushService {
     return sessionServerConfig.getSessionServerDataCenter();
   }
 
-  boolean doExecuteOnChange(
-      long startTimestamp, String dataCenter, String changeDataInfoId, long expectVersion) {
-    final SubDatum datum = getDatum(dataCenter, changeDataInfoId, expectVersion);
+  boolean doExecuteOnChange(String changeDataInfoId, TriggerPushContext changeCtx) {
+    final long expectVersion = changeCtx.getExpectDatumVersion();
+    final SubDatum datum = getDatum(changeCtx.dataCenter, changeDataInfoId, expectVersion);
     if (datum == null) {
       // datum change, but get null datum, should not happen
-      LOGGER.error("[changeNil] {},{},{}", dataCenter, changeDataInfoId, expectVersion);
+      LOGGER.error("[changeNil] {},{},{}", changeCtx.dataCenter, changeDataInfoId, expectVersion);
       return false;
     }
     if (datum.getVersion() < expectVersion) {
       LOGGER.error(
           "[changeLessVer] {},{},{}<{}",
-          dataCenter,
+          changeCtx.dataCenter,
           changeDataInfoId,
           datum.getVersion(),
           expectVersion);
       return false;
     }
-    onDatumChange(startTimestamp, datum);
+    onDatumChange(changeCtx, datum);
     return true;
   }
 
-  private void onDatumChange(long startTimestamp, SubDatum datum) {
+  private void onDatumChange(TriggerPushContext changeCtx, SubDatum datum) {
     Map<ScopeEnum, List<Subscriber>> scopes =
         SubscriberUtils.groupByScope(sessionInterests.getDatas(datum.getDataInfoId()));
-    final long triggerPushTs = PushTrace.getTriggerPushTimestamp(datum);
-    final PushCause cause = new PushCause(startTimestamp, PushType.Sub, triggerPushTs);
+    final long datumTimestamp = PushTrace.getTriggerPushTimestamp(datum);
+    final PushCause cause = new PushCause(changeCtx, PushType.Sub, datumTimestamp);
     for (Map.Entry<ScopeEnum, List<Subscriber>> scope : scopes.entrySet()) {
       processPush(cause, datum, scope.getValue());
     }
@@ -228,19 +228,13 @@ public class FirePushService {
   final class ChangeHandler implements ChangeProcessor.ChangeHandler {
 
     @Override
-    public boolean onChange(
-        long startTimestamp, String dataCenter, String dataInfoId, long expectDatumVersion) {
+    public boolean onChange(String dataInfoId, TriggerPushContext changeCtx) {
       try {
         CHANGE_TASK_EXEC_COUNTER.inc();
-        doExecuteOnChange(startTimestamp, dataCenter, dataInfoId, expectDatumVersion);
+        doExecuteOnChange(dataInfoId, changeCtx);
         return true;
       } catch (Throwable e) {
-        LOGGER.error(
-            "failed to do change Task, {}, dataCenter={}, expectVersion={}",
-            dataInfoId,
-            dataCenter,
-            expectDatumVersion,
-            e);
+        LOGGER.error("failed to do change Task, {}, {}", dataInfoId, changeCtx, e);
         return false;
       }
     }
@@ -258,9 +252,9 @@ public class FirePushService {
               subscriber, dataCenter, ValueConstants.DEFAULT_NO_DATUM_VERSION);
       LOGGER.warn("[registerEmptyPush] {},{},{}", subDataInfoId, dataCenter, subscriber);
     }
-
-    PushCause cause =
-        new PushCause(System.currentTimeMillis(), PushType.Reg, subscriber.getRegisterTimestamp());
+    TriggerPushContext pushCtx =
+        new TriggerPushContext(dataCenter, 0, null, subscriber.getRegisterTimestamp());
+    PushCause cause = new PushCause(pushCtx, PushType.Reg, System.currentTimeMillis());
     processPush(cause, datum, Collections.singletonList(subscriber));
     return true;
   }

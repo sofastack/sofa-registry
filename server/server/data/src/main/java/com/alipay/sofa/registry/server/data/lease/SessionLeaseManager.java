@@ -37,7 +37,10 @@ import com.alipay.sofa.registry.util.LoopRunnable;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.PostConstruct;
@@ -100,7 +103,7 @@ public final class SessionLeaseManager {
       return Collections.emptyList();
     }
 
-    LOGGER.info("[collectExpire]expires={}, {}", expires.size(), expires);
+    LOGGER.info("collectExpire={}, {}", expires.size(), expires);
     List<ProcessId> cleans = Lists.newArrayListWithCapacity(expires.size());
     for (Map.Entry<ProcessId, Long> expire : expires.entrySet()) {
       final ProcessId p = expire.getKey();
@@ -145,21 +148,23 @@ public final class SessionLeaseManager {
               LOGGER.info("[expireHasMeta]{}", p);
               continue;
             }
-
+            LOGGER.info("[cleanSession]{}", p);
             // in fullGC case, the cleaning maybe very slow
             // after double check, the session.processId is insert, but cleanup not know it
             // deadlineTs, ensure that the cleanup ends within the expected time
             final long deadlineTimestamp = start + deadlineMillis;
             CleanLeaseContinues continues = new CleanLeaseContinues(deadlineTimestamp);
             Map<String, DatumVersion> versionMap = localDatumStorage.clean(i, p, continues);
-            LOGGER.info(
-                "[cleanSession]broken={},slotId={},datas={},pubs={},span={},{}",
-                continues.broken,
-                i,
-                versionMap.size(),
-                continues.cleanNum,
-                System.currentTimeMillis() - start,
-                p);
+            if (!versionMap.isEmpty()) {
+              LOGGER.info(
+                  "[cleanDatum]broken={},slotId={},datas={},pubs={},span={},{}",
+                  continues.broken,
+                  i,
+                  versionMap.size(),
+                  continues.cleanNum,
+                  System.currentTimeMillis() - start,
+                  p);
+            }
           }
         }
       }
@@ -215,7 +220,7 @@ public final class SessionLeaseManager {
         ret.add(processId);
       }
     }
-    LOGGER.info("find processId from channels={}, {}", channels.size(), ret);
+    LOGGER.info("find processId from channels={}, {}:{}", channels.size(), ret.size(), ret);
     return ret;
   }
 
