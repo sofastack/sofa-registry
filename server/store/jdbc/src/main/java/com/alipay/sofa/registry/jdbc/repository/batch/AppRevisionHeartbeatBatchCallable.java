@@ -27,6 +27,8 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 
+import static com.alipay.sofa.registry.jdbc.repository.impl.MetadataMetrics.Register.REVISION_HEARTBEAT_COUNTER;
+
 /**
  * @author xiaojian.xj
  * @version $Id: AppRevisionHeartbeatBatchCallable.java, v 0.1 2021年02月09日 17:52 xiaojian.xj Exp $
@@ -62,6 +64,7 @@ public class AppRevisionHeartbeatBatchCallable extends BatchCallableRunnable<Str
         tasks.stream().map(task -> task.getData()).collect(Collectors.toList());
 
     appRevisionMapper.batchHeartbeat(defaultCommonConfig.getClusterId(), revisions);
+    REVISION_HEARTBEAT_COUNTER.inc();
     tasks.forEach(
         taskEvent -> {
           InvokeFuture<String> future = taskEvent.getFuture();

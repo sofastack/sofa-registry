@@ -43,6 +43,9 @@ import javax.annotation.Resource;
 import org.apache.commons.lang.time.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import static com.alipay.sofa.registry.jdbc.repository.impl.MetadataMetrics.Register.REVISION_GC_COUNTER;
+import static com.alipay.sofa.registry.jdbc.repository.impl.MetadataMetrics.Register.REVISION_HEARTBEAT_COUNTER;
+
 /**
  * @author xiaojian.xj
  * @version $Id: AppRevisionHeartbeatJdbcRepository.java, v 0.1 2021年02月09日 17:14 xiaojian.xj Exp $
@@ -154,6 +157,7 @@ public class AppRevisionHeartbeatJdbcRepository implements AppRevisionHeartbeatR
             }
             for (String revision : revisions) {
               // delete app_revision
+              REVISION_GC_COUNTER.inc();
               appRevisionMapper.deleteAppRevision(defaultCommonConfig.getClusterId(), revision);
             }
 
