@@ -19,13 +19,12 @@ package com.alipay.sofa.registry.server.shared.env;
 import com.alipay.sofa.registry.server.shared.TestUtils;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import org.junit.Assert;
-import org.junit.Test;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class ServerEnvTest {
   @Test

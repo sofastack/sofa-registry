@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.registry.server.shared.util;
 
-import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.store.*;
@@ -45,12 +44,12 @@ public final class DatumUtils {
     return versions;
   }
 
-  public static SubDatum newEmptySubDatum(Subscriber subscriber, String datacenter) {
+  public static SubDatum newEmptySubDatum(Subscriber subscriber, String datacenter, long version) {
     SubDatum datum =
         new SubDatum(
             subscriber.getDataInfoId(),
             datacenter,
-            ValueConstants.DEFAULT_NO_DATUM_VERSION,
+            version,
             Collections.emptyList(),
             subscriber.getDataId(),
             subscriber.getInstanceId(),

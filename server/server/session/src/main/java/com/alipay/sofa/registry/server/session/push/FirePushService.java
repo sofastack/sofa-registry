@@ -19,6 +19,7 @@ package com.alipay.sofa.registry.server.session.push;
 import static com.alipay.sofa.registry.server.session.push.PushMetrics.Fetch.*;
 
 import com.alipay.sofa.registry.common.model.SubscriberUtils;
+import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.common.model.store.SubDatum;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
@@ -34,6 +35,7 @@ import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.shared.util.DatumUtils;
 import com.alipay.sofa.registry.task.FastRejectedExecutionException;
 import com.alipay.sofa.registry.task.KeyedThreadPoolExecutor;
+import com.alipay.sofa.registry.util.DatumVersionUtil;
 import com.google.common.collect.Lists;
 import java.net.InetSocketAddress;
 import java.util.Collection;
@@ -86,7 +88,9 @@ public class FirePushService {
   }
 
   public boolean fireOnPushEmpty(Subscriber subscriber) {
-    SubDatum emptyDatum = DatumUtils.newEmptySubDatum(subscriber, getDataCenterWhenPushEmpty());
+    SubDatum emptyDatum =
+        DatumUtils.newEmptySubDatum(
+            subscriber, getDataCenterWhenPushEmpty(), DatumVersionUtil.nextId());
     final long now = System.currentTimeMillis();
     PushCause cause = new PushCause(now, PushType.Empty, now);
     processPush(cause, emptyDatum, Collections.singletonList(subscriber));
@@ -249,7 +253,9 @@ public class FirePushService {
     final String subDataInfoId = subscriber.getDataInfoId();
     SubDatum datum = getDatum(dataCenter, subDataInfoId, Long.MIN_VALUE);
     if (datum == null) {
-      datum = DatumUtils.newEmptySubDatum(subscriber, dataCenter);
+      datum =
+          DatumUtils.newEmptySubDatum(
+              subscriber, dataCenter, ValueConstants.DEFAULT_NO_DATUM_VERSION);
       LOGGER.warn("[registerEmptyPush] {},{},{}", subDataInfoId, dataCenter, subscriber);
     }
 

@@ -40,7 +40,8 @@ public class DatumUtilsTest {
     subscriber.setGroup("DEFAULT_GROUP");
     subscriber.setInstanceId("InstanceId");
     subscriber.setDataInfoId("dataInfoId");
-    SubDatum subDatum = DatumUtils.newEmptySubDatum(subscriber, "testDc");
+    SubDatum subDatum =
+        DatumUtils.newEmptySubDatum(subscriber, "testDc", ValueConstants.DEFAULT_NO_DATUM_VERSION);
     Assert.assertEquals(subDatum.getDataCenter(), "testDc");
     Assert.assertEquals(subDatum.getDataInfoId(), subscriber.getDataInfoId());
     Assert.assertEquals(subDatum.getDataId(), subscriber.getDataId());
