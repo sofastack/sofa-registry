@@ -41,4 +41,6 @@ public interface JdbcDriverConfig {
   int getMaxActive();
 
   int getMaxWait();
+
+  int getSlowSqlMillis();
 }

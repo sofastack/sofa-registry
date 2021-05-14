@@ -369,15 +369,15 @@
             </DefaultRolloverStrategy>
         </RollingRandomAccessFile>
 
-        <RollingRandomAccessFile name="DRUID-SQL-DIGEST-APPENDER" fileName="${SESSION_LOG_HOME}/registry-sql.log"
-                                 filePattern="${SESSION_LOG_HOME}/registry-sql.log.%d{yyyy-MM-dd}">
+        <RollingRandomAccessFile name="DRUID-SQL-DIGEST-APPENDER" fileName="${LOG_HOME}/registry-sql.log"
+                                 filePattern="${LOG_HOME}/registry-sql.log.%d{yyyy-MM-dd}">
             <PatternLayout pattern="[%d{ISO8601}][%p][%t][%c{0}] - %m%n"/>
             <ThresholdFilter level="ERROR" onMatch="DENY" onMismatch="NEUTRAL"/>
             <Policies>
                 <TimeBasedTriggeringPolicy/>
             </Policies>
             <DefaultRolloverStrategy max="10">
-                <Delete basePath="${SESSION_LOG_HOME}" maxDepth="2">
+                <Delete basePath="${LOG_HOME}" maxDepth="2">
                     <IfFileName glob="registry-sql.log.*" />
                     <IfLastModified age="10d" />
                 </Delete>
