@@ -47,8 +47,10 @@ public class ChangeProcessorTest {
     Assert.assertTrue(key.toString(), key.toString().contains(dataInfoId));
 
     long now1 = System.currentTimeMillis();
+    TriggerPushContext ctx =
+        new TriggerPushContext(dataCenter, 1000, null, System.currentTimeMillis());
     // first commit
-    Assert.assertTrue(worker.commitChange(key, handler, 1000));
+    Assert.assertTrue(worker.commitChange(key, handler, ctx));
     long now2 = System.currentTimeMillis();
     ChangeProcessor.ChangeTask existingTask = worker.get(key);
     Assert.assertNotNull(existingTask);
@@ -62,20 +64,23 @@ public class ChangeProcessorTest {
 
     Assert.assertNull(worker.getExpire());
     // expectDatumVersion is less than exist
-    Assert.assertFalse(worker.commitChange(key, handler, 900));
-    Assert.assertTrue(worker.commitChange(key, handler, 1100));
+    ctx = new TriggerPushContext(dataCenter, 900, null, System.currentTimeMillis());
+    Assert.assertFalse(worker.commitChange(key, handler, ctx));
+    ctx = new TriggerPushContext(dataCenter, 1100, null, System.currentTimeMillis());
+    Assert.assertTrue(worker.commitChange(key, handler, ctx));
     ChangeProcessor.ChangeTask replaceTask = worker.get(key);
     // has replace
     Assert.assertTrue(replaceTask != existingTask);
     Assert.assertEquals(replaceTask.expireDeadlineTimestamp, existingTask.expireDeadlineTimestamp);
     // wait max deadline
     Thread.sleep(changeDebouncingMaxMillis + 50);
-    Assert.assertTrue(worker.commitChange(key, handler, 1200));
+    ctx = new TriggerPushContext(dataCenter, 1200, null, System.currentTimeMillis());
+    Assert.assertTrue(worker.commitChange(key, handler, ctx));
     ChangeProcessor.ChangeTask overwriteTask = worker.get(key);
     Assert.assertTrue(replaceTask == overwriteTask);
-    Assert.assertEquals(overwriteTask.expectDatumVersion, 1200);
+    Assert.assertEquals(overwriteTask.changeCtx.getExpectDatumVersion(), 1200);
     worker.runUnthrowable();
-    verify(handler, times(1)).onChange(anyLong(), anyString(), anyString(), anyLong());
+    verify(handler, times(1)).onChange(anyString(), anyObject());
   }
 
   @Test
@@ -99,9 +104,11 @@ public class ChangeProcessorTest {
     ChangeProcessor.ChangeHandler handler = mock(ChangeProcessor.ChangeHandler.class);
     ChangeProcessor.ChangeKey key = new ChangeProcessor.ChangeKey(dataCenter, dataInfoId);
     Assert.assertNotNull(processor.workerOf(key));
-    processor.fireChange(dataCenter, dataInfoId, handler, 100);
+    TriggerPushContext ctx =
+        new TriggerPushContext(dataCenter, 100, null, System.currentTimeMillis());
+    processor.fireChange(dataInfoId, handler, ctx);
     Thread.sleep(configBean.getDataChangeDebouncingMillis() + 100);
-    verify(handler, times(1)).onChange(anyLong(), anyString(), anyString(), anyLong());
+    verify(handler, times(1)).onChange(anyString(), anyObject());
   }
 
   @Test

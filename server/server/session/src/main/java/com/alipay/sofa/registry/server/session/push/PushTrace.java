@@ -110,7 +110,7 @@ public final class PushTrace {
   public void print() {
     calc();
     LOGGER.info(
-        "{},{},{},{},{},cause={},pubNum={},pubBytes={},pubNew={},delay={},{},{},{},{},session={},cliIO={},firstPubDelay={},lastPubDelay={},subNum={},addr={}",
+        "{},{},{},{},{},cause={},pubNum={},pubBytes={},pubNew={},delay={},{},{},{},{},session={},cliIO={},firstPubDelay={},lastPubDelay={},subNum={},addr={},expectVer={},dataNode={}",
         status,
         datum.getDataInfoId(),
         datum.getVersion(),
@@ -130,19 +130,24 @@ public final class PushTrace {
         firstPubPushDelayMillis,
         lastPubPushDelayMillis,
         subNum,
-        subAddress);
+        subAddress,
+        pushCause.triggerPushCtx.getExpectDatumVersion(),
+        pushCause.triggerPushCtx.dataNode);
   }
 
   private void calc() {
     // try find the earliest and the latest publisher after the subPushedVersion
     // that means the modify after last push, but this could not handle the publisher.remove
-    this.datumTotalDelayMillis = pushFinishTimestamp - pushCause.triggerTimestamp;
+    this.datumTotalDelayMillis = pushFinishTimestamp - pushCause.datumTimestamp;
     this.datumPushTriggerSpanMillis =
-        Math.max(pushCause.startTimestamp - pushCause.triggerTimestamp, 0);
-    this.datumPushCommitSpanMillis = pushCommitTimestamp - pushCause.startTimestamp;
+        Math.max(
+            pushCause.triggerPushCtx.getTriggerSessionTimestamp() - pushCause.datumTimestamp, 0);
+    this.datumPushCommitSpanMillis =
+        pushCommitTimestamp - pushCause.triggerPushCtx.getTriggerSessionTimestamp();
     this.datumPushStartSpanMillis = pushStartTimestamp - pushCommitTimestamp;
     this.datumPushFinishSpanMillis = pushFinishTimestamp - pushStartTimestamp;
-    this.datumPushSessionSpanMillis = pushStartTimestamp - pushCause.startTimestamp;
+    this.datumPushSessionSpanMillis =
+        pushStartTimestamp - pushCause.triggerPushCtx.getTriggerSessionTimestamp();
     final List<SubPublisher> publishers = datum.getPublishers();
     final long lastPushTimestamp =
         subscriberPushedVersion <= ValueConstants.DEFAULT_NO_DATUM_VERSION

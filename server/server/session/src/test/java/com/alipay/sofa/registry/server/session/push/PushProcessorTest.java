@@ -47,9 +47,9 @@ public class PushProcessorTest {
     Assert.assertTrue(processor.watchDog.getWaitingMillis() < 200);
 
     Assert.assertEquals(processor.watchCommit().size(), 0);
-
-    PushCause pushCause =
-        new PushCause(System.currentTimeMillis(), PushType.Reg, System.currentTimeMillis());
+    TriggerPushContext ctx =
+        new TriggerPushContext("testDc", 100, null, System.currentTimeMillis());
+    PushCause pushCause = new PushCause(ctx, PushType.Reg, System.currentTimeMillis());
     Subscriber subscriber = TestUtils.newZoneSubscriber(dataId, zone);
     SubDatum datum = TestUtils.newSubDatum(subscriber.getDataId(), 100, Collections.emptyList());
     Assert.assertTrue(processor.pendingTasks.isEmpty());
@@ -121,7 +121,7 @@ public class PushProcessorTest {
 
     // noDelay=false
     processor.firePush(
-        new PushCause(System.currentTimeMillis(), PushType.Sub, System.currentTimeMillis()),
+        new PushCause(ctx, PushType.Sub, System.currentTimeMillis()),
         NetUtil.getLocalSocketAddress(),
         Collections.singletonMap(subscriber.getRegisterId() + "-test", subscriber),
         datum);
@@ -152,9 +152,9 @@ public class PushProcessorTest {
     processor.sessionServerConfig = config;
     processor.pushDataGenerator = new PushDataGenerator();
     processor.pushDataGenerator.sessionServerConfig = config;
-
-    PushCause pushCause =
-        new PushCause(System.currentTimeMillis(), PushType.Reg, System.currentTimeMillis());
+    TriggerPushContext ctx =
+        new TriggerPushContext("testDc", 100, null, System.currentTimeMillis());
+    PushCause pushCause = new PushCause(ctx, PushType.Reg, System.currentTimeMillis());
     Subscriber subscriber = TestUtils.newZoneSubscriber(dataId, zone);
     SubDatum datum = TestUtils.newSubDatum(subscriber.getDataId(), 100, Collections.emptyList());
 
@@ -273,8 +273,9 @@ public class PushProcessorTest {
   @Test
   public void testOnCallback() throws Exception {
     PushProcessor processor = newProcessor();
-    PushCause pushCause =
-        new PushCause(System.currentTimeMillis(), PushType.Reg, System.currentTimeMillis());
+    TriggerPushContext ctx =
+        new TriggerPushContext("testDc", 100, null, System.currentTimeMillis());
+    PushCause pushCause = new PushCause(ctx, PushType.Reg, System.currentTimeMillis());
     Subscriber subscriber = TestUtils.newZoneSubscriber(dataId, zone);
     SubDatum datum = TestUtils.newSubDatum(subscriber.getDataId(), 100, Collections.emptyList());
 
@@ -314,9 +315,9 @@ public class PushProcessorTest {
   @Test
   public void testOnException() throws Exception {
     PushProcessor processor = newProcessor();
-
-    PushCause pushCause =
-        new PushCause(System.currentTimeMillis(), PushType.Reg, System.currentTimeMillis());
+    TriggerPushContext ctx =
+        new TriggerPushContext("testDc", 100, null, System.currentTimeMillis());
+    PushCause pushCause = new PushCause(ctx, PushType.Reg, System.currentTimeMillis());
     Subscriber subscriber = TestUtils.newZoneSubscriber(dataId, zone);
     SubDatum datum = TestUtils.newSubDatum(subscriber.getDataId(), 100, Collections.emptyList());
 

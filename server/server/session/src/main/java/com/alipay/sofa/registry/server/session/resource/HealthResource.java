@@ -39,7 +39,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 @Path("health")
 public class HealthResource {
 
-  @Autowired private SessionServerBootstrap sessionServerBootstrap;
+  @Autowired SessionServerBootstrap sessionServerBootstrap;
 
   @PostConstruct
   public void init() {

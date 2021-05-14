@@ -30,10 +30,6 @@ public class TaskEvent {
     // Session task
     WATCHER_REGISTER_FETCH_TASK("WatcherRegisterFetchTask"), //
     RECEIVED_DATA_CONFIG_PUSH_TASK("ReceivedDataConfigPushTask"), //
-    SYNC_PUBLISHER_TASK("SyncPublisherTask"), //
-    SYNC_UNPUBLISHER_TASK("SyncUnPublisherTask"), //
-    SYNC_SUBSCRIBER_TASK("SyncSubscriberTask"), //
-    SYNC_UNSUBSCRIBER_TASK("SyncUnSubscriberTask"), //
     PROVIDE_DATA_CHANGE_FETCH_TASK("ProvideDataChangeFetchTask"), //
 
     // MetaServer task

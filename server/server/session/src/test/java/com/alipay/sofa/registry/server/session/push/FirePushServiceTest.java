@@ -40,14 +40,14 @@ public class FirePushServiceTest {
     svc.sessionServerConfig = config;
     svc.sessionInterests = Mockito.mock(Interests.class);
     svc.pushProcessor = Mockito.mock(PushProcessor.class);
-
-    Assert.assertFalse(svc.fireOnChange("testDc", "testDataId", 100));
+    TriggerPushContext ctx =
+        new TriggerPushContext("testDc", 100, "testDataNode", System.currentTimeMillis());
+    Assert.assertFalse(svc.fireOnChange("testDataId", ctx));
     svc.changeProcessor = Mockito.mock(ChangeProcessor.class);
 
-    Assert.assertTrue(svc.fireOnChange("testDc", "testDataId", 100));
+    Assert.assertTrue(svc.fireOnChange("testDataId", ctx));
     Mockito.verify(svc.changeProcessor, Mockito.times(1))
-        .fireChange(
-            Mockito.anyString(), Mockito.anyString(), Mockito.anyObject(), Mockito.anyLong());
+        .fireChange(Mockito.anyString(), Mockito.anyObject(), Mockito.anyObject());
 
     Subscriber subscriber = TestUtils.newZoneSubscriber(dataId, zone);
     config.setStopPushSwitch(true);
@@ -63,9 +63,9 @@ public class FirePushServiceTest {
         .firePush(
             Mockito.anyObject(), Mockito.anyObject(), Mockito.anyObject(), Mockito.anyObject());
 
-    Assert.assertFalse(svc.fireOnDatum(null));
+    Assert.assertFalse(svc.fireOnDatum(null, null));
     SubDatum datum = TestUtils.newSubDatum(subscriber.getDataId(), 100, Collections.emptyList());
-    Assert.assertTrue(svc.fireOnDatum(datum));
+    Assert.assertTrue(svc.fireOnDatum(datum, null));
     // no sub
     Mockito.verify(svc.pushProcessor, Mockito.times(1))
         .firePush(
@@ -101,7 +101,8 @@ public class FirePushServiceTest {
 
     final long now = System.currentTimeMillis();
     // datum is null
-    Assert.assertFalse(svc.doExecuteOnChange(now, "testDc", "testDataId", 100));
+    TriggerPushContext ctx = new TriggerPushContext("testDc", 100, "testDataNode", now);
+    Assert.assertFalse(svc.doExecuteOnChange("testDataId", ctx));
     SubDatum datum = TestUtils.newSubDatum("testDataId", 200, Collections.emptyList());
 
     // get the datum
@@ -110,7 +111,7 @@ public class FirePushServiceTest {
         .thenReturn(new Value(datum));
     Mockito.when(svc.sessionInterests.getDatas(Mockito.anyObject()))
         .thenReturn(Collections.singletonList(subscriber));
-    Assert.assertTrue(svc.doExecuteOnChange(now, "testDc", "testDataId", 100));
+    Assert.assertTrue(svc.doExecuteOnChange("testDataId", ctx));
     Mockito.verify(svc.pushProcessor, Mockito.times(1))
         .firePush(
             Mockito.anyObject(), Mockito.anyObject(), Mockito.anyObject(), Mockito.anyObject());
@@ -121,20 +122,21 @@ public class FirePushServiceTest {
         .thenReturn(new Value(datum));
     Mockito.when(svc.sessionCacheService.getValue(Mockito.anyObject()))
         .thenReturn(new Value(datum));
-    Assert.assertFalse(svc.doExecuteOnChange(now, "testDc", "testDataId", 100));
+    Assert.assertFalse(svc.doExecuteOnChange("testDataId", ctx));
   }
 
   @Test
   public void testChangeHandler() {
     final long now = System.currentTimeMillis();
+    TriggerPushContext ctx = new TriggerPushContext("testDc", 100, "testDataNode", now);
     FirePushService svc = mockFirePushService();
     Mockito.when(svc.sessionCacheService.getValue(Mockito.anyObject()))
         .thenThrow(new RuntimeException());
-    Assert.assertFalse(svc.changeHandler.onChange(now, "testDc", "testDataId", 100));
+    Assert.assertFalse(svc.changeHandler.onChange("testDataId", ctx));
     SubDatum datum = TestUtils.newSubDatum("testDataId", 200, Collections.emptyList());
     Mockito.when(svc.sessionCacheService.getValueIfPresent(Mockito.anyObject()))
         .thenReturn(new Value(datum));
-    Assert.assertTrue(svc.changeHandler.onChange(now, "testDc", "testDataId", 100));
+    Assert.assertTrue(svc.changeHandler.onChange("testDataId", ctx));
   }
 
   @Test

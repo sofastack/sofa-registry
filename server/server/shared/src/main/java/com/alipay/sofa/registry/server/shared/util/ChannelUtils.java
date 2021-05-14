@@ -14,19 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.node.processor;
+package com.alipay.sofa.registry.server.shared.util;
 
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.remoting.Channel;
 
-/**
- * @author zhuoyu.sjw
- * @version $Id: ConsoleSyncSingleTaskProcessor.java, v 0.1 2018-03-31 16:46 zhuoyu.sjw Exp $$
- */
-public class ConsoleSyncSingleTaskProcessor extends AbstractRetrySingleTaskProcessor {
-  private static final Logger CONSOLE_LOGGER = LoggerFactory.getLogger("SESSION-CONSOLE", "[Sync]");
+public final class ChannelUtils {
+  private ChannelUtils() {}
 
-  public ConsoleSyncSingleTaskProcessor() {
-    super(CONSOLE_LOGGER);
+  public static String getRemoteHostAddress(Channel channel) {
+    return channel == null ? null : channel.getRemoteAddress().getAddress().getHostAddress();
   }
 }

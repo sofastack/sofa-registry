@@ -25,8 +25,10 @@ import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.session.bootstrap.ExecutorManager;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.push.FirePushService;
+import com.alipay.sofa.registry.server.session.push.TriggerPushContext;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractClientHandler;
+import com.alipay.sofa.registry.server.shared.util.ChannelUtils;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import java.util.Map;
 import java.util.concurrent.Executor;
@@ -70,7 +72,9 @@ public class DataChangeRequestHandler extends AbstractClientHandler<DataChangeRe
     if (sessionServerConfig.isStopPushSwitch()) {
       return null;
     }
+    final String dataNode = ChannelUtils.getRemoteHostAddress(channel);
     final String dataCenter = dataChangeRequest.getDataCenter();
+    final long changeTimestamp = System.currentTimeMillis();
     for (Map.Entry<String, DatumVersion> e : dataChangeRequest.getDataInfoIds().entrySet()) {
       final String dataInfoId = e.getKey();
       final DatumVersion version = e.getValue();
@@ -83,7 +87,9 @@ public class DataChangeRequestHandler extends AbstractClientHandler<DataChangeRe
         }
         continue;
       }
-      firePushService.fireOnChange(dataCenter, dataInfoId, version.getValue());
+      final TriggerPushContext changeCtx =
+          new TriggerPushContext(dataCenter, version.getValue(), dataNode, changeTimestamp);
+      firePushService.fireOnChange(dataInfoId, changeCtx);
     }
     return null;
   }
