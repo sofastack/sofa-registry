@@ -131,6 +131,9 @@ public final class ReceivedDataConverter {
     receivedConfigData.setDataId(dataInfo.getDataId());
     receivedConfigData.setGroup(dataInfo.getGroup());
     receivedConfigData.setInstanceId(dataInfo.getInstanceId());
+    if (version == null) {
+      version = DatumVersionUtil.nextId();
+    }
     receivedConfigData.setVersion(DatumVersionUtil.transferDatumVersion(version));
     return receivedConfigData;
   }
