@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.jdbc.config;
 
 import static com.alibaba.druid.pool.DruidDataSourceFactory.PROP_DRIVERCLASSNAME;
+import static com.alibaba.druid.pool.DruidDataSourceFactory.PROP_FILTERS;
 import static com.alibaba.druid.pool.DruidDataSourceFactory.PROP_INIT;
 import static com.alibaba.druid.pool.DruidDataSourceFactory.PROP_LOGABANDONED;
 import static com.alibaba.druid.pool.DruidDataSourceFactory.PROP_MAXACTIVE;
@@ -28,7 +29,10 @@ import static com.alibaba.druid.pool.DruidDataSourceFactory.PROP_REMOVEABANDONED
 import static com.alibaba.druid.pool.DruidDataSourceFactory.PROP_URL;
 import static com.alibaba.druid.pool.DruidDataSourceFactory.PROP_USERNAME;
 
+import com.alibaba.druid.filter.Filter;
 import com.alibaba.druid.filter.logging.Slf4jLogFilter;
+import com.alibaba.druid.filter.stat.StatFilter;
+import com.alibaba.druid.pool.DruidDataSource;
 import com.alibaba.druid.pool.DruidDataSourceFactory;
 import com.alipay.sofa.registry.jdbc.repository.batch.AppRevisionBatchQueryCallable;
 import com.alipay.sofa.registry.jdbc.repository.batch.AppRevisionHeartbeatBatchCallable;
@@ -44,6 +48,8 @@ import com.alipay.sofa.registry.store.api.repository.InterfaceAppsRepository;
 import com.alipay.sofa.registry.store.api.spring.SpringContext;
 import com.alipay.sofa.registry.util.SystemUtils;
 import com.google.common.collect.Lists;
+
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
@@ -96,6 +102,14 @@ public class JdbcConfiguration {
       return filter;
     }
 
+    @Bean
+    public StatFilter statFilter(JdbcDriverConfig jdbcDriverConfig) {
+      StatFilter filter = new StatFilter();
+      filter.setSlowSqlMillis(jdbcDriverConfig.getSlowSqlMillis());
+      filter.setLogSlowSql(true);
+      return filter;
+    }
+
     /**
      * create datasource
      *
@@ -103,7 +117,7 @@ public class JdbcConfiguration {
      * @throws Exception
      */
     @Bean
-    public DataSource dataSource(JdbcDriverConfig jdbcDriverConfig, Slf4jLogFilter logFilter)
+    public DataSource dataSource(JdbcDriverConfig jdbcDriverConfig)
         throws Exception {
       Properties props = new Properties();
       props.put(
@@ -124,11 +138,10 @@ public class JdbcConfiguration {
       props.put(PROP_LOGABANDONED, "true");
       props.put(PROP_INIT, "true");
 
+      DruidDataSource dataSource = (DruidDataSource)DruidDataSourceFactory.createDataSource(props);
       // log filter
-      // props.put(PROP_FILTERS, logFilter);
-
-      DataSource dataSource = DruidDataSourceFactory.createDataSource(props);
-
+      List list= Lists.newArrayList(logFilter(), statFilter(jdbcDriverConfig));
+      dataSource.setProxyFilters(list);
       return dataSource;
     }
 

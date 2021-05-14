@@ -36,15 +36,17 @@ public class JdbcDriverConfigBean implements JdbcDriverConfig {
 
   private String password = "password";
 
+  private int slowSqlMillis = 1000;
+
   private String typeAliasesPackage;
 
   private String[] mapperLocations = {"classpath:mapper/*.xml"};
 
-  private int minIdle = 3;
+  private int minIdle = 5;
 
-  private int maxActive = 5;
+  private int maxActive = 25;
 
-  private int maxWait = 3000;
+  private int maxWait = 2000;
 
   /**
    * Getter method for property <tt>driverClassName</tt>.
@@ -214,5 +216,23 @@ public class JdbcDriverConfigBean implements JdbcDriverConfig {
    */
   public void setMaxWait(int maxWait) {
     this.maxWait = maxWait;
+  }
+
+  /**
+   * Getter method for property <tt>slowSqlMillis</tt>.
+   *
+   * @return property value of slowSqlMillis
+   */
+  public int getSlowSqlMillis() {
+    return slowSqlMillis;
+  }
+
+  /**
+   * Setter method for property <tt>slowSqlMillis</tt>.
+   *
+   * @param slowSqlMillis value to be assigned to property slowSqlMillis
+   */
+  public void setSlowSqlMillis(int slowSqlMillis) {
+    this.slowSqlMillis = slowSqlMillis;
   }
 }
