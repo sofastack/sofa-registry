@@ -115,7 +115,7 @@ public class FirePushService {
           e.getMessage());
       return;
     }
-    LOGGER.error("failed to fireOnRegister ", subscriber.shortDesc(), e);
+    LOGGER.error("failed to fireOnRegister {}", subscriber.shortDesc(), e);
   }
 
   public boolean fireOnDatum(SubDatum datum, String dataNode) {
