@@ -93,6 +93,15 @@ public class Subscriber extends BaseInfo {
     return false;
   }
 
+  public String shortDesc() {
+    final StringBuilder sb = new StringBuilder();
+    sb.append("dataInfoId=").append(getDataInfoId()).append(", ");
+    sb.append("registerId=").append(getRegisterId()).append(", ");
+    sb.append("scope=").append(getScope()).append(", ");
+    sb.append("sourceAddress=").append(getSourceAddress().getAddressString());
+    return sb.toString();
+  }
+
   /**
    * Setter method for property <tt>elementType</tt>.
    *

@@ -110,13 +110,12 @@ public class FirePushService {
   static void handleFireOnRegisterException(Subscriber subscriber, Throwable e) {
     if (e instanceof FastRejectedExecutionException) {
       LOGGER.error(
-          "failed to fireOnRegister {}, {}, {}",
-          subscriber.getDataInfoId(),
-          subscriber,
+          "failed to fireOnRegister , {}",
+          subscriber.shortDesc(),
           e.getMessage());
       return;
     }
-    LOGGER.error("failed to fireOnRegister {}, {}", subscriber.getDataInfoId(), subscriber, e);
+    LOGGER.error("failed to fireOnRegister ", subscriber.shortDesc(), e);
   }
 
   public boolean fireOnDatum(SubDatum datum, String dataNode) {
