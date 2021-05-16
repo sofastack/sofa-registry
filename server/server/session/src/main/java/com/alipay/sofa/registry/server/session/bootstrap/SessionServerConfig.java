@@ -104,6 +104,10 @@ public interface SessionServerConfig {
 
   int getDataChangeFetchTaskWorkerSize();
 
+  int getSubscriberRegisterTaskWorkerSize();
+
+  int getSubscriberRegisterTaskMaxBufferSize();
+
   String getBlacklistPubDataIdRegex();
 
   String getBlacklistSubDataIdRegex();

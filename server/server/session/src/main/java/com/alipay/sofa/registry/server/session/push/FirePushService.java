@@ -66,8 +66,8 @@ public class FirePushService {
     registerFetchExecutor =
         new KeyedThreadPoolExecutor(
             "RegisterFetchExecutor",
-            sessionServerConfig.getDataChangeFetchTaskWorkerSize(),
-            sessionServerConfig.getDataChangeFetchTaskMaxBufferSize());
+            sessionServerConfig.getSubscriberRegisterTaskWorkerSize(),
+            sessionServerConfig.getSubscriberRegisterTaskMaxBufferSize());
   }
 
   public boolean fireOnChange(String dataInfoId, TriggerPushContext changeCtx) {
