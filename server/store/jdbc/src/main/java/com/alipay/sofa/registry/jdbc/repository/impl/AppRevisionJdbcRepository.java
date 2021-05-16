@@ -43,7 +43,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import static com.alipay.sofa.registry.jdbc.repository.impl.MetadataMetrics.Fetch.REVISION_CACHE_HIT_COUNTER;
 import static com.alipay.sofa.registry.jdbc.repository.impl.MetadataMetrics.Fetch.REVISION_CACHE_MISS_COUNTER;
-import static com.alipay.sofa.registry.jdbc.repository.impl.MetadataMetrics.Register.REVISION_HEARTBEAT_COUNTER;
 import static com.alipay.sofa.registry.jdbc.repository.impl.MetadataMetrics.Register.REVISION_REGISTER_COUNTER;
 
 /**

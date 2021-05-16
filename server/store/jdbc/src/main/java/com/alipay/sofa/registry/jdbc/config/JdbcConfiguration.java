@@ -17,7 +17,6 @@
 package com.alipay.sofa.registry.jdbc.config;
 
 import static com.alibaba.druid.pool.DruidDataSourceFactory.PROP_DRIVERCLASSNAME;
-import static com.alibaba.druid.pool.DruidDataSourceFactory.PROP_FILTERS;
 import static com.alibaba.druid.pool.DruidDataSourceFactory.PROP_INIT;
 import static com.alibaba.druid.pool.DruidDataSourceFactory.PROP_LOGABANDONED;
 import static com.alibaba.druid.pool.DruidDataSourceFactory.PROP_MAXACTIVE;
@@ -28,8 +27,6 @@ import static com.alibaba.druid.pool.DruidDataSourceFactory.PROP_REMOVEABANDONED
 import static com.alibaba.druid.pool.DruidDataSourceFactory.PROP_REMOVEABANDONEDTIMEOUT;
 import static com.alibaba.druid.pool.DruidDataSourceFactory.PROP_URL;
 import static com.alibaba.druid.pool.DruidDataSourceFactory.PROP_USERNAME;
-
-import com.alibaba.druid.filter.Filter;
 import com.alibaba.druid.filter.logging.Slf4jLogFilter;
 import com.alibaba.druid.filter.stat.StatFilter;
 import com.alibaba.druid.pool.DruidDataSource;
@@ -48,8 +45,6 @@ import com.alipay.sofa.registry.store.api.repository.InterfaceAppsRepository;
 import com.alipay.sofa.registry.store.api.spring.SpringContext;
 import com.alipay.sofa.registry.util.SystemUtils;
 import com.google.common.collect.Lists;
-
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;

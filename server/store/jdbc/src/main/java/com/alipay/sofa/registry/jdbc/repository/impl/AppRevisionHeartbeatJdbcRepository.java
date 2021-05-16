@@ -44,7 +44,6 @@ import org.apache.commons.lang.time.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import static com.alipay.sofa.registry.jdbc.repository.impl.MetadataMetrics.Register.REVISION_GC_COUNTER;
-import static com.alipay.sofa.registry.jdbc.repository.impl.MetadataMetrics.Register.REVISION_HEARTBEAT_COUNTER;
 
 /**
  * @author xiaojian.xj
