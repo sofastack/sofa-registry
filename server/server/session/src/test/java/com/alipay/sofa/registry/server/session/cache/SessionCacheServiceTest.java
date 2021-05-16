@@ -76,7 +76,7 @@ public class SessionCacheServiceTest {
     Assert.assertNull(value);
 
     // touch remove listener
-    for (int i = 0; i < cacheService.sessionServerConfig.getCacheDatumMaxNums() * 2; i++) {
+    for (int i = 0; i < 1000; i++) {
       datumKey = new DatumKey(dataInfoId + ":" + i, dataCenter);
       key = new Key(DatumKey.class.getName(), datumKey);
       cacheService.getValue(key);

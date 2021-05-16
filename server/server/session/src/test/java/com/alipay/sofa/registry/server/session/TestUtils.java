@@ -71,6 +71,7 @@ public class TestUtils {
     when(commonConfig.getLocalDataCenter()).thenReturn(dataCenter);
     when(commonConfig.getLocalRegion()).thenReturn("DEF_ZONE");
     SessionServerConfigBean configBean = new SessionServerConfigBean(commonConfig);
+    configBean.setCacheDatumMaxWeight(1000000);
     return configBean;
   }
 

@@ -25,7 +25,7 @@ import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 
-public final class SubPublisher implements Serializable {
+public final class SubPublisher implements Serializable, Sizer {
   private final String registerId;
   private final String cell;
   private final String clientId;
@@ -112,5 +112,13 @@ public final class SubPublisher implements Serializable {
 
   public PublishSource getPublishSource() {
     return publishSource;
+  }
+
+  public int size() {
+    int s = registerId.length() + cell.length() + srcAddressString.length() + 40;
+    for (ServerDataBox box : dataList) {
+      s += box.byteSize();
+    }
+    return s;
   }
 }

@@ -42,7 +42,8 @@ public class SessionCacheService implements CacheService {
   public void init() {
     this.readWriteCacheMap =
         CacheBuilder.newBuilder()
-            .maximumSize(sessionServerConfig.getCacheDatumMaxNums())
+            .maximumWeight(sessionServerConfig.getCacheDatumMaxWeight())
+            .weigher((Weigher<Key, Value>) (key, value) -> key.size() + value.size())
             .expireAfterWrite(sessionServerConfig.getCacheDatumExpireSecs(), TimeUnit.SECONDS)
             .removalListener(new RemoveListener())
             .build(

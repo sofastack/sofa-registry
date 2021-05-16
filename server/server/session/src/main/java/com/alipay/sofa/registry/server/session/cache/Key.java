@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.cache;
 
+import com.alipay.sofa.registry.common.model.store.Sizer;
 import com.alipay.sofa.registry.util.StringFormatter;
 
 /**
@@ -24,7 +25,7 @@ import com.alipay.sofa.registry.util.StringFormatter;
  * @author shangyu.wh
  * @version $Id: Key.java, v 0.1 2017-12-06 15:52 shangyu.wh Exp $
  */
-public final class Key {
+public final class Key implements Sizer {
 
   private final String entityName;
   private final String hashKey;
@@ -82,5 +83,9 @@ public final class Key {
   @Override
   public String toString() {
     return StringFormatter.format("Key{{}, type={}}", entityName, entityType);
+  }
+
+  public int size() {
+    return entityName.length() + hashKey.length();
   }
 }

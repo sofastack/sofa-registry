@@ -160,7 +160,7 @@ public interface SessionServerConfig {
 
   int getCacheCountIntervalSecs();
 
-  int getCacheDatumMaxNums();
+  int getCacheDatumMaxWeight();
 
   int getCacheDatumExpireSecs();
 
