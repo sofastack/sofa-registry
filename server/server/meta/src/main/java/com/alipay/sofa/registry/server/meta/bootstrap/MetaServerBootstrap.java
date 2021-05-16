@@ -21,6 +21,7 @@ import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.metrics.ReporterUtils;
+import com.alipay.sofa.registry.metrics.TaskMetrics;
 import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.remoting.Server;
@@ -157,6 +158,7 @@ public class MetaServerBootstrap {
                 && metaNodeExchange.getClient() != null;
           });
 
+      TaskMetrics.getInstance().registerBolt();
       LOGGER.info(
           "[MetaBootstrap] leader info: {}, [{}]",
           leaderElector.getLeader(),

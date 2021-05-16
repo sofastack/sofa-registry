@@ -573,13 +573,13 @@ public class SessionServerConfiguration {
     @Bean(name = "metaNodeExecutor")
     public ThreadPoolExecutor metaNodeExecutor(SessionServerConfig sessionServerConfig) {
       return new MetricsableThreadPoolExecutor(
-          "metaExecutor",
+          "metaNodeInSessionExecutor",
           sessionServerConfig.getMetaNodeWorkerSize(),
           sessionServerConfig.getMetaNodeWorkerSize(),
           300,
           TimeUnit.SECONDS,
           new ArrayBlockingQueue<>(sessionServerConfig.getMetaNodeBufferSize()),
-          new NamedThreadFactory("metaExecutor", true));
+          new NamedThreadFactory("metaNodeInSessionExecutor", true));
     }
 
     @Bean

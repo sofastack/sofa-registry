@@ -16,12 +16,20 @@
  */
 package com.alipay.sofa.registry.metrics;
 
+import com.alipay.remoting.ProtocolCode;
+import com.alipay.remoting.ProtocolManager;
+import com.alipay.remoting.rpc.protocol.RpcProtocol;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.util.ConcurrentUtils;
+import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricRegistry;
+import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadPoolExecutor;
 
 /**
@@ -29,13 +37,20 @@ import java.util.concurrent.ThreadPoolExecutor;
  * @version $Id: ThreadMetrics.java, v 0.1 2018-11-18 15:19 shangyu.wh Exp $
  */
 public class TaskMetrics {
-  private static final Logger LOGGER = LoggerFactory.getLogger(TaskMetrics.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger("THREAD-POOL-METRICS");
 
   private final MetricRegistry metrics = new MetricRegistry();
 
-  private TaskMetrics() {}
+  private final Set<String> executors = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
   private static final TaskMetrics instance = new TaskMetrics();
+
+  private static boolean boltRegistered = false;
+
+  private TaskMetrics() {
+    ExecutorMetricsWatchDog executorMetricsWatchDog = new ExecutorMetricsWatchDog();
+    ConcurrentUtils.createDaemonThread("executorMetrics", executorMetricsWatchDog).start();
+  }
 
   public static TaskMetrics getInstance() {
     return instance;
@@ -45,14 +60,26 @@ public class TaskMetrics {
     return this.metrics;
   }
 
-  public void registerThreadExecutor(String executorName, ThreadPoolExecutor executor) {
+  public synchronized void registerBolt() {
+    if (boltRegistered) {
+      return;
+    }
+    ThreadPoolExecutor boltDefaultExecutor =
+        (ThreadPoolExecutor)
+            ProtocolManager.getProtocol(ProtocolCode.fromBytes(RpcProtocol.PROTOCOL_CODE))
+                .getCommandHandler()
+                .getDefaultExecutor();
+    registerThreadExecutor("BoltDefaultExecutor", boltDefaultExecutor);
+    boltRegistered = true;
+  }
 
+  public void registerThreadExecutor(String executorName, ThreadPoolExecutor executor) {
     registerIfAbsent(
         MetricRegistry.name(executorName, "queue"),
         (Gauge<Integer>) () -> executor.getQueue().size());
 
     registerIfAbsent(
-        MetricRegistry.name(executorName, "current"), (Gauge<Integer>) executor::getPoolSize);
+        MetricRegistry.name(executorName, "poolSize"), (Gauge<Integer>) executor::getPoolSize);
 
     registerIfAbsent(
         MetricRegistry.name(executorName, "active"), (Gauge<Integer>) executor::getActiveCount);
@@ -63,15 +90,39 @@ public class TaskMetrics {
 
     registerIfAbsent(
         MetricRegistry.name(executorName, "task"), (Gauge<Long>) executor::getTaskCount);
+    executors.add(executorName);
   }
 
-  private boolean registerIfAbsent(String executorName, Metric metric) {
+  private boolean registerIfAbsent(String metricName, Metric metric) {
     Map<String, Metric> metricMap = metrics.getMetrics();
-    if (metricMap.containsKey(executorName)) {
-      LOGGER.warn("executor.metric exists {}", executorName);
+    if (metricMap.containsKey(metricName)) {
+      LOGGER.warn("executor.metric exists {}", metricName);
       return false;
     }
-    metrics.register(executorName, metric);
+    metrics.register(metricName, metric);
     return true;
+  }
+
+  class ExecutorMetricsWatchDog extends WakeUpLoopRunnable {
+
+    @Override
+    public void runUnthrowable() {
+      for (String executorName : executors) {
+        Map<String, Gauge> map = metrics.getGauges((name, value) -> name.startsWith(executorName));
+        StringBuilder sb = new StringBuilder();
+        sb.append(executorName);
+        map.forEach(
+            (key, gauge) -> {
+              String name = key.substring(executorName.length() + 1);
+              sb.append(", ").append(name).append(":").append(gauge.getValue());
+            });
+        LOGGER.info(sb.toString());
+      }
+    }
+
+    @Override
+    public int getWaitingMillis() {
+      return 5000;
+    }
   }
 }

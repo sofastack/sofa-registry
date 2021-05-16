@@ -345,13 +345,13 @@ public class DataServerBeanConfiguration {
     @Bean(name = "metaNodeExecutor")
     public ThreadPoolExecutor metaNodeExecutor(DataServerConfig dataServerConfig) {
       return new MetricsableThreadPoolExecutor(
-          "metaExecutor",
+          "metaNodeInDataExecutor",
           dataServerConfig.getMetaNodeExecutorPoolSize(),
           dataServerConfig.getMetaNodeExecutorPoolSize(),
           300,
           TimeUnit.SECONDS,
           new ArrayBlockingQueue<>(dataServerConfig.getMetaNodeExecutorQueueSize()),
-          new NamedThreadFactory("metaExecutor", true));
+          new NamedThreadFactory("metaNodeInDataExecutor", true));
     }
   }
 
