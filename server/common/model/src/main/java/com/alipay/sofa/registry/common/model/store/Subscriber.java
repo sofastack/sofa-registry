@@ -94,7 +94,7 @@ public class Subscriber extends BaseInfo {
   }
 
   public String shortDesc() {
-    final StringBuilder sb = new StringBuilder();
+    final StringBuilder sb = new StringBuilder(256);
     sb.append("dataInfoId=").append(getDataInfoId()).append(", ");
     sb.append("registerId=").append(getRegisterId()).append(", ");
     sb.append("scope=").append(getScope()).append(", ");

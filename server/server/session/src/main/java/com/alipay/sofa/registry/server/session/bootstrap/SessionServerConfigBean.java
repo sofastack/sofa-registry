@@ -170,7 +170,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
   private int cacheCountIntervalSecs = 30;
 
-  private int cacheDatumMaxNums = 2000;
+  private int cacheDatumMaxNums = 20000;
 
   private int cacheDatumExpireSecs = 60 * 3;
 
