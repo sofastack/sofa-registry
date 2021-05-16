@@ -45,6 +45,7 @@ public class MetadataMetrics {
                     .subsystem("apps")
                     .name("fetch_apps_total")
                     .help("query apps")
+                    .labelNames("hit")
                     .register();
     static final Counter.Child APPS_CACHE_HIT_COUNTER = FETCH_APPS_COUNTER.labels("Y");
     static final Counter.Child APPS_CACHE_MISS_COUNTER = FETCH_APPS_COUNTER.labels("N");
