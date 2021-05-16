@@ -170,7 +170,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
   private int cacheCountIntervalSecs = 30;
 
-  private int cacheDatumMaxNums = 20000;
+  private int cacheDatumMaxWeight = 1000*1000*1000;
 
   private int cacheDatumExpireSecs = 60 * 3;
 
@@ -1129,12 +1129,12 @@ public class SessionServerConfigBean implements SessionServerConfig {
   }
 
   @Override
-  public int getCacheDatumMaxNums() {
-    return cacheDatumMaxNums;
+  public int getCacheDatumMaxWeight() {
+    return cacheDatumMaxWeight;
   }
 
-  public void setCacheDatumMaxNums(int cacheDatumMaxNums) {
-    this.cacheDatumMaxNums = cacheDatumMaxNums;
+  public void setCacheDatumMaxWeight(int cacheDatumMaxWeight) {
+    this.cacheDatumMaxWeight = cacheDatumMaxWeight;
   }
 
   @Override

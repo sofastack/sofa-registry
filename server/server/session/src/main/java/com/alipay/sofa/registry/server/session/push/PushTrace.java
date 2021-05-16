@@ -138,7 +138,11 @@ public final class PushTrace {
   private void calc() {
     // try find the earliest and the latest publisher after the subPushedVersion
     // that means the modify after last push, but this could not handle the publisher.remove
-    this.datumTotalDelayMillis = pushFinishTimestamp - pushCause.datumTimestamp;
+    if(subscriberPushedVersion == 0){
+      this.datumTotalDelayMillis = pushFinishTimestamp - subRegTimestamp;
+    }else{
+      this.datumTotalDelayMillis = pushFinishTimestamp - pushCause.datumTimestamp;
+    }
     this.datumPushTriggerSpanMillis =
         Math.max(
             pushCause.triggerPushCtx.getTriggerSessionTimestamp() - pushCause.datumTimestamp, 0);

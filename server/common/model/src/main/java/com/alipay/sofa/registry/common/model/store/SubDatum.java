@@ -23,7 +23,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-public final class SubDatum implements Serializable {
+public final class SubDatum implements Serializable, Sizer {
   private static final long serialVersionUID = 5307489721610438103L;
 
   private final String dataInfoId;
@@ -135,5 +135,13 @@ public final class SubDatum implements Serializable {
     }
     return new SubDatum(
         dataInfoId, dataCenter, datum.version, publishers, dataId, instanceId, group);
+  }
+
+  public int size() {
+    int size = dataInfoId.length() + dataCenter.length() + dataId.length() + instanceId.length() + 20;
+    for(SubPublisher pub:publishers){
+      size += pub.size();
+    }
+    return size;
   }
 }

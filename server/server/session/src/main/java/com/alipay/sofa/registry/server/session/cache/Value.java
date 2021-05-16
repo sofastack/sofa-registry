@@ -16,13 +16,15 @@
  */
 package com.alipay.sofa.registry.server.session.cache;
 
+import com.alipay.sofa.registry.common.model.store.Sizer;
+
 /**
  * cache return result
  *
  * @author shangyu.wh
  * @version $Id: Value.java, v 0.1 2017-12-06 15:52 shangyu.wh Exp $
  */
-public class Value<T> {
+public class Value<T extends Sizer> implements Sizer {
 
   private final T payload;
 
@@ -42,5 +44,13 @@ public class Value<T> {
    */
   public T getPayload() {
     return payload;
+  }
+
+  public int size() {
+    if (payload == null) {
+      // default size for java header
+      return 20;
+    }
+    return payload.size();
   }
 }
