@@ -135,7 +135,6 @@ public class CacheTaskTest {
     try {
       task.syncCount();
       task.printTaskExecute();
-      task.printExecutorTaskExecute();
     } finally {
       TaskDispatchers.getTaskDispatcherMap().clear();
     }

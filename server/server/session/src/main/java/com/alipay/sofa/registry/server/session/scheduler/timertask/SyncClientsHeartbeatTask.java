@@ -18,7 +18,6 @@ package com.alipay.sofa.registry.server.session.scheduler.timertask;
 
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.metrics.TaskMetrics;
 import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.session.bootstrap.ExecutorManager;
@@ -29,12 +28,9 @@ import com.alipay.sofa.registry.server.session.store.Watchers;
 import com.alipay.sofa.registry.task.batcher.AcceptorExecutor;
 import com.alipay.sofa.registry.task.batcher.TaskDispatcher;
 import com.alipay.sofa.registry.task.batcher.TaskDispatchers;
-import com.codahale.metrics.Gauge;
-import com.codahale.metrics.MetricRegistry;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.ThreadPoolExecutor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 
@@ -50,9 +46,6 @@ public class SyncClientsHeartbeatTask {
 
   private static final Logger PRO_LOGGER =
       LoggerFactory.getLogger("SESSION-PROFILE-DIGEST", "[TaskExecute]");
-
-  private static final Logger EXE_LOGGER =
-      LoggerFactory.getLogger("SESSION-PROFILE-DIGEST", "[ExecutorMetrics]");
 
   public static final String SYMBOLIC1 = "  ├─ ";
   public static final String SYMBOLIC2 = "  └─ ";
@@ -128,48 +121,6 @@ public class SyncClientsHeartbeatTask {
       sb.append(", ExpiredTasks:").append(acceptorExecutor.getExpiredTasks());
       sb.append(", OverriddenTasks:").append(acceptorExecutor.getOverriddenTasks());
       sb.append(", MaxBuffer:").append(acceptorExecutor.getMaxBufferSize()).append("\n");
-    }
-    sb0.append("\n").append(sb);
-  }
-
-  @Scheduled(
-      initialDelayString = "${session.server.printTask.fixedDelay}",
-      fixedDelayString = "${session.server.printTask.fixedDelay}")
-  public void printExecutorTaskExecute() {
-
-    Map<String, ThreadPoolExecutor> reportExecutors = executorManager.getReportExecutors();
-    if (reportExecutors != null) {
-
-      StringBuilder sb = new StringBuilder();
-      logInfoExecutor(sb, reportExecutors, "ExecutorMetrics");
-      EXE_LOGGER.info(sb.toString());
-    }
-  }
-
-  protected void logInfoExecutor(
-      StringBuilder sb0, Map<String, ThreadPoolExecutor> reportExecutors, String info) {
-    sb0.append("\n").append(info).append(" >>>>>>>");
-    StringBuilder sb = new StringBuilder();
-    for (Iterator<Entry<String, ThreadPoolExecutor>> i = reportExecutors.entrySet().iterator();
-        i.hasNext(); ) {
-      Entry<String, ThreadPoolExecutor> entry = i.next();
-      String executorName = entry.getKey();
-
-      MetricRegistry metricRegistry = TaskMetrics.getInstance().getMetricRegistry();
-      Map<String, Gauge> map =
-          metricRegistry.getGauges((name, value) -> name.startsWith(executorName));
-
-      String outterTreeSymbol = SYMBOLIC1;
-      if (!i.hasNext()) {
-        outterTreeSymbol = SYMBOLIC2;
-      }
-      sb.append(outterTreeSymbol).append(executorName);
-      map.forEach(
-          (key, gauge) -> {
-            String name = key.substring(executorName.length() + 1);
-            sb.append(", ").append(name).append(":").append(gauge.getValue());
-          });
-      sb.append("\n");
     }
     sb0.append("\n").append(sb);
   }

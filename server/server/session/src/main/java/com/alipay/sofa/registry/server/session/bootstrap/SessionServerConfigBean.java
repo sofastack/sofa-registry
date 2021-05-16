@@ -99,7 +99,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
   private int accessMetadataWorkerSize = OsUtils.getCpuCount() * 4;
 
-  private int clientNodeExchangeTimeoutMillis = 1000;
+  private int clientNodeExchangeTimeoutMillis = 2000;
 
   private int dataNodeExchangeTimeoutMillis = 3000;
 
