@@ -54,7 +54,7 @@ public class DatumCacheGenerator implements CacheGenerator {
             datum.getDataBoxBytes(),
             datum.getVersion());
       }
-      return new Value(datum);
+      return new Value((SubDatum) datum);
     }
     throw new IllegalArgumentException("unsupported key type:" + entityType);
   }

@@ -22,6 +22,7 @@ import com.alipay.sofa.registry.core.model.RegisterResponse;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.session.converter.pb.AppRevisionConvertor;
 import com.alipay.sofa.registry.server.session.converter.pb.RegisterResponseConvertor;
+import com.alipay.sofa.registry.server.shared.remoting.RemotingHelper;
 
 /**
  * @author xiaojian.xj
@@ -39,5 +40,18 @@ public class MetadataRegisterPbHandler extends AbstractClientMetadataRequestHand
   @Override
   public Class interest() {
     return MetaRegister.class;
+  }
+
+  @Override
+  protected void logRequest(Channel channel, MetaRegister request) {
+    if (exchangeLog.isInfoEnabled()) {
+      StringBuilder sb = new StringBuilder(256);
+      sb.append("[").append(this.getClass().getSimpleName()).append("] ");
+      sb.append("Remote:")
+          .append(RemotingHelper.getChannelRemoteAddress(channel))
+          .append(" Revision: ")
+          .append(request.getRevision());
+      exchangeLog.info(sb.toString());
+    }
   }
 }
