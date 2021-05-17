@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.push;
 
+import com.alipay.sofa.registry.common.model.store.Sizer;
 import com.alipay.sofa.registry.common.model.store.SubDatum;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.server.session.TestUtils;
@@ -107,8 +108,8 @@ public class FirePushServiceTest {
 
     // get the datum
     Subscriber subscriber = TestUtils.newZoneSubscriber(dataId, zone);
-    Mockito.when(svc.sessionCacheService.getValueIfPresent(Mockito.anyObject()))
-        .thenReturn(new Value(datum));
+    Value v = new Value((Sizer) datum);
+    Mockito.when(svc.sessionCacheService.getValueIfPresent(Mockito.anyObject())).thenReturn(v);
     Mockito.when(svc.sessionInterests.getDatas(Mockito.anyObject()))
         .thenReturn(Collections.singletonList(subscriber));
     Assert.assertTrue(svc.doExecuteOnChange("testDataId", ctx));
@@ -118,10 +119,11 @@ public class FirePushServiceTest {
 
     // get datum is old
     datum = TestUtils.newSubDatum("testDataId", 80, Collections.emptyList());
+    v = new Value((Sizer) datum);
     Mockito.when(svc.sessionCacheService.getValueIfPresent(Mockito.anyObject()))
-        .thenReturn(new Value(datum));
+        .thenReturn(v);
     Mockito.when(svc.sessionCacheService.getValue(Mockito.anyObject()))
-        .thenReturn(new Value(datum));
+        .thenReturn(v);
     Assert.assertFalse(svc.doExecuteOnChange("testDataId", ctx));
   }
 
@@ -134,8 +136,8 @@ public class FirePushServiceTest {
         .thenThrow(new RuntimeException());
     Assert.assertFalse(svc.changeHandler.onChange("testDataId", ctx));
     SubDatum datum = TestUtils.newSubDatum("testDataId", 200, Collections.emptyList());
-    Mockito.when(svc.sessionCacheService.getValueIfPresent(Mockito.anyObject()))
-        .thenReturn(new Value(datum));
+    Value v = new Value((Sizer) datum);
+    Mockito.when(svc.sessionCacheService.getValueIfPresent(Mockito.anyObject())).thenReturn(v);
     Assert.assertTrue(svc.changeHandler.onChange("testDataId", ctx));
   }
 
