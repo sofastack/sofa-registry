@@ -17,11 +17,10 @@
 package com.alipay.sofa.registry.server.session.resource;
 
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerBootstrap;
+import javax.ws.rs.core.Response;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
-
-import javax.ws.rs.core.Response;
 
 public class HealthResourceTest {
   @Test

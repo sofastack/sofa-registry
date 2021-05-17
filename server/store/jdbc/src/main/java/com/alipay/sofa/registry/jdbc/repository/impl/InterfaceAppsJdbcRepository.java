@@ -16,6 +16,10 @@
  */
 package com.alipay.sofa.registry.jdbc.repository.impl;
 
+import static com.alipay.sofa.registry.jdbc.repository.impl.MetadataMetrics.Fetch.APPS_CACHE_HIT_COUNTER;
+import static com.alipay.sofa.registry.jdbc.repository.impl.MetadataMetrics.Fetch.APPS_CACHE_MISS_COUNTER;
+import static com.alipay.sofa.registry.jdbc.repository.impl.MetadataMetrics.Register.INTERFACE_APPS_REGISTER_COUNTER;
+
 import com.alipay.sofa.registry.common.model.appmeta.InterfaceMapping;
 import com.alipay.sofa.registry.jdbc.config.DefaultCommonConfig;
 import com.alipay.sofa.registry.jdbc.config.MetadataConfig;
@@ -39,10 +43,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
-
-import static com.alipay.sofa.registry.jdbc.repository.impl.MetadataMetrics.Fetch.APPS_CACHE_HIT_COUNTER;
-import static com.alipay.sofa.registry.jdbc.repository.impl.MetadataMetrics.Fetch.APPS_CACHE_MISS_COUNTER;
-import static com.alipay.sofa.registry.jdbc.repository.impl.MetadataMetrics.Register.INTERFACE_APPS_REGISTER_COUNTER;
 
 /**
  * @author xiaojian.xj

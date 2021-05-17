@@ -46,6 +46,10 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
   private int syncSessionIOHighWaterMark = 1024 * 256;
 
+  private int clientIOLowWaterMark = 1024 * 48;
+
+  private int clientIOHighWaterMark = 1024 * 96;
+
   private int metaServerPort = 9610;
 
   private int dataServerPort = 9620;
@@ -1288,5 +1292,23 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
   public void setSubscriberRegisterTaskWorkerSize(int subscriberRegisterTaskWorkerSize) {
     this.subscriberRegisterTaskWorkerSize = subscriberRegisterTaskWorkerSize;
+  }
+
+  @Override
+  public int getClientIOLowWaterMark() {
+    return clientIOLowWaterMark;
+  }
+
+  public void setClientIOLowWaterMark(int clientIOLowWaterMark) {
+    this.clientIOLowWaterMark = clientIOLowWaterMark;
+  }
+
+  @Override
+  public int getClientIOHighWaterMark() {
+    return clientIOHighWaterMark;
+  }
+
+  public void setClientIOHighWaterMark(int clientIOHighWaterMark) {
+    this.clientIOHighWaterMark = clientIOHighWaterMark;
   }
 }

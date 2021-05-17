@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.jdbc.repository.impl;
 
+import static com.alipay.sofa.registry.jdbc.repository.impl.MetadataMetrics.Register.REVISION_GC_COUNTER;
+
 import com.alipay.sofa.registry.jdbc.config.DefaultCommonConfig;
 import com.alipay.sofa.registry.jdbc.config.MetadataConfig;
 import com.alipay.sofa.registry.jdbc.mapper.AppRevisionMapper;
@@ -42,8 +44,6 @@ import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import org.apache.commons.lang.time.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import static com.alipay.sofa.registry.jdbc.repository.impl.MetadataMetrics.Register.REVISION_GC_COUNTER;
 
 /**
  * @author xiaojian.xj

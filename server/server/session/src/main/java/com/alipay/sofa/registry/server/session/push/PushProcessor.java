@@ -20,6 +20,7 @@ import static com.alipay.sofa.registry.server.session.push.PushMetrics.Push.*;
 
 import com.alipay.remoting.rpc.exception.InvokeTimeoutException;
 import com.alipay.sofa.registry.common.model.SubscriberUtils;
+import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.store.BaseInfo;
 import com.alipay.sofa.registry.common.model.store.SubDatum;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
@@ -153,8 +154,10 @@ public class PushProcessor {
 
   private boolean commitTask(PushTask task) {
     try {
-      // keyed by pushingKey: client.addr && dataInfoId
-      pushExecutor.execute(task.pushingTaskKey, task);
+      // keyed by client.addr && (pushingKey%8)
+      // avoid generating too many pushes for the same client at the same time
+      pushExecutor.execute(
+          new Tuple(task.pushingTaskKey.addr, task.pushingTaskKey.hashCode() % 8), task);
       COMMIT_COUNTER.inc();
       return true;
     } catch (Throwable e) {
@@ -297,7 +300,7 @@ public class PushProcessor {
       clientNodeService.pushWithCallback(
           data, task.subscriber.getSourceAddress(), new PushClientCallback(task));
       PUSH_CLIENT_PUSHING_COUNTER.inc();
-      LOGGER.info("{}, pushing {}", task.taskID, task.pushingTaskKey);
+      LOGGER.info("[pushing]{},{}", task.taskID, task.pushingTaskKey);
       return true;
     } catch (Throwable e) {
       handleDoPushException(task, e);
