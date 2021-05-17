@@ -235,6 +235,8 @@ public class SessionServerBootstrap {
                 new URL(
                     NetUtil.getLocalAddress().getHostAddress(),
                     sessionServerConfig.getServerPort()),
+                sessionServerConfig.getClientIOLowWaterMark(),
+                sessionServerConfig.getClientIOHighWaterMark(),
                 serverHandlers.toArray(new ChannelHandler[serverHandlers.size()]));
         LOGGER.info("Session server started! port:{}", sessionServerConfig.getServerPort());
       }

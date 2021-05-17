@@ -100,21 +100,21 @@ public class PushProcessorTest {
     Assert.assertEquals(replaceTask.expireTimestamp, task.expireTimestamp);
     Assert.assertTrue(replaceTask.toString(), replaceTask.toString().contains(dataId));
 
-    // now there is one pending task with noDelay
+    // now there is one pending task with delay
     processor.sessionServerConfig.setStopPushSwitch(true);
     Assert.assertEquals(processor.watchCommit().size(), 0);
 
     processor.sessionServerConfig.setStopPushSwitch(false);
-    // pushExecutor not init, commit failed
+    // task has clean
     Assert.assertEquals(processor.watchCommit().size(), 0);
     // first suspend, avoid run watchdog
     processor.watchDog.suspend();
     // pushExecutor init
     processor.init();
     // push again
-    // noDelay=true
+    // Reg.noDelay=false
     processor.firePush(
-        pushCause,
+        new PushCause(ctx, PushType.Empty, System.currentTimeMillis()),
         NetUtil.getLocalSocketAddress(),
         Collections.singletonMap(subscriber.getRegisterId(), subscriber),
         datum);
@@ -128,7 +128,7 @@ public class PushProcessorTest {
     Assert.assertEquals(processor.pendingTasks.size(), 2);
     // only one, sub is not expire
     List<PushProcessor.PushTask> commits = processor.watchCommit();
-    Assert.assertEquals(commits.size(), 1);
+    Assert.assertEquals(1, commits.size());
     Assert.assertEquals(processor.watchCommit().size(), 0);
     Assert.assertEquals(processor.pendingTasks.size(), 1);
 

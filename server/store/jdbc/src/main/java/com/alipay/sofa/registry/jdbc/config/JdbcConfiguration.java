@@ -27,6 +27,7 @@ import static com.alibaba.druid.pool.DruidDataSourceFactory.PROP_REMOVEABANDONED
 import static com.alibaba.druid.pool.DruidDataSourceFactory.PROP_REMOVEABANDONEDTIMEOUT;
 import static com.alibaba.druid.pool.DruidDataSourceFactory.PROP_URL;
 import static com.alibaba.druid.pool.DruidDataSourceFactory.PROP_USERNAME;
+
 import com.alibaba.druid.filter.logging.Slf4jLogFilter;
 import com.alibaba.druid.filter.stat.StatFilter;
 import com.alibaba.druid.pool.DruidDataSource;
@@ -112,8 +113,7 @@ public class JdbcConfiguration {
      * @throws Exception
      */
     @Bean
-    public DataSource dataSource(JdbcDriverConfig jdbcDriverConfig)
-        throws Exception {
+    public DataSource dataSource(JdbcDriverConfig jdbcDriverConfig) throws Exception {
       Properties props = new Properties();
       props.put(
           PROP_DRIVERCLASSNAME,
@@ -133,9 +133,9 @@ public class JdbcConfiguration {
       props.put(PROP_LOGABANDONED, "true");
       props.put(PROP_INIT, "true");
 
-      DruidDataSource dataSource = (DruidDataSource)DruidDataSourceFactory.createDataSource(props);
+      DruidDataSource dataSource = (DruidDataSource) DruidDataSourceFactory.createDataSource(props);
       // log filter
-      List list= Lists.newArrayList(logFilter(), statFilter(jdbcDriverConfig));
+      List list = Lists.newArrayList(logFilter(), statFilter(jdbcDriverConfig));
       dataSource.setProxyFilters(list);
       return dataSource;
     }

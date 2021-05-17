@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.jdbc.repository.batch;
 
+import static com.alipay.sofa.registry.jdbc.repository.impl.MetadataMetrics.Register.REVISION_HEARTBEAT_COUNTER;
+
 import com.alipay.sofa.registry.jdbc.config.DefaultCommonConfig;
 import com.alipay.sofa.registry.jdbc.mapper.AppRevisionMapper;
 import com.alipay.sofa.registry.log.Logger;
@@ -26,8 +28,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
-
-import static com.alipay.sofa.registry.jdbc.repository.impl.MetadataMetrics.Register.REVISION_HEARTBEAT_COUNTER;
 
 /**
  * @author xiaojian.xj

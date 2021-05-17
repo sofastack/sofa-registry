@@ -38,18 +38,16 @@ public class MetadataMetrics {
     static final Counter.Child REVISION_CACHE_HIT_COUNTER = FETCH_REVISION_COUNTER.labels("Y");
     static final Counter.Child REVISION_CACHE_MISS_COUNTER = FETCH_REVISION_COUNTER.labels("N");
 
-
     static final Counter FETCH_APPS_COUNTER =
-            Counter.build()
-                    .namespace("metadata")
-                    .subsystem("apps")
-                    .name("fetch_apps_total")
-                    .help("query apps")
-                    .labelNames("hit")
-                    .register();
+        Counter.build()
+            .namespace("metadata")
+            .subsystem("apps")
+            .name("fetch_apps_total")
+            .help("query apps")
+            .labelNames("hit")
+            .register();
     static final Counter.Child APPS_CACHE_HIT_COUNTER = FETCH_APPS_COUNTER.labels("Y");
     static final Counter.Child APPS_CACHE_MISS_COUNTER = FETCH_APPS_COUNTER.labels("N");
-
   }
 
   public static final class Register {
@@ -63,28 +61,27 @@ public class MetadataMetrics {
             .register();
 
     public static final Counter REVISION_HEARTBEAT_COUNTER =
-            Counter.build()
-                    .namespace("metadata")
-                    .subsystem("revision")
-                    .name("revision_heartbeat_total")
-                    .help("revision register")
-                    .register();
+        Counter.build()
+            .namespace("metadata")
+            .subsystem("revision")
+            .name("revision_heartbeat_total")
+            .help("revision register")
+            .register();
 
     public static final Counter REVISION_GC_COUNTER =
-            Counter.build()
-                    .namespace("metadata")
-                    .subsystem("revision")
-                    .name("revision_delete_total")
-                    .help("revision delete")
-                    .register();
-
+        Counter.build()
+            .namespace("metadata")
+            .subsystem("revision")
+            .name("revision_delete_total")
+            .help("revision delete")
+            .register();
 
     public static final Counter INTERFACE_APPS_REGISTER_COUNTER =
-            Counter.build()
-                    .namespace("metadata")
-                    .subsystem("apps")
-                    .name("apps_register_total")
-                    .help("apps register")
-                    .register();
+        Counter.build()
+            .namespace("metadata")
+            .subsystem("apps")
+            .name("apps_register_total")
+            .help("apps register")
+            .register();
   }
 }

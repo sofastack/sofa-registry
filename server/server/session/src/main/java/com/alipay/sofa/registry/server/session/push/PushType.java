@@ -18,7 +18,7 @@ package com.alipay.sofa.registry.server.session.push;
 
 public enum PushType {
   Sub(false),
-  Reg(true),
+  Reg(false),
   Temp(true),
   Empty(true);
 
