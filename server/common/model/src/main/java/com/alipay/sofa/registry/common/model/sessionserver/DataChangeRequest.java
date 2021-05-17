@@ -17,8 +17,10 @@
 package com.alipay.sofa.registry.common.model.sessionserver;
 
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
+import com.alipay.sofa.registry.util.StringFormatter;
 import java.io.Serializable;
-import java.util.*;
+import java.util.Collections;
+import java.util.Map;
 
 /**
  * request to notify session server when data changed
@@ -49,12 +51,6 @@ public class DataChangeRequest implements Serializable {
 
   @Override
   public String toString() {
-    return "DataChangeRequest{"
-        + "dataInfoIds="
-        + dataInfoIds
-        + ", dataCenter='"
-        + dataCenter
-        + '\''
-        + '}';
+    return StringFormatter.format("DataChangeRequest{size={},{}}", dataInfoIds.size(), dataCenter);
   }
 }

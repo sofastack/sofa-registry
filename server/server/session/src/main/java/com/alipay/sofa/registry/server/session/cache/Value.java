@@ -24,16 +24,16 @@ import com.alipay.sofa.registry.common.model.store.Sizer;
  * @author shangyu.wh
  * @version $Id: Value.java, v 0.1 2017-12-06 15:52 shangyu.wh Exp $
  */
-public class Value<T extends Sizer> implements Sizer {
+public class Value implements Sizer {
 
-  private final T payload;
+  private final Sizer payload;
 
   /**
    * constructor
    *
    * @param payload
    */
-  public Value(T payload) {
+  public Value(Sizer payload) {
     this.payload = payload;
   }
 
@@ -42,10 +42,11 @@ public class Value<T extends Sizer> implements Sizer {
    *
    * @return property value of payload
    */
-  public T getPayload() {
+  public Sizer getPayload() {
     return payload;
   }
 
+  @Override
   public int size() {
     if (payload == null) {
       // default size for java header

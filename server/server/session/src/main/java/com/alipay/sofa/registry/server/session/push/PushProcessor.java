@@ -16,8 +16,6 @@
  */
 package com.alipay.sofa.registry.server.session.push;
 
-import static com.alipay.sofa.registry.server.session.push.PushMetrics.Push.*;
-
 import com.alipay.remoting.rpc.exception.InvokeTimeoutException;
 import com.alipay.sofa.registry.common.model.SubscriberUtils;
 import com.alipay.sofa.registry.common.model.Tuple;
@@ -36,19 +34,25 @@ import com.alipay.sofa.registry.task.KeyedThreadPoolExecutor;
 import com.alipay.sofa.registry.task.MetricsableThreadPoolExecutor;
 import com.alipay.sofa.registry.trace.TraceID;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
+import com.alipay.sofa.registry.util.LoopRunnable;
 import com.alipay.sofa.registry.util.OsUtils;
 import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import javax.annotation.PostConstruct;
 import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import javax.annotation.PostConstruct;
-import org.springframework.beans.factory.annotation.Autowired;
+
+import static com.alipay.sofa.registry.server.session.push.PushMetrics.Push.*;
 
 public class PushProcessor {
   private static final Logger LOGGER = LoggerFactory.getLogger(PushProcessor.class);
@@ -66,10 +70,12 @@ public class PushProcessor {
   @Autowired ClientNodeService clientNodeService;
 
   final WatchDog watchDog = new WatchDog();
+  final Cleaner cleaner = new Cleaner();
 
+  final AtomicLong callBackDiscardCount = new AtomicLong();
   private final ThreadPoolExecutor pushCallbackExecutor =
       MetricsableThreadPoolExecutor.newExecutor(
-          "PushCallback", OsUtils.getCpuCount() * 4, 20000, new DiscardRunHandler());
+          "PushCallback", OsUtils.getCpuCount() * 5, 40000, new DiscardRunHandler());
 
   @PostConstruct
   public void init() {
@@ -79,6 +85,7 @@ public class PushProcessor {
             sessionServerConfig.getPushTaskExecutorPoolSize(),
             sessionServerConfig.getPushTaskExecutorQueueSize());
     ConcurrentUtils.createDaemonThread("PushWatchDog", watchDog).start();
+    ConcurrentUtils.createDaemonThread("PushCleaner", cleaner).start();
   }
 
   private boolean firePush(PushTask pushTask) {
@@ -179,6 +186,24 @@ public class PushProcessor {
     }
   }
 
+  final class Cleaner extends LoopRunnable {
+    @Override
+    public void runUnthrowable() {
+      int cleans = cleanPushingTaskRunTooLong();
+      LOGGER.info(
+          "clean {}, callbackDiscardCounter={}, pending={}, pushing={}",
+          cleans,
+          callBackDiscardCount.getAndSet(0),
+          pendingTasks.size(),
+          pushingTasks.size());
+    }
+
+    @Override
+    public void waitingUnthrowable() {
+      ConcurrentUtils.sleepUninterruptibly(500, TimeUnit.MILLISECONDS);
+    }
+  }
+
   List<PushTask> watchCommit() {
     if (sessionServerConfig.isStopPushSwitch()) {
       // stop push, clean the task
@@ -222,6 +247,39 @@ public class PushProcessor {
     return pending;
   }
 
+  private int getPushingMaxSpanMillis() {
+    return sessionServerConfig.getClientNodeExchangeTimeoutMillis() * 3;
+  }
+
+  int cleanPushingTaskRunTooLong() {
+    List<PushTask> pushes = Lists.newArrayList(pushingTasks.values());
+    final long now = System.currentTimeMillis();
+    final int maxSpanMillis = getPushingMaxSpanMillis();
+    int count = 0;
+    for (PushTask push : pushes) {
+      long span = cleanPushingTaskIfRunTooLong(now, push, maxSpanMillis);
+      if (span > 0) {
+        count++;
+        LOGGER.warn("[pushTooLong]{},span={},{}", push.taskID, span, push.pushingTaskKey);
+      }
+    }
+    return count;
+  }
+
+  long cleanPushingTaskIfRunTooLong(long now, PushTask task, int maxSpanMillis) {
+    final long span = now - task.pushTimestamp;
+    if (span > maxSpanMillis) {
+      // this happens when the callbackExecutor is too busy and the callback task is discarded
+      // force to remove the prev task
+      final boolean cleaned = pushingTasks.remove(task.pushingTaskKey, task);
+      if (cleaned) {
+        task.trace.finishPush(PushTrace.PushStatus.Busy, now).print();
+      }
+      return span;
+    }
+    return 0;
+  }
+
   boolean checkPushing(PushTask task) {
     final PushingTaskKey pushingTaskKey = task.pushingTaskKey;
     // check the pushing task
@@ -230,20 +288,11 @@ public class PushProcessor {
       return true;
     }
     final long now = System.currentTimeMillis();
-    final long span = now - prev.pushTimestamp;
-    if (span > sessionServerConfig.getClientNodeExchangeTimeoutMillis() * 3) {
-      // this happens when the callbackExecutor is too busy and the callback task is discarded
-      // force to remove the prev task
-      final boolean cleaned = pushingTasks.remove(pushingTaskKey) != null;
+    final int maxSpanMillis = getPushingMaxSpanMillis();
+    final long span = cleanPushingTaskIfRunTooLong(now, prev, maxSpanMillis);
+    if (span > 0) {
       LOGGER.warn(
-          "[prevPushTooLong] {}, clean={}, prev={}, now={}",
-          pushingTaskKey,
-          cleaned,
-          prev.taskID,
-          task.taskID);
-      if (cleaned) {
-        prev.trace.finishPush(PushTrace.PushStatus.Busy, now).print();
-      }
+          "[pushTooLong]{},span={},{},now={}", prev.taskID, span, task.pushingTaskKey, task.taskID);
       return true;
     }
     // task after the prev, but prev.pushClient not callback, retry
@@ -605,9 +654,9 @@ public class PushProcessor {
     }
   }
 
-  static final class DiscardRunHandler implements RejectedExecutionHandler {
+  final class DiscardRunHandler implements RejectedExecutionHandler {
     public void rejectedExecution(Runnable r, ThreadPoolExecutor e) {
-      LOGGER.info("[pushCallbackBusy]");
+      callBackDiscardCount.incrementAndGet();
     }
   }
 

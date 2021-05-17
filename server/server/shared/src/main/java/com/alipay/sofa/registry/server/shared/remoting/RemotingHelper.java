@@ -29,4 +29,8 @@ public final class RemotingHelper {
   public static InetSocketAddress getChannelRemoteAddress(Channel channel) {
     return channel == null ? null : channel.getRemoteAddress();
   }
+
+  public static String getRemoteHostAddress(Channel channel) {
+    return channel == null ? null : channel.getRemoteAddress().getAddress().getHostAddress();
+  }
 }

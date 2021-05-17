@@ -256,7 +256,8 @@ public class PushProcessorTest {
 
   @Test
   public void testRun() {
-    PushProcessor.DiscardRunHandler discardRunHandler = new PushProcessor.DiscardRunHandler();
+    PushProcessor processor = new PushProcessor();
+    PushProcessor.DiscardRunHandler discardRunHandler = processor.new DiscardRunHandler();
     Thread t = Thread.currentThread();
     final AtomicReference<Thread> runT = new AtomicReference<>();
     discardRunHandler.rejectedExecution(
@@ -348,5 +349,29 @@ public class PushProcessorTest {
     Assert.assertEquals(PUSH_CLIENT_FAIL_COUNTER.get(), 2, 0);
     Assert.assertEquals(processor.pushingTasks.size(), 0);
     Assert.assertEquals(0, subscriber.getPushVersion(datum.getDataCenter()));
+  }
+
+  @Test
+  public void testClean() {
+    PushProcessor processor = newProcessor();
+    Assert.assertEquals(0, processor.cleanPushingTaskRunTooLong());
+    TriggerPushContext ctx =
+        new TriggerPushContext("testDc", 100, null, System.currentTimeMillis());
+    PushCause pushCause = new PushCause(ctx, PushType.Reg, System.currentTimeMillis());
+    Subscriber subscriber = TestUtils.newZoneSubscriber(dataId, zone);
+    SubDatum datum = TestUtils.newSubDatum(subscriber.getDataId(), 100, Collections.emptyList());
+
+    processor.firePush(
+        pushCause,
+        NetUtil.getLocalSocketAddress(),
+        Collections.singletonMap(subscriber.getRegisterId(), subscriber),
+        datum);
+    PushProcessor.PushTask task = processor.pendingTasks.values().iterator().next();
+    processor.doPush(task);
+    // no run too long
+    Assert.assertEquals(0, processor.cleanPushingTaskRunTooLong());
+    // make expire
+    ((SessionServerConfigBean) processor.sessionServerConfig).setClientNodeExchangeTimeoutMillis(0);
+    Assert.assertEquals(1, processor.cleanPushingTaskRunTooLong());
   }
 }

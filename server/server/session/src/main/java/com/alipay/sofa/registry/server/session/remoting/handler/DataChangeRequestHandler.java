@@ -28,7 +28,7 @@ import com.alipay.sofa.registry.server.session.push.FirePushService;
 import com.alipay.sofa.registry.server.session.push.TriggerPushContext;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractClientHandler;
-import com.alipay.sofa.registry.server.shared.util.ChannelUtils;
+import com.alipay.sofa.registry.server.shared.remoting.RemotingHelper;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import java.util.Map;
 import java.util.concurrent.Executor;
@@ -72,7 +72,7 @@ public class DataChangeRequestHandler extends AbstractClientHandler<DataChangeRe
     if (sessionServerConfig.isStopPushSwitch()) {
       return null;
     }
-    final String dataNode = ChannelUtils.getRemoteHostAddress(channel);
+    final String dataNode = RemotingHelper.getRemoteHostAddress(channel);
     final String dataCenter = dataChangeRequest.getDataCenter();
     final long changeTimestamp = System.currentTimeMillis();
     for (Map.Entry<String, DatumVersion> e : dataChangeRequest.getDataInfoIds().entrySet()) {
