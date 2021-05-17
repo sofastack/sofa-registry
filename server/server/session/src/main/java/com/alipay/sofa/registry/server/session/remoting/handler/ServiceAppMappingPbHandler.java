@@ -19,6 +19,7 @@ package com.alipay.sofa.registry.server.session.remoting.handler;
 import com.alipay.sofa.registry.common.model.client.pb.ServiceAppMappingRequest;
 import com.alipay.sofa.registry.common.model.client.pb.ServiceAppMappingResponse;
 import com.alipay.sofa.registry.remoting.Channel;
+import com.alipay.sofa.registry.server.shared.remoting.RemotingHelper;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import java.util.List;
 
@@ -40,6 +41,19 @@ public class ServiceAppMappingPbHandler
     List<String> services = request.getServiceIdsList();
     ServiceAppMappingResponse response = appRevisionHandlerStrategy.queryApps(services);
     return response;
+  }
+
+  @Override
+  protected void logRequest(Channel channel, ServiceAppMappingRequest request) {
+    if (exchangeLog.isInfoEnabled()) {
+      StringBuilder sb = new StringBuilder(256);
+      sb.append("[").append(this.getClass().getSimpleName()).append("] ");
+      sb.append("Remote:")
+          .append(RemotingHelper.getChannelRemoteAddress(channel))
+          .append(" ServiceCount: ")
+          .append(request.getServiceIdsList().size());
+      exchangeLog.info(sb.toString());
+    }
   }
 
   @Override

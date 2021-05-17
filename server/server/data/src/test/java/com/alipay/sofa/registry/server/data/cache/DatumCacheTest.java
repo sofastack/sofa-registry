@@ -20,9 +20,12 @@ import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.slot.func.SlotFunctionRegistry;
 import com.alipay.sofa.registry.common.model.store.Publisher;
+import com.alipay.sofa.registry.common.model.store.SubDatum;
 import com.alipay.sofa.registry.server.data.TestBaseUtils;
 import java.util.List;
 import java.util.Map;
+
+import com.alipay.sofa.registry.server.session.cache.Value;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -65,4 +68,5 @@ public class DatumCacheTest {
     Assert.assertTrue(datum.getPubMap().isEmpty());
     Assert.assertTrue(v.getValue() < datum.getVersion());
   }
+
 }
