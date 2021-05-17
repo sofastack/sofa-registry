@@ -20,6 +20,7 @@ import com.alipay.sofa.registry.common.model.PublishSource;
 import com.alipay.sofa.registry.common.model.RegisterVersion;
 import com.alipay.sofa.registry.common.model.ServerDataBox;
 import com.alipay.sofa.registry.util.StringFormatter;
+import com.alipay.sofa.registry.util.StringUtils;
 import com.google.common.collect.Lists;
 import java.io.Serializable;
 import java.util.Collections;
@@ -115,9 +116,15 @@ public final class SubPublisher implements Serializable, Sizer {
   }
 
   public int size() {
-    int s = registerId.length() + cell.length() + srcAddressString.length() + 40;
-    for (ServerDataBox box : dataList) {
-      s += box.byteSize();
+    int s =
+        StringUtils.sizeof(registerId)
+            + StringUtils.sizeof(cell)
+            + StringUtils.sizeof(srcAddressString)
+            + 40;
+    if (dataList != null) {
+      for (ServerDataBox box : dataList) {
+        s += box.byteSize();
+      }
     }
     return s;
   }

@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.common.model.store;
 
 import com.alipay.sofa.registry.util.StringFormatter;
+import com.alipay.sofa.registry.util.StringUtils;
 import com.google.common.collect.Lists;
 import java.io.Serializable;
 import java.util.Collection;
@@ -138,9 +139,16 @@ public final class SubDatum implements Serializable, Sizer {
   }
 
   public int size() {
-    int size = dataInfoId.length() + dataCenter.length() + dataId.length() + instanceId.length() + 20;
-    for(SubPublisher pub:publishers){
-      size += pub.size();
+    int size =
+        StringUtils.sizeof(dataInfoId)
+            + StringUtils.sizeof(dataCenter)
+            + StringUtils.sizeof(dataId)
+            + StringUtils.sizeof(instanceId)
+            + 20;
+    if (publishers != null) {
+      for (SubPublisher pub : publishers) {
+        size += pub.size();
+      }
     }
     return size;
   }
