@@ -167,7 +167,8 @@ public class SlotTableResourceTest extends AbstractMetaServerTestBase {
     Assert.assertTrue(response.isSuccess());
     SlotTableResource.SlotTableStatusResponse slotTableStatus =
         (SlotTableResource.SlotTableStatusResponse) response.getData();
-    Assert.assertFalse(slotTableStatus.isSlotTableBalanced());
+    Assert.assertFalse(slotTableStatus.isSlotTableLeaderBalanced());
+    Assert.assertFalse(slotTableStatus.isSlotTableFollowerBalanced());
     Assert.assertTrue(slotTableStatus.isSlotTableStable());
 
     dataNodes = randomDataNodes(2);
@@ -179,7 +180,8 @@ public class SlotTableResourceTest extends AbstractMetaServerTestBase {
     response = resource.getSlotTableStatus();
     Assert.assertTrue(response.isSuccess());
     slotTableStatus = (SlotTableResource.SlotTableStatusResponse) response.getData();
-    Assert.assertFalse(slotTableStatus.isSlotTableBalanced());
+    Assert.assertFalse(slotTableStatus.isSlotTableLeaderBalanced());
+    Assert.assertFalse(slotTableStatus.isSlotTableFollowerBalanced());
     Assert.assertTrue(slotTableStatus.isSlotTableStable());
   }
 
@@ -195,7 +197,8 @@ public class SlotTableResourceTest extends AbstractMetaServerTestBase {
     Assert.assertTrue(response.isSuccess());
     SlotTableResource.SlotTableStatusResponse slotTableStatus =
         (SlotTableResource.SlotTableStatusResponse) response.getData();
-    Assert.assertFalse(slotTableStatus.isSlotTableBalanced());
+    Assert.assertFalse(slotTableStatus.isSlotTableLeaderBalanced());
+    Assert.assertFalse(slotTableStatus.isSlotTableFollowerBalanced());
     Assert.assertTrue(slotTableStatus.isSlotTableStable());
   }
 }

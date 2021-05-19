@@ -32,8 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 public abstract class AbstractEvictableFilterableLeaseManager<T extends Node>
     extends AbstractEvictableLeaseManager<T> {
 
-  @Autowired(required = false)
-  private List<LeaseFilter<T>> leaseFilters;
+  @Autowired private List<LeaseFilter> leaseFilters;
 
   @Override
   public VersionedList<Lease<T>> getLeaseMeta() {
@@ -42,13 +41,13 @@ public abstract class AbstractEvictableFilterableLeaseManager<T extends Node>
     }
     VersionedList<Lease<T>> rawVersionedList = super.getLeaseMeta();
     List<Lease<T>> leaseList = rawVersionedList.getClusterMembers();
-    for (LeaseFilter<T> filter : leaseFilters) {
+    for (LeaseFilter filter : leaseFilters) {
       leaseList = filterOut(leaseList, filter);
     }
     return new VersionedList<>(rawVersionedList.getEpoch(), leaseList);
   }
 
-  protected List<Lease<T>> filterOut(List<Lease<T>> inputs, LeaseFilter<T> filter) {
+  protected List<Lease<T>> filterOut(List<Lease<T>> inputs, LeaseFilter filter) {
     List<Lease<T>> leases = Lists.newArrayListWithCapacity(inputs.size());
     for (Lease<T> lease : inputs) {
       if (filter.allowSelect(lease)) {
@@ -60,7 +59,7 @@ public abstract class AbstractEvictableFilterableLeaseManager<T extends Node>
 
   @VisibleForTesting
   protected AbstractEvictableFilterableLeaseManager<T> setLeaseFilters(
-      List<LeaseFilter<T>> leaseFilters) {
+      List<LeaseFilter> leaseFilters) {
     this.leaseFilters = leaseFilters;
     return this;
   }

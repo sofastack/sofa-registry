@@ -66,7 +66,7 @@ public class DefaultForbiddenServerManager implements RegistryForbiddenServerMan
     if (servers.servers.add(ip)) {
       return store(servers);
     }
-    return false;
+    return true;
   }
 
   @Override
@@ -75,7 +75,7 @@ public class DefaultForbiddenServerManager implements RegistryForbiddenServerMan
     if (servers.servers.remove(ip)) {
       return store(servers);
     }
-    return false;
+    return true;
   }
 
   @Override
