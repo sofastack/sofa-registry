@@ -31,12 +31,10 @@ public class RegistryOpsResourceTest {
     resource.metaServerService = metaServerService;
     CommonResponse response = resource.kickOffMyself();
     Assert.assertTrue(response.isSuccess());
-    Mockito.verify(metaServerService, Mockito.times(1)).suspendRenewer();
     Mockito.verify(metaServerService, Mockito.times(1)).addSelfToMetaBlacklist();
 
     response = resource.putMyselfBack();
     Assert.assertTrue(response.isSuccess());
-    Mockito.verify(metaServerService, Mockito.times(1)).resumeRenewer();
     Mockito.verify(metaServerService, Mockito.times(1)).removeSelfFromMetaBlacklist();
   }
 

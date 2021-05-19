@@ -46,7 +46,6 @@ public class RegistryOpsResource {
     CommonResponse response = null;
     try {
       metaServerService.addSelfToMetaBlacklist();
-      metaServerService.suspendRenewer();
       response = GenericResponse.buildSuccessResponse();
     } catch (Throwable th) {
       LOGGER.error("[kickOffMyself]", th);
@@ -63,7 +62,6 @@ public class RegistryOpsResource {
     LOGGER.info("[putMyselfBack] begin");
     CommonResponse response = null;
     try {
-      metaServerService.resumeRenewer();
       metaServerService.removeSelfFromMetaBlacklist();
       response = GenericResponse.buildSuccessResponse();
     } catch (Throwable th) {

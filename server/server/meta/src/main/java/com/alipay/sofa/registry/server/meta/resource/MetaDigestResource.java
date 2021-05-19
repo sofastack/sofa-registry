@@ -89,8 +89,8 @@ public class MetaDigestResource {
   @Produces(MediaType.APPLICATION_JSON)
   public Map<String, String> getPushSwitch() {
     Map<String, String> resultMap = new HashMap<>(1);
-      resultMap.putAll(globalPushSwitch());
-      resultMap.putAll(grayPushSwitch());
+    resultMap.putAll(globalPushSwitch());
+    resultMap.putAll(grayPushSwitch());
     return resultMap;
   }
 

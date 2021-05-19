@@ -165,16 +165,18 @@ public class SlotTableResource {
       SlotTable slotTable = slotManager.getSlotTable();
       Map<String, Integer> leaderCounter = SlotTableUtils.getSlotTableLeaderCount(slotTable);
       Map<String, Integer> followerCounter = SlotTableUtils.getSlotTableSlotCount(slotTable);
-      boolean isSlotBalanced =
-          isSlotTableBalanced(
-              leaderCounter,
-              followerCounter,
-              dataServerManager.getDataServerMetaInfo().getClusterMembers());
+      boolean isLeaderSlotBalanced =
+          isSlotTableLeaderBalanced(
+              leaderCounter, dataServerManager.getDataServerMetaInfo().getClusterMembers());
+      boolean isFollowerSlotBalanced =
+          isSlotTableFollowerBalanced(
+              followerCounter, dataServerManager.getDataServerMetaInfo().getClusterMembers());
       return new GenericResponse<>()
           .fillSucceed(
               new SlotTableStatusResponse(
                   slotTable.getEpoch(),
-                  isSlotBalanced,
+                  isLeaderSlotBalanced,
+                  isFollowerSlotBalanced,
                   isSlotStable,
                   leaderCounter,
                   followerCounter));
@@ -186,21 +188,17 @@ public class SlotTableResource {
     }
   }
 
-  public boolean isSlotTableBalanced(
-      Map<String, Integer> leaderCounter,
-      Map<String, Integer> followerCounter,
-      List<DataNode> dataNodes) {
-
+  public boolean isSlotTableLeaderBalanced(
+      Map<String, Integer> leaderCounter, List<DataNode> dataNodes) {
     BalancePolicy balancePolicy = new NaiveBalancePolicy();
-    int leaderTotal = slotManager.getSlotNums();
-    int leaderAverage = MathUtils.divideCeil(leaderTotal, dataNodes.size());
-    int leaderHighWaterMark = balancePolicy.getHighWaterMarkSlotLeaderNums(leaderAverage);
-    int leaderLowWaterMark = balancePolicy.getLowWaterMarkSlotLeaderNums(leaderAverage);
-
-    int followerTotal = slotManager.getSlotNums() * (slotManager.getSlotReplicaNums() - 1);
-    int followerAverage = MathUtils.divideCeil(followerTotal, dataNodes.size());
-    int followerHighWaterMark = balancePolicy.getHighWaterMarkSlotFollowerNums(followerAverage);
-    int followerLowWaterMark = balancePolicy.getLowWaterMarkSlotFollowerNums(followerAverage);
+    int expectedLeaderTotal = slotManager.getSlotNums();
+    if (leaderCounter.values().stream().mapToInt(Integer::intValue).sum() < expectedLeaderTotal) {
+      return false;
+    }
+    int leaderHighAverage = MathUtils.divideCeil(expectedLeaderTotal, dataNodes.size());
+    int leaderLowAverage = Math.floorDiv(expectedLeaderTotal, dataNodes.size());
+    int leaderHighWaterMark = balancePolicy.getHighWaterMarkSlotLeaderNums(leaderHighAverage);
+    int leaderLowWaterMark = balancePolicy.getLowWaterMarkSlotLeaderNums(leaderLowAverage);
 
     for (DataNode dataNode : dataNodes) {
       String dataIp = dataNode.getIp();
@@ -211,6 +209,27 @@ public class SlotTableResource {
       if (leaderCount > leaderHighWaterMark || leaderCount < leaderLowWaterMark) {
         return false;
       }
+    }
+    return true;
+  }
+
+  public boolean isSlotTableFollowerBalanced(
+      Map<String, Integer> followerCounter, List<DataNode> dataNodes) {
+    BalancePolicy balancePolicy = new NaiveBalancePolicy();
+    int expectedFollowerTotal = slotManager.getSlotNums() * (slotManager.getSlotReplicaNums() - 1);
+    if (slotManager.getSlotReplicaNums() < dataNodes.size()) {
+      if (followerCounter.values().stream().mapToInt(Integer::intValue).sum()
+          < expectedFollowerTotal) {
+        return false;
+      }
+    }
+    int followerHighAverage = MathUtils.divideCeil(expectedFollowerTotal, dataNodes.size());
+    int followerLowAverage = Math.floorDiv(expectedFollowerTotal, dataNodes.size());
+    int followerHighWaterMark = balancePolicy.getHighWaterMarkSlotFollowerNums(followerHighAverage);
+    int followerLowWaterMark = balancePolicy.getLowWaterMarkSlotFollowerNums(followerLowAverage);
+
+    for (DataNode dataNode : dataNodes) {
+      String dataIp = dataNode.getIp();
       int followerCount = followerCounter.getOrDefault(dataIp, 0);
       if (followerCount > followerHighWaterMark || followerCount < followerLowWaterMark) {
         return false;
@@ -223,7 +242,8 @@ public class SlotTableResource {
 
     private final long slotTableEpoch;
 
-    private final boolean isSlotTableBalanced;
+    private final boolean isSlotTableLeaderBalanced;
+    private final boolean isSlotTableFollowerBalanced;
 
     private final boolean isSlotTableStable;
 
@@ -233,19 +253,17 @@ public class SlotTableResource {
 
     public SlotTableStatusResponse(
         long slotTableEpoch,
-        boolean slotTableBalanced,
+        boolean slotTableLeaderBalanced,
+        boolean slotTableFollowerBalanced,
         boolean slotTableStable,
         Map<String, Integer> leaderCount,
         Map<String, Integer> followerCount) {
       this.slotTableEpoch = slotTableEpoch;
-      this.isSlotTableBalanced = slotTableBalanced;
+      this.isSlotTableLeaderBalanced = slotTableLeaderBalanced;
+      this.isSlotTableFollowerBalanced = slotTableFollowerBalanced;
       this.isSlotTableStable = slotTableStable;
       this.leaderCount = leaderCount;
       this.followerCount = followerCount;
-    }
-
-    public boolean isSlotTableBalanced() {
-      return isSlotTableBalanced;
     }
 
     public boolean isSlotTableStable() {
@@ -258,6 +276,14 @@ public class SlotTableResource {
 
     public Map<String, Integer> getFollowerCount() {
       return followerCount;
+    }
+
+    public boolean isSlotTableLeaderBalanced() {
+      return isSlotTableLeaderBalanced;
+    }
+
+    public boolean isSlotTableFollowerBalanced() {
+      return isSlotTableFollowerBalanced;
     }
   }
 

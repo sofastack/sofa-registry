@@ -57,7 +57,11 @@ public class SimpleSlotManager extends AbstractLifecycleObservable implements Sl
   public boolean refresh(SlotTable slotTable) {
     lock.writeLock().lock();
     try {
-      if (slotTable.getEpoch() <= localRepo.slotTable.getEpoch()) {
+      long localEpoch = localRepo.slotTable.getEpoch();
+      if (slotTable.getEpoch() == localEpoch) {
+        return true;
+      }
+      if (slotTable.getEpoch() < localEpoch) {
         if (logger.isWarnEnabled()) {
           logger.warn(
               "[refresh]receive slot table,but epoch({}) is smaller than current({})",

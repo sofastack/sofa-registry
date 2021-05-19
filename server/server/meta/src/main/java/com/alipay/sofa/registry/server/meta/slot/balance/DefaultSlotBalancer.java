@@ -119,6 +119,7 @@ public class DefaultSlotBalancer implements SlotBalancer {
     Set<String> notSatisfies = Sets.newHashSet();
 
     while (balanced < maxMove) {
+      int last = balanced;
       // 1. find the dataNode which has leaders more than high water mark
       //    and sorted by leaders.num desc
       final List<String> highDataServers = findDataServersLeaderHighWaterMark(threshold);
@@ -155,8 +156,8 @@ public class DefaultSlotBalancer implements SlotBalancer {
             newLeaderDataServer);
         Metrics.SlotBalance.onLeaderUpgrade(highDataServer, newLeaderDataServer, slotId);
         balanced++;
-        break;
       }
+      if (last == balanced) break;
     }
     return balanced != 0;
   }
@@ -166,46 +167,46 @@ public class DefaultSlotBalancer implements SlotBalancer {
     final int maxMove = balancePolicy.getMaxMoveFollowerSlots();
     final int threshold = balancePolicy.getHighWaterMarkSlotLeaderNums(ceilAvg);
 
-    // 1. find the dataNode which has leaders more than high water mark
-    //    and sorted by leaders.num desc
-    final List<String> highDataServers = findDataServersLeaderHighWaterMark(threshold);
-    if (highDataServers.isEmpty()) {
-      return false;
-    }
-    // 2. find the dataNode which could own a new leader
-    // exclude the high
-    final Set<String> excludes = Sets.newHashSet(highDataServers);
-    // exclude the dataNode which could not add any leader
-    excludes.addAll(findDataServersLeaderHighWaterMark(threshold - 1));
     int balanced = 0;
-    final Set<String> newFollowerDataServers = Sets.newHashSet();
-    // only balance highDataServer once at one round, avoid the follower moves multi times
-    for (String highDataServer : highDataServers) {
-      Triple<String, Integer, String> selected =
-          selectFollower4LeaderMigrate(highDataServer, excludes, newFollowerDataServers);
-      if (selected == null) {
-        LOGGER.warn(
-            "[migrateHighLeaders] could not find dataServer to migrate follower for {}",
-            highDataServer);
-        continue;
+    while (balanced < maxMove) {
+      int last = balanced;
+      // 1. find the dataNode which has leaders more than high water mark
+      //    and sorted by leaders.num desc
+      final List<String> highDataServers = findDataServersLeaderHighWaterMark(threshold);
+      if (highDataServers.isEmpty()) {
+        return false;
       }
-      final String oldFollower = selected.getFirst();
-      final int slotId = selected.getMiddle();
-      final String newFollower = selected.getLast();
-      slotTableBuilder.removeFollower(slotId, oldFollower);
-      slotTableBuilder.addFollower(slotId, newFollower);
-      newFollowerDataServers.add(newFollower);
-      LOGGER.info(
-          "[migrateHighLeaders] slotId={}, follower balance from {} to {}",
-          slotId,
-          oldFollower,
-          newFollower);
-      Metrics.SlotBalance.onLeaderMigrate(oldFollower, newFollower, slotId);
-
-      balanced++;
-      if (balanced >= maxMove) {
-        break;
+      // 2. find the dataNode which could own a new leader
+      // exclude the high
+      final Set<String> excludes = Sets.newHashSet(highDataServers);
+      // exclude the dataNode which could not add any leader
+      excludes.addAll(findDataServersLeaderHighWaterMark(threshold - 1));
+      final Set<String> newFollowerDataServers = Sets.newHashSet();
+      // only balance highDataServer once at one round, avoid the follower moves multi times
+      for (String highDataServer : highDataServers) {
+        Triple<String, Integer, String> selected =
+            selectFollower4LeaderMigrate(highDataServer, excludes, newFollowerDataServers);
+        if (selected == null) {
+          LOGGER.warn(
+              "[migrateHighLeaders] could not find dataServer to migrate follower for {}",
+              highDataServer);
+          continue;
+        }
+        final String oldFollower = selected.getFirst();
+        final int slotId = selected.getMiddle();
+        final String newFollower = selected.getLast();
+        slotTableBuilder.removeFollower(slotId, oldFollower);
+        slotTableBuilder.addFollower(slotId, newFollower);
+        newFollowerDataServers.add(newFollower);
+        LOGGER.info(
+            "[migrateHighLeaders] slotId={}, follower balance from {} to {}",
+            slotId,
+            oldFollower,
+            newFollower);
+        Metrics.SlotBalance.onLeaderMigrate(oldFollower, newFollower, slotId);
+        balanced++;
       }
+      if (last == balanced) break;
     }
     return balanced != 0;
   }
@@ -218,6 +219,7 @@ public class DefaultSlotBalancer implements SlotBalancer {
     Set<String> notSatisfies = Sets.newHashSet();
 
     while (balanced < maxMove) {
+      int last = balanced;
       // 1. find the dataNode which has leaders less than low water mark
       //    and sorted by leaders.num asc
       final List<String> lowDataServers = findDataServersLeaderLowWaterMark(threshold);
@@ -265,8 +267,8 @@ public class DefaultSlotBalancer implements SlotBalancer {
             oldLeaderDataServer,
             lowDataServer);
         balanced++;
-        break;
       }
+      if (last == balanced) break;
     }
     return balanced != 0;
   }

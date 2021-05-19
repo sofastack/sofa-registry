@@ -33,6 +33,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import org.apache.commons.lang.StringUtils;
 
 /**
  * @author chen.zhu
@@ -73,7 +74,8 @@ public class DefaultSlotTableStats extends AbstractLifecycle implements SlotTabl
       for (int slotId = 0; slotId < SlotConfig.SLOT_NUM; slotId++) {
         String leader = slotManager.getSlotTable().getSlot(slotId).getLeader();
         SlotStats slotStats = slotStatses.get(slotId);
-        if (!slotStats.getSlot().getLeader().equals(leader)
+        if (StringUtils.isBlank(leader)
+            || !slotStats.getSlot().getLeader().equals(leader)
             || !slotStatses.get(slotId).isLeaderStable()) {
           logger.warn("[isSlotLeadersStable]slot[{}] leader[{}] not stable", slotId, leader);
           return false;
