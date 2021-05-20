@@ -54,22 +54,9 @@ public class PushTraceTest {
     long now2 = System.currentTimeMillis();
 
     // new.sub=2
-    trace.startPush(middle, now2);
+    trace.startPush();
     long finish = now2 + 100;
-    trace.finishPush(PushTrace.PushStatus.OK, finish);
-
-    trace.print();
-
-    Assert.assertEquals(trace.datumTotalDelayMillis, finish - trace.pushCause.datumTimestamp);
-    Assert.assertEquals(
-        trace.datumPushCommitSpanMillis,
-        trace.pushCommitTimestamp - trace.pushCause.datumTimestamp);
-    Assert.assertEquals(trace.datumPushStartSpanMillis, now2 - trace.pushCommitTimestamp);
-    Assert.assertEquals(trace.datumPushFinishSpanMillis, finish - now2);
-
-    Assert.assertEquals(trace.newPublisherNum, 2);
-    Assert.assertEquals(trace.firstPubPushDelayMillis, finish - list.get(1).getRegisterTimestamp());
-    Assert.assertEquals(trace.lastPubPushDelayMillis, finish - list.get(2).getRegisterTimestamp());
+    trace.finishPush(PushTrace.PushStatus.OK, null, finish);
   }
 
   @Test

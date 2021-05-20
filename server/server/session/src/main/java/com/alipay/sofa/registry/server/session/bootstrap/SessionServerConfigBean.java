@@ -62,25 +62,19 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
   private int subscriberRegisterFetchRetryTimes = 3;
 
-  private int accessDataExecutorMinPoolSize = OsUtils.getCpuCount() * 10;
-
-  private int accessDataExecutorMaxPoolSize = OsUtils.getCpuCount() * 20;
+  private int accessDataExecutorPoolSize = OsUtils.getCpuCount() * 10;
 
   private int accessDataExecutorQueueSize = 10000;
 
-  private long accessDataExecutorKeepAliveTime = 60;
+  private int accessSubDataExecutorPoolSize = OsUtils.getCpuCount() * 10;
 
-  private int dataChangeExecutorMinPoolSize = OsUtils.getCpuCount() * 2;
+  private int accessSubDataExecutorQueueSize = 40000;
 
-  private int dataChangeExecutorMaxPoolSize = OsUtils.getCpuCount() * 3;
+  private int dataChangeExecutorPoolSize = OsUtils.getCpuCount() * 3;
 
   private int dataChangeExecutorQueueSize = 20000;
 
-  private long dataChangeExecutorKeepAliveTime = 60;
-
-  private int connectClientExecutorMinPoolSize = OsUtils.getCpuCount();
-
-  private int connectClientExecutorMaxPoolSize = OsUtils.getCpuCount();
+  private int connectClientExecutorPoolSize = OsUtils.getCpuCount();
 
   private int connectClientExecutorQueueSize = 2000;
 
@@ -176,7 +170,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
   private int cacheDatumMaxWeight = 1000 * 1000 * 1000;
 
-  private int cacheDatumExpireSecs = 60 * 3;
+  private int cacheDatumExpireSecs = 8;
 
   // metadata config start
 
@@ -502,33 +496,17 @@ public class SessionServerConfigBean implements SessionServerConfig {
   }
 
   @Override
-  public int getAccessDataExecutorMinPoolSize() {
-    return accessDataExecutorMinPoolSize;
+  public int getAccessDataExecutorPoolSize() {
+    return accessDataExecutorPoolSize;
   }
 
   /**
-   * Setter method for property <tt>accessDataExecutorMinPoolSize</tt>.
+   * Setter method for property <tt>accessDataExecutorPoolSize</tt>.
    *
-   * @param accessDataExecutorMinPoolSize value to be assigned to property
-   *     accessDataExecutorMinPoolSize
+   * @param accessDataExecutorPoolSize value to be assigned to property accessDataExecutorPoolSize
    */
-  public void setAccessDataExecutorMinPoolSize(int accessDataExecutorMinPoolSize) {
-    this.accessDataExecutorMinPoolSize = accessDataExecutorMinPoolSize;
-  }
-
-  @Override
-  public int getAccessDataExecutorMaxPoolSize() {
-    return accessDataExecutorMaxPoolSize;
-  }
-
-  /**
-   * Setter method for property <tt>accessDataExecutorMaxPoolSize</tt>.
-   *
-   * @param accessDataExecutorMaxPoolSize value to be assigned to property
-   *     accessDataExecutorMaxPoolSize
-   */
-  public void setAccessDataExecutorMaxPoolSize(int accessDataExecutorMaxPoolSize) {
-    this.accessDataExecutorMaxPoolSize = accessDataExecutorMaxPoolSize;
+  public void setAccessDataExecutorPoolSize(int accessDataExecutorPoolSize) {
+    this.accessDataExecutorPoolSize = accessDataExecutorPoolSize;
   }
 
   @Override
@@ -546,38 +524,35 @@ public class SessionServerConfigBean implements SessionServerConfig {
   }
 
   @Override
-  public long getAccessDataExecutorKeepAliveTime() {
-    return accessDataExecutorKeepAliveTime;
+  public int getAccessSubDataExecutorPoolSize() {
+    return accessSubDataExecutorPoolSize;
+  }
+
+  public void setAccessSubDataExecutorPoolSize(int accessSubDataExecutorPoolSize) {
+    this.accessSubDataExecutorPoolSize = accessSubDataExecutorPoolSize;
+  }
+
+  @Override
+  public int getAccessSubDataExecutorQueueSize() {
+    return accessSubDataExecutorQueueSize;
+  }
+
+  public void setAccessSubDataExecutorQueueSize(int accessSubDataExecutorQueueSize) {
+    this.accessSubDataExecutorQueueSize = accessSubDataExecutorQueueSize;
   }
 
   /**
-   * Setter method for property <tt>accessDataExecutorKeepAliveTime</tt>.
+   * Getter method for property <tt>dataChangeExecutorPoolSize</tt>.
    *
-   * @param accessDataExecutorKeepAliveTime value to be assigned to property
-   *     accessDataExecutorKeepAliveTime
-   */
-  public void setAccessDataExecutorKeepAliveTime(long accessDataExecutorKeepAliveTime) {
-    this.accessDataExecutorKeepAliveTime = accessDataExecutorKeepAliveTime;
-  }
-
-  /**
-   * Getter method for property <tt>dataChangeExecutorMinPoolSize</tt>.
-   *
-   * @return property value of dataChangeExecutorMinPoolSize
+   * @return property value of dataChangeExecutorPoolSize
    */
   @Override
-  public int getDataChangeExecutorMinPoolSize() {
-    return dataChangeExecutorMinPoolSize;
+  public int getDataChangeExecutorPoolSize() {
+    return dataChangeExecutorPoolSize;
   }
 
-  /**
-   * Getter method for property <tt>dataChangeExecutorMaxPoolSize</tt>.
-   *
-   * @return property value of dataChangeExecutorMaxPoolSize
-   */
-  @Override
-  public int getDataChangeExecutorMaxPoolSize() {
-    return dataChangeExecutorMaxPoolSize;
+  public void setDataChangeExecutorPoolSize(int dataChangeExecutorPoolSize) {
+    this.dataChangeExecutorPoolSize = dataChangeExecutorPoolSize;
   }
 
   /**
@@ -591,13 +566,12 @@ public class SessionServerConfigBean implements SessionServerConfig {
   }
 
   /**
-   * Getter method for property <tt>dataChangeExecutorKeepAliveTime</tt>.
+   * Setter method for property <tt>dataChangeExecutorQueueSize</tt>.
    *
-   * @return property value of dataChangeExecutorKeepAliveTime
+   * @param dataChangeExecutorQueueSize value to be assigned to property dataChangeExecutorQueueSize
    */
-  @Override
-  public long getDataChangeExecutorKeepAliveTime() {
-    return dataChangeExecutorKeepAliveTime;
+  public void setDataChangeExecutorQueueSize(int dataChangeExecutorQueueSize) {
+    this.dataChangeExecutorQueueSize = dataChangeExecutorQueueSize;
   }
 
   @Override
@@ -616,45 +590,6 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
   public void setDataChangeMaxDebouncingMillis(int dataChangeMaxDebouncingMillis) {
     this.dataChangeMaxDebouncingMillis = dataChangeMaxDebouncingMillis;
-  }
-
-  /**
-   * Setter method for property <tt>dataChangeExecutorMinPoolSize</tt>.
-   *
-   * @param dataChangeExecutorMinPoolSize value to be assigned to property
-   *     dataChangeExecutorMinPoolSize
-   */
-  public void setDataChangeExecutorMinPoolSize(int dataChangeExecutorMinPoolSize) {
-    this.dataChangeExecutorMinPoolSize = dataChangeExecutorMinPoolSize;
-  }
-
-  /**
-   * Setter method for property <tt>dataChangeExecutorMaxPoolSize</tt>.
-   *
-   * @param dataChangeExecutorMaxPoolSize value to be assigned to property
-   *     dataChangeExecutorMaxPoolSize
-   */
-  public void setDataChangeExecutorMaxPoolSize(int dataChangeExecutorMaxPoolSize) {
-    this.dataChangeExecutorMaxPoolSize = dataChangeExecutorMaxPoolSize;
-  }
-
-  /**
-   * Setter method for property <tt>dataChangeExecutorQueueSize</tt>.
-   *
-   * @param dataChangeExecutorQueueSize value to be assigned to property dataChangeExecutorQueueSize
-   */
-  public void setDataChangeExecutorQueueSize(int dataChangeExecutorQueueSize) {
-    this.dataChangeExecutorQueueSize = dataChangeExecutorQueueSize;
-  }
-
-  /**
-   * Setter method for property <tt>dataChangeExecutorKeepAliveTime</tt>.
-   *
-   * @param dataChangeExecutorKeepAliveTime value to be assigned to property
-   *     dataChangeExecutorKeepAliveTime
-   */
-  public void setDataChangeExecutorKeepAliveTime(long dataChangeExecutorKeepAliveTime) {
-    this.dataChangeExecutorKeepAliveTime = dataChangeExecutorKeepAliveTime;
   }
 
   /**
@@ -705,21 +640,22 @@ public class SessionServerConfigBean implements SessionServerConfig {
   }
 
   /**
-   * Getter method for property <tt>connectClientExecutorMinPoolSize</tt>.
+   * Getter method for property <tt>connectClientExecutorPoolSize</tt>.
    *
-   * @return property value of connectClientExecutorMinPoolSize
+   * @return property value of connectClientExecutorPoolSize
    */
-  public int getConnectClientExecutorMinPoolSize() {
-    return connectClientExecutorMinPoolSize;
+  public int getConnectClientExecutorPoolSize() {
+    return connectClientExecutorPoolSize;
   }
 
   /**
-   * Getter method for property <tt>connectClientExecutorMaxPoolSize</tt>.
+   * Setter method for property <tt>connectClientExecutorPoolSize</tt>.
    *
-   * @return property value of connectClientExecutorMaxPoolSize
+   * @param connectClientExecutorPoolSize value to be assigned to property
+   *     connectClientExecutorMinPoolSize
    */
-  public int getConnectClientExecutorMaxPoolSize() {
-    return connectClientExecutorMaxPoolSize;
+  public void setConnectClientExecutorPoolSize(int connectClientExecutorPoolSize) {
+    this.connectClientExecutorPoolSize = connectClientExecutorPoolSize;
   }
 
   /**
@@ -729,26 +665,6 @@ public class SessionServerConfigBean implements SessionServerConfig {
    */
   public int getConnectClientExecutorQueueSize() {
     return connectClientExecutorQueueSize;
-  }
-
-  /**
-   * Setter method for property <tt>connectClientExecutorMinPoolSize</tt>.
-   *
-   * @param connectClientExecutorMinPoolSize value to be assigned to property
-   *     connectClientExecutorMinPoolSize
-   */
-  public void setConnectClientExecutorMinPoolSize(int connectClientExecutorMinPoolSize) {
-    this.connectClientExecutorMinPoolSize = connectClientExecutorMinPoolSize;
-  }
-
-  /**
-   * Setter method for property <tt>connectClientExecutorMaxPoolSize</tt>.
-   *
-   * @param connectClientExecutorMaxPoolSize value to be assigned to property
-   *     connectClientExecutorMaxPoolSize
-   */
-  public void setConnectClientExecutorMaxPoolSize(int connectClientExecutorMaxPoolSize) {
-    this.connectClientExecutorMaxPoolSize = connectClientExecutorMaxPoolSize;
   }
 
   /**

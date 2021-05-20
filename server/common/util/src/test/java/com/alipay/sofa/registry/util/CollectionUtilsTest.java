@@ -16,10 +16,8 @@
  */
 package com.alipay.sofa.registry.util;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import com.google.common.collect.Maps;
+import java.util.*;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -47,5 +45,30 @@ public class CollectionUtilsTest {
       }
     }
     Assert.assertFalse(allValueSame);
+  }
+
+  @Test
+  public void testSingleMap() {
+    Map<String, String> m = Maps.newHashMap();
+    Map<String, String> to = CollectionUtils.toSingletonMap(m);
+    Assert.assertEquals(to, m);
+    Assert.assertTrue(to == m);
+
+    m.put("1", "a");
+    m.put("2", "b");
+    to = CollectionUtils.toSingletonMap(m);
+    Assert.assertEquals(to, m);
+    Assert.assertTrue(to == m);
+
+    m.remove("1");
+    to = CollectionUtils.toSingletonMap(m);
+    Assert.assertEquals(to, m);
+    Assert.assertTrue(to != m);
+
+    try {
+      to.clear();
+      Assert.fail();
+    } catch (UnsupportedOperationException exception) {
+    }
   }
 }

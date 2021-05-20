@@ -103,5 +103,14 @@ public final class PushMetrics {
     static final Counter.Child PUSH_CLIENT_PUSHING_COUNTER = PUSH_CLIENT_COUNTER.labels("I");
     static final Counter.Child PUSH_CLIENT_SUCCESS_COUNTER = PUSH_CLIENT_COUNTER.labels("Y");
     static final Counter.Child PUSH_CLIENT_FAIL_COUNTER = PUSH_CLIENT_COUNTER.labels("N");
+
+    static final Counter PUSH_RETRY_COUNTER =
+        Counter.build()
+            .namespace("session")
+            .subsystem("push")
+            .name("retry_total")
+            .help("retry count")
+            .labelNames("reason")
+            .register();
   }
 }

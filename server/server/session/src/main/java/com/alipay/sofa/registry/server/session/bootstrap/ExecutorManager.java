@@ -42,6 +42,7 @@ public class ExecutorManager {
   private final ScheduledThreadPoolExecutor scheduler;
 
   private final ThreadPoolExecutor accessDataExecutor;
+  private final ThreadPoolExecutor accessSubExecutor;
   private final ThreadPoolExecutor dataChangeRequestExecutor;
   private final ThreadPoolExecutor dataSlotSyncRequestExecutor;
   private final ThreadPoolExecutor connectClientExecutor;
@@ -56,6 +57,8 @@ public class ExecutorManager {
   private Map<String, ThreadPoolExecutor> reportExecutors = new HashMap<>();
 
   private static final String ACCESS_DATA_EXECUTOR = "AccessDataExecutor";
+
+  private static final String ACCESS_SUB_EXECUTOR = "AccessSubExecutor";
 
   private static final String DATA_CHANGE_REQUEST_EXECUTOR = "DataChangeExecutor";
 
@@ -77,9 +80,9 @@ public class ExecutorManager {
             k ->
                 new MetricsableThreadPoolExecutor(
                     ACCESS_DATA_EXECUTOR,
-                    sessionServerConfig.getAccessDataExecutorMinPoolSize(),
-                    sessionServerConfig.getAccessDataExecutorMaxPoolSize(),
-                    sessionServerConfig.getAccessDataExecutorKeepAliveTime(),
+                    sessionServerConfig.getAccessDataExecutorPoolSize(),
+                    sessionServerConfig.getAccessDataExecutorPoolSize(),
+                    60,
                     TimeUnit.SECONDS,
                     new ArrayBlockingQueue<>(sessionServerConfig.getAccessDataExecutorQueueSize()),
                     new NamedThreadFactory(ACCESS_DATA_EXECUTOR, true),
@@ -91,15 +94,35 @@ public class ExecutorManager {
                       LOGGER.error(msg);
                     }));
 
+    accessSubExecutor =
+        reportExecutors.computeIfAbsent(
+            ACCESS_SUB_EXECUTOR,
+            k ->
+                new MetricsableThreadPoolExecutor(
+                    ACCESS_SUB_EXECUTOR,
+                    sessionServerConfig.getAccessSubDataExecutorPoolSize(),
+                    sessionServerConfig.getAccessSubDataExecutorPoolSize(),
+                    60,
+                    TimeUnit.SECONDS,
+                    new ArrayBlockingQueue<>(
+                        sessionServerConfig.getAccessSubDataExecutorQueueSize()),
+                    new NamedThreadFactory(ACCESS_SUB_EXECUTOR, true),
+                    (r, executor) -> {
+                      String msg =
+                          String.format(
+                              "Task(%s) %s rejected from %s, just ignore it to let client timeout.",
+                              r.getClass(), r, executor);
+                      LOGGER.error(msg);
+                    }));
     dataChangeRequestExecutor =
         reportExecutors.computeIfAbsent(
             DATA_CHANGE_REQUEST_EXECUTOR,
             k ->
                 new MetricsableThreadPoolExecutor(
                     DATA_CHANGE_REQUEST_EXECUTOR,
-                    sessionServerConfig.getDataChangeExecutorMinPoolSize(),
-                    sessionServerConfig.getDataChangeExecutorMaxPoolSize(),
-                    sessionServerConfig.getDataChangeExecutorKeepAliveTime(),
+                    sessionServerConfig.getDataChangeExecutorPoolSize(),
+                    sessionServerConfig.getDataChangeExecutorPoolSize(),
+                    60,
                     TimeUnit.SECONDS,
                     new ArrayBlockingQueue<>(sessionServerConfig.getDataChangeExecutorQueueSize()),
                     new NamedThreadFactory(DATA_CHANGE_REQUEST_EXECUTOR, true)));
@@ -134,8 +157,8 @@ public class ExecutorManager {
             k ->
                 new MetricsableThreadPoolExecutor(
                     CONNECT_CLIENT_EXECUTOR,
-                    sessionServerConfig.getConnectClientExecutorMinPoolSize(),
-                    sessionServerConfig.getConnectClientExecutorMaxPoolSize(),
+                    sessionServerConfig.getConnectClientExecutorPoolSize(),
+                    sessionServerConfig.getConnectClientExecutorPoolSize(),
                     60L,
                     TimeUnit.SECONDS,
                     new LinkedBlockingQueue(
@@ -157,25 +180,15 @@ public class ExecutorManager {
   }
 
   public void stopScheduler() {
-    if (scheduler != null && !scheduler.isShutdown()) {
-      scheduler.shutdown();
-    }
+    scheduler.shutdown();
 
-    if (accessDataExecutor != null && !accessDataExecutor.isShutdown()) {
-      accessDataExecutor.shutdown();
-    }
+    accessDataExecutor.shutdown();
 
-    if (dataChangeRequestExecutor != null && !dataChangeRequestExecutor.isShutdown()) {
-      dataChangeRequestExecutor.shutdown();
-    }
+    dataChangeRequestExecutor.shutdown();
 
-    if (dataSlotSyncRequestExecutor != null && !dataSlotSyncRequestExecutor.isShutdown()) {
-      dataSlotSyncRequestExecutor.shutdown();
-    }
+    dataSlotSyncRequestExecutor.shutdown();
 
-    if (connectClientExecutor != null && !connectClientExecutor.isShutdown()) {
-      connectClientExecutor.shutdown();
-    }
+    connectClientExecutor.shutdown();
   }
 
   public Map<String, ThreadPoolExecutor> getReportExecutors() {
@@ -184,6 +197,10 @@ public class ExecutorManager {
 
   public ThreadPoolExecutor getAccessDataExecutor() {
     return accessDataExecutor;
+  }
+
+  public ThreadPoolExecutor getAccessSubExecutor() {
+    return accessSubExecutor;
   }
 
   public ThreadPoolExecutor getDataChangeRequestExecutor() {

@@ -20,6 +20,7 @@ import com.alipay.sofa.registry.core.model.SyncConfigRequest;
 import com.alipay.sofa.registry.core.model.SyncConfigResponse;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.session.strategy.SyncConfigHandlerStrategy;
+import java.util.concurrent.Executor;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -40,5 +41,10 @@ public class SyncConfigHandler extends AbstractClientDataRequestHandler<SyncConf
   @Override
   public Class interest() {
     return SyncConfigRequest.class;
+  }
+
+  @Override
+  public Executor getExecutor() {
+    return executorManager.getAccessSubExecutor();
   }
 }

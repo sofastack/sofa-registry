@@ -133,7 +133,7 @@ public class PushProcessorTest {
     Assert.assertEquals(processor.pendingTasks.size(), 1);
 
     task = processor.pendingTasks.values().iterator().next();
-    Assert.assertEquals(task.pushCause.pushType, PushType.Sub);
+    Assert.assertEquals(task.trace.pushCause.pushType, PushType.Sub);
     // make task expire
     task.expireTimestamp = System.currentTimeMillis();
 
@@ -223,7 +223,7 @@ public class PushProcessorTest {
     // push too long, trigger force push
     config.setClientNodeExchangeTimeoutMillis(0);
     Thread.sleep(1);
-    Assert.assertTrue(processor.checkPushing(task));
+    Assert.assertTrue(processor.checkPushRunning(task));
     Assert.assertEquals(processor.pushingTasks.size(), 0);
 
     Assert.assertTrue(processor.doPush(task));
@@ -293,14 +293,10 @@ public class PushProcessorTest {
     PushProcessor.PushClientCallback callback = processor.new PushClientCallback(task);
     Assert.assertNotNull(callback.getExecutor());
     Assert.assertEquals(0, subscriber.getPushVersion(datum.getDataCenter()));
-    Assert.assertEquals(0, callback.finishedTimestamp);
     callback.onCallback(null, null);
     // pushing task cleaned
     Assert.assertEquals(processor.pushingTasks.size(), 0);
-    Assert.assertNotEquals(0, callback.finishedTimestamp);
     Assert.assertEquals(100, subscriber.getPushVersion(datum.getDataCenter()));
-    Assert.assertTrue(String.valueOf(callback.pushSpanMillis()), callback.pushSpanMillis() > 0);
-    Assert.assertTrue(String.valueOf(callback.totalSpanMillis()), callback.totalSpanMillis() > 0);
   }
 
   private PushProcessor newProcessor() {
@@ -335,17 +331,13 @@ public class PushProcessorTest {
     PushProcessor.PushClientCallback callback = processor.new PushClientCallback(task);
     Assert.assertNotNull(callback.getExecutor());
     Assert.assertEquals(0, subscriber.getPushVersion(datum.getDataCenter()));
-    Assert.assertEquals(0, callback.finishedTimestamp);
-
-    callback.onException(null, new InvokeTimeoutException());
+    TestUtils.MockBlotChannel channel = TestUtils.newChannel(9600, "192.168.1.1", 1234);
+    callback.onException(channel, new InvokeTimeoutException());
     Assert.assertEquals(PUSH_CLIENT_FAIL_COUNTER.get(), 1, 0);
     Assert.assertEquals(processor.pushingTasks.size(), 0);
-    Assert.assertNotEquals(0, callback.finishedTimestamp);
     Assert.assertEquals(0, subscriber.getPushVersion(datum.getDataCenter()));
-    Assert.assertTrue(callback.pushSpanMillis() > 0);
-    Assert.assertTrue(callback.totalSpanMillis() > 0);
 
-    callback.onException(null, new Exception());
+    callback.onException(channel, new Exception());
     Assert.assertEquals(PUSH_CLIENT_FAIL_COUNTER.get(), 2, 0);
     Assert.assertEquals(processor.pushingTasks.size(), 0);
     Assert.assertEquals(0, subscriber.getPushVersion(datum.getDataCenter()));
@@ -373,5 +365,24 @@ public class PushProcessorTest {
     // make expire
     ((SessionServerConfigBean) processor.sessionServerConfig).setClientNodeExchangeTimeoutMillis(0);
     Assert.assertEquals(1, processor.cleanPushingTaskRunTooLong());
+  }
+
+  @Test
+  public void testInterestOfDatum() throws Exception {
+    PushProcessor processor = new PushProcessor();
+    Subscriber subscriber = TestUtils.newZoneSubscriber(dataId, zone);
+    SubDatum datum = TestUtils.newSubDatum(subscriber.getDataId(), 100, Collections.emptyList());
+    PushProcessor.PushTask task =
+        processor
+        .new PushTask(
+            null, null, Collections.singletonMap(subscriber.getRegisterId(), subscriber), datum);
+
+    Assert.assertTrue(processor.interestOfDatum(task));
+    subscriber.checkAndUpdateVersion(datum.getDataCenter(), 90);
+    Assert.assertTrue(processor.interestOfDatum(task));
+    subscriber.checkAndUpdateVersion(datum.getDataCenter(), 100);
+    Assert.assertFalse(processor.interestOfDatum(task));
+    subscriber.checkAndUpdateVersion(datum.getDataCenter(), 110);
+    Assert.assertFalse(processor.interestOfDatum(task));
   }
 }

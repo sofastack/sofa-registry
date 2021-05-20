@@ -159,7 +159,7 @@ public class DataNodeServiceImpl implements DataNodeService {
     } catch (RequestException e) {
       throw new RuntimeException(
           StringFormatter.format(
-              "GetDataVersion fail {}, slotId={}", dataNodeIp, dataCenter, slotId, e));
+              "GetDataVersion fail {}@{}, slotId={}", dataNodeIp, dataCenter, slotId, e));
     }
   }
 

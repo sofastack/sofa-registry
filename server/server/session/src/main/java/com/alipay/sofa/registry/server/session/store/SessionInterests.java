@@ -51,7 +51,7 @@ public class SessionInterests extends AbstractDataManager<Subscriber> implements
     Subscriber existingSubscriber = addData(subscriber);
 
     if (existingSubscriber != null) {
-      LOGGER.warn(
+      LOGGER.info(
           "dups subscriber, {}, {}, exist={}/{}, input={}/{}",
           existingSubscriber.getDataInfoId(),
           existingSubscriber.getRegisterId(),
@@ -59,7 +59,7 @@ public class SessionInterests extends AbstractDataManager<Subscriber> implements
           existingSubscriber.getVersion(),
           existingSubscriber.getRegisterTimestamp(),
           subscriber.getVersion(),
-          existingSubscriber.getRegisterTimestamp());
+          subscriber.getRegisterTimestamp());
     }
     return true;
   }

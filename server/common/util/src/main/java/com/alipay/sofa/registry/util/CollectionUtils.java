@@ -16,7 +16,9 @@
  */
 package com.alipay.sofa.registry.util;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -40,5 +42,13 @@ public final class CollectionUtils {
     }
     int idx = ThreadLocalRandom.current().nextInt(e.size());
     return e.get(idx);
+  }
+
+  public static <K, V> Map<K, V> toSingletonMap(Map<K, V> m) {
+    if (m.size() != 1) {
+      return m;
+    }
+    Map.Entry<K, V> one = m.entrySet().stream().findFirst().get();
+    return Collections.singletonMap(one.getKey(), one.getValue());
   }
 }
