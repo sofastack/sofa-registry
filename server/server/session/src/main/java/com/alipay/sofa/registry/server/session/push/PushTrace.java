@@ -21,6 +21,7 @@ import com.alipay.sofa.registry.common.model.store.SubDatum;
 import com.alipay.sofa.registry.common.model.store.SubPublisher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.trace.TraceID;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Longs;
@@ -31,44 +32,19 @@ import java.util.List;
 
 public final class PushTrace {
   private static final Logger LOGGER = LoggerFactory.getLogger("PUSH-TRACE");
-
+  private static final int MAX_NTP_TIME_PRECISION_MILLIS = 200;
   private final SubDatum datum;
-  final long pushCommitTimestamp = System.currentTimeMillis();
+  final long pushCreateTimestamp = System.currentTimeMillis();
 
   private long subscriberPushedVersion;
   private final String subApp;
-  private final int subNum;
+
   private final long subRegTimestamp;
   private final InetSocketAddress subAddress;
   final PushCause pushCause;
 
-  private long pushStartTimestamp;
-
-  private PushStatus status;
-  private long pushFinishTimestamp;
-
-  // push.finish- first.newly.publisher.registryTs
-  long datumModifyDelayMillis;
-  // push.finish - datum.versionTs
-  long datumTotalDelayMillis;
-  // exec.start - datum.modify
-  long datumPushTriggerSpanMillis;
-  // commit - exec.start
-  long datumPushCommitSpanMillis;
-  // push.start - fetch.finish
-  long datumPushStartSpanMillis;
-  // push.finish - push.start
-  long datumPushFinishSpanMillis;
-
-  // push.start - exec.start
-  long datumPushSessionSpanMillis;
-
-  // pub after last push
-  int newPublisherNum;
-  // push.finish - firstPub.registerTimestamp
-  long firstPubPushDelayMillis;
-  // push.finish - lastPub.registerTimestamp
-  long lastPubPushDelayMillis;
+  private volatile long pushStartTimestamp;
+  private final int subNum;
 
   private PushTrace(
       SubDatum datum,
@@ -95,22 +71,84 @@ public final class PushTrace {
     return new PushTrace(datum, address, subApp, pushCause, subNum, subRegTimestamp);
   }
 
-  public PushTrace startPush(long subscriberPushedVersion, long startPushTimestamp) {
-    this.subscriberPushedVersion = subscriberPushedVersion;
-    this.pushStartTimestamp = startPushTimestamp;
-    return this;
+  public void startPush() {
+    this.pushStartTimestamp = System.currentTimeMillis();
   }
 
-  public PushTrace finishPush(PushStatus status, long finishPushTimestamp) {
-    this.status = status;
-    this.pushFinishTimestamp = finishPushTimestamp;
-    return this;
-  }
+  public void finishPush(PushStatus status, TraceID taskID, long subscriberPushedVersion) {
+    final long pushFinishTimestamp = System.currentTimeMillis();
+    // push.finish- first.newly.publisher.registryTs
+    long datumModifyPushSpanMillis;
+    // push.finish - datum.versionTs
+    long datumVersionPushSpanMillis;
+    // session.triggerTs - datum.versionTs
+    long datumVersionTriggerSpanMillis;
 
-  public void print() {
-    calc();
+    // task.create - session.triggerTs
+    long pushTaskPrepareSpanMillis;
+    // task.start - task.create
+    long pushTaskQueueSpanMillis;
+    // task.finish - task.start
+    long pushTaskClientIOSpanMillis;
+    // task.start - session.triggerTs
+    long pushTaskSessionSpanMillis;
+
+    // pub after last push
+    int newPublisherNum;
+    // push.finish - firstPub.registerTimestamp
+    long firstPubPushDelayMillis;
+    // push.finish - lastPub.registerTimestamp
+    long lastPubPushDelayMillis;
+
+    // try find the earliest and the latest publisher after the subPushedVersion
+    // that means the modify after last push, but this could not handle the publisher.remove
+    if (pushCause.pushType == PushType.Reg) {
+      datumVersionPushSpanMillis = pushFinishTimestamp - subRegTimestamp;
+    } else {
+      datumVersionPushSpanMillis = Math.max(pushFinishTimestamp - pushCause.datumTimestamp, 0);
+      if (pushCause.pushType == PushType.Sub) {
+        if (subRegTimestamp >= pushCause.datumTimestamp) {
+          // case: datum.change trigger the sub.sub, but the sub.reg not finish
+          datumVersionPushSpanMillis = pushFinishTimestamp - subRegTimestamp;
+        }
+      }
+    }
+    datumVersionTriggerSpanMillis =
+        Math.max(
+            pushCause.triggerPushCtx.getTriggerSessionTimestamp() - pushCause.datumTimestamp, 0);
+
+    // calc the task span millis
+    pushTaskPrepareSpanMillis =
+        pushCreateTimestamp - pushCause.triggerPushCtx.getTriggerSessionTimestamp();
+    pushTaskQueueSpanMillis = pushStartTimestamp - pushCreateTimestamp;
+    pushTaskClientIOSpanMillis = pushFinishTimestamp - pushStartTimestamp;
+    pushTaskSessionSpanMillis =
+        pushStartTimestamp - pushCause.triggerPushCtx.getTriggerSessionTimestamp();
+
+    final List<SubPublisher> publishers = datum.getPublishers();
+    final long lastPushTimestamp =
+        subscriberPushedVersion <= ValueConstants.DEFAULT_NO_DATUM_VERSION
+            ? subRegTimestamp
+            : DatumVersionUtil.getRealTimestamp(subscriberPushedVersion);
+    final List<SubPublisher> news =
+        findNewPublishers(publishers, lastPushTimestamp + MAX_NTP_TIME_PRECISION_MILLIS);
+    final SubPublisher first = news.isEmpty() ? null : news.get(0);
+    final SubPublisher last = news.isEmpty() ? null : news.get(news.size() - 1);
+    newPublisherNum = news.size();
+    firstPubPushDelayMillis =
+        first == null ? 0 : Math.max(pushFinishTimestamp - first.getRegisterTimestamp(), 0);
+    lastPubPushDelayMillis =
+        last == null ? 0 : Math.max(pushFinishTimestamp - last.getRegisterTimestamp(), 0);
+
+    datumModifyPushSpanMillis = datumVersionPushSpanMillis;
+    if (pushCause.pushType == PushType.Sub && first != null) {
+      // if sub, use first.publisher.registerTs as modifyTs
+      datumModifyPushSpanMillis = firstPubPushDelayMillis;
+    }
     LOGGER.info(
-        "{},{},{},{},{},cause={},pubNum={},pubBytes={},pubNew={},delay={},{},{},{},{},session={},cliIO={},firstPubDelay={},lastPubDelay={},subNum={},addr={},expectVer={},dataNode={}",
+        "{},{},{},{},{},cause={},pubNum={},pubBytes={},pubNew={},delay={},{},{},{},{},"
+            + "session={},cliIO={},firstPubDelay={},lastPubDelay={},"
+            + "subNum={},addr={},expectVer={},dataNode={},taskID={},pushedVer={},regTs={}",
         status,
         datum.getDataInfoId(),
         datum.getVersion(),
@@ -120,57 +158,22 @@ public final class PushTrace {
         datum.getPublishers().size(),
         datum.getDataBoxBytes(),
         newPublisherNum,
-        datumModifyDelayMillis,
-        datumTotalDelayMillis,
-        datumPushTriggerSpanMillis,
-        datumPushCommitSpanMillis,
-        datumPushStartSpanMillis,
-        datumPushSessionSpanMillis,
-        datumPushFinishSpanMillis,
+        datumModifyPushSpanMillis,
+        datumVersionPushSpanMillis,
+        datumVersionTriggerSpanMillis,
+        pushTaskPrepareSpanMillis,
+        pushTaskQueueSpanMillis,
+        pushTaskSessionSpanMillis,
+        pushTaskClientIOSpanMillis,
         firstPubPushDelayMillis,
         lastPubPushDelayMillis,
         subNum,
         subAddress,
         pushCause.triggerPushCtx.getExpectDatumVersion(),
-        pushCause.triggerPushCtx.dataNode);
-  }
-
-  private void calc() {
-    // try find the earliest and the latest publisher after the subPushedVersion
-    // that means the modify after last push, but this could not handle the publisher.remove
-    if (subscriberPushedVersion == 0) {
-      this.datumTotalDelayMillis = pushFinishTimestamp - subRegTimestamp;
-    } else {
-      this.datumTotalDelayMillis = pushFinishTimestamp - pushCause.datumTimestamp;
-    }
-    this.datumPushTriggerSpanMillis =
-        Math.max(
-            pushCause.triggerPushCtx.getTriggerSessionTimestamp() - pushCause.datumTimestamp, 0);
-    this.datumPushCommitSpanMillis =
-        pushCommitTimestamp - pushCause.triggerPushCtx.getTriggerSessionTimestamp();
-    this.datumPushStartSpanMillis = pushStartTimestamp - pushCommitTimestamp;
-    this.datumPushFinishSpanMillis = pushFinishTimestamp - pushStartTimestamp;
-    this.datumPushSessionSpanMillis =
-        pushStartTimestamp - pushCause.triggerPushCtx.getTriggerSessionTimestamp();
-    final List<SubPublisher> publishers = datum.getPublishers();
-    final long lastPushTimestamp =
-        subscriberPushedVersion <= ValueConstants.DEFAULT_NO_DATUM_VERSION
-            ? subRegTimestamp
-            : DatumVersionUtil.getRealTimestamp(subscriberPushedVersion);
-    final List<SubPublisher> news = findNewPublishers(publishers, lastPushTimestamp);
-    final SubPublisher first = news.isEmpty() ? null : news.get(0);
-    final SubPublisher last = news.isEmpty() ? null : news.get(news.size() - 1);
-    this.newPublisherNum = news.size();
-    this.firstPubPushDelayMillis =
-        first == null ? 0 : pushFinishTimestamp - first.getRegisterTimestamp();
-    this.lastPubPushDelayMillis =
-        last == null ? 0 : pushFinishTimestamp - last.getRegisterTimestamp();
-
-    this.datumModifyDelayMillis = datumTotalDelayMillis;
-    if (pushCause.pushType == PushType.Sub && first != null) {
-      // if sub, use first.publisher.registerTs as modifyTs
-      datumModifyDelayMillis = firstPubPushDelayMillis;
-    }
+        pushCause.triggerPushCtx.dataNode,
+        taskID,
+        subscriberPushedVersion,
+        subRegTimestamp);
   }
 
   enum PushStatus {
@@ -178,6 +181,7 @@ public final class PushTrace {
     Fail,
     Timeout,
     Busy,
+    ChanClosed,
   }
 
   static List<SubPublisher> findNewPublishers(
@@ -207,5 +211,9 @@ public final class PushTrace {
             ? System.currentTimeMillis()
             : DatumVersionUtil.getRealTimestamp(datum.getVersion());
     return ts;
+  }
+
+  long getPushStartTimestamp() {
+    return pushStartTimestamp;
   }
 }

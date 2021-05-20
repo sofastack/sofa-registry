@@ -33,7 +33,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 public class PushDataGenerator {
 
-  @Autowired SessionServerConfig sessionServerConfig;
+  @Autowired protected SessionServerConfig sessionServerConfig;
 
   public Object createPushData(SubDatum datum, Map<String, Subscriber> subscriberMap) {
     SubscriberUtils.getAndAssertHasSameScope(subscriberMap.values());

@@ -20,6 +20,7 @@ import com.alipay.sofa.registry.core.model.RegisterResponse;
 import com.alipay.sofa.registry.core.model.SubscriberRegister;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.session.strategy.SubscriberHandlerStrategy;
+import java.util.concurrent.Executor;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -41,5 +42,10 @@ public class SubscriberHandler extends AbstractClientDataRequestHandler<Subscrib
   @Override
   public Class interest() {
     return SubscriberRegister.class;
+  }
+
+  @Override
+  public Executor getExecutor() {
+    return executorManager.getAccessSubExecutor();
   }
 }

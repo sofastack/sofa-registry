@@ -97,7 +97,7 @@ public class DefaultSubscriberHandlerStrategy implements SubscriberHandlerStrate
   private void log(boolean success, SubscriberRegister subscriberRegister, Subscriber subscriber) {
     // [Y|N],[R|U|N],app,zone,dataInfoId,registerId,scope,elementType,clientVersion,clientIp,clientPort
     SUB_LOGGER.info(
-        "{},{},{},{},{},{},{},{},{},{},{},{},{}",
+        "{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}",
         success ? 'Y' : 'N',
         EventTypeConstants.getEventTypeFlag(subscriberRegister.getEventType()),
         subscriberRegister.getAppName(),
@@ -109,6 +109,8 @@ public class DefaultSubscriberHandlerStrategy implements SubscriberHandlerStrate
         subscriberRegister.getScope(),
         subscriber == null ? "" : subscriber.getElementType(),
         subscriber == null ? "" : subscriber.getClientVersion(),
+        subscriber == null ? "" : subscriber.getRegisterTimestamp(),
+        subscriber == null ? "" : subscriber.getVersion(),
         subscriberRegister.getIp(),
         subscriberRegister.getPort());
   }

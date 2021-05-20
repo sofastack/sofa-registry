@@ -66,21 +66,17 @@ public interface SessionServerConfig {
 
   int getSubscriberRegisterFetchRetryTimes();
 
-  int getAccessDataExecutorMinPoolSize();
-
-  int getAccessDataExecutorMaxPoolSize();
+  int getAccessDataExecutorPoolSize();
 
   int getAccessDataExecutorQueueSize();
 
-  long getAccessDataExecutorKeepAliveTime();
+  int getAccessSubDataExecutorPoolSize();
 
-  int getDataChangeExecutorMinPoolSize();
+  int getAccessSubDataExecutorQueueSize();
 
-  int getDataChangeExecutorMaxPoolSize();
+  int getDataChangeExecutorPoolSize();
 
   int getDataChangeExecutorQueueSize();
-
-  long getDataChangeExecutorKeepAliveTime();
 
   int getDataChangeDebouncingMillis();
 
@@ -98,9 +94,7 @@ public interface SessionServerConfig {
 
   int getPushDataTaskDebouncingMillis();
 
-  int getConnectClientExecutorMinPoolSize();
-
-  int getConnectClientExecutorMaxPoolSize();
+  int getConnectClientExecutorPoolSize();
 
   int getConnectClientExecutorQueueSize();
 

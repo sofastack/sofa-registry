@@ -120,10 +120,8 @@ public class FirePushServiceTest {
     // get datum is old
     datum = TestUtils.newSubDatum("testDataId", 80, Collections.emptyList());
     v = new Value((Sizer) datum);
-    Mockito.when(svc.sessionCacheService.getValueIfPresent(Mockito.anyObject()))
-        .thenReturn(v);
-    Mockito.when(svc.sessionCacheService.getValue(Mockito.anyObject()))
-        .thenReturn(v);
+    Mockito.when(svc.sessionCacheService.getValueIfPresent(Mockito.anyObject())).thenReturn(v);
+    Mockito.when(svc.sessionCacheService.getValue(Mockito.anyObject())).thenReturn(v);
     Assert.assertFalse(svc.doExecuteOnChange("testDataId", ctx));
   }
 

@@ -126,13 +126,18 @@ public final class PublisherGroup {
   }
 
   DatumVersion updateVersion() {
-    if (DatumVersionUtil.useConfregVersionGen()) {
-      long lastVersion = this.version;
-      this.version = DatumVersionUtil.confregNextId(lastVersion);
-    } else {
-      this.version = DatumVersionUtil.nextId();
+    final boolean useConfreg = DatumVersionUtil.useConfregVersionGen();
+    lock.writeLock().lock();
+    try {
+      if (useConfreg) {
+        this.version = DatumVersionUtil.confregNextId(this.version);
+      } else {
+        this.version = DatumVersionUtil.nextId();
+      }
+      return new DatumVersion(version);
+    } finally {
+      lock.writeLock().unlock();
     }
-    return new DatumVersion(version);
   }
 
   private boolean tryAddPublisher(Publisher publisher) {
