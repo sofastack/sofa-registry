@@ -26,6 +26,7 @@ import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
 import com.alipay.sofa.registry.observer.Observable;
 import com.alipay.sofa.registry.observer.impl.AbstractLifecycleObservable;
 import com.alipay.sofa.registry.server.meta.MetaLeaderService;
+import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.cluster.node.NodeAdded;
 import com.alipay.sofa.registry.server.meta.cluster.node.NodeRemoved;
 import com.alipay.sofa.registry.server.meta.lease.data.DataManagerObserver;
@@ -43,6 +44,7 @@ import com.alipay.sofa.registry.server.shared.slot.SlotTableUtils;
 import com.alipay.sofa.registry.server.shared.util.NodeUtils;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.JsonUtils;
+import com.alipay.sofa.registry.util.SystemUtils;
 import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import com.google.common.annotations.VisibleForTesting;
 import java.util.Collection;
@@ -72,6 +74,8 @@ public class ScheduledSlotArranger extends AbstractLifecycleObservable
 
   private final Arranger arranger = new Arranger();
 
+  private final MetaServerConfig metaServerConfig;
+
   private final Lock lock = new ReentrantLock();
 
   @Autowired
@@ -79,11 +83,13 @@ public class ScheduledSlotArranger extends AbstractLifecycleObservable
       DefaultDataServerManager dataServerManager,
       SlotManager slotManager,
       SlotTableMonitor slotTableMonitor,
-      MetaLeaderService metaLeaderService) {
+      MetaLeaderService metaLeaderService,
+      MetaServerConfig metaServerConfig) {
     this.dataServerManager = dataServerManager;
     this.slotManager = slotManager;
     this.slotTableMonitor = slotTableMonitor;
     this.metaLeaderService = metaLeaderService;
+    this.metaServerConfig = metaServerConfig;
   }
 
   @PostConstruct
@@ -202,7 +208,7 @@ public class ScheduledSlotArranger extends AbstractLifecycleObservable
   private final class Arranger extends WakeUpLoopRunnable {
 
     private final int waitingMillis =
-        Integer.getInteger("registry.slot.arrange.interval.millis", 1000);
+        SystemUtils.getSystemInteger("registry.slot.arrange.interval.millis", 1000);
 
     @Override
     public int getWaitingMillis() {
@@ -225,6 +231,7 @@ public class ScheduledSlotArranger extends AbstractLifecycleObservable
       return false;
     }
     boolean modified = false;
+    boolean noAssign = false;
     try {
       List<String> currentDataNodeIps = NodeUtils.transferNodeToIpList(dataNodes);
       logger.info(
@@ -239,7 +246,8 @@ public class ScheduledSlotArranger extends AbstractLifecycleObservable
               slotManager.getSlotNums(),
               slotManager.getSlotReplicaNums());
 
-      if (tableBuilder.hasNoAssignedSlots()) {
+      noAssign = tableBuilder.hasNoAssignedSlots();
+      if (noAssign) {
         logger.info("[re-assign][begin] assign slots to data-server");
         modified = assignSlots(tableBuilder, currentDataNodeIps);
         logger.info("[re-assign][end] modified={}", modified);
@@ -253,13 +261,17 @@ public class ScheduledSlotArranger extends AbstractLifecycleObservable
     } finally {
       unlock();
     }
+    if (modified || noAssign) {
+      // for log monitor
+      logger.warn("[Arranging]noAssign={},modified={}", noAssign, modified);
+    }
     return modified;
   }
 
   @VisibleForTesting
   public boolean arrangeSync() {
     if (metaLeaderService.amIStableAsLeader()) {
-
+      final int minDataNodeNum = metaServerConfig.getDataNodeProtectionNum();
       // the start arrange with the dataNodes snapshot
       final List<DataNode> dataNodes =
           dataServerManager.getDataServerMetaInfo().getClusterMembers();
@@ -267,6 +279,10 @@ public class ScheduledSlotArranger extends AbstractLifecycleObservable
         logger.warn("[Arranger] empty data server list");
         return false;
       } else {
+        if (dataNodes.size() <= minDataNodeNum) {
+          logger.warn("[ProtectionMode] dataServers={} <= {}", dataNodes.size(), minDataNodeNum);
+          return false;
+        }
         Metrics.SlotArrange.begin();
         try {
           return tryArrangeSlots(dataNodes);

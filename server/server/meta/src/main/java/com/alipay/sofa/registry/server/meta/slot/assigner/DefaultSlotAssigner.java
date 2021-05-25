@@ -65,7 +65,6 @@ public class DefaultSlotAssigner implements SlotAssigner {
       throw new SofaRegistryRuntimeException(
           "no pending slot or available dataServers for reassignment");
     }
-    // TODO get the high water mark of leader
     BalancePolicy balancePolicy = new NaiveBalancePolicy();
     final int ceilAvg =
         MathUtils.divideCeil(slotTableBuilder.getSlotNums(), currentDataServers.size());

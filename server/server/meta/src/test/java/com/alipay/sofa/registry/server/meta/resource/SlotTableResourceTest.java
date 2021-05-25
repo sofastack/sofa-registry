@@ -65,7 +65,11 @@ public class SlotTableResourceTest extends AbstractMetaServerTestBase {
     slotArranger =
         spy(
             new ScheduledSlotArranger(
-                dataServerManager, slotManager, slotTableMonitor, metaLeaderService));
+                dataServerManager,
+                slotManager,
+                slotTableMonitor,
+                metaLeaderService,
+                metaServerConfig));
     resource =
         new SlotTableResource(
             slotManager, slotTableMonitor, dataServerManager, slotArranger, metaLeaderService);

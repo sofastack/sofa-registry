@@ -59,7 +59,7 @@ public interface MetaLeaderService {
     return amILeader() && isWarmuped();
   }
 
-  public interface MetaLeaderElectorListener {
+  interface MetaLeaderElectorListener {
 
     void becomeLeader();
 

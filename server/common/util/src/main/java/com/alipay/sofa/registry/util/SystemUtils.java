@@ -27,6 +27,14 @@ public final class SystemUtils {
     return v == null ? def : Integer.valueOf(v);
   }
 
+  public static long getSystemLong(String name, long def) {
+    String v = System.getProperty(name);
+    if (v == null) {
+      v = System.getenv(name);
+    }
+    return v == null ? def : Long.valueOf(v);
+  }
+
   public static String getSystem(String name, String def) {
     String v = System.getProperty(name);
     if (v == null) {
