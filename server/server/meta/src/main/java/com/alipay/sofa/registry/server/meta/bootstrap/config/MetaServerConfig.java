@@ -58,4 +58,6 @@ public interface MetaServerConfig {
   int getRevisionGcSecs();
 
   int getMetaSchedulerPoolSize();
+
+  int getDataNodeProtectionNum();
 }

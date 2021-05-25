@@ -59,13 +59,13 @@ public class PushProcessor {
 
   final Map<PushingTaskKey, PushTask> pushingTasks = Maps.newConcurrentMap();
 
-  @Autowired SessionServerConfig sessionServerConfig;
+  @Autowired protected SessionServerConfig sessionServerConfig;
 
-  @Autowired PushSwitchService pushSwitchService;
+  @Autowired protected PushSwitchService pushSwitchService;
 
-  @Autowired PushDataGenerator pushDataGenerator;
+  @Autowired protected PushDataGenerator pushDataGenerator;
 
-  @Autowired ClientNodeService clientNodeService;
+  @Autowired protected ClientNodeService clientNodeService;
 
   final WatchDog watchDog = new WatchDog();
   final Cleaner cleaner = new Cleaner();

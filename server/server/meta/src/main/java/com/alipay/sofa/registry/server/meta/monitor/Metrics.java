@@ -296,12 +296,20 @@ public class Metrics {
       }
     }
 
+    public static void clearLeaderNumbers() {
+      LEADER_ASSIGN_GAUGE.clear();
+    }
+
     public static void setFollowerNumbers(String dataServer, int followerNum) {
       try {
         FOLLOWER_ASSIGN_GAUGE.labels(dataServer).set(followerNum);
       } catch (Throwable throwable) {
         LOGGER.error("[setFollowerNumbers]", throwable);
       }
+    }
+
+    public static void clearFollowerNumbers() {
+      FOLLOWER_ASSIGN_GAUGE.clear();
     }
 
     public static void setDataServerSlotLagTimes(String dataServer, int times) {

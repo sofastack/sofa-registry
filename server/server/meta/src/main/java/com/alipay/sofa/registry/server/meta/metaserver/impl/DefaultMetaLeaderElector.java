@@ -23,6 +23,7 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.observer.impl.AbstractLifecycleObservable;
 import com.alipay.sofa.registry.server.meta.MetaLeaderService;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
+import com.alipay.sofa.registry.server.meta.monitor.Metrics;
 import com.alipay.sofa.registry.store.api.elector.LeaderAware;
 import com.alipay.sofa.registry.store.api.elector.LeaderElector;
 import java.util.List;
@@ -136,6 +137,9 @@ public class DefaultMetaLeaderElector extends AbstractLifecycleObservable
     if (logger.isInfoEnabled()) {
       logger.info("[becomeFollow] change from elector to follower, {}", this.leaderState.get());
     }
+    // not leader, clear the leader/follower metrics
+    Metrics.DataSlot.clearLeaderNumbers();
+    Metrics.DataSlot.clearFollowerNumbers();
     if (listeners != null && !listeners.isEmpty()) {
       listeners.forEach(
           listener -> {

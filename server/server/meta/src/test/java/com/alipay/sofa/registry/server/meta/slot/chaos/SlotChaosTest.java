@@ -73,7 +73,7 @@ public class SlotChaosTest extends AbstractMetaServerTestBase {
     slotManager.setSlotReplicas(2);
     scheduledSlotArranger =
         new ScheduledSlotArranger(
-            dataServerManager, slotManager, slotTableMonitor, metaLeaderService);
+            dataServerManager, slotManager, slotTableMonitor, metaLeaderService, metaServerConfig);
 
     when(slotTableMonitor.isStableTableStable()).thenReturn(true);
     when(dataServerManager.getDataServerMetaInfo()).thenReturn(VersionedList.EMPTY);

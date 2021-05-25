@@ -205,4 +205,8 @@ public class DefaultDataServerManager extends AbstractEvictableFilterableLeaseMa
   public long getEpoch() {
     return currentEpoch.get();
   }
+
+  public MetaServerConfig getMetaServerConfig() {
+    return metaServerConfig;
+  }
 }

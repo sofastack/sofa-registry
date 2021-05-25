@@ -30,6 +30,9 @@ public class DataSlotMetricsRecorder implements SlotTableRecorder {
   @Override
   public void record(SlotTable slotTable) {
     List<DataNodeSlot> dataNodeSlots = slotTable.transfer(null, false);
+    // clear the gauge
+    Metrics.DataSlot.clearLeaderNumbers();
+    Metrics.DataSlot.clearFollowerNumbers();
     dataNodeSlots.forEach(
         dataNodeSlot -> {
           Metrics.DataSlot.setLeaderNumbers(

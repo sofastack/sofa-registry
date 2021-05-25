@@ -28,6 +28,7 @@ import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.lifecycle.LifecycleState;
 import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
 import com.alipay.sofa.registry.server.meta.MetaLeaderService;
+import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.lease.data.DefaultDataServerManager;
 import com.alipay.sofa.registry.server.meta.monitor.SlotTableMonitor;
@@ -64,6 +65,8 @@ public class SlotMigrationIntegrationTest extends AbstractMetaServerTestBase {
 
   @Mock private MetaLeaderService leaderElector;
 
+  @Mock private MetaServerConfig metaServerConfig;
+
   @Before
   public void beforeSlotMigrationIntegrationTest() throws Exception {
     MockitoAnnotations.initMocks(this);
@@ -94,7 +97,8 @@ public class SlotMigrationIntegrationTest extends AbstractMetaServerTestBase {
   public void testDataServerAddedOneByOne() throws Exception {
     System.setProperty(NaiveBalancePolicy.PROP_LEADER_MAX_MOVE, SlotConfig.SLOT_NUM + "");
     ScheduledSlotArranger arranger =
-        new ScheduledSlotArranger(dataServerManager, slotManager, slotTableMonitor, leaderElector);
+        new ScheduledSlotArranger(
+            dataServerManager, slotManager, slotTableMonitor, leaderElector, metaServerConfig);
     arranger.getLifecycleState().setPhase(LifecycleState.LifecyclePhase.STARTED);
     List<DataNode> dataNodes = Lists.newArrayList(new DataNode(new URL("100.88.142.32"), getDc()));
     when(dataServerManager.getDataServerMetaInfo())
@@ -174,7 +178,8 @@ public class SlotMigrationIntegrationTest extends AbstractMetaServerTestBase {
   public void testDataServerAddedAndDeleted() throws Exception {
     System.setProperty(NaiveBalancePolicy.PROP_LEADER_MAX_MOVE, SlotConfig.SLOT_NUM + "");
     ScheduledSlotArranger arranger =
-        new ScheduledSlotArranger(dataServerManager, slotManager, slotTableMonitor, leaderElector);
+        new ScheduledSlotArranger(
+            dataServerManager, slotManager, slotTableMonitor, leaderElector, metaServerConfig);
     arranger.getLifecycleState().setPhase(LifecycleState.LifecyclePhase.STARTED);
 
     List<DataNode> dataNodes = Lists.newArrayList(new DataNode(new URL("100.88.142.32"), getDc()));
@@ -326,7 +331,8 @@ public class SlotMigrationIntegrationTest extends AbstractMetaServerTestBase {
   @Test
   public void testDataLeaderBalance() throws Exception {
     ScheduledSlotArranger arranger =
-        new ScheduledSlotArranger(dataServerManager, slotManager, slotTableMonitor, leaderElector);
+        new ScheduledSlotArranger(
+            dataServerManager, slotManager, slotTableMonitor, leaderElector, metaServerConfig);
     arranger.getLifecycleState().setPhase(LifecycleState.LifecyclePhase.STARTED);
 
     byte[] bytes =
@@ -359,7 +365,8 @@ public class SlotMigrationIntegrationTest extends AbstractMetaServerTestBase {
   @Test
   public void testDataLeaderBalance2() throws Exception {
     ScheduledSlotArranger arranger =
-        new ScheduledSlotArranger(dataServerManager, slotManager, slotTableMonitor, leaderElector);
+        new ScheduledSlotArranger(
+            dataServerManager, slotManager, slotTableMonitor, leaderElector, metaServerConfig);
     arranger.getLifecycleState().setPhase(LifecycleState.LifecyclePhase.STARTED);
     byte[] bytes =
         FileUtils.readFileToByteArray(new File("src/test/resources/test/slot-table-2.json"));
@@ -387,7 +394,8 @@ public class SlotMigrationIntegrationTest extends AbstractMetaServerTestBase {
   @Test
   public void testNoInfinityLoop() throws Exception {
     ScheduledSlotArranger assigner =
-        new ScheduledSlotArranger(dataServerManager, slotManager, slotTableMonitor, leaderElector);
+        new ScheduledSlotArranger(
+            dataServerManager, slotManager, slotTableMonitor, leaderElector, metaServerConfig);
     assigner.getLifecycleState().setPhase(LifecycleState.LifecyclePhase.STARTED);
 
     byte[] bytes =

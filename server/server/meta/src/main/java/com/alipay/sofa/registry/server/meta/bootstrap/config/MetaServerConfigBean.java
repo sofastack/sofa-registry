@@ -19,6 +19,7 @@ package com.alipay.sofa.registry.server.meta.bootstrap.config;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.Lease;
 import com.alipay.sofa.registry.util.OsUtils;
+import com.alipay.sofa.registry.util.SystemUtils;
 import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
@@ -62,14 +63,18 @@ public class MetaServerConfigBean implements MetaServerConfig {
   private int revisionGcSecs = 60;
 
   private long metaLeaderWarmupMillis =
-      Long.getLong(
+      SystemUtils.getSystemLong(
           "registry.elector.warm.up.millis",
           TimeUnit.SECONDS.toMillis(Lease.DEFAULT_DURATION_SECS * 3 / 2));
 
   private long dataReplicateMaxGapMillis =
-      Long.getLong("registry.data.replicate.max.gap.millis", 3 * 60 * 1000);
+      SystemUtils.getSystemLong("registry.data.replicate.max.gap.millis", 3 * 60 * 1000);
 
   private int metaSchedulerPoolSize = OsUtils.getCpuCount();
+
+  // <=0 means no protection
+  private int dataNodeProtectionNum =
+      SystemUtils.getSystemInteger("registry.data.protection.num", 0);
 
   /**
    * Gets get session server port.
@@ -414,5 +419,14 @@ public class MetaServerConfigBean implements MetaServerConfig {
    */
   public void setMetaSchedulerPoolSize(int metaSchedulerPoolSize) {
     this.metaSchedulerPoolSize = metaSchedulerPoolSize;
+  }
+
+  @Override
+  public int getDataNodeProtectionNum() {
+    return dataNodeProtectionNum;
+  }
+
+  public void setDataNodeProtectionNum(int dataNodeProtectionNum) {
+    this.dataNodeProtectionNum = dataNodeProtectionNum;
   }
 }

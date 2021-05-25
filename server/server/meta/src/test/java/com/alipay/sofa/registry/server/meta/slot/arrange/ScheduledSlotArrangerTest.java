@@ -53,7 +53,11 @@ public class ScheduledSlotArrangerTest extends AbstractMetaServerTestBase {
     slotArranger =
         spy(
             new ScheduledSlotArranger(
-                dataServerManager, slotManager, slotTableMonitor, metaLeaderService));
+                dataServerManager,
+                slotManager,
+                slotTableMonitor,
+                metaLeaderService,
+                metaServerConfig));
   }
 
   @Test
