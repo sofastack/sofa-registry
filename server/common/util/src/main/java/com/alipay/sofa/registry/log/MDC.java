@@ -14,28 +14,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.cache;
+package com.alipay.sofa.registry.log;
 
-/**
- * @author shangyu.wh
- * @version $Id: CacheService.java, v 0.1 2017-12-06 20:19 shangyu.wh Exp $
- */
-public interface CacheService {
+import com.alipay.sofa.registry.trace.TraceID;
 
-  /**
-   * get cache by key
-   *
-   * @param key
-   * @return
-   */
-  Value getValue(Key key) throws CacheAccessException;
+public final class MDC {
+  private static final String KEY_TRACE_ID = "traceID";
+  private static final String KEY_ADDRESS = "address";
 
-  Value getValueIfPresent(Key key);
+  private MDC() {}
 
-  /**
-   * invalidate cache by key
-   *
-   * @param key
-   */
-  void invalidate(Key key);
+  public static void startTraceRequest(String address) {
+    TraceID traceID = TraceID.newTraceID();
+    put(KEY_TRACE_ID, traceID.toString());
+    put(KEY_ADDRESS, address);
+  }
+
+  public static void finishTraceRequest() {
+    org.slf4j.MDC.remove(KEY_TRACE_ID);
+    org.slf4j.MDC.remove(KEY_ADDRESS);
+  }
+
+  public static void put(String key, String val) {
+    org.slf4j.MDC.put(key, val);
+  }
+
+  public static void clear() {
+    org.slf4j.MDC.clear();
+  }
 }

@@ -20,8 +20,10 @@ import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.util.OsUtils;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -66,7 +68,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
   private int accessDataExecutorQueueSize = 10000;
 
-  private int accessSubDataExecutorPoolSize = OsUtils.getCpuCount() * 10;
+  private int accessSubDataExecutorPoolSize = OsUtils.getCpuCount() * 8;
 
   private int accessSubDataExecutorQueueSize = 40000;
 
@@ -84,7 +86,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
   private int subscriberRegisterTaskMaxBufferSize = 500000;
 
-  private int subscriberRegisterTaskWorkerSize = OsUtils.getCpuCount() * 8;
+  private int subscriberRegisterTaskWorkerSize = OsUtils.getCpuCount() * 5;
 
   private int dataChangeDebouncingMillis = 1000;
   private int dataChangeMaxDebouncingMillis = 3000;
@@ -135,7 +137,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
   private int schedulerScanVersionIntervalMillis = 1000 * 5;
 
-  private double accessLimitRate = 100000.0;
+  private double accessLimitRate = 30000.0;
 
   private String sessionServerRegion;
 
@@ -152,7 +154,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
   private volatile Set<String> invalidForeverZonesSet;
 
-  private volatile Pattern invalidIgnoreDataIdPattern = null;
+  private volatile Optional<Pattern> invalidIgnoreDataIdPattern = null;
 
   private String blacklistPubDataIdRegex = "";
 
@@ -170,7 +172,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
   private int cacheDatumMaxWeight = 1000 * 1000 * 1000;
 
-  private int cacheDatumExpireSecs = 8;
+  private int cacheDatumExpireSecs = 4;
 
   // metadata config start
 
@@ -857,13 +859,16 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
   @Override
   public boolean isInvalidIgnored(String dataId) {
-
-    String invalidIgnoreDataidRegex = getInvalidIgnoreDataidRegex();
-    if (null != invalidIgnoreDataidRegex && !invalidIgnoreDataidRegex.isEmpty()) {
-      invalidIgnoreDataIdPattern = Pattern.compile(invalidIgnoreDataidRegex);
+    if (invalidIgnoreDataIdPattern == null) {
+      String invalidIgnoreDataidRegex = getInvalidIgnoreDataidRegex();
+      if (StringUtils.isBlank(invalidIgnoreDataidRegex)) {
+        invalidIgnoreDataIdPattern = Optional.empty();
+      } else {
+        invalidIgnoreDataIdPattern = Optional.of(Pattern.compile(invalidIgnoreDataidRegex));
+      }
     }
-
-    return null != invalidIgnoreDataIdPattern && invalidIgnoreDataIdPattern.matcher(dataId).find();
+    final Pattern p = invalidIgnoreDataIdPattern.get();
+    return p != null && p.matcher(dataId).find();
   }
 
   /**

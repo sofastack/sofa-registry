@@ -18,6 +18,7 @@ package com.alipay.sofa.registry.server.shared.remoting;
 
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.MDC;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
 
@@ -64,13 +65,17 @@ public abstract class AbstractChannelHandler<T> implements ChannelHandler<T> {
 
   @Override
   public Object reply(Channel channel, T request) {
+    final String address = RemotingHelper.getRemoteHostAddress(channel);
     try {
+      MDC.startTraceRequest(address);
       logRequest(channel, request);
       checkParam(request);
       return doHandle(channel, request);
     } catch (Throwable e) {
       exchangeLog.error("[{}] handle request failed", getClassName(), e);
       return buildFailedResponse(e.getMessage());
+    } finally {
+      MDC.finishTraceRequest();
     }
   }
 

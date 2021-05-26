@@ -22,6 +22,10 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public final class TraceID implements Serializable {
   private static final transient UUID SEED = UUID.randomUUID();
+  private static final transient String SEED_PREFIX =
+      Long.toHexString(SEED.getMostSignificantBits())
+          + Long.toHexString(SEED.getLeastSignificantBits())
+          + '-';
   private static final transient AtomicLong SEQ = new AtomicLong();
 
   private final long mostSigBits;
@@ -50,6 +54,10 @@ public final class TraceID implements Serializable {
   }
 
   private String createString() {
+    if (SEED.getMostSignificantBits() == mostSigBits
+        && SEED.getLeastSignificantBits() == leastSigBits) {
+      return SEED_PREFIX + seq;
+    }
     StringBuilder sb = new StringBuilder(64);
     sb.append(Long.toHexString(mostSigBits))
         .append(Long.toHexString(leastSigBits))

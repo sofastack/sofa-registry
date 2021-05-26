@@ -104,6 +104,7 @@ public class JerseyJettyServer implements Server {
     CustomRequestLog log = new CustomRequestLog(writer, NCSA_FORMAT);
     server.setRequestLog(log);
     final ServerConnector http = new ServerConnector(server, new HttpConnectionCustomFactory());
+    http.setAcceptQueueSize(512);
     http.setPort(port);
     server.setConnectors(new Connector[] {http});
     if (handler != null) {

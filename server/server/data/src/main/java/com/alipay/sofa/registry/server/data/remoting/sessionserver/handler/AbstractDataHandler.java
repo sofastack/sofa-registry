@@ -134,11 +134,8 @@ public abstract class AbstractDataHandler<T> extends AbstractServerHandler<T> {
     return Node.NodeType.SESSION;
   }
 
-  public static String getRemoteAddress(Channel channel) {
-    try {
-      return channel.getRemoteAddress().getAddress().getHostAddress();
-    } catch (Throwable exception) {
-      return "unknown";
-    }
+  @Override
+  protected void logRequest(Channel channel, T request) {
+    // too much to log
   }
 }

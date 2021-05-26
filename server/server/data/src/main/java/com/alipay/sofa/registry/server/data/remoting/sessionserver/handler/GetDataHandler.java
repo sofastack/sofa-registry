@@ -106,11 +106,6 @@ public class GetDataHandler extends AbstractDataHandler<GetDataRequest> {
   }
 
   @Override
-  protected void logRequest(Channel channel, GetDataRequest request) {
-    // not log
-  }
-
-  @Override
   public Class interest() {
     return GetDataRequest.class;
   }

@@ -29,6 +29,7 @@ import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.session.store.Watchers;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
+import io.prometheus.client.Gauge;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -76,15 +77,18 @@ public class CacheCountTask {
 
       Map<String, Map<String, Tuple<Integer, Integer>>> pubGroupCounts =
           DataUtils.countGroupByInstanceIdGroup(pubs);
-      printInstanceIdGroupCount("[PubGroup]", pubGroupCounts);
+      printInstanceIdGroupCount(
+          "[PubGroup]", pubGroupCounts, Metrics.PUB_GAUGE, Metrics.PUB_DATA_ID_GAUGE);
 
       Map<String, Map<String, Tuple<Integer, Integer>>> subGroupCounts =
           DataUtils.countGroupByInstanceIdGroup(subs);
-      printInstanceIdGroupCount("[SubGroup]", subGroupCounts);
+      printInstanceIdGroupCount(
+          "[SubGroup]", subGroupCounts, Metrics.SUB_GAUGE, Metrics.SUB_DATA_ID_GAUGE);
 
       Map<String, Map<String, Tuple<Integer, Integer>>> watGroupCounts =
           DataUtils.countGroupByInstanceIdGroup(wats);
-      printInstanceIdGroupCount("[WatGroup]", watGroupCounts);
+      printInstanceIdGroupCount(
+          "[WatGroup]", watGroupCounts, Metrics.WAT_COUNTER, Metrics.WAT_DATA_ID_COUNTER);
 
       Map<String, Map<String, Map<String, Tuple<Integer, Integer>>>> pubCounts =
           DataUtils.countGroupByInstanceIdGroupApp(pubs);
@@ -124,12 +128,17 @@ public class CacheCountTask {
   }
 
   private static void printInstanceIdGroupCount(
-      String prefix, Map<String, Map<String, Tuple<Integer, Integer>>> counts) {
+      String prefix,
+      Map<String, Map<String, Tuple<Integer, Integer>>> counts,
+      Gauge gauge,
+      Gauge dataIDGauge) {
     for (Entry<String, Map<String, Tuple<Integer, Integer>>> count : counts.entrySet()) {
       final String instanceId = count.getKey();
       for (Entry<String, Tuple<Integer, Integer>> groups : count.getValue().entrySet()) {
         final String group = groups.getKey();
         Tuple<Integer, Integer> tupleCount = groups.getValue();
+        gauge.labels(instanceId, group).set(tupleCount.o1);
+        dataIDGauge.labels(instanceId, group).set(tupleCount.o2);
         COUNT_LOGGER.info("{}{},{},{},{}", prefix, instanceId, group, tupleCount.o1, tupleCount.o2);
       }
     }

@@ -97,10 +97,8 @@ public class SessionCacheService implements CacheService {
   }
 
   @Override
-  public void invalidate(Key... keys) {
-    for (Key key : keys) {
-      readWriteCacheMap.invalidate(key);
-    }
+  public void invalidate(Key key) {
+    readWriteCacheMap.invalidate(key);
   }
 
   /**

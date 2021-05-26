@@ -24,6 +24,9 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.session.bootstrap.ExecutorManager;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
+import com.alipay.sofa.registry.server.session.cache.CacheService;
+import com.alipay.sofa.registry.server.session.cache.DatumKey;
+import com.alipay.sofa.registry.server.session.cache.Key;
 import com.alipay.sofa.registry.server.session.push.FirePushService;
 import com.alipay.sofa.registry.server.session.push.PushSwitchService;
 import com.alipay.sofa.registry.server.session.push.TriggerPushContext;
@@ -53,6 +56,8 @@ public class DataChangeRequestHandler extends AbstractClientHandler<DataChangeRe
   @Autowired FirePushService firePushService;
 
   @Autowired PushSwitchService pushSwitchService;
+
+  @Autowired CacheService sessionCacheService;
 
   @Override
   protected NodeType getConnectNodeType() {
@@ -84,7 +89,11 @@ public class DataChangeRequestHandler extends AbstractClientHandler<DataChangeRe
       Interests.InterestVersionCheck check =
           sessionInterests.checkInterestVersion(dataCenter, dataInfoId, version.getValue());
       if (!check.interested) {
-        if (check != Interests.InterestVersionCheck.NoSub) {
+        if (check == Interests.InterestVersionCheck.NoSub) {
+          // no sub of the dataId
+          Key key = new Key(DatumKey.class.getName(), new DatumKey(dataInfoId, dataCenter));
+          sessionCacheService.invalidate(key);
+        } else {
           // log exclude NoSub
           LOGGER.info("[SkipChange]{},{}, ver={}, {}", dataInfoId, dataCenter, version, check);
         }

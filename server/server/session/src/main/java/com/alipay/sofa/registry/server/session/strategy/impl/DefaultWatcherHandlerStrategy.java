@@ -92,6 +92,7 @@ public class DefaultWatcherHandlerStrategy implements WatcherHandlerStrategy {
 
   private void log(boolean success, ConfiguratorRegister register, Watcher watcher) {
     // [Y|N],[R|U|N],app,zone,dataInfoId,registerId,clientVersion,clientIp,clientPort
+    Metrics.Access.watCount(success);
     WATCH_LOGGER.info(
         "{},{},{},{},{},{},{},{},{},{},{}",
         success ? 'Y' : 'N',
