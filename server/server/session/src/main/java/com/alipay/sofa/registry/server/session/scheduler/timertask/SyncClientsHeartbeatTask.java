@@ -79,6 +79,11 @@ public class SyncClientsHeartbeatTask {
       channelCount = sessionServer.getChannelCount();
     }
 
+    Metrics.PUB_SUM.set(countPub);
+    Metrics.SUB_SUM.set(countSub);
+    Metrics.WAT_SUM.set(countSubW);
+    Metrics.CHANNEL_SUM.set(channelCount);
+
     CONSOLE_COUNT_LOGGER.info(
         "Subscriber count: {}, Publisher count: {}, Watcher count: {}, Connection count: {}",
         countSub,

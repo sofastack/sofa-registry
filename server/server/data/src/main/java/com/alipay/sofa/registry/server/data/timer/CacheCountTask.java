@@ -123,6 +123,8 @@ public class CacheCountTask {
       for (Entry<String, Tuple<Integer, Integer>> groupCount : groupCounts.entrySet()) {
         final String group = groupCount.getKey();
         Tuple<Integer, Integer> tupleCount = groupCount.getValue();
+        Metrics.PUB_GAUGE.labels(dataCenter, instanceId, group).set(tupleCount.o1);
+        Metrics.PUB_DATA_ID_GAUGE.labels(dataCenter, instanceId, group).set(tupleCount.o2);
         COUNT_LOGGER.info(
             "[PubGroup]{},{},{},{},{}",
             dataCenter,

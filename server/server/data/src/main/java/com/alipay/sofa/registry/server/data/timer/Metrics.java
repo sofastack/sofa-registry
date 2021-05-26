@@ -14,28 +14,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.cache;
+package com.alipay.sofa.registry.server.data.timer;
 
-/**
- * @author shangyu.wh
- * @version $Id: CacheService.java, v 0.1 2017-12-06 20:19 shangyu.wh Exp $
- */
-public interface CacheService {
+import io.prometheus.client.Gauge;
 
-  /**
-   * get cache by key
-   *
-   * @param key
-   * @return
-   */
-  Value getValue(Key key) throws CacheAccessException;
+public final class Metrics {
+  private Metrics() {}
 
-  Value getValueIfPresent(Key key);
+  static final Gauge PUB_GAUGE =
+      Gauge.build()
+          .namespace("data")
+          .subsystem("cache")
+          .name("pub_total")
+          .labelNames("dataCenter", "instanceId", "group")
+          .help("publisher cache num")
+          .register();
 
-  /**
-   * invalidate cache by key
-   *
-   * @param key
-   */
-  void invalidate(Key key);
+  static final Gauge PUB_DATA_ID_GAUGE =
+      Gauge.build()
+          .namespace("data")
+          .subsystem("cache")
+          .name("pub_dataID_total")
+          .labelNames("dataCenter", "instanceId", "group")
+          .help("publisher dataID cache num")
+          .register();
 }

@@ -96,6 +96,7 @@ public class DefaultSubscriberHandlerStrategy implements SubscriberHandlerStrate
 
   private void log(boolean success, SubscriberRegister subscriberRegister, Subscriber subscriber) {
     // [Y|N],[R|U|N],app,zone,dataInfoId,registerId,scope,elementType,clientVersion,clientIp,clientPort
+    Metrics.Access.subCount(success);
     SUB_LOGGER.info(
         "{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}",
         success ? 'Y' : 'N',

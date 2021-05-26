@@ -22,6 +22,7 @@ import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
+import com.alipay.sofa.registry.util.StringFormatter;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.net.InetSocketAddress;
@@ -74,7 +75,7 @@ public final class SubscriberUtils {
     for (Subscriber subscriber : subscribers) {
       if (scope != subscriber.getScope()) {
         throw new RuntimeException(
-            String.format("conflict scope, first={}, one is {}", scope, subscriber));
+            StringFormatter.format("conflict scope, first={}, one is {}", scope, subscriber));
       }
     }
     return scope;

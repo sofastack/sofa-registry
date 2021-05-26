@@ -92,6 +92,7 @@ public class DefaultPublisherHandlerStrategy implements PublisherHandlerStrategy
 
   private void log(boolean success, PublisherRegister publisherRegister, Publisher publisher) {
     // [Y|N],[R|U|N],app,zone,dataInfoId,registerId,version,registerTimestamp,clientVersion,clientIp,clientPort
+    Metrics.Access.pubCount(success);
     PUB_LOGGER.info(
         "{},{},{},{},{},{},{},{},{},{},{},{},{}",
         success ? 'Y' : 'N',
