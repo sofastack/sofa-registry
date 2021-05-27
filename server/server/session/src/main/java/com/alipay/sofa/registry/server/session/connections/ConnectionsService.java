@@ -31,6 +31,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.util.*;
 import java.util.stream.Collectors;
+import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class ConnectionsService {
@@ -81,7 +82,7 @@ public class ConnectionsService {
    */
   public List<ConnectId> getIpConnects(List<String> _ipList) {
     Server sessionServer = boltExchange.getServer(sessionServerConfig.getServerPort());
-    if (sessionServer == null) {
+    if (sessionServer == null || CollectionUtils.isEmpty(_ipList)) {
       return Collections.emptyList();
     }
     List<ConnectId> connections = Lists.newArrayList();
@@ -106,7 +107,7 @@ public class ConnectionsService {
    */
   public List<String> closeIpConnects(List<String> _ipList) {
     Server sessionServer = boltExchange.getServer(sessionServerConfig.getServerPort());
-    if (sessionServer == null) {
+    if (sessionServer == null || CollectionUtils.isEmpty(_ipList)) {
       return Collections.emptyList();
     }
     List<String> connections = new ArrayList<>();

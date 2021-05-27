@@ -89,6 +89,7 @@ public class BaseIntegrationTest extends AbstractTest {
   protected static volatile Channel metaChannel;
 
   protected static int sessionPort = 9603;
+  protected static int consolePort = 9604;
   protected static int metaPort = 9615;
   protected static int dataPort = 9622;
 

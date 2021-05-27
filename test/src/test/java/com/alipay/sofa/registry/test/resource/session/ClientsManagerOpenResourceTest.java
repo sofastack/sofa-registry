@@ -43,12 +43,12 @@ public class ClientsManagerOpenResourceTest extends BaseIntegrationTest {
     ClientManagerResource clientManagerResource =
         (ClientManagerResource) sessionApplicationContext.getBean("clientManagerResource");
     ClientManagerResource mockedResource = spy(clientManagerResource);
-    when(mockedResource.getOtherServersCurrentZone())
-        .thenReturn(Arrays.asList(new URL(LOCAL_ADDRESS, sessionPort)));
+    when(mockedResource.getOtherConsoleServersCurrentZone())
+        .thenReturn(Arrays.asList(new URL(LOCAL_ADDRESS, consolePort)));
 
     CommonResponse response =
         mockedResource.clientOffInZone(sessionChannel.getLocalAddress().getHostString());
-    assertTrue(response.isSuccess());
+    assertTrue(response.getMessage(), response.isSuccess());
     String dataId = "test-dataId-" + System.currentTimeMillis();
     String value = "test client off";
     PublisherRegistration registration = new PublisherRegistration(dataId);

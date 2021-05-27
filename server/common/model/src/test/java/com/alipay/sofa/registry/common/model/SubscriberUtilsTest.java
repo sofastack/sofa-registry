@@ -16,9 +16,12 @@
  */
 package com.alipay.sofa.registry.common.model;
 
+import com.alipay.sofa.registry.common.model.sessionserver.SimpleSubscriber;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
+import com.alipay.sofa.registry.common.model.store.URL;
 import com.google.common.collect.Lists;
 import java.util.Collections;
+import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -36,5 +39,36 @@ public class SubscriberUtilsTest {
     Assert.assertEquals(
         s2.getRegisterTimestamp(),
         SubscriberUtils.getMaxRegisterTimestamp(Lists.newArrayList(s1, s2)));
+  }
+
+  @Test
+  public void testSimpleSub() {
+    Subscriber s1 = new Subscriber();
+    s1.setAppName("testApp");
+    s1.setClientId("testClientId");
+    s1.setSourceAddress(new URL("192.168.1.1", 8888));
+
+    SimpleSubscriber simple1 = SubscriberUtils.convert(s1);
+    Assert.assertEquals(s1.getAppName(), simple1.getAppName());
+    Assert.assertEquals(s1.getClientId(), simple1.getClientId());
+    Assert.assertEquals(s1.getSourceAddress().getAddressString(), simple1.getSourceAddress());
+
+    Subscriber s2 = new Subscriber();
+    s2.setAppName("testApp2");
+    s2.setClientId("testClientId2");
+    s2.setSourceAddress(new URL("192.168.1.2", 8888));
+
+    Assert.assertTrue(SubscriberUtils.convert((List) null).isEmpty());
+
+    List<SimpleSubscriber> ss = SubscriberUtils.convert(Lists.newArrayList(s1, s2));
+    Assert.assertEquals(ss.size(), 2);
+
+    Assert.assertEquals(s1.getAppName(), ss.get(0).getAppName());
+    Assert.assertEquals(s1.getClientId(), ss.get(0).getClientId());
+    Assert.assertEquals(s1.getSourceAddress().getAddressString(), ss.get(0).getSourceAddress());
+
+    Assert.assertEquals(s2.getAppName(), ss.get(1).getAppName());
+    Assert.assertEquals(s2.getClientId(), ss.get(1).getClientId());
+    Assert.assertEquals(s2.getSourceAddress().getAddressString(), ss.get(1).getSourceAddress());
   }
 }

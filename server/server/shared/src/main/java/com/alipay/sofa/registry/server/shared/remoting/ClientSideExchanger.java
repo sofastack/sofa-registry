@@ -57,6 +57,7 @@ public abstract class ClientSideExchanger implements NodeExchanger {
 
   @PostConstruct
   public void init() {
+    // init blotClient
     ConcurrentUtils.createDaemonThread(serverType + "-async-connector", connector).start();
     LOGGER.info("init connector");
   }
@@ -68,6 +69,10 @@ public abstract class ClientSideExchanger implements NodeExchanger {
       throw new RequestException("null url", request);
     }
     Client client = boltExchange.getClient(serverType);
+    if (client == null) {
+      connect(url);
+      client = boltExchange.getClient(serverType);
+    }
     final int timeout = request.getTimeout() != null ? request.getTimeout() : getRpcTimeoutMillis();
     try {
       CallbackHandler callback = request.getCallBackHandler();

@@ -47,6 +47,7 @@ public class ExecutorManager {
   private final ThreadPoolExecutor dataSlotSyncRequestExecutor;
   private final ThreadPoolExecutor connectClientExecutor;
   private final ThreadPoolExecutor accessMetadataExecutor;
+  private final ThreadPoolExecutor consoleExecutor;
 
   @Autowired protected SessionServerConfig sessionServerConfig;
 
@@ -67,6 +68,8 @@ public class ExecutorManager {
   private static final String CONNECT_CLIENT_EXECUTOR = "ConnectClientExecutor";
 
   private static final String ACCESS_METADATA_EXECUTOR = "AccessMetadataExecutor";
+
+  private static final String CONSOLE_EXECUTOR = "ConsoleExecutor";
 
   public ExecutorManager(SessionServerConfig sessionServerConfig) {
     scheduler =
@@ -164,6 +167,19 @@ public class ExecutorManager {
                     new LinkedBlockingQueue(
                         sessionServerConfig.getConnectClientExecutorQueueSize()),
                     new NamedThreadFactory(CONNECT_CLIENT_EXECUTOR, true)));
+
+    consoleExecutor =
+        reportExecutors.computeIfAbsent(
+            CONSOLE_EXECUTOR,
+            k ->
+                new MetricsableThreadPoolExecutor(
+                    CONSOLE_EXECUTOR,
+                    sessionServerConfig.getConsoleExecutorPoolSize(),
+                    sessionServerConfig.getConsoleExecutorPoolSize(),
+                    60L,
+                    TimeUnit.SECONDS,
+                    new LinkedBlockingQueue(sessionServerConfig.getConsoleExecutorQueueSize()),
+                    new NamedThreadFactory(CONSOLE_EXECUTOR, true)));
   }
 
   public void startScheduler() {
@@ -217,5 +233,9 @@ public class ExecutorManager {
 
   public ThreadPoolExecutor getAccessMetadataExecutor() {
     return accessMetadataExecutor;
+  }
+
+  public ThreadPoolExecutor getConsoleExecutor() {
+    return consoleExecutor;
   }
 }

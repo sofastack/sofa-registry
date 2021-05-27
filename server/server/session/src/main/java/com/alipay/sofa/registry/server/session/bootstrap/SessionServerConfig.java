@@ -30,6 +30,8 @@ public interface SessionServerConfig {
 
   int getSyncSessionPort();
 
+  int getConsolePort();
+
   int getSyncSessionIOLowWaterMark();
 
   int getSyncSessionIOHighWaterMark();
@@ -73,6 +75,10 @@ public interface SessionServerConfig {
   int getAccessSubDataExecutorPoolSize();
 
   int getAccessSubDataExecutorQueueSize();
+
+  int getConsoleExecutorPoolSize();
+
+  int getConsoleExecutorQueueSize();
 
   int getDataChangeExecutorPoolSize();
 

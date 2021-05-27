@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.common.model;
 
+import com.alipay.sofa.registry.common.model.sessionserver.SimpleSubscriber;
 import com.alipay.sofa.registry.common.model.store.BaseInfo;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
@@ -30,6 +31,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import org.apache.commons.collections.CollectionUtils;
 
 public final class SubscriberUtils {
   private static final Logger LOGGER = LoggerFactory.getLogger(SubscriberUtils.class);
@@ -108,5 +110,23 @@ public final class SubscriberUtils {
       }
     }
     return max;
+  }
+
+  public static SimpleSubscriber convert(Subscriber subscriber) {
+    return new SimpleSubscriber(
+        subscriber.getClientId(),
+        subscriber.getSourceAddress().getAddressString(),
+        subscriber.getAppName());
+  }
+
+  public static List<SimpleSubscriber> convert(Collection<Subscriber> subscribers) {
+    if (CollectionUtils.isEmpty(subscribers)) {
+      return Collections.emptyList();
+    }
+    List<SimpleSubscriber> ret = Lists.newArrayListWithCapacity(subscribers.size());
+    for (Subscriber s : subscribers) {
+      ret.add(convert(s));
+    }
+    return ret;
   }
 }
