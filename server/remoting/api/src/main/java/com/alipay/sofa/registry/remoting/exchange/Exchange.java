@@ -26,6 +26,7 @@ import com.alipay.sofa.registry.remoting.Server;
  */
 public interface Exchange<T> {
   String SESSION_SERVER_TYPE = "sessionServer";
+  String SESSION_SERVER_CONSOLE_TYPE = "sessionServerConsole";
   String DATA_SERVER_TYPE = "dataServer";
   String DATA_SERVER_NOTIFY_TYPE = "dataServerNotify";
   String META_SERVER_TYPE = "metaServer";

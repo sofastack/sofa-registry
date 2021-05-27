@@ -132,6 +132,8 @@ public class CacheCountTask {
       Map<String, Map<String, Tuple<Integer, Integer>>> counts,
       Gauge gauge,
       Gauge dataIDGauge) {
+    gauge.clear();
+    dataIDGauge.clear();
     for (Entry<String, Map<String, Tuple<Integer, Integer>>> count : counts.entrySet()) {
       final String instanceId = count.getKey();
       for (Entry<String, Tuple<Integer, Integer>> groups : count.getValue().entrySet()) {

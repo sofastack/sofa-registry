@@ -59,7 +59,11 @@ public class BoltExchange implements Exchange<ChannelHandler> {
     }
     Client client =
         clients.computeIfAbsent(serverType, key -> newBoltClient(connNum, channelHandlers));
-    client.connect(serverUrl);
+    // if serverUrl is null, just init the client
+    // the conn will auto create if absent
+    if (serverUrl != null) {
+      client.connect(serverUrl);
+    }
     return client;
   }
 

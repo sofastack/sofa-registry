@@ -67,24 +67,34 @@ public class HealthResource {
     boolean start = false;
 
     start = sessionServerBootstrap.getMetaStart();
+    boolean ret = start;
     sb.append(", MetaServerStart:").append(start);
 
     start = sessionServerBootstrap.getSchedulerStart();
+    ret = ret && start;
     sb.append(", SchedulerStart:").append(start);
 
     start = sessionServerBootstrap.getHttpStart();
+    ret = ret && start;
     sb.append(", HttpServerStart:").append(start);
 
     start = sessionServerBootstrap.getServerStart();
+    ret = ret && start;
     sb.append(", SessionServerStart:").append(start);
 
     start = sessionServerBootstrap.getServerForSessionSyncStart();
+    ret = ret && start;
     sb.append(", ServerForSessionSyncStart:").append(start);
 
     start = sessionServerBootstrap.getDataStart();
+    ret = ret && start;
     sb.append(", ConnectDataServer:").append(start);
 
-    result.setBool(start);
+    start = sessionServerBootstrap.getConsoleStart();
+    ret = ret && start;
+    sb.append(", ConsoleServer:").append(start);
+
+    result.setBool(ret);
     return sb;
   }
 

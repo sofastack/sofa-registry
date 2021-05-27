@@ -64,6 +64,10 @@ import com.alipay.sofa.registry.server.session.registry.SessionRegistry;
 import com.alipay.sofa.registry.server.session.remoting.ClientNodeExchanger;
 import com.alipay.sofa.registry.server.session.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.server.session.remoting.DataNodeNotifyExchanger;
+import com.alipay.sofa.registry.server.session.remoting.console.SessionConsoleExchanger;
+import com.alipay.sofa.registry.server.session.remoting.console.handler.ClientOffRequestHandler;
+import com.alipay.sofa.registry.server.session.remoting.console.handler.ClientOnRequestHandler;
+import com.alipay.sofa.registry.server.session.remoting.console.handler.QuerySubscriberRequestHandler;
 import com.alipay.sofa.registry.server.session.remoting.handler.CancelAddressRequestHandler;
 import com.alipay.sofa.registry.server.session.remoting.handler.ClientNodeConnectionHandler;
 import com.alipay.sofa.registry.server.session.remoting.handler.DataChangeRequestHandler;
@@ -206,6 +210,11 @@ public class SessionServerConfiguration {
     }
 
     @Bean
+    public NodeExchanger sessionConsoleExchanger() {
+      return new SessionConsoleExchanger();
+    }
+
+    @Bean
     public DataNodeExchanger dataNodeExchanger() {
       return new DataNodeExchanger();
     }
@@ -253,6 +262,15 @@ public class SessionServerConfiguration {
       return list;
     }
 
+    @Bean(name = "consoleHandlers")
+    public Collection<AbstractServerHandler> consoleHandlers() {
+      Collection<AbstractServerHandler> list = new ArrayList<>();
+      list.add(querySubscriberRequestHandler());
+      list.add(clientOffRequestHandler());
+      list.add(clientOnRequestHandler());
+      return list;
+    }
+
     @Bean
     public AbstractServerHandler publisherHandler() {
       return new PublisherHandler();
@@ -281,6 +299,21 @@ public class SessionServerConfiguration {
     @Bean
     public AbstractServerHandler cancelAddressRequestHandler() {
       return new CancelAddressRequestHandler();
+    }
+
+    @Bean
+    public AbstractServerHandler querySubscriberRequestHandler() {
+      return new QuerySubscriberRequestHandler();
+    }
+
+    @Bean
+    public AbstractServerHandler clientOffRequestHandler() {
+      return new ClientOffRequestHandler();
+    }
+
+    @Bean
+    public AbstractServerHandler clientOnRequestHandler() {
+      return new ClientOnRequestHandler();
     }
 
     @Bean

@@ -102,6 +102,11 @@ public class SessionServerBootstrap {
   @Resource(name = "sessionSyncHandlers")
   private Collection<AbstractServerHandler> sessionSyncHandlers;
 
+  private Server consoleServer;
+
+  @Resource(name = "consoleHandlers")
+  private Collection<AbstractServerHandler> consoleHandlers;
+
   @Autowired private AppRevisionCacheRegistry appRevisionCacheRegistry;
 
   private Server httpServer;
@@ -111,6 +116,8 @@ public class SessionServerBootstrap {
   private final AtomicBoolean schedulerStart = new AtomicBoolean(false);
 
   private final AtomicBoolean httpStart = new AtomicBoolean(false);
+
+  private final AtomicBoolean consoleStart = new AtomicBoolean(false);
 
   private final AtomicBoolean serverStart = new AtomicBoolean(false);
 
@@ -171,7 +178,7 @@ public class SessionServerBootstrap {
           });
 
       registerSerializer();
-
+      openConsoleServer();
       openSessionServer();
 
       TaskMetrics.getInstance().registerBolt();
@@ -199,6 +206,7 @@ public class SessionServerBootstrap {
       stopHttpServer();
       stopServer();
       stopDataSyncServer();
+      stopConsoleServer();
     } catch (Throwable e) {
       LOGGER.error("Shutting down Session Server error!", e);
     }
@@ -224,6 +232,26 @@ public class SessionServerBootstrap {
       schedulerStart.set(false);
       LOGGER.error("Session Scheduler start error!", e);
       throw new RuntimeException("Session Scheduler start error!", e);
+    }
+  }
+
+  private void openConsoleServer() {
+    try {
+      if (consoleStart.compareAndSet(false, true)) {
+        consoleServer =
+            boltExchange.open(
+                new URL(
+                    NetUtil.getLocalAddress().getHostAddress(),
+                    sessionServerConfig.getConsolePort()),
+                1024 * 128,
+                1024 * 256,
+                consoleHandlers.toArray(new ChannelHandler[consoleHandlers.size()]));
+        LOGGER.info("Console server started! port:{}", sessionServerConfig.getConsolePort());
+      }
+    } catch (Exception e) {
+      serverStart.set(false);
+      LOGGER.error("Console server start error! port:{}", sessionServerConfig.getConsolePort(), e);
+      throw new RuntimeException("Console server start error!", e);
     }
   }
 
@@ -388,6 +416,12 @@ public class SessionServerBootstrap {
     }
   }
 
+  private void stopConsoleServer() {
+    if (consoleServer != null && consoleServer.isOpen()) {
+      consoleServer.close();
+    }
+  }
+
   private void stopHttpServer() {
     if (httpServer != null && httpServer.isOpen()) {
       httpServer.close();
@@ -437,6 +471,10 @@ public class SessionServerBootstrap {
    */
   public boolean getDataStart() {
     return dataStart.get();
+  }
+
+  public boolean getConsoleStart() {
+    return consoleStart.get();
   }
 
   public boolean getServerForSessionSyncStart() {

@@ -117,6 +117,8 @@ public class CacheCountTask {
 
   private static void printGroupCount(
       String dataCenter, Map<String, Map<String, Tuple<Integer, Integer>>> counts) {
+    Metrics.PUB_GAUGE.clear();
+    Metrics.PUB_DATA_ID_GAUGE.clear();
     for (Map.Entry<String, Map<String, Tuple<Integer, Integer>>> count : counts.entrySet()) {
       final String instanceId = count.getKey();
       Map<String, Tuple<Integer, Integer>> groupCounts = count.getValue();

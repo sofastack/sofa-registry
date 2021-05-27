@@ -51,6 +51,10 @@ public class HealthResourceTest {
     resp = resource.checkHealth();
     Assert.assertEquals(resp.getStatus(), Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
 
+    Mockito.when(resource.sessionServerBootstrap.getConsoleStart()).thenReturn(true);
+    resp = resource.checkHealth();
+    Assert.assertEquals(resp.getStatus(), Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
+
     Mockito.when(resource.sessionServerBootstrap.getDataStart()).thenReturn(true);
     resp = resource.checkHealth();
     Assert.assertEquals(resp.getStatus(), Response.Status.OK.getStatusCode());

@@ -44,6 +44,8 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
   private int syncSessionPort = 9602;
 
+  private int consolePort = 9604;
+
   private int syncSessionIOLowWaterMark = 1024 * 128;
 
   private int syncSessionIOHighWaterMark = 1024 * 256;
@@ -102,6 +104,10 @@ public class SessionServerConfigBean implements SessionServerConfig {
   private int accessMetadataMaxBufferSize = 10000;
 
   private int accessMetadataWorkerSize = OsUtils.getCpuCount() * 4;
+
+  private int consoleExecutorPoolSize = OsUtils.getCpuCount() * 3;
+
+  private int consoleExecutorQueueSize = 2000;
 
   private int clientNodeExchangeTimeoutMillis = 2000;
 
@@ -214,6 +220,10 @@ public class SessionServerConfigBean implements SessionServerConfig {
   @Override
   public int getSyncSessionPort() {
     return syncSessionPort;
+  }
+
+  public void setSyncSessionPort(int syncSessionPort) {
+    this.syncSessionPort = syncSessionPort;
   }
 
   /**
@@ -951,13 +961,13 @@ public class SessionServerConfigBean implements SessionServerConfig {
   }
 
   /**
-   * Setter method for property <tt>schedulerScanVersionIntervalMs</tt>.
+   * Setter method for property <tt>schedulerScanVersionIntervalMillis</tt>.
    *
-   * @param schedulerScanVersionIntervalMs value to be assigned to property
+   * @param schedulerScanVersionIntervalMillis value to be assigned to property
    *     schedulerScanVersionIntervalMs
    */
-  public void setSchedulerFetchDataVersionIntervalMs(int schedulerScanVersionIntervalMs) {
-    this.schedulerScanVersionIntervalMillis = schedulerScanVersionIntervalMs;
+  public void setSchedulerScanVersionIntervalMillis(int schedulerScanVersionIntervalMillis) {
+    this.schedulerScanVersionIntervalMillis = schedulerScanVersionIntervalMillis;
   }
 
   public int getSlotSyncMaxBufferSize() {
@@ -1231,5 +1241,32 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
   public void setClientIOHighWaterMark(int clientIOHighWaterMark) {
     this.clientIOHighWaterMark = clientIOHighWaterMark;
+  }
+
+  @Override
+  public int getConsolePort() {
+    return consolePort;
+  }
+
+  public void setConsolePort(int consolePort) {
+    this.consolePort = consolePort;
+  }
+
+  @Override
+  public int getConsoleExecutorPoolSize() {
+    return consoleExecutorPoolSize;
+  }
+
+  public void setConsoleExecutorPoolSize(int consoleExecutorPoolSize) {
+    this.consoleExecutorPoolSize = consoleExecutorPoolSize;
+  }
+
+  @Override
+  public int getConsoleExecutorQueueSize() {
+    return consoleExecutorQueueSize;
+  }
+
+  public void setConsoleExecutorQueueSize(int consoleExecutorQueueSize) {
+    this.consoleExecutorQueueSize = consoleExecutorQueueSize;
   }
 }
