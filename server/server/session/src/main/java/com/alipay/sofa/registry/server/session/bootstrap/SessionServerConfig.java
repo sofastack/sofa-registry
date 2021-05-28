@@ -104,17 +104,11 @@ public interface SessionServerConfig {
 
   int getConnectClientExecutorQueueSize();
 
-  int getDataChangeFetchTaskMaxBufferSize();
-
   int getDataChangeFetchTaskWorkerSize();
 
   int getSubscriberRegisterTaskWorkerSize();
 
   int getSubscriberRegisterTaskMaxBufferSize();
-
-  String getBlacklistPubDataIdRegex();
-
-  String getBlacklistSubDataIdRegex();
 
   boolean isStopPushSwitch();
 

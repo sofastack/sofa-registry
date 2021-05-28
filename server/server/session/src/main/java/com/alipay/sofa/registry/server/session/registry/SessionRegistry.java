@@ -30,7 +30,7 @@ import com.alipay.sofa.registry.server.session.acceptor.PublisherWriteDataReques
 import com.alipay.sofa.registry.server.session.acceptor.WriteDataAcceptor;
 import com.alipay.sofa.registry.server.session.acceptor.WriteDataRequest;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import com.alipay.sofa.registry.server.session.filter.DataIdMatchStrategy;
+import com.alipay.sofa.registry.server.session.loggers.Loggers;
 import com.alipay.sofa.registry.server.session.node.service.DataNodeService;
 import com.alipay.sofa.registry.server.session.push.FirePushService;
 import com.alipay.sofa.registry.server.session.push.PushSwitchService;
@@ -50,6 +50,7 @@ import com.alipay.sofa.registry.util.LoopRunnable;
 import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -92,8 +93,6 @@ public class SessionRegistry implements Registry {
   @Autowired private SessionRegistryStrategy sessionRegistryStrategy;
 
   @Autowired private WrapperInterceptorManager wrapperInterceptorManager;
-
-  @Autowired private DataIdMatchStrategy dataIdMatchStrategy;
 
   @Autowired private WriteDataAcceptor writeDataAcceptor;
 
@@ -208,25 +207,56 @@ public class SessionRegistry implements Registry {
   }
 
   @Override
-  public void cancel(List<ConnectId> connectIds) {
+  public void clean(List<ConnectId> connectIds) {
     // update local firstly, data node send error depend on renew check
     for (ConnectId connectId : connectIds) {
-      List<Publisher> removes = removeFromSession(connectId);
-      if (!removes.isEmpty()) {
-        // clientOff to dataNode async
+      List<Publisher> removes = removeFromSession(connectId, true);
+      // clientOff to dataNode async
+      clientOffToDataNode(connectId, removes);
+    }
+  }
+
+  @Override
+  public void clientOff(List<ConnectId> connectIds) {
+    final String dataCenter = getDataCenterWhenPushEmpty();
+    // clientOff: 1. remove pub; 2. check sub push empty; 3. keep watcher
+    for (ConnectId connectId : connectIds) {
+      int subEmptyCount = 0;
+      try {
+        Map<String, Subscriber> subMap = sessionInterests.queryByConnectId(connectId);
+        for (Subscriber sub : subMap.values()) {
+          if (isPushEmpty(sub)) {
+            subEmptyCount++;
+            firePushService.fireOnPushEmpty(sub, dataCenter);
+            Loggers.CLIENT_OFF_LOG.info("subEmpty,{},{},{}", sub.getDataInfoId(), dataCenter, connectId);
+          }
+        }
+      } finally {
+        List<Publisher> removes = removeFromSession(connectId, false);
         clientOffToDataNode(connectId, removes);
+        Loggers.CLIENT_OFF_LOG.info("pubRemove={}, subEmpty={}", removes.size(), subEmptyCount);
       }
     }
   }
 
-  private List<Publisher> removeFromSession(ConnectId connectId) {
+  public boolean isPushEmpty(Subscriber subscriber) {
+    // mostly, do not need to push empty
+    return false;
+  }
+
+  private List<Publisher> removeFromSession(ConnectId connectId, boolean removeSubAndWat) {
     Map<String, Publisher> publisherMap = sessionDataStore.deleteByConnectId(connectId);
-    sessionInterests.deleteByConnectId(connectId);
-    sessionWatchers.deleteByConnectId(connectId);
+    if (removeSubAndWat) {
+      sessionInterests.deleteByConnectId(connectId);
+      sessionWatchers.deleteByConnectId(connectId);
+    }
     return Lists.newArrayList(publisherMap.values());
   }
 
   private void clientOffToDataNode(ConnectId connectId, List<Publisher> clientOffPublishers) {
+    if (CollectionUtils.isEmpty(clientOffPublishers)) {
+      return;
+    }
     writeDataAcceptor.accept(new ClientOffWriteDataRequest(connectId, clientOffPublishers));
   }
 
@@ -260,7 +290,7 @@ public class SessionRegistry implements Registry {
         // 3. scanVerEnable=true after session start and config the stopPush.val
         if (!stop && scanVerEnable) {
           scanVersions();
-          triggerSubscriberRegister();
+          scanSubscribers();
           if (prevStopPushSwitch) {
             SCAN_VER_LOGGER.info("[ReSub] resub after stopPushSwitch closed");
           }
@@ -294,18 +324,33 @@ public class SessionRegistry implements Registry {
     }
   }
 
-  private void triggerSubscriberRegister() {
-    Collection<Subscriber> subscribers = sessionInterests.getInterestsNeverPushed();
-    if (!subscribers.isEmpty()) {
-      SCAN_VER_LOGGER.info("find never pushed subscribers:{}", subscribers.size());
-      for (Subscriber subscriber : subscribers) {
-        try {
-          firePushService.fireOnRegister(subscriber);
-        } catch (Throwable e) {
-          SCAN_VER_LOGGER.error("failed to register subscriber, {}", subscriber, e);
+  public String getDataCenterWhenPushEmpty() {
+    // TODO cloud mode use default.datacenter?
+    return sessionServerConfig.getSessionServerDataCenter();
+  }
+
+  private void scanSubscribers() {
+    List<Subscriber> subscribers = sessionInterests.getDataList();
+    int regCount = 0;
+    int emptyCount = 0;
+    final String dataCenter = getDataCenterWhenPushEmpty();
+    for (Subscriber subscriber : subscribers) {
+      try {
+        if (subscriber.needPushEmpty(dataCenter)) {
+          firePushService.fireOnPushEmpty(subscriber, dataCenter);
+          emptyCount++;
+          continue;
         }
+        if (!subscriber.hasPushed()) {
+          firePushService.fireOnRegister(subscriber);
+          regCount++;
+        }
+      } catch (Throwable e) {
+        SCAN_VER_LOGGER.error("failed to scan subscribers, {}", subscriber, e);
       }
     }
+    SCAN_VER_LOGGER.info(
+        "scan subscribers, total={}, reg={}, empty={}", subscribers.size(), regCount, emptyCount);
   }
 
   @Override
@@ -363,44 +408,8 @@ public class SessionRegistry implements Registry {
     }
   }
 
-  public void remove(List<ConnectId> connectIds) {
-    List<ConnectId> connectIdsAll = new ArrayList<>();
-    connectIds.forEach(
-        connectId -> {
-          Map pubMap = getSessionDataStore().queryByConnectId(connectId);
-          boolean pubExisted = pubMap != null && !pubMap.isEmpty();
-
-          Map<String, Subscriber> subMap = getSessionInterests().queryByConnectId(connectId);
-          boolean subExisted = false;
-          if (subMap != null && !subMap.isEmpty()) {
-            subExisted = true;
-
-            subMap.forEach(
-                (registerId, sub) -> {
-                  if (isFireSubscriberPushEmptyTask(sub.getDataId())) {
-                    fireSubscriberPushEmptyTask(sub);
-                  }
-                });
-          }
-
-          if (pubExisted || subExisted) {
-            connectIdsAll.add(connectId);
-          }
-        });
-    cancel(connectIdsAll);
-  }
-
-  protected boolean isFireSubscriberPushEmptyTask(String dataId) {
-    return dataIdMatchStrategy.match(
-        dataId, () -> sessionServerConfig.getBlacklistSubDataIdRegex());
-  }
-
-  private void fireSubscriberPushEmptyTask(Subscriber subscriber) {
-    firePushService.fireOnPushEmpty(subscriber);
-  }
-
   public void cleanClientConnect() {
-    Set<ConnectId> connectIndexes = new HashSet<>();
+    Set<ConnectId> connectIndexes = Sets.newHashSetWithExpectedSize(1024);
     connectIndexes.addAll(sessionDataStore.getConnectIds());
     connectIndexes.addAll(sessionInterests.getConnectIds());
     connectIndexes.addAll(sessionWatchers.getConnectIds());
@@ -414,12 +423,10 @@ public class SessionRegistry implements Registry {
               new URL(connectId.getClientHostAddress(), connectId.getClientPort()));
       if (channel == null) {
         connectIds.add(connectId);
-        LOGGER.warn("Client connect has not existed!it must be remove!connectId:{}", connectId);
+        LOGGER.warn("Client connect has not existed! connectId:{}", connectId);
       }
     }
-    if (!connectIds.isEmpty()) {
-      cancel(connectIds);
-    }
+    clean(connectIds);
   }
 
   /**

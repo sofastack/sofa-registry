@@ -16,52 +16,36 @@
  */
 package com.alipay.sofa.registry.server.session.wrapper;
 
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
+import com.google.common.collect.Lists;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * @author shangyu.wh
  * @version 1.0: WrapperInterceptorManager.java, v 0.1 2019-06-18 14:51 shangyu.wh Exp $
  */
 public class WrapperInterceptorManager {
+  private static final Logger LOGGER = LoggerFactory.getLogger(WrapperInterceptorManager.class);
+  private volatile List<WrapperInterceptor> interceptorChain = Collections.EMPTY_LIST;
 
-  private List<WrapperInterceptor> interceptorChain = new CopyOnWriteArrayList<>();
-
-  public int addInterceptor(WrapperInterceptor item) {
-    // The index of the search key, if it is contained in the list; otherwise, (-(insertion point) -
-    // 1)
-    final int index =
-        Collections.binarySearch(
-            interceptorChain,
-            item,
-            (o1, o2) -> {
-              if (o1 == null && o2 == null) {
-                return 0;
-              } else if (o1 == null) {
-                return 1;
-              } else if (o2 == null) {
-                return -1;
-              }
-
-              if (o1.getOrder() < o2.getOrder()) {
-                return -1;
-              } else if (o1.getOrder() > o2.getOrder()) {
-                return 1;
-              }
-              return 0;
-            });
-    final int insertAt;
-    if (index < 0) {
-      insertAt = -(index + 1);
-    } else {
-      insertAt = index + 1;
-    }
-
-    interceptorChain.add(insertAt, item);
-    return insertAt;
+  public void addInterceptor(WrapperInterceptor item) {
+    List<WrapperInterceptor> list = Lists.newArrayListWithCapacity(interceptorChain.size() + 1);
+    list.addAll(interceptorChain);
+    list.add(item);
+    list.sort(new Comp());
+    this.interceptorChain = list;
+    LOGGER.info("add interceptor:{}, now={}", item.getClass(), interceptorChain);
   }
 
+  static final class Comp implements Comparator<WrapperInterceptor> {
+    @Override
+    public int compare(WrapperInterceptor o1, WrapperInterceptor o2) {
+      return o1.getOrder() - o2.getOrder();
+    }
+  }
   /**
    * Getter method for property <tt>interceptorChain</tt>.
    *

@@ -20,8 +20,12 @@ import com.alipay.sofa.registry.common.model.store.BaseInfo;
 import com.alipay.sofa.registry.common.model.store.StoreData;
 import com.alipay.sofa.registry.common.model.store.StoreData.DataType;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
+import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.server.session.filter.ProcessFilter;
+import com.alipay.sofa.registry.server.session.loggers.Loggers;
 import com.alipay.sofa.registry.server.session.push.FirePushService;
+import com.alipay.sofa.registry.server.session.registry.SessionRegistry;
+import com.alipay.sofa.registry.server.shared.remoting.RemotingHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -31,26 +35,40 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @version 1.0: BlacklistWrapperInterceptor.java, v 0.1 2019-06-18 22:26 shangyu.wh Exp $
  */
 public class BlacklistWrapperInterceptor implements WrapperInterceptor<StoreData, Boolean> {
+  private static final Logger LOGGER = Loggers.BLACK_LIST_LOG;
+  @Autowired protected SessionRegistry sessionRegistry;
 
-  @Autowired private FirePushService firePushService;
+  @Autowired protected FirePushService firePushService;
   /** blacklist filter */
-  @Autowired private ProcessFilter<BaseInfo> processFilter;
+  @Autowired protected ProcessFilter<BaseInfo> processFilter;
 
   @Override
   public Boolean invokeCodeWrapper(WrapperInvocation<StoreData, Boolean> invocation)
       throws Exception {
 
     BaseInfo storeData = (BaseInfo) invocation.getParameterSupplier().get();
-
     if (processFilter.match(storeData)) {
       if (DataType.PUBLISHER == storeData.getDataType()) {
         // match blacklist stop pub.
+        LOGGER.info(
+            "[pub],{},{}",
+            storeData.getDataInfoId(),
+            RemotingHelper.getAddressString(storeData.getSourceAddress()));
         return true;
       }
 
       if (DataType.SUBSCRIBER == storeData.getDataType()) {
-        fireSubscriberPushEmptyTask((Subscriber) storeData);
-        return true;
+        // in some case, need to push empty to new subscriber, and stop sub
+        // else, filter not stop sub
+        if (sessionRegistry.isPushEmpty((Subscriber) storeData)) {
+          firePushService.fireOnPushEmpty(
+              (Subscriber) storeData, sessionRegistry.getDataCenterWhenPushEmpty());
+          LOGGER.info(
+              "[sub],{},{}",
+              storeData.getDataInfoId(),
+              RemotingHelper.getAddressString(storeData.getSourceAddress()));
+          return true;
+        }
       }
     }
     return invocation.proceed();
@@ -59,10 +77,5 @@ public class BlacklistWrapperInterceptor implements WrapperInterceptor<StoreData
   @Override
   public int getOrder() {
     return 200;
-  }
-
-  private void fireSubscriberPushEmptyTask(Subscriber subscriber) {
-    // trigger empty data push
-    firePushService.fireOnPushEmpty(subscriber);
   }
 }

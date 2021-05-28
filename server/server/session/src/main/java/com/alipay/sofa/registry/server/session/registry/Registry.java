@@ -34,24 +34,18 @@ public interface Registry {
   void register(StoreData<String> data);
 
   /**
-   * cancel publisher or subscriber data by client ip address and port(ip:port),one ip address has
-   * more than one processId when disconnection between client node and session node,disconnect
-   * event fire remove all pub and sub info on session and data node this function always use in
-   * Console manage Client node list,input ip list must transform to connectId through connect
-   * manage
+   * clean all the data from connectIds
    *
    * @param connectIds
    */
-  void cancel(List<ConnectId> connectIds);
+  void clean(List<ConnectId> connectIds);
 
   /**
-   * remove publisher or subscriber data by client ip address and port(ip:port) this function always
-   * use in rest api Console manage ,the run mode is standard remove subscriber data will push empty
-   * datum to some one who has dataInfoId begin with pushEmptyDataDataIdPrefixes config
+   * client off the connectIds 1. clean pubs; 2. check sub
    *
    * @param connectIds
    */
-  void remove(List<ConnectId> connectIds);
+  void clientOff(List<ConnectId> connectIds);
 
   /**
    * message mode com.alipay.sofa.registry.client.provider for client node to unregister single

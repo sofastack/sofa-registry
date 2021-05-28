@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.registry.server.session.strategy.impl;
 
-import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 
 import com.alipay.sofa.registry.common.model.store.Publisher;

@@ -46,13 +46,13 @@ public class ClientNodeConnectionHandler extends ListenServerChannelHandler {
     return Node.NodeType.CLIENT;
   }
 
-  void cancel(Channel channel) {
+  void clean(Channel channel) {
     ConnectId connectId = ConnectId.of(channel.getRemoteAddress(), channel.getLocalAddress());
-    sessionRegistry.cancel(Collections.singletonList(connectId));
+    sessionRegistry.clean(Collections.singletonList(connectId));
   }
 
   private void fireCancelClient(Channel channel) {
     // avoid block connect ConnectionEventExecutor thread pool
-    executorManager.getConnectClientExecutor().execute(() -> cancel(channel));
+    executorManager.getConnectClientExecutor().execute(() -> clean(channel));
   }
 }

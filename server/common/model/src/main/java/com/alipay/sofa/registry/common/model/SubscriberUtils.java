@@ -93,7 +93,7 @@ public final class SubscriberUtils {
   public static long getMaxPushedVersion(String dataCenter, Collection<Subscriber> subscribers) {
     long max = 0;
     for (Subscriber sub : subscribers) {
-      long v = sub.getPushVersion(dataCenter);
+      long v = sub.getPushedVersion(dataCenter);
       if (max < v) {
         max = v;
       }

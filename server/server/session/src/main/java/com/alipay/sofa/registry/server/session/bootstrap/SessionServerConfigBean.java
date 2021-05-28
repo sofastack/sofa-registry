@@ -82,8 +82,6 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
   private int connectClientExecutorQueueSize = 2000;
 
-  private int dataChangeFetchTaskMaxBufferSize = 30000;
-
   private int dataChangeFetchTaskWorkerSize = OsUtils.getCpuCount() * 5;
 
   private int subscriberRegisterTaskMaxBufferSize = 500000;
@@ -162,10 +160,6 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
   private volatile Optional<Pattern> invalidIgnoreDataIdPattern = null;
 
-  private String blacklistPubDataIdRegex = "";
-
-  private String blacklistSubDataIdRegex = "";
-
   private int dataClientConnNum = 10;
   private int dataNotifyClientConnNum = 2;
   private int sessionSchedulerPoolSize = OsUtils.getCpuCount();
@@ -178,7 +172,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
   private int cacheDatumMaxWeight = 1000 * 1000 * 1000;
 
-  private int cacheDatumExpireSecs = 4;
+  private int cacheDatumExpireSecs = 3;
 
   // metadata config start
 
@@ -690,26 +684,6 @@ public class SessionServerConfigBean implements SessionServerConfig {
   }
 
   /**
-   * Getter method for property <tt>dataChangeFetchTaskMaxBufferSize</tt>.
-   *
-   * @return property value of dataChangeFetchTaskMaxBufferSize
-   */
-  @Override
-  public int getDataChangeFetchTaskMaxBufferSize() {
-    return dataChangeFetchTaskMaxBufferSize;
-  }
-
-  /**
-   * Setter method for property <tt>dataChangeFetchTaskMaxBufferSize</tt>.
-   *
-   * @param dataChangeFetchTaskMaxBufferSize value to be assigned to property
-   *     dataChangeFetchTaskMaxBufferSize
-   */
-  public void setDataChangeFetchTaskMaxBufferSize(int dataChangeFetchTaskMaxBufferSize) {
-    this.dataChangeFetchTaskMaxBufferSize = dataChangeFetchTaskMaxBufferSize;
-  }
-
-  /**
    * Getter method for property <tt>dataChangeFetchTaskWorkerSize</tt>.
    *
    * @return property value of dataChangeFetchTaskWorkerSize
@@ -767,42 +741,6 @@ public class SessionServerConfigBean implements SessionServerConfig {
    */
   public void setPushDataTaskRetryIncrementDelayMillis(int pushDataTaskRetryIncrementDelayMillis) {
     this.pushDataTaskRetryIncrementDelayMillis = pushDataTaskRetryIncrementDelayMillis;
-  }
-
-  /**
-   * Getter method for property <tt>blacklistPubDataIdRegex</tt>.
-   *
-   * @return property value of blacklistPubDataIdRegex
-   */
-  public String getBlacklistPubDataIdRegex() {
-    return blacklistPubDataIdRegex;
-  }
-
-  /**
-   * Getter method for property <tt>blacklistSubDataIdRegex</tt>.
-   *
-   * @return property value of blacklistSubDataIdRegex
-   */
-  public String getBlacklistSubDataIdRegex() {
-    return blacklistSubDataIdRegex;
-  }
-
-  /**
-   * Setter method for property <tt>blacklistPubDataIdRegex</tt>.
-   *
-   * @param blacklistPubDataIdRegex value to be assigned to property blacklistPubDataIdRegex
-   */
-  public void setBlacklistPubDataIdRegex(String blacklistPubDataIdRegex) {
-    this.blacklistPubDataIdRegex = blacklistPubDataIdRegex;
-  }
-
-  /**
-   * Setter method for property <tt>blacklistSubDataIdRegex</tt>.
-   *
-   * @param blacklistSubDataIdRegex value to be assigned to property blacklistSubDataIdRegex
-   */
-  public void setBlacklistSubDataIdRegex(String blacklistSubDataIdRegex) {
-    this.blacklistSubDataIdRegex = blacklistSubDataIdRegex;
   }
 
   /**

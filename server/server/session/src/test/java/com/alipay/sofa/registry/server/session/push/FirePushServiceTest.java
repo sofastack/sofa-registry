@@ -53,14 +53,14 @@ public class FirePushServiceTest {
 
     Subscriber subscriber = TestUtils.newZoneSubscriber(dataId, zone);
     config.setStopPushSwitch(true);
-    svc.fireOnPushEmpty(subscriber);
+    svc.fireOnPushEmpty(subscriber, "testDc");
     Mockito.verify(svc.pushProcessor, Mockito.times(0))
         .firePush(
             Mockito.anyObject(), Mockito.anyObject(), Mockito.anyObject(), Mockito.anyObject());
 
     config.setStopPushSwitch(false);
 
-    svc.fireOnPushEmpty(subscriber);
+    svc.fireOnPushEmpty(subscriber, "testDc");
     Mockito.verify(svc.pushProcessor, Mockito.times(1))
         .firePush(
             Mockito.anyObject(), Mockito.anyObject(), Mockito.anyObject(), Mockito.anyObject());
@@ -145,7 +145,7 @@ public class FirePushServiceTest {
   public void testOnSubscriber() {
     FirePushService svc = mockFirePushService();
     Subscriber subscriber = TestUtils.newZoneSubscriber("testZone");
-    subscriber.checkAndUpdateVersion("testDc", 100);
+    subscriber.checkAndUpdateVersion("testDc", 100, 10);
     Assert.assertFalse(svc.doExecuteOnSubscriber("testDc", subscriber));
     FirePushService.RegisterTask task = svc.new RegisterTask(subscriber);
     task.run();

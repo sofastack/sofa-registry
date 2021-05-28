@@ -36,7 +36,7 @@ import org.junit.rules.ExpectedException;
  */
 public class WrapperInvocationTest {
 
-  private Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(WrapperInvocationTest.class);
 
   @Rule public ExpectedException thrown = ExpectedException.none();
 

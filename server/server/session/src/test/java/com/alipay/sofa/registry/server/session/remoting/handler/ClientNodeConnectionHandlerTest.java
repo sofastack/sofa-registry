@@ -46,8 +46,8 @@ public class ClientNodeConnectionHandlerTest {
     handler.sessionRegistry = mock(Registry.class);
     handler.executorManager = new ExecutorManager(TestUtils.newSessionConfig("testDc"));
     Channel channel = TestUtils.newChannel(9600, "127.0.0.1", 9888);
-    handler.cancel(channel);
-    verify(handler.sessionRegistry, times(1)).cancel(anyList());
+    handler.clean(channel);
+    verify(handler.sessionRegistry, times(1)).clean(anyList());
     handler.disconnected(channel);
   }
 }

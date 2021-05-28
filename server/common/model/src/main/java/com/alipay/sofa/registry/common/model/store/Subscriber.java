@@ -20,7 +20,8 @@ import com.alipay.sofa.registry.common.model.ElementType;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author shangyu.wh
@@ -63,21 +64,33 @@ public class Subscriber extends BaseInfo {
 
   // check the version
   public synchronized boolean checkVersion(String dataCenter, long version) {
-    final PushContext ctx = lastPushContexts.get(dataCenter);
-    if (ctx == null) {
-      return true;
-    }
-    return ctx.pushVersion < version;
+    final PushContext ctx = lastPushContexts.computeIfAbsent(dataCenter, k -> new PushContext());
+    // emptyVersion != 0, means not care any version update
+    return ctx.pushedVersion < version && ctx.emptyVersion == 0;
   }
 
-  public synchronized boolean checkAndUpdateVersion(String dataCenter, long pushVersion) {
+  public synchronized boolean checkAndUpdateVersion(String dataCenter, long pushVersion, int num) {
     final PushContext ctx = lastPushContexts.computeIfAbsent(dataCenter, k -> new PushContext());
 
-    if (ctx.pushVersion < pushVersion) {
-      ctx.pushVersion = pushVersion;
+    if (ctx.pushedVersion < pushVersion) {
+      ctx.pushedVersion = pushVersion;
+      ctx.pushedNum = num;
       return true;
     }
     return false;
+  }
+
+  public synchronized boolean needPushEmpty(String dataCenter) {
+    final PushContext ctx = lastPushContexts.computeIfAbsent(dataCenter, k -> new PushContext());
+    if (ctx.emptyVersion == 0) {
+      return false;
+    }
+    // empty has mark, last push.num is not empty
+    if (ctx.pushedNum != 0) {
+      return true;
+    }
+    // emptyVersion has pushed
+    return ctx.emptyVersion != ctx.pushedVersion;
   }
 
   public synchronized boolean hasPushed() {
@@ -86,7 +99,7 @@ public class Subscriber extends BaseInfo {
       return false;
     }
     for (PushContext ctx : lastPushContexts.values()) {
-      if (ctx.pushVersion != 0) {
+      if (ctx.pushedVersion != 0) {
         return true;
       }
     }
@@ -131,11 +144,20 @@ public class Subscriber extends BaseInfo {
     return sb.append(lastPushContexts).toString();
   }
 
-  public synchronized long getPushVersion(String dataCenter) {
-    PushContext ctx = lastPushContexts.get(dataCenter);
-    return ctx == null ? 0 : ctx.pushVersion;
+  public synchronized long getPushedVersion(String dataCenter) {
+    final PushContext ctx = lastPushContexts.computeIfAbsent(dataCenter, k -> new PushContext());
+    return ctx.pushedVersion;
   }
 
+  public synchronized void markPushEmpty(String dataCenter, long emptyVersion) {
+    final PushContext ctx = lastPushContexts.computeIfAbsent(dataCenter, k -> new PushContext());
+    ctx.emptyVersion = emptyVersion;
+  }
+
+  public synchronized boolean isMarkPushEmpty(String dataCenter) {
+    final PushContext ctx = lastPushContexts.computeIfAbsent(dataCenter, k -> new PushContext());
+    return ctx.emptyVersion != 0;
+  }
   /**
    * change subscriber word cache
    *
@@ -155,11 +177,14 @@ public class Subscriber extends BaseInfo {
   }
 
   private static class PushContext {
-    long pushVersion;
+    long pushedVersion;
+    long emptyVersion;
+    int pushedNum = -1;
 
     @Override
     public String toString() {
-      return StringFormatter.format("PushCtx{{}}", pushVersion);
+      return StringFormatter.format(
+          "PushCtx{{},num={},empty={}}", pushedVersion, pushedNum, emptyVersion);
     }
   }
 }

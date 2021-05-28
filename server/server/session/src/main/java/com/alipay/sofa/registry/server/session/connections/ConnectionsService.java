@@ -80,7 +80,7 @@ public class ConnectionsService {
    * @param _ipList ip list
    * @return
    */
-  public List<ConnectId> getIpConnects(List<String> _ipList) {
+  public List<ConnectId> getIpConnects(Collection<String> _ipList) {
     Server sessionServer = boltExchange.getServer(sessionServerConfig.getServerPort());
     if (sessionServer == null || CollectionUtils.isEmpty(_ipList)) {
       return Collections.emptyList();

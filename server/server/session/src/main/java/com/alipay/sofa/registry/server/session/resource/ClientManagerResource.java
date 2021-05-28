@@ -32,7 +32,6 @@ import com.alipay.sofa.registry.server.session.registry.SessionRegistry;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.task.MetricsableThreadPoolExecutor;
 import com.alipay.sofa.registry.util.OsUtils;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -40,7 +39,6 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.util.CollectionUtils;
 
 /**
  * The type Clients open resource.
@@ -78,15 +76,10 @@ public class ClientManagerResource {
     if (StringUtils.isEmpty(ips)) {
       return CommonResponse.buildFailedResponse("ips is empty");
     }
-    final List<String> ipList = toIpList(ips);
-
+    final List<String> ipList = Sdks.toIpList(ips);
     List<ConnectId> conIds = connectionsService.getIpConnects(ipList);
-
-    if (!CollectionUtils.isEmpty(conIds)) {
-      sessionRegistry.remove(conIds);
-      LOGGER.info("clientOff conIds: {}", conIds.toString());
-    }
-
+    sessionRegistry.clientOff(conIds);
+    LOGGER.info("clientOff ips={}, conIds={}", ips, conIds);
     return CommonResponse.buildSuccessResponse();
   }
 
@@ -97,12 +90,9 @@ public class ClientManagerResource {
     if (StringUtils.isEmpty(ips)) {
       return CommonResponse.buildFailedResponse("ips is empty");
     }
-    final List<String> ipList = toIpList(ips);
-
-    if (!CollectionUtils.isEmpty(ipList)) {
-      List<String> conIds = connectionsService.closeIpConnects(ipList);
-      LOGGER.info("clientOn conIds: {}", conIds.toString());
-    }
+    final List<String> ipList = Sdks.toIpList(ips);
+    List<String> conIds = connectionsService.closeIpConnects(ipList);
+    LOGGER.info("clientOn ips={}, conIds={}", ips, conIds);
 
     return CommonResponse.buildSuccessResponse();
   }
@@ -119,7 +109,7 @@ public class ClientManagerResource {
       return resp;
     }
 
-    final List<String> ipList = toIpList(ips);
+    final List<String> ipList = Sdks.toIpList(ips);
     List<URL> servers = getOtherConsoleServersCurrentZone();
     LOGGER.info("clientOffInZone, others={}", servers);
     if (servers.size() > 0) {
@@ -149,7 +139,7 @@ public class ClientManagerResource {
     if (!resp.isSuccess()) {
       return resp;
     }
-    final List<String> ipList = toIpList(ips);
+    final List<String> ipList = Sdks.toIpList(ips);
     List<URL> servers = getOtherConsoleServersCurrentZone();
     LOGGER.info("clientOnInZone, others={}", servers);
     if (servers.size() > 0) {
@@ -172,11 +162,6 @@ public class ClientManagerResource {
   @Path("/connectionMapper.json")
   public Map<String, String> connectionMapper() {
     return connectionMapper.get();
-  }
-
-  static final List<String> toIpList(String ips) {
-    String[] ipArray = StringUtils.split(ips.trim(), ';');
-    return Arrays.asList(ipArray);
   }
 
   public List<URL> getOtherConsoleServersCurrentZone() {
