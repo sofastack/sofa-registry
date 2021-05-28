@@ -164,7 +164,7 @@ public class PushProcessor {
       // keyed by client.addr && (pushingKey%8)
       // avoid generating too many pushes for the same client at the same time
       pushExecutor.execute(
-          new Tuple(task.pushingTaskKey.addr, task.pushingTaskKey.hashCode() % 8), task);
+          new Tuple(task.pushingTaskKey.addr, task.pushingTaskKey.hashCode() % 6), task);
       COMMIT_COUNTER.inc();
       return true;
     } catch (Throwable e) {
@@ -313,10 +313,14 @@ public class PushProcessor {
   }
 
   boolean causeContinue(PushTask task) {
-    if (task.trace.pushCause.pushType == PushType.Reg && task.subscriber.hasPushed()) {
-      return false;
+    switch (task.trace.pushCause.pushType) {
+      case Reg:
+        return !task.subscriber.hasPushed();
+      case Empty:
+        return task.subscriber.needPushEmpty(task.datum.getDataCenter());
+      default:
+        return interestOfDatum(task);
     }
-    return true;
   }
 
   private boolean retry(PushTask task, String reason) {
@@ -354,13 +358,11 @@ public class PushProcessor {
         return false;
       }
 
-      if (!interestOfDatum(task)) {
-        return false;
-      }
       final Object data = task.createPushData();
       task.trace.startPush();
-      // double check pushVersion
-      if (!interestOfDatum(task)) {
+
+      // double check
+      if (!causeContinue(task)) {
         return false;
       }
       pushingTasks.put(task.pushingTaskKey, task);
@@ -502,7 +504,9 @@ public class PushProcessor {
               pushTask.datum.getDataCenter(), pushTask.subscriberMap.values());
       for (Subscriber subscriber : pushTask.subscriberMap.values()) {
         if (!subscriber.checkAndUpdateVersion(
-            pushTask.datum.getDataCenter(), pushTask.datum.getVersion())) {
+            pushTask.datum.getDataCenter(),
+            pushTask.datum.getVersion(),
+            pushTask.datum.getPublishers().size())) {
           LOGGER.info(
               "PushY, but failed to updateVersion, {}, {}",
               pushTask.taskID,

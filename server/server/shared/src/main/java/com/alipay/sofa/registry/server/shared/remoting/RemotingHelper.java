@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.shared.remoting;
 
+import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.remoting.Channel;
 import java.net.InetSocketAddress;
 
@@ -32,5 +33,9 @@ public final class RemotingHelper {
 
   public static String getRemoteHostAddress(Channel channel) {
     return channel == null ? null : channel.getRemoteAddress().getAddress().getHostAddress();
+  }
+
+  public static String getAddressString(URL url) {
+    return url == null ? null : url.getAddressString();
   }
 }

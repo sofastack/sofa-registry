@@ -18,7 +18,8 @@ package com.alipay.sofa.registry.test.resource.session;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
 
 import com.alipay.sofa.registry.client.api.registration.PublisherRegistration;
 import com.alipay.sofa.registry.common.model.CommonResponse;
@@ -49,11 +50,11 @@ public class ClientsManagerOpenResourceTest extends BaseIntegrationTest {
     CommonResponse response =
         mockedResource.clientOffInZone(sessionChannel.getLocalAddress().getHostString());
     assertTrue(response.getMessage(), response.isSuccess());
-    String dataId = "test-dataId-" + System.currentTimeMillis();
+    String dataId = "test-dataId-ZoneClientOff-" + System.currentTimeMillis();
     String value = "test client off";
     PublisherRegistration registration = new PublisherRegistration(dataId);
     registryClient1.register(registration, value);
-    Thread.sleep(2000L);
+    Thread.sleep(3000L);
 
     String countResult =
         dataChannel
@@ -61,7 +62,9 @@ public class ClientsManagerOpenResourceTest extends BaseIntegrationTest {
             .path("digest/datum/count")
             .request(APPLICATION_JSON)
             .get(String.class);
-    assertTrue(countResult.contains("[Publisher] size of publisher in DefaultDataCenter is 1"));
+    assertTrue(
+        countResult,
+        countResult.contains("[Publisher] size of publisher in DefaultDataCenter is 1"));
     response = mockedResource.clientOffInZone(sessionChannel.getLocalAddress().getHostString());
     assertTrue(response.isSuccess());
     countResult =
@@ -70,6 +73,22 @@ public class ClientsManagerOpenResourceTest extends BaseIntegrationTest {
             .path("digest/datum/count")
             .request(APPLICATION_JSON)
             .get(String.class);
-    assertTrue(countResult.contains("[Publisher] size of publisher in DefaultDataCenter is 0"));
+    assertTrue(
+        countResult,
+        countResult.contains("[Publisher] size of publisher in DefaultDataCenter is 0"));
+
+    // clientOn
+    response = mockedResource.clientOn(sessionChannel.getLocalAddress().getHostString());
+    assertTrue(response.getMessage(), response.isSuccess());
+    Thread.sleep(3000L);
+    countResult =
+        dataChannel
+            .getWebTarget()
+            .path("digest/datum/count")
+            .request(APPLICATION_JSON)
+            .get(String.class);
+    assertTrue(
+        countResult,
+        countResult.contains("[Publisher] size of publisher in DefaultDataCenter is 1"));
   }
 }

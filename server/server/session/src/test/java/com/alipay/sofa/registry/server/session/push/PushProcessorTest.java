@@ -294,11 +294,11 @@ public class PushProcessorTest {
     Assert.assertEquals(processor.pushingTasks.size(), 1);
     PushProcessor.PushClientCallback callback = processor.new PushClientCallback(task);
     Assert.assertNotNull(callback.getExecutor());
-    Assert.assertEquals(0, subscriber.getPushVersion(datum.getDataCenter()));
+    Assert.assertEquals(0, subscriber.getPushedVersion(datum.getDataCenter()));
     callback.onCallback(null, null);
     // pushing task cleaned
     Assert.assertEquals(processor.pushingTasks.size(), 0);
-    Assert.assertEquals(100, subscriber.getPushVersion(datum.getDataCenter()));
+    Assert.assertEquals(100, subscriber.getPushedVersion(datum.getDataCenter()));
   }
 
   private PushProcessor newProcessor() {
@@ -333,17 +333,17 @@ public class PushProcessorTest {
     Assert.assertEquals(processor.pushingTasks.size(), 1);
     PushProcessor.PushClientCallback callback = processor.new PushClientCallback(task);
     Assert.assertNotNull(callback.getExecutor());
-    Assert.assertEquals(0, subscriber.getPushVersion(datum.getDataCenter()));
+    Assert.assertEquals(0, subscriber.getPushedVersion(datum.getDataCenter()));
     TestUtils.MockBlotChannel channel = TestUtils.newChannel(9600, "192.168.1.1", 1234);
     callback.onException(channel, new InvokeTimeoutException());
     Assert.assertEquals(PUSH_CLIENT_FAIL_COUNTER.get(), 1, 0);
     Assert.assertEquals(processor.pushingTasks.size(), 0);
-    Assert.assertEquals(0, subscriber.getPushVersion(datum.getDataCenter()));
+    Assert.assertEquals(0, subscriber.getPushedVersion(datum.getDataCenter()));
 
     callback.onException(channel, new Exception());
     Assert.assertEquals(PUSH_CLIENT_FAIL_COUNTER.get(), 2, 0);
     Assert.assertEquals(processor.pushingTasks.size(), 0);
-    Assert.assertEquals(0, subscriber.getPushVersion(datum.getDataCenter()));
+    Assert.assertEquals(0, subscriber.getPushedVersion(datum.getDataCenter()));
   }
 
   @Test
@@ -381,11 +381,11 @@ public class PushProcessorTest {
             null, null, Collections.singletonMap(subscriber.getRegisterId(), subscriber), datum);
 
     Assert.assertTrue(processor.interestOfDatum(task));
-    subscriber.checkAndUpdateVersion(datum.getDataCenter(), 90);
+    subscriber.checkAndUpdateVersion(datum.getDataCenter(), 90, 100);
     Assert.assertTrue(processor.interestOfDatum(task));
-    subscriber.checkAndUpdateVersion(datum.getDataCenter(), 100);
+    subscriber.checkAndUpdateVersion(datum.getDataCenter(), 100, 100);
     Assert.assertFalse(processor.interestOfDatum(task));
-    subscriber.checkAndUpdateVersion(datum.getDataCenter(), 110);
+    subscriber.checkAndUpdateVersion(datum.getDataCenter(), 110, 100);
     Assert.assertFalse(processor.interestOfDatum(task));
   }
 }

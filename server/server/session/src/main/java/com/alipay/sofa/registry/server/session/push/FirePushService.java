@@ -83,17 +83,16 @@ public class FirePushService {
     }
   }
 
-  public boolean fireOnPushEmpty(Subscriber subscriber) {
-    final String dataCenter = getDataCenterWhenPushEmpty();
+  public boolean fireOnPushEmpty(Subscriber subscriber, String dataCenter) {
     SubDatum emptyDatum =
         DatumUtils.newEmptySubDatum(subscriber, dataCenter, DatumVersionUtil.nextId());
+    subscriber.markPushEmpty(dataCenter, emptyDatum.getVersion());
     final long now = System.currentTimeMillis();
     TriggerPushContext pushCtx =
         new TriggerPushContext(dataCenter, emptyDatum.getVersion(), null, now);
     PushCause cause = new PushCause(pushCtx, PushType.Empty, now);
     processPush(cause, emptyDatum, Collections.singletonList(subscriber));
     PUSH_EMPTY_COUNTER.inc();
-    LOGGER.info("firePushEmpty, {}", subscriber);
     return true;
   }
 
@@ -132,11 +131,6 @@ public class FirePushService {
       LOGGER.error("failed to fireOnDatum {}", datum, e);
       return false;
     }
-  }
-
-  protected String getDataCenterWhenPushEmpty() {
-    // TODO cloud mode use default.datacenter?
-    return sessionServerConfig.getSessionServerDataCenter();
   }
 
   boolean doExecuteOnChange(String changeDataInfoId, TriggerPushContext changeCtx) {
@@ -178,10 +172,13 @@ public class FirePushService {
     if (subscriberList.isEmpty()) {
       return false;
     }
-    subscriberList =
-        subscribersPushCheck(datum.getDataCenter(), datum.getVersion(), subscriberList);
-    if (CollectionUtils.isEmpty(subscriberList)) {
-      return false;
+    // if pushEmpty, do not check the version
+    if (pushCause.pushType != PushType.Empty) {
+      subscriberList =
+          subscribersPushCheck(datum.getDataCenter(), datum.getVersion(), subscriberList);
+      if (CollectionUtils.isEmpty(subscriberList)) {
+        return false;
+      }
     }
     Map<InetSocketAddress, Map<String, Subscriber>> group =
         SubscriberUtils.groupBySourceAddress(subscriberList);

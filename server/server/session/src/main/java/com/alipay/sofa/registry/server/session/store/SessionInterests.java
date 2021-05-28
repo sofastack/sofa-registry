@@ -23,9 +23,7 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.google.common.collect.Maps;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import org.springframework.util.CollectionUtils;
 
@@ -101,7 +99,10 @@ public class SessionInterests extends AbstractDataManager<Subscriber> implements
         if (sub.getScope() != ScopeEnum.global && !isLocalDataCenter) {
           continue;
         }
-        final long pushVersion = sub.getPushVersion(dataCenter);
+        if (sub.isMarkPushEmpty(dataCenter)) {
+          continue;
+        }
+        final long pushVersion = sub.getPushedVersion(dataCenter);
         if (maxVersion < pushVersion) {
           maxVersion = pushVersion;
         }
@@ -110,18 +111,5 @@ public class SessionInterests extends AbstractDataManager<Subscriber> implements
     }
 
     return ret;
-  }
-
-  @Override
-  public Collection<Subscriber> getInterestsNeverPushed() {
-    List<Subscriber> subscribers = new ArrayList<>(512);
-    for (Map<String, Subscriber> e : stores.values()) {
-      for (Subscriber subscriber : e.values()) {
-        if (!subscriber.hasPushed()) {
-          subscribers.add(subscriber);
-        }
-      }
-    }
-    return subscribers;
   }
 }

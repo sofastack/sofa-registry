@@ -36,7 +36,6 @@ public final class PushTrace {
   private final SubDatum datum;
   final long pushCreateTimestamp = System.currentTimeMillis();
 
-  private long subscriberPushedVersion;
   private final String subApp;
 
   private final long subRegTimestamp;

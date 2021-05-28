@@ -36,7 +36,7 @@ public final class ClientOffRequestHandler extends AbstractConsoleHandler<Client
   @Override
   public Object doHandle(Channel channel, ClientOffRequest request) {
     List<ConnectId> conIds = connectionsService.getIpConnects(request.getIps());
-    sessionRegistry.remove(conIds);
+    sessionRegistry.clientOff(conIds);
     LOGGER.info("clientOff conIds: {}", conIds);
     return CommonResponse.buildSuccessResponse();
   }

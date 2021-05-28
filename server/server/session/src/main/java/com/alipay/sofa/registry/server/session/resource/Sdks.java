@@ -20,9 +20,12 @@ import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
+import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
+import com.google.common.collect.Lists;
+import org.apache.commons.lang.StringUtils;
+
 import java.net.ConnectException;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
@@ -31,8 +34,6 @@ import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-import org.apache.commons.lang.StringUtils;
 
 public final class Sdks {
   private static final Logger LOGGER = LoggerFactory.getLogger(Sdks.class);
@@ -47,12 +48,13 @@ public final class Sdks {
     if (StringUtils.isNotBlank(zone)) {
       zone = zone.toUpperCase();
     }
-    List<URL> servers =
-        metaNodeService.getSessionServerList(zone).stream()
-            .filter(server -> !server.equals(NetUtil.getLocalAddress().getHostAddress()))
-            .map(server -> new URL(server, sessionServerConfig.getConsolePort()))
-            .collect(Collectors.toList());
-    return servers;
+    List<URL> others = Lists.newLinkedList();
+    for (String server : metaNodeService.getSessionServerList(zone)) {
+      if (!ServerEnv.isLocalServer(server)) {
+        others.add(new URL(server, sessionServerConfig.getConsolePort()));
+      }
+    }
+    return others;
   }
 
   public static List<CommonResponse> concurrentSdkSend(
@@ -103,5 +105,14 @@ public final class Sdks {
 
   interface SdkExecutor {
     CommonResponse execute(URL url) throws Exception;
+  }
+
+  public static List<String> toIpList(String ips) {
+    String[] ipArray = StringUtils.split(ips.trim(), ';');
+    List<String> ret = Lists.newArrayListWithCapacity(ipArray.length);
+    for (String ip : ipArray) {
+      ret.add(ip.trim());
+    }
+    return ret;
   }
 }

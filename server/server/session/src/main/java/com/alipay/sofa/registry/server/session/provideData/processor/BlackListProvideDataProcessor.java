@@ -16,20 +16,20 @@
  */
 package com.alipay.sofa.registry.server.session.provideData.processor;
 
-import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
+import com.alipay.sofa.registry.server.session.connections.ConnectionsService;
 import com.alipay.sofa.registry.server.session.filter.blacklist.BlacklistConstants;
 import com.alipay.sofa.registry.server.session.filter.blacklist.BlacklistManager;
+import com.alipay.sofa.registry.server.session.loggers.Loggers;
 import com.alipay.sofa.registry.server.session.provideData.ProvideDataProcessor;
 import com.alipay.sofa.registry.server.session.registry.Registry;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -38,15 +38,17 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public class BlackListProvideDataProcessor implements ProvideDataProcessor {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(BlackListProvideDataProcessor.class);
+  private static final Logger LOGGER = Loggers.BLACK_LIST_LOG;
 
-  @Autowired private SessionServerConfig sessionServerConfig;
+  @Autowired protected SessionServerConfig sessionServerConfig;
 
-  @Autowired private Registry sessionRegistry;
+  @Autowired protected Registry sessionRegistry;
 
-  @Autowired private Exchange boltExchange;
+  @Autowired protected Exchange boltExchange;
 
-  @Autowired private BlacklistManager blacklistManager;
+  @Autowired protected BlacklistManager blacklistManager;
+
+  @Autowired protected ConnectionsService connectionsService;
 
   @Override
   public void changeDataProcess(ProvideData provideData) {
@@ -89,28 +91,9 @@ public class BlackListProvideDataProcessor implements ProvideDataProcessor {
           }
         }
       }
-
-      sessionRegistry.remove(getIpConnects(ipSet));
+      LOGGER.info("[ip],{}/{}", ipSet.size(), ipSet);
+      sessionRegistry.clientOff(connectionsService.getIpConnects(ipSet));
     }
-  }
-
-  public List<ConnectId> getIpConnects(Set<String> _ipList) {
-
-    Server sessionServer = boltExchange.getServer(sessionServerConfig.getServerPort());
-
-    List<ConnectId> connections = new ArrayList<>();
-
-    if (sessionServer != null) {
-      Collection<Channel> channels = sessionServer.getChannels();
-      for (Channel channel : channels) {
-        String ip = channel.getRemoteAddress().getAddress().getHostAddress();
-        if (_ipList.contains(ip)) {
-          connections.add(ConnectId.of(channel.getRemoteAddress(), channel.getLocalAddress()));
-        }
-      }
-    }
-
-    return connections;
   }
 
   @Override

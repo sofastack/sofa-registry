@@ -62,7 +62,11 @@ public class SessionInterestsTest extends AbstractSessionServerTestBase {
             DataInfo.toDataInfoId(dataInfo, instanceId, "default-group"),
             System.currentTimeMillis() + 100));
 
-    Assert.assertTrue(subscriber.checkAndUpdateVersion(getDc(), 100));
+    Assert.assertTrue(subscriber.checkAndUpdateVersion(getDc(), 100, 10));
+    Assert.assertFalse(subscriber.needPushEmpty(getDc()));
+    subscriber.markPushEmpty(getDc(), 100);
+    Assert.assertTrue(subscriber.needPushEmpty(getDc()));
+    Assert.assertFalse(subscriber.needPushEmpty(getDc() + "1"));
     Assert.assertEquals(
         Interests.InterestVersionCheck.Obsolete,
         interests.checkInterestVersion(
@@ -70,18 +74,24 @@ public class SessionInterestsTest extends AbstractSessionServerTestBase {
 
     Subscriber subscriber2 = randomSubscriber(dataInfo, instanceId);
     interests.add(subscriber2);
-    Collection<Subscriber> neverPushed = interests.getInterestsNeverPushed();
-    Assert.assertEquals(neverPushed.size(), 1);
-    Assert.assertEquals(neverPushed.iterator().next(), subscriber2);
 
-    subscriber2.checkAndUpdateVersion(getDc(), 80);
+    Collection<Subscriber> dataList = interests.getDataList();
+    for (Subscriber s : dataList) {
+      if (s == subscriber2) {
+        Assert.assertTrue(!s.hasPushed());
+      }
+    }
 
+    subscriber2.checkAndUpdateVersion(getDc(), 80, 20);
+
+    // get sub2.dc1
     map = interests.getInterestVersions(getDc() + "1");
     Assert.assertEquals(map.size(), 1);
     Assert.assertEquals(map.get(subscriber.getDataInfoId()).getValue(), 0);
 
+    // get sub2
     map = interests.getInterestVersions(getDc());
     Assert.assertEquals(map.size(), 1);
-    Assert.assertEquals(map.get(subscriber.getDataInfoId()).getValue(), 100);
+    Assert.assertEquals(map.get(subscriber.getDataInfoId()).getValue(), 80);
   }
 }

@@ -117,9 +117,9 @@ public class BlacklistTest extends BaseIntegrationTest {
     assertTrue(response.isSuccess());
 
     // wait for new list meta dispatch to session
-    Thread.sleep(2000L);
+    Thread.sleep(3000L);
 
-    String dataId = "test-dataId-blacklist";
+    String dataId = "test-dataId-blacklist-" + System.currentTimeMillis();
     String value = "test blacklist";
 
     PublisherRegistration registration = new PublisherRegistration(dataId);
@@ -132,7 +132,7 @@ public class BlacklistTest extends BaseIntegrationTest {
 
     registryClient1.register(subReg);
 
-    Thread.sleep(2000L);
+    Thread.sleep(3000L);
     assertEquals(dataId, observer.dataId);
     assertEquals(LOCAL_REGION, observer.userData.getLocalZone());
 
@@ -190,9 +190,9 @@ public class BlacklistTest extends BaseIntegrationTest {
     assertTrue(response.isSuccess());
 
     // wait for new list meta dispatch to session
-    Thread.sleep(2000L);
+    Thread.sleep(3000L);
 
-    String dataId = "test-dataId-blacklist2";
+    String dataId = "test-dataId-blacklist2-" + System.currentTimeMillis();
     String value = "test blacklist2";
 
     PublisherRegistration registration = new PublisherRegistration(dataId);
@@ -204,7 +204,7 @@ public class BlacklistTest extends BaseIntegrationTest {
 
     registryClient1.register(subReg);
 
-    Thread.sleep(2000L);
+    Thread.sleep(3000L);
     assertEquals(dataId, observer.dataId);
     assertEquals(LOCAL_REGION, observer.userData.getLocalZone());
 
@@ -230,7 +230,8 @@ public class BlacklistTest extends BaseIntegrationTest {
                 "dataInfoId", DataInfo.toDataInfoId(dataId, DEFAULT_INSTANCE_ID, DEFAULT_GROUP))
             .request(APPLICATION_JSON)
             .get(new GenericType<Map<String, List<Subscriber>>>() {});
-    assertEquals(0, subscriberMap.size());
+    // default setting, black list not forbit the sub
+    assertEquals(1, subscriberMap.size());
   }
 
   @AfterClass

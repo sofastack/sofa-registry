@@ -14,15 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.filter;
+package com.alipay.sofa.registry.server.session.loggers;
 
-import java.util.function.Supplier;
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
 
-/**
- * @author shangyu.wh
- * @version 1.0: DataIdMatchStrategy.java, v 0.1 2019-06-19 22:12 shangyu.wh Exp $
- */
-public interface DataIdMatchStrategy<T> {
+public final class Loggers {
+  private Loggers() {}
 
-  boolean match(String dataId, Supplier<T> getOperatorType);
+  public static final Logger CLIENT_OFF_LOG = LoggerFactory.getLogger("CLIENT-OFF");
+  public static final Logger BLACK_LIST_LOG = LoggerFactory.getLogger("BLACK-LIST");
 }

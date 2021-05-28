@@ -29,13 +29,11 @@ import com.alipay.sofa.registry.server.session.cache.CacheService;
 import com.alipay.sofa.registry.server.session.cache.DatumCacheGenerator;
 import com.alipay.sofa.registry.server.session.cache.SessionCacheService;
 import com.alipay.sofa.registry.server.session.connections.ConnectionsService;
-import com.alipay.sofa.registry.server.session.filter.DataIdMatchStrategy;
 import com.alipay.sofa.registry.server.session.filter.IPMatchStrategy;
 import com.alipay.sofa.registry.server.session.filter.ProcessFilter;
 import com.alipay.sofa.registry.server.session.filter.blacklist.BlacklistManager;
 import com.alipay.sofa.registry.server.session.filter.blacklist.BlacklistManagerImpl;
 import com.alipay.sofa.registry.server.session.filter.blacklist.BlacklistMatchProcessFilter;
-import com.alipay.sofa.registry.server.session.filter.blacklist.DefaultDataIdMatchStrategy;
 import com.alipay.sofa.registry.server.session.filter.blacklist.DefaultIPMatchStrategy;
 import com.alipay.sofa.registry.server.session.limit.AccessLimitService;
 import com.alipay.sofa.registry.server.session.limit.AccessLimitServiceImpl;
@@ -68,7 +66,6 @@ import com.alipay.sofa.registry.server.session.remoting.console.SessionConsoleEx
 import com.alipay.sofa.registry.server.session.remoting.console.handler.ClientOffRequestHandler;
 import com.alipay.sofa.registry.server.session.remoting.console.handler.ClientOnRequestHandler;
 import com.alipay.sofa.registry.server.session.remoting.console.handler.QuerySubscriberRequestHandler;
-import com.alipay.sofa.registry.server.session.remoting.handler.CancelAddressRequestHandler;
 import com.alipay.sofa.registry.server.session.remoting.handler.ClientNodeConnectionHandler;
 import com.alipay.sofa.registry.server.session.remoting.handler.DataChangeRequestHandler;
 import com.alipay.sofa.registry.server.session.remoting.handler.DataPushRequestHandler;
@@ -241,7 +238,6 @@ public class SessionServerConfiguration {
       list.add(subscriberHandler());
       list.add(watcherHandler());
       list.add(clientNodeConnectionHandler());
-      list.add(cancelAddressRequestHandler());
       list.add(syncConfigHandler());
       list.add(publisherPbHandler());
       list.add(subscriberPbHandler());
@@ -294,11 +290,6 @@ public class SessionServerConfiguration {
     @Bean
     public AbstractServerHandler clientNodeConnectionHandler() {
       return new ClientNodeConnectionHandler();
-    }
-
-    @Bean
-    public AbstractServerHandler cancelAddressRequestHandler() {
-      return new CancelAddressRequestHandler();
     }
 
     @Bean
@@ -704,11 +695,6 @@ public class SessionServerConfiguration {
     }
 
     @Bean
-    public DataIdMatchStrategy dataIdMatchStrategy() {
-      return new DefaultDataIdMatchStrategy();
-    }
-
-    @Bean
     @ConditionalOnMissingBean
     public ProcessFilter processFilter() {
       return new BlacklistMatchProcessFilter();
@@ -721,33 +707,26 @@ public class SessionServerConfiguration {
 
     @Bean
     public WrapperInterceptorManager wrapperInterceptorManager() {
-      return new WrapperInterceptorManager();
+      WrapperInterceptorManager mgr = new WrapperInterceptorManager();
+      mgr.addInterceptor(clientCheckWrapperInterceptor());
+      mgr.addInterceptor(blacklistWrapperInterceptor());
+      mgr.addInterceptor(accessLimitWrapperInterceptor());
+      return mgr;
     }
 
     @Bean
-    public WrapperInterceptor clientCheckWrapperInterceptor(
-        WrapperInterceptorManager wrapperInterceptorManager) {
-      ClientCheckWrapperInterceptor clientCheckWrapperInterceptor =
-          new ClientCheckWrapperInterceptor();
-      wrapperInterceptorManager.addInterceptor(clientCheckWrapperInterceptor);
-      return clientCheckWrapperInterceptor;
+    public WrapperInterceptor clientCheckWrapperInterceptor() {
+      return new ClientCheckWrapperInterceptor();
     }
 
     @Bean
-    public WrapperInterceptor blacklistWrapperInterceptor(
-        WrapperInterceptorManager wrapperInterceptorManager) {
-      BlacklistWrapperInterceptor blacklistWrapperInterceptor = new BlacklistWrapperInterceptor();
-      wrapperInterceptorManager.addInterceptor(blacklistWrapperInterceptor);
-      return blacklistWrapperInterceptor;
+    public WrapperInterceptor blacklistWrapperInterceptor() {
+      return new BlacklistWrapperInterceptor();
     }
 
     @Bean
-    public WrapperInterceptor accessLimitWrapperInterceptor(
-        WrapperInterceptorManager wrapperInterceptorManager) {
-      AccessLimitWrapperInterceptor accessLimitWrapperInterceptor =
-          new AccessLimitWrapperInterceptor();
-      wrapperInterceptorManager.addInterceptor(accessLimitWrapperInterceptor);
-      return accessLimitWrapperInterceptor;
+    public WrapperInterceptor accessLimitWrapperInterceptor() {
+      return new AccessLimitWrapperInterceptor();
     }
   }
 

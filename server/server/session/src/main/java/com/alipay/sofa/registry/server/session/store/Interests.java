@@ -43,8 +43,6 @@ public interface Interests extends DataManager<Subscriber, String, String> {
 
   Map<String, DatumVersion> getInterestVersions(String dataCenter);
 
-  Collection<Subscriber> getInterestsNeverPushed();
-
   enum InterestVersionCheck {
     NoSub(false),
     Obsolete(false),
