@@ -18,6 +18,8 @@ package com.alipay.sofa.registry.jraft.repository.impl;
 
 import com.alipay.sofa.registry.common.model.store.AppRevision;
 import com.alipay.sofa.registry.store.api.repository.AppRevisionRepository;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -38,9 +40,6 @@ public class AppRevisionRaftRepository implements AppRevisionRepository {
   }
 
   @Override
-  public void refresh() {}
-
-  @Override
   public AppRevision queryRevision(String revision) {
     return registry.get(revision);
   }
@@ -48,5 +47,13 @@ public class AppRevisionRaftRepository implements AppRevisionRepository {
   @Override
   public boolean heartbeat(String revision) {
     return false;
+  }
+
+  @Override
+  public void waitSynced() {}
+
+  @Override
+  public Collection<String> availableRevisions() {
+    return Collections.EMPTY_LIST;
   }
 }

@@ -23,10 +23,7 @@ import com.alipay.sofa.registry.core.model.RegisterResponse;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.LoopRunnable;
 import java.util.Collections;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import org.junit.Assert;
-import org.junit.Test;
 
 /**
  * @author xiaojian.xj
@@ -52,36 +49,6 @@ public class MetadataHeartbeatTest extends MetadataTest {
     @Override
     public void waitingUnthrowable() {
       ConcurrentUtils.sleepUninterruptibly(1, TimeUnit.SECONDS);
-    }
-  }
-
-  @Test
-  public void heartbeatClean() throws ExecutionException, InterruptedException {
-
-    super.register();
-
-    for (AppRevision appRevision : appRevisionList) {
-
-      boolean success = appRevisionHeartbeatRegistry.heartbeat(appRevision.getRevision());
-      Assert.assertTrue(success);
-      appRevisionMapper.deleteAppRevision(
-          defaultCommonConfig.getClusterId(), appRevision.getRevision());
-    }
-    appRevisionHeartbeatRegistry.doHeartbeatCacheChecker();
-
-    for (AppRevision appRevision : appRevisionList) {
-      boolean success = appRevisionHeartbeatRegistry.heartbeat(appRevision.getRevision());
-      Assert.assertFalse(success);
-    }
-
-    ConcurrentUtils.createDaemonThread("heartbeat-runner-test", new HeartbeatRunner()).start();
-    Thread.sleep(3000);
-    for (AppRevision appRevision : appRevisionList) {
-
-      boolean success = appRevisionHeartbeatRegistry.heartbeat(appRevision.getRevision());
-      Assert.assertTrue(success);
-      appRevisionMapper.deleteAppRevision(
-          defaultCommonConfig.getClusterId(), appRevision.getRevision());
     }
   }
 }

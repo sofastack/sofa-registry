@@ -22,13 +22,19 @@ import com.alipay.sofa.registry.common.model.store.AppRevision;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.core.model.AppRevisionInterface;
 import com.alipay.sofa.registry.jdbc.AbstractH2DbTestBase;
+import com.alipay.sofa.registry.jdbc.TestUtils;
 import com.alipay.sofa.registry.jdbc.config.DefaultCommonConfig;
+import com.alipay.sofa.registry.jdbc.convertor.AppRevisionDomainConvertor;
 import com.alipay.sofa.registry.jdbc.domain.AppRevisionDomain;
 import com.alipay.sofa.registry.jdbc.mapper.AppRevisionMapper;
+import com.alipay.sofa.registry.store.api.repository.AppRevisionRepository;
+import com.alipay.sofa.registry.store.api.repository.InterfaceAppsRepository;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.LoopRunnable;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -37,6 +43,7 @@ import java.util.concurrent.TimeUnit;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author xiaojian.xj
@@ -44,15 +51,13 @@ import org.junit.Test;
  */
 public class AppRevisionRepositoryTest extends AbstractH2DbTestBase {
 
-  private AppRevisionJdbcRepository appRevisionJdbcRepository;
+  @Autowired private AppRevisionRepository appRevisionJdbcRepository;
 
-  private InterfaceAppsJdbcRepository interfaceAppsJdbcRepository;
+  @Autowired private InterfaceAppsRepository interfaceAppsJdbcRepository;
 
-  private AppRevisionHeartbeatJdbcRepository appRevisionHeartbeatJdbcRepository;
+  @Autowired private AppRevisionMapper appRevisionMapper;
 
-  private AppRevisionMapper appRevisionMapper;
-
-  private DefaultCommonConfig defaultCommonConfig;
+  @Autowired private DefaultCommonConfig defaultCommonConfig;
 
   private List<AppRevision> appRevisionList;
 
@@ -60,13 +65,8 @@ public class AppRevisionRepositoryTest extends AbstractH2DbTestBase {
 
   @Before
   public void buildAppRevision() {
-    appRevisionJdbcRepository = applicationContext.getBean(AppRevisionJdbcRepository.class);
-    interfaceAppsJdbcRepository = applicationContext.getBean(InterfaceAppsJdbcRepository.class);
-    appRevisionHeartbeatJdbcRepository =
-        applicationContext.getBean(AppRevisionHeartbeatJdbcRepository.class);
-    appRevisionMapper = applicationContext.getBean(AppRevisionMapper.class);
-    defaultCommonConfig = applicationContext.getBean(DefaultCommonConfig.class);
-
+    ((AppRevisionJdbcRepository) appRevisionJdbcRepository).init();
+    ((InterfaceAppsJdbcRepository) interfaceAppsJdbcRepository).init();
     appRevisionList = new ArrayList<>();
     for (int i = 1; i <= APP_REVISION_SIZE; i++) {
       long l = System.currentTimeMillis();
@@ -81,13 +81,7 @@ public class AppRevisionRepositoryTest extends AbstractH2DbTestBase {
       appRevision.setClientVersion("1.0");
 
       Map<String, List<String>> baseParams = Maps.newHashMap();
-      baseParams.put(
-          "metaBaseParam1",
-          new ArrayList<String>() {
-            {
-              add("metaBaseValue1");
-            }
-          });
+      baseParams.put("metaBaseParam1", Lists.newArrayList("metaBaseValue1"));
       appRevision.setBaseParams(baseParams);
 
       Map<String, AppRevisionInterface> interfaceMap = Maps.newHashMap();
@@ -106,38 +100,26 @@ public class AppRevisionRepositoryTest extends AbstractH2DbTestBase {
 
       inf1.setId("1");
       Map<String, List<String>> serviceParams1 = new HashMap<String, List<String>>();
-      serviceParams1.put(
-          "metaParam2",
-          new ArrayList<String>() {
-            {
-              add("metaValue2");
-            }
-          });
+      serviceParams1.put("metaParam2", Lists.newArrayList("metaValue2"));
       inf1.setServiceParams(serviceParams1);
 
       inf2.setId("2");
       Map<String, List<String>> serviceParams2 = new HashMap<String, List<String>>();
-      serviceParams1.put(
-          "metaParam3",
-          new ArrayList<String>() {
-            {
-              add("metaValue3");
-            }
-          });
+      serviceParams1.put("metaParam3", Lists.newArrayList("metaValues3"));
       inf1.setServiceParams(serviceParams2);
 
       appRevisionList.add(appRevision);
     }
   }
 
-  @Test
-  public void registerAndQuery() throws Exception {
-
+  private void register() throws Exception {
     // register
     for (AppRevision appRevisionRegister : appRevisionList) {
       appRevisionJdbcRepository.register(appRevisionRegister);
     }
+  }
 
+  private void queryAndCheck() {
     // query app_revision
     for (AppRevision appRevisionRegister : appRevisionList) {
       AppRevision revision =
@@ -145,6 +127,7 @@ public class AppRevisionRepositoryTest extends AbstractH2DbTestBase {
       Assert.assertEquals(appRevisionRegister.getAppName(), revision.getAppName());
     }
 
+    interfaceAppsJdbcRepository.waitSynced();
     // query by interface
     for (AppRevision appRevisionRegister : appRevisionList) {
       for (Map.Entry<String, AppRevisionInterface> entry :
@@ -159,15 +142,19 @@ public class AppRevisionRepositoryTest extends AbstractH2DbTestBase {
   }
 
   @Test
+  public void registerAndQuery() throws Exception {
+    register();
+    queryAndCheck();
+  }
+
+  @Test
   public void revisionLoad() throws Exception {
-    appRevisionJdbcRepository
-        .getRevisions()
-        .asMap()
-        .forEach((key, value) -> appRevisionJdbcRepository.getRevisions().invalidate(key));
+    AppRevisionJdbcRepository repository = (AppRevisionJdbcRepository) appRevisionJdbcRepository;
 
-    registerAndQuery();
+    register();
+    queryAndCheck();
 
-    LoadingCache<String, AppRevision> cache = appRevisionJdbcRepository.getRevisions();
+    LoadingCache<String, AppRevision> cache = repository.getRevisions();
     Assert.assertEquals(cache.asMap().size(), APP_REVISION_SIZE.intValue());
 
     for (AppRevision appRevisionRegister : appRevisionList) {
@@ -211,50 +198,44 @@ public class AppRevisionRepositoryTest extends AbstractH2DbTestBase {
   public void heartbeatClean() throws Exception {
 
     registerAndQuery();
+    appRevisionJdbcRepository.waitSynced();
+    ((AppRevisionJdbcRepository) appRevisionJdbcRepository).cleanCache();
 
     for (AppRevision appRevision : appRevisionList) {
-
       boolean before = appRevisionJdbcRepository.heartbeat(appRevision.getRevision());
       Assert.assertTrue(before);
-      appRevisionMapper.deleteAppRevision(
-          defaultCommonConfig.getClusterId(), appRevision.getRevision());
-
-      boolean after = appRevisionJdbcRepository.heartbeat(appRevision.getRevision());
-      Assert.assertTrue(after);
       AppRevisionDomain query =
           appRevisionMapper.queryRevision(
               defaultCommonConfig.getClusterId(), appRevision.getRevision());
-      Assert.assertTrue(query == null);
+      Assert.assertTrue(query != null);
     }
-    appRevisionHeartbeatJdbcRepository.doHeartbeatCacheChecker();
 
     for (AppRevision appRevision : appRevisionList) {
-      boolean success = appRevisionJdbcRepository.heartbeat(appRevision.getRevision());
-      Assert.assertFalse(success);
+      AppRevisionDomain domain =
+          AppRevisionDomainConvertor.convert2Domain(
+              defaultCommonConfig.getClusterId(), appRevision);
+      domain.setDeleted(true);
+      appRevisionMapper.replace(domain);
     }
-
+    appRevisionJdbcRepository.waitSynced();
+    for (AppRevision appRevision : appRevisionList) {
+      boolean after = appRevisionJdbcRepository.heartbeat(appRevision.getRevision());
+      Assert.assertFalse(after);
+      TestUtils.assertException(
+          UncheckedExecutionException.class,
+          () -> appRevisionJdbcRepository.queryRevision(appRevision.getRevision()));
+    }
     ConcurrentUtils.createDaemonThread("heartbeatClean-test", new HeartbeatRunner()).start();
+    ((AppRevisionJdbcRepository) appRevisionJdbcRepository).cleanCache();
     Thread.sleep(3000);
     for (AppRevision appRevision : appRevisionList) {
-
       boolean success = appRevisionJdbcRepository.heartbeat(appRevision.getRevision());
       Assert.assertTrue(success);
-      appRevisionMapper.deleteAppRevision(
-          defaultCommonConfig.getClusterId(), appRevision.getRevision());
-    }
-  }
-
-  @Test
-  public void revisionGc() throws Exception {
-    registerAndQuery();
-
-    appRevisionHeartbeatJdbcRepository.doAppRevisionGc(0);
-
-    for (AppRevision appRevision : appRevisionList) {
-      AppRevisionDomain query =
-          appRevisionMapper.queryRevision(
-              defaultCommonConfig.getClusterId(), appRevision.getRevision());
-      Assert.assertTrue(query == null);
+      AppRevisionDomain domain =
+          AppRevisionDomainConvertor.convert2Domain(
+              defaultCommonConfig.getClusterId(), appRevision);
+      domain.setDeleted(true);
+      appRevisionMapper.replace(domain);
     }
   }
 }

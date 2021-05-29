@@ -35,12 +35,10 @@ import com.alibaba.druid.pool.DruidDataSourceFactory;
 import com.alipay.sofa.registry.jdbc.repository.batch.AppRevisionBatchQueryCallable;
 import com.alipay.sofa.registry.jdbc.repository.batch.AppRevisionHeartbeatBatchCallable;
 import com.alipay.sofa.registry.jdbc.repository.batch.InterfaceAppBatchQueryCallable;
-import com.alipay.sofa.registry.jdbc.repository.impl.AppRevisionHeartbeatJdbcRepository;
 import com.alipay.sofa.registry.jdbc.repository.impl.AppRevisionJdbcRepository;
 import com.alipay.sofa.registry.jdbc.repository.impl.InterfaceAppsJdbcRepository;
 import com.alipay.sofa.registry.jdbc.repository.impl.ProvideDataJdbcRepository;
 import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
-import com.alipay.sofa.registry.store.api.repository.AppRevisionHeartbeatRepository;
 import com.alipay.sofa.registry.store.api.repository.AppRevisionRepository;
 import com.alipay.sofa.registry.store.api.repository.InterfaceAppsRepository;
 import com.alipay.sofa.registry.store.api.spring.SpringContext;
@@ -59,6 +57,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.core.io.support.ResourcePatternResolver;
@@ -213,6 +212,7 @@ public class JdbcConfiguration {
     }
   }
 
+  @Lazy
   @Configuration
   public static class RepositoryBeanConfiguration {
 
@@ -225,11 +225,6 @@ public class JdbcConfiguration {
     @Bean
     public InterfaceAppsRepository interfaceAppsJdbcRepository() {
       return new InterfaceAppsJdbcRepository();
-    }
-
-    @Bean
-    public AppRevisionHeartbeatRepository appRevisionHeartbeatJdbcRepository() {
-      return new AppRevisionHeartbeatJdbcRepository();
     }
 
     @Bean

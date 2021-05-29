@@ -17,10 +17,8 @@
 package com.alipay.sofa.registry.server.meta.bootstrap;
 
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
-import com.alipay.sofa.registry.server.meta.revision.AppRevisionHeartbeatService;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -33,21 +31,13 @@ public class ExecutorManager {
 
   @Autowired private MetaServerConfig metaServerConfig;
 
-  @Autowired private AppRevisionHeartbeatService appRevisionHeartbeatService;
-
   public ExecutorManager(MetaServerConfig metaServerConfig) {
     scheduler =
         new ScheduledThreadPoolExecutor(
             metaServerConfig.getMetaSchedulerPoolSize(), new NamedThreadFactory("MetaScheduler"));
   }
 
-  public void startScheduler() {
-    scheduler.scheduleWithFixedDelay(
-        () -> appRevisionHeartbeatService.doRevisionGc(),
-        metaServerConfig.getRevisionGcInitialDelaySecs(),
-        metaServerConfig.getRevisionGcSecs(),
-        TimeUnit.SECONDS);
-  }
+  public void startScheduler() {}
 
   public void stopScheduler() {
     if (scheduler != null && !scheduler.isShutdown()) {

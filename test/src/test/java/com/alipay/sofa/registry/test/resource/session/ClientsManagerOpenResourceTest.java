@@ -28,9 +28,7 @@ import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.server.session.resource.ClientManagerResource;
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
 import java.util.Arrays;
-
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;

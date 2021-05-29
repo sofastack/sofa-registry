@@ -182,18 +182,7 @@ public class ExecutorManager {
                     new NamedThreadFactory(CONSOLE_EXECUTOR, true)));
   }
 
-  public void startScheduler() {
-    scheduler.scheduleWithFixedDelay(
-        () -> appRevisionHeartbeatRegistry.doHeartbeatCacheChecker(),
-        sessionServerConfig.getHeartbeatCacheCheckerInitialDelaySecs(),
-        sessionServerConfig.getHeartbeatCacheCheckerSecs(),
-        TimeUnit.SECONDS);
-    scheduler.scheduleWithFixedDelay(
-        () -> appRevisionHeartbeatRegistry.doRevisionHeartbeat(),
-        sessionServerConfig.getRevisionHeartbeatInitialDelayMinutes(),
-        sessionServerConfig.getRevisionHeartbeatMinutes(),
-        TimeUnit.MINUTES);
-  }
+  public void startScheduler() {}
 
   public void stopScheduler() {
     scheduler.shutdown();

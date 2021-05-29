@@ -8,6 +8,7 @@ CREATE TABLE `app_revision` (
   `gmt_create` timestamp NOT NULL COMMENT '创建时间',
   `gmt_modified` timestamp NOT NULL COMMENT '修改时间',
   `client_version` varchar(512) DEFAULT NULL COMMENT '客户端版本',
+  `deleted` tinyint(1) NOT NULL DEFAULT 0 COMMENT '是否被删除',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_data_center_revision` (`data_center`, `revision`) BLOCK_SIZE 16384 GLOBAL
 ) AUTO_INCREMENT = 913172 DEFAULT CHARSET = utf8mb4 ROW_FORMAT = DYNAMIC COMPRESSION = 'zstd_1.0' REPLICA_NUM = 3 BLOCK_SIZE = 16384 USE_BLOOM_FILTER = FALSE TABLET_SIZE = 134217728 PCTFREE = 10 COMMENT = '服务元数据表'

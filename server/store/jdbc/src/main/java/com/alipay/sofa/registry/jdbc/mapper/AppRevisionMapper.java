@@ -28,14 +28,6 @@ import org.apache.ibatis.annotations.Param;
 public interface AppRevisionMapper {
 
   /**
-   * save record
-   *
-   * @param appRevision
-   * @return effect record count
-   */
-  public int insert(AppRevisionDomain appRevision);
-
-  /**
    * query revision
    *
    * @param dataCenter
@@ -55,15 +47,6 @@ public interface AppRevisionMapper {
       @Param("dataCenter") String dataCenter, @Param("revisions") List<String> revisions);
 
   /**
-   * check if revision exist
-   *
-   * @param dataCenter
-   * @return revision
-   */
-  AppRevisionDomain checkExist(
-      @Param("dataCenter") String dataCenter, @Param("revision") String revision);
-
-  /**
    * batchHeartbeat
    *
    * @param dataCenter
@@ -72,31 +55,22 @@ public interface AppRevisionMapper {
   void batchHeartbeat(
       @Param("dataCenter") String dataCenter, @Param("revisions") List<String> revisions);
 
-  /**
-   * query app_revision silence beyond silenceHour
-   *
-   * @param dataCenter
-   * @param date
-   * @return
-   */
-  public List<String> queryGcRevision(
+  List<AppRevisionDomain> listRevisions(
       @Param("dataCenter") String dataCenter,
-      @Param("date") Date date,
-      @Param("limitCount") int limitCount);
+      @Param("afterId") long afterId,
+      @Param("limit") int limit);
 
-  /**
-   * delete
-   *
-   * @param dataCenter
-   * @param revision
-   */
-  public void deleteAppRevision(
-      @Param("dataCenter") String dataCenter, @Param("revision") String revision);
+  int heartbeat(@Param("dataCenter") String dataCenter, @Param("revision") String revision);
 
-  /**
-   * @param revisions
-   * @return
-   */
-  List<String> batchCheck(
-      @Param("dataCenter") String dataCenter, @Param("revisions") List<String> revisions);
+  void replace(AppRevisionDomain domain);
+
+  List<AppRevisionDomain> getExpired(
+      @Param("dataCenter") String dataCenter,
+      @Param("beforeTime") Date beforeTime,
+      @Param("limit") int limit);
+
+  int cleanDeleted(
+      @Param("dataCenter") String dataCenter,
+      @Param("beforeTime") Date beforeTime,
+      @Param("limit") int limit);
 }

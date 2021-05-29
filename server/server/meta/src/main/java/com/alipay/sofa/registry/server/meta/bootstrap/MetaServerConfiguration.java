@@ -27,6 +27,8 @@ import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfigBean;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfigBeanProperty;
+import com.alipay.sofa.registry.server.meta.cleaner.AppRevisionCleaner;
+import com.alipay.sofa.registry.server.meta.cleaner.InterfaceAppsIndexCleaner;
 import com.alipay.sofa.registry.server.meta.provide.data.DefaultProvideDataService;
 import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataService;
 import com.alipay.sofa.registry.server.meta.remoting.DataNodeExchanger;
@@ -50,7 +52,6 @@ import com.alipay.sofa.registry.server.meta.resource.SlotSyncResource;
 import com.alipay.sofa.registry.server.meta.resource.SlotTableResource;
 import com.alipay.sofa.registry.server.meta.resource.StopPushDataResource;
 import com.alipay.sofa.registry.server.meta.resource.filter.LeaderAwareFilter;
-import com.alipay.sofa.registry.server.meta.revision.AppRevisionHeartbeatService;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.alipay.sofa.registry.server.shared.resource.MetricsResource;
 import com.alipay.sofa.registry.server.shared.resource.SlotGenericResource;
@@ -248,11 +249,6 @@ public class MetaServerConfiguration {
     public ProvideDataService provideDataService() {
       return new DefaultProvideDataService();
     }
-
-    @Bean
-    public AppRevisionHeartbeatService appRevisionHeartbeatService() {
-      return new AppRevisionHeartbeatService();
-    }
   }
 
   @Configuration
@@ -324,6 +320,19 @@ public class MetaServerConfiguration {
     @Bean
     public RegistryCoreOpsResource registryCoreOpsResource() {
       return new RegistryCoreOpsResource();
+    }
+  }
+
+  @Configuration
+  public static class CleanerConfiguration {
+    @Bean
+    public AppRevisionCleaner appRevisionCleaner() {
+      return new AppRevisionCleaner();
+    }
+
+    @Bean
+    public InterfaceAppsIndexCleaner interfaceAppsIndexCleaner() {
+      return new InterfaceAppsIndexCleaner();
     }
   }
 

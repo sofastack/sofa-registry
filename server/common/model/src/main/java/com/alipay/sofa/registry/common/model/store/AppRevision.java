@@ -37,6 +37,8 @@ public class AppRevision implements Serializable {
 
   private Map<String, AppRevisionInterface> interfaceMap = Maps.newHashMap();
 
+  private boolean isDeleted;
+
   private Date lastHeartbeat;
 
   public AppRevision() {}
@@ -185,5 +187,13 @@ public class AppRevision implements Serializable {
         + ", lastHeartbeat="
         + lastHeartbeat
         + '}';
+  }
+
+  public boolean isDeleted() {
+    return isDeleted;
+  }
+
+  public void setDeleted(boolean deleted) {
+    isDeleted = deleted;
   }
 }

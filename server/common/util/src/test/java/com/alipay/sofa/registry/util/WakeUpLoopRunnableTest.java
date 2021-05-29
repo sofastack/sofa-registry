@@ -45,7 +45,7 @@ public class WakeUpLoopRunnableTest {
 
     loop.close();
     Assert.assertTrue(loop.isClosed());
-    Thread.sleep(100);
+    Thread.sleep(200);
 
     Assert.assertFalse(t.isAlive());
   }

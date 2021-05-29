@@ -22,10 +22,6 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.store.api.repository.AppRevisionRepository;
 import com.alipay.sofa.registry.store.api.repository.InterfaceAppsRepository;
-import com.alipay.sofa.registry.util.ConcurrentUtils;
-import com.alipay.sofa.registry.util.LoopRunnable;
-import java.util.concurrent.TimeUnit;
-import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class AppRevisionCacheRegistry {
@@ -35,41 +31,13 @@ public class AppRevisionCacheRegistry {
 
   @Autowired private InterfaceAppsRepository interfaceAppsRepository;
 
-  private volatile boolean startWatch;
-
-  private final class RevisionWatchDog extends LoopRunnable {
-    @Override
-    public void runUnthrowable() {
-      if (!startWatch) {
-        LOGGER.info("not start watch");
-        return;
-      }
-      try {
-        appRevisionRepository.refresh();
-      } catch (Throwable e) {
-        LOGGER.error("failed to watch", e);
-      }
-    }
-
-    @Override
-    public void waitingUnthrowable() {
-      ConcurrentUtils.sleepUninterruptibly(5, TimeUnit.SECONDS);
-    }
-  }
-
-  @PostConstruct
-  public void init() {
-    ConcurrentUtils.createDaemonThread("SessionRefreshRevisionWatchDog", new RevisionWatchDog())
-        .start();
-  }
-
-  public void loadMetadata() {
-    interfaceAppsRepository.loadMetadata();
-    startWatch = true;
-  }
-
   public void register(AppRevision appRevision) throws Exception {
     appRevisionRepository.register(appRevision);
+  }
+
+  public void waitSynced() {
+    appRevisionRepository.waitSynced();
+    interfaceAppsRepository.waitSynced();
   }
 
   public InterfaceMapping getAppNames(String dataInfoId) {

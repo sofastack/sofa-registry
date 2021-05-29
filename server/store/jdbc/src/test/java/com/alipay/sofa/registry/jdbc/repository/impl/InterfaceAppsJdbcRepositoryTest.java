@@ -18,62 +18,42 @@ package com.alipay.sofa.registry.jdbc.repository.impl;
 
 import com.alipay.sofa.registry.common.model.appmeta.InterfaceMapping;
 import com.alipay.sofa.registry.jdbc.AbstractH2DbTestBase;
+import com.alipay.sofa.registry.store.api.repository.AppRevisionRepository;
+import com.alipay.sofa.registry.store.api.repository.InterfaceAppsRepository;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author xiaojian.xj
  * @version $Id: InterfaceAppsJdbcRepositoryTest.java, v 0.1 2021年04月12日 10:31 xiaojian.xj Exp $
  */
 public class InterfaceAppsJdbcRepositoryTest extends AbstractH2DbTestBase {
-  private InterfaceAppsJdbcRepository interfaceAppsJdbcRepository;
 
-  @Before
-  public void build() {
-    interfaceAppsJdbcRepository = applicationContext.getBean(InterfaceAppsJdbcRepository.class);
-  }
+  @Autowired private AppRevisionRepository appRevisionJdbcRepository;
+  @Autowired private InterfaceAppsRepository interfaceAppsJdbcRepository;
 
   @Test
   public void batchSaveTest() {
 
-    String app = "batchSaveApp";
+    String app1 = "app1";
+    String app2 = "app2";
     List<String> services = new ArrayList<>();
     for (int i = 0; i < 100; i++) {
       services.add(i + "batchSaveService-" + System.currentTimeMillis());
     }
-
-    interfaceAppsJdbcRepository.batchSave(app, new HashSet<>(services));
+    for (String service : services) {
+      interfaceAppsJdbcRepository.register(service, app1);
+      interfaceAppsJdbcRepository.register(service, app2);
+    }
+    interfaceAppsJdbcRepository.waitSynced();
     for (String service : services) {
       InterfaceMapping appNames = interfaceAppsJdbcRepository.getAppNames(service);
-      Assert.assertEquals(1, appNames.getApps().size());
-      Assert.assertTrue(appNames.getApps().contains(app));
-    }
-  }
-
-  @Test
-  public void loadMetadataTest() {
-    String app = "loadMetadataTest";
-    List<String> services = new ArrayList<>();
-    for (int i = 0; i < 100; i++) {
-      services.add(i + "loadMetadataTest-" + System.currentTimeMillis());
-    }
-
-    Map<String, InterfaceMapping> interfaceApps = interfaceAppsJdbcRepository.getInterfaceApps();
-    interfaceApps.clear();
-    interfaceAppsJdbcRepository.batchSave(app, new HashSet<>(services));
-    Assert.assertEquals(interfaceApps.size(), 0);
-
-    interfaceAppsJdbcRepository.loadMetadata();
-
-    for (String service : services) {
-      InterfaceMapping interfaceMapping = interfaceApps.get(service);
-      Assert.assertEquals(interfaceMapping.getApps().size(), 1);
-      Assert.assertTrue(interfaceMapping.getApps().contains(app));
+      Assert.assertEquals(2, appNames.getApps().size());
+      Assert.assertTrue(appNames.getApps().contains(app1));
+      Assert.assertTrue(appNames.getApps().contains(app2));
     }
   }
 }

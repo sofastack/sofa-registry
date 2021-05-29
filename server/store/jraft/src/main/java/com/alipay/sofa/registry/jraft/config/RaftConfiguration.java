@@ -16,10 +16,8 @@
  */
 package com.alipay.sofa.registry.jraft.config;
 
-import com.alipay.sofa.registry.jraft.repository.impl.AppRevisionHeartbeatRaftRepository;
 import com.alipay.sofa.registry.jraft.repository.impl.AppRevisionRaftRepository;
 import com.alipay.sofa.registry.jraft.repository.impl.InterfaceAppsRaftRepository;
-import com.alipay.sofa.registry.store.api.repository.AppRevisionHeartbeatRepository;
 import com.alipay.sofa.registry.store.api.repository.AppRevisionRepository;
 import com.alipay.sofa.registry.store.api.repository.InterfaceAppsRepository;
 import com.alipay.sofa.registry.store.api.spring.SpringContext;
@@ -49,11 +47,6 @@ public class RaftConfiguration {
     @Bean
     public InterfaceAppsRepository interfaceAppsRaftRepository() {
       return new InterfaceAppsRaftRepository();
-    }
-
-    @Bean
-    public AppRevisionHeartbeatRepository appRevisionHeartbeatRaftRepository() {
-      return new AppRevisionHeartbeatRaftRepository();
     }
   }
 }

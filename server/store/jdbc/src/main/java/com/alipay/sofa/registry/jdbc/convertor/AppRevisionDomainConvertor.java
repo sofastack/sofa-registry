@@ -49,6 +49,7 @@ public class AppRevisionDomainConvertor {
     domain.setClientVersion(appRevision.getClientVersion());
     domain.setBaseParams(JsonUtils.writeValueAsString(appRevision.getBaseParams()));
     domain.setServiceParams(JsonUtils.writeValueAsString(appRevision.getInterfaceMap()));
+    domain.setDeleted(appRevision.isDeleted());
     return domain;
   }
 
@@ -66,6 +67,7 @@ public class AppRevisionDomainConvertor {
     appRevision.setBaseParams(JsonUtils.read(domain.getBaseParams(), BASE_FORMAT));
     appRevision.setInterfaceMap(JsonUtils.read(domain.getServiceParams(), SERVICE_FORMAT));
     appRevision.setLastHeartbeat(domain.getGmtModify());
+    appRevision.setDeleted(domain.isDeleted());
     return appRevision;
   }
 

@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.store.api.repository;
 
 import com.alipay.sofa.registry.common.model.store.AppRevision;
+import java.util.Collection;
 
 /**
  * @author xiaojian.xj
@@ -29,18 +30,18 @@ public interface AppRevisionRepository {
    *
    * @param appRevision
    */
-  public void register(AppRevision appRevision) throws Exception;
-
-  /** refresh */
-  public void refresh();
-
+  void register(AppRevision appRevision) throws Exception;
   /**
    * get AppRevision
    *
    * @param revision
    * @return
    */
-  public AppRevision queryRevision(String revision);
+  AppRevision queryRevision(String revision);
 
-  public boolean heartbeat(String revision);
+  boolean heartbeat(String revision);
+
+  Collection<String> availableRevisions();
+
+  void waitSynced();
 }

@@ -14,22 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.jraft.repository.impl;
+package com.alipay.sofa.registry.jdbc.informer;
 
-import com.alipay.sofa.registry.store.api.repository.AppRevisionHeartbeatRepository;
-
-/**
- * @author xiaojian.xj
- * @version $Id: AppRevisionHeartbeatRaftRepository.java, v 0.1 2021年02月09日 17:15 xiaojian.xj Exp $
- */
-public class AppRevisionHeartbeatRaftRepository implements AppRevisionHeartbeatRepository {
-
-  @Override
-  public void doAppRevisionHeartbeat() {}
-
-  @Override
-  public void doHeartbeatCacheChecker() {}
-
-  @Override
-  public void doAppRevisionGc(int silenceHour) {}
+public interface DbEntryContainer<T extends DbEntry> {
+  void onEntry(T entry);
 }

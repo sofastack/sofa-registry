@@ -9,6 +9,7 @@ create table APP_REVISION (
   gmt_create timestamp not null,
   gmt_modified timestamp not null,
   client_version varchar(512) default null,
+  deleted tinyint(1) NOT NULL DEFAULT 0 COMMENT '是否被删除',
   UNIQUE KEY `uk_data_center_revision` (`data_center`, `revision`)
 );
 

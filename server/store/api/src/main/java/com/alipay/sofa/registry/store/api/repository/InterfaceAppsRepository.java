@@ -17,7 +17,6 @@
 package com.alipay.sofa.registry.store.api.repository;
 
 import com.alipay.sofa.registry.common.model.appmeta.InterfaceMapping;
-import java.util.Set;
 
 /**
  * @author xiaojian.xj
@@ -32,14 +31,8 @@ public interface InterfaceAppsRepository {
    * @return return <appName, revisions>
    */
   InterfaceMapping getAppNames(String dataInfoId);
-  /**
-   * insert
-   *
-   * @param appName
-   * @return
-   */
-  default void batchSave(String appName, Set<String> interfaceName) {}
 
-  /** refresh when startup */
-  void loadMetadata();
+  void register(String interfaceName, String appName);
+
+  void waitSynced();
 }

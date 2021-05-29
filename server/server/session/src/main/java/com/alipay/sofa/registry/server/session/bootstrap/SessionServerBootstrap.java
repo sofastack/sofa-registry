@@ -160,12 +160,7 @@ public class SessionServerBootstrap {
       retryer.call(
           () -> slotTableCache.getCurrentSlotTable().getEpoch() != SlotTable.INIT.getEpoch());
 
-      // load metadata
-      retryer.call(
-          () -> {
-            appRevisionCacheRegistry.loadMetadata();
-            return true;
-          });
+      appRevisionCacheRegistry.waitSynced();
 
       startScheduler();
 
