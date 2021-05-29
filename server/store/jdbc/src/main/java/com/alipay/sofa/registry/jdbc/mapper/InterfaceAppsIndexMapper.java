@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.jdbc.mapper;
 
 import com.alipay.sofa.registry.jdbc.domain.InterfaceAppsIndexDomain;
+import java.util.Date;
 import java.util.List;
 import org.apache.ibatis.annotations.Param;
 
@@ -27,23 +28,13 @@ import org.apache.ibatis.annotations.Param;
 public interface InterfaceAppsIndexMapper {
 
   /**
-   * query by interfaceName
-   *
-   * @param dataCenter
-   * @param interfaceName
-   * @return
-   */
-  public List<InterfaceAppsIndexDomain> queryByInterfaceName(
-      @Param("dataCenter") String dataCenter, @Param("interfaceName") String interfaceName);
-
-  /**
    * batch query by interfaceName
    *
    * @param dataCenter
    * @param interfaceNames
    * @return
    */
-  public List<InterfaceAppsIndexDomain> batchQueryByInterface(
+  List<InterfaceAppsIndexDomain> batchQueryByInterface(
       @Param("dataCenter") String dataCenter, @Param("interfaceNames") List<String> interfaceNames);
 
   /**
@@ -52,7 +43,7 @@ public interface InterfaceAppsIndexMapper {
    * @param domain
    * @return
    */
-  int insertOnReplace(InterfaceAppsIndexDomain domain);
+  int replace(InterfaceAppsIndexDomain domain);
 
   /**
    * insert
@@ -60,7 +51,7 @@ public interface InterfaceAppsIndexMapper {
    * @param domain
    * @return effect rows number
    */
-  public int update(InterfaceAppsIndexDomain domain);
+  int update(InterfaceAppsIndexDomain domain);
 
   /**
    * query domains which gmt_modified is after than maxUpdate
@@ -74,5 +65,8 @@ public interface InterfaceAppsIndexMapper {
       @Param("maxId") long maxId,
       @Param("limitCount") int limitCount);
 
-  int getTotalCount(@Param("dataCenter") String dataCenter);
+  List<InterfaceAppsIndexDomain> getExpired(
+      @Param("dataCenter") String dataCenter,
+      @Param("beforeTime") Date beforeTime,
+      @Param("limit") int limit);
 }

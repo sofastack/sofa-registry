@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.util;
 
+import com.alipay.sofa.registry.concurrent.SingleFlight;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;

@@ -16,18 +16,17 @@
 
     <update id="update" parameterType="com.alipay.sofa.registry.jdbc.domain.InterfaceAppsIndexDomain">
         <![CDATA[
-
               update interface_apps_index set gmt_modified = NOW(6)
               WHERE data_center = #{dataCenter} AND app_name = #{appName} AND hashcode = #{hashcode} AND reference = true
 
         ]]>
     </update>
 
-    <insert id="insertOnReplace" parameterType="com.alipay.sofa.registry.jdbc.domain.InterfaceAppsIndexDomain">
-            <![CDATA[
+    <insert id="replace" parameterType="com.alipay.sofa.registry.jdbc.domain.InterfaceAppsIndexDomain">
+        <![CDATA[
             replace into interface_apps_index(data_center, interface_name, app_name, reference, hashcode, gmt_create,
             gmt_modified)
-            values (#{dataCenter},#{interfaceName},#{appName}, true , #{hashcode}, NOW(6), NOW(6))
+            values (#{dataCenter},#{interfaceName},#{appName}, #{reference} , #{hashcode}, NOW(6), NOW(6))
         ]]>
     </insert>
 
@@ -41,20 +40,16 @@
         </if>
     </select>
 
-    <select id="queryByInterfaceName" resultMap="interfaceAppsResultMap">
-        <![CDATA[
-         select * from interface_apps_index
-         where data_center = #{dataCenter} and interface_name = #{interfaceName}
-        ]]>
-    </select>
-
-    <select id="getTotalCount" resultType="java.lang.Integer">
-        select count(1) from interface_apps_index where data_center = #{dataCenter}
-    </select>
 
     <select id="queryLargeThan" resultMap="interfaceAppsResultMap">
         select * from interface_apps_index where data_center = #{dataCenter} and id > #{maxId}
         order by id limit #{limitCount}
     </select>
 
+    <select id="getExpired" resultMap="interfaceAppsResultMap">
+<![CDATA[
+        select * from interface_apps_index where data_center = #{dataCenter} and gmt_modified < #{beforeTime}
+        and reference=true limit #{limit}
+]]>
+    </select>
 </mapper>

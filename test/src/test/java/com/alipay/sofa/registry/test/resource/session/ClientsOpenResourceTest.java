@@ -24,7 +24,6 @@ import com.alipay.sofa.registry.client.api.registration.PublisherRegistration;
 import com.alipay.sofa.registry.client.constants.ValueConstants;
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.junit4.SpringRunner;

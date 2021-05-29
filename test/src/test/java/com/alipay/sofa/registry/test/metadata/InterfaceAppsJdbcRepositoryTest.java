@@ -56,8 +56,11 @@ public class InterfaceAppsJdbcRepositoryTest extends BaseIntegrationTest {
       services.add(i + "batchSaveService-" + System.currentTimeMillis());
     }
 
-    HashSet<String> sets = new HashSet<>(services.subList(0, 1));
-    interfaceAppsJdbcRepository.batchSave(app, sets);
+    HashSet<String> sets = new HashSet<>(services.subList(0, 50));
+    for (String service : sets) {
+      interfaceAppsJdbcRepository.register(service, app);
+    }
+    interfaceAppsJdbcRepository.waitSynced();
     for (String service : services) {
       InterfaceMapping appNames = appRevisionCacheRegistry.getAppNames(service);
       if (sets.contains(service)) {
@@ -67,9 +70,10 @@ public class InterfaceAppsJdbcRepositoryTest extends BaseIntegrationTest {
         Assert.assertTrue(appNames.getNanosVersion() == -1);
       }
     }
-
-    interfaceAppsJdbcRepository.batchSave(app, new HashSet<>(services));
-    Thread.sleep(6000);
+    for (String service : services) {
+      interfaceAppsJdbcRepository.register(service, app);
+    }
+    interfaceAppsJdbcRepository.waitSynced();
     for (String service : services) {
       InterfaceMapping appNames = appRevisionCacheRegistry.getAppNames(service);
 

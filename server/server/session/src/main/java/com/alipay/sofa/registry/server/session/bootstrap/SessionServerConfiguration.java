@@ -66,23 +66,7 @@ import com.alipay.sofa.registry.server.session.remoting.console.SessionConsoleEx
 import com.alipay.sofa.registry.server.session.remoting.console.handler.ClientOffRequestHandler;
 import com.alipay.sofa.registry.server.session.remoting.console.handler.ClientOnRequestHandler;
 import com.alipay.sofa.registry.server.session.remoting.console.handler.QuerySubscriberRequestHandler;
-import com.alipay.sofa.registry.server.session.remoting.handler.ClientNodeConnectionHandler;
-import com.alipay.sofa.registry.server.session.remoting.handler.DataChangeRequestHandler;
-import com.alipay.sofa.registry.server.session.remoting.handler.DataPushRequestHandler;
-import com.alipay.sofa.registry.server.session.remoting.handler.DataSlotDiffDigestRequestHandler;
-import com.alipay.sofa.registry.server.session.remoting.handler.DataSlotDiffPublisherRequestHandler;
-import com.alipay.sofa.registry.server.session.remoting.handler.GetRevisionPbHandler;
-import com.alipay.sofa.registry.server.session.remoting.handler.MetaRevisionHeartbeatPbHandler;
-import com.alipay.sofa.registry.server.session.remoting.handler.MetadataRegisterPbHandler;
-import com.alipay.sofa.registry.server.session.remoting.handler.NotifyProvideDataChangeHandler;
-import com.alipay.sofa.registry.server.session.remoting.handler.PublisherHandler;
-import com.alipay.sofa.registry.server.session.remoting.handler.PublisherPbHandler;
-import com.alipay.sofa.registry.server.session.remoting.handler.ServiceAppMappingPbHandler;
-import com.alipay.sofa.registry.server.session.remoting.handler.SubscriberHandler;
-import com.alipay.sofa.registry.server.session.remoting.handler.SubscriberPbHandler;
-import com.alipay.sofa.registry.server.session.remoting.handler.SyncConfigHandler;
-import com.alipay.sofa.registry.server.session.remoting.handler.SyncConfigPbHandler;
-import com.alipay.sofa.registry.server.session.remoting.handler.WatcherHandler;
+import com.alipay.sofa.registry.server.session.remoting.handler.*;
 import com.alipay.sofa.registry.server.session.resource.ClientManagerResource;
 import com.alipay.sofa.registry.server.session.resource.ClientsOpenResource;
 import com.alipay.sofa.registry.server.session.resource.ConnectionsResource;
@@ -365,6 +349,7 @@ public class SessionServerConfiguration {
       Collection<AbstractClientHandler> list = new ArrayList<>();
       list.add(notifyProvideDataChangeHandler());
       list.add(slotTableChangeEventHandler());
+      list.add(appRevisionSliceHandler());
       return list;
     }
 
@@ -381,6 +366,11 @@ public class SessionServerConfiguration {
     @Bean
     public AbstractClientHandler notifyProvideDataChangeHandler() {
       return new NotifyProvideDataChangeHandler();
+    }
+
+    @Bean
+    public AbstractClientHandler appRevisionSliceHandler() {
+      return new AppRevisionSliceHandler();
     }
 
     @Bean

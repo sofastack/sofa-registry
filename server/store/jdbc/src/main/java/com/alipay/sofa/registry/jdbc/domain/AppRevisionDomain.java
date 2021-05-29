@@ -16,13 +16,14 @@
  */
 package com.alipay.sofa.registry.jdbc.domain;
 
+import com.alipay.sofa.registry.jdbc.informer.DbEntry;
 import java.util.Date;
 
 /**
  * @author xiaojian.xj
  * @version $Id: AppRevisionDomain.java, v 0.1 2021年01月18日 17:51 xiaojian.xj Exp $
  */
-public class AppRevisionDomain {
+public class AppRevisionDomain implements DbEntry {
 
   /** primary key */
   private long id;
@@ -50,6 +51,8 @@ public class AppRevisionDomain {
 
   /** last update time */
   private Date gmtModify;
+
+  private boolean deleted;
 
   /**
    * Getter method for property <tt>id</tt>.
@@ -211,5 +214,13 @@ public class AppRevisionDomain {
    */
   public void setClientVersion(String clientVersion) {
     this.clientVersion = clientVersion;
+  }
+
+  public boolean isDeleted() {
+    return deleted;
+  }
+
+  public void setDeleted(boolean deleted) {
+    this.deleted = deleted;
   }
 }

@@ -17,8 +17,6 @@
 package com.alipay.sofa.registry.jraft.repository.impl;
 
 import com.alipay.sofa.registry.common.model.appmeta.InterfaceMapping;
-import com.alipay.sofa.registry.common.model.store.AppRevision;
-import com.alipay.sofa.registry.core.model.AppRevisionInterface;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.store.api.repository.InterfaceAppsRepository;
@@ -36,28 +34,18 @@ public class InterfaceAppsRaftRepository implements InterfaceAppsRepository {
   protected final Map<String, InterfaceMapping> interfaceApps = new ConcurrentHashMap<>();
 
   @Override
-  public void loadMetadata() {
-    // FIXME
-  }
-
-  @Override
   public InterfaceMapping getAppNames(String dataInfoId) {
     final InterfaceMapping ret = interfaceApps.get(dataInfoId);
     return ret;
   }
 
-  public void onNewRevision(AppRevision rev) {
-
-    if (rev.getInterfaceMap() == null) {
-      LOG.warn("AppRevision no interface, {}", rev);
-      return;
-    }
-
-    for (Map.Entry<String, AppRevisionInterface> entry : rev.getInterfaceMap().entrySet()) {
-      String serviceId = entry.getKey();
-      InterfaceMapping interfaceMapping =
-          interfaceApps.computeIfAbsent(serviceId, k -> new InterfaceMapping(-1));
-      interfaceMapping.getApps().add(rev.getAppName());
-    }
+  @Override
+  public void register(String interfaceName, String appName) {
+    InterfaceMapping interfaceMapping =
+        interfaceApps.computeIfAbsent(interfaceName, k -> new InterfaceMapping(-1));
+    interfaceMapping.getApps().add(appName);
   }
+
+  @Override
+  public void waitSynced() {}
 }

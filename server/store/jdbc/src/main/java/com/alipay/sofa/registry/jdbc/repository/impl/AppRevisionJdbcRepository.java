@@ -20,28 +20,29 @@ import static com.alipay.sofa.registry.jdbc.repository.impl.MetadataMetrics.Fetc
 import static com.alipay.sofa.registry.jdbc.repository.impl.MetadataMetrics.Fetch.REVISION_CACHE_MISS_COUNTER;
 import static com.alipay.sofa.registry.jdbc.repository.impl.MetadataMetrics.Register.REVISION_REGISTER_COUNTER;
 
+import com.alipay.sofa.registry.cache.CacheCleaner;
 import com.alipay.sofa.registry.common.model.store.AppRevision;
+import com.alipay.sofa.registry.concurrent.CachedExecutor;
 import com.alipay.sofa.registry.jdbc.config.DefaultCommonConfig;
 import com.alipay.sofa.registry.jdbc.convertor.AppRevisionDomainConvertor;
 import com.alipay.sofa.registry.jdbc.domain.AppRevisionDomain;
-import com.alipay.sofa.registry.jdbc.exception.AppRevisionQueryException;
 import com.alipay.sofa.registry.jdbc.exception.RevisionNotExistException;
+import com.alipay.sofa.registry.jdbc.informer.BaseInformer;
 import com.alipay.sofa.registry.jdbc.mapper.AppRevisionMapper;
-import com.alipay.sofa.registry.jdbc.repository.batch.AppRevisionBatchQueryCallable;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.store.api.repository.AppRevisionRepository;
-import com.alipay.sofa.registry.util.BatchCallableRunnable.InvokeFuture;
-import com.alipay.sofa.registry.util.BatchCallableRunnable.TaskEvent;
+import com.alipay.sofa.registry.util.StringFormatter;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import java.util.Collection;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -56,17 +57,18 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository {
   /** map: <revision, AppRevision> */
   private final LoadingCache<String, AppRevision> registry;
 
-  /** map: <revision, AppRevision> */
-  private final AtomicReference<ConcurrentHashMap.KeySetView> heartbeatSet =
-      new AtomicReference<>();
+  private final Cache<String, Boolean> localRevisions =
+      CacheBuilder.newBuilder().expireAfterWrite(2, TimeUnit.MINUTES).build();
+
+  private final CachedExecutor<String, Boolean> cachedExecutor = new CachedExecutor<>(1000 * 10);
 
   @Autowired private AppRevisionMapper appRevisionMapper;
-
-  @Autowired private AppRevisionBatchQueryCallable appRevisionBatchQueryCallable;
 
   @Resource private InterfaceAppsJdbcRepository interfaceAppsJdbcRepository;
 
   @Autowired private DefaultCommonConfig defaultCommonConfig;
+
+  private final BaseInformer<AppRevisionDomain, AppRevisionContainer> informer;
 
   public AppRevisionJdbcRepository() {
     this.registry =
@@ -77,25 +79,36 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository {
                 new CacheLoader<String, AppRevision>() {
                   @Override
                   public AppRevision load(String revision) throws InterruptedException {
-
                     REVISION_CACHE_MISS_COUNTER.inc();
-                    TaskEvent task = appRevisionBatchQueryCallable.new TaskEvent(revision);
-                    InvokeFuture future = appRevisionBatchQueryCallable.commit(task);
-
-                    if (future.isSuccess()) {
-                      Object response = future.getResponse();
-                      if (response == null) {
-                        throw new RevisionNotExistException(revision);
-                      }
-                      AppRevision appRevision = (AppRevision) response;
-                      return appRevision;
-                    } else {
-                      throw new AppRevisionQueryException(revision, future.getMessage());
+                    AppRevisionDomain revisionDomain =
+                        appRevisionMapper.queryRevision(
+                            defaultCommonConfig.getClusterId(), revision);
+                    if (revisionDomain == null || revisionDomain.isDeleted()) {
+                      throw new RevisionNotExistException(revision);
                     }
+                    return AppRevisionDomainConvertor.convert2Revision(revisionDomain);
                   }
                 });
+    CacheCleaner.autoClean(localRevisions, 1000 * 60 * 10);
+    informer =
+        new BaseInformer<AppRevisionDomain, AppRevisionContainer>() {
+          @Override
+          protected AppRevisionContainer containerFactory() {
+            return new AppRevisionContainer();
+          }
 
-    heartbeatSet.set(new ConcurrentHashMap<>().newKeySet());
+          @Override
+          protected List<AppRevisionDomain> listFromStorage(long start, int limit) {
+            return appRevisionMapper.listRevisions(
+                defaultCommonConfig.getClusterId(), start, limit);
+          }
+        };
+  }
+
+  @PostConstruct
+  public void init() {
+    informer.setEnabled(true);
+    informer.start();
   }
 
   @Override
@@ -103,52 +116,30 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository {
     if (appRevision == null) {
       throw new RuntimeException("jdbc register app revision error, appRevision is null.");
     }
-
-    // query database
-    try {
-      AppRevisionDomain revision =
-          appRevisionMapper.checkExist(
-              defaultCommonConfig.getClusterId(), appRevision.getRevision());
-      if (revision != null) {
-        return;
-      }
-    } catch (Throwable e) {
-      LOG.error("new revision:{} register error.", appRevision.getRevision(), e);
-      throw e;
+    localRevisions.put(appRevision.getRevision(), true);
+    if (informer.getContainer().containsRevisionId(appRevision.getRevision())) {
+      return;
     }
-
+    AppRevisionDomain domain =
+        AppRevisionDomainConvertor.convert2Domain(defaultCommonConfig.getClusterId(), appRevision);
     // new revision, save into database
     REVISION_REGISTER_COUNTER.inc();
 
-    // it will ignore ON DUPLICATE KEY, return effect rows number
-    interfaceAppsJdbcRepository.batchSave(
-        appRevision.getAppName(), appRevision.getInterfaceMap().keySet());
-
-    // it will ignore ON DUPLICATE KEY
-    appRevisionMapper.insert(
-        AppRevisionDomainConvertor.convert2Domain(defaultCommonConfig.getClusterId(), appRevision));
-  }
-
-  @Override
-  public void refresh() {
-
-    try {
-      interfaceAppsJdbcRepository.refresh(defaultCommonConfig.getClusterId());
-    } catch (Throwable e) {
-      LOG.error("jdbc refresh revisions failed ", e);
-      throw new RuntimeException("jdbc refresh revision failed", e);
+    for (String interfaceName : appRevision.getInterfaceMap().keySet()) {
+      interfaceAppsJdbcRepository.register(interfaceName, appRevision.getAppName());
     }
+    refreshEntryToStorage(domain);
   }
 
   @Override
   public AppRevision queryRevision(String revision) {
-
+    AppRevision appRevision;
+    appRevision = registry.getIfPresent(revision);
+    if (appRevision != null) {
+      REVISION_CACHE_HIT_COUNTER.inc();
+      return appRevision;
+    }
     try {
-      AppRevision appRevision = registry.getIfPresent(revision);
-      if (appRevision != null) {
-        REVISION_CACHE_HIT_COUNTER.inc();
-        return appRevision;
-      }
       return registry.get(revision);
     } catch (ExecutionException e) {
       if (e.getCause() instanceof RevisionNotExistException) {
@@ -163,44 +154,45 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository {
 
   @Override
   public boolean heartbeat(String revision) {
-
-    try {
-      if (heartbeatSet.get().contains(revision)) {
-        return true;
-      }
-      AppRevisionDomain domain =
-          appRevisionMapper.checkExist(defaultCommonConfig.getClusterId(), revision);
-
-      if (domain != null) {
-        heartbeatSet.get().add(revision);
-        return true;
-      }
-      return false;
-    } catch (Throwable e) {
-      LOG.error("jdbc revision heartbeat failed, revision: %{}", revision, e);
-      return false;
-    }
-  }
-
-  /**
-   * Getter method for property <tt>heartbeatMap</tt>.
-   *
-   * @return property value of heartbeatMap
-   */
-  public AtomicReference<ConcurrentHashMap.KeySetView> getHeartbeatSet() {
-
-    return heartbeatSet;
-  }
-
-  public void invalidateHeartbeat(Collection<String> keys) {
-    if (LOG.isInfoEnabled()) {
-      LOG.info("Invalidating heartbeat cache keys: {}", keys);
-    }
-    heartbeatSet.get().removeAll(keys);
+    localRevisions.put(revision, true);
+    return informer.getContainer().containsRevisionId(revision);
   }
 
   @VisibleForTesting
   LoadingCache<String, AppRevision> getRevisions() {
     return registry;
+  }
+
+  @VisibleForTesting
+  void cleanCache() {
+    registry.invalidateAll();
+    cachedExecutor.clean();
+  }
+
+  protected void refreshEntryToStorage(AppRevisionDomain entry) {
+    try {
+      cachedExecutor.execute(
+          entry.getRevision(),
+          () -> {
+            if (appRevisionMapper.heartbeat(entry.getDataCenter(), entry.getRevision()) == 0) {
+              appRevisionMapper.replace(entry);
+            }
+            LOG.info("insert revision {}, succeed", entry.getRevision());
+            return true;
+          });
+    } catch (Exception e) {
+      LOG.error("refresh to db failed: ", e);
+      throw new RuntimeException(
+          StringFormatter.format("refresh to db failed: {}", e.getMessage()));
+    }
+  }
+
+  public Collection<String> availableRevisions() {
+    return localRevisions.asMap().keySet();
+  }
+
+  @Override
+  public void waitSynced() {
+    informer.waitSynced();
   }
 }

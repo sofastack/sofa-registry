@@ -16,11 +16,10 @@
  */
 package com.alipay.sofa.registry.server.session.cache;
 
+import com.alipay.sofa.registry.cache.CacheCleaner;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import com.alipay.sofa.registry.util.ConcurrentUtils;
-import com.alipay.sofa.registry.util.LoopRunnable;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.google.common.cache.*;
 import java.util.Map;
@@ -40,8 +39,6 @@ public class SessionCacheService implements CacheService {
   /** injectQ */
   private Map<String, CacheGenerator> cacheGenerators;
 
-  private final CacheDog cacheDog = new CacheDog();
-
   @PostConstruct
   public void init() {
     this.readWriteCacheMap =
@@ -57,7 +54,7 @@ public class SessionCacheService implements CacheService {
                     return generatePayload(key);
                   }
                 });
-    ConcurrentUtils.createDaemonThread("CacheDog", cacheDog).start();
+    CacheCleaner.autoClean(readWriteCacheMap, 30000);
   }
 
   static final class RemoveListener implements RemovalListener<Key, Value> {
@@ -106,18 +103,6 @@ public class SessionCacheService implements CacheService {
     readWriteCacheMap.invalidate(key);
   }
 
-  private final class CacheDog extends LoopRunnable {
-
-    @Override
-    public void runUnthrowable() {
-      readWriteCacheMap.cleanUp();
-    }
-
-    @Override
-    public void waitingUnthrowable() {
-      ConcurrentUtils.sleepUninterruptibly(30, TimeUnit.SECONDS);
-    }
-  }
   /**
    * Setter method for property <tt>cacheGenerators</tt>.
    *

@@ -15,36 +15,6 @@
         <result property="gmtModify" column="gmt_modified" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
     </resultMap>
 
-    <insert id="insert" parameterType="com.alipay.sofa.registry.jdbc.domain.AppRevisionDomain">
-        <![CDATA[
-
-               INSERT INTO app_revision
-               (
-                   data_center,
-                   revision,
-                   app_name,
-                   client_version,
-                   base_params,
-                   service_params,
-                   gmt_create,
-                   gmt_modified
-               )
-               VALUES
-               (
-                   #{dataCenter},
-                   #{revision},
-                   #{appName},
-                   #{clientVersion},
-                   #{baseParams},
-                   #{serviceParams},
-                   CURRENT_TIMESTAMP,
-                   CURRENT_TIMESTAMP
-               )
-               ON DUPLICATE KEY UPDATE gmt_modified = CURRENT_TIMESTAMP
-
-        ]]>
-    </insert>
-
     <select id="queryRevision" resultMap="appRevisionResultMap">
         <![CDATA[
          select * from app_revision
@@ -63,10 +33,6 @@
         </if>
     </select>
 
-    <select id="checkExist" parameterType="com.alipay.sofa.registry.jdbc.domain.AppRevisionDomain" resultMap="appRevisionResultMap">
-        select data_center, revision, gmt_modified from app_revision where data_center = #{dataCenter} and revision = #{revision}
-    </select>
-
 
     <update id="batchHeartbeat" parameterType="java.util.List">
         update app_revision set gmt_modified = CURRENT_TIMESTAMP
@@ -80,15 +46,7 @@
     </update>
 
 
-    <select id="queryGcRevision" resultType="java.lang.String">
-        <![CDATA[
-         select revision from app_revision
-                          where data_center = #{dataCenter} and gmt_modified < #{date} limit #{limitCount}
-
-        ]]>
-    </select>
-
-    <select id="batchCheck" parameterType="java.util.List" resultType="java.lang.String">
+   <select id="batchCheck" parameterType="java.util.List" resultType="java.lang.String">
         select revision from app_revision where data_center = #{dataCenter}
         <if test="revisions != null and revisions.size() > 0">
             and revision in
@@ -98,8 +56,51 @@
         </if>
     </select>
 
-    <delete id="deleteAppRevision">
-        delete from app_revision where data_center = #{dataCenter} and revision = #{revision}
-    </delete>
+    <select id="listRevisions" resultMap="appRevisionResultMap">
+        select * from app_revision where data_center = #{dataCenter} and id > #{afterId} order by id limit #{limit}
+    </select>
 
+    <update id="heartbeat">
+        update app_revision set gmt_modified=CURRENT_TIMESTAMP  where data_center = #{dataCenter}
+        and revision=#{revision}
+        and deleted = '0'
+    </update>
+
+    <insert id="replace" parameterType="com.alipay.sofa.registry.jdbc.domain.AppRevisionDomain">
+        delete from app_revision where data_center=#{dataCenter} and revision=#{revision};
+        insert into app_revision (
+               data_center,
+               revision,
+               app_name,
+               client_version,
+               base_params,
+               service_params,
+               deleted,
+               gmt_create,
+               gmt_modified
+        )
+        values (
+               #{dataCenter},
+               #{revision},
+               #{appName},
+               #{clientVersion},
+               #{baseParams},
+               #{serviceParams},
+               #{deleted},
+               CURRENT_TIMESTAMP,
+               CURRENT_TIMESTAMP
+        ) on duplicate key update deleted = #{deleted};
+    </insert>
+    <select id="getExpired" resultMap="appRevisionResultMap">
+<![CDATA[
+        select * from app_revision where data_center=#{dataCenter} and gmt_modified < #{beforeTime} and deleted='0'
+        limit #{limit}
+]]>
+    </select>
+    <delete id="cleanDeleted">
+        <![CDATA[
+        delete from app_revision where data_center=#{dataCenter} and gmt_modified < #{beforeTime} and deleted='1'
+        limit #{limit}
+        ]]>
+    </delete>
 </mapper>

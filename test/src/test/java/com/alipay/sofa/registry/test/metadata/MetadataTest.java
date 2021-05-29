@@ -168,6 +168,7 @@ public class MetadataTest extends BaseIntegrationTest {
       Assert.assertTrue(future.get().isSuccess());
     }
 
+    appRevisionCacheRegistry.waitSynced();
     // query app_revision
     List<Future<AppRevision>> appRevisions = new ArrayList<>();
     for (AppRevision appRevisionRegister : appRevisionList) {
@@ -182,6 +183,7 @@ public class MetadataTest extends BaseIntegrationTest {
                   });
       appRevisions.add(appRevision);
     }
+    appRevisionCacheRegistry.waitSynced();
 
     Map<String, AppRevision> revisionMap = new HashMap<>();
     for (Future<AppRevision> future : appRevisions) {
@@ -215,15 +217,12 @@ public class MetadataTest extends BaseIntegrationTest {
       future.get();
     }
 
-    // heartbeat
-    Thread.sleep(3000);
     for (AppRevision appRevisionRegister : appRevisionList) {
       fixedThreadPool.submit(
           () -> {
             appRevisionHeartbeatRegistry.heartbeat(appRevisionRegister.getRevision());
           });
     }
-    appRevisionHeartbeatRegistry.doRevisionHeartbeat();
   }
 
   @Test

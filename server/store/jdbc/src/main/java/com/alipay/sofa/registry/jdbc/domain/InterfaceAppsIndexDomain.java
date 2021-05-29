@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.jdbc.domain;
 
+import com.alipay.sofa.registry.jdbc.informer.DbEntry;
 import com.alipay.sofa.registry.util.MessageDigests;
 import java.sql.Timestamp;
 
@@ -23,7 +24,7 @@ import java.sql.Timestamp;
  * @author xiaojian.xj
  * @version $Id: InterfaceAppsIndexDomain.java, v 0.1 2021年01月24日 17:05 xiaojian.xj Exp $
  */
-public class InterfaceAppsIndexDomain {
+public class InterfaceAppsIndexDomain implements DbEntry {
 
   /** primary key */
   private long id;
@@ -55,6 +56,7 @@ public class InterfaceAppsIndexDomain {
     this.dataCenter = dataCenter;
     this.interfaceName = interfaceName;
     this.appName = appName;
+    this.reference = true;
     // uk: dataCenter + appName + 32char
     this.hashcode = MessageDigests.getMd5String(interfaceName);
   }

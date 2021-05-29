@@ -27,44 +27,23 @@ public class MetadataConfigBean implements MetadataConfig {
 
   public static final String PRE_FIX = "metadata.server";
 
-  private int interfaceAppsRefreshLimit = 1000;
+  private int revisionRenewIntervalMinutes = 60 * 3;
+  private int interfaceAppsIndexRenewIntervalMinutes = 60 * 3;
 
-  private int revisionGcLimit = 100;
-
-  /**
-   * Getter method for property <tt>interfaceAppsRefreshLimit</tt>.
-   *
-   * @return property value of interfaceAppsRefreshLimit
-   */
-  public int getInterfaceAppsRefreshLimit() {
-    return interfaceAppsRefreshLimit;
+  public int getRevisionRenewIntervalMinutes() {
+    return revisionRenewIntervalMinutes;
   }
 
-  /**
-   * Setter method for property <tt>interfaceAppsRefreshLimit</tt>.
-   *
-   * @param interfaceAppsRefreshLimit value to be assigned to property interfaceAppsRefreshLimit
-   */
-  public void setInterfaceAppsRefreshLimit(int interfaceAppsRefreshLimit) {
-    this.interfaceAppsRefreshLimit = interfaceAppsRefreshLimit;
+  public void setRevisionRenewIntervalMinutes(int revisionRenewIntervalMinutes) {
+    this.revisionRenewIntervalMinutes = revisionRenewIntervalMinutes;
   }
 
-  /**
-   * Getter method for property <tt>revisionGcLimit</tt>.
-   *
-   * @return property value of revisionGcLimit
-   */
-  @Override
-  public int getRevisionGcLimit() {
-    return revisionGcLimit;
+  public int getInterfaceAppsIndexRenewIntervalMinutes() {
+    return interfaceAppsIndexRenewIntervalMinutes;
   }
 
-  /**
-   * Setter method for property <tt>revisionGcLimit</tt>.
-   *
-   * @param revisionGcLimit value to be assigned to property revisionGcLimit
-   */
-  public void setRevisionGcLimit(int revisionGcLimit) {
-    this.revisionGcLimit = revisionGcLimit;
+  public void setInterfaceAppsIndexRenewIntervalMinutes(
+      int interfaceAppsIndexRenewIntervalMinutes) {
+    this.interfaceAppsIndexRenewIntervalMinutes = interfaceAppsIndexRenewIntervalMinutes;
   }
 }

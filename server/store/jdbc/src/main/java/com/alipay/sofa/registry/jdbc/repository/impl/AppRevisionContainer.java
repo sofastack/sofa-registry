@@ -14,17 +14,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.store.api.repository;
+package com.alipay.sofa.registry.jdbc.repository.impl;
 
-/**
- * @author xiaojian.xj
- * @version $Id: AppRevisionHeartbeatRepository.java, v 0.1 2021年02月09日 17:09 xiaojian.xj Exp $
- */
-public interface AppRevisionHeartbeatRepository {
+import com.alipay.sofa.registry.jdbc.domain.AppRevisionDomain;
+import com.alipay.sofa.registry.jdbc.informer.DbEntryContainer;
+import com.google.common.collect.Sets;
+import java.util.Set;
 
-  public void doAppRevisionHeartbeat();
+public class AppRevisionContainer implements DbEntryContainer<AppRevisionDomain> {
+  private final Set<String> data = Sets.newConcurrentHashSet();
 
-  public void doHeartbeatCacheChecker();
+  @Override
+  public synchronized void onEntry(AppRevisionDomain entry) {
+    if (entry.isDeleted()) {
+      data.remove(entry.getRevision());
+    } else {
+      data.add(entry.getRevision());
+    }
+  }
 
-  public void doAppRevisionGc(int silenceHour);
+  public boolean containsRevisionId(String revisionId) {
+    return data.contains(revisionId);
+  }
 }

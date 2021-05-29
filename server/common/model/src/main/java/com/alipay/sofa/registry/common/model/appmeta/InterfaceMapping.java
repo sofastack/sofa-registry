@@ -16,11 +16,16 @@
  */
 package com.alipay.sofa.registry.common.model.appmeta;
 
-import com.google.common.collect.Sets;
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 
 public final class InterfaceMapping {
+
+  private static final Logger LOG = LoggerFactory.getLogger("METADATA-EXCHANGE", "[InterfaceApps]");
+
   private final long nanosVersion;
   private final Set<String> apps;
 
@@ -29,28 +34,46 @@ public final class InterfaceMapping {
     this.apps = Collections.EMPTY_SET;
   }
 
-  public InterfaceMapping(long nanosVersion, String app) {
+  public InterfaceMapping(long nanosVersion, String appName) {
     this.nanosVersion = nanosVersion;
-    this.apps = Sets.newHashSet(app);
+    this.apps = Collections.unmodifiableSet(Collections.singleton(appName));
   }
 
-  public InterfaceMapping(long nanosVersion, Set<String> apps) {
+  public InterfaceMapping(long nanosVersion, Set<String> appNames) {
     this.nanosVersion = nanosVersion;
-    this.apps = Sets.newHashSet(apps);
-  }
-
-  public InterfaceMapping(long nanosVersion, Set<String> copyApp, String newApp) {
-    this.nanosVersion = nanosVersion;
-    this.apps = Sets.newHashSet(copyApp);
-    this.apps.add(newApp);
+    this.apps = Collections.unmodifiableSet(appNames);
   }
 
   public long getNanosVersion() {
     return nanosVersion;
   }
 
+  public InterfaceMapping addApp(long version, String app) {
+    if (this.apps.contains(app) && this.nanosVersion >= version) {
+      return this;
+    }
+    if (version <= nanosVersion) {
+      LOG.error("interface app mapping stale version: {}", version);
+    }
+    Set<String> apps = new HashSet<>(this.apps);
+    apps.add(app);
+    return new InterfaceMapping(Math.max(this.nanosVersion, version), apps);
+  }
+
+  public InterfaceMapping removeApp(long version, String app) {
+    if (!this.apps.contains(app) && this.nanosVersion >= version) {
+      return this;
+    }
+    if (version <= nanosVersion) {
+      LOG.error("interface app mapping stale version: {}", version);
+    }
+    Set<String> apps = new HashSet<>(this.apps);
+    apps.remove(app);
+    return new InterfaceMapping(Math.max(this.nanosVersion, version), apps);
+  }
+
   public Set<String> getApps() {
-    return Collections.unmodifiableSet(apps);
+    return apps;
   }
 
   @Override

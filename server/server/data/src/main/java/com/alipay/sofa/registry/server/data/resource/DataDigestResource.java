@@ -32,14 +32,13 @@ import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.MetaServerServiceImpl;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.google.common.collect.Lists;
+import java.util.*;
+import java.util.Map.Entry;
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
-
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
-import java.util.*;
-import java.util.Map.Entry;
 
 /**
  * @author shangyu.wh
