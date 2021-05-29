@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.server.meta.remoting.notifier;
 
 import com.alipay.sofa.registry.common.model.Node;
+import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideDataChangeEvent;
 import com.alipay.sofa.registry.common.model.metaserver.SlotTableChangeEvent;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
@@ -27,17 +28,21 @@ import com.alipay.sofa.registry.remoting.CallbackHandler;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
 import com.alipay.sofa.registry.remoting.exchange.message.Request;
+import com.alipay.sofa.registry.remoting.exchange.message.Response;
 import com.alipay.sofa.registry.server.meta.MetaLeaderService;
 import com.alipay.sofa.registry.server.meta.remoting.connection.NodeConnectManager;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.DefaultExecutorFactory;
 import com.alipay.sofa.registry.util.OsUtils;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -51,7 +56,7 @@ public abstract class AbstractNotifier<T extends Node> implements Notifier {
 
   protected final Logger logger = LoggerFactory.getLogger(getClass());
 
-  @Autowired private MetaLeaderService metaLeaderService;
+  @Autowired protected MetaLeaderService metaLeaderService;
 
   private Executor executors =
       DefaultExecutorFactory.createCachedThreadPoolFactory(
@@ -74,6 +79,10 @@ public abstract class AbstractNotifier<T extends Node> implements Notifier {
     new NotifyTemplate<ProvideDataChangeEvent>().broadcast(event);
   }
 
+  public Map<String, Object> broadcastInvoke(Object request, int timeout) throws Exception {
+    return new InvokeTemplate().broadcast(request, timeout);
+  }
+
   @VisibleForTesting
   public AbstractNotifier<T> setExecutors(Executor executors) {
     this.executors = executors;
@@ -86,51 +95,101 @@ public abstract class AbstractNotifier<T extends Node> implements Notifier {
 
   protected abstract NodeConnectManager getNodeConnectManager();
 
+  private Tuple<Set<String>, Collection<InetSocketAddress>> getNodeConnections() {
+    NodeConnectManager nodeConnectManager = getNodeConnectManager();
+    Collection<InetSocketAddress> connections = nodeConnectManager.getConnections(null);
+
+    if (connections == null || connections.isEmpty()) {
+      logger.error("Push Node list error! No node connected!");
+      return null;
+    }
+
+    List<T> nodes = getNodes();
+
+    if (nodes == null || nodes.isEmpty()) {
+      logger.error("Node list error! No node registered!");
+      return null;
+    }
+    Set<String> ipAddresses = Sets.newHashSet();
+    nodes.forEach(node -> ipAddresses.add(node.getNodeUrl().getIpAddress()));
+    return new Tuple<>(ipAddresses, connections);
+  }
+
+  public final class InvokeTemplate<R> {
+    public Map<String, Object> broadcast(R req, int timeout) throws Exception {
+      Tuple<Set<String>, Collection<InetSocketAddress>> nodeConnections = getNodeConnections();
+      if (nodeConnections == null) {
+        return Maps.newHashMap();
+      }
+      Set<String> ipAddresses = nodeConnections.getFirst();
+      Collection<InetSocketAddress> connections = nodeConnections.getSecond();
+
+      Map<String, Object> ret = Maps.newConcurrentMap();
+      final CountDownLatch latch = new CountDownLatch(connections.size());
+      new ConcurrentUtils.SafeParaLoop<InetSocketAddress>(executors, connections) {
+        @Override
+        protected void doRun0(InetSocketAddress connection) throws Exception {
+          try {
+            String address = connection.getAddress().getHostAddress();
+            if (!ipAddresses.contains(address)) {
+              return;
+            }
+            if (ret.containsKey(address)) {
+              return;
+            }
+            Response resp = getNodeExchanger().request(new SimpleRequest<>(req, connection));
+            if (resp != null) {
+              ret.put(address, resp.getResult());
+            } else {
+              logger.error(
+                  "broadcast request {} to {} failed: response null", req, connection.getAddress());
+            }
+          } catch (Throwable e) {
+            logger.error("broadcast request {} to {} failed:", req, connection.getAddress(), e);
+          } finally {
+            latch.countDown();
+          }
+        }
+      }.run();
+      latch.await(timeout, TimeUnit.MILLISECONDS);
+      return ret;
+    }
+  }
+
   public final class NotifyTemplate<E> {
 
     public void broadcast(E event) {
-      NodeConnectManager nodeConnectManager = getNodeConnectManager();
-      Collection<InetSocketAddress> connections = nodeConnectManager.getConnections(null);
-
-      if (connections == null || connections.isEmpty()) {
-        logger.error("Push Node list error! No node connected!");
+      Tuple<Set<String>, Collection<InetSocketAddress>> nodeConnections = getNodeConnections();
+      if (nodeConnections == null) {
         return;
       }
 
-      List<T> nodes = getNodes();
+      Set<String> ipAddresses = nodeConnections.getFirst();
+      Collection<InetSocketAddress> connections = nodeConnections.getSecond();
 
-      if (nodes == null || nodes.isEmpty()) {
-        logger.error("Node list error! No node registered!");
-        return;
-      }
-      Set<String> ipAddresses = Sets.newHashSet();
-      nodes.forEach(node -> ipAddresses.add(node.getNodeUrl().getIpAddress()));
       new ConcurrentUtils.SafeParaLoop<InetSocketAddress>(executors, connections) {
         @Override
         protected void doRun0(InetSocketAddress connection) throws Exception {
           if (!ipAddresses.contains(connection.getAddress().getHostAddress())) {
             return;
           }
-          getNodeExchanger().request(new SimpleRequest<E>(event, connection, executors));
+          getNodeExchanger().request(new NotifyRequest(event, connection, executors));
         }
       }.run();
     }
   }
 
-  private static final class SimpleRequest<E> implements Request<E> {
+  private static class SimpleRequest<E> implements Request<E> {
 
-    private static final Logger logger = LoggerFactory.getLogger(SimpleRequest.class);
+    protected static final Logger logger = LoggerFactory.getLogger(SimpleRequest.class);
 
     private final E event;
 
     private final InetSocketAddress connection;
 
-    private final Executor executors;
-
-    public SimpleRequest(E event, InetSocketAddress connection, Executor executors) {
+    public SimpleRequest(E event, InetSocketAddress connection) {
       this.event = event;
       this.connection = connection;
-      this.executors = executors;
     }
 
     @Override
@@ -141,6 +200,20 @@ public abstract class AbstractNotifier<T extends Node> implements Notifier {
     @Override
     public URL getRequestUrl() {
       return new URL(connection);
+    }
+
+    @Override
+    public AtomicInteger getRetryTimes() {
+      return new AtomicInteger(3);
+    }
+  }
+
+  private static final class NotifyRequest<E> extends SimpleRequest<E> {
+    private final Executor executors;
+
+    public NotifyRequest(E event, InetSocketAddress connection, Executor executors) {
+      super(event, connection);
+      this.executors = executors;
     }
 
     @Override
@@ -167,11 +240,6 @@ public abstract class AbstractNotifier<T extends Node> implements Notifier {
           return executors;
         }
       };
-    }
-
-    @Override
-    public AtomicInteger getRetryTimes() {
-      return new AtomicInteger(3);
     }
   }
 

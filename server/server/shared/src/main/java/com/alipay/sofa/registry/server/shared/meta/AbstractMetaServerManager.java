@@ -89,7 +89,6 @@ public abstract class AbstractMetaServerManager extends ClientSideExchanger
   public void init() {
     super.init();
     rsClient = JerseyClient.getInstance().getClient();
-    resetLeaderFromRestServer();
   }
 
   @Override

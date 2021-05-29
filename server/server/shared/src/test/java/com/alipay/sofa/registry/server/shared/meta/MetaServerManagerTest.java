@@ -110,7 +110,9 @@ public class MetaServerManagerTest {
         new LeaderInfo(leaderInfo.getEpoch() + 1, "leader2"), mockServerManager.metaLeaderInfo);
 
     // reset the rsclient
-    TestUtils.assertRunException(MetaLeaderQueryException.class, () -> mockServerManager.init());
+    mockServerManager.init();
+    TestUtils.assertRunException(
+        MetaLeaderQueryException.class, () -> mockServerManager.resetLeaderFromRestServer());
   }
 
   @Test

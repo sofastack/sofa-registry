@@ -139,4 +139,30 @@ public class DefaultSessionServerServiceTest extends AbstractMetaServerTestBase 
         new ProvideDataChangeEvent(ValueConstants.BLACK_LIST_DATA_ID, System.currentTimeMillis()));
     Thread.sleep(200);
   }
+
+  @Test
+  public void testBroadcastInvoke() throws Exception {
+    String ip1 = randomIp(), ip2 = randomIp();
+    when(sessionConnectionManager.getConnections(anyString()))
+        .thenReturn(
+            Lists.newArrayList(
+                new InetSocketAddress(ip1, Math.abs(random.nextInt(65535)) % 65535),
+                new InetSocketAddress(ip2, Math.abs(random.nextInt(65535)) % 65535),
+                new InetSocketAddress(randomIp(), 1024)));
+    when(sessionServerManager.getSessionServerMetaInfo())
+        .thenReturn(
+            new VersionedList<>(
+                DatumVersionUtil.nextId(),
+                Lists.newArrayList(
+                    new SessionNode(randomURL(ip1), getDc(), ServerEnv.PROCESS_ID),
+                    new SessionNode(randomURL(ip2), getDc(), ServerEnv.PROCESS_ID),
+                    new SessionNode(randomURL(randomIp()), getDc(), ServerEnv.PROCESS_ID))));
+
+    SessionNodeExchanger otherNodeExchanger = mock(SessionNodeExchanger.class);
+    when(otherNodeExchanger.request(any(Request.class))).thenReturn(Object::new);
+    notifier.setSessionNodeExchanger(otherNodeExchanger);
+    notifier.broadcastInvoke(
+        new ProvideDataChangeEvent(ValueConstants.BLACK_LIST_DATA_ID, System.currentTimeMillis()),
+        1000);
+  }
 }
