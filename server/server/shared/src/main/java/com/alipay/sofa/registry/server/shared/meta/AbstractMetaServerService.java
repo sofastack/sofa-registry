@@ -56,13 +56,16 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
   protected volatile State state = State.NULL;
 
   final Renewer renewer = new Renewer();
-
+  private Thread renewerThread;
   final AtomicInteger renewFailCounter = new AtomicInteger(0);
   static final int MAX_RENEW_FAIL_COUNT = 3;
 
   @Override
   public synchronized void startRenewer() {
-    ConcurrentUtils.createDaemonThread("meta-renewer", this.renewer).start();
+    if (renewerThread == null) {
+      renewerThread = ConcurrentUtils.createDaemonThread("meta-renewer", this.renewer);
+      renewerThread.start();
+    }
   }
 
   @Override

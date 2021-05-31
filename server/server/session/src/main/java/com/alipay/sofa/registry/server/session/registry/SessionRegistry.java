@@ -228,7 +228,8 @@ public class SessionRegistry implements Registry {
           if (isPushEmpty(sub)) {
             subEmptyCount++;
             firePushService.fireOnPushEmpty(sub, dataCenter);
-            Loggers.CLIENT_OFF_LOG.info("subEmpty,{},{},{}", sub.getDataInfoId(), dataCenter, connectId);
+            Loggers.CLIENT_OFF_LOG.info(
+                "subEmpty,{},{},{}", sub.getDataInfoId(), dataCenter, connectId);
           }
         }
       } finally {

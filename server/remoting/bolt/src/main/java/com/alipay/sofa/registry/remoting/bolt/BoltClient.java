@@ -25,12 +25,9 @@ import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.net.NetUtil;
-import com.alipay.sofa.registry.remoting.CallbackHandler;
-import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.remoting.ChannelHandler;
+import com.alipay.sofa.registry.remoting.*;
 import com.alipay.sofa.registry.remoting.ChannelHandler.HandlerType;
 import com.alipay.sofa.registry.remoting.ChannelHandler.InvokeType;
-import com.alipay.sofa.registry.remoting.Client;
 import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Map;
@@ -126,7 +123,7 @@ public class BoltClient implements Client {
     try {
       Connection connection = getBoltConnection(rpcClient, url);
       return new BoltChannel(connection);
-    } catch (Throwable e) {
+    } catch (RemotingException e) {
       throw BoltUtil.handleException("BoltClient", url, e, "connect");
     }
   }
@@ -139,7 +136,7 @@ public class BoltClient implements Client {
         if (connection != null) {
           connection.close();
         }
-        throw new RemotingException("Get bolt connection failed for boltUrl: " + boltUrl);
+        throw new ChannelConnectException("Get bolt connection failed for boltUrl: " + boltUrl);
       }
       return connection;
     } catch (InterruptedException e) {

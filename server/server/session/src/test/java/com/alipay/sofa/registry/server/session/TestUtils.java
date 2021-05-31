@@ -29,8 +29,10 @@ import com.alipay.sofa.registry.common.model.store.*;
 import com.alipay.sofa.registry.core.model.BaseRegister;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.remoting.bolt.BoltChannel;
+import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
 import com.alipay.sofa.registry.server.session.bootstrap.CommonConfig;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfigBean;
+import com.alipay.sofa.registry.server.session.remoting.console.SessionConsoleExchanger;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.google.common.collect.Lists;
@@ -308,5 +310,23 @@ public class TestUtils {
     Assert.assertEquals(left.getIp(), right.getSourceAddress().getIpAddress());
     Assert.assertEquals(left.getPort().intValue(), right.getSourceAddress().getPort());
     Assert.assertEquals(right.getClientVersion(), BaseInfo.ClientVersion.StoreData);
+  }
+
+  public static SessionConsoleExchanger newSessionConsoleExchanger(
+      SessionServerConfigBean configBean) {
+    SessionConsoleExchanger exchanger = new SessionConsoleExchanger();
+    exchanger.setSessionServerConfig(configBean);
+    BoltExchange boltExchange = new BoltExchange();
+    exchanger.setBoltExchange(boltExchange);
+
+    Assert.assertEquals(exchanger.getConnNum(), 2);
+    Assert.assertEquals(exchanger.getServerPort(), configBean.getConsolePort());
+    Assert.assertEquals(exchanger.getRpcTimeoutMillis(), 3000);
+    Assert.assertNull(exchanger.getClient());
+    Assert.assertNull(exchanger.connectServer());
+    Assert.assertEquals(exchanger.getServerIps().size(), 0);
+    Assert.assertEquals(exchanger.getConnections().size(), 0);
+
+    return exchanger;
   }
 }

@@ -22,7 +22,9 @@ import com.alipay.remoting.exception.RemotingException;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
+import com.alipay.sofa.registry.remoting.ChannelConnectException;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
+import com.alipay.sofa.registry.remoting.ChannelOverflowException;
 import com.alipay.sofa.registry.remoting.exchange.RequestChannelClosedException;
 import com.alipay.sofa.registry.remoting.exchange.RequestException;
 import com.alipay.sofa.registry.util.StringFormatter;
@@ -65,19 +67,27 @@ public final class BoltUtil {
   public static RuntimeException handleException(
       String role, Object target, Throwable e, String op) {
     if (e instanceof RemotingException) {
-      String msg =
+      final String format =
           StringFormatter.format("{} {} RemotingException! target url:{}", role, op, target);
-      LOGGER.error(msg, e);
-      return new RuntimeException(msg, e);
+      final String msg = e.getMessage();
+      // see RpcClientRemoting.connectionManager.check
+      if (msg != null) {
+        if (msg.contains("write overflow")) {
+          return new ChannelOverflowException(format, e);
+        }
+        if (msg.contains("Connection is null when do check")
+            || msg.contains("Check connection failed for address")) {
+          return new ChannelConnectException(format, e);
+        }
+      }
+      return new RuntimeException(format, e);
     }
     if (e instanceof InterruptedException) {
       String msg =
           StringFormatter.format("{} {} InterruptedException! target url:{}", role, op, target);
-      LOGGER.error(msg, e);
       return new RuntimeException(msg, e);
     }
     String msg = StringFormatter.format("{} {} Exception! target url:{}", role, op, target);
-    LOGGER.error(msg, e);
     return new RuntimeException(msg, e);
   }
 

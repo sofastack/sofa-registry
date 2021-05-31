@@ -264,7 +264,6 @@ public class BoltServer implements Server {
           newInvokeContext(message),
           new InvokeCallbackHandler(channel, callbackHandler),
           timeoutMillis);
-      return;
     } catch (Throwable e) {
       throw BoltUtil.handleException("BoltServer", channel, e, "invokeCallback");
     }

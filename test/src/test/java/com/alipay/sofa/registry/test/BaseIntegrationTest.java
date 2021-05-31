@@ -42,6 +42,9 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.jersey.JerseyClient;
+import com.alipay.sofa.registry.server.session.registry.SessionRegistry;
+import com.alipay.sofa.registry.server.session.store.DataStore;
+import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.test.TestRegistryMain;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.alipay.sofa.registry.util.StringFormatter;
@@ -87,6 +90,10 @@ public class BaseIntegrationTest extends AbstractTest {
   protected static volatile Channel dataChannel;
 
   protected static volatile Channel metaChannel;
+
+  protected static volatile SessionRegistry sessionRegistry;
+  protected static volatile Interests sessionInterests;
+  protected static volatile DataStore sessionDataStore;
 
   protected static int sessionPort = 9603;
   protected static int consolePort = 9604;
@@ -159,6 +166,9 @@ public class BaseIntegrationTest extends AbstractTest {
       sessionApplicationContext = testRegistryMain.getSessionApplicationContext();
       dataApplicationContext = testRegistryMain.getDataApplicationContext();
       initRegistryClientAndChannel();
+      sessionRegistry = sessionApplicationContext.getBean("sessionRegistry", SessionRegistry.class);
+      sessionInterests = sessionApplicationContext.getBean("sessionInterests", Interests.class);
+      sessionDataStore = sessionApplicationContext.getBean("sessionDataStore", DataStore.class);
       LOGGER.info(
           "startServerNecessary, {} loaded by {}",
           BaseIntegrationTest.class,

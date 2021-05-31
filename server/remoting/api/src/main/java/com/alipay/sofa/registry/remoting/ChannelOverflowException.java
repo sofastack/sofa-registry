@@ -16,18 +16,9 @@
  */
 package com.alipay.sofa.registry.remoting;
 
-/**
- * @author shangyu.wh
- * @version $Id: RemotingException.java, v 0.1 2017-11-20 20:43 shangyu.wh Exp $
- */
-public class RemotingException extends RuntimeException {
+public class ChannelOverflowException extends RuntimeException {
 
-  /**
-   * constructor
-   *
-   * @param s
-   */
-  public RemotingException(String s) {
-    super(s);
+  public ChannelOverflowException(String message, Throwable cause) {
+    super(message, cause);
   }
 }

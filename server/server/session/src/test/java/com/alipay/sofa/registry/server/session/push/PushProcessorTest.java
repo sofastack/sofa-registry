@@ -23,6 +23,7 @@ import com.alipay.sofa.registry.common.model.store.BaseInfo;
 import com.alipay.sofa.registry.common.model.store.SubDatum;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.net.NetUtil;
+import com.alipay.sofa.registry.remoting.ChannelOverflowException;
 import com.alipay.sofa.registry.remoting.exchange.RequestChannelClosedException;
 import com.alipay.sofa.registry.server.session.TestUtils;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfigBean;
@@ -238,6 +239,13 @@ public class PushProcessorTest {
     Assert.assertEquals(processor.pushingTasks.size(), 1);
     // task has clean
     processor.handleDoPushException(task, new Throwable("test"));
+    Assert.assertEquals(processor.pushingTasks.size(), 0);
+
+    Assert.assertTrue(processor.doPush(task));
+    Assert.assertEquals(processor.pushingTasks.size(), 1);
+    // task has clean
+    processor.handleDoPushException(
+        task, new ChannelOverflowException("test", new RuntimeException()));
     Assert.assertEquals(processor.pushingTasks.size(), 0);
   }
 

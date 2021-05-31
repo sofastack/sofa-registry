@@ -30,8 +30,10 @@ import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
 import com.alipay.sofa.registry.remoting.exchange.RequestException;
 import com.alipay.sofa.registry.remoting.exchange.message.Request;
 import com.alipay.sofa.registry.remoting.exchange.message.Response;
+import com.alipay.sofa.registry.remoting.exchange.message.SyncRequest;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import java.util.*;
 import javax.annotation.PostConstruct;
@@ -69,12 +71,12 @@ public abstract class ClientSideExchanger implements NodeExchanger {
       throw new RequestException("null url", request);
     }
     Client client = boltExchange.getClient(serverType);
-    if (client == null) {
-      connect(url);
-      client = boltExchange.getClient(serverType);
-    }
     final int timeout = request.getTimeout() != null ? request.getTimeout() : getRpcTimeoutMillis();
     try {
+      if (client == null) {
+        connect(url);
+        client = boltExchange.getClient(serverType);
+      }
       CallbackHandler callback = request.getCallBackHandler();
       if (callback == null) {
         final Object result = client.sendSync(url, request.getRequestBody(), timeout);
@@ -90,18 +92,7 @@ public abstract class ClientSideExchanger implements NodeExchanger {
   }
 
   public Response requestRaw(String ip, Object raw) throws RequestException {
-    Request req =
-        new Request() {
-          @Override
-          public Object getRequestBody() {
-            return raw;
-          }
-
-          @Override
-          public URL getRequestUrl() {
-            return new URL(ip, getServerPort());
-          }
-        };
+    Request req = new SyncRequest(raw, new URL(ip, getServerPort()));
     return request(req);
   }
 
@@ -208,5 +199,10 @@ public abstract class ClientSideExchanger implements NodeExchanger {
 
   public synchronized void setServerIps(Collection<String> serverIps) {
     this.serverIps = Collections.unmodifiableSet(Sets.newHashSet(serverIps));
+  }
+
+  @VisibleForTesting
+  public void setBoltExchange(Exchange boltExchange) {
+    this.boltExchange = boltExchange;
   }
 }
