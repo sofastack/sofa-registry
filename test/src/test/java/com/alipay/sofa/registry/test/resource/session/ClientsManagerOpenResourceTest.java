@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.registry.test.resource.session;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
@@ -27,6 +26,7 @@ import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.server.session.resource.ClientManagerResource;
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
 import java.util.Arrays;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -56,39 +56,23 @@ public class ClientsManagerOpenResourceTest extends BaseIntegrationTest {
     registryClient1.register(registration, value);
     Thread.sleep(3000L);
 
-    String countResult =
-        dataChannel
-            .getWebTarget()
-            .path("digest/datum/count")
-            .request(APPLICATION_JSON)
-            .get(String.class);
-    assertTrue(
-        countResult,
-        countResult.contains("[Publisher] size of publisher in DefaultDataCenter is 1"));
+    long count =
+        sessionDataStore.getDataList().stream().filter(p -> p.getDataId().equals(dataId)).count();
+    Assert.assertEquals(count, 1);
+
     response = mockedResource.clientOffInZone(sessionChannel.getLocalAddress().getHostString());
     assertTrue(response.isSuccess());
-    countResult =
-        dataChannel
-            .getWebTarget()
-            .path("digest/datum/count")
-            .request(APPLICATION_JSON)
-            .get(String.class);
-    assertTrue(
-        countResult,
-        countResult.contains("[Publisher] size of publisher in DefaultDataCenter is 0"));
+
+    count =
+        sessionDataStore.getDataList().stream().filter(p -> p.getDataId().equals(dataId)).count();
+    Assert.assertEquals(count, 0);
 
     // clientOn
     response = mockedResource.clientOn(sessionChannel.getLocalAddress().getHostString());
     assertTrue(response.getMessage(), response.isSuccess());
     Thread.sleep(3000L);
-    countResult =
-        dataChannel
-            .getWebTarget()
-            .path("digest/datum/count")
-            .request(APPLICATION_JSON)
-            .get(String.class);
-    assertTrue(
-        countResult,
-        countResult.contains("[Publisher] size of publisher in DefaultDataCenter is 1"));
+    count =
+        sessionDataStore.getDataList().stream().filter(p -> p.getDataId().equals(dataId)).count();
+    Assert.assertEquals(count, 1);
   }
 }

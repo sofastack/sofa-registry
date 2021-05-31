@@ -20,20 +20,18 @@ import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.remoting.exchange.RequestException;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.google.common.collect.Lists;
-import org.apache.commons.lang.StringUtils;
-
-import java.net.ConnectException;
-import java.net.SocketTimeoutException;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import org.apache.commons.lang.StringUtils;
 
 public final class Sdks {
   private static final Logger LOGGER = LoggerFactory.getLogger(Sdks.class);
@@ -58,8 +56,9 @@ public final class Sdks {
   }
 
   public static List<CommonResponse> concurrentSdkSend(
-      ThreadPoolExecutor pool, List<URL> servers, SdkExecutor executor, int timeoutMs) {
-    List<CommonResponse> responses = new ArrayList<>(servers.size());
+      ExecutorService pool, List<URL> servers, SdkExecutor executor, int timeoutMs) {
+    List<CommonResponse> responses =
+        Collections.synchronizedList(Lists.newArrayListWithCapacity(servers.size() + 1));
     final CountDownLatch latch = new CountDownLatch(servers.size());
     for (URL url : servers) {
       pool.submit(
@@ -90,13 +89,13 @@ public final class Sdks {
     try {
       return executor.execute(url);
     } catch (Throwable e) {
-      if (e.getCause() instanceof ConnectException) {
-        LOGGER.warn("connect {} refused", url, e);
-        return new CommonResponse(true, "ignored error: connection refused");
-      }
-      if (e.getCause() instanceof SocketTimeoutException) {
-        LOGGER.warn("connect {} timeout", url, e);
-        return new CommonResponse(true, "ignored error: connect timeout");
+      if (e instanceof RequestException) {
+        final Throwable cause = e.getCause();
+        // failed on connect
+        if (cause.getMessage().contains("connect RemotingException")) {
+          LOGGER.warn("connect failed {}", url, e);
+          return new CommonResponse(true, "ignored error: connection failed");
+        }
       }
       LOGGER.error("send request other session error!url={}", url, e);
       return new CommonResponse(false, e.getMessage());

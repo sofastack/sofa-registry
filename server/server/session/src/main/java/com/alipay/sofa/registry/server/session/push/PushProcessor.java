@@ -29,6 +29,7 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.CallbackHandler;
 import com.alipay.sofa.registry.remoting.Channel;
+import com.alipay.sofa.registry.remoting.ChannelOverflowException;
 import com.alipay.sofa.registry.remoting.exchange.RequestChannelClosedException;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.node.service.ClientNodeService;
@@ -380,16 +381,29 @@ public class PushProcessor {
   void handleDoPushException(PushTask task, Throwable e) {
     // try to delete self
     boolean cleaned = pushingTasks.remove(task.pushingTaskKey) != null;
-    task.trace.finishPush(PushTrace.PushStatus.Fail, task.taskID, task.getMaxPushedVersion());
     if (e instanceof RequestChannelClosedException) {
+      task.trace.finishPush(
+          PushTrace.PushStatus.ChanClosed, task.taskID, task.getMaxPushedVersion());
       LOGGER.error(
-          "{}, failed to pushing {}, cleaned={}, {}",
+          "{}, channel closed, {}, cleaned={}, {}",
           task.taskID,
           task.pushingTaskKey,
           cleaned,
           e.getMessage());
       return;
     }
+    if (e instanceof ChannelOverflowException) {
+      task.trace.finishPush(
+          PushTrace.PushStatus.ChanOverflow, task.taskID, task.getMaxPushedVersion());
+      LOGGER.error(
+          "{}, channel overflow, {}, cleaned={}, {}",
+          task.taskID,
+          task.pushingTaskKey,
+          cleaned,
+          e.getMessage());
+      return;
+    }
+    task.trace.finishPush(PushTrace.PushStatus.Fail, task.taskID, task.getMaxPushedVersion());
     LOGGER.error(
         "{}, failed to pushing {}, cleaned={}", task.taskID, task.pushingTaskKey, cleaned, e);
   }

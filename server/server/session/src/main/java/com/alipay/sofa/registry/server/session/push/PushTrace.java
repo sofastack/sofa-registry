@@ -181,6 +181,7 @@ public final class PushTrace {
     Timeout,
     Busy,
     ChanClosed,
+    ChanOverflow,
   }
 
   static List<SubPublisher> findNewPublishers(
