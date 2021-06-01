@@ -22,14 +22,12 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.shared.config.ServerShareConfig;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
+import com.alipay.sofa.registry.server.shared.providedata.AbstractFetchSystemPropertyService.SystemDataStorage;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
-import com.alipay.sofa.registry.util.LoopRunnable;
+import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.alipay.sofa.registry.util.StringFormatter;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
+import java.util.concurrent.atomic.AtomicReference;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.Assert;
@@ -38,24 +36,16 @@ import org.springframework.util.Assert;
  * @author xiaojian.xj
  * @version $Id: AbstractFetchSystemPropertyService.java, v 0.1 2021年05月16日 13:32 xiaojian.xj Exp $
  */
-public abstract class AbstractFetchSystemPropertyService
+public abstract class AbstractFetchSystemPropertyService<T extends SystemDataStorage>
     implements FetchSystemPropertyService, ProvideDataProcessor {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FetchSystemPropertyService.class);
 
-  private static final Long INIT_VERSION = -1L;
-
-  protected ReadWriteLock lock = new ReentrantReadWriteLock();
-
-  /** The Read lock. */
-  protected Lock readLock = lock.readLock();
-
-  /** The Write lock. */
-  protected Lock writeLock = lock.writeLock();
+  protected static final long INIT_VERSION = -1L;
 
   private final String dataInfoId;
 
-  protected AtomicLong version = new AtomicLong(INIT_VERSION);
+  protected final AtomicReference<T> storage = new AtomicReference<>();
 
   private final WatchDog watchDog = new WatchDog();
 
@@ -63,7 +53,7 @@ public abstract class AbstractFetchSystemPropertyService
 
   @Autowired protected MetaServerService metaNodeService;
 
-  private final class WatchDog extends LoopRunnable {
+  private final class WatchDog extends WakeUpLoopRunnable {
 
     @Override
     public void runUnthrowable() {
@@ -71,25 +61,22 @@ public abstract class AbstractFetchSystemPropertyService
     }
 
     @Override
-    public void waitingUnthrowable() {
-      ConcurrentUtils.sleepUninterruptibly(
-          serverShareConfig.getSystemPropertyIntervalMillis(), TimeUnit.MILLISECONDS);
+    public int getWaitingMillis() {
+      return serverShareConfig.getSystemPropertyIntervalMillis();
     }
   }
 
   private void doFetchData() {
+    T expect = storage.get();
     FetchSystemPropertyResult response =
-        metaNodeService.fetchSystemProperty(dataInfoId, version.get());
+        metaNodeService.fetchSystemProperty(dataInfoId, expect.version);
 
-    Assert.isTrue(
-        response != null,
-        StringFormatter.format("[FetchSystemProperty]dataInfoId:{} fetch data error.", dataInfoId));
-
+    ParaCheckUtil.checkNotNull(response, "fetchSystemPropertyResult");
     if (LOGGER.isInfoEnabled()) {
       LOGGER.info(
           "[FetchSystemProperty]dataInfoId:{}, version:{}, response:{}",
           dataInfoId,
-          version,
+          expect,
           response);
     }
     if (!response.isVersionUpgrade()) {
@@ -97,11 +84,17 @@ public abstract class AbstractFetchSystemPropertyService
     }
 
     // do process
-    processorData(response.getProvideData());
+    processorData(response.getProvideData(), expect);
   }
 
   public AbstractFetchSystemPropertyService(String dataInfoId) {
     this.dataInfoId = dataInfoId;
+  }
+
+  @Override
+  public boolean doFetch() {
+    watchDog.wakeup();
+    return true;
   }
 
   @Override
@@ -112,8 +105,7 @@ public abstract class AbstractFetchSystemPropertyService
         .start();
   }
 
-  @Override
-  public boolean processorData(ProvideData data) {
+  private boolean processorData(ProvideData data, T expect) {
     Assert.isTrue(
         data != null,
         StringFormatter.format(
@@ -121,31 +113,49 @@ public abstract class AbstractFetchSystemPropertyService
             dataInfoId,
             true));
 
-    readLock.lock();
     try {
-      if (data.getVersion() <= version.get()) {
+      if (data.getVersion() <= expect.version) {
         LOGGER.warn(
             "Fetch system data={}, currentVersion={}, updateVersion={}",
             dataInfoId,
-            version.get(),
+            expect,
             data.getVersion());
         return false;
       }
     } catch (Throwable e) {
       LOGGER.error("Fetch session stopPushSwitch error.", e);
       return false;
-    } finally {
-      readLock.unlock();
     }
 
     // do process
-    return doProcess(data);
+    return doProcess(expect, data);
   }
 
   @Override
-  public boolean support(ProvideData provideData) {
-    return StringUtils.equals(dataInfoId, provideData.getDataInfoId());
+  public boolean support(String dataInfoId) {
+    return StringUtils.equals(this.dataInfoId, dataInfoId);
   }
 
-  protected abstract boolean doProcess(ProvideData data);
+  protected boolean compareAndSet(T expect, T update) {
+    return storage.compareAndSet(expect, update);
+  }
+
+  protected abstract boolean doProcess(T expect, ProvideData data);
+
+  public abstract class SystemDataStorage {
+    final long version;
+
+    public SystemDataStorage(long version) {
+      this.version = version;
+    }
+
+    /**
+     * Getter method for property <tt>version</tt>.
+     *
+     * @return property value of version
+     */
+    public long getVersion() {
+      return version;
+    }
+  }
 }

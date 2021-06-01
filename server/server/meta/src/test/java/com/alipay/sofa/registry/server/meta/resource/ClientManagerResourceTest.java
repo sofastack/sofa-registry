@@ -18,14 +18,15 @@ package com.alipay.sofa.registry.server.meta.resource;
 
 import static org.mockito.Mockito.spy;
 
+import com.alipay.sofa.registry.common.model.CommonQueryResponse;
+import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.ServerDataBox;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
 import com.alipay.sofa.registry.server.meta.provide.data.ClientManagerService;
+import com.alipay.sofa.registry.server.meta.resource.model.ClientOffAddressModel;
 import com.alipay.sofa.registry.store.api.DBResponse;
-import com.alipay.sofa.registry.store.api.OperationStatus;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -78,7 +79,7 @@ public class ClientManagerResourceTest extends AbstractMetaServerTestBase {
       ProvideData provideData =
           new ProvideData(
               new ServerDataBox(cache.get()),
-              ValueConstants.CLIENT_OFF_PODS_DATA_ID,
+              ValueConstants.CLIENT_OFF_ADDRESS_DATA_ID,
               version.get());
       return DBResponse.ok(provideData).build();
     }
@@ -96,11 +97,10 @@ public class ClientManagerResourceTest extends AbstractMetaServerTestBase {
 
     clientManagerResource.clientOpen(CLIENT_OPEN_STR);
 
-    Map<String, Object> query = clientManagerResource.query();
-    Set<String> ips = (Set<String>) query.get("ips");
+    GenericResponse<ClientOffAddressModel> query = clientManagerResource.query();
 
-    Assert.assertEquals(query.get("status"), OperationStatus.SUCCESS);
-    Assert.assertEquals(query.get("version"), 2L);
-    Assert.assertEquals(ips.size(), 1);
+    Assert.assertTrue(query.isSuccess());
+    Assert.assertEquals(query.getData().getVersion(), 2L);
+    Assert.assertEquals(query.getData().getIps().size(), 1);
   }
 }

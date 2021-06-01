@@ -23,6 +23,7 @@ import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
+import com.alipay.sofa.registry.server.session.provideData.ProvideDataProcessorManager;
 import com.alipay.sofa.registry.server.session.store.Watchers;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractClientHandler;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
@@ -51,6 +52,8 @@ public class NotifyProvideDataChangeHandler extends AbstractClientHandler<Provid
 
   @Autowired ThreadPoolExecutor metaNodeExecutor;
 
+  @Autowired ProvideDataProcessorManager provideDataProcessorManager;
+
   @Override
   protected NodeType getConnectNodeType() {
     return NodeType.META;
@@ -59,17 +62,22 @@ public class NotifyProvideDataChangeHandler extends AbstractClientHandler<Provid
   @Override
   public Object doHandle(Channel channel, ProvideDataChangeEvent provideDataChangeEvent) {
     final String notifyDataInfoId = provideDataChangeEvent.getDataInfoId();
-    if (!matchSession(notifyDataInfoId)) {
-      boolean result =
-          sessionWatchers.checkWatcherVersions(
-              provideDataChangeEvent.getDataInfoId(), provideDataChangeEvent.getVersion());
-      if (!result) {
-        LOGGER.info(
-            "Request message dataInfo {}, version {} not be interested or lower than current version!",
-            provideDataChangeEvent.getDataInfoId(),
-            provideDataChangeEvent.getVersion());
-        return null;
-      }
+
+    // system data do fetch
+    if (provideDataProcessorManager.doFetch(notifyDataInfoId)) {
+      return null;
+    }
+
+    // watcher
+    boolean result =
+        sessionWatchers.checkWatcherVersions(
+            provideDataChangeEvent.getDataInfoId(), provideDataChangeEvent.getVersion());
+    if (!result) {
+      LOGGER.info(
+          "Request message dataInfo {}, version {} not be interested or lower than current version!",
+          provideDataChangeEvent.getDataInfoId(),
+          provideDataChangeEvent.getVersion());
+      return null;
     }
     fireDataChangeFetchTask(provideDataChangeEvent);
     return null;

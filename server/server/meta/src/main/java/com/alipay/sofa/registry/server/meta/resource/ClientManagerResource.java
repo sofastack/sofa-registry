@@ -16,18 +16,22 @@
  */
 package com.alipay.sofa.registry.server.meta.resource;
 
+import com.alipay.sofa.registry.common.model.CollectionSdks;
+import com.alipay.sofa.registry.common.model.CommonQueryResponse;
 import com.alipay.sofa.registry.common.model.CommonResponse;
+import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
+import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.BaseHeartBeatResponse;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.provide.data.ClientManagerService;
+import com.alipay.sofa.registry.server.meta.resource.model.ClientOffAddressModel;
 import com.alipay.sofa.registry.store.api.DBResponse;
 import com.alipay.sofa.registry.store.api.OperationStatus;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -56,11 +60,10 @@ public class ClientManagerResource {
   @POST
   @Path("/clientOff")
   public CommonResponse clientOff(@FormParam("ips") String ips) {
-    if (StringUtils.isEmpty(ips)) {
+    if (StringUtils.isBlank(ips)) {
       return CommonResponse.buildFailedResponse("ips is empty");
     }
-    String[] ipArray = StringUtils.split(ips.trim(), ';');
-    HashSet<String> ipSet = Sets.newHashSet(ipArray);
+    Set<String> ipSet = CollectionSdks.toIpSet(ips);
 
     boolean ret = clientManagerService.clientOff(ipSet);
 
@@ -75,11 +78,10 @@ public class ClientManagerResource {
   @POST
   @Path("/clientOpen")
   public CommonResponse clientOpen(@FormParam("ips") String ips) {
-    if (StringUtils.isEmpty(ips)) {
+    if (StringUtils.isBlank(ips)) {
       return CommonResponse.buildFailedResponse("ips is empty");
     }
-    String[] ipArray = StringUtils.split(ips.trim(), ';');
-    HashSet<String> ipSet = Sets.newHashSet(ipArray);
+    Set<String> ipSet = CollectionSdks.toIpSet(ips);
 
     boolean ret = clientManagerService.clientOpen(ipSet);
 
@@ -93,20 +95,21 @@ public class ClientManagerResource {
   /** Client Open */
   @GET
   @Path("/query")
-  public Map<String, Object> query() {
+  public GenericResponse<ClientOffAddressModel> query() {
     DBResponse<ProvideData> ret = clientManagerService.queryClientOffSet();
     DB_LOGGER.info("client open result:{}", ret);
 
     Map<String, Object> response = Maps.newHashMap();
     response.put("status", ret.getOperationStatus());
     if (ret.getOperationStatus() != OperationStatus.SUCCESS) {
-      return response;
+      return new GenericResponse<ClientOffAddressModel>().fillFailed("data not found");
     }
     ProvideData entity = ret.getEntity();
-    response.put("version", entity.getVersion());
-    response.put("ips", entity.getProvideData().getObject());
+    ClientOffAddressModel data =
+        new ClientOffAddressModel(
+            entity.getVersion(), (Set<String>) entity.getProvideData().getObject());
 
-    return response;
+    return new GenericResponse<ClientOffAddressModel>().fillSucceed(data);
   }
 
   /**

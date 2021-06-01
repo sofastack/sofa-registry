@@ -16,7 +16,7 @@
  */
 package com.alipay.sofa.registry.server.meta.remoting.handler;
 
-import static com.alipay.sofa.registry.common.model.constants.ValueConstants.CLIENT_OFF_PODS_DATA_ID;
+import static com.alipay.sofa.registry.common.model.constants.ValueConstants.CLIENT_OFF_ADDRESS_DATA_ID;
 
 import com.alipay.sofa.registry.common.model.ServerDataBox;
 import com.alipay.sofa.registry.common.model.console.PersistenceData;
@@ -30,9 +30,8 @@ import com.alipay.sofa.registry.server.meta.provide.data.ClientManagerService;
 import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataService;
 import com.alipay.sofa.registry.store.api.DBResponse;
 import com.alipay.sofa.registry.store.api.OperationStatus;
-import org.apache.commons.lang.StringUtils;
+import com.alipay.sofa.registry.util.ParaCheckUtil;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.util.Assert;
 
 /**
  * Handle session node's query request
@@ -52,10 +51,8 @@ public class FetchSystemPropertyRequestHandler
 
   @Override
   public void checkParam(FetchSystemPropertyRequest request) {
-    Assert.isTrue(request != null, "get system data request is null.");
-    Assert.isTrue(
-        StringUtils.isNotEmpty(request.getDataInfoId()),
-        "get system data request dataInfoId is empty.");
+    ParaCheckUtil.checkNotNull(request, "fetchSystemPropertyRequest");
+    ParaCheckUtil.checkNotBlank(request.getDataInfoId(), "dataInfoId");
   }
 
   @Override
@@ -63,7 +60,7 @@ public class FetchSystemPropertyRequestHandler
     try {
       DB_LOGGER.info("get system data {}", request);
 
-      if (CLIENT_OFF_PODS_DATA_ID.equals(request.getDataInfoId())) {
+      if (CLIENT_OFF_ADDRESS_DATA_ID.equals(request.getDataInfoId())) {
         return fetchClientOffSet(request);
       } else {
         return fetchSystemData(request);
@@ -79,38 +76,36 @@ public class FetchSystemPropertyRequestHandler
     OperationStatus status = ret.getOperationStatus();
     PersistenceData persistenceData = ret.getEntity();
 
-    if (status == OperationStatus.SUCCESS) {
-      ProvideData data =
-          new ProvideData(
-              new ServerDataBox(persistenceData.getData()),
-              request.getDataInfoId(),
-              persistenceData.getVersion());
-
-      FetchSystemPropertyResult result;
-      if (data.getVersion() > request.getVersion()) {
-        result = new FetchSystemPropertyResult(true, data);
-      } else {
-        result = new FetchSystemPropertyResult(false);
-      }
-      if (DB_LOGGER.isInfoEnabled()) {
-        DB_LOGGER.info("get SystemProperty {} from DB success!", result);
-      }
-      return result;
-    } else if (status == OperationStatus.NOTFOUND) {
+    if (status == OperationStatus.NOTFOUND) {
       FetchSystemPropertyResult result = new FetchSystemPropertyResult(false);
       DB_LOGGER.warn("has not found system data from DB dataInfoId:{}", request.getDataInfoId());
       return result;
-    } else {
-      DB_LOGGER.error("get Data DB status error!");
-      throw new RuntimeException("Get Data DB status error!");
     }
+    ProvideData data =
+        new ProvideData(
+            new ServerDataBox(persistenceData.getData()),
+            request.getDataInfoId(),
+            persistenceData.getVersion());
+
+    return processResult(request, status, data);
   }
 
   private Object fetchClientOffSet(FetchSystemPropertyRequest request) {
     DBResponse<ProvideData> ret = clientManagerService.queryClientOffSet();
     OperationStatus status = ret.getOperationStatus();
+
+    if (status == OperationStatus.NOTFOUND) {
+      FetchSystemPropertyResult result = new FetchSystemPropertyResult(false);
+      DB_LOGGER.warn("has not found system data from DB dataInfoId:{}", request.getDataInfoId());
+      return result;
+    }
     ProvideData data = ret.getEntity();
 
+    return processResult(request, status, data);
+  }
+
+  private Object processResult(
+      FetchSystemPropertyRequest request, OperationStatus status, ProvideData data) {
     if (status == OperationStatus.SUCCESS) {
       FetchSystemPropertyResult result;
       if (data.getVersion() > request.getVersion()) {
@@ -121,10 +116,6 @@ public class FetchSystemPropertyRequestHandler
       if (DB_LOGGER.isInfoEnabled()) {
         DB_LOGGER.info("get SystemProperty {} from DB success!", result);
       }
-      return result;
-    } else if (status == OperationStatus.NOTFOUND) {
-      FetchSystemPropertyResult result = new FetchSystemPropertyResult(false);
-      DB_LOGGER.warn("has not found system data from DB dataInfoId:{}", request.getDataInfoId());
       return result;
     } else {
       DB_LOGGER.error("get Data DB status error!");

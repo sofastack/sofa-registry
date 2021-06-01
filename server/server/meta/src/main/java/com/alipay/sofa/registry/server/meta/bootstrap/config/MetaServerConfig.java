@@ -61,7 +61,7 @@ public interface MetaServerConfig {
 
   int getDataNodeProtectionNum();
 
-  int getClientManagerRefreshSecs();
+  int getClientManagerRefreshMillis();
 
   int getClientManagerWatchMillis();
 

@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.registry.server.session.provideData;
 
-import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.server.shared.providedata.ProvideDataProcessor;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -25,7 +24,7 @@ import java.util.Collection;
  * @author shangyu.wh
  * @version 1.0: ProvideDataProcessorManager.java, v 0.1 2019-10-09 17:39 shangyu.wh Exp $
  */
-public class ProvideDataProcessorManager implements ProvideDataProcessor {
+public class ProvideDataProcessorManager {
 
   private Collection<ProvideDataProcessor> provideDataProcessors = new ArrayList<>();
 
@@ -33,18 +32,12 @@ public class ProvideDataProcessorManager implements ProvideDataProcessor {
     provideDataProcessors.add(provideDataProcessor);
   }
 
-  @Override
-  public boolean processorData(ProvideData provideData) {
+  public boolean doFetch(String dataInfoId) {
     for (ProvideDataProcessor provideDataProcessor : provideDataProcessors) {
-      if (provideDataProcessor.support(provideData)) {
-        provideDataProcessor.processorData(provideData);
+      if (provideDataProcessor.support(dataInfoId)) {
+        return provideDataProcessor.doFetch();
       }
     }
-    return true;
-  }
-
-  @Override
-  public boolean support(ProvideData provideData) {
     return false;
   }
 }

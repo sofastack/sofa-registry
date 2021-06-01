@@ -16,42 +16,32 @@
  */
 package com.alipay.sofa.registry.server.session.push;
 
+import com.alipay.sofa.registry.server.session.provideData.FetchGrayPushSwitchService;
 import com.alipay.sofa.registry.server.session.provideData.FetchStopPushService;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Sets;
-import java.util.Collection;
-import java.util.HashSet;
 import javax.annotation.Resource;
+import org.apache.commons.collections.CollectionUtils;
 
 public class PushSwitchService {
 
   @Resource FetchStopPushService fetchStopPushService;
 
-  private volatile Collection<String> openIps = Sets.newHashSet();
+  @Resource FetchGrayPushSwitchService fetchGrayPushSwitchService;
 
   public PushSwitchService() {}
-
-  public void setOpenIPs(Collection<String> ips) {
-    if (ips == null) {
-      ips = Sets.newHashSet();
-    }
-    openIps = new HashSet<>(ips);
-  }
-
-  public Collection<String> getOpenIps() {
-    return openIps;
-  }
 
   public boolean isGlobalPushSwitchStopped() {
     return fetchStopPushService.isStopPushSwitch();
   }
 
   public boolean canPush() {
-    return !fetchStopPushService.isStopPushSwitch() || openIps.size() > 0;
+    return !fetchStopPushService.isStopPushSwitch()
+        || CollectionUtils.isNotEmpty(fetchGrayPushSwitchService.getOpenIps());
   }
 
   public boolean canIpPush(String ip) {
-    return !fetchStopPushService.isStopPushSwitch() || openIps.contains(ip);
+    return !fetchStopPushService.isStopPushSwitch()
+        || fetchGrayPushSwitchService.getOpenIps().contains(ip);
   }
 
   /**
@@ -65,6 +55,16 @@ public class PushSwitchService {
   }
 
   /**
+   * Setter method for property <tt>fetchGrayPushSwitchService</tt>.
+   *
+   * @param fetchGrayPushSwitchService value to be assigned to property fetchGrayPushSwitchService
+   */
+  @VisibleForTesting
+  public void setFetchGrayPushSwitchService(FetchGrayPushSwitchService fetchGrayPushSwitchService) {
+    this.fetchGrayPushSwitchService = fetchGrayPushSwitchService;
+  }
+
+  /**
    * Getter method for property <tt>fetchStopPushService</tt>.
    *
    * @return property value of fetchStopPushService
@@ -72,5 +72,15 @@ public class PushSwitchService {
   @VisibleForTesting
   public FetchStopPushService getFetchStopPushService() {
     return fetchStopPushService;
+  }
+
+  /**
+   * Getter method for property <tt>fetchGrayPushSwitchService</tt>.
+   *
+   * @return property value of fetchGrayPushSwitchService
+   */
+  @VisibleForTesting
+  public FetchGrayPushSwitchService getFetchGrayPushSwitchService() {
+    return fetchGrayPushSwitchService;
   }
 }

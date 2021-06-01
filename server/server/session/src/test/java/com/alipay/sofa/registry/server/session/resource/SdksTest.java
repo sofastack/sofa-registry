@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.resource;
 
+import com.alipay.sofa.registry.common.model.CollectionSdks;
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.sessionserver.ClientOffRequest;
 import com.alipay.sofa.registry.common.model.store.URL;
@@ -36,7 +37,7 @@ import org.mockito.Mockito;
 public class SdksTest {
   @Test
   public void toIpListTest() {
-    List<String> list = Sdks.toIpList("111 ; 222,dd ");
+    List<String> list = CollectionSdks.toIpList("111 ; 222,dd ");
     Assert.assertEquals(2, list.size());
     Assert.assertEquals(list.get(0), "111");
     Assert.assertEquals(list.get(1), "222,dd");
@@ -44,10 +45,10 @@ public class SdksTest {
 
   @Test
   public void toIpSetTest() {
-    Set<String> set = Sdks.toIpSet("111 ; 222,dd ");
+    Set<String> set = CollectionSdks.toIpSet("111 ; 222,dd ");
     Assert.assertEquals(2, set.size());
-    Assert.assertTrue(set.contains( "111"));
-    Assert.assertTrue(set.contains( "222,dd"));
+    Assert.assertTrue(set.contains("111"));
+    Assert.assertTrue(set.contains("222,dd"));
   }
 
   @Test

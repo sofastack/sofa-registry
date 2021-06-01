@@ -77,21 +77,14 @@ public abstract class AbstractDataManager<T extends BaseInfo>
 
   @Override
   public Map<String, T> deleteByConnectId(ConnectId connectId) {
-    Map<String, T> ret = Maps.newHashMap();
 
-    for (Map<String, T> map : stores.values()) {
-      // copy a map for iterate
-      for (Map.Entry<String, T> e : Maps.newHashMap(map).entrySet()) {
-        final T data = e.getValue();
-        if (connectId.equals(data.connectId())) {
-          // may be the value has removed by anther thread
-          if (map.remove(e.getKey(), data)) {
-            ret.put(e.getKey(), data);
-          }
-        }
-      }
+    Map<ConnectId, Map<String, T>> ret = deleteByConnectIds(Lists.newArrayList(connectId));
+    Map<String, T> data = ret.get(connectId);
+    if (CollectionUtils.isEmpty(data)) {
+      return Maps.newHashMap();
     }
-    return ret;
+
+    return data;
   }
 
   @Override
@@ -100,7 +93,7 @@ public abstract class AbstractDataManager<T extends BaseInfo>
 
     for (Map<String, T> map : stores.values()) {
       // copy a map for iterate
-      for (Map.Entry<String, T> e : Maps.newHashMap(map).entrySet()) {
+      for (Map.Entry<String, T> e : map.entrySet()) {
         final T data = e.getValue();
         if (!connectIds.contains(data.connectId())) {
           continue;

@@ -77,19 +77,19 @@ public class ConnectionsService {
   /**
    * get connectIds by ip set
    *
-   * @param _ipSet ip set
+   * @param ipSet ip set
    * @return
    */
-  public List<ConnectId> getIpConnects(Set<String> _ipSet) {
+  public List<ConnectId> getIpConnects(Set<String> ipSet) {
     Server sessionServer = boltExchange.getServer(sessionServerConfig.getServerPort());
-    if (sessionServer == null || CollectionUtils.isEmpty(_ipSet)) {
+    if (sessionServer == null || CollectionUtils.isEmpty(ipSet)) {
       return Collections.emptyList();
     }
     List<ConnectId> connections = Lists.newArrayList();
     Collection<Channel> channels = sessionServer.getChannels();
     for (Channel channel : channels) {
       String ip = channel.getRemoteAddress().getAddress().getHostAddress();
-      if (_ipSet.contains(ip)) {
+      if (ipSet.contains(ip)) {
         connections.add(ConnectId.of(channel.getRemoteAddress(), channel.getLocalAddress()));
       }
     }
@@ -100,17 +100,17 @@ public class ConnectionsService {
   /**
    * close ip connects
    *
-   * @param _ipList ip list
+   * @param ipList ip list
    * @return
    */
-  public List<String> closeIpConnects(List<String> _ipList) {
+  public List<String> closeIpConnects(List<String> ipList) {
     Server sessionServer = boltExchange.getServer(sessionServerConfig.getServerPort());
-    if (sessionServer == null || CollectionUtils.isEmpty(_ipList)) {
+    if (sessionServer == null || CollectionUtils.isEmpty(ipList)) {
       return Collections.emptyList();
     }
     List<String> connections = new ArrayList<>();
     Collection<Channel> channels = sessionServer.getChannels();
-    Set<String> ipSet = Sets.newHashSet(_ipList);
+    Set<String> ipSet = Sets.newHashSet(ipList);
     for (Channel channel : channels) {
       String key = NetUtil.toAddressString(channel.getRemoteAddress());
       String ip = getIpFromConnectId(key);

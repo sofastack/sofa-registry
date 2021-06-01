@@ -65,21 +65,17 @@ public class ProvideDataChangeFetchTask extends AbstractSessionTask {
 
   private ProvideDataChangeEvent provideDataChangeEvent;
 
-  private ProvideDataProcessor provideDataProcessorManager;
-
   public ProvideDataChangeFetchTask(
       SessionServerConfig sessionServerConfig,
       TaskListenerManager taskListenerManager,
       MetaServerService metaServerService,
       Watchers sessionWatchers,
-      Exchange boltExchange,
-      ProvideDataProcessor provideDataProcessorManager) {
+      Exchange boltExchange) {
     this.sessionServerConfig = sessionServerConfig;
     this.taskListenerManager = taskListenerManager;
     this.metaServerService = metaServerService;
     this.sessionWatchers = sessionWatchers;
     this.boltExchange = boltExchange;
-    this.provideDataProcessorManager = provideDataProcessorManager;
   }
 
   @Override
@@ -110,7 +106,6 @@ public class ProvideDataChangeFetchTask extends AbstractSessionTask {
           "Notify provider data Change request {} fetch no provider data!", provideDataChangeEvent);
       return;
     }
-    provideDataProcessorManager.processorData(provideData);
 
     DataInfo dataInfo = DataInfo.valueOf(dataInfoId);
 

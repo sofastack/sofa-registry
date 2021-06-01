@@ -20,19 +20,20 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.junit.Assert.assertTrue;
 
 import com.alipay.sofa.registry.client.api.registration.PublisherRegistration;
+import com.alipay.sofa.registry.common.model.CommonQueryResponse;
 import com.alipay.sofa.registry.common.model.CommonResponse;
+import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.server.meta.resource.ClientManagerResource;
-import com.alipay.sofa.registry.server.session.provideData.FetchClientOffPodsService;
+import com.alipay.sofa.registry.server.meta.resource.model.ClientOffAddressModel;
+import com.alipay.sofa.registry.server.session.provideData.FetchClientOffAddressService;
 import com.alipay.sofa.registry.server.session.store.DataStore;
-import com.alipay.sofa.registry.store.api.OperationStatus;
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 import java.util.Collection;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
 import org.apache.commons.lang.StringUtils;
@@ -50,7 +51,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 public class ClientManagerTest extends BaseIntegrationTest {
 
   private ClientManagerResource clientManagerResource;
-  private FetchClientOffPodsService fetchClientOffPodsService;
+  private FetchClientOffAddressService fetchClientOffAddressService;
   private DataStore sessionDataStore;
 
   private String localAddress = sessionChannel.getLocalAddress().getHostString();
@@ -65,9 +66,9 @@ public class ClientManagerTest extends BaseIntegrationTest {
     clientManagerResource =
         metaApplicationContext.getBean("clientManagerResource", ClientManagerResource.class);
     sessionDataStore = sessionApplicationContext.getBean("sessionDataStore", DataStore.class);
-    fetchClientOffPodsService =
+    fetchClientOffAddressService =
         sessionApplicationContext.getBean(
-            "fetchClientOffPodsService", FetchClientOffPodsService.class);
+            "fetchClientOffAddressService", FetchClientOffAddressService.class);
   }
 
   @Test
@@ -107,7 +108,7 @@ public class ClientManagerTest extends BaseIntegrationTest {
 
     // check session client off list
     waitConditionUntilTimeOut(
-        () -> fetchClientOffPodsService.getClientOffPods().equals(CLIENT_OFF_SET), 5000);
+        () -> fetchClientOffAddressService.getClientOffAddress().equals(CLIENT_OFF_SET), 5000);
 
     register.republish(value);
     Thread.sleep(2000L);
@@ -137,11 +138,12 @@ public class ClientManagerTest extends BaseIntegrationTest {
 
     SetView<String> difference = Sets.difference(CLIENT_OFF_SET, CLIENT_OPEN_SET);
     waitConditionUntilTimeOut(
-        () -> fetchClientOffPodsService.getClientOffPods().equals(difference), 5000);
+        () -> fetchClientOffAddressService.getClientOffAddress().equals(difference), 5000);
 
-    Map<String, Object> query = clientManagerResource.query();
-    Assert.assertEquals(query.get("status"), OperationStatus.SUCCESS);
-    Assert.assertEquals(query.get("ips"), fetchClientOffPodsService.getClientOffPods());
+    GenericResponse<ClientOffAddressModel> query = clientManagerResource.query();
+    Assert.assertTrue(query.isSuccess());
+    Assert.assertEquals(
+        query.getData().getIps(), fetchClientOffAddressService.getClientOffAddress());
 
     Thread.sleep(3000);
 

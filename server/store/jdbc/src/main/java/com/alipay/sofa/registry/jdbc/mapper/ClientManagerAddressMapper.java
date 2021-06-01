@@ -16,15 +16,15 @@
  */
 package com.alipay.sofa.registry.jdbc.mapper;
 
-import com.alipay.sofa.registry.common.model.metaserver.ClientManagerPods;
+import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress;
 import java.util.List;
 import org.apache.ibatis.annotations.Param;
 
 /**
  * @author xiaojian.xj
- * @version $Id: ClientManagerPodsMapper.java, v 0.1 2021年05月12日 19:38 xiaojian.xj Exp $
+ * @version $Id: ClientManagerAddressMapper.java, v 0.1 2021年05月12日 19:38 xiaojian.xj Exp $
  */
-public interface ClientManagerPodsMapper {
+public interface ClientManagerAddressMapper {
 
   int queryTotalCount(@Param("dataCenter") String dataCenter);
 
@@ -35,25 +35,25 @@ public interface ClientManagerPodsMapper {
    * @param limit
    * @return
    */
-  List<ClientManagerPods> queryAfterThanByLimit(
+  List<ClientManagerAddress> queryAfterThanByLimit(
       @Param("dataCenter") String dataCenter,
       @Param("maxId") long maxId,
       @Param("limit") long limit);
 
-  List<ClientManagerPods> queryAfterThan(
+  List<ClientManagerAddress> queryAfterThan(
       @Param("dataCenter") String dataCenter, @Param("maxId") long maxId);
 
   /**
-   * @param clientManagerPods
+   * @param clientManagerAddress
    * @return effect rows
    */
-  int update(ClientManagerPods clientManagerPods);
+  int update(ClientManagerAddress clientManagerAddress);
 
   /**
    * insert on replace
    *
-   * @param clientManagerPods
+   * @param clientManagerAddress
    * @return
    */
-  int insertOnReplace(ClientManagerPods clientManagerPods);
+  int insertOnReplace(ClientManagerAddress clientManagerAddress);
 }

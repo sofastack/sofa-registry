@@ -41,7 +41,7 @@ import org.mockito.Mockito;
 public class PushProcessorTest {
   private String zone = "testZone";
   private String dataId = "testDataId";
-
+  private long version = -1L;
   @Test
   public void testFire() throws Exception {
     PushProcessor processor = new PushProcessor();
@@ -105,10 +105,10 @@ public class PushProcessorTest {
     Assert.assertTrue(replaceTask.toString(), replaceTask.toString().contains(dataId));
 
     // now there is one pending task with delay
-    processor.pushSwitchService.fetchStopPushService.setStopPushSwitch(true);
+    processor.pushSwitchService.fetchStopPushService.setStopPushSwitch(version,true);
     Assert.assertEquals(processor.watchCommit().size(), 0);
 
-    processor.pushSwitchService.fetchStopPushService.setStopPushSwitch(false);
+    processor.pushSwitchService.fetchStopPushService.setStopPushSwitch(version,false);
     // task has clean
     Assert.assertEquals(processor.watchCommit().size(), 0);
     // first suspend, avoid run watchdog
@@ -173,10 +173,10 @@ public class PushProcessorTest {
     PushProcessor.PushTask task = processor.pendingTasks.values().iterator().next();
     processor.pendingTasks.clear();
 
-    processor.pushSwitchService.fetchStopPushService.setStopPushSwitch(true);
+    processor.pushSwitchService.fetchStopPushService.setStopPushSwitch(version, true);
     Assert.assertFalse(processor.doPush(task));
 
-    processor.pushSwitchService.fetchStopPushService.setStopPushSwitch(false);
+    processor.pushSwitchService.fetchStopPushService.setStopPushSwitch(version, false);
     // clientNodeService is null
     Assert.assertFalse(processor.doPush(task));
     Assert.assertEquals(processor.pushingTasks.size(), 0);

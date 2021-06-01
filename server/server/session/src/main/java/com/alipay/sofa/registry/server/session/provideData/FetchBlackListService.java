@@ -25,25 +25,28 @@ import com.alipay.sofa.registry.server.session.connections.ConnectionsService;
 import com.alipay.sofa.registry.server.session.filter.blacklist.BlacklistConfig;
 import com.alipay.sofa.registry.server.session.filter.blacklist.BlacklistConstants;
 import com.alipay.sofa.registry.server.session.filter.blacklist.MatchType;
+import com.alipay.sofa.registry.server.session.provideData.FetchBlackListService.BlacklistStorage;
 import com.alipay.sofa.registry.server.session.registry.Registry;
 import com.alipay.sofa.registry.server.shared.providedata.AbstractFetchSystemPropertyService;
 import com.alipay.sofa.registry.util.JsonUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author xiaojian.xj
  * @version $Id: FetchBlackListService.java, v 0.1 2021年05月16日 17:59 xiaojian.xj Exp $
  */
-public class FetchBlackListService extends AbstractFetchSystemPropertyService {
+public class FetchBlackListService extends AbstractFetchSystemPropertyService<BlacklistStorage> {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FetchBlackListService.class);
 
@@ -55,37 +58,7 @@ public class FetchBlackListService extends AbstractFetchSystemPropertyService {
 
   public FetchBlackListService() {
     super(ValueConstants.BLACK_LIST_DATA_ID);
-  }
-
-  @Override
-  protected boolean doProcess(ProvideData provideData) {
-    // black list data
-    final String data = ProvideData.toString(provideData);
-    if (data == null) {
-      LOGGER.warn("Fetch session blacklist content null");
-      return false;
-    }
-
-    LOGGER.info("Fetch session blacklist {}", data);
-
-    List<BlacklistConfig> blacklistConfigs = new ArrayList();
-    // {"FORBIDDEN_PUB":{"IP_FULL":["1.1.1.1","10.15.233.150"]},"FORBIDDEN_SUB_BY_PREFIX":{"IP_FULL":["1.1.1.1"]}}
-    Map<String, Map<String, Set<String>>> blacklistConfigMap =
-        convertBlacklistConfig(data, blacklistConfigs);
-    clientOffBlackIp(blacklistConfigMap);
-
-    // after cancel success
-    writeLock.lock();
-    try {
-      blacklistConfigList = blacklistConfigs;
-      version.set(provideData.getVersion());
-    } catch (Throwable t) {
-      LOGGER.error("update blacklist:{} error.", provideData, t);
-    } finally {
-      writeLock.unlock();
-    }
-
-    return true;
+    storage.set(new BlacklistStorage(INIT_VERSION, Collections.EMPTY_LIST));
   }
 
   private Map<String, Map<String, Set<String>>> convertBlacklistConfig(
@@ -155,7 +128,47 @@ public class FetchBlackListService extends AbstractFetchSystemPropertyService {
       }
 
       List<ConnectId> conIds = connectionsService.getIpConnects(ipSet);
-      sessionRegistry.clientOff(conIds);
+      // blacklist remove pub, sub, watch
+      sessionRegistry.clean(conIds);
+    }
+  }
+
+  @Override
+  protected boolean doProcess(BlacklistStorage expect, ProvideData provideData) {
+    // black list data
+    final String data = ProvideData.toString(provideData);
+    if (data == null) {
+      LOGGER.warn("Fetch session blacklist content null");
+      return false;
+    }
+
+    LOGGER.info("Fetch session blacklist {}", data);
+
+    List<BlacklistConfig> blacklistConfigs = new ArrayList();
+    // {"FORBIDDEN_PUB":{"IP_FULL":["1.1.1.1"]},"FORBIDDEN_SUB_BY_PREFIX":{"IP_FULL":["1.1.1.1"]}}
+    Map<String, Map<String, Set<String>>> blacklistConfigMap =
+        convertBlacklistConfig(data, blacklistConfigs);
+    clientOffBlackIp(blacklistConfigMap);
+
+    // after cancel success
+    try {
+      BlacklistStorage update = new BlacklistStorage(provideData.getVersion(), blacklistConfigs);
+      if (compareAndSet(expect, update)) {
+        return true;
+      }
+    } catch (Throwable t) {
+      LOGGER.error("update blacklist:{} error.", provideData, t);
+    }
+
+    return false;
+  }
+
+  protected class BlacklistStorage extends AbstractFetchSystemPropertyService.SystemDataStorage {
+    final List<BlacklistConfig> blacklistConfigList;
+
+    public BlacklistStorage(long version, List<BlacklistConfig> blacklistConfigList) {
+      super(version);
+      this.blacklistConfigList = blacklistConfigList;
     }
   }
 

@@ -20,40 +20,40 @@ import static com.alipay.sofa.registry.jdbc.repository.impl.MetadataMetrics.Prov
 import static com.alipay.sofa.registry.jdbc.repository.impl.MetadataMetrics.ProvideData.CLIENT_MANAGER_UPDATE_COUNTER;
 
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
-import com.alipay.sofa.registry.common.model.metaserver.ClientManagerPods;
+import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress;
 import com.alipay.sofa.registry.jdbc.config.DefaultCommonConfig;
-import com.alipay.sofa.registry.jdbc.mapper.ClientManagerPodsMapper;
+import com.alipay.sofa.registry.jdbc.mapper.ClientManagerAddressMapper;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.store.api.meta.ClientManagerPodsRepository;
+import com.alipay.sofa.registry.store.api.meta.ClientManagerAddressRepository;
 import java.util.List;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author xiaojian.xj
- * @version $Id: ClientManagerPodsJdbcRepository.java, v 0.1 2021年05月12日 19:27 xiaojian.xj Exp $
+ * @version $Id: ClientManagerAddressJdbcRepository.java, v 0.1 2021年05月12日 19:27 xiaojian.xj Exp $
  */
-public class ClientManagerPodsJdbcRepository implements ClientManagerPodsRepository {
+public class ClientManagerAddressJdbcRepository implements ClientManagerAddressRepository {
 
   private static final Logger LOG = LoggerFactory.getLogger("META-PROVIDEDATA", "[ClientManager]");
 
   @Autowired private DefaultCommonConfig defaultCommonConfig;
 
-  @Autowired private ClientManagerPodsMapper clientManagerPodsMapper;
+  @Autowired private ClientManagerAddressMapper clientManagerAddressMapper;
 
   @Override
   public boolean clientOpen(Set<String> ipSet) {
 
     try {
       for (String address : ipSet) {
-        ClientManagerPods update =
-            new ClientManagerPods(
+        ClientManagerAddress update =
+            new ClientManagerAddress(
                 defaultCommonConfig.getClusterId(), address, ValueConstants.CLIENT_OPEN);
-        int effectRows = clientManagerPodsMapper.update(update);
+        int effectRows = clientManagerAddressMapper.update(update);
 
         if (effectRows == 0) {
-          clientManagerPodsMapper.insertOnReplace(update);
+          clientManagerAddressMapper.insertOnReplace(update);
         }
       }
       CLIENT_MANAGER_UPDATE_COUNTER.inc(ipSet.size());
@@ -69,13 +69,13 @@ public class ClientManagerPodsJdbcRepository implements ClientManagerPodsReposit
     try {
 
       for (String address : ipSet) {
-        ClientManagerPods update =
-            new ClientManagerPods(
+        ClientManagerAddress update =
+            new ClientManagerAddress(
                 defaultCommonConfig.getClusterId(), address, ValueConstants.CLIENT_OFF);
-        int effectRows = clientManagerPodsMapper.update(update);
+        int effectRows = clientManagerAddressMapper.update(update);
 
         if (effectRows == 0) {
-          clientManagerPodsMapper.insertOnReplace(update);
+          clientManagerAddressMapper.insertOnReplace(update);
         }
       }
       CLIENT_MANAGER_UPDATE_COUNTER.inc(ipSet.size());
@@ -87,20 +87,20 @@ public class ClientManagerPodsJdbcRepository implements ClientManagerPodsReposit
   }
 
   @Override
-  public List<ClientManagerPods> queryAfterThan(long maxId) {
-    return clientManagerPodsMapper.queryAfterThan(defaultCommonConfig.getClusterId(), maxId);
+  public List<ClientManagerAddress> queryAfterThan(long maxId) {
+    return clientManagerAddressMapper.queryAfterThan(defaultCommonConfig.getClusterId(), maxId);
   }
 
   @Override
-  public List<ClientManagerPods> queryAfterThan(long maxId, long limit) {
+  public List<ClientManagerAddress> queryAfterThan(long maxId, long limit) {
     CLIENT_MANAGER_QUERY_COUNTER.inc();
-    return clientManagerPodsMapper.queryAfterThanByLimit(
+    return clientManagerAddressMapper.queryAfterThanByLimit(
         defaultCommonConfig.getClusterId(), maxId, limit);
   }
 
   @Override
   public int queryTotalCount() {
     CLIENT_MANAGER_QUERY_COUNTER.inc();
-    return clientManagerPodsMapper.queryTotalCount(defaultCommonConfig.getClusterId());
+    return clientManagerAddressMapper.queryTotalCount(defaultCommonConfig.getClusterId());
   }
 }
