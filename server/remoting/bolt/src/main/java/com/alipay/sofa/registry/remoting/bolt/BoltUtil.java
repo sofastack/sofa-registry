@@ -19,8 +19,6 @@ package com.alipay.sofa.registry.remoting.bolt;
 import com.alipay.remoting.InvokeContext;
 import com.alipay.remoting.Url;
 import com.alipay.remoting.exception.RemotingException;
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.ChannelConnectException;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
@@ -35,8 +33,6 @@ import java.util.List;
  * @since 2019/2/15
  */
 public final class BoltUtil {
-  private static final Logger LOGGER = LoggerFactory.getLogger(BoltUtil.class);
-
   private BoltUtil() {}
 
   public static Byte getBoltCustomSerializer(Channel channel) {

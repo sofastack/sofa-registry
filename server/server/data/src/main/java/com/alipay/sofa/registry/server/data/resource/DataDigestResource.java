@@ -21,6 +21,8 @@ import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.common.model.store.Publisher;
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.bolt.BoltChannel;
@@ -30,15 +32,14 @@ import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.MetaServerServiceImpl;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.google.common.collect.Lists;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
+
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
+import java.util.*;
+import java.util.Map.Entry;
 
 /**
  * @author shangyu.wh
@@ -46,6 +47,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 @Path("digest")
 public class DataDigestResource {
+  private static final Logger LOGGER = LoggerFactory.getLogger(DataDigestResource.class);
 
   private static final String SESSION = "SESSION";
 
@@ -175,6 +177,39 @@ public class DataDigestResource {
       return Lists.newArrayList(leader);
     } else {
       return Collections.emptyList();
+    }
+  }
+
+  @GET
+  @Path("datum/getDataInfoIdList")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Collection<String> getDataInfoIdList() {
+    try {
+      Map<String, Map<String, Datum>> allMap = datumCache.getAll();
+      if (CollectionUtils.isEmpty(allMap)) {
+        return Collections.emptyList();
+      }
+      List<String> dataInfos = Lists.newArrayListWithCapacity(1024);
+      StringBuilder builder = new StringBuilder(128);
+      for (Entry<String, Map<String, Datum>> dataCenterEntry : allMap.entrySet()) {
+        String dataCenter = dataCenterEntry.getKey();
+        Map<String, Datum> datumMap = dataCenterEntry.getValue();
+        for (Datum datum : datumMap.values()) {
+          builder
+              .append(dataCenter)
+              .append(",")
+              .append(datum.getDataInfoId())
+              .append(",")
+              .append(datum.publisherSize());
+
+          dataInfos.add(builder.toString());
+          builder.setLength(0);
+        }
+      }
+      return dataInfos;
+    } catch (Throwable e) {
+      LOGGER.error("failed to get dataInfoList", e);
+      throw new RuntimeException(e);
     }
   }
 }

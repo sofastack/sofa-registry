@@ -39,7 +39,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public class DefaultPublisherHandlerStrategy implements PublisherHandlerStrategy {
   private static final Logger PUB_LOGGER = LoggerFactory.getLogger("PUB-RECEIVE");
-  @Autowired private Registry sessionRegistry;
+  @Autowired protected Registry sessionRegistry;
 
   @Override
   public void handlePublisherRegister(

@@ -17,8 +17,6 @@
 package com.alipay.sofa.registry.server.shared.remoting;
 
 import com.alipay.sofa.registry.common.model.store.URL;
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.Client;
 import com.alipay.sofa.registry.remoting.Server;
@@ -37,7 +35,6 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @version v 0.1 2020-12-18 11:40 yuzhi.lyz Exp $
  */
 public abstract class ServerSideExchanger implements NodeExchanger {
-  private static final Logger LOGGER = LoggerFactory.getLogger(ServerSideExchanger.class);
 
   @Autowired protected Exchange boltExchange;
 
