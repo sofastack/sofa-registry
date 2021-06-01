@@ -14,15 +14,40 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.shared.providedata;
+package com.alipay.sofa.registry.server.meta.resource.model;
+
+import java.util.Set;
 
 /**
- * @author shangyu.wh
- * @version 1.0: ProvideDataProcessor.java, v 0.1 2019-10-09 17:26 shangyu.wh Exp $
+ * @author xiaojian.xj
+ * @version $Id: ClientOffAddressModel.java, v 0.1 2021年06月02日 15:43 xiaojian.xj Exp $
  */
-public interface ProvideDataProcessor {
+public class ClientOffAddressModel {
 
-  boolean doFetch();
+  private final long version;
 
-  boolean support(String dataInfoId);
+  private final Set<String> ips;
+
+  public ClientOffAddressModel(long version, Set<String> ips) {
+    this.version = version;
+    this.ips = ips;
+  }
+
+  /**
+   * Getter method for property <tt>version</tt>.
+   *
+   * @return property value of version
+   */
+  public long getVersion() {
+    return version;
+  }
+
+  /**
+   * Getter method for property <tt>ips</tt>.
+   *
+   * @return property value of ips
+   */
+  public Set<String> getIps() {
+    return ips;
+  }
 }

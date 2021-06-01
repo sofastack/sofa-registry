@@ -21,26 +21,36 @@ import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.common.model.sessionserver.GrayOpenPushSwitchRequest;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.server.session.push.PushSwitchService;
+import com.alipay.sofa.registry.server.session.provideData.FetchGrayPushSwitchService.GrayPushSwitchStorage;
 import com.alipay.sofa.registry.server.session.registry.Registry;
-import com.alipay.sofa.registry.server.shared.providedata.ProvideDataProcessor;
+import com.alipay.sofa.registry.server.shared.providedata.AbstractFetchSystemPropertyService;
 import com.alipay.sofa.registry.util.JsonUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Collections;
+import javax.annotation.Resource;
+
+import com.google.common.annotations.VisibleForTesting;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
-public class GrayPushSwitchProvideDataProcessor implements ProvideDataProcessor {
-  private static final Logger LOGGER =
-      LoggerFactory.getLogger(GrayPushSwitchProvideDataProcessor.class);
-
-  @Autowired private PushSwitchService pushSwitchService;
+public class FetchGrayPushSwitchService
+    extends AbstractFetchSystemPropertyService<GrayPushSwitchStorage> {
+  private static final Logger LOGGER = LoggerFactory.getLogger(FetchGrayPushSwitchService.class);
 
   @Autowired private Registry sessionRegistry;
 
+  @Resource private FetchStopPushService fetchStopPushService;
+
+  public FetchGrayPushSwitchService() {
+    super(ValueConstants.PUSH_SWITCH_GRAY_OPEN_DATA_ID);
+    storage.set(new GrayPushSwitchStorage(INIT_VERSION, Collections.EMPTY_LIST));
+  }
+
   @Override
-  public boolean processorData(ProvideData provideData) {
+  protected boolean doProcess(GrayPushSwitchStorage expect, ProvideData provideData) {
     if (provideData == null) {
       LOGGER.info("fetch session gray pushSwitch null");
       return true;
@@ -56,17 +66,41 @@ public class GrayPushSwitchProvideDataProcessor implements ProvideDataProcessor 
         throw new RuntimeException(String.format("parse gray open switch failed: %s", data), e);
       }
     }
-    Collection<String> prev = pushSwitchService.getOpenIps();
-    pushSwitchService.setOpenIPs(req.getIps());
-    if (pushSwitchService.isGlobalPushSwitchStopped() && pushSwitchService.canPush()) {
+    GrayPushSwitchStorage update =
+        new GrayPushSwitchStorage(provideData.getVersion(), req.getIps());
+    if (!compareAndSet(expect, update)) {
+      return false;
+    }
+
+    if (fetchStopPushService.isStopPushSwitch() && canPush()) {
       sessionRegistry.fetchChangDataProcess();
     }
-    LOGGER.info("fetch session gray pushSwitch={}, prev={}", req, prev);
+    LOGGER.info("fetch session gray pushSwitch={}, prev={}", req, expect.openIps);
     return true;
   }
 
-  @Override
-  public boolean support(ProvideData provideData) {
-    return ValueConstants.PUSH_SWITCH_GRAY_OPEN_DATA_ID.equals(provideData.getDataInfoId());
+  protected class GrayPushSwitchStorage
+      extends AbstractFetchSystemPropertyService.SystemDataStorage {
+    final Collection<String> openIps;
+
+    public GrayPushSwitchStorage(long version, Collection<String> openIps) {
+      super(version);
+      this.openIps = openIps;
+    }
   }
+
+  public Collection<String> getOpenIps() {
+    return storage.get().openIps;
+  }
+
+  private boolean canPush() {
+    return CollectionUtils.isNotEmpty(storage.get().openIps);
+  }
+
+  @VisibleForTesting
+  public void setOpenIps(long version, Collection<String> openIps) {
+    storage.set(new GrayPushSwitchStorage(version, openIps));
+  }
+
+
 }

@@ -20,9 +20,9 @@ import java.util.Date;
 
 /**
  * @author xiaojian.xj
- * @version $Id: ClientManagerPods.java, v 0.1 2021年05月12日 20:11 xiaojian.xj Exp $
+ * @version $Id: ClientManagerAddress.java, v 0.1 2021年05月12日 20:11 xiaojian.xj Exp $
  */
-public class ClientManagerPods {
+public class ClientManagerAddress {
 
   /** primary key */
   private long id;
@@ -42,9 +42,9 @@ public class ClientManagerPods {
   /** last update time */
   private Date gmtModify;
 
-  public ClientManagerPods() {}
+  public ClientManagerAddress() {}
 
-  public ClientManagerPods(String dataCenter, String address, String operation) {
+  public ClientManagerAddress(String dataCenter, String address, String operation) {
     this.dataCenter = dataCenter;
     this.address = address;
     this.operation = operation;
@@ -160,7 +160,7 @@ public class ClientManagerPods {
 
   @Override
   public String toString() {
-    return "ClientManagerPods{"
+    return "ClientManagerAddress{"
         + "id="
         + id
         + ", dataCenter='"

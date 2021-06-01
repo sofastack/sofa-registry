@@ -33,9 +33,11 @@ import java.util.HashMap;
 import java.util.Map;
 import org.junit.Assert;
 import org.junit.Test;
-import org.mockito.Mockito;
 
 public class DataChangeRequestHandlerTest {
+
+
+  private long init = -1L;
   @Test
   public void testCheckParam() {
     DataChangeRequestHandler handler = newHandler();
@@ -62,12 +64,12 @@ public class DataChangeRequestHandlerTest {
     handler.sessionInterests = mock(Interests.class);
     handler.pushSwitchService.setFetchStopPushService(new FetchStopPushService());
 
-    handler.pushSwitchService.getFetchStopPushService().setStopPushSwitch(true);
+    handler.pushSwitchService.getFetchStopPushService().setStopPushSwitch(init,true);
     // no npe, stopPush skip the handle
     Object obj = handler.doHandle(null, null);
     Assert.assertNull(obj);
 
-    handler.pushSwitchService.getFetchStopPushService().setStopPushSwitch(false);
+    handler.pushSwitchService.getFetchStopPushService().setStopPushSwitch(init,false);
     when(handler.sessionInterests.checkInterestVersion(anyString(), anyString(), anyLong()))
         .thenReturn(Interests.InterestVersionCheck.Obsolete);
     obj = handler.doHandle(null, request());

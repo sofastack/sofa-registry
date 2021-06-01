@@ -36,10 +36,10 @@ import com.alipay.sofa.registry.jdbc.repository.batch.AppRevisionBatchQueryCalla
 import com.alipay.sofa.registry.jdbc.repository.batch.AppRevisionHeartbeatBatchCallable;
 import com.alipay.sofa.registry.jdbc.repository.batch.InterfaceAppBatchQueryCallable;
 import com.alipay.sofa.registry.jdbc.repository.impl.AppRevisionJdbcRepository;
-import com.alipay.sofa.registry.jdbc.repository.impl.ClientManagerPodsJdbcRepository;
+import com.alipay.sofa.registry.jdbc.repository.impl.ClientManagerAddressJdbcRepository;
 import com.alipay.sofa.registry.jdbc.repository.impl.InterfaceAppsJdbcRepository;
 import com.alipay.sofa.registry.jdbc.repository.impl.ProvideDataJdbcRepository;
-import com.alipay.sofa.registry.store.api.meta.ClientManagerPodsRepository;
+import com.alipay.sofa.registry.store.api.meta.ClientManagerAddressRepository;
 import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
 import com.alipay.sofa.registry.store.api.repository.AppRevisionRepository;
 import com.alipay.sofa.registry.store.api.repository.InterfaceAppsRepository;
@@ -235,8 +235,8 @@ public class JdbcConfiguration {
     }
 
     @Bean
-    public ClientManagerPodsRepository clientManagerPodsJdbcRepository() {
-      return new ClientManagerPodsJdbcRepository();
+    public ClientManagerAddressRepository clientManagerAddressJdbcRepository() {
+      return new ClientManagerAddressJdbcRepository();
     }
 
     /** batch callable */

@@ -23,6 +23,7 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.connections.ConnectionsService;
+import com.alipay.sofa.registry.server.session.provideData.FetchClientOffAddressService.ClientOffAddressStorage;
 import com.alipay.sofa.registry.server.session.registry.Registry;
 import com.alipay.sofa.registry.server.shared.providedata.AbstractFetchSystemPropertyService;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
@@ -32,8 +33,6 @@ import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentHashMap.KeySetView;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import org.apache.commons.collections.CollectionUtils;
@@ -41,15 +40,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author xiaojian.xj
- * @version $Id: FetchClientOffPodsService.java, v 0.1 2021年05月16日 18:01 xiaojian.xj Exp $
+ * @version $Id: FetchClientOffAddressService.java, v 0.1 2021年05月16日 18:01 xiaojian.xj Exp $
  */
-public class FetchClientOffPodsService extends AbstractFetchSystemPropertyService {
+public class FetchClientOffAddressService
+    extends AbstractFetchSystemPropertyService<ClientOffAddressStorage> {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(FetchClientOffPodsService.class);
-
-  private final AtomicReference<KeySetView> clientOffPods = new AtomicReference<>();
-
-  private final AtomicReference<ClientOffTable> updating = new AtomicReference<>();
+  private static final Logger LOGGER = LoggerFactory.getLogger(FetchClientOffAddressService.class);
 
   private final ClientManagerProcessor clientManagerProcessor = new ClientManagerProcessor();
 
@@ -59,44 +55,56 @@ public class FetchClientOffPodsService extends AbstractFetchSystemPropertyServic
 
   @Autowired private Registry sessionRegistry;
 
-  public FetchClientOffPodsService() {
-    super(ValueConstants.CLIENT_OFF_PODS_DATA_ID);
-    clientOffPods.set(new ConcurrentHashMap<>().newKeySet());
+  public FetchClientOffAddressService() {
+    super(ValueConstants.CLIENT_OFF_ADDRESS_DATA_ID);
+    storage.set(new ClientOffAddressStorage(INIT_VERSION, Sets.newHashSet(), null));
     ConcurrentUtils.createDaemonThread("ClientManagerProcessor", clientManagerProcessor).start();
   }
 
   @Override
-  public boolean doProcess(ProvideData data) {
-    if (this.updating.get() != null) {
+  public boolean doProcess(ClientOffAddressStorage expect, ProvideData data) {
+    if (expect.updating.get() != null) {
       return false;
     }
-    Set<String> fetch = (Set<String>) data.getProvideData().getObject();
-    KeySetView olds = clientOffPods.get();
+    Set<String> news = (Set<String>) data.getProvideData().getObject();
+    Set<String> olds = expect.clientOffAddress;
 
-    SetView toBeRemove = Sets.difference(olds, fetch);
-    SetView toBeAdd = Sets.difference(fetch, olds);
+    SetView toBeRemove = Sets.difference(olds, news);
+    SetView toBeAdd = Sets.difference(news, olds);
 
-    KeySetView<String, Boolean> news = new ConcurrentHashMap<>().newKeySet();
-    news.addAll(fetch);
-
-    writeLock.lock();
     try {
-      updating.set(new ClientOffTable(toBeAdd, toBeRemove));
-      clientOffPods.set(news);
-      version.set(data.getVersion());
+
+      ClientOffAddressStorage update =
+          new ClientOffAddressStorage(
+              data.getVersion(), news, new ClientOffTable(toBeAdd, toBeRemove));
+      if (!compareAndSet(expect, update)) {
+        return false;
+      }
     } catch (Throwable t) {
-      LOGGER.error("update clientOffPods:{} error.", data, t);
-    } finally {
-      writeLock.unlock();
+      LOGGER.error("update clientOffAddress:{} error.", data, t);
     }
 
     LOGGER.info(
-        "olds clientOffPods:{}, toBeAdd:{}, toBeRemove:{}, current clientOffPods:{}",
+        "olds clientOffAddress:{}, toBeAdd:{}, toBeRemove:{}, current clientOffAddress:{}",
         olds,
         toBeAdd,
         toBeRemove,
-        clientOffPods);
+        news);
     return true;
+  }
+
+  protected class ClientOffAddressStorage
+      extends AbstractFetchSystemPropertyService.SystemDataStorage {
+    final Set<String> clientOffAddress;
+
+    final AtomicReference<ClientOffTable> updating;
+
+    public ClientOffAddressStorage(
+        long version, Set<String> clientOffAddress, ClientOffTable updating) {
+      super(version);
+      this.clientOffAddress = clientOffAddress;
+      this.updating = new AtomicReference<>(updating);
+    }
   }
 
   final class ClientOffTable {
@@ -143,7 +151,7 @@ public class FetchClientOffPodsService extends AbstractFetchSystemPropertyServic
   }
 
   boolean processUpdating() {
-    final ClientOffTable table = updating.getAndSet(null);
+    final ClientOffTable table = storage.get().updating.getAndSet(null);
     if (table == null) {
       return true;
     }
@@ -165,8 +173,8 @@ public class FetchClientOffPodsService extends AbstractFetchSystemPropertyServic
     return true;
   }
 
-  private void doTrafficOff(Set<String> _ipSet) {
-    List<ConnectId> conIds = connectionsService.getIpConnects(_ipSet);
+  private void doTrafficOff(Set<String> ipSet) {
+    List<ConnectId> conIds = connectionsService.getIpConnects(ipSet);
 
     if (CollectionUtils.isNotEmpty(conIds)) {
       LOGGER.info("clientOff conIds: {}", conIds.toString());
@@ -174,19 +182,19 @@ public class FetchClientOffPodsService extends AbstractFetchSystemPropertyServic
     sessionRegistry.clientOff(conIds);
   }
 
-  private void doTrafficOn(Set<String> _ipList) {
-    List<String> connections = connectionsService.closeIpConnects(Lists.newArrayList(_ipList));
+  private void doTrafficOn(Set<String> ipSet) {
+    List<String> connections = connectionsService.closeIpConnects(Lists.newArrayList(ipSet));
     if (CollectionUtils.isNotEmpty(connections)) {
       LOGGER.info("clientOpen conIds: {}", connections);
     }
   }
 
   /**
-   * Getter method for property <tt>clientOffPods</tt>.
+   * Getter method for property <tt>clientOffAddress</tt>.
    *
-   * @return property value of clientOffPods
+   * @return property value of clientOffAddress
    */
-  public KeySetView getClientOffPods() {
-    return clientOffPods.get();
+  public Set<String> getClientOffAddress() {
+    return storage.get().clientOffAddress;
   }
 }

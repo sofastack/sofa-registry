@@ -14,49 +14,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.store.api.meta;
+package com.alipay.sofa.registry.common.model;
 
-import com.alipay.sofa.registry.common.model.metaserver.ClientManagerPods;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import java.util.List;
 import java.util.Set;
+import org.apache.commons.lang.StringUtils;
 
 /**
  * @author xiaojian.xj
- * @version $Id: ClientManagerPodsRepository.java, v 0.1 2021年05月11日 16:47 xiaojian.xj Exp $
+ * @version $Id: CollectionSdks.java, v 0.1 2021年06月02日 14:31 xiaojian.xj Exp $
  */
-public interface ClientManagerPodsRepository {
+public class CollectionSdks {
 
-  /**
-   * client open
-   *
-   * @param ipSet
-   * @return
-   */
-  boolean clientOpen(Set<String> ipSet);
+  public static List<String> toIpList(String ips) {
+    String[] ipArray = StringUtils.split(ips.trim(), ';');
+    List<String> ret = Lists.newArrayListWithCapacity(ipArray.length);
+    for (String ip : ipArray) {
+      ret.add(ip.trim());
+    }
+    return ret;
+  }
 
-  /**
-   * client off
-   *
-   * @param ipSet
-   * @return
-   */
-  boolean clientOff(Set<String> ipSet);
-
-  /**
-   * query records
-   *
-   * @param maxId
-   * @return
-   */
-  List<ClientManagerPods> queryAfterThan(long maxId);
-
-  /**
-   * query records
-   *
-   * @param maxId
-   * @return
-   */
-  List<ClientManagerPods> queryAfterThan(long maxId, long limit);
-
-  int queryTotalCount();
+  public static Set<String> toIpSet(String ips) {
+    return Sets.newHashSet(toIpList(ips));
+  }
 }

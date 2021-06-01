@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.resource;
 
+import com.alipay.sofa.registry.common.model.CollectionSdks;
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.sessionserver.ClientOffRequest;
@@ -77,7 +78,7 @@ public class ClientManagerResource {
     if (StringUtils.isEmpty(ips)) {
       return CommonResponse.buildFailedResponse("ips is empty");
     }
-    final Set<String> ipSet = Sdks.toIpSet(ips);
+    final Set<String> ipSet = CollectionSdks.toIpSet(ips);
     List<ConnectId> conIds = connectionsService.getIpConnects(ipSet);
     sessionRegistry.clientOff(conIds);
     LOGGER.info("clientOff ips={}, conIds={}", ips, conIds);
@@ -91,7 +92,7 @@ public class ClientManagerResource {
     if (StringUtils.isEmpty(ips)) {
       return CommonResponse.buildFailedResponse("ips is empty");
     }
-    final List<String> ipList = Sdks.toIpList(ips);
+    final List<String> ipList = CollectionSdks.toIpList(ips);
     List<String> conIds = connectionsService.closeIpConnects(ipList);
     LOGGER.info("clientOn ips={}, conIds={}", ips, conIds);
 
@@ -110,7 +111,7 @@ public class ClientManagerResource {
       return resp;
     }
 
-    final List<String> ipList = Sdks.toIpList(ips);
+    final List<String> ipList = CollectionSdks.toIpList(ips);
     List<URL> servers = getOtherConsoleServersCurrentZone();
     LOGGER.info("clientOffInZone, others={}", servers);
     if (servers.size() > 0) {
@@ -140,7 +141,7 @@ public class ClientManagerResource {
     if (!resp.isSuccess()) {
       return resp;
     }
-    final List<String> ipList = Sdks.toIpList(ips);
+    final List<String> ipList = CollectionSdks.toIpList(ips);
     List<URL> servers = getOtherConsoleServersCurrentZone();
     LOGGER.info("clientOnInZone, others={}", servers);
     if (servers.size() > 0) {

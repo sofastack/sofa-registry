@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author yuzhi.lyz
@@ -93,7 +92,7 @@ public final class StoreHelpers {
   }
 
   public static <T extends BaseInfo> Map<ConnectId, Map<String, T>> getByConnectIds(
-      List<ConnectId> connectIds, ConcurrentHashMap<String, Map<String, T>> stores) {
+      List<ConnectId> connectIds, Map<String, Map<String, T>> stores) {
     Map<ConnectId, Map<String, T>> retMap = Maps.newHashMap();
     for (Map<String, T> m : stores.values()) {
       for (Entry<String, T> entry : m.entrySet()) {

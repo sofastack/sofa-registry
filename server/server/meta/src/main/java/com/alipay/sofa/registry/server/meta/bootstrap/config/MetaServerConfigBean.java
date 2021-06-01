@@ -64,7 +64,7 @@ public class MetaServerConfigBean implements MetaServerConfig {
 
   private int clientManagerWatchMillis = 1000;
 
-  private int clientManagerRefreshSecs = 300;
+  private int clientManagerRefreshMillis = 300 * 1000;
 
   private int clientManagerRefreshLimit = 5000;
 
@@ -456,22 +456,22 @@ public class MetaServerConfigBean implements MetaServerConfig {
   }
 
   /**
-   * Getter method for property <tt>clientManagerRefreshSecs</tt>.
+   * Getter method for property <tt>clientManagerRefreshMillis</tt>.
    *
-   * @return property value of clientManagerRefreshSecs
+   * @return property value of clientManagerRefreshMillis
    */
   @Override
-  public int getClientManagerRefreshSecs() {
-    return clientManagerRefreshSecs;
+  public int getClientManagerRefreshMillis() {
+    return clientManagerRefreshMillis;
   }
 
   /**
-   * Setter method for property <tt>clientManagerRefreshSecs</tt>.
+   * Setter method for property <tt>clientManagerRefreshMillis</tt>.
    *
-   * @param clientManagerRefreshSecs value to be assigned to property clientManagerRefreshSecs
+   * @param clientManagerRefreshMillis value to be assigned to property clientManagerRefreshMillis
    */
-  public void setClientManagerRefreshSecs(int clientManagerRefreshSecs) {
-    this.clientManagerRefreshSecs = clientManagerRefreshSecs;
+  public void setClientManagerRefreshMillis(int clientManagerRefreshMillis) {
+    this.clientManagerRefreshMillis = clientManagerRefreshMillis;
   }
 
   /**

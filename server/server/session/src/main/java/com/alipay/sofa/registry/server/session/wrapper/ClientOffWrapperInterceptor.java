@@ -23,9 +23,10 @@ import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.server.session.provideData.FetchClientOffPodsService;
+import com.alipay.sofa.registry.server.session.provideData.FetchClientOffAddressService;
 import com.alipay.sofa.registry.server.session.push.FirePushService;
 import com.alipay.sofa.registry.server.session.registry.SessionRegistry;
+import com.alipay.sofa.registry.server.shared.remoting.RemotingHelper;
 import javax.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -39,7 +40,7 @@ public class ClientOffWrapperInterceptor implements WrapperInterceptor<StoreData
 
   @Autowired private FirePushService firePushService;
 
-  @Resource private FetchClientOffPodsService fetchClientOffPodsService;
+  @Resource private FetchClientOffAddressService fetchClientOffAddressService;
   @Autowired protected SessionRegistry sessionRegistry;
 
   @Override
@@ -49,7 +50,7 @@ public class ClientOffWrapperInterceptor implements WrapperInterceptor<StoreData
 
     URL url = storeData.getSourceAddress();
 
-    if (fetchClientOffPodsService.getClientOffPods().contains(url.getIpAddress())) {
+    if (fetchClientOffAddressService.getClientOffAddress().contains(url.getIpAddress())) {
       LOGGER.info(
           "dataInfoId:{} ,url:{} match clientOff ips.",
           storeData.getDataInfoId(),
@@ -60,8 +61,17 @@ public class ClientOffWrapperInterceptor implements WrapperInterceptor<StoreData
       }
 
       if (DataType.SUBSCRIBER == storeData.getDataType()) {
-        fireSubscriberPushEmptyTask((Subscriber) storeData);
-        return true;
+        // in some case, need to push empty to new subscriber, and stop sub
+        // else, filter not stop sub
+        if (sessionRegistry.isPushEmpty((Subscriber) storeData)) {
+          firePushService.fireOnPushEmpty(
+              (Subscriber) storeData, sessionRegistry.getDataCenterWhenPushEmpty());
+          LOGGER.info(
+              "[sub],{},{}",
+              storeData.getDataInfoId(),
+              RemotingHelper.getAddressString(storeData.getSourceAddress()));
+          return true;
+        }
       }
     }
     return invocation.proceed();
@@ -70,10 +80,5 @@ public class ClientOffWrapperInterceptor implements WrapperInterceptor<StoreData
   @Override
   public int getOrder() {
     return 300;
-  }
-
-  private void fireSubscriberPushEmptyTask(Subscriber subscriber) {
-    // trigger empty data push
-    firePushService.fireOnPushEmpty(subscriber, sessionRegistry.getDataCenterWhenPushEmpty());
   }
 }

@@ -50,9 +50,9 @@ import com.alipay.sofa.registry.server.session.node.service.DataNodeServiceImpl;
 import com.alipay.sofa.registry.server.session.node.service.MetaServerServiceImpl;
 import com.alipay.sofa.registry.server.session.node.service.SessionMetaServerManager;
 import com.alipay.sofa.registry.server.session.provideData.FetchBlackListService;
-import com.alipay.sofa.registry.server.session.provideData.FetchClientOffPodsService;
+import com.alipay.sofa.registry.server.session.provideData.FetchClientOffAddressService;
+import com.alipay.sofa.registry.server.session.provideData.FetchGrayPushSwitchService;
 import com.alipay.sofa.registry.server.session.provideData.FetchStopPushService;
-import com.alipay.sofa.registry.server.session.provideData.GrayPushSwitchProvideDataProcessor;
 import com.alipay.sofa.registry.server.session.provideData.ProvideDataProcessorManager;
 import com.alipay.sofa.registry.server.session.push.*;
 import com.alipay.sofa.registry.server.session.push.ChangeProcessor;
@@ -751,45 +751,33 @@ public class SessionServerConfiguration {
   public static class SessionProvideDataConfiguration {
 
     @Bean
-    public ProvideDataProcessor provideDataProcessorManager() {
-      return new ProvideDataProcessorManager();
+    public ProvideDataProcessorManager provideDataProcessorManager() {
+      ProvideDataProcessorManager provideDataProcessorManager = new ProvideDataProcessorManager();
+      provideDataProcessorManager.addProvideDataProcessor(fetchStopPushService());
+      provideDataProcessorManager.addProvideDataProcessor(fetchGrayPushSwitchService());
+      provideDataProcessorManager.addProvideDataProcessor(fetchBlackListService());
+      provideDataProcessorManager.addProvideDataProcessor(fetchClientOffAddressService());
+      return provideDataProcessorManager;
     }
 
     @Bean
-    public ProvideDataProcessor fetchBlackListService(
-        ProvideDataProcessor provideDataProcessorManager) {
-      ProvideDataProcessor fetchBlackListService = new FetchBlackListService();
-      ((ProvideDataProcessorManager) provideDataProcessorManager)
-          .addProvideDataProcessor(fetchBlackListService);
-      return fetchBlackListService;
+    public ProvideDataProcessor fetchBlackListService() {
+      return new FetchBlackListService();
     }
 
     @Bean
-    public ProvideDataProcessor fetchStopPushService(
-        ProvideDataProcessor provideDataProcessorManager) {
-      ProvideDataProcessor fetchStopPushService = new FetchStopPushService();
-      ((ProvideDataProcessorManager) provideDataProcessorManager)
-          .addProvideDataProcessor(fetchStopPushService);
-      return fetchStopPushService;
+    public ProvideDataProcessor fetchStopPushService() {
+      return new FetchStopPushService();
     }
 
     @Bean
-    public ProvideDataProcessor fetchClientOffPodsService(
-        ProvideDataProcessor provideDataProcessorManager) {
-      ProvideDataProcessor fetchClientOffPodsService = new FetchClientOffPodsService();
-      ((ProvideDataProcessorManager) provideDataProcessorManager)
-          .addProvideDataProcessor(fetchClientOffPodsService);
-      return fetchClientOffPodsService;
+    public ProvideDataProcessor fetchClientOffAddressService() {
+      return new FetchClientOffAddressService();
     }
 
     @Bean
-    public ProvideDataProcessor grayPushSwitchProvideDataProcessor(
-        ProvideDataProcessor provideDataProcessorManager) {
-      ProvideDataProcessor grayPushSwitchProvideDataProcessor =
-          new GrayPushSwitchProvideDataProcessor();
-      ((ProvideDataProcessorManager) provideDataProcessorManager)
-          .addProvideDataProcessor(grayPushSwitchProvideDataProcessor);
-      return grayPushSwitchProvideDataProcessor;
+    public ProvideDataProcessor fetchGrayPushSwitchService() {
+      return new FetchGrayPushSwitchService();
     }
   }
 }

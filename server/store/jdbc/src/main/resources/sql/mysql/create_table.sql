@@ -53,10 +53,10 @@ CREATE TABLE `distribute_lock` (
 ) AUTO_INCREMENT = 1 DEFAULT CHARSET = utf8mb4 ROW_FORMAT = DYNAMIC COMPRESSION = 'zstd_1.0' REPLICA_NUM = 3 BLOCK_SIZE = 16384 USE_BLOOM_FILTER = FALSE TABLET_SIZE = 134217728 PCTFREE = 10 COMMENT = '分布式锁'
 
 
-CREATE TABLE `client_manager_pods` (
+CREATE TABLE `client_manager_address` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT primary key,
   `data_center` varchar(128) NOT NULL COMMENT '集群名称',
-  `address` varchar(1024) NOT NULL COMMENT 'address',
+  `address` varchar(256) NOT NULL COMMENT 'address',
   `gmt_create` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `gmt_modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
   `operation` varchar(128) NOT NULL COMMENT '操作类型',

@@ -35,6 +35,7 @@ public class FirePushServiceTest {
   private String zone = "testZone";
   private String dataId = "testDataId";
 
+  private long init = -1L;
   @Test
   public void testFire() {
     FirePushService svc = new FirePushService();
@@ -55,13 +56,13 @@ public class FirePushServiceTest {
         .fireChange(Mockito.anyString(), Mockito.anyObject(), Mockito.anyObject());
 
     Subscriber subscriber = TestUtils.newZoneSubscriber(dataId, zone);
-    fetchStopPushService.setStopPushSwitch(true);
+    fetchStopPushService.setStopPushSwitch(init,true);
     svc.fireOnPushEmpty(subscriber, "testDc");
     Mockito.verify(svc.pushProcessor, Mockito.times(0))
         .firePush(
             Mockito.anyObject(), Mockito.anyObject(), Mockito.anyObject(), Mockito.anyObject());
 
-    fetchStopPushService.setStopPushSwitch(false);
+    fetchStopPushService.setStopPushSwitch(init,false);
 
     svc.fireOnPushEmpty(subscriber, "testDc");
     Mockito.verify(svc.pushProcessor, Mockito.times(1))

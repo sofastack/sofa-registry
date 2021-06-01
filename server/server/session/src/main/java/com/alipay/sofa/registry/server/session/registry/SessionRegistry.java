@@ -211,13 +211,10 @@ public class SessionRegistry implements Registry {
   public void clean(List<ConnectId> connectIds) {
     // update local firstly, data node send error depend on renew check
     Map<ConnectId, List<Publisher>> removes = removeFromSession(connectIds, true);
-    removes
-        .entrySet()
-        .forEach(
-            entry -> {
-              // clientOff to dataNode async
-              clientOffToDataNode(entry.getKey(), entry.getValue());
-            });
+    for (Entry<ConnectId, List<Publisher>> entry : removes.entrySet()) {
+      // clientOff to dataNode async
+      clientOffToDataNode(entry.getKey(), entry.getValue());
+    }
   }
 
   @Override

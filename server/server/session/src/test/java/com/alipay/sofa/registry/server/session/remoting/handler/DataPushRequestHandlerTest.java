@@ -32,9 +32,10 @@ import com.alipay.sofa.registry.server.session.push.PushSwitchService;
 import java.util.Collections;
 import org.junit.Assert;
 import org.junit.Test;
-import org.mockito.Mockito;
 
 public class DataPushRequestHandlerTest {
+
+  private long init = -1L;
   @Test
   public void testCheckParam() {
     DataPushRequestHandler handler = newHandler();
@@ -60,12 +61,12 @@ public class DataPushRequestHandlerTest {
     handler.pushSwitchService.setFetchStopPushService(new FetchStopPushService());
     Assert.assertNotNull(handler.getExecutor());
 
-    handler.pushSwitchService.getFetchStopPushService().setStopPushSwitch(true);
+    handler.pushSwitchService.getFetchStopPushService().setStopPushSwitch(init,true);
     // no npe, stopPush skip the handle
     Object obj = handler.doHandle(null, null);
     Assert.assertNull(obj);
 
-    handler.pushSwitchService.getFetchStopPushService().setStopPushSwitch(false);
+    handler.pushSwitchService.getFetchStopPushService().setStopPushSwitch(init,false);
     // npe
     TestUtils.assertRunException(RuntimeException.class, () -> handler.doHandle(null, request()));
     handler.firePushService = mock(FirePushService.class);

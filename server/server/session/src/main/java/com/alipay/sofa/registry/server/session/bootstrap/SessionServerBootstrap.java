@@ -90,7 +90,7 @@ public class SessionServerBootstrap {
 
   @Resource private FetchSystemPropertyService fetchBlackListService;
 
-  @Resource private FetchSystemPropertyService fetchClientOffPodsService;
+  @Resource private FetchSystemPropertyService fetchClientOffAddressService;
 
   @Autowired private SlotTableCache slotTableCache;
 
@@ -316,7 +316,7 @@ public class SessionServerBootstrap {
       // start fetch system property data
       fetchStopPushService.load();
       fetchBlackListService.load();
-      fetchClientOffPodsService.load();
+      fetchClientOffAddressService.load();
 
       // start fetch change data after got the switch
       sessionRegistry.fetchChangDataProcess();
