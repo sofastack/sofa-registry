@@ -126,4 +126,16 @@ public class DataDigestResourceTest {
     TestBaseUtils.assertException(
         IllegalArgumentException.class, () -> resource.getServerListAll("xx"));
   }
+
+  @Test
+  public void testGetDataInfoIdList() {
+    DataDigestResource resource = newResource();
+    Assert.assertEquals(0, resource.getDataInfoIdList().size());
+    Publisher pub = TestBaseUtils.createTestPublishers(10, 1).get(0);
+    resource.datumCache.getLocalDatumStorage().put(pub);
+    Assert.assertEquals(1, resource.getDataInfoIdList().size());
+    Assert.assertTrue(resource.getDataInfoIdList().toString().contains(pub.getDataInfoId()));
+    resource.datumCache = null;
+    TestBaseUtils.assertException(RuntimeException.class, () -> resource.getDataInfoIdList());
+  }
 }

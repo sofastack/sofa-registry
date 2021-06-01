@@ -20,12 +20,17 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
+import com.alipay.sofa.registry.client.api.model.RegistryType;
 import com.alipay.sofa.registry.client.api.registration.PublisherRegistration;
+import com.alipay.sofa.registry.client.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.server.session.resource.ClientManagerResource;
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
 import java.util.Arrays;
+
+import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -37,6 +42,8 @@ import org.springframework.test.context.junit4.SpringRunner;
  */
 @RunWith(SpringRunner.class)
 public class ClientsManagerOpenResourceTest extends BaseIntegrationTest {
+  private String dataId = "test-dataId-ZoneClientOff-" + System.currentTimeMillis();
+  private String value = "test client off";
 
   @Test
   public void testZoneClientOff() throws Exception {
@@ -50,8 +57,7 @@ public class ClientsManagerOpenResourceTest extends BaseIntegrationTest {
     CommonResponse response =
         mockedResource.clientOffInZone(sessionChannel.getLocalAddress().getHostString());
     assertTrue(response.getMessage(), response.isSuccess());
-    String dataId = "test-dataId-ZoneClientOff-" + System.currentTimeMillis();
-    String value = "test client off";
+
     PublisherRegistration registration = new PublisherRegistration(dataId);
     registryClient1.register(registration, value);
     Thread.sleep(3000L);
@@ -74,5 +80,10 @@ public class ClientsManagerOpenResourceTest extends BaseIntegrationTest {
     count =
         sessionDataStore.getDataList().stream().filter(p -> p.getDataId().equals(dataId)).count();
     Assert.assertEquals(count, 1);
+  }
+
+  @After
+  public void clean() {
+    registryClient1.unregister(dataId, ValueConstants.DEFAULT_GROUP, RegistryType.PUBLISHER);
   }
 }

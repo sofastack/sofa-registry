@@ -40,13 +40,13 @@ public class DefaultSessionRegistryStrategy implements SessionRegistryStrategy {
       LoggerFactory.getLogger(DefaultSessionRegistryStrategy.class, "[Task]");
 
   /** trigger task com.alipay.sofa.registry.server.meta.listener process */
-  @Autowired private TaskListenerManager taskListenerManager;
+  @Autowired protected TaskListenerManager taskListenerManager;
 
-  @Autowired private FirePushService firePushService;
+  @Autowired protected FirePushService firePushService;
 
-  @Autowired private SessionServerConfig sessionServerConfig;
+  @Autowired protected SessionServerConfig sessionServerConfig;
 
-  @Autowired private PushSwitchService pushSwitchService;
+  @Autowired protected PushSwitchService pushSwitchService;
 
   @Override
   public void afterPublisherRegister(Publisher publisher) {}

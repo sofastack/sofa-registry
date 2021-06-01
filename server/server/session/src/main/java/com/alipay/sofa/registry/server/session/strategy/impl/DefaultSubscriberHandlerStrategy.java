@@ -41,7 +41,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class DefaultSubscriberHandlerStrategy implements SubscriberHandlerStrategy {
   private static final Logger SUB_LOGGER = LoggerFactory.getLogger("SUB-RECEIVE");
 
-  @Autowired private Registry sessionRegistry;
+  @Autowired protected Registry sessionRegistry;
 
   @Override
   public void handleSubscriberRegister(

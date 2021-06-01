@@ -19,8 +19,12 @@ package com.alipay.sofa.registry.test.resource.session;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.junit.Assert.assertTrue;
 
+import com.alipay.sofa.registry.client.api.model.RegistryType;
 import com.alipay.sofa.registry.client.api.registration.PublisherRegistration;
+import com.alipay.sofa.registry.client.constants.ValueConstants;
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
+import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -31,11 +35,13 @@ import org.springframework.test.context.junit4.SpringRunner;
  */
 @RunWith(SpringRunner.class)
 public class ClientsOpenResourceTest extends BaseIntegrationTest {
+  private String dataId = "test-dataId-testClientOff" + System.currentTimeMillis();
+  private String value = "test client off";
+
   @Test
   public void testClientOff() throws Exception {
     clientOff();
-    String dataId = "test-dataId-" + System.currentTimeMillis();
-    String value = "test client off";
+
     PublisherRegistration registration = new PublisherRegistration(dataId);
     registryClient1.register(registration, value);
     Thread.sleep(2000L);
@@ -56,5 +62,10 @@ public class ClientsOpenResourceTest extends BaseIntegrationTest {
             .request(APPLICATION_JSON)
             .get(String.class);
     assertTrue(countResult.contains("[Publisher] size of publisher in DefaultDataCenter is 0"));
+  }
+
+  @After
+  public void clean() {
+    registryClient1.unregister(dataId, ValueConstants.DEFAULT_GROUP, RegistryType.PUBLISHER);
   }
 }

@@ -40,7 +40,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class DefaultWatcherHandlerStrategy implements WatcherHandlerStrategy {
   private static final Logger WATCH_LOGGER = LoggerFactory.getLogger("WATCH-RECEIVE");
 
-  @Autowired private Registry sessionRegistry;
+  @Autowired protected Registry sessionRegistry;
 
   @Override
   public void handleConfiguratorRegister(
