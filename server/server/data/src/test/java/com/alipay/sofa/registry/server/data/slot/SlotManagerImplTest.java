@@ -26,7 +26,10 @@ import com.alipay.sofa.registry.server.shared.slot.DiskSlotTableRecorder;
 import com.alipay.sofa.registry.task.KeyedTask;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -197,6 +200,52 @@ public class SlotManagerImplTest {
     FollowerSlotStatus followerstatus = (FollowerSlotStatus) list.get(1);
     Assert.assertTrue(followerstatus.getLastSyncTaskStartTime() > 0);
     Assert.assertTrue(followerstatus.getLastLeaderSyncTime() <= 0);
+  }
+
+  @Test
+  public void testEmergency() throws Exception {
+    Set<String> sessions = Sets.newHashSet("xx1", "xx2");
+    Mock mock = mockSM(10, true, false, sessions);
+    SlotManagerImpl sm = mock.slotManager;
+    SlotManagerImpl.SlotState slotState = new SlotManagerImpl.SlotState(createLeader(0, 3));
+
+    KeyedTask kt1 = Mockito.mock(KeyedTask.class);
+    SlotManagerImpl.MigratingTask mt1 = new SlotManagerImpl.MigratingTask("xx1", kt1);
+    slotState.migratingTasks.put(mt1.sessionIp, mt1);
+
+    KeyedTask kt2 = Mockito.mock(KeyedTask.class);
+    SlotManagerImpl.MigratingTask mt2 = new SlotManagerImpl.MigratingTask("xx2", kt2);
+    slotState.migratingTasks.put(mt2.sessionIp, mt2);
+
+    mock.mockSync.syncer.getDataServerConfig().setMigratingMaxUnavailable(1);
+
+    // failed
+    Assert.assertFalse(sm.triggerEmergencyMigrating(slotState, Collections.emptyList(), mt1));
+    Assert.assertFalse(mt1.forceSuccess);
+
+    Assert.assertFalse(sm.triggerEmergencyMigrating(slotState, null, mt1));
+    Assert.assertFalse(mt1.forceSuccess);
+
+    Assert.assertFalse(sm.triggerEmergencyMigrating(slotState, sessions, mt1));
+    Assert.assertFalse(mt1.forceSuccess);
+
+    mock.mockSync.syncer.getDataServerConfig().setMigratingMaxRetry(-1);
+    Assert.assertFalse(sm.triggerEmergencyMigrating(slotState, sessions, mt1));
+    Assert.assertFalse(mt1.forceSuccess);
+
+    mock.mockSync.syncer.getDataServerConfig().setMigratingMaxSecs(-1);
+    Assert.assertFalse(sm.triggerEmergencyMigrating(slotState, sessions, mt1));
+    Assert.assertFalse(mt1.forceSuccess);
+
+    // mt2 force success
+    mt2.forceSuccess = true;
+    Assert.assertFalse(sm.triggerEmergencyMigrating(slotState, sessions, mt1));
+    Assert.assertFalse(mt1.forceSuccess);
+
+    // make mt2 success
+    Mockito.when(kt2.isSuccess()).thenReturn(true);
+    Assert.assertTrue(sm.triggerEmergencyMigrating(slotState, sessions, mt1));
+    Assert.assertTrue(mt1.forceSuccess);
   }
 
   static void slotEquals(SlotTable table, SlotManagerImpl sm) {

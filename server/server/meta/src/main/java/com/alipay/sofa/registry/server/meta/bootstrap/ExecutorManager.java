@@ -19,7 +19,6 @@ package com.alipay.sofa.registry.server.meta.bootstrap;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author xiaojian.xj
@@ -28,8 +27,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class ExecutorManager {
 
   private final ScheduledThreadPoolExecutor scheduler;
-
-  @Autowired private MetaServerConfig metaServerConfig;
 
   public ExecutorManager(MetaServerConfig metaServerConfig) {
     scheduler =
