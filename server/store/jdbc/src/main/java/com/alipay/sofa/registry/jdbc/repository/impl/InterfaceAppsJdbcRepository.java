@@ -51,7 +51,8 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository {
 
   public InterfaceAppsJdbcRepository() {
     informer =
-        new BaseInformer<InterfaceAppsIndexDomain, InterfaceAppsIndexContainer>() {
+        new BaseInformer<InterfaceAppsIndexDomain, InterfaceAppsIndexContainer>(
+            "InterfaceAppsIndex") {
           @Override
           protected InterfaceAppsIndexContainer containerFactory() {
             return new InterfaceAppsIndexContainer();

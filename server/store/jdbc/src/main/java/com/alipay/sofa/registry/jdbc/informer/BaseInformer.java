@@ -41,14 +41,18 @@ public abstract class BaseInformer<T extends DbEntry, C extends DbEntryContainer
   protected int watchLoopIntervalMs = 1000;
   protected int listLoopIntervalMs = 1000 * 60 * 30;
   protected int checkLoopIntervalMs = 100 * 60 * 5;
+  private final String name;
+
+  public BaseInformer(String name) {
+    this.name = name;
+  }
 
   public synchronized void start() {
     if (started) {
       return;
     }
-    ConcurrentUtils.createDaemonThread(getClass().getSimpleName() + "-WatchLoop", watchLoop)
-        .start();
-    ConcurrentUtils.createDaemonThread(getClass().getSimpleName() + "-ListLoop", listLoop).start();
+    ConcurrentUtils.createDaemonThread(name + "-WatchLoop", watchLoop).start();
+    ConcurrentUtils.createDaemonThread(name + "-ListLoop", listLoop).start();
     started = true;
   }
 

@@ -91,7 +91,7 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository {
                 });
     CacheCleaner.autoClean(localRevisions, 1000 * 60 * 10);
     informer =
-        new BaseInformer<AppRevisionDomain, AppRevisionContainer>() {
+        new BaseInformer<AppRevisionDomain, AppRevisionContainer>("AppRevision") {
           @Override
           protected AppRevisionContainer containerFactory() {
             return new AppRevisionContainer();
