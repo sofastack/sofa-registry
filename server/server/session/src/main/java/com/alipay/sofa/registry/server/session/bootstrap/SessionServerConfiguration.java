@@ -53,6 +53,7 @@ import com.alipay.sofa.registry.server.session.provideData.FetchBlackListService
 import com.alipay.sofa.registry.server.session.provideData.FetchClientOffAddressService;
 import com.alipay.sofa.registry.server.session.provideData.FetchGrayPushSwitchService;
 import com.alipay.sofa.registry.server.session.provideData.FetchStopPushService;
+import com.alipay.sofa.registry.server.session.provideData.ProvideDataProcessorManager;
 import com.alipay.sofa.registry.server.session.provideData.SystemPropertyProcessorManager;
 import com.alipay.sofa.registry.server.session.push.*;
 import com.alipay.sofa.registry.server.session.push.ChangeProcessor;
@@ -109,6 +110,7 @@ import com.alipay.sofa.registry.server.session.wrapper.WrapperInterceptorManager
 import com.alipay.sofa.registry.server.shared.meta.MetaServerManager;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.server.shared.providedata.FetchSystemPropertyService;
+import com.alipay.sofa.registry.server.shared.providedata.ProvideDataProcessor;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractClientHandler;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.alipay.sofa.registry.server.shared.remoting.SlotTableChangeEventHandler;
@@ -759,6 +761,11 @@ public class SessionServerConfiguration {
       systemPropertyProcessorManager.addSystemDataProcessor(fetchBlackListService());
       systemPropertyProcessorManager.addSystemDataProcessor(fetchClientOffAddressService());
       return systemPropertyProcessorManager;
+    }
+
+    @Bean
+    public ProvideDataProcessor provideDataProcessorManager() {
+      return new ProvideDataProcessorManager();
     }
 
     @Bean
