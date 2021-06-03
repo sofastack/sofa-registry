@@ -51,7 +51,6 @@ public class ClientManagerTest extends BaseIntegrationTest {
 
   private ClientManagerResource clientManagerResource;
   private FetchClientOffAddressService fetchClientOffAddressService;
-  private DataStore sessionDataStore;
 
   private String localAddress = sessionChannel.getLocalAddress().getHostString();
   private final String CLIENT_OFF_STR = "1.1.1.1;2.2.2.2;" + localAddress;
@@ -64,7 +63,6 @@ public class ClientManagerTest extends BaseIntegrationTest {
   public void beforeClientManagerTest() {
     clientManagerResource =
         metaApplicationContext.getBean("clientManagerResource", ClientManagerResource.class);
-    sessionDataStore = sessionApplicationContext.getBean("sessionDataStore", DataStore.class);
     fetchClientOffAddressService =
         sessionApplicationContext.getBean(
             "fetchClientOffAddressService", FetchClientOffAddressService.class);

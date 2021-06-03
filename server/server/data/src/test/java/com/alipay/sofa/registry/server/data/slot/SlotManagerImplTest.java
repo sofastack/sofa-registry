@@ -26,13 +26,14 @@ import com.alipay.sofa.registry.server.shared.slot.DiskSlotTableRecorder;
 import com.alipay.sofa.registry.task.KeyedTask;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import org.junit.Assert;
+import org.junit.Test;
+import org.mockito.Mockito;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.junit.Assert;
-import org.junit.Test;
-import org.mockito.Mockito;
 
 public class SlotManagerImplTest {
 
@@ -220,31 +221,36 @@ public class SlotManagerImplTest {
     mock.mockSync.syncer.getDataServerConfig().setMigratingMaxUnavailable(1);
 
     // failed
-    Assert.assertFalse(sm.triggerEmergencyMigrating(slotState, Collections.emptyList(), mt1));
+    Assert.assertFalse(sm.triggerEmergencyMigrating(slotState, Collections.emptyList(), mt1, 0));
     Assert.assertFalse(mt1.forceSuccess);
 
-    Assert.assertFalse(sm.triggerEmergencyMigrating(slotState, null, mt1));
+    Assert.assertFalse(sm.triggerEmergencyMigrating(slotState, null, mt1, 0));
     Assert.assertFalse(mt1.forceSuccess);
 
-    Assert.assertFalse(sm.triggerEmergencyMigrating(slotState, sessions, mt1));
+    int notSyncedCount = sessions.size() - slotState.countSyncSuccess(sessions);
+    Assert.assertFalse(sm.triggerEmergencyMigrating(slotState, sessions, mt1, notSyncedCount));
     Assert.assertFalse(mt1.forceSuccess);
 
     mock.mockSync.syncer.getDataServerConfig().setMigratingMaxRetry(-1);
-    Assert.assertFalse(sm.triggerEmergencyMigrating(slotState, sessions, mt1));
+    notSyncedCount = sessions.size() - slotState.countSyncSuccess(sessions);
+    Assert.assertFalse(sm.triggerEmergencyMigrating(slotState, sessions, mt1, notSyncedCount));
     Assert.assertFalse(mt1.forceSuccess);
 
     mock.mockSync.syncer.getDataServerConfig().setMigratingMaxSecs(-1);
-    Assert.assertFalse(sm.triggerEmergencyMigrating(slotState, sessions, mt1));
+    notSyncedCount = sessions.size() - slotState.countSyncSuccess(sessions);
+    Assert.assertFalse(sm.triggerEmergencyMigrating(slotState, sessions, mt1, notSyncedCount));
     Assert.assertFalse(mt1.forceSuccess);
 
     // mt2 force success
     mt2.forceSuccess = true;
-    Assert.assertFalse(sm.triggerEmergencyMigrating(slotState, sessions, mt1));
+    notSyncedCount = sessions.size() - slotState.countSyncSuccess(sessions);
+    Assert.assertFalse(sm.triggerEmergencyMigrating(slotState, sessions, mt1, notSyncedCount));
     Assert.assertFalse(mt1.forceSuccess);
 
     // make mt2 success
     Mockito.when(kt2.isSuccess()).thenReturn(true);
-    Assert.assertTrue(sm.triggerEmergencyMigrating(slotState, sessions, mt1));
+    notSyncedCount = sessions.size() - slotState.countSyncSuccess(sessions);
+    Assert.assertTrue(sm.triggerEmergencyMigrating(slotState, sessions, mt1, notSyncedCount));
     Assert.assertTrue(mt1.forceSuccess);
   }
 
