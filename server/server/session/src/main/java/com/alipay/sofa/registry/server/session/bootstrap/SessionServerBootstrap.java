@@ -33,11 +33,11 @@ import com.alipay.sofa.registry.remoting.bolt.serializer.ProtobufSerializer;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
 import com.alipay.sofa.registry.server.session.metadata.AppRevisionCacheRegistry;
+import com.alipay.sofa.registry.server.session.provideData.SystemPropertyProcessorManager;
 import com.alipay.sofa.registry.server.session.registry.SessionRegistry;
 import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
-import com.alipay.sofa.registry.server.shared.providedata.FetchSystemPropertyService;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.alipay.sofa.registry.task.batcher.TaskDispatchers;
 import com.github.rholder.retry.*;
@@ -86,11 +86,7 @@ public class SessionServerBootstrap {
 
   @Autowired private ApplicationContext applicationContext;
 
-  @Resource private FetchSystemPropertyService fetchStopPushService;
-
-  @Resource private FetchSystemPropertyService fetchBlackListService;
-
-  @Resource private FetchSystemPropertyService fetchClientOffAddressService;
+  @Autowired private SystemPropertyProcessorManager systemPropertyProcessorManager;
 
   @Autowired private SlotTableCache slotTableCache;
 
@@ -314,9 +310,7 @@ public class SessionServerBootstrap {
       metaNodeService.startRenewer();
 
       // start fetch system property data
-      fetchStopPushService.load();
-      fetchBlackListService.load();
-      fetchClientOffAddressService.load();
+      retryer.call(() -> systemPropertyProcessorManager.start());
 
       // start fetch change data after got the switch
       sessionRegistry.fetchChangDataProcess();

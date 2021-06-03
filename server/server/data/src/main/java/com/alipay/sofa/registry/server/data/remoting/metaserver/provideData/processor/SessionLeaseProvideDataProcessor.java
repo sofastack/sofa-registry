@@ -22,7 +22,7 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.lease.SessionLeaseManager;
-import com.alipay.sofa.registry.server.data.remoting.metaserver.provideData.ProvideDataProcessor;
+import com.alipay.sofa.registry.server.shared.providedata.ProvideDataProcessor;
 import com.google.common.annotations.VisibleForTesting;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -37,30 +37,31 @@ public class SessionLeaseProvideDataProcessor implements ProvideDataProcessor {
   @Autowired private DataServerConfig dataServerConfig;
 
   @Override
-  public void changeDataProcess(ProvideData provideData) {
+  public boolean processData(ProvideData provideData) {
     if (provideData == null) {
       LOGGER.info("Fetch data sessionLease null");
-      return;
+      return false;
     }
 
     final Integer data = ProvideData.toInteger(provideData);
     if (data == null) {
       LOGGER.info("Fetch data sessionLease content null");
-      return;
+      return false;
     }
 
     LOGGER.info("Fetch sessionLeaseSec {}", data);
     SessionLeaseManager.validateSessionLeaseSec(data);
     dataServerConfig.setSessionLeaseSecs(data);
-  }
 
-  @Override
-  public boolean support(ProvideData provideData) {
-    return ValueConstants.DATA_SESSION_LEASE_SEC.equals(provideData.getDataInfoId());
+    return true;
   }
 
   @VisibleForTesting
   void setDataServerConfig(DataServerConfig dataServerConfig) {
     this.dataServerConfig = dataServerConfig;
   }
+
+  @Override
+  public boolean support(String dataInfoId) {
+    return ValueConstants.DATA_SESSION_LEASE_SEC.equals(dataInfoId);  }
 }

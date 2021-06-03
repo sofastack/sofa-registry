@@ -17,6 +17,8 @@
 package com.alipay.sofa.registry.server.data.remoting.metaserver.provideData;
 
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
+import com.alipay.sofa.registry.server.shared.providedata.ProvideDataProcessor;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,16 +35,18 @@ public class ProvideDataProcessorManager implements ProvideDataProcessor {
   }
 
   @Override
-  public void changeDataProcess(ProvideData provideData) {
+  public boolean processData(ProvideData provideData) {
     for (ProvideDataProcessor provideDataProcessor : provideDataProcessors) {
-      if (provideDataProcessor.support(provideData)) {
-        provideDataProcessor.changeDataProcess(provideData);
+      if (provideDataProcessor.support(provideData.getDataInfoId())) {
+        provideDataProcessor.processData(provideData);
       }
     }
+
+    return true;
   }
 
   @Override
-  public boolean support(ProvideData provideData) {
+  public boolean support(String dataInfoId) {
     return false;
   }
 }

@@ -83,7 +83,7 @@ public final class ServerEnv {
       try {
         properties.load(inputStream);
       } catch (Throwable e) {
-        LOGGER.warn("failed to load release props file");
+        LOGGER.warn("failed to start release props file");
       } finally {
         IOUtils.closeQuietly(inputStream);
       }

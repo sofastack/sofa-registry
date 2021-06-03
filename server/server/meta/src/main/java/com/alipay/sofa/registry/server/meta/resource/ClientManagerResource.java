@@ -17,11 +17,9 @@
 package com.alipay.sofa.registry.server.meta.resource;
 
 import com.alipay.sofa.registry.common.model.CollectionSdks;
-import com.alipay.sofa.registry.common.model.CommonQueryResponse;
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
-import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.BaseHeartBeatResponse;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.provide.data.ClientManagerService;

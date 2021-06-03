@@ -22,7 +22,7 @@ import com.alipay.sofa.registry.common.model.store.StoreData.DataType;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.server.session.loggers.Loggers;
 import com.alipay.sofa.registry.server.session.provideData.FetchClientOffAddressService;
 import com.alipay.sofa.registry.server.session.push.FirePushService;
 import com.alipay.sofa.registry.server.session.registry.SessionRegistry;
@@ -36,7 +36,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public class ClientOffWrapperInterceptor implements WrapperInterceptor<StoreData, Boolean> {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(ClientOffWrapperInterceptor.class);
+  private static final Logger LOGGER = Loggers.CLIENT_OFF_LOG;
 
   @Autowired private FirePushService firePushService;
 

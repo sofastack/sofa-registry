@@ -25,6 +25,7 @@ import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.server.session.TestUtils;
 import com.alipay.sofa.registry.server.session.bootstrap.ExecutorManager;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfigBean;
+import com.alipay.sofa.registry.server.session.provideData.FetchGrayPushSwitchService;
 import com.alipay.sofa.registry.server.session.provideData.FetchStopPushService;
 import com.alipay.sofa.registry.server.session.push.FirePushService;
 import com.alipay.sofa.registry.server.session.push.PushSwitchService;
@@ -36,8 +37,8 @@ import org.junit.Test;
 
 public class DataChangeRequestHandlerTest {
 
-
   private long init = -1L;
+
   @Test
   public void testCheckParam() {
     DataChangeRequestHandler handler = newHandler();
@@ -63,13 +64,14 @@ public class DataChangeRequestHandlerTest {
     handler.firePushService = mock(FirePushService.class);
     handler.sessionInterests = mock(Interests.class);
     handler.pushSwitchService.setFetchStopPushService(new FetchStopPushService());
+    handler.pushSwitchService.setFetchGrayPushSwitchService(new FetchGrayPushSwitchService());
 
-    handler.pushSwitchService.getFetchStopPushService().setStopPushSwitch(init,true);
+    handler.pushSwitchService.getFetchStopPushService().setStopPushSwitch(init, true);
     // no npe, stopPush skip the handle
     Object obj = handler.doHandle(null, null);
     Assert.assertNull(obj);
 
-    handler.pushSwitchService.getFetchStopPushService().setStopPushSwitch(init,false);
+    handler.pushSwitchService.getFetchStopPushService().setStopPushSwitch(init, false);
     when(handler.sessionInterests.checkInterestVersion(anyString(), anyString(), anyLong()))
         .thenReturn(Interests.InterestVersionCheck.Obsolete);
     obj = handler.doHandle(null, request());

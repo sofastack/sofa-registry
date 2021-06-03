@@ -115,7 +115,7 @@ public class AbstractH2DbTestBase extends AbstractTestBase implements Applicatio
           LOGGER.info("[getFileInputStream]{}", f.getAbsolutePath());
           return new FileInputStream(f);
         } catch (IOException e) {
-          throw new IllegalArgumentException("file load fail:" + f, e);
+          throw new IllegalArgumentException("file start fail:" + f, e);
         }
       }
     }
@@ -127,7 +127,7 @@ public class AbstractH2DbTestBase extends AbstractTestBase implements Applicatio
         LOGGER.info("[getFileInputStream]{}", f.getAbsolutePath());
         return new FileInputStream(f);
       } catch (IOException e) {
-        throw new IllegalArgumentException("file load fail:" + f, e);
+        throw new IllegalArgumentException("file start fail:" + f, e);
       }
     }
 
@@ -138,10 +138,10 @@ public class AbstractH2DbTestBase extends AbstractTestBase implements Applicatio
     }
     if (url != null) {
       try {
-        LOGGER.info("[load]{}", url);
+        LOGGER.info("[start]{}", url);
         return url.openStream();
       } catch (IOException e) {
-        throw new IllegalArgumentException("classpath load fail:" + url, e);
+        throw new IllegalArgumentException("classpath start fail:" + url, e);
       }
     }
 

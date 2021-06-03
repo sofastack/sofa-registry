@@ -16,28 +16,39 @@
  */
 package com.alipay.sofa.registry.server.session.provideData;
 
-import com.alipay.sofa.registry.server.shared.providedata.ProvideDataProcessor;
+import com.alipay.sofa.registry.server.shared.providedata.FetchSystemPropertyService;
 import java.util.ArrayList;
 import java.util.Collection;
 
 /**
  * @author shangyu.wh
- * @version 1.0: ProvideDataProcessorManager.java, v 0.1 2019-10-09 17:39 shangyu.wh Exp $
+ * @version 1.0: SystemPropertyProcessorManager.java, v 0.1 2019-10-09 17:39 shangyu.wh Exp $
  */
-public class ProvideDataProcessorManager {
+public class SystemPropertyProcessorManager {
 
-  private Collection<ProvideDataProcessor> provideDataProcessors = new ArrayList<>();
+  private Collection<FetchSystemPropertyService> systemDataProcessors = new ArrayList<>();
 
-  public void addProvideDataProcessor(ProvideDataProcessor provideDataProcessor) {
-    provideDataProcessors.add(provideDataProcessor);
+  public void addSystemDataProcessor(FetchSystemPropertyService systemDataProcessor) {
+    systemDataProcessors.add(systemDataProcessor);
   }
 
   public boolean doFetch(String dataInfoId) {
-    for (ProvideDataProcessor provideDataProcessor : provideDataProcessors) {
-      if (provideDataProcessor.support(dataInfoId)) {
-        return provideDataProcessor.doFetch();
+    for (FetchSystemPropertyService systemDataProcessor : systemDataProcessors) {
+      if (systemDataProcessor.support(dataInfoId)) {
+        return systemDataProcessor.doFetch();
       }
     }
     return false;
+  }
+
+  public boolean start() {
+    boolean success = true;
+
+    for (FetchSystemPropertyService systemDataProcessor : systemDataProcessors) {
+      if (!systemDataProcessor.start()) {
+        success = false;
+      }
+    }
+    return success;
   }
 }

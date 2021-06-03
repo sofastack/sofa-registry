@@ -47,7 +47,7 @@ public class DatumCacheGenerator implements CacheGenerator {
         LOGGER.info("loadNil,{},{}", dataInfoId, dataCenter);
       } else {
         LOGGER.info(
-            "load,{},{},{},{},{}",
+            "start,{},{},{},{},{}",
             dataInfoId,
             dataCenter,
             datum.getPublishers().size(),

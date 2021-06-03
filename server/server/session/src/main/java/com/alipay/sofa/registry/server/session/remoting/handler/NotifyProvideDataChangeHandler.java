@@ -23,7 +23,7 @@ import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.server.session.provideData.ProvideDataProcessorManager;
+import com.alipay.sofa.registry.server.session.provideData.SystemPropertyProcessorManager;
 import com.alipay.sofa.registry.server.session.store.Watchers;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractClientHandler;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
@@ -52,7 +52,7 @@ public class NotifyProvideDataChangeHandler extends AbstractClientHandler<Provid
 
   @Autowired ThreadPoolExecutor metaNodeExecutor;
 
-  @Autowired ProvideDataProcessorManager provideDataProcessorManager;
+  @Autowired SystemPropertyProcessorManager systemPropertyProcessorManager;
 
   @Override
   protected NodeType getConnectNodeType() {
@@ -64,7 +64,7 @@ public class NotifyProvideDataChangeHandler extends AbstractClientHandler<Provid
     final String notifyDataInfoId = provideDataChangeEvent.getDataInfoId();
 
     // system data do fetch
-    if (provideDataProcessorManager.doFetch(notifyDataInfoId)) {
+    if (systemPropertyProcessorManager.doFetch(notifyDataInfoId)) {
       return null;
     }
 

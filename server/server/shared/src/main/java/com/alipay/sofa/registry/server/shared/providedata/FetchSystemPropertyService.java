@@ -16,12 +16,21 @@
  */
 package com.alipay.sofa.registry.server.shared.providedata;
 
+import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
+
 /**
  * @author xiaojian.xj
  * @version $Id: FetchSystemPropertyService.java, v 0.1 2021年05月16日 13:06 xiaojian.xj Exp $
  */
-public interface FetchSystemPropertyService {
+public interface FetchSystemPropertyService extends ProvideDataProcessor {
 
-  /** start load data */
-  void load();
+  /** start start data */
+  boolean start();
+
+  boolean doFetch();
+
+  @Override
+  default boolean processData(ProvideData data) {
+    return doFetch();
+  }
 }

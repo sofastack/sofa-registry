@@ -34,7 +34,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public class ClientManagerAddressJdbcRepositoryTest extends AbstractH2DbTestBase {
 
-  @Autowired private ClientManagerAddressRepository ClientManagerAddressRepository;
+  @Autowired private ClientManagerAddressRepository clientManagerAddressRepository;
 
   public static final Set<String> clientOffSet = Sets.newHashSet("1.1.1.1", "2.2.2.2");
   public static final Set<String> clientOpenSet = Sets.newHashSet("2.2.2.2", "3.3.3.3");
@@ -42,29 +42,29 @@ public class ClientManagerAddressJdbcRepositoryTest extends AbstractH2DbTestBase
   @Test
   public void testClientManager() {
     boolean clientOff =
-        ClientManagerAddressRepository.clientOff(
+        clientManagerAddressRepository.clientOff(
             ClientManagerAddressJdbcRepositoryTest.clientOffSet);
     Assert.assertTrue(clientOff);
 
     boolean clientOpen =
-        ClientManagerAddressRepository.clientOpen(
+        clientManagerAddressRepository.clientOpen(
             ClientManagerAddressJdbcRepositoryTest.clientOpenSet);
     Assert.assertTrue(clientOpen);
 
-    int total = ClientManagerAddressRepository.queryTotalCount();
+    int total = clientManagerAddressRepository.queryTotalCount();
     Assert.assertEquals(3, total);
 
-    List<ClientManagerAddress> ClientManagerAddress =
-        ClientManagerAddressRepository.queryAfterThan(-1L);
-    List<ClientManagerAddress> addresses = ClientManagerAddressRepository.queryAfterThan(-1L, 1000);
-    Assert.assertEquals(total, ClientManagerAddress.size());
+    List<ClientManagerAddress> clientManagerAddress =
+        clientManagerAddressRepository.queryAfterThan(-1L);
+    List<ClientManagerAddress> addresses = clientManagerAddressRepository.queryAfterThan(-1L, 1000);
+    Assert.assertEquals(total, clientManagerAddress.size());
     Assert.assertEquals(total, addresses.size());
 
-    for (ClientManagerAddress clientManagerAddress : ClientManagerAddress) {
-      if (clientOpenSet.contains(clientManagerAddress.getAddress())) {
-        Assert.assertEquals(ValueConstants.CLIENT_OPEN, clientManagerAddress.getOperation());
+    for (ClientManagerAddress address : clientManagerAddress) {
+      if (clientOpenSet.contains(address.getAddress())) {
+        Assert.assertEquals(ValueConstants.CLIENT_OPEN, address.getOperation());
       } else {
-        Assert.assertEquals(ValueConstants.CLIENT_OFF, clientManagerAddress.getOperation());
+        Assert.assertEquals(ValueConstants.CLIENT_OFF, address.getOperation());
       }
     }
   }
