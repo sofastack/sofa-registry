@@ -60,4 +60,10 @@ public interface MetaServerConfig {
   int getMetaSchedulerPoolSize();
 
   int getDataNodeProtectionNum();
+
+  int getClientManagerRefreshSecs();
+
+  int getClientManagerWatchMillis();
+
+  int getClientManagerRefreshLimit();
 }

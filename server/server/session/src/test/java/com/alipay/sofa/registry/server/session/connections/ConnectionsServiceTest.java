@@ -46,7 +46,7 @@ public class ConnectionsServiceTest {
 
     connectionsService.boltExchange = Mockito.mock(Exchange.class);
     String remoteIp = "192.168.8.8";
-    Assert.assertEquals(connectionsService.getIpConnects(Lists.newArrayList(remoteIp)).size(), 0);
+    Assert.assertEquals(connectionsService.getIpConnects(Sets.newHashSet(remoteIp)).size(), 0);
     Assert.assertEquals(connectionsService.closeIpConnects(Lists.newArrayList(remoteIp)).size(), 0);
 
     Server server = Mockito.mock(Server.class);
@@ -61,10 +61,10 @@ public class ConnectionsServiceTest {
     List<String> list = connectionsService.getConnections();
     Assert.assertEquals(list, Lists.newArrayList(remoteIp + ":1234"));
 
-    List<ConnectId> connectIds = connectionsService.getIpConnects(Lists.newArrayList("222"));
+    List<ConnectId> connectIds = connectionsService.getIpConnects(Sets.newHashSet("222"));
     Assert.assertEquals(connectIds.size(), 0);
 
-    connectIds = connectionsService.getIpConnects(Lists.newArrayList(remoteIp));
+    connectIds = connectionsService.getIpConnects(Sets.newHashSet(remoteIp));
     Assert.assertEquals(connectIds.size(), 1);
     Assert.assertEquals(connectIds.get(0), connectId);
   }

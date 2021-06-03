@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.filter.blacklist;
 
+import com.alipay.sofa.registry.server.session.provideData.FetchBlackListService;
 import java.util.Collections;
 import java.util.List;
 import org.assertj.core.util.Lists;
@@ -27,23 +28,22 @@ public class DefaultIPMatchStrategyTest {
   @Test
   public void test() {
     DefaultIPMatchStrategy strategy = new DefaultIPMatchStrategy();
-    BlacklistManagerImpl mgr = new BlacklistManagerImpl();
-    strategy.blacklistManager = mgr;
-    mgr.blacklistConfigList = Lists.newArrayList();
-    mgr.blacklistConfigList.add(
-        getIpConfig(BlacklistConstants.FORBIDDEN_PUB + "1", Collections.emptyList()));
+    FetchBlackListService mgr = new FetchBlackListService();
+    strategy.setFetchBlackListService(mgr);
+    mgr.getBlacklistConfigList()
+        .add(getIpConfig(BlacklistConstants.FORBIDDEN_PUB + "1", Collections.emptyList()));
 
     Assert.assertFalse(strategy.match("192.168.1.1", () -> BlacklistConstants.FORBIDDEN_PUB));
 
-    mgr.blacklistConfigList.add(
-        getIpConfig(BlacklistConstants.FORBIDDEN_PUB, Collections.emptyList()));
+    mgr.getBlacklistConfigList()
+        .add(getIpConfig(BlacklistConstants.FORBIDDEN_PUB, Collections.emptyList()));
     Assert.assertFalse(strategy.match("192.168.1.1", () -> BlacklistConstants.FORBIDDEN_PUB));
 
     List<MatchType> types = Lists.newArrayList();
     MatchType m = new MatchType();
     m.setType(BlacklistConstants.IP_FULL);
     types.add(m);
-    mgr.blacklistConfigList.add(getIpConfig(BlacklistConstants.FORBIDDEN_PUB, types));
+    mgr.getBlacklistConfigList().add(getIpConfig(BlacklistConstants.FORBIDDEN_PUB, types));
     Assert.assertFalse(strategy.match("192.168.1.1", () -> BlacklistConstants.FORBIDDEN_PUB));
 
     m.setPatternSet(Sets.newSet("192.168.1.2"));
@@ -52,8 +52,8 @@ public class DefaultIPMatchStrategyTest {
     m.setPatternSet(Sets.newSet("192.168.1.2", "192.168.1.1"));
     Assert.assertTrue(m.toString(), m.toString().contains("192.168.1.1"));
     Assert.assertTrue(
-        mgr.blacklistConfigList.toString(),
-        mgr.blacklistConfigList.toString().contains("192.168.1.1"));
+        mgr.getBlacklistConfigList().toString(),
+        mgr.getBlacklistConfigList().toString().contains("192.168.1.1"));
 
     Assert.assertTrue(strategy.match("192.168.1.1", () -> BlacklistConstants.FORBIDDEN_PUB));
   }

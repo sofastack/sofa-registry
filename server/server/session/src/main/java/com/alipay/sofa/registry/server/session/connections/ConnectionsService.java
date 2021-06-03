@@ -75,24 +75,22 @@ public class ConnectionsService {
     return new ArrayList<>(connectIds);
   }
   /**
-   * get connectIds by ip list
+   * get connectIds by ip set
    *
-   * @param _ipList ip list
+   * @param _ipSet ip set
    * @return
    */
-  public List<ConnectId> getIpConnects(Collection<String> _ipList) {
+  public List<ConnectId> getIpConnects(Set<String> _ipSet) {
     Server sessionServer = boltExchange.getServer(sessionServerConfig.getServerPort());
-    if (sessionServer == null || CollectionUtils.isEmpty(_ipList)) {
+    if (sessionServer == null || CollectionUtils.isEmpty(_ipSet)) {
       return Collections.emptyList();
     }
     List<ConnectId> connections = Lists.newArrayList();
-    Set<String> ipSet = Sets.newHashSet(_ipList);
     Collection<Channel> channels = sessionServer.getChannels();
     for (Channel channel : channels) {
-      String key = NetUtil.toAddressString(channel.getRemoteAddress());
-      String ip = getIpFromConnectId(key);
-      if (ipSet.contains(ip)) {
-        connections.add(ConnectId.of(key, NetUtil.toAddressString(channel.getLocalAddress())));
+      String ip = channel.getRemoteAddress().getAddress().getHostAddress();
+      if (_ipSet.contains(ip)) {
+        connections.add(ConnectId.of(channel.getRemoteAddress(), channel.getLocalAddress()));
       }
     }
 

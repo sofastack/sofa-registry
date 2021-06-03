@@ -24,6 +24,7 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.session.connections.ConnectionsService;
 import com.alipay.sofa.registry.server.session.registry.SessionRegistry;
+import com.google.common.collect.Sets;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -35,7 +36,7 @@ public final class ClientOffRequestHandler extends AbstractConsoleHandler<Client
 
   @Override
   public Object doHandle(Channel channel, ClientOffRequest request) {
-    List<ConnectId> conIds = connectionsService.getIpConnects(request.getIps());
+    List<ConnectId> conIds = connectionsService.getIpConnects(Sets.newHashSet(request.getIps()));
     sessionRegistry.clientOff(conIds);
     LOGGER.info("clientOff conIds: {}", conIds);
     return CommonResponse.buildSuccessResponse();

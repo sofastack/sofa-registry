@@ -30,9 +30,9 @@ import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.converter.ReceivedDataConverter;
-import com.alipay.sofa.registry.server.session.provideData.ProvideDataProcessor;
 import com.alipay.sofa.registry.server.session.store.Watchers;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
+import com.alipay.sofa.registry.server.shared.providedata.ProvideDataProcessor;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
@@ -110,7 +110,7 @@ public class ProvideDataChangeFetchTask extends AbstractSessionTask {
           "Notify provider data Change request {} fetch no provider data!", provideDataChangeEvent);
       return;
     }
-    provideDataProcessorManager.changeDataProcess(provideData);
+    provideDataProcessorManager.processorData(provideData);
 
     DataInfo dataInfo = DataInfo.valueOf(dataInfoId);
 

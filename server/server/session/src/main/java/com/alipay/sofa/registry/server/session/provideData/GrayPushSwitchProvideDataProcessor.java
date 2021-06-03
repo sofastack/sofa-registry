@@ -14,16 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.provideData.processor;
+package com.alipay.sofa.registry.server.session.provideData;
 
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.common.model.sessionserver.GrayOpenPushSwitchRequest;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.server.session.provideData.ProvideDataProcessor;
 import com.alipay.sofa.registry.server.session.push.PushSwitchService;
 import com.alipay.sofa.registry.server.session.registry.Registry;
+import com.alipay.sofa.registry.server.shared.providedata.ProvideDataProcessor;
 import com.alipay.sofa.registry.util.JsonUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
@@ -32,17 +32,18 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class GrayPushSwitchProvideDataProcessor implements ProvideDataProcessor {
-  private static final Logger LOGGER = LoggerFactory.getLogger(StopPushProvideDataProcessor.class);
+  private static final Logger LOGGER =
+      LoggerFactory.getLogger(GrayPushSwitchProvideDataProcessor.class);
 
   @Autowired private PushSwitchService pushSwitchService;
 
   @Autowired private Registry sessionRegistry;
 
   @Override
-  public void changeDataProcess(ProvideData provideData) {
+  public boolean processorData(ProvideData provideData) {
     if (provideData == null) {
       LOGGER.info("fetch session gray pushSwitch null");
-      return;
+      return true;
     }
     final String data = ProvideData.toString(provideData);
 
@@ -61,11 +62,7 @@ public class GrayPushSwitchProvideDataProcessor implements ProvideDataProcessor 
       sessionRegistry.fetchChangDataProcess();
     }
     LOGGER.info("fetch session gray pushSwitch={}, prev={}", req, prev);
-  }
-
-  @Override
-  public void fetchDataProcess(ProvideData provideData) {
-    changeDataProcess(provideData);
+    return true;
   }
 
   @Override

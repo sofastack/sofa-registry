@@ -25,6 +25,7 @@ import com.alipay.sofa.registry.server.session.remoting.console.SessionConsoleEx
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import org.assertj.core.util.Lists;
@@ -39,6 +40,14 @@ public class SdksTest {
     Assert.assertEquals(2, list.size());
     Assert.assertEquals(list.get(0), "111");
     Assert.assertEquals(list.get(1), "222,dd");
+  }
+
+  @Test
+  public void toIpSetTest() {
+    Set<String> set = Sdks.toIpSet("111 ; 222,dd ");
+    Assert.assertEquals(2, set.size());
+    Assert.assertTrue(set.contains( "111"));
+    Assert.assertTrue(set.contains( "222,dd"));
   }
 
   @Test

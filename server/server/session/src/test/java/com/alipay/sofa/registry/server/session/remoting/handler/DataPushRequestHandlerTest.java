@@ -26,11 +26,13 @@ import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.server.session.TestUtils;
 import com.alipay.sofa.registry.server.session.bootstrap.ExecutorManager;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfigBean;
+import com.alipay.sofa.registry.server.session.provideData.FetchStopPushService;
 import com.alipay.sofa.registry.server.session.push.FirePushService;
 import com.alipay.sofa.registry.server.session.push.PushSwitchService;
 import java.util.Collections;
 import org.junit.Assert;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 public class DataPushRequestHandlerTest {
   @Test
@@ -53,16 +55,17 @@ public class DataPushRequestHandlerTest {
     DataPushRequestHandler handler = newHandler();
     SessionServerConfigBean serverConfigBean = TestUtils.newSessionConfig("testDc");
     handler.sessionServerConfig = serverConfigBean;
-    handler.pushSwitchService = new PushSwitchService(serverConfigBean);
+    handler.pushSwitchService = new PushSwitchService();
     handler.executorManager = new ExecutorManager(serverConfigBean);
+    handler.pushSwitchService.setFetchStopPushService(new FetchStopPushService());
     Assert.assertNotNull(handler.getExecutor());
 
-    handler.sessionServerConfig.setStopPushSwitch(true);
+    handler.pushSwitchService.getFetchStopPushService().setStopPushSwitch(true);
     // no npe, stopPush skip the handle
     Object obj = handler.doHandle(null, null);
     Assert.assertNull(obj);
 
-    handler.sessionServerConfig.setStopPushSwitch(false);
+    handler.pushSwitchService.getFetchStopPushService().setStopPushSwitch(false);
     // npe
     TestUtils.assertRunException(RuntimeException.class, () -> handler.doHandle(null, request()));
     handler.firePushService = mock(FirePushService.class);

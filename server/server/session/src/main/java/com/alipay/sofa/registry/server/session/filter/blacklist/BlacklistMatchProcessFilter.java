@@ -21,7 +21,9 @@ import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.filter.IPMatchStrategy;
 import com.alipay.sofa.registry.server.session.filter.ProcessFilter;
+import com.alipay.sofa.registry.server.session.provideData.FetchBlackListService;
 import java.util.List;
+import javax.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -32,14 +34,14 @@ public class BlacklistMatchProcessFilter implements ProcessFilter<BaseInfo> {
 
   @Autowired protected IPMatchStrategy ipMatchStrategy;
 
-  @Autowired protected BlacklistManager blacklistManager;
+  @Resource private FetchBlackListService fetchBlackListService;
 
-  @Autowired protected SessionServerConfig sessionServerConfig;
+  @Autowired private SessionServerConfig sessionServerConfig;
 
   @Override
   public boolean match(BaseInfo storeData) {
 
-    final List<BlacklistConfig> configList = blacklistManager.getBlacklistConfigList();
+    final List<BlacklistConfig> configList = fetchBlackListService.getBlacklistConfigList();
 
     // empty list proceed
     if (null == configList || configList.size() == 0) {

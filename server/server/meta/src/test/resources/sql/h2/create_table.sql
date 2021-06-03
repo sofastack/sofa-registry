@@ -53,8 +53,17 @@ CREATE TABLE provide_data (
   UNIQUE KEY `uk_data_center_key` (`data_center`, `data_key`)
 );
 
-
-
+drop table if exists client_manager_pods;
+CREATE TABLE `client_manager_pods` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT primary key,
+  `data_center` varchar(128) NOT NULL COMMENT '集群名称',
+  `address` varchar(1024) NOT NULL COMMENT 'address',
+  `gmt_create` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `gmt_modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
+  `operation` varchar(128) NOT NULL COMMENT '操作类型',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_data_center_address` (`data_center`, `address`)
+);
 
 
 

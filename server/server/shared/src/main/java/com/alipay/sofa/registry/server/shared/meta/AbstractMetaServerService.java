@@ -21,6 +21,8 @@ import com.alipay.sofa.registry.common.model.ProcessId;
 import com.alipay.sofa.registry.common.model.elector.LeaderInfo;
 import com.alipay.sofa.registry.common.model.metaserver.DataOperation;
 import com.alipay.sofa.registry.common.model.metaserver.FetchProvideDataRequest;
+import com.alipay.sofa.registry.common.model.metaserver.FetchSystemPropertyRequest;
+import com.alipay.sofa.registry.common.model.metaserver.FetchSystemPropertyResult;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.common.model.metaserver.SlotTableChangeEvent;
 import com.alipay.sofa.registry.common.model.metaserver.blacklist.RegistryForbiddenServerRequest;
@@ -233,6 +235,36 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
     } catch (Throwable e) {
       LOGGER.error("fetch provider data error from {}", leaderIp, e);
       throw new RuntimeException("fetch provider data error! " + e.getMessage(), e);
+    }
+  }
+
+  @Override
+  public FetchSystemPropertyResult fetchSystemProperty(String dataInfoId, long version) {
+    final String leaderIp = metaServerManager.getMetaServerLeader();
+
+    try {
+      Response response =
+          metaServerManager.sendRequest(new FetchSystemPropertyRequest(dataInfoId, version));
+
+      Object result = response.getResult();
+      if (result instanceof FetchSystemPropertyResult) {
+        return (FetchSystemPropertyResult) result;
+      } else {
+        LOGGER.error(
+            "fetch system property data:{}, version:{}, from {} is null",
+            dataInfoId,
+            version,
+            leaderIp);
+        throw new RuntimeException("metaServerService fetch null system property data!");
+      }
+    } catch (Throwable e) {
+      LOGGER.error(
+          "fetch system property data:{}, version:{}, from {} is null",
+          dataInfoId,
+          version,
+          leaderIp,
+          e);
+      throw new RuntimeException("fetch system property data error! " + e.getMessage(), e);
     }
   }
 

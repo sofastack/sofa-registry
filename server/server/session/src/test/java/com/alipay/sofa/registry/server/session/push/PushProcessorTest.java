@@ -28,6 +28,7 @@ import com.alipay.sofa.registry.remoting.exchange.RequestChannelClosedException;
 import com.alipay.sofa.registry.server.session.TestUtils;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfigBean;
 import com.alipay.sofa.registry.server.session.node.service.ClientNodeService;
+import com.alipay.sofa.registry.server.session.provideData.FetchStopPushService;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -45,7 +46,8 @@ public class PushProcessorTest {
   public void testFire() throws Exception {
     PushProcessor processor = new PushProcessor();
     processor.sessionServerConfig = TestUtils.newSessionConfig("testDc");
-    processor.pushSwitchService = new PushSwitchService(processor.sessionServerConfig);
+    processor.pushSwitchService = new PushSwitchService();
+    processor.pushSwitchService.setFetchStopPushService(new FetchStopPushService());
     Assert.assertTrue(processor.watchDog.getWaitingMillis() < 200);
 
     Assert.assertEquals(processor.watchCommit().size(), 0);
@@ -103,10 +105,10 @@ public class PushProcessorTest {
     Assert.assertTrue(replaceTask.toString(), replaceTask.toString().contains(dataId));
 
     // now there is one pending task with delay
-    processor.sessionServerConfig.setStopPushSwitch(true);
+    processor.pushSwitchService.fetchStopPushService.setStopPushSwitch(true);
     Assert.assertEquals(processor.watchCommit().size(), 0);
 
-    processor.sessionServerConfig.setStopPushSwitch(false);
+    processor.pushSwitchService.fetchStopPushService.setStopPushSwitch(false);
     // task has clean
     Assert.assertEquals(processor.watchCommit().size(), 0);
     // first suspend, avoid run watchdog
@@ -152,7 +154,8 @@ public class PushProcessorTest {
     PushProcessor processor = new PushProcessor();
     SessionServerConfigBean config = TestUtils.newSessionConfig("testDc");
     processor.sessionServerConfig = config;
-    processor.pushSwitchService = new PushSwitchService(config);
+    processor.pushSwitchService = new PushSwitchService();
+    processor.pushSwitchService.setFetchStopPushService(new FetchStopPushService());
     processor.pushDataGenerator = new PushDataGenerator();
     processor.pushDataGenerator.sessionServerConfig = config;
     TriggerPushContext ctx =
@@ -170,10 +173,10 @@ public class PushProcessorTest {
     PushProcessor.PushTask task = processor.pendingTasks.values().iterator().next();
     processor.pendingTasks.clear();
 
-    processor.sessionServerConfig.setStopPushSwitch(true);
+    processor.pushSwitchService.fetchStopPushService.setStopPushSwitch(true);
     Assert.assertFalse(processor.doPush(task));
 
-    processor.sessionServerConfig.setStopPushSwitch(false);
+    processor.pushSwitchService.fetchStopPushService.setStopPushSwitch(false);
     // clientNodeService is null
     Assert.assertFalse(processor.doPush(task));
     Assert.assertEquals(processor.pushingTasks.size(), 0);
@@ -314,7 +317,8 @@ public class PushProcessorTest {
     SessionServerConfigBean config = TestUtils.newSessionConfig("testDc");
     processor.sessionServerConfig = config;
     processor.clientNodeService = Mockito.mock(ClientNodeService.class);
-    processor.pushSwitchService = new PushSwitchService(config);
+    processor.pushSwitchService = new PushSwitchService();
+    processor.pushSwitchService.setFetchStopPushService(new FetchStopPushService());
     processor.pushDataGenerator = new PushDataGenerator();
     processor.pushDataGenerator.sessionServerConfig = config;
     return processor;

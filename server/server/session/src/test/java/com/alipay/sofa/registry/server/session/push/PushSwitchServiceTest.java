@@ -16,8 +16,9 @@
  */
 package com.alipay.sofa.registry.server.session.push;
 
-import com.alipay.sofa.registry.server.session.TestUtils;
 import java.util.Arrays;
+
+import com.alipay.sofa.registry.server.session.provideData.FetchStopPushService;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -26,15 +27,15 @@ public class PushSwitchServiceTest {
   @Test
   public void testGlobalOpen() throws Exception {
     PushSwitchService service = new PushSwitchService();
-    service.sessionServerConfig = TestUtils.newSessionConfig("testDc");
-    service.sessionServerConfig.setStopPushSwitch(true);
+    service.fetchStopPushService = new FetchStopPushService();
+    service.fetchStopPushService.setStopPushSwitch(true);
     Assert.assertFalse(service.canPush());
     service.setOpenIPs(Arrays.asList("127.0.0.1"));
     Assert.assertTrue(service.canPush());
     Assert.assertFalse(service.canIpPush("127.0.0.2"));
     Assert.assertTrue(service.canIpPush("127.0.0.1"));
 
-    service.sessionServerConfig.setStopPushSwitch(false);
+    service.fetchStopPushService.setStopPushSwitch(false);
     Assert.assertTrue(service.canIpPush("127.0.0.2"));
     Assert.assertTrue(service.canIpPush("127.0.0.1"));
   }

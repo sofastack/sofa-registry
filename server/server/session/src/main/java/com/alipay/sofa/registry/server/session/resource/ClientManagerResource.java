@@ -34,6 +34,7 @@ import com.alipay.sofa.registry.task.MetricsableThreadPoolExecutor;
 import com.alipay.sofa.registry.util.OsUtils;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ThreadPoolExecutor;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -76,8 +77,8 @@ public class ClientManagerResource {
     if (StringUtils.isEmpty(ips)) {
       return CommonResponse.buildFailedResponse("ips is empty");
     }
-    final List<String> ipList = Sdks.toIpList(ips);
-    List<ConnectId> conIds = connectionsService.getIpConnects(ipList);
+    final Set<String> ipSet = Sdks.toIpSet(ips);
+    List<ConnectId> conIds = connectionsService.getIpConnects(ipSet);
     sessionRegistry.clientOff(conIds);
     LOGGER.info("clientOff ips={}, conIds={}", ips, conIds);
     return CommonResponse.buildSuccessResponse();

@@ -92,12 +92,11 @@ public class DefaultAppRevisionHandlerStrategy implements AppRevisionHandlerStra
     try {
       for (String revision : revisions) {
         queryRevision = revision;
-        AppRevision appRevision;
+        AppRevision appRevision = null;
         try {
           appRevision = appRevisionCacheService.getRevision(revision);
         } catch (Throwable e) {
           LOG.error("query revision {} error", queryRevision, e);
-          continue;
         }
         if (appRevision == null) {
           statusCode = ValueConstants.METADATA_STATUS_DATA_NOT_FOUND;

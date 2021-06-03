@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.provideData;
+package com.alipay.sofa.registry.server.shared.providedata;
 
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 
@@ -24,9 +24,7 @@ import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
  */
 public interface ProvideDataProcessor {
 
-  void changeDataProcess(ProvideData provideData);
-
-  void fetchDataProcess(ProvideData provideData);
+  boolean processorData(ProvideData provideData);
 
   boolean support(ProvideData provideData);
 }

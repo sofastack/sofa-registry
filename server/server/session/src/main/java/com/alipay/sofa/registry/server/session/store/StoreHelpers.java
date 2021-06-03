@@ -22,8 +22,11 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author yuzhi.lyz
@@ -87,5 +90,20 @@ public final class StoreHelpers {
       }
     }
     return ret;
+  }
+
+  public static <T extends BaseInfo> Map<ConnectId, Map<String, T>> getByConnectIds(
+      List<ConnectId> connectIds, ConcurrentHashMap<String, Map<String, T>> stores) {
+    Map<ConnectId, Map<String, T>> retMap = Maps.newHashMap();
+    for (Map<String, T> m : stores.values()) {
+      for (Entry<String, T> entry : m.entrySet()) {
+        T value = entry.getValue();
+        if (connectIds.contains(value.connectId())) {
+          Map<String, T> map = retMap.computeIfAbsent(value.connectId(), k -> Maps.newHashMap());
+          map.put(entry.getKey(), value);
+        }
+      }
+    }
+    return retMap;
   }
 }

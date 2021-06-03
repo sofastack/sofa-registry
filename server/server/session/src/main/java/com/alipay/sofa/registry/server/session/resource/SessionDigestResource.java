@@ -26,6 +26,7 @@ import com.alipay.sofa.registry.common.model.store.Watcher;
 import com.alipay.sofa.registry.metrics.ReporterUtils;
 import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
+import com.alipay.sofa.registry.server.session.provideData.FetchStopPushService;
 import com.alipay.sofa.registry.server.session.store.DataStore;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.session.store.Watchers;
@@ -40,6 +41,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -67,6 +69,8 @@ public class SessionDigestResource {
   @Autowired private DataStore sessionDataStore;
 
   @Autowired private SessionServerConfig sessionServerConfig;
+
+  @Resource private FetchStopPushService fetchStopPushService;
 
   private static final String LOCAL_ADDRESS = NetUtil.getLocalAddress().getHostAddress();
 
@@ -169,7 +173,7 @@ public class SessionDigestResource {
   @Produces(MediaType.APPLICATION_JSON)
   public Map<String, Object> getPushSwitch() {
     Map<String, Object> resultMap = new HashMap<>(1);
-    resultMap.put("pushSwitch", !sessionServerConfig.isStopPushSwitch() ? "open" : "closed");
+    resultMap.put("pushSwitch", !fetchStopPushService.isStopPushSwitch() ? "open" : "closed");
     return resultMap;
   }
 
