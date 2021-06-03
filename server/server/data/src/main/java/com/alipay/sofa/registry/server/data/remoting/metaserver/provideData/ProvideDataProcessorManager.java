@@ -18,7 +18,6 @@ package com.alipay.sofa.registry.server.data.remoting.metaserver.provideData;
 
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.server.shared.providedata.ProvideDataProcessor;
-
 import java.util.ArrayList;
 import java.util.List;
 
