@@ -63,5 +63,6 @@ public class SessionLeaseProvideDataProcessor implements ProvideDataProcessor {
 
   @Override
   public boolean support(String dataInfoId) {
-    return ValueConstants.DATA_SESSION_LEASE_SEC.equals(dataInfoId);  }
+    return ValueConstants.DATA_SESSION_LEASE_SEC.equals(dataInfoId);
+  }
 }

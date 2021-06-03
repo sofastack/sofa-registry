@@ -49,8 +49,7 @@ public class SessionLeaseProvideDataProcessorTest {
         IllegalArgumentException.class,
         () -> {
           ServerDataBox box = new ServerDataBox("3");
-          processor.processData(
-              new ProvideData(box, ValueConstants.DATA_SESSION_LEASE_SEC, 100L));
+          processor.processData(new ProvideData(box, ValueConstants.DATA_SESSION_LEASE_SEC, 100L));
         });
 
     ServerDataBox box = new ServerDataBox("10");
