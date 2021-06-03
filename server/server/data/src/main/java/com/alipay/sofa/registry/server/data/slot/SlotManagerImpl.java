@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.server.data.slot;
 
+import static com.alipay.sofa.registry.server.data.slot.SlotMetrics.Manager.*;
+
 import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.slot.*;
 import com.alipay.sofa.registry.common.model.slot.func.SlotFunction;
@@ -40,15 +42,12 @@ import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import javax.annotation.PostConstruct;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-
-import static com.alipay.sofa.registry.server.data.slot.SlotMetrics.Manager.*;
+import javax.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author yuzhi.lyz
