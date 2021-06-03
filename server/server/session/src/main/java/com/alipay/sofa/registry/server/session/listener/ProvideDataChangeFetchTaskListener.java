@@ -22,6 +22,7 @@ import com.alipay.sofa.registry.server.session.scheduler.task.ProvideDataChangeF
 import com.alipay.sofa.registry.server.session.scheduler.task.SessionTask;
 import com.alipay.sofa.registry.server.session.store.Watchers;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
+import com.alipay.sofa.registry.server.shared.providedata.ProvideDataProcessor;
 import com.alipay.sofa.registry.task.batcher.TaskDispatcher;
 import com.alipay.sofa.registry.task.batcher.TaskDispatchers;
 import com.alipay.sofa.registry.task.batcher.TaskProcessor;
@@ -49,6 +50,8 @@ public class ProvideDataChangeFetchTaskListener implements TaskListener {
   @Autowired Exchange boltExchange;
 
   @Autowired Watchers sessionWatchers;
+
+  @Autowired ProvideDataProcessor provideDataProcessorManager;
 
   private TaskDispatcher<String, SessionTask> singleTaskDispatcher;
 
@@ -79,7 +82,8 @@ public class ProvideDataChangeFetchTaskListener implements TaskListener {
             taskListenerManager,
             metaServerService,
             sessionWatchers,
-            boltExchange);
+            boltExchange,
+            provideDataProcessorManager);
 
     provideDataChangeFetchTask.setTaskEvent(event);
 
