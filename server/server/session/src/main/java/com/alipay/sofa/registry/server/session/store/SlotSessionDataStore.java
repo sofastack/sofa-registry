@@ -19,7 +19,6 @@ package com.alipay.sofa.registry.server.session.store;
 import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.util.*;
 import java.util.Map.Entry;
@@ -141,8 +140,7 @@ public class SlotSessionDataStore implements DataStore {
       Map<ConnectId, Map<String, Publisher>> m = ds.queryByConnectIds(connectIds);
       for (Entry<ConnectId, Map<String, Publisher>> entry : m.entrySet()) {
         Map<String, Publisher> map =
-            ret.computeIfAbsent(
-                entry.getKey(), k -> Maps.newHashMapWithExpectedSize(64));
+            ret.computeIfAbsent(entry.getKey(), k -> Maps.newHashMapWithExpectedSize(64));
         map.putAll(entry.getValue());
       }
     }
@@ -152,7 +150,8 @@ public class SlotSessionDataStore implements DataStore {
   @Override
   public Map<String, Publisher> deleteByConnectId(ConnectId connectId) {
 
-    Map<ConnectId, Map<String, Publisher>> ret = deleteByConnectIds(Collections.singletonList(connectId));
+    Map<ConnectId, Map<String, Publisher>> ret =
+        deleteByConnectIds(Collections.singletonList(connectId));
     Map<String, Publisher> publisherMap = ret.get(connectId);
     if (CollectionUtils.isEmpty(publisherMap)) {
       return Maps.newHashMap();

@@ -98,8 +98,8 @@ public class BlacklistTest extends BaseIntegrationTest {
     Map<String, Set<String>> map1 = Maps.newHashMap();
     map1.put(BlacklistConstants.IP_FULL, set1);
 
-    Map<String, Set<String>> map2 = Maps.newHashMap();
-    map2.put(BlacklistConstants.IP_FULL, set2);
+    // Map<String, Set<String>> map2 = Maps.newHashMap();
+    // map2.put(BlacklistConstants.IP_FULL, set2);
 
     map.put(BlacklistConstants.FORBIDDEN_PUB, map1);
 
@@ -117,7 +117,7 @@ public class BlacklistTest extends BaseIntegrationTest {
     assertTrue(response.isSuccess());
 
     // wait for new list meta dispatch to session
-    Thread.sleep(3000L);
+    Thread.sleep(5000L);
 
     String dataId = "test-dataId-blacklist-" + System.currentTimeMillis();
     String value = "test blacklist";

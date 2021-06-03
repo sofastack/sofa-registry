@@ -18,7 +18,6 @@ package com.alipay.sofa.registry.server.meta.resource;
 
 import static org.mockito.Mockito.spy;
 
-import com.alipay.sofa.registry.common.model.CommonQueryResponse;
 import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.ServerDataBox;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;

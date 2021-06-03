@@ -31,7 +31,6 @@ import com.alipay.sofa.registry.server.data.remoting.dataserver.handler.SlotFoll
 import com.alipay.sofa.registry.server.data.remoting.dataserver.handler.SlotFollowerDiffPublisherRequestHandler;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.MetaServerServiceImpl;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.handler.NotifyProvideDataChangeHandler;
-import com.alipay.sofa.registry.server.data.remoting.metaserver.provideData.ProvideDataProcessor;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.provideData.ProvideDataProcessorManager;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.provideData.processor.SessionLeaseProvideDataProcessor;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.*;
@@ -44,6 +43,7 @@ import com.alipay.sofa.registry.server.data.slot.SlotManagerImpl;
 import com.alipay.sofa.registry.server.data.timer.CacheCountTask;
 import com.alipay.sofa.registry.server.data.timer.CacheDigestTask;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerManager;
+import com.alipay.sofa.registry.server.shared.providedata.ProvideDataProcessor;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractClientHandler;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.alipay.sofa.registry.server.shared.remoting.SlotTableChangeEventHandler;

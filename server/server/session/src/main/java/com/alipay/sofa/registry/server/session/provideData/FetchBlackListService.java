@@ -40,6 +40,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import com.google.common.collect.Lists;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -50,15 +51,13 @@ public class FetchBlackListService extends AbstractFetchSystemPropertyService<Bl
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FetchBlackListService.class);
 
-  private volatile List<BlacklistConfig> blacklistConfigList = new ArrayList();
-
   @Autowired private Registry sessionRegistry;
 
   @Autowired private ConnectionsService connectionsService;
 
   public FetchBlackListService() {
     super(ValueConstants.BLACK_LIST_DATA_ID);
-    storage.set(new BlacklistStorage(INIT_VERSION, Collections.EMPTY_LIST));
+    storage.set(new BlacklistStorage(INIT_VERSION, Lists.newArrayList()));
   }
 
   private Map<String, Map<String, Set<String>>> convertBlacklistConfig(
@@ -178,6 +177,6 @@ public class FetchBlackListService extends AbstractFetchSystemPropertyService<Bl
    * @return property value of blacklistConfigList
    */
   public List<BlacklistConfig> getBlacklistConfigList() {
-    return blacklistConfigList;
+    return storage.get().blacklistConfigList;
   }
 }

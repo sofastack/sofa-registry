@@ -27,6 +27,7 @@ import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,7 +38,7 @@ import org.springframework.util.Assert;
  * @version $Id: AbstractFetchSystemPropertyService.java, v 0.1 2021年05月16日 13:32 xiaojian.xj Exp $
  */
 public abstract class AbstractFetchSystemPropertyService<T extends SystemDataStorage>
-    implements FetchSystemPropertyService, ProvideDataProcessor {
+    implements FetchSystemPropertyService {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FetchSystemPropertyService.class);
 
@@ -46,6 +47,8 @@ public abstract class AbstractFetchSystemPropertyService<T extends SystemDataSto
   private final String dataInfoId;
 
   protected final AtomicReference<T> storage = new AtomicReference<>();
+
+  private final AtomicBoolean watcherInited = new AtomicBoolean(false);
 
   private final WatchDog watchDog = new WatchDog();
 
@@ -98,11 +101,15 @@ public abstract class AbstractFetchSystemPropertyService<T extends SystemDataSto
   }
 
   @Override
-  public void load() {
+  public boolean start() {
     doFetchData();
-    ConcurrentUtils.createDaemonThread(
-            StringFormatter.format("FetchSystemProperty-{}", dataInfoId), watchDog)
-        .start();
+    if (watcherInited.compareAndSet(false, true)) {
+      ConcurrentUtils.createDaemonThread(
+              StringFormatter.format("FetchSystemProperty-{}", dataInfoId), watchDog)
+          .start();
+    }
+
+    return watcherInited.get();
   }
 
   private boolean processorData(ProvideData data, T expect) {

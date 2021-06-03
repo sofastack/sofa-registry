@@ -38,11 +38,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -63,23 +59,23 @@ public class DefaultClientManagerService implements ClientManagerService {
 
   protected final ReadWriteLock lock = new ReentrantReadWriteLock();
 
+  private static final long INIT = -1L;
+
   /** The Read lock. */
   protected final Lock readLock = lock.readLock();
 
   /** The Write lock. */
   protected final Lock writeLock = lock.writeLock();
 
-  private volatile long version;
+  private volatile long version = INIT;
 
-  private final AtomicReference<ConcurrentHashMap.KeySetView> cache = new AtomicReference<>();
+  private Set<String> cache = new HashSet<>();
 
   private final ClientManagerWatcher watcher = new ClientManagerWatcher();
 
   private final ClientManagerRefresher refresher = new ClientManagerRefresher();
 
-  private volatile boolean refreshFinish;
-
-  @Autowired private ClientManagerAddressRepository ClientManagerAddressRepository;
+  @Autowired private ClientManagerAddressRepository clientManagerAddressRepository;
 
   @Autowired private DefaultProvideDataNotifier provideDataNotifier;
 
@@ -92,13 +88,11 @@ public class DefaultClientManagerService implements ClientManagerService {
   private void init() {
     writeLock.lock();
     try {
-      version = -1L;
-      cache.set(new ConcurrentHashMap<>().newKeySet());
-      refreshFinish = false;
+      version = INIT;
+      cache = new HashSet<>();
     } finally {
       writeLock.unlock();
     }
-
   }
 
   @PostConstruct
@@ -119,7 +113,7 @@ public class DefaultClientManagerService implements ClientManagerService {
    */
   @Override
   public boolean clientOpen(Set<String> ipSet) {
-    return ClientManagerAddressRepository.clientOpen(ipSet);
+    return clientManagerAddressRepository.clientOpen(ipSet);
   }
 
   /**
@@ -130,7 +124,7 @@ public class DefaultClientManagerService implements ClientManagerService {
    */
   @Override
   public boolean clientOff(Set<String> ipSet) {
-    return ClientManagerAddressRepository.clientOff(ipSet);
+    return clientManagerAddressRepository.clientOff(ipSet);
   }
 
   /**
@@ -140,7 +134,7 @@ public class DefaultClientManagerService implements ClientManagerService {
    */
   @Override
   public DBResponse<ProvideData> queryClientOffSet() {
-    if (!refreshFinish) {
+    if (version == INIT) {
       LOGGER.warn("query client manager cache before refreshFinish");
       return DBResponse.notfound().build();
     }
@@ -149,9 +143,7 @@ public class DefaultClientManagerService implements ClientManagerService {
     try {
       ProvideData provideData =
           new ProvideData(
-              new ServerDataBox(cache.get()),
-              ValueConstants.CLIENT_OFF_ADDRESS_DATA_ID,
-              version);
+              new ServerDataBox(cache), ValueConstants.CLIENT_OFF_ADDRESS_DATA_ID, version);
       return DBResponse.ok(provideData).build();
     } catch (Throwable t) {
       LOGGER.error("query client manager cache error.", t);
@@ -182,8 +174,7 @@ public class DefaultClientManagerService implements ClientManagerService {
       ClientManagerAggregation aggregation = aggregate(totalRet);
 
       if (aggregation == EMPTY_AGGREGATION || doRefresh(aggregation)) {
-        refreshFinish = true;
-        LOGGER.info("finish load clientManager, refreshFinish:{}", refreshFinish);
+        LOGGER.info("finish start clientManager, version:{}", version);
         fireClientManagerChangeNotify(version, ValueConstants.CLIENT_OFF_ADDRESS_DATA_ID);
       }
     }
@@ -193,20 +184,20 @@ public class DefaultClientManagerService implements ClientManagerService {
         return null;
       }
 
-      final int total = ClientManagerAddressRepository.queryTotalCount();
+      final int total = clientManagerAddressRepository.queryTotalCount();
 
       // add 10, query the new records which inserted when scanning
       final int refreshCount = MathUtils.divideCeil(total, refreshLimit) + 10;
-      LOGGER.info("begin load clientManager, total count {}, rounds={}", total, refreshCount);
+      LOGGER.info("begin start clientManager, total count {}, rounds={}", total, refreshCount);
 
-      long maxTemp = -1;
+      long maxTemp = INIT;
       int refreshTotal = 0;
       List<ClientManagerAddress> totalRet = new ArrayList<>();
       for (int i = 0; i < refreshCount; i++) {
         List<ClientManagerAddress> ClientManagerAddress =
-            ClientManagerAddressRepository.queryAfterThan(maxTemp, refreshLimit);
+            clientManagerAddressRepository.queryAfterThan(maxTemp, refreshLimit);
         final int num = ClientManagerAddress.size();
-        LOGGER.info("load clientManager in round={}, num={}", i, num);
+        LOGGER.info("start clientManager in round={}, num={}", i, num);
         if (num == 0) {
           break;
         }
@@ -215,7 +206,7 @@ public class DefaultClientManagerService implements ClientManagerService {
         maxTemp = ClientManagerAddress.get(ClientManagerAddress.size() - 1).getId();
         totalRet.addAll(ClientManagerAddress);
       }
-      LOGGER.info("finish load clientManager, total={}, maxId={}", refreshTotal, maxTemp);
+      LOGGER.info("finish start clientManager, total={}, maxId={}", refreshTotal, maxTemp);
       return totalRet;
     }
 
@@ -234,7 +225,7 @@ public class DefaultClientManagerService implements ClientManagerService {
       }
 
       List<ClientManagerAddress> ClientManagerAddress =
-          ClientManagerAddressRepository.queryAfterThan(version);
+          clientManagerAddressRepository.queryAfterThan(version);
 
       if (CollectionUtils.isEmpty(ClientManagerAddress)) {
         return;
@@ -290,8 +281,8 @@ public class DefaultClientManagerService implements ClientManagerService {
         return false;
       }
       version = aggregation.max;
-      cache.get().addAll(aggregation.clientOffAddress);
-      cache.get().removeAll(aggregation.clientOpenAddress);
+      cache.addAll(aggregation.clientOffAddress);
+      cache.removeAll(aggregation.clientOpenAddress);
     } catch (Throwable t) {
       LOGGER.error("refresh client manager cache error.", t);
       return false;
@@ -320,7 +311,7 @@ public class DefaultClientManagerService implements ClientManagerService {
   }
 
   private final ClientManagerAggregation EMPTY_AGGREGATION =
-      new ClientManagerAggregation(-1L, Sets.newHashSet(), Sets.newHashSet());
+      new ClientManagerAggregation(INIT, Sets.newHashSet(), Sets.newHashSet());
 
   final class ClientManagerAggregation {
     final long max;
@@ -350,14 +341,14 @@ public class DefaultClientManagerService implements ClientManagerService {
   }
 
   /**
-   * Setter method for property <tt>ClientManagerAddressRepository</tt>.
+   * Setter method for property <tt>clientManagerAddressRepository</tt>.
    *
-   * @param ClientManagerAddressRepository value to be assigned to property
+   * @param clientManagerAddressRepository value to be assigned to property
    *     ClientManagerAddressRepository
    */
   @VisibleForTesting
   public void setClientManagerAddressRepository(
-      ClientManagerAddressRepository ClientManagerAddressRepository) {
-    this.ClientManagerAddressRepository = ClientManagerAddressRepository;
+      ClientManagerAddressRepository clientManagerAddressRepository) {
+    this.clientManagerAddressRepository = clientManagerAddressRepository;
   }
 }

@@ -3,7 +3,7 @@
 
 <mapper namespace="com.alipay.sofa.registry.jdbc.mapper.ClientManagerAddressMapper">
 
-    <resultMap type="com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress" id="ClientManagerAddressResultMap">
+    <resultMap type="com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress" id="clientManagerAddressResultMap">
         <id property="id" column="id" javaType="long" jdbcType="BIGINT"/>
         <result property="dataCenter" column="data_center" javaType="java.lang.String" jdbcType="VARCHAR"/>
         <result property="address" column="address" javaType="java.lang.String" jdbcType="VARCHAR"/>
@@ -32,12 +32,12 @@
         select count(1) from client_manager_address where data_center = #{dataCenter}
     </select>
 
-    <select id="queryAfterThanByLimit" resultMap="ClientManagerAddressResultMap">
+    <select id="queryAfterThanByLimit" resultMap="clientManagerAddressResultMap">
         select * from client_manager_address where data_center = #{dataCenter} and id > #{maxId}
         order by id limit #{limit}
     </select>
 
-    <select id="queryAfterThan" resultMap="ClientManagerAddressResultMap">
+    <select id="queryAfterThan" resultMap="clientManagerAddressResultMap">
         select * from client_manager_address where data_center = #{dataCenter} and id > #{maxId}
         order by id
     </select>

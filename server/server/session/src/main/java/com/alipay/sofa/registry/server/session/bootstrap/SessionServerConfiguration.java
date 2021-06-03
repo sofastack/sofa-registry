@@ -53,7 +53,7 @@ import com.alipay.sofa.registry.server.session.provideData.FetchBlackListService
 import com.alipay.sofa.registry.server.session.provideData.FetchClientOffAddressService;
 import com.alipay.sofa.registry.server.session.provideData.FetchGrayPushSwitchService;
 import com.alipay.sofa.registry.server.session.provideData.FetchStopPushService;
-import com.alipay.sofa.registry.server.session.provideData.ProvideDataProcessorManager;
+import com.alipay.sofa.registry.server.session.provideData.SystemPropertyProcessorManager;
 import com.alipay.sofa.registry.server.session.push.*;
 import com.alipay.sofa.registry.server.session.push.ChangeProcessor;
 import com.alipay.sofa.registry.server.session.push.FirePushService;
@@ -108,7 +108,7 @@ import com.alipay.sofa.registry.server.session.wrapper.WrapperInterceptor;
 import com.alipay.sofa.registry.server.session.wrapper.WrapperInterceptorManager;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerManager;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
-import com.alipay.sofa.registry.server.shared.providedata.ProvideDataProcessor;
+import com.alipay.sofa.registry.server.shared.providedata.FetchSystemPropertyService;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractClientHandler;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.alipay.sofa.registry.server.shared.remoting.SlotTableChangeEventHandler;
@@ -751,32 +751,33 @@ public class SessionServerConfiguration {
   public static class SessionProvideDataConfiguration {
 
     @Bean
-    public ProvideDataProcessorManager provideDataProcessorManager() {
-      ProvideDataProcessorManager provideDataProcessorManager = new ProvideDataProcessorManager();
-      provideDataProcessorManager.addProvideDataProcessor(fetchStopPushService());
-      provideDataProcessorManager.addProvideDataProcessor(fetchGrayPushSwitchService());
-      provideDataProcessorManager.addProvideDataProcessor(fetchBlackListService());
-      provideDataProcessorManager.addProvideDataProcessor(fetchClientOffAddressService());
-      return provideDataProcessorManager;
+    public SystemPropertyProcessorManager systemPropertyProcessorManager() {
+      SystemPropertyProcessorManager systemPropertyProcessorManager =
+          new SystemPropertyProcessorManager();
+      systemPropertyProcessorManager.addSystemDataProcessor(fetchStopPushService());
+      systemPropertyProcessorManager.addSystemDataProcessor(fetchGrayPushSwitchService());
+      systemPropertyProcessorManager.addSystemDataProcessor(fetchBlackListService());
+      systemPropertyProcessorManager.addSystemDataProcessor(fetchClientOffAddressService());
+      return systemPropertyProcessorManager;
     }
 
     @Bean
-    public ProvideDataProcessor fetchBlackListService() {
+    public FetchSystemPropertyService fetchBlackListService() {
       return new FetchBlackListService();
     }
 
     @Bean
-    public ProvideDataProcessor fetchStopPushService() {
+    public FetchSystemPropertyService fetchStopPushService() {
       return new FetchStopPushService();
     }
 
     @Bean
-    public ProvideDataProcessor fetchClientOffAddressService() {
+    public FetchSystemPropertyService fetchClientOffAddressService() {
       return new FetchClientOffAddressService();
     }
 
     @Bean
-    public ProvideDataProcessor fetchGrayPushSwitchService() {
+    public FetchSystemPropertyService fetchGrayPushSwitchService() {
       return new FetchGrayPushSwitchService();
     }
   }

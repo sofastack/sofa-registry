@@ -21,8 +21,8 @@ import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideDataChangeEvent;
 import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.server.data.remoting.metaserver.provideData.ProvideDataProcessor;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
+import com.alipay.sofa.registry.server.shared.providedata.ProvideDataProcessor;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractClientHandler;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.google.common.annotations.VisibleForTesting;
@@ -56,7 +56,7 @@ public class NotifyProvideDataChangeHandler extends AbstractClientHandler<Provid
   public Object doHandle(Channel channel, ProvideDataChangeEvent request) {
     String dataInfoId = request.getDataInfoId();
     ProvideData provideData = metaServerService.fetchData(dataInfoId);
-    provideDataProcessorManager.changeDataProcess(provideData);
+    provideDataProcessorManager.processData(provideData);
     return null;
   }
 

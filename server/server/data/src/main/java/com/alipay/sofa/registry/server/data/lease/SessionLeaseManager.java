@@ -109,13 +109,13 @@ public final class SessionLeaseManager {
       final ProcessId p = expire.getKey();
       if (connProcessIds.contains(p)) {
         renewSession(p);
-        // maybe happens in fullGc or high load scenario
+        // maybe happens in fullGc or high start scenario
         LOGGER.info("[expireHasConn]{}", expire);
         continue;
       }
       if (metaProcessIds.contains(p)) {
         renewSession(p);
-        // maybe happens in fullGc or or high load scenario
+        // maybe happens in fullGc or or high start scenario
         LOGGER.info("[expireHasMeta]{}", expire);
         continue;
       }

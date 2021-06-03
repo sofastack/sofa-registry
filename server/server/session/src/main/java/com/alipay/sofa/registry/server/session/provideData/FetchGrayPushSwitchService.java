@@ -26,12 +26,11 @@ import com.alipay.sofa.registry.server.session.registry.Registry;
 import com.alipay.sofa.registry.server.shared.providedata.AbstractFetchSystemPropertyService;
 import com.alipay.sofa.registry.util.JsonUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.annotations.VisibleForTesting;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import javax.annotation.Resource;
-
-import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -101,6 +100,4 @@ public class FetchGrayPushSwitchService
   public void setOpenIps(long version, Collection<String> openIps) {
     storage.set(new GrayPushSwitchStorage(version, openIps));
   }
-
-
 }

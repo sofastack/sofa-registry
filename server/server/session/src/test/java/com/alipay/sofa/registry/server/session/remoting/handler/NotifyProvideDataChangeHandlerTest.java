@@ -24,6 +24,8 @@ import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideDataChangeEvent;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
+import com.alipay.sofa.registry.server.session.provideData.FetchBlackListService;
+import com.alipay.sofa.registry.server.session.provideData.SystemPropertyProcessorManager;
 import com.alipay.sofa.registry.server.session.store.Watchers;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -46,16 +48,25 @@ public class NotifyProvideDataChangeHandlerTest {
     return handler;
   }
 
+  private SystemPropertyProcessorManager newProvideDataProcessorManager() {
+    SystemPropertyProcessorManager provideDataProcessorManager =
+        new SystemPropertyProcessorManager();
+    provideDataProcessorManager.addSystemDataProcessor(new FetchBlackListService());
+    return provideDataProcessorManager;
+  }
+
   @Test
   public void testHandle() {
     NotifyProvideDataChangeHandler handler = newHandler();
     handler.sessionWatchers = mock(Watchers.class);
     handler.taskListenerManager = mock(TaskListenerManager.class);
+    handler.systemPropertyProcessorManager = newProvideDataProcessorManager();
     Assert.assertNull(handler.doHandle(null, request(ValueConstants.BLACK_LIST_DATA_ID)));
     verify(handler.sessionWatchers, times(0)).checkWatcherVersions(anyString(), anyLong());
-    verify(handler.taskListenerManager, times(1)).sendTaskEvent(anyObject());
+    verify(handler.taskListenerManager, times(0)).sendTaskEvent(anyObject());
 
     // not match system.provideData and not watch
+    when(handler.sessionWatchers.checkWatcherVersions(anyString(), anyLong())).thenReturn(true);
     handler.doHandle(null, request("testDataInfoId"));
     verify(handler.sessionWatchers, times(1)).checkWatcherVersions(anyString(), anyLong());
     verify(handler.taskListenerManager, times(1)).sendTaskEvent(anyObject());

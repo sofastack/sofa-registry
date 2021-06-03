@@ -20,7 +20,6 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.junit.Assert.assertTrue;
 
 import com.alipay.sofa.registry.client.api.registration.PublisherRegistration;
-import com.alipay.sofa.registry.common.model.CommonQueryResponse;
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
