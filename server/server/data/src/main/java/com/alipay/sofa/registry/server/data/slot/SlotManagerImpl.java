@@ -451,7 +451,7 @@ public final class SlotManagerImpl implements SlotManager {
   }
 
   boolean triggerEmergencyMigrating(
-      SlotState slotState, Collection<String> sessions, MigratingTask mtask) {
+      SlotState slotState, Collection<String> sessions, MigratingTask mtask, int notSyncedCount) {
     try {
       // session.size=1 means only one session, could not skip
       if (sessions.size() <= 1) {
@@ -466,7 +466,6 @@ public final class SlotManagerImpl implements SlotManager {
         emergencyCases++;
       }
       if (emergencyCases != 0) {
-        final int notSyncedCount = sessions.size() - slotState.countSyncSuccess(sessions);
         if (notSyncedCount <= dataServerConfig.getMigratingMaxUnavailable()) {
           emergencyCases++;
         }
@@ -511,6 +510,7 @@ public final class SlotManagerImpl implements SlotManager {
           sessions.size(),
           sessions);
     }
+    final int notSyncedCount = sessions.size() - slotState.countSyncSuccess(sessions);
     for (String sessionIp : sessions) {
       MigratingTask mtask = slotState.migratingTasks.get(sessionIp);
       if (mtask == null) {
@@ -524,7 +524,7 @@ public final class SlotManagerImpl implements SlotManager {
 
       if (mtask.task.isFailed() && !mtask.forceSuccess) {
         // failed and not force Success, try to trigger emergency
-        if (triggerEmergencyMigrating(slotState, sessions, mtask)) {
+        if (triggerEmergencyMigrating(slotState, sessions, mtask, notSyncedCount)) {
           LOGGER.info("[emergency]{},session={}", slotState.slotId, mtask.sessionIp);
         } else {
           KeyedTask<SyncSessionTask> ktask =

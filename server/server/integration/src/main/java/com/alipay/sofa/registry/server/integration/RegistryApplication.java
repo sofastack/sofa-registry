@@ -140,15 +140,16 @@ public class RegistryApplication {
   private static void waitClusterStart(Collection<String> serverList, int httpPort)
       throws Exception {
     for (String serverAddress : serverList) {
-      while (true) {
+      for(int i=0; i<100; i++) {
         if (nodeHealthCheck(serverAddress, httpPort)) {
           LOGGER.info("{}:{} health check success.", serverAddress, httpPort);
-          break;
+          return;
         }
         LOGGER.error("{}:{} health check failed.", serverAddress, httpPort);
         Thread.sleep(1000);
       }
     }
+    System.exit(1);
   }
 
   private static boolean nodeHealthCheck(String serverAddress, int httpPort) {
