@@ -42,8 +42,6 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository {
 
   @Autowired private InterfaceAppsIndexMapper interfaceAppsIndexMapper;
 
-  @Autowired private AppRevisionJdbcRepository appRevisionJdbcRepository;
-
   @Autowired private DefaultCommonConfig defaultCommonConfig;
 
   private final CachedExecutor<Tuple<String, String>, Boolean> cachedExecutor =

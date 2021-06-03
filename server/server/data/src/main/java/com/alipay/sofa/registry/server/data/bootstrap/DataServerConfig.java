@@ -122,6 +122,10 @@ public class DataServerConfig {
   private int lowWaterMark = 1024 * 128;
   private int highWaterMark = 1024 * 256;
 
+  private int migratingMaxSecs = 40;
+  private int migratingMaxRetry = 15;
+  private int migratingMaxUnavailable = 1;
+
   /**
    * constructor
    *
@@ -850,6 +854,30 @@ public class DataServerConfig {
 
   public void setSessionLeaseCleanDeadlineSecs(int sessionLeaseCleanDeadlineSecs) {
     this.sessionLeaseCleanDeadlineSecs = sessionLeaseCleanDeadlineSecs;
+  }
+
+  public int getMigratingMaxSecs() {
+    return migratingMaxSecs;
+  }
+
+  public void setMigratingMaxSecs(int migratingMaxSecs) {
+    this.migratingMaxSecs = migratingMaxSecs;
+  }
+
+  public int getMigratingMaxRetry() {
+    return migratingMaxRetry;
+  }
+
+  public void setMigratingMaxRetry(int migratingMaxRetry) {
+    this.migratingMaxRetry = migratingMaxRetry;
+  }
+
+  public int getMigratingMaxUnavailable() {
+    return migratingMaxUnavailable;
+  }
+
+  public void setMigratingMaxUnavailable(int migratingMaxUnavailable) {
+    this.migratingMaxUnavailable = migratingMaxUnavailable;
   }
 
   @Override

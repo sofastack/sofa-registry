@@ -18,14 +18,11 @@ package com.alipay.sofa.registry.server.session.metadata;
 
 import com.alipay.sofa.registry.common.model.appmeta.InterfaceMapping;
 import com.alipay.sofa.registry.common.model.store.AppRevision;
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.store.api.repository.AppRevisionRepository;
 import com.alipay.sofa.registry.store.api.repository.InterfaceAppsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class AppRevisionCacheRegistry {
-  private static final Logger LOGGER = LoggerFactory.getLogger(AppRevisionCacheRegistry.class);
 
   @Autowired private AppRevisionRepository appRevisionRepository;
 

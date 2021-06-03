@@ -16,8 +16,6 @@
  */
 package com.alipay.sofa.registry.server.data.slot;
 
-import static com.alipay.sofa.registry.server.data.slot.SlotMetrics.Manager.*;
-
 import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.slot.*;
 import com.alipay.sofa.registry.common.model.slot.func.SlotFunction;
@@ -42,12 +40,15 @@ import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import javax.annotation.PostConstruct;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import javax.annotation.PostConstruct;
-import org.springframework.beans.factory.annotation.Autowired;
+
+import static com.alipay.sofa.registry.server.data.slot.SlotMetrics.Manager.*;
 
 /**
  * @author yuzhi.lyz
@@ -396,16 +397,21 @@ public final class SlotManagerImpl implements SlotManager {
 
   private boolean checkMigratingTask(SlotState slotState, Collection<String> sessions) {
     final Slot slot = slotState.slot;
-
+    final long span = System.currentTimeMillis() - slotState.migratingStartTime;
     MIGRATING_LOGGER.info(
         "[migrating]{},span={},tasks={}/{},sessions={}/{},remains={}",
-        slot.getId(),
-        System.currentTimeMillis() - slotState.migratingStartTime,
+        slotState.slotId,
+        span,
         slotState.migratingTasks.size(),
         slotState.migratingTasks.keySet(),
         sessions.size(),
         sessions,
         getMigratingSpans(slotState));
+
+    // monitor slow migrating
+    if (span > 1000 * 8) {
+      MIGRATING_LOGGER.error("[slowSlot]{},span={}", slotState.slotId, span);
+    }
 
     // check all migrating task
     if (slotState.migratingTasks.isEmpty() || sessions.isEmpty()) {
@@ -413,21 +419,20 @@ public final class SlotManagerImpl implements SlotManager {
       return false;
     }
     // TODO the session down and up in a short time. session.processId is important
-    if (slotState.isFinish(sessions)) {
+    if (slotState.isAnywaySuccess(sessions)) {
       // after migrated, force to update the version
       // make sure the version is newly than old leader's
-      localDatumStorage.updateVersion(slot.getId());
+      localDatumStorage.updateVersion(slotState.slotId);
       slotState.migrated = true;
-      final long span = System.currentTimeMillis() - slotState.migratingStartTime;
       LOGGER.info(
-          "slotId={}, migrating finish, span={}, slot={}, sessions={}",
-          slot.getId(),
+          "[finish]slotId={}, span={}, slot={}, sessions={}",
+          slotState.slotId,
           span,
           slot,
           sessions);
       slotState.migratingTasks.clear();
-      observeLeaderMigratingFinish(slot.getId());
-      observeLeaderMigratingHistogram(slot.getId(), span);
+      observeLeaderMigratingFinish(slotState.slotId);
+      observeLeaderMigratingHistogram(slotState.slotId, span);
       return true;
     }
     return false;
@@ -438,11 +443,56 @@ public final class SlotManagerImpl implements SlotManager {
     Map<String, Long> spans = Maps.newTreeMap();
     for (Map.Entry<String, MigratingTask> e : slotState.migratingTasks.entrySet()) {
       MigratingTask m = e.getValue();
-      if (!m.task.isFinished() || m.task.isFailed()) {
+      if (!m.task.isFinished() || (m.task.isFailed() && !m.forceSuccess)) {
         spans.put(e.getKey(), now - m.createTimestamp);
       }
     }
     return spans;
+  }
+
+  boolean triggerEmergencyMigrating(
+      SlotState slotState, Collection<String> sessions, MigratingTask mtask) {
+    try {
+      // session.size=1 means only one session, could not skip
+      if (sessions.size() <= 1) {
+        return false;
+      }
+      final long span = System.currentTimeMillis() - mtask.createTimestamp;
+      int emergencyCases = 0;
+      if (span > dataServerConfig.getMigratingMaxSecs() * 1000) {
+        emergencyCases++;
+      }
+      if (mtask.tryCount > dataServerConfig.getMigratingMaxRetry()) {
+        emergencyCases++;
+      }
+      if (emergencyCases != 0) {
+        final int notSyncedCount = sessions.size() - slotState.countSyncSuccess(sessions);
+        if (notSyncedCount <= dataServerConfig.getMigratingMaxUnavailable()) {
+          emergencyCases++;
+        }
+        LOGGER.error(
+            "[slowSession]{},span={},try={},ing={}/{},session={}",
+            slotState.slotId,
+            span,
+            mtask.tryCount,
+            notSyncedCount,
+            sessions.size(),
+            mtask.sessionIp);
+        if (emergencyCases >= 3) {
+          // mark the session migrating success, avoid block
+          mtask.forceSuccess = true;
+          return true;
+        }
+      }
+    } catch (Throwable e) {
+      // cache unexpect exception, make sure the check not break the migrating
+      LOGGER.error(
+          "failed to check slow migrating, slotId={}, session={}",
+          slotState.slotId,
+          mtask.sessionIp,
+          e);
+    }
+    return false;
   }
 
   private void syncMigrating(
@@ -457,27 +507,41 @@ public final class SlotManagerImpl implements SlotManager {
       observeLeaderMigratingStart(slot.getId());
       LOGGER.info(
           "start migrating, slotId={}, sessionSize={}, sessions={}",
-          slot.getId(),
+          slotState.slotId,
           sessions.size(),
           sessions);
     }
     for (String sessionIp : sessions) {
       MigratingTask mtask = slotState.migratingTasks.get(sessionIp);
-      if (mtask == null || mtask.task.isFailed()) {
+      if (mtask == null) {
         KeyedTask<SyncSessionTask> ktask =
             commitSyncSessionTask(slot, slotTableEpoch, sessionIp, true);
-        if (mtask == null) {
-          mtask = new MigratingTask(ktask);
-          slotState.migratingTasks.put(sessionIp, mtask);
-        } else {
-          // fail
-          mtask.task = ktask;
-        }
-        // TODO add max trycount, avoid the unhealth session block the migrating
-        mtask.tryCount++;
+        mtask = new MigratingTask(sessionIp, ktask);
+        slotState.migratingTasks.put(sessionIp, mtask);
+        LOGGER.info("migrating start,slotId={},session={}", slot.getId(), sessionIp);
         continue;
       }
-      // migrating finish. try to sync session
+
+      if (mtask.task.isFailed() && !mtask.forceSuccess) {
+        // failed and not force Success, try to trigger emergency
+        if (triggerEmergencyMigrating(slotState, sessions, mtask)) {
+          LOGGER.info("[emergency]{},session={}", slotState.slotId, mtask.sessionIp);
+        } else {
+          KeyedTask<SyncSessionTask> ktask =
+              commitSyncSessionTask(slot, slotTableEpoch, sessionIp, true);
+          mtask.task = ktask;
+          mtask.tryCount++;
+          LOGGER.error(
+              "migrating retry,slotId={},try={},session={},create={}/{}",
+              slot.getId(),
+              mtask.tryCount,
+              sessionIp,
+              mtask.createTimestamp,
+              System.currentTimeMillis() - mtask.createTimestamp);
+          continue;
+        }
+      }
+      // force success or migrating finish. try to sync session
       // avoid the time of migrating is too long and block the syncing of session
       if (mtask.task.isOverAfter(syncSessionIntervalMs)) {
         if (syncSession(slotState, sessionIp, syncSessionIntervalMs, slotTableEpoch)) {
@@ -601,28 +665,50 @@ public final class SlotManagerImpl implements SlotManager {
       }
     }
 
-    boolean isFinish(Collection<String> sessions) {
+    int countSyncSuccess(Collection<String> sessions) {
+      int count = 0;
+      for (String session : sessions) {
+        MigratingTask t = migratingTasks.get(session);
+        // not contains forceSuccess
+        if (t != null && t.task.isSuccess()) {
+          count++;
+        }
+      }
+      return count;
+    }
+
+    boolean isAnywaySuccess(Collection<String> sessions) {
       if (sessions.isEmpty()) {
         return false;
       }
-      boolean finished = true;
+      // contains forceSuccess
       for (String session : sessions) {
-        MigratingTask t = migratingTasks.get(session);
-        if (t == null || !t.task.isSuccess()) {
-          finished = false;
-          break;
+        final MigratingTask t = migratingTasks.get(session);
+        if (t == null) {
+          return false;
+        }
+        // contains forceSuccess
+        if (t.forceSuccess) {
+          continue;
+        }
+        if (!t.task.isSuccess()) {
+          // could not use isFailed to replace !isSuccess
+          return false;
         }
       }
-      return finished;
+      return true;
     }
   }
 
   static class MigratingTask {
     final long createTimestamp = System.currentTimeMillis();
+    final String sessionIp;
     KeyedTask<SyncSessionTask> task;
     int tryCount;
+    boolean forceSuccess;
 
-    MigratingTask(KeyedTask<SyncSessionTask> task) {
+    MigratingTask(String sessionIp, KeyedTask<SyncSessionTask> task) {
+      this.sessionIp = sessionIp;
       this.task = task;
     }
   }
