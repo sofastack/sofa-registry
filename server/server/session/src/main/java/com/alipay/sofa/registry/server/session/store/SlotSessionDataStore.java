@@ -21,6 +21,7 @@ import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
 import com.google.common.collect.Maps;
 import java.util.*;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import org.glassfish.jersey.internal.guava.Sets;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -130,10 +131,39 @@ public class SlotSessionDataStore implements DataStore {
   }
 
   @Override
+  public Map<ConnectId, Map<String, Publisher>> queryByConnectIds(List<ConnectId> connectIds) {
+    if (CollectionUtils.isEmpty(connectIds)) {
+      return Collections.EMPTY_MAP;
+    }
+    Map<ConnectId, Map<String, Publisher>> ret = Maps.newHashMap();
+    for (DataStore ds : slot2DataStores.values()) {
+      Map<ConnectId, Map<String, Publisher>> m = ds.queryByConnectIds(connectIds);
+      for (Entry<ConnectId, Map<String, Publisher>> entry : m.entrySet()) {
+        Map<String, Publisher> map = ret.computeIfAbsent(entry.getKey(), k -> Maps.newHashMap());
+        map.putAll(entry.getValue());
+      }
+    }
+    return ret;
+  }
+
+  @Override
   public Map<String, Publisher> deleteByConnectId(ConnectId connectId) {
     Map<String, Publisher> ret = Maps.newHashMap();
     for (DataStore ds : slot2DataStores.values()) {
       ret.putAll(ds.deleteByConnectId(connectId));
+    }
+    return ret;
+  }
+
+  @Override
+  public Map<ConnectId, Map<String, Publisher>> deleteByConnectIds(List<ConnectId> connectIds) {
+    Map<ConnectId, Map<String, Publisher>> ret = Maps.newHashMap();
+    for (DataStore ds : slot2DataStores.values()) {
+      Map<ConnectId, Map<String, Publisher>> publisherMap = ds.deleteByConnectIds(connectIds);
+      for (Entry<ConnectId, Map<String, Publisher>> entry : publisherMap.entrySet()) {
+        Map<String, Publisher> remove = ret.computeIfAbsent(entry.getKey(), k -> Maps.newHashMap());
+        remove.putAll(entry.getValue());
+      }
     }
     return ret;
   }

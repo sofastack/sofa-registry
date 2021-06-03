@@ -13,6 +13,7 @@ create table APP_REVISION (
   UNIQUE KEY `uk_data_center_revision` (`data_center`, `revision`)
 );
 
+drop table if exists interface_apps_index;
 CREATE TABLE interface_apps_index (
   id bigint(20) NOT NULL AUTO_INCREMENT,
   data_center varchar(128) NOT NULL,
@@ -27,6 +28,7 @@ CREATE TABLE interface_apps_index (
   KEY `idx_data_center_interface` (`interface_name`)
 );
 
+drop table if exists distribute_lock;
 CREATE TABLE distribute_lock (
   id bigint(20) NOT NULL AUTO_INCREMENT primary key,
   data_center varchar(128) NOT NULL,
@@ -39,6 +41,7 @@ CREATE TABLE distribute_lock (
   KEY `idx_lock_owner` (`owner`)
 );
 
+drop table if exists provide_data;
 CREATE TABLE provide_data (
   id bigint(20) NOT NULL AUTO_INCREMENT primary key,
   data_center varchar(128) NOT NULL,
@@ -48,6 +51,18 @@ CREATE TABLE provide_data (
   gmt_modified timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `data_version` bigint(20) NOT NULL DEFAULT '0' COMMENT '版本号',
   UNIQUE KEY `uk_data_center_key` (`data_center`, `data_key`)
+);
+
+drop table if exists client_manager_pods;
+CREATE TABLE `client_manager_pods` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT primary key,
+  `data_center` varchar(128) NOT NULL COMMENT '集群名称',
+  `address` varchar(1024) NOT NULL COMMENT 'address',
+  `gmt_create` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `gmt_modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
+  `operation` varchar(128) NOT NULL COMMENT '操作类型',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_data_center_address` (`data_center`, `address`)
 );
 
 

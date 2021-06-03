@@ -19,8 +19,6 @@ package com.alipay.sofa.registry.server.session.bootstrap;
 import com.alipay.remoting.CustomSerializerManager;
 import com.alipay.remoting.serialization.SerializerManager;
 import com.alipay.sofa.registry.common.model.client.pb.*;
-import com.alipay.sofa.registry.common.model.constants.ValueConstants;
-import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
@@ -34,13 +32,12 @@ import com.alipay.sofa.registry.remoting.bolt.serializer.ProtobufCustomSerialize
 import com.alipay.sofa.registry.remoting.bolt.serializer.ProtobufSerializer;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
-import com.alipay.sofa.registry.server.session.filter.blacklist.BlacklistManager;
 import com.alipay.sofa.registry.server.session.metadata.AppRevisionCacheRegistry;
-import com.alipay.sofa.registry.server.session.provideData.ProvideDataProcessor;
 import com.alipay.sofa.registry.server.session.registry.SessionRegistry;
 import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
+import com.alipay.sofa.registry.server.shared.providedata.FetchSystemPropertyService;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.alipay.sofa.registry.task.batcher.TaskDispatchers;
 import com.github.rholder.retry.*;
@@ -89,9 +86,11 @@ public class SessionServerBootstrap {
 
   @Autowired private ApplicationContext applicationContext;
 
-  @Autowired private BlacklistManager blacklistManager;
+  @Resource private FetchSystemPropertyService fetchStopPushService;
 
-  @Autowired private ProvideDataProcessor provideDataProcessorManager;
+  @Resource private FetchSystemPropertyService fetchBlackListService;
+
+  @Resource private FetchSystemPropertyService fetchClientOffPodsService;
 
   @Autowired private SlotTableCache slotTableCache;
 
@@ -313,9 +312,14 @@ public class SessionServerBootstrap {
       metaNodeService.renewNode();
       // start sched renew
       metaNodeService.startRenewer();
-      fetchStopPushSwitch();
 
-      fetchBlackList();
+      // start fetch system property data
+      fetchStopPushService.load();
+      fetchBlackListService.load();
+      fetchClientOffPodsService.load();
+
+      // start fetch change data after got the switch
+      sessionRegistry.fetchChangDataProcess();
       metaStart.set(true);
 
       LOGGER.info(
@@ -326,21 +330,6 @@ public class SessionServerBootstrap {
           "MetaServer connected server error! Port:{}", sessionServerConfig.getMetaServerPort(), e);
       throw new RuntimeException("MetaServer connected server error!", e);
     }
-  }
-
-  private void fetchStopPushSwitch() {
-    ProvideData data = metaNodeService.fetchData(ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID);
-    if (data != null && data.getProvideData() != null) {
-      provideDataProcessorManager.fetchDataProcess(data);
-    } else {
-      LOGGER.info("Fetch session stop push switch data null,config not change!");
-    }
-    // start fetch change data after got the switch
-    sessionRegistry.fetchChangDataProcess();
-  }
-
-  private void fetchBlackList() {
-    blacklistManager.load();
   }
 
   private void openHttpServer() {

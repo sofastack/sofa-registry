@@ -16,6 +16,9 @@
  */
 package com.alipay.sofa.registry.jdbc.repository.impl;
 
+import static com.alipay.sofa.registry.jdbc.repository.impl.MetadataMetrics.ProvideData.PROVIDE_DATA_QUERY_COUNTER;
+import static com.alipay.sofa.registry.jdbc.repository.impl.MetadataMetrics.ProvideData.PROVIDE_DATA_UPDATE_COUNTER;
+
 import com.alipay.sofa.registry.common.model.console.PersistenceData;
 import com.alipay.sofa.registry.common.model.console.PersistenceDataBuilder;
 import com.alipay.sofa.registry.jdbc.config.DefaultCommonConfig;
@@ -53,6 +56,7 @@ public class ProvideDataJdbcRepository implements ProvideDataRepository {
             defaultCommonConfig.getClusterId(),
             PersistenceDataBuilder.getDataInfoId(persistenceData));
 
+    PROVIDE_DATA_QUERY_COUNTER.inc();
     ProvideDataDomain domain =
         ProvideDataDomainConvertor.convert2ProvideData(
             persistenceData, defaultCommonConfig.getClusterId());
@@ -73,6 +77,7 @@ public class ProvideDataJdbcRepository implements ProvideDataRepository {
               affect);
         }
       }
+      PROVIDE_DATA_UPDATE_COUNTER.inc();
 
       if (affect == 0) {
         PersistenceData query = get(domain.getDataKey());
@@ -93,12 +98,14 @@ public class ProvideDataJdbcRepository implements ProvideDataRepository {
 
   @Override
   public PersistenceData get(String key) {
+    PROVIDE_DATA_QUERY_COUNTER.inc();
     return ProvideDataDomainConvertor.convert2PersistenceData(
         provideDataMapper.query(defaultCommonConfig.getClusterId(), key));
   }
 
   @Override
   public boolean remove(String key, long version) {
+    PROVIDE_DATA_UPDATE_COUNTER.inc();
     int affect = provideDataMapper.remove(defaultCommonConfig.getClusterId(), key, version);
     if (LOG.isInfoEnabled()) {
       LOG.info(
@@ -123,6 +130,7 @@ public class ProvideDataJdbcRepository implements ProvideDataRepository {
           provideDataMapper.queryByPage(defaultCommonConfig.getClusterId(), start, batchQuerySize);
       responses.addAll(ProvideDataDomainConvertor.convert2PersistenceDatas(provideDataDomains));
     }
+    PROVIDE_DATA_QUERY_COUNTER.inc();
     return responses;
   }
 }

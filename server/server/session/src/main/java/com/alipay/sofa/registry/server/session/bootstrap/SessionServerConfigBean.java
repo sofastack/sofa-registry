@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.bootstrap;
 
+import com.alipay.sofa.registry.server.shared.config.ServerShareConfig;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.util.OsUtils;
 import java.util.Collection;
@@ -35,7 +36,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @version $Id : SessionServerConfigBean.java, v 0.1 2017-11-14 11:49 synex Exp $
  */
 @ConfigurationProperties(prefix = SessionServerConfigBean.PREFIX)
-public class SessionServerConfigBean implements SessionServerConfig {
+public class SessionServerConfigBean implements SessionServerConfig, ServerShareConfig {
 
   /** The constant PREFIX. */
   public static final String PREFIX = "session.server";
@@ -147,8 +148,6 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
   private String sessionServerDataCenter;
 
-  private volatile boolean stopPushSwitch = false;
-
   // begin config for enterprise version
 
   /** forever close push zone，such as:RZBETA */
@@ -184,6 +183,8 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
   private int revisionHeartbeatMinutes = 10;
 
+  private int clientManagerIntervalMillis = 1000;
+
   // metadata config end
 
   // end config for enterprise version
@@ -191,6 +192,8 @@ public class SessionServerConfigBean implements SessionServerConfig {
   private CommonConfig commonConfig;
 
   private volatile Collection<String> metaAddresses;
+
+  private int systemPropertyIntervalMillis = 3000;
 
   /**
    * constructor
@@ -453,26 +456,6 @@ public class SessionServerConfigBean implements SessionServerConfig {
    */
   public void setHttpServerPort(int httpServerPort) {
     this.httpServerPort = httpServerPort;
-  }
-
-  /**
-   * Getter method for property <tt>stopPushSwitch</tt>.
-   *
-   * @return property value of stopPushSwitch
-   */
-  @Override
-  public boolean isStopPushSwitch() {
-    return stopPushSwitch;
-  }
-
-  /**
-   * Setter method for property <tt>stopPushSwitch</tt>.
-   *
-   * @param stopPushSwitch value to be assigned to property stopPushSwitch
-   */
-  @Override
-  public void setStopPushSwitch(boolean stopPushSwitch) {
-    this.stopPushSwitch = stopPushSwitch;
   }
 
   public String getInvalidForeverZones() {
@@ -1112,6 +1095,15 @@ public class SessionServerConfigBean implements SessionServerConfig {
   }
 
   @Override
+  public int getClientManagerIntervalMillis() {
+    return clientManagerIntervalMillis;
+  }
+
+  public void setClientManagerIntervalMillis(int clientManagerIntervalMillis) {
+    this.clientManagerIntervalMillis = clientManagerIntervalMillis;
+  }
+
+  @Override
   public int getAccessMetadataMaxBufferSize() {
     return accessMetadataMaxBufferSize;
   }
@@ -1179,6 +1171,15 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
   public void setClientIOHighWaterMark(int clientIOHighWaterMark) {
     this.clientIOHighWaterMark = clientIOHighWaterMark;
+  }
+
+  @Override
+  public int getSystemPropertyIntervalMillis() {
+    return systemPropertyIntervalMillis;
+  }
+
+  public void setSystemPropertyIntervalMillis(int systemPropertyIntervalMillis) {
+    this.systemPropertyIntervalMillis = systemPropertyIntervalMillis;
   }
 
   @Override

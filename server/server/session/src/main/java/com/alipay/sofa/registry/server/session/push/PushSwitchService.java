@@ -16,23 +16,20 @@
  */
 package com.alipay.sofa.registry.server.session.push;
 
-import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
+import com.alipay.sofa.registry.server.session.provideData.FetchStopPushService;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import java.util.Collection;
 import java.util.HashSet;
-import org.springframework.beans.factory.annotation.Autowired;
+import javax.annotation.Resource;
 
 public class PushSwitchService {
 
-  @Autowired SessionServerConfig sessionServerConfig;
+  @Resource FetchStopPushService fetchStopPushService;
 
   private volatile Collection<String> openIps = Sets.newHashSet();
 
   public PushSwitchService() {}
-
-  public PushSwitchService(SessionServerConfig config) {
-    sessionServerConfig = config;
-  }
 
   public void setOpenIPs(Collection<String> ips) {
     if (ips == null) {
@@ -46,14 +43,34 @@ public class PushSwitchService {
   }
 
   public boolean isGlobalPushSwitchStopped() {
-    return sessionServerConfig.isStopPushSwitch();
+    return fetchStopPushService.isStopPushSwitch();
   }
 
   public boolean canPush() {
-    return !sessionServerConfig.isStopPushSwitch() || openIps.size() > 0;
+    return !fetchStopPushService.isStopPushSwitch() || openIps.size() > 0;
   }
 
   public boolean canIpPush(String ip) {
-    return !sessionServerConfig.isStopPushSwitch() || openIps.contains(ip);
+    return !fetchStopPushService.isStopPushSwitch() || openIps.contains(ip);
+  }
+
+  /**
+   * Setter method for property <tt>fetchStopPushService</tt>.
+   *
+   * @param fetchStopPushService value to be assigned to property fetchStopPushService
+   */
+  @VisibleForTesting
+  public void setFetchStopPushService(FetchStopPushService fetchStopPushService) {
+    this.fetchStopPushService = fetchStopPushService;
+  }
+
+  /**
+   * Getter method for property <tt>fetchStopPushService</tt>.
+   *
+   * @return property value of fetchStopPushService
+   */
+  @VisibleForTesting
+  public FetchStopPushService getFetchStopPushService() {
+    return fetchStopPushService;
   }
 }

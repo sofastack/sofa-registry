@@ -62,6 +62,12 @@ public class MetaServerConfigBean implements MetaServerConfig {
 
   private int revisionGcSecs = 60;
 
+  private int clientManagerWatchMillis = 1000;
+
+  private int clientManagerRefreshSecs = 300;
+
+  private int clientManagerRefreshLimit = 5000;
+
   private long metaLeaderWarmupMillis =
       SystemUtils.getSystemLong(
           "registry.elector.warm.up.millis",
@@ -428,5 +434,62 @@ public class MetaServerConfigBean implements MetaServerConfig {
 
   public void setDataNodeProtectionNum(int dataNodeProtectionNum) {
     this.dataNodeProtectionNum = dataNodeProtectionNum;
+  }
+
+  /**
+   * Getter method for property <tt>clientManagerWatchMillis</tt>.
+   *
+   * @return property value of clientManagerWatchMillis
+   */
+  @Override
+  public int getClientManagerWatchMillis() {
+    return clientManagerWatchMillis;
+  }
+
+  /**
+   * Setter method for property <tt>clientManagerWatchMillis</tt>.
+   *
+   * @param clientManagerWatchMillis value to be assigned to property clientManagerWatchMillis
+   */
+  public void setClientManagerWatchMillis(int clientManagerWatchMillis) {
+    this.clientManagerWatchMillis = clientManagerWatchMillis;
+  }
+
+  /**
+   * Getter method for property <tt>clientManagerRefreshSecs</tt>.
+   *
+   * @return property value of clientManagerRefreshSecs
+   */
+  @Override
+  public int getClientManagerRefreshSecs() {
+    return clientManagerRefreshSecs;
+  }
+
+  /**
+   * Setter method for property <tt>clientManagerRefreshSecs</tt>.
+   *
+   * @param clientManagerRefreshSecs value to be assigned to property clientManagerRefreshSecs
+   */
+  public void setClientManagerRefreshSecs(int clientManagerRefreshSecs) {
+    this.clientManagerRefreshSecs = clientManagerRefreshSecs;
+  }
+
+  /**
+   * Getter method for property <tt>clientManagerRefreshLimit</tt>.
+   *
+   * @return property value of clientManagerRefreshLimit
+   */
+  @Override
+  public int getClientManagerRefreshLimit() {
+    return clientManagerRefreshLimit;
+  }
+
+  /**
+   * Setter method for property <tt>clientManagerRefreshLimit</tt>.
+   *
+   * @param clientManagerRefreshLimit value to be assigned to property clientManagerRefreshLimit
+   */
+  public void setClientManagerRefreshLimit(int clientManagerRefreshLimit) {
+    this.clientManagerRefreshLimit = clientManagerRefreshLimit;
   }
 }

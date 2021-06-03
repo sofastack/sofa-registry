@@ -14,33 +14,49 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.filter.blacklist;
+package com.alipay.sofa.registry.store.api.meta;
 
+import com.alipay.sofa.registry.common.model.metaserver.ClientManagerPods;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**
- * @author shangyu.wh
- * @version 1.0: BlacklistManager.java, v 0.1 2019-06-19 18:27 shangyu.wh Exp $
+ * @author xiaojian.xj
+ * @version $Id: ClientManagerPodsRepository.java, v 0.1 2021年05月11日 16:47 xiaojian.xj Exp $
  */
-public interface BlacklistManager {
-  /** load list first */
-  void load();
+public interface ClientManagerPodsRepository {
 
   /**
-   * get list
+   * client open
    *
+   * @param ipSet
    * @return
    */
-  List<BlacklistConfig> getBlacklistConfigList();
+  boolean clientOpen(Set<String> ipSet);
 
   /**
-   * convert blacklist map to blacklist config list
+   * client off
    *
-   * @param config
-   * @return blacklistConfigMap key:blacklist type Map<String, Set<String>> key:MatchType set:match
-   *     patterns
+   * @param ipSet
+   * @return
    */
-  Map<String, Map<String, Set<String>>> convertBlacklistConfig(String config);
+  boolean clientOff(Set<String> ipSet);
+
+  /**
+   * query records
+   *
+   * @param maxId
+   * @return
+   */
+  List<ClientManagerPods> queryAfterThan(long maxId);
+
+  /**
+   * query records
+   *
+   * @param maxId
+   * @return
+   */
+  List<ClientManagerPods> queryAfterThan(long maxId, long limit);
+
+  int queryTotalCount();
 }

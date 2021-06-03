@@ -25,6 +25,7 @@ import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.server.session.TestUtils;
 import com.alipay.sofa.registry.server.session.bootstrap.ExecutorManager;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfigBean;
+import com.alipay.sofa.registry.server.session.provideData.FetchStopPushService;
 import com.alipay.sofa.registry.server.session.push.FirePushService;
 import com.alipay.sofa.registry.server.session.push.PushSwitchService;
 import com.alipay.sofa.registry.server.session.store.Interests;
@@ -32,6 +33,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.junit.Assert;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 public class DataChangeRequestHandlerTest {
   @Test
@@ -54,17 +56,18 @@ public class DataChangeRequestHandlerTest {
     DataChangeRequestHandler handler = newHandler();
     SessionServerConfigBean serverConfigBean = TestUtils.newSessionConfig("testDc");
     handler.sessionServerConfig = serverConfigBean;
-    handler.pushSwitchService = new PushSwitchService(handler.sessionServerConfig);
+    handler.pushSwitchService = new PushSwitchService();
     handler.executorManager = new ExecutorManager(serverConfigBean);
     handler.firePushService = mock(FirePushService.class);
     handler.sessionInterests = mock(Interests.class);
+    handler.pushSwitchService.setFetchStopPushService(new FetchStopPushService());
 
-    handler.sessionServerConfig.setStopPushSwitch(true);
+    handler.pushSwitchService.getFetchStopPushService().setStopPushSwitch(true);
     // no npe, stopPush skip the handle
     Object obj = handler.doHandle(null, null);
     Assert.assertNull(obj);
 
-    handler.sessionServerConfig.setStopPushSwitch(false);
+    handler.pushSwitchService.getFetchStopPushService().setStopPushSwitch(false);
     when(handler.sessionInterests.checkInterestVersion(anyString(), anyString(), anyLong()))
         .thenReturn(Interests.InterestVersionCheck.Obsolete);
     obj = handler.doHandle(null, request());

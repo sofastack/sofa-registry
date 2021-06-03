@@ -52,6 +52,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.util.*;
+import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import javax.annotation.PostConstruct;
@@ -209,34 +210,41 @@ public class SessionRegistry implements Registry {
   @Override
   public void clean(List<ConnectId> connectIds) {
     // update local firstly, data node send error depend on renew check
-    for (ConnectId connectId : connectIds) {
-      List<Publisher> removes = removeFromSession(connectId, true);
-      // clientOff to dataNode async
-      clientOffToDataNode(connectId, removes);
-    }
+    Map<ConnectId, List<Publisher>> removes = removeFromSession(connectIds, true);
+    removes
+        .entrySet()
+        .forEach(
+            entry -> {
+              // clientOff to dataNode async
+              clientOffToDataNode(entry.getKey(), entry.getValue());
+            });
   }
 
   @Override
   public void clientOff(List<ConnectId> connectIds) {
     final String dataCenter = getDataCenterWhenPushEmpty();
     // clientOff: 1. remove pub; 2. check sub push empty; 3. keep watcher
-    for (ConnectId connectId : connectIds) {
+    Map<ConnectId, List<Publisher>> pubMap = removeFromSession(connectIds, false);
+    Map<ConnectId, Map<String, Subscriber>> subMap =
+        getSessionInterests().queryByConnectIds(connectIds);
+
+    for (Entry<ConnectId, Map<String, Subscriber>> subEntry : subMap.entrySet()) {
       int subEmptyCount = 0;
-      try {
-        Map<String, Subscriber> subMap = sessionInterests.queryByConnectId(connectId);
-        for (Subscriber sub : subMap.values()) {
-          if (isPushEmpty(sub)) {
-            subEmptyCount++;
-            firePushService.fireOnPushEmpty(sub, dataCenter);
-            Loggers.CLIENT_OFF_LOG.info(
-                "subEmpty,{},{},{}", sub.getDataInfoId(), dataCenter, connectId);
-          }
+      for (Subscriber sub : subEntry.getValue().values()) {
+        if (isPushEmpty(sub)) {
+          subEmptyCount++;
+          firePushService.fireOnPushEmpty(sub, dataCenter);
+          Loggers.CLIENT_OFF_LOG.info(
+              "subEmpty,{},{},{}", sub.getDataInfoId(), dataCenter, subEntry.getKey());
         }
-      } finally {
-        List<Publisher> removes = removeFromSession(connectId, false);
-        clientOffToDataNode(connectId, removes);
-        Loggers.CLIENT_OFF_LOG.info("pubRemove={}, subEmpty={}", removes.size(), subEmptyCount);
       }
+      Loggers.CLIENT_OFF_LOG.info("connectId={}, subEmpty={}", subEntry.getKey(), subEmptyCount);
+    }
+
+    for (Entry<ConnectId, List<Publisher>> pubEntry : pubMap.entrySet()) {
+      clientOffToDataNode(pubEntry.getKey(), pubEntry.getValue());
+      Loggers.CLIENT_OFF_LOG.info(
+          "connectId={}, pubRemove={}", pubEntry.getKey(), pubEntry.getValue().size());
     }
   }
 
@@ -245,13 +253,21 @@ public class SessionRegistry implements Registry {
     return false;
   }
 
-  private List<Publisher> removeFromSession(ConnectId connectId, boolean removeSubAndWat) {
-    Map<String, Publisher> publisherMap = sessionDataStore.deleteByConnectId(connectId);
+  private Map<ConnectId, List<Publisher>> removeFromSession(
+      List<ConnectId> connectIds, boolean removeSubAndWat) {
+    Map<ConnectId, Map<String, Publisher>> publisherMap =
+        sessionDataStore.deleteByConnectIds(connectIds);
+
     if (removeSubAndWat) {
-      sessionInterests.deleteByConnectId(connectId);
-      sessionWatchers.deleteByConnectId(connectId);
+      sessionInterests.deleteByConnectIds(connectIds);
+      sessionWatchers.deleteByConnectIds(connectIds);
     }
-    return Lists.newArrayList(publisherMap.values());
+
+    Map<ConnectId, List<Publisher>> ret = Maps.newHashMap();
+    for (Entry<ConnectId, Map<String, Publisher>> entry : publisherMap.entrySet()) {
+      ret.put(entry.getKey(), Lists.newArrayList(entry.getValue().values()));
+    }
+    return ret;
   }
 
   private void clientOffToDataNode(ConnectId connectId, List<Publisher> clientOffPublishers) {

@@ -84,4 +84,38 @@ public class MetadataMetrics {
             .help("apps register")
             .register();
   }
+
+  public static final class ProvideData {
+    public static final Counter PROVIDE_DATA_UPDATE_COUNTER =
+        Counter.build()
+            .namespace("metadata")
+            .subsystem("provideData")
+            .name("provideData_update_total")
+            .help("provideData_update")
+            .register();
+
+    public static final Counter PROVIDE_DATA_QUERY_COUNTER =
+        Counter.build()
+            .namespace("metadata")
+            .subsystem("provideData")
+            .name("provideData_query_total")
+            .help("provideData_query")
+            .register();
+
+    public static final Counter CLIENT_MANAGER_UPDATE_COUNTER =
+        Counter.build()
+            .namespace("metadata")
+            .subsystem("clientManager")
+            .name("clientManager_update_total")
+            .help("clientManager_update")
+            .register();
+
+    public static final Counter CLIENT_MANAGER_QUERY_COUNTER =
+        Counter.build()
+            .namespace("metadata")
+            .subsystem("clientManager")
+            .name("clientManager_query_total")
+            .help("clientManager_query")
+            .register();
+  }
 }

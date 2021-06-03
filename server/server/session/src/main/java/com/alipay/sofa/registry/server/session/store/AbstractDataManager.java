@@ -95,6 +95,27 @@ public abstract class AbstractDataManager<T extends BaseInfo>
   }
 
   @Override
+  public Map<ConnectId, Map<String, T>> deleteByConnectIds(List<ConnectId> connectIds) {
+    Map<ConnectId, Map<String, T>> ret = Maps.newHashMap();
+
+    for (Map<String, T> map : stores.values()) {
+      // copy a map for iterate
+      for (Map.Entry<String, T> e : Maps.newHashMap(map).entrySet()) {
+        final T data = e.getValue();
+        if (!connectIds.contains(data.connectId())) {
+          continue;
+        }
+        // may be the value has removed by anther thread
+        if (map.remove(e.getKey(), data)) {
+          Map<String, T> remove = ret.computeIfAbsent(data.connectId(), k -> Maps.newHashMap());
+          remove.put(e.getKey(), data);
+        }
+      }
+    }
+    return ret;
+  }
+
+  @Override
   public Collection<T> getDatas(String dataInfoId) {
     ParaCheckUtil.checkNotBlank(dataInfoId, "dataInfoId");
     Map<String, T> dataMap = stores.get(dataInfoId);
@@ -121,6 +142,17 @@ public abstract class AbstractDataManager<T extends BaseInfo>
   @Override
   public Map<String, T> queryByConnectId(ConnectId connectId) {
     return StoreHelpers.getByConnectId(connectId, stores);
+  }
+
+  /**
+   * query data by client node connectId
+   *
+   * @param connectIds
+   * @return
+   */
+  @Override
+  public Map<ConnectId, Map<String, T>> queryByConnectIds(List<ConnectId> connectIds) {
+    return StoreHelpers.getByConnectIds(connectIds, stores);
   }
 
   @Override
