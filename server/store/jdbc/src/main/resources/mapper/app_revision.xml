@@ -86,7 +86,7 @@
                #{clientVersion},
                #{baseParams},
                #{serviceParams},
-               '0'
+               #{deleted},
                CURRENT_TIMESTAMP,
                CURRENT_TIMESTAMP
            )
