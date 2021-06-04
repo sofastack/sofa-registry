@@ -16,23 +16,17 @@
  */
 package com.alipay.sofa.registry.test.client;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static org.junit.Assert.assertTrue;
-
 import com.alipay.sofa.registry.client.api.registration.PublisherRegistration;
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
-import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.server.meta.resource.model.ClientOffAddressModel;
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
-import java.util.Collection;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
-import org.apache.commons.lang.StringUtils;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -66,22 +60,12 @@ public class ClientManagerTest extends BaseIntegrationTest {
         registryClient1.register(registration, value);
     Thread.sleep(2000L);
 
-    Collection<Publisher> datas = sessionDataStore.getDatas(dataInfo.getDataInfoId());
-    boolean exist = false;
-    for (Publisher publisher : datas) {
-      if (StringUtils.equals(publisher.getSourceAddress().getIpAddress(), localAddress)) {
-        exist = true;
-      }
-    }
-    Assert.assertTrue(exist);
+    // check session
+    Assert.assertTrue(isExist(sessionDataStore.getDatas(dataInfo.getDataInfoId()), localAddress));
 
-    String countResult =
-        dataChannel
-            .getWebTarget()
-            .path("digest/datum/count")
-            .request(APPLICATION_JSON)
-            .get(String.class);
-    assertTrue(countResult.contains("[Publisher] size of publisher in DefaultDataCenter is 1"));
+    // check data
+    Assert.assertTrue(
+        isExist(localDatumStorage.getAllPublisher().get(dataInfo.getDataInfoId()), localAddress));
 
     /** client off */
     CommonResponse response = clientManagerResource.clientOff(CLIENT_OFF_STR);
@@ -95,23 +79,10 @@ public class ClientManagerTest extends BaseIntegrationTest {
     Thread.sleep(2000L);
 
     // check session local cache
-    Collection<Publisher> datasAfterClientOff = sessionDataStore.getDatas(dataInfo.getDataInfoId());
-    boolean existAfterClientOff = false;
-    for (Publisher publisher : datasAfterClientOff) {
-      if (StringUtils.equals(publisher.getSourceAddress().getIpAddress(), localAddress)) {
-        existAfterClientOff = true;
-      }
-    }
-    Assert.assertTrue(!existAfterClientOff);
-
+    Assert.assertFalse(isExist(sessionDataStore.getDatas(dataInfo.getDataInfoId()), localAddress));
     // check data publisher
-    countResult =
-        dataChannel
-            .getWebTarget()
-            .path("digest/datum/count")
-            .request(APPLICATION_JSON)
-            .get(String.class);
-    assertTrue(countResult.contains("[Publisher] size of publisher in DefaultDataCenter is 0"));
+    Assert.assertFalse(
+        isExist(localDatumStorage.getAllPublisher().get(dataInfo.getDataInfoId()), localAddress));
 
     /** client open */
     response = clientManagerResource.clientOpen(CLIENT_OPEN_STR);
@@ -129,23 +100,8 @@ public class ClientManagerTest extends BaseIntegrationTest {
     Thread.sleep(3000);
 
     // check session local cache
-    Collection<Publisher> datasAfterClientOpen =
-        sessionDataStore.getDatas(dataInfo.getDataInfoId());
-    boolean existAfterClientOpen = false;
-    for (Publisher publisher : datasAfterClientOpen) {
-      if (StringUtils.equals(publisher.getSourceAddress().getIpAddress(), localAddress)) {
-        existAfterClientOpen = true;
-      }
-    }
-    Assert.assertTrue(existAfterClientOpen);
-
-    // check data publisher
-    countResult =
-        dataChannel
-            .getWebTarget()
-            .path("digest/datum/count")
-            .request(APPLICATION_JSON)
-            .get(String.class);
-    assertTrue(countResult.contains("[Publisher] size of publisher in DefaultDataCenter is 1"));
+    Assert.assertTrue(isExist(sessionDataStore.getDatas(dataInfo.getDataInfoId()), localAddress));
+    Assert.assertTrue(
+        isExist(localDatumStorage.getAllPublisher().get(dataInfo.getDataInfoId()), localAddress));
   }
 }

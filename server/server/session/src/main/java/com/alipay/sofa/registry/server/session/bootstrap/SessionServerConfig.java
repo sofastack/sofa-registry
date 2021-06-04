@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.bootstrap;
 
+import com.alipay.sofa.registry.server.shared.config.ServerShareConfig;
 import java.util.Collection;
 
 /**
@@ -24,7 +25,7 @@ import java.util.Collection;
  * @author shangyu.wh
  * @version $Id: SessionServerConfig.java, v 0.1 2017-11-14 11:47 synex Exp $
  */
-public interface SessionServerConfig {
+public interface SessionServerConfig extends ServerShareConfig {
 
   int getServerPort();
 

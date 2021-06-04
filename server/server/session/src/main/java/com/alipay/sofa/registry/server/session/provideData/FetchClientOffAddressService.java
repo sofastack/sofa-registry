@@ -62,6 +62,11 @@ public class FetchClientOffAddressService
   }
 
   @Override
+  protected int getSystemPropertyIntervalMillis() {
+    return sessionServerConfig.getSystemPropertyIntervalMillis();
+  }
+
+  @Override
   public boolean doProcess(ClientOffAddressStorage expect, ProvideData data) {
     if (expect.updating.get() != null) {
       return false;

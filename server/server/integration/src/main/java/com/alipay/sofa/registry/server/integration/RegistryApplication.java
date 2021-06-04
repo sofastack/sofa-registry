@@ -86,30 +86,36 @@ public class RegistryApplication {
     }
 
     // start meta
+    LOGGER.warn("starting meta");
+
     SpringApplicationBuilder springApplicationBuilder =
         new SpringApplicationBuilder(MetaApplication.class);
     springApplicationBuilder.parent(commonContext);
     metaApplicationContext = springApplicationBuilder.run();
-
+    LOGGER.warn("waiting meta");
     // wait meta cluster start
     waitClusterStart(
         serverList,
         Integer.parseInt(commonContext.getEnvironment().getProperty(META_HTTP_SERVER_PORT)));
 
     // start data
+    LOGGER.warn("starting data");
     dataApplicationContext =
         new SpringApplicationBuilder(DataApplication.class).parent(commonContext).run();
 
+    LOGGER.warn("waiting data");
     // wait data cluster start
     waitClusterStart(
         serverList,
         Integer.parseInt(commonContext.getEnvironment().getProperty(DATA_HTTP_SERVER_PORT)));
 
     // start session
+    LOGGER.warn("starting session");
     sessionApplicationContext =
         new SpringApplicationBuilder(SessionApplication.class).parent(commonContext).run();
 
     // wait session cluster start
+    LOGGER.warn("waiting session");
     waitClusterStart(
         serverList,
         Integer.parseInt(commonContext.getEnvironment().getProperty(SESSION_HTTP_SERVER_PORT)));
