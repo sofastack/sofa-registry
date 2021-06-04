@@ -61,7 +61,7 @@ public class ClientsOpenResource {
     }
 
     final List<ConnectId> connectIds = request.getConnectIds();
-    sessionRegistry.clean(connectIds);
+    sessionRegistry.clientOff(connectIds);
     return CommonResponse.buildSuccessResponse();
   }
 }

@@ -42,6 +42,8 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.jersey.JerseyClient;
+import com.alipay.sofa.registry.server.meta.resource.ClientManagerResource;
+import com.alipay.sofa.registry.server.session.provideData.FetchClientOffAddressService;
 import com.alipay.sofa.registry.server.session.registry.SessionRegistry;
 import com.alipay.sofa.registry.server.session.store.DataStore;
 import com.alipay.sofa.registry.server.session.store.Interests;
@@ -94,6 +96,9 @@ public class BaseIntegrationTest extends AbstractTest {
   protected static volatile SessionRegistry sessionRegistry;
   protected static volatile Interests sessionInterests;
   protected static volatile DataStore sessionDataStore;
+
+  protected static volatile ClientManagerResource clientManagerResource;
+  protected static volatile FetchClientOffAddressService fetchClientOffAddressService;
 
   protected static int sessionPort = 9603;
   protected static int consolePort = 9604;
@@ -169,6 +174,14 @@ public class BaseIntegrationTest extends AbstractTest {
       sessionRegistry = sessionApplicationContext.getBean("sessionRegistry", SessionRegistry.class);
       sessionInterests = sessionApplicationContext.getBean("sessionInterests", Interests.class);
       sessionDataStore = sessionApplicationContext.getBean("sessionDataStore", DataStore.class);
+
+      clientManagerResource =
+          metaApplicationContext.getBean("clientManagerResource", ClientManagerResource.class);
+
+      fetchClientOffAddressService =
+          sessionApplicationContext.getBean(
+              "fetchClientOffAddressService", FetchClientOffAddressService.class);
+
       LOGGER.info(
           "startServerNecessary, {} loaded by {}",
           BaseIntegrationTest.class,
