@@ -34,18 +34,25 @@ public interface Registry {
   void register(StoreData<String> data);
 
   /**
-   * clean all the data from connectIds
+   * clean all the connectIds: 1. clean pubs/sub/wat
    *
    * @param connectIds
    */
   void clean(List<ConnectId> connectIds);
 
   /**
-   * client off the connectIds 1. clean pubs; 2. check sub
+   * client off the connectIds: 1. clean pubs, keep sub/wat; 2. check sub
    *
    * @param connectIds
    */
   void clientOff(List<ConnectId> connectIds);
+
+  /**
+   * disable the connectIds: 1. clean pub/sub/wat; 2. check sub
+   *
+   * @param connectIds
+   */
+  void blacklist(List<ConnectId> connectIds);
 
   /**
    * message mode com.alipay.sofa.registry.client.provider for client node to unregister single

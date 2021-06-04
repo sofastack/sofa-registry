@@ -209,35 +209,41 @@ public class SessionRegistry implements Registry {
 
   @Override
   public void clean(List<ConnectId> connectIds) {
-    // update local firstly, data node send error depend on renew check
-    Map<ConnectId, List<Publisher>> removes = removeFromSession(connectIds, true);
-    for (Entry<ConnectId, List<Publisher>> entry : removes.entrySet()) {
-      // clientOff to dataNode async
-      clientOffToDataNode(entry.getKey(), entry.getValue());
-    }
+    disableConnect(connectIds, true, false);
   }
 
   @Override
   public void clientOff(List<ConnectId> connectIds) {
-    final String dataCenter = getDataCenterWhenPushEmpty();
-    // clientOff: 1. remove pub; 2. check sub push empty; 3. keep watcher
-    Map<ConnectId, List<Publisher>> pubMap = removeFromSession(connectIds, false);
-    Map<ConnectId, Map<String, Subscriber>> subMap =
-        getSessionInterests().queryByConnectIds(connectIds);
+    disableConnect(connectIds, false, true);
+  }
 
-    for (Entry<ConnectId, Map<String, Subscriber>> subEntry : subMap.entrySet()) {
-      int subEmptyCount = 0;
-      for (Subscriber sub : subEntry.getValue().values()) {
-        if (isPushEmpty(sub)) {
-          subEmptyCount++;
-          firePushService.fireOnPushEmpty(sub, dataCenter);
-          Loggers.CLIENT_OFF_LOG.info(
-              "subEmpty,{},{},{}", sub.getDataInfoId(), dataCenter, subEntry.getKey());
+  @Override
+  public void blacklist(List<ConnectId> connectIds) {
+    disableConnect(connectIds, true, true);
+  }
+
+  private void disableConnect(
+      List<ConnectId> connectIds, boolean removeSubAndWat, boolean checkSub) {
+    final String dataCenter = getDataCenterWhenPushEmpty();
+
+    if (checkSub) {
+      Map<ConnectId, Map<String, Subscriber>> subMap =
+          sessionInterests.queryByConnectIds(connectIds);
+      for (Entry<ConnectId, Map<String, Subscriber>> subEntry : subMap.entrySet()) {
+        int subEmptyCount = 0;
+        for (Subscriber sub : subEntry.getValue().values()) {
+          if (isPushEmpty(sub)) {
+            subEmptyCount++;
+            firePushService.fireOnPushEmpty(sub, dataCenter);
+            Loggers.CLIENT_OFF_LOG.info(
+                "subEmpty,{},{},{}", sub.getDataInfoId(), dataCenter, subEntry.getKey());
+          }
         }
+        Loggers.CLIENT_OFF_LOG.info("connectId={}, subEmpty={}", subEntry.getKey(), subEmptyCount);
       }
-      Loggers.CLIENT_OFF_LOG.info("connectId={}, subEmpty={}", subEntry.getKey(), subEmptyCount);
     }
 
+    Map<ConnectId, List<Publisher>> pubMap = removeFromSession(connectIds, removeSubAndWat);
     for (Entry<ConnectId, List<Publisher>> pubEntry : pubMap.entrySet()) {
       clientOffToDataNode(pubEntry.getKey(), pubEntry.getValue());
       Loggers.CLIENT_OFF_LOG.info(

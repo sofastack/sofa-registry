@@ -25,10 +25,7 @@ import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.common.model.store.Publisher;
-import com.alipay.sofa.registry.server.meta.resource.ClientManagerResource;
 import com.alipay.sofa.registry.server.meta.resource.model.ClientOffAddressModel;
-import com.alipay.sofa.registry.server.session.provideData.FetchClientOffAddressService;
-import com.alipay.sofa.registry.server.session.store.DataStore;
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
@@ -37,7 +34,6 @@ import java.util.Set;
 import java.util.concurrent.TimeoutException;
 import org.apache.commons.lang.StringUtils;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -49,24 +45,12 @@ import org.springframework.test.context.junit4.SpringRunner;
 @RunWith(SpringRunner.class)
 public class ClientManagerTest extends BaseIntegrationTest {
 
-  private ClientManagerResource clientManagerResource;
-  private FetchClientOffAddressService fetchClientOffAddressService;
-
   private String localAddress = sessionChannel.getLocalAddress().getHostString();
   private final String CLIENT_OFF_STR = "1.1.1.1;2.2.2.2;" + localAddress;
   private final String CLIENT_OPEN_STR = "2.2.2.2;3.3.3.3;" + localAddress;
 
   private final Set<String> CLIENT_OFF_SET = Sets.newHashSet(CLIENT_OFF_STR.split(";"));
   private final Set<String> CLIENT_OPEN_SET = Sets.newHashSet(CLIENT_OPEN_STR.split(";"));
-
-  @Before
-  public void beforeClientManagerTest() {
-    clientManagerResource =
-        metaApplicationContext.getBean("clientManagerResource", ClientManagerResource.class);
-    fetchClientOffAddressService =
-        sessionApplicationContext.getBean(
-            "fetchClientOffAddressService", FetchClientOffAddressService.class);
-  }
 
   @Test
   public void testClientOff() throws InterruptedException, TimeoutException {

@@ -18,7 +18,6 @@ package com.alipay.sofa.registry.server.session.filter.blacklist;
 
 import com.alipay.sofa.registry.common.model.store.BaseInfo;
 import com.alipay.sofa.registry.common.model.store.URL;
-import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.filter.IPMatchStrategy;
 import com.alipay.sofa.registry.server.session.filter.ProcessFilter;
 import com.alipay.sofa.registry.server.session.provideData.FetchBlackListService;
@@ -35,8 +34,6 @@ public class BlacklistMatchProcessFilter implements ProcessFilter<BaseInfo> {
   @Autowired protected IPMatchStrategy ipMatchStrategy;
 
   @Resource private FetchBlackListService fetchBlackListService;
-
-  @Autowired private SessionServerConfig sessionServerConfig;
 
   @Override
   public boolean match(BaseInfo storeData) {
