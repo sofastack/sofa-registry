@@ -90,13 +90,13 @@ public class BlacklistDataResource {
   }
 
   @VisibleForTesting
-  protected BlacklistDataResource setProvideDataService(ProvideDataService provideDataService) {
+  public BlacklistDataResource setProvideDataService(ProvideDataService provideDataService) {
     this.provideDataService = provideDataService;
     return this;
   }
 
   @VisibleForTesting
-  protected BlacklistDataResource setProvideDataNotifier(
+  public BlacklistDataResource setProvideDataNotifier(
       DefaultProvideDataNotifier provideDataNotifier) {
     this.provideDataNotifier = provideDataNotifier;
     return this;

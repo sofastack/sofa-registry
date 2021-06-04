@@ -31,6 +31,7 @@ import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataService;
 import com.alipay.sofa.registry.store.api.DBResponse;
 import com.alipay.sofa.registry.store.api.OperationStatus;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
+import com.google.common.annotations.VisibleForTesting;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -126,5 +127,29 @@ public class FetchSystemPropertyRequestHandler
   @Override
   public Class interest() {
     return FetchSystemPropertyRequest.class;
+  }
+
+  /**
+   * Setter method for property <tt>provideDataService</tt>.
+   *
+   * @param provideDataService value to be assigned to property provideDataService
+   */
+  @VisibleForTesting
+  public FetchSystemPropertyRequestHandler setProvideDataService(
+      ProvideDataService provideDataService) {
+    this.provideDataService = provideDataService;
+    return this;
+  }
+
+  /**
+   * Setter method for property <tt>clientManagerService</tt>.
+   *
+   * @param clientManagerService value to be assigned to property clientManagerService
+   */
+  @VisibleForTesting
+  public FetchSystemPropertyRequestHandler setClientManagerService(
+      ClientManagerService clientManagerService) {
+    this.clientManagerService = clientManagerService;
+    return this;
   }
 }

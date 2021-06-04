@@ -116,8 +116,7 @@ public class ClientManagerResource {
    * @param clientManagerService value to be assigned to property clientManagerService
    */
   @VisibleForTesting
-  protected ClientManagerResource setClientManagerService(
-      ClientManagerService clientManagerService) {
+  public ClientManagerResource setClientManagerService(ClientManagerService clientManagerService) {
     this.clientManagerService = clientManagerService;
     return this;
   }

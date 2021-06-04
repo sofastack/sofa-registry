@@ -16,16 +16,20 @@
  */
 package com.alipay.sofa.registry.jdbc.repository.impl;
 
+import static org.mockito.Matchers.anyObject;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress;
 import com.alipay.sofa.registry.jdbc.AbstractH2DbTestBase;
-import com.alipay.sofa.registry.store.api.meta.ClientManagerAddressRepository;
+import com.alipay.sofa.registry.jdbc.mapper.ClientManagerAddressMapper;
 import com.google.common.collect.Sets;
 import java.util.List;
 import java.util.Set;
+import javax.annotation.Resource;
 import org.junit.Assert;
 import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author xiaojian.xj
@@ -34,31 +38,38 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public class ClientManagerAddressJdbcRepositoryTest extends AbstractH2DbTestBase {
 
-  @Autowired private ClientManagerAddressRepository clientManagerAddressRepository;
+  @Resource private ClientManagerAddressJdbcRepository clientManagerAddressJdbcRepository;
 
   public static final Set<String> clientOffSet = Sets.newHashSet("1.1.1.1", "2.2.2.2");
   public static final Set<String> clientOpenSet = Sets.newHashSet("2.2.2.2", "3.3.3.3");
 
+  private ClientManagerAddressMapper clientManagerAddressMapper =
+      mock(ClientManagerAddressMapper.class);
+
   @Test
   public void testClientManager() {
+    long current = System.currentTimeMillis();
     boolean clientOff =
-        clientManagerAddressRepository.clientOff(
+        clientManagerAddressJdbcRepository.clientOff(
             ClientManagerAddressJdbcRepositoryTest.clientOffSet);
     Assert.assertTrue(clientOff);
 
     boolean clientOpen =
-        clientManagerAddressRepository.clientOpen(
+        clientManagerAddressJdbcRepository.clientOpen(
             ClientManagerAddressJdbcRepositoryTest.clientOpenSet);
     Assert.assertTrue(clientOpen);
 
-    int total = clientManagerAddressRepository.queryTotalCount();
+    int total = clientManagerAddressJdbcRepository.queryTotalCount();
     Assert.assertEquals(3, total);
 
     List<ClientManagerAddress> clientManagerAddress =
-        clientManagerAddressRepository.queryAfterThan(-1L);
-    List<ClientManagerAddress> addresses = clientManagerAddressRepository.queryAfterThan(-1L, 1000);
+        clientManagerAddressJdbcRepository.queryAfterThan(-1L);
+    List<ClientManagerAddress> addresses =
+        clientManagerAddressJdbcRepository.queryAfterThan(-1L, 1000);
     Assert.assertEquals(total, clientManagerAddress.size());
     Assert.assertEquals(total, addresses.size());
+    Assert.assertTrue(addresses.stream().findFirst().get().getGmtCreate().getTime() > current);
+    Assert.assertTrue(addresses.stream().findFirst().get().getGmtModify().getTime() > current);
 
     for (ClientManagerAddress address : clientManagerAddress) {
       if (clientOpenSet.contains(address.getAddress())) {
@@ -67,5 +78,21 @@ public class ClientManagerAddressJdbcRepositoryTest extends AbstractH2DbTestBase
         Assert.assertEquals(ValueConstants.CLIENT_OFF, address.getOperation());
       }
     }
+  }
+
+  @Test
+  public void testClientManagerError() {
+    clientManagerAddressJdbcRepository.setClientManagerAddressMapper(clientManagerAddressMapper);
+    when(clientManagerAddressMapper.update(anyObject()))
+        .thenThrow(new RuntimeException("expected exception"));
+    boolean clientOff =
+        clientManagerAddressJdbcRepository.clientOff(
+            ClientManagerAddressJdbcRepositoryTest.clientOffSet);
+    Assert.assertTrue(!clientOff);
+
+    boolean clientOpen =
+        clientManagerAddressJdbcRepository.clientOpen(
+            ClientManagerAddressJdbcRepositoryTest.clientOpenSet);
+    Assert.assertTrue(!clientOpen);
   }
 }

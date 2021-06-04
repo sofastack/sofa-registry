@@ -70,6 +70,11 @@ public class NotifyProvideDataChangeHandlerTest {
     handler.doHandle(null, request("testDataInfoId"));
     verify(handler.sessionWatchers, times(1)).checkWatcherVersions(anyString(), anyLong());
     verify(handler.taskListenerManager, times(1)).sendTaskEvent(anyObject());
+
+    when(handler.sessionWatchers.checkWatcherVersions(anyString(), anyLong())).thenReturn(false);
+    handler.doHandle(null, request("testDataInfoId"));
+    verify(handler.sessionWatchers, times(2)).checkWatcherVersions(anyString(), anyLong());
+    verify(handler.taskListenerManager, times(1)).sendTaskEvent(anyObject());
   }
 
   private static ProvideDataChangeEvent request(String dataInfoId) {
