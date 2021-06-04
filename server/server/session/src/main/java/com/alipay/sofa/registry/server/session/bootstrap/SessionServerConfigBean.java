@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.registry.server.session.bootstrap;
 
-import com.alipay.sofa.registry.server.shared.config.ServerShareConfig;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.util.OsUtils;
 import java.util.Collection;
@@ -36,7 +35,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @version $Id : SessionServerConfigBean.java, v 0.1 2017-11-14 11:49 synex Exp $
  */
 @ConfigurationProperties(prefix = SessionServerConfigBean.PREFIX)
-public class SessionServerConfigBean implements SessionServerConfig, ServerShareConfig {
+public class SessionServerConfigBean implements SessionServerConfig {
 
   /** The constant PREFIX. */
   public static final String PREFIX = "session.server";

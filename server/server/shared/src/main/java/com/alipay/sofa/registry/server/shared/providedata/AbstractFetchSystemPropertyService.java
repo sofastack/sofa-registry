@@ -20,7 +20,6 @@ import com.alipay.sofa.registry.common.model.metaserver.FetchSystemPropertyResul
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.server.shared.config.ServerShareConfig;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.server.shared.providedata.AbstractFetchSystemPropertyService.SystemDataStorage;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
@@ -52,8 +51,6 @@ public abstract class AbstractFetchSystemPropertyService<T extends SystemDataSto
 
   private final WatchDog watchDog = new WatchDog();
 
-  @Autowired private ServerShareConfig serverShareConfig;
-
   @Autowired protected MetaServerService metaNodeService;
 
   private final class WatchDog extends WakeUpLoopRunnable {
@@ -65,9 +62,11 @@ public abstract class AbstractFetchSystemPropertyService<T extends SystemDataSto
 
     @Override
     public int getWaitingMillis() {
-      return serverShareConfig.getSystemPropertyIntervalMillis();
+      return getSystemPropertyIntervalMillis();
     }
   }
+
+  protected abstract int getSystemPropertyIntervalMillis();
 
   private void doFetchData() {
     T expect = storage.get();

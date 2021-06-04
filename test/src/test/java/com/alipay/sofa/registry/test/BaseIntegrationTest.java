@@ -36,12 +36,14 @@ import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.Lease;
 import com.alipay.sofa.registry.common.model.sessionserver.CancelAddressRequest;
 import com.alipay.sofa.registry.common.model.slot.SlotConfig;
+import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.jersey.JerseyClient;
+import com.alipay.sofa.registry.server.data.cache.DatumStorage;
 import com.alipay.sofa.registry.server.meta.resource.ClientManagerResource;
 import com.alipay.sofa.registry.server.session.provideData.FetchClientOffAddressService;
 import com.alipay.sofa.registry.server.session.registry.SessionRegistry;
@@ -52,13 +54,11 @@ import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.alipay.sofa.registry.util.StringFormatter;
 import java.io.*;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
+import org.apache.commons.lang.StringUtils;
 import org.h2.tools.Server;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -96,6 +96,7 @@ public class BaseIntegrationTest extends AbstractTest {
   protected static volatile SessionRegistry sessionRegistry;
   protected static volatile Interests sessionInterests;
   protected static volatile DataStore sessionDataStore;
+  protected static volatile DatumStorage localDatumStorage;
 
   protected static volatile ClientManagerResource clientManagerResource;
   protected static volatile FetchClientOffAddressService fetchClientOffAddressService;
@@ -182,6 +183,7 @@ public class BaseIntegrationTest extends AbstractTest {
           sessionApplicationContext.getBean(
               "fetchClientOffAddressService", FetchClientOffAddressService.class);
 
+      localDatumStorage = dataApplicationContext.getBean("localDatumStorage", DatumStorage.class);
       LOGGER.info(
           "startServerNecessary, {} loaded by {}",
           BaseIntegrationTest.class,
@@ -299,7 +301,21 @@ public class BaseIntegrationTest extends AbstractTest {
       }
       Thread.sleep(500);
     }
-    throw new RuntimeException("clientOff failed.");
+    String sessionDigestCount =
+        sessionChannel
+            .getWebTarget()
+            .path("digest/data/count")
+            .request(APPLICATION_JSON)
+            .get(String.class);
+    String dataDigestCount =
+        dataChannel
+            .getWebTarget()
+            .path("digest/datum/count")
+            .request(APPLICATION_JSON)
+            .get(String.class);
+
+    throw new RuntimeException(
+        "clientOff failed, session=" + sessionDigestCount + ", data=" + dataDigestCount);
   }
 
   private static boolean clientOffSuccess() {
@@ -315,7 +331,7 @@ public class BaseIntegrationTest extends AbstractTest {
             .path("digest/datum/count")
             .request(APPLICATION_JSON)
             .get(String.class);
-    return sessionDigestCount.equals("Subscriber count: 0, Publisher count: 0, Watcher count: 0")
+    return sessionDigestCount.contains("Publisher count: 0, Watcher count: 0")
         && (dataDigestCount.equals("CacheDigest datum cache is empty")
             || dataDigestCount.contains("[Publisher] size of publisher in DefaultDataCenter is 0"));
   }
@@ -367,5 +383,14 @@ public class BaseIntegrationTest extends AbstractTest {
       }
     }
     return bos.toByteArray();
+  }
+
+  public static boolean isExist(Collection<Publisher> publishers, String localAddress) {
+    for (Publisher publisher : publishers) {
+      if (StringUtils.equals(publisher.getSourceAddress().getIpAddress(), localAddress)) {
+        return true;
+      }
+    }
+    return false;
   }
 }

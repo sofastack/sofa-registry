@@ -21,6 +21,7 @@ import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.connections.ConnectionsService;
 import com.alipay.sofa.registry.server.session.filter.blacklist.BlacklistConfig;
 import com.alipay.sofa.registry.server.session.filter.blacklist.BlacklistConstants;
@@ -52,6 +53,8 @@ public class FetchBlackListService extends AbstractFetchSystemPropertyService<Bl
   @Autowired private Registry sessionRegistry;
 
   @Autowired private ConnectionsService connectionsService;
+
+  @Autowired private SessionServerConfig sessionServerConfig;
 
   public FetchBlackListService() {
     super(ValueConstants.BLACK_LIST_DATA_ID);
@@ -128,6 +131,11 @@ public class FetchBlackListService extends AbstractFetchSystemPropertyService<Bl
       // blacklist remove pub, sub, watch
       sessionRegistry.blacklist(conIds);
     }
+  }
+
+  @Override
+  protected int getSystemPropertyIntervalMillis() {
+    return sessionServerConfig.getSystemPropertyIntervalMillis();
   }
 
   @Override

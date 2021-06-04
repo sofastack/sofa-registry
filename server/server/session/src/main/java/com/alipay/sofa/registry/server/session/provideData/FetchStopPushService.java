@@ -20,6 +20,7 @@ import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.provideData.FetchStopPushService.StopPushStorage;
 import com.alipay.sofa.registry.server.session.registry.Registry;
 import com.alipay.sofa.registry.server.shared.providedata.AbstractFetchSystemPropertyService;
@@ -36,9 +37,16 @@ public class FetchStopPushService extends AbstractFetchSystemPropertyService<Sto
 
   @Autowired private Registry sessionRegistry;
 
+  @Autowired private SessionServerConfig sessionServerConfig;
+
   public FetchStopPushService() {
     super(ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID);
     storage.set(new StopPushStorage(INIT_VERSION, false));
+  }
+
+  @Override
+  protected int getSystemPropertyIntervalMillis() {
+    return sessionServerConfig.getSystemPropertyIntervalMillis();
   }
 
   @Override

@@ -21,6 +21,7 @@ import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.common.model.sessionserver.GrayOpenPushSwitchRequest;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.provideData.FetchGrayPushSwitchService.GrayPushSwitchStorage;
 import com.alipay.sofa.registry.server.session.registry.Registry;
 import com.alipay.sofa.registry.server.shared.providedata.AbstractFetchSystemPropertyService;
@@ -43,9 +44,16 @@ public class FetchGrayPushSwitchService
 
   @Resource private FetchStopPushService fetchStopPushService;
 
+  @Autowired private SessionServerConfig sessionServerConfig;
+
   public FetchGrayPushSwitchService() {
     super(ValueConstants.PUSH_SWITCH_GRAY_OPEN_DATA_ID);
     storage.set(new GrayPushSwitchStorage(INIT_VERSION, Collections.EMPTY_LIST));
+  }
+
+  @Override
+  protected int getSystemPropertyIntervalMillis() {
+    return sessionServerConfig.getSystemPropertyIntervalMillis();
   }
 
   @Override
