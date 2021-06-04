@@ -26,6 +26,7 @@ import com.alipay.sofa.registry.jdbc.mapper.ClientManagerAddressMapper;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.store.api.meta.ClientManagerAddressRepository;
+import com.google.common.annotations.VisibleForTesting;
 import java.util.List;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -102,5 +103,15 @@ public class ClientManagerAddressJdbcRepository implements ClientManagerAddressR
   public int queryTotalCount() {
     CLIENT_MANAGER_QUERY_COUNTER.inc();
     return clientManagerAddressMapper.queryTotalCount(defaultCommonConfig.getClusterId());
+  }
+
+  /**
+   * Setter method for property <tt>clientManagerAddressMapper</tt>.
+   *
+   * @param clientManagerAddressMapper value to be assigned to property clientManagerAddressMapper
+   */
+  @VisibleForTesting
+  public void setClientManagerAddressMapper(ClientManagerAddressMapper clientManagerAddressMapper) {
+    this.clientManagerAddressMapper = clientManagerAddressMapper;
   }
 }

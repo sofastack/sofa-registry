@@ -20,8 +20,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.alipay.sofa.registry.common.model.Node;
+import com.alipay.sofa.registry.common.model.ServerDataBox;
 import com.alipay.sofa.registry.common.model.console.PersistenceData;
 import com.alipay.sofa.registry.common.model.console.PersistenceDataBuilder;
+import com.alipay.sofa.registry.common.model.constants.ValueConstants;
+import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.common.model.slot.SlotConfig;
@@ -34,6 +37,7 @@ import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.Client;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
+import com.alipay.sofa.registry.server.meta.provide.data.ClientManagerService;
 import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataService;
 import com.alipay.sofa.registry.server.meta.slot.balance.BalancePolicy;
 import com.alipay.sofa.registry.server.meta.slot.balance.NaiveBalancePolicy;
@@ -56,10 +60,13 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentHashMap.KeySetView;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BooleanSupplier;
 import org.assertj.core.util.Lists;
 import org.junit.Assert;
@@ -663,6 +670,43 @@ public class AbstractMetaServerTestBase extends AbstractTestBase {
     public boolean removeProvideData(String key) {
       PersistenceData remove = localRepo.remove(key);
       return remove != null;
+    }
+
+    @Override
+    public void becomeLeader() {}
+
+    @Override
+    public void loseLeader() {}
+  }
+
+  public class InMemoryClientManagerServiceRepo implements ClientManagerService {
+
+    private final AtomicLong version = new AtomicLong(0L);
+
+    private final AtomicReference<KeySetView> cache =
+        new AtomicReference<>(new ConcurrentHashMap<>().newKeySet());
+
+    @Override
+    public boolean clientOpen(Set<String> ipSet) {
+      version.incrementAndGet();
+      return cache.get().removeAll(ipSet);
+    }
+
+    @Override
+    public boolean clientOff(Set<String> ipSet) {
+      version.incrementAndGet();
+      return cache.get().addAll(ipSet);
+    }
+
+    @Override
+    public DBResponse<ProvideData> queryClientOffSet() {
+
+      ProvideData provideData =
+          new ProvideData(
+              new ServerDataBox(cache.get()),
+              ValueConstants.CLIENT_OFF_ADDRESS_DATA_ID,
+              version.get());
+      return DBResponse.ok(provideData).build();
     }
 
     @Override

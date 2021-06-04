@@ -32,6 +32,7 @@ import com.alipay.sofa.registry.server.shared.providedata.AbstractFetchSystemPro
 import com.alipay.sofa.registry.util.JsonUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -184,5 +185,38 @@ public class FetchBlackListService extends AbstractFetchSystemPropertyService<Bl
    */
   public List<BlacklistConfig> getBlacklistConfigList() {
     return storage.get().blacklistConfigList;
+  }
+
+  /**
+   * Setter method for property <tt>sessionRegistry</tt>.
+   *
+   * @param sessionRegistry value to be assigned to property sessionRegistry
+   */
+  @VisibleForTesting
+  public FetchBlackListService setSessionRegistry(Registry sessionRegistry) {
+    this.sessionRegistry = sessionRegistry;
+    return this;
+  }
+
+  /**
+   * Setter method for property <tt>connectionsService</tt>.
+   *
+   * @param connectionsService value to be assigned to property connectionsService
+   */
+  @VisibleForTesting
+  public FetchBlackListService setConnectionsService(ConnectionsService connectionsService) {
+    this.connectionsService = connectionsService;
+    return this;
+  }
+
+  /**
+   * Setter method for property <tt>sessionServerConfig</tt>.
+   *
+   * @param sessionServerConfig value to be assigned to property sessionServerConfig
+   */
+  @VisibleForTesting
+  public FetchBlackListService setSessionServerConfig(SessionServerConfig sessionServerConfig) {
+    this.sessionServerConfig = sessionServerConfig;
+    return this;
   }
 }

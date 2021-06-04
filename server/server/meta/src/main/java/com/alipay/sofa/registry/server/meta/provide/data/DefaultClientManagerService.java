@@ -224,14 +224,14 @@ public class DefaultClientManagerService implements ClientManagerService {
         return;
       }
 
-      List<ClientManagerAddress> ClientManagerAddress =
+      List<ClientManagerAddress> addressList =
           clientManagerAddressRepository.queryAfterThan(version);
 
-      if (CollectionUtils.isEmpty(ClientManagerAddress)) {
+      if (CollectionUtils.isEmpty(addressList)) {
         return;
       }
 
-      ClientManagerAggregation aggregation = aggregate(ClientManagerAddress);
+      ClientManagerAggregation aggregation = aggregate(addressList);
 
       LOGGER.info("client manager watcher aggregation:{}", aggregation);
       if (doRefresh(aggregation)) {
@@ -246,15 +246,15 @@ public class DefaultClientManagerService implements ClientManagerService {
     }
   }
 
-  private ClientManagerAggregation aggregate(List<ClientManagerAddress> ClientManagerAddress) {
-    if (CollectionUtils.isEmpty(ClientManagerAddress)) {
+  private ClientManagerAggregation aggregate(List<ClientManagerAddress> addressList) {
+    if (CollectionUtils.isEmpty(addressList)) {
       return EMPTY_AGGREGATION;
     }
 
-    long max = ClientManagerAddress.get(ClientManagerAddress.size() - 1).getId();
+    long max = addressList.get(addressList.size() - 1).getId();
     Set<String> clientOffAddress = new HashSet<>();
     Set<String> clientOpenAddress = new HashSet<>();
-    for (ClientManagerAddress clientManagerAddress : ClientManagerAddress) {
+    for (ClientManagerAddress clientManagerAddress : addressList) {
       switch (clientManagerAddress.getOperation()) {
         case ValueConstants.CLIENT_OFF:
           clientOffAddress.add(clientManagerAddress.getAddress());

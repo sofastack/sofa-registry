@@ -110,4 +110,26 @@ public class FetchStopPushService extends AbstractFetchSystemPropertyService<Sto
   public void setStopPushSwitch(long version, boolean stopPushSwitch) {
     this.storage.set(new StopPushStorage(version, stopPushSwitch));
   }
+
+  /**
+   * Setter method for property <tt>sessionRegistry</tt>.
+   *
+   * @param sessionRegistry value to be assigned to property sessionRegistry
+   */
+  @VisibleForTesting
+  protected FetchStopPushService setSessionRegistry(Registry sessionRegistry) {
+    this.sessionRegistry = sessionRegistry;
+    return this;
+  }
+
+  /**
+   * Setter method for property <tt>sessionServerConfig</tt>.
+   *
+   * @param sessionServerConfig value to be assigned to property sessionServerConfig
+   */
+  @VisibleForTesting
+  protected FetchStopPushService setSessionServerConfig(SessionServerConfig sessionServerConfig) {
+    this.sessionServerConfig = sessionServerConfig;
+    return this;
+  }
 }

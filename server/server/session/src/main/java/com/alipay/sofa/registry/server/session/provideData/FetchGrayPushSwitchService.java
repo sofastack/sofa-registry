@@ -28,9 +28,9 @@ import com.alipay.sofa.registry.server.shared.providedata.AbstractFetchSystemPro
 import com.alipay.sofa.registry.util.JsonUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.Collections;
 import javax.annotation.Resource;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
@@ -48,7 +48,7 @@ public class FetchGrayPushSwitchService
 
   public FetchGrayPushSwitchService() {
     super(ValueConstants.PUSH_SWITCH_GRAY_OPEN_DATA_ID);
-    storage.set(new GrayPushSwitchStorage(INIT_VERSION, Collections.EMPTY_LIST));
+    storage.set(new GrayPushSwitchStorage(INIT_VERSION, Lists.newArrayList()));
   }
 
   @Override
@@ -100,12 +100,47 @@ public class FetchGrayPushSwitchService
     return storage.get().openIps;
   }
 
-  private boolean canPush() {
+  protected boolean canPush() {
     return CollectionUtils.isNotEmpty(storage.get().openIps);
   }
 
   @VisibleForTesting
   public void setOpenIps(long version, Collection<String> openIps) {
     storage.set(new GrayPushSwitchStorage(version, openIps));
+  }
+
+  /**
+   * Setter method for property <tt>sessionRegistry</tt>.
+   *
+   * @param sessionRegistry value to be assigned to property sessionRegistry
+   */
+  @VisibleForTesting
+  protected FetchGrayPushSwitchService setSessionRegistry(Registry sessionRegistry) {
+    this.sessionRegistry = sessionRegistry;
+    return this;
+  }
+
+  /**
+   * Setter method for property <tt>fetchStopPushService</tt>.
+   *
+   * @param fetchStopPushService value to be assigned to property fetchStopPushService
+   */
+  @VisibleForTesting
+  protected FetchGrayPushSwitchService setFetchStopPushService(
+      FetchStopPushService fetchStopPushService) {
+    this.fetchStopPushService = fetchStopPushService;
+    return this;
+  }
+
+  /**
+   * Setter method for property <tt>sessionServerConfig</tt>.
+   *
+   * @param sessionServerConfig value to be assigned to property sessionServerConfig
+   */
+  @VisibleForTesting
+  protected FetchGrayPushSwitchService setSessionServerConfig(
+      SessionServerConfig sessionServerConfig) {
+    this.sessionServerConfig = sessionServerConfig;
+    return this;
   }
 }

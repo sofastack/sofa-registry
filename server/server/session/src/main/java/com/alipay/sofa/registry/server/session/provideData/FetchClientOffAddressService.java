@@ -28,6 +28,7 @@ import com.alipay.sofa.registry.server.session.registry.Registry;
 import com.alipay.sofa.registry.server.shared.providedata.AbstractFetchSystemPropertyService;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.LoopRunnable;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
@@ -47,7 +48,7 @@ public class FetchClientOffAddressService
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FetchClientOffAddressService.class);
 
-  private final ClientManagerProcessor clientManagerProcessor = new ClientManagerProcessor();
+  protected final ClientManagerProcessor clientManagerProcessor = new ClientManagerProcessor();
 
   @Autowired private SessionServerConfig sessionServerConfig;
 
@@ -141,7 +142,7 @@ public class FetchClientOffAddressService
     }
   }
 
-  private final class ClientManagerProcessor extends LoopRunnable {
+  protected final class ClientManagerProcessor extends LoopRunnable {
 
     @Override
     public void runUnthrowable() {
@@ -150,8 +151,8 @@ public class FetchClientOffAddressService
 
     @Override
     public void waitingUnthrowable() {
-      ConcurrentUtils.sleepUninterruptibly(
-          sessionServerConfig.getClientManagerIntervalMillis(), TimeUnit.MILLISECONDS);
+      int clientManagerIntervalMillis = sessionServerConfig.getClientManagerIntervalMillis();
+      ConcurrentUtils.sleepUninterruptibly(clientManagerIntervalMillis, TimeUnit.MILLISECONDS);
     }
   }
 
@@ -201,5 +202,44 @@ public class FetchClientOffAddressService
    */
   public Set<String> getClientOffAddress() {
     return storage.get().clientOffAddress;
+  }
+
+  /**
+   * Setter method for property <tt>sessionServerConfig</tt>.
+   *
+   * @param sessionServerConfig value to be assigned to property sessionServerConfig
+   */
+  @VisibleForTesting
+  public FetchClientOffAddressService setSessionServerConfig(
+      SessionServerConfig sessionServerConfig) {
+    this.sessionServerConfig = sessionServerConfig;
+    return this;
+  }
+
+  /**
+   * Setter method for property <tt>connectionsService</tt>.
+   *
+   * @param connectionsService value to be assigned to property connectionsService
+   */
+  @VisibleForTesting
+  public FetchClientOffAddressService setConnectionsService(ConnectionsService connectionsService) {
+    this.connectionsService = connectionsService;
+    return this;
+  }
+
+  /**
+   * Setter method for property <tt>sessionRegistry</tt>.
+   *
+   * @param sessionRegistry value to be assigned to property sessionRegistry
+   */
+  @VisibleForTesting
+  public FetchClientOffAddressService setSessionRegistry(Registry sessionRegistry) {
+    this.sessionRegistry = sessionRegistry;
+    return this;
+  }
+
+  @VisibleForTesting
+  public ClientOffAddressStorage getStorage() {
+    return storage.get();
   }
 }

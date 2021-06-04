@@ -26,6 +26,7 @@ import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
+import com.google.common.annotations.VisibleForTesting;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import org.apache.commons.lang.StringUtils;
@@ -49,11 +50,11 @@ public abstract class AbstractFetchSystemPropertyService<T extends SystemDataSto
 
   private final AtomicBoolean watcherInited = new AtomicBoolean(false);
 
-  private final WatchDog watchDog = new WatchDog();
+  protected final WatchDog watchDog = new WatchDog();
 
   @Autowired protected MetaServerService metaNodeService;
 
-  private final class WatchDog extends WakeUpLoopRunnable {
+  protected final class WatchDog extends WakeUpLoopRunnable {
 
     @Override
     public void runUnthrowable() {
@@ -68,7 +69,7 @@ public abstract class AbstractFetchSystemPropertyService<T extends SystemDataSto
 
   protected abstract int getSystemPropertyIntervalMillis();
 
-  private void doFetchData() {
+  protected boolean doFetchData() {
     T expect = storage.get();
     FetchSystemPropertyResult response =
         metaNodeService.fetchSystemProperty(dataInfoId, expect.version);
@@ -82,11 +83,11 @@ public abstract class AbstractFetchSystemPropertyService<T extends SystemDataSto
           response);
     }
     if (!response.isVersionUpgrade()) {
-      return;
+      return true;
     }
 
     // do process
-    processorData(response.getProvideData(), expect);
+    return processorData(response.getProvideData(), expect);
   }
 
   public AbstractFetchSystemPropertyService(String dataInfoId) {
@@ -163,5 +164,15 @@ public abstract class AbstractFetchSystemPropertyService<T extends SystemDataSto
     public long getVersion() {
       return version;
     }
+  }
+
+  /**
+   * Setter method for property <tt>metaNodeService</tt>.
+   *
+   * @param metaNodeService value to be assigned to property metaNodeService
+   */
+  @VisibleForTesting
+  public void setMetaNodeService(MetaServerService metaNodeService) {
+    this.metaNodeService = metaNodeService;
   }
 }
