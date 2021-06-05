@@ -29,6 +29,8 @@ import java.net.InetSocketAddress;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
+import org.apache.commons.collections.CollectionUtils;
 
 public final class PushTrace {
   private static final Logger LOGGER = LoggerFactory.getLogger("PUSH-TRACE");
@@ -68,6 +70,36 @@ public final class PushTrace {
       int subNum,
       long subRegTimestamp) {
     return new PushTrace(datum, address, subApp, pushCause, subNum, subRegTimestamp);
+  }
+
+  private List<Long> datumModifyTsAfter(long pushedTs) {
+    List<Long> ret = Lists.newArrayListWithCapacity(12);
+    List<Long> recentVersions = datum.getRecentVersions();
+    if (!CollectionUtils.isEmpty(recentVersions)) {
+      for (long v : recentVersions) {
+        long ts = DatumVersionUtil.getRealTimestamp(v);
+        if (ts > pushedTs) {
+          ret.add(ts);
+        }
+      }
+    }
+    ret.add(DatumVersionUtil.getRealTimestamp(datum.getVersion()));
+    return ret;
+  }
+
+  private List<Long> datumPushedDelayList(long finishedTs, long lastPushTs) {
+    List<Long> timestamps = datumModifyTsAfter(lastPushTs);
+    List<Long> ret = Lists.newArrayListWithCapacity(timestamps.size());
+    for (long ts : timestamps) {
+      ret.add(finishedTs - ts);
+    }
+    return ret;
+  }
+
+  private String formatDatumPushedDelayList(long finishedTs, long lastPushTs) {
+    return datumPushedDelayList(finishedTs, lastPushTs).stream()
+        .map(String::valueOf)
+        .collect(Collectors.joining(","));
   }
 
   public void startPush() {
@@ -114,15 +146,15 @@ public final class PushTrace {
     }
     datumVersionTriggerSpanMillis =
         Math.max(
-            pushCause.triggerPushCtx.getTriggerSessionTimestamp() - pushCause.datumTimestamp, 0);
+            pushCause.triggerPushCtx.getTimes().getTriggerSession() - pushCause.datumTimestamp, 0);
 
     // calc the task span millis
     pushTaskPrepareSpanMillis =
-        pushCreateTimestamp - pushCause.triggerPushCtx.getTriggerSessionTimestamp();
+        pushCreateTimestamp - pushCause.triggerPushCtx.getTimes().getTriggerSession();
     pushTaskQueueSpanMillis = pushStartTimestamp - pushCreateTimestamp;
     pushTaskClientIOSpanMillis = pushFinishTimestamp - pushStartTimestamp;
     pushTaskSessionSpanMillis =
-        pushStartTimestamp - pushCause.triggerPushCtx.getTriggerSessionTimestamp();
+        pushStartTimestamp - pushCause.triggerPushCtx.getTimes().getTriggerSession();
 
     final List<SubPublisher> publishers = datum.getPublishers();
     final long lastPushTimestamp =
@@ -147,7 +179,8 @@ public final class PushTrace {
     LOGGER.info(
         "{},{},{},{},{},cause={},pubNum={},pubBytes={},pubNew={},delay={},{},{},{},{},"
             + "session={},cliIO={},firstPubDelay={},lastPubDelay={},"
-            + "subNum={},addr={},expectVer={},dataNode={},taskID={},pushedVer={},regTs={}",
+            + "subNum={},addr={},expectVer={},dataNode={},taskID={},pushedVer={},regTs={},"
+            + "notifyCreateTs={},commitOverride={},datumRecentDelay={}",
         status,
         datum.getDataInfoId(),
         datum.getVersion(),
@@ -172,7 +205,10 @@ public final class PushTrace {
         pushCause.triggerPushCtx.dataNode,
         taskID,
         subscriberPushedVersion,
-        subRegTimestamp);
+        subRegTimestamp,
+        pushCause.triggerPushCtx.getTimes().getDatumNotifyCreate(),
+        pushCause.triggerPushCtx.getTimes().getOverrideCount(),
+        formatDatumPushedDelayList(pushFinishTimestamp, lastPushTimestamp));
   }
 
   enum PushStatus {

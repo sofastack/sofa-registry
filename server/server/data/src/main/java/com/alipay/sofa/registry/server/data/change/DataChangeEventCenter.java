@@ -35,6 +35,7 @@ import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.shared.util.DatumUtils;
 import com.alipay.sofa.registry.task.FastRejectedExecutionException;
 import com.alipay.sofa.registry.task.KeyedThreadPoolExecutor;
+import com.alipay.sofa.registry.util.CollectionUtils;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.LoopRunnable;
 import com.alipay.sofa.registry.util.StringFormatter;
@@ -61,7 +62,7 @@ public final class DataChangeEventCenter {
 
   @Autowired private Exchange boltExchange;
 
-  private final Map<String, DataChangeGroup> dataCenter2Changes = Maps.newConcurrentMap();
+  private final Map<String, Set<String>> dataCenter2Changes = Maps.newConcurrentMap();
   private final ReadWriteLock lock = new ReentrantReadWriteLock();
   private final LinkedList<ChangeNotifierRetry> retryNotifiers = Lists.newLinkedList();
 
@@ -108,8 +109,8 @@ public final class DataChangeEventCenter {
   }
 
   public void onChange(Collection<String> dataInfoIds, String dataCenter) {
-    DataChangeGroup changes =
-        dataCenter2Changes.computeIfAbsent(dataCenter, k -> new DataChangeGroup());
+    Set<String> changes =
+        dataCenter2Changes.computeIfAbsent(dataCenter, k -> Sets.newConcurrentHashSet());
     lock.readLock().lock();
     try {
       changes.addAll(dataInfoIds);
@@ -158,13 +159,17 @@ public final class DataChangeEventCenter {
     final Channel channel;
     final String dataCenter;
     final Map<String, DatumVersion> dataInfoIds;
+
+    final long createTime;
     volatile int retryCount;
 
     private ChangeNotifier(
         Channel channel, String dataCenter, Map<String, DatumVersion> dataInfoIds) {
+      long currentTs = System.currentTimeMillis();
       this.dataCenter = dataCenter;
       this.channel = channel;
       this.dataInfoIds = dataInfoIds;
+      this.createTime = currentTs;
     }
 
     @Override
@@ -176,14 +181,9 @@ public final class DataChangeEventCenter {
           return;
         }
         DataChangeRequest request = new DataChangeRequest(dataCenter, dataInfoIds);
+        request.getTimes().setDatumNotifyCreate(createTime);
         doNotify(request, channel);
-        for (Map.Entry<String, DatumVersion> entry : dataInfoIds.entrySet()) {
-          LOGGER.info(
-              "success to notify {}, {}, {}",
-              channel.getRemoteAddress(),
-              entry.getKey(),
-              entry.getValue().getValue());
-        }
+        LOGGER.info("success to notify {}, {}", channel.getRemoteAddress(), this);
         CHANGE_SUCCESS_COUNTER.inc();
       } catch (Throwable e) {
         CHANGE_FAIL_COUNTER.inc();
@@ -336,14 +336,14 @@ public final class DataChangeEventCenter {
     }
   }
 
-  boolean handleChanges(List<Channel> channels) {
+  boolean handleChanges(Map<String, List<Channel>> channelsMap) {
     // first clean the event
     final int maxItems = dataServerConfig.getNotifyMaxItems();
     final List<DataChangeEvent> events = transferChangeEvent(maxItems);
     if (events.isEmpty()) {
       return false;
     }
-    if (channels.isEmpty()) {
+    if (channelsMap.isEmpty()) {
       LOGGER.error("session conn is empty when change");
       return false;
     }
@@ -360,7 +360,8 @@ public final class DataChangeEventCenter {
       if (changes.isEmpty()) {
         continue;
       }
-      for (Channel channel : channels) {
+      for (Map.Entry<String, List<Channel>> entry : channelsMap.entrySet()) {
+        Channel channel = CollectionUtils.getRandom(entry.getValue());
         try {
           notifyExecutor.execute(
               channel.getRemoteAddress(),
@@ -404,14 +405,13 @@ public final class DataChangeEventCenter {
     final List<DataChangeEvent> events = Lists.newArrayList();
     lock.writeLock().lock();
     try {
-      for (Map.Entry<String, DataChangeGroup> change : dataCenter2Changes.entrySet()) {
+      for (Map.Entry<String, Set<String>> change : dataCenter2Changes.entrySet()) {
         final String dataCenter = change.getKey();
-        DataChangeGroup group = change.getValue();
-        List<List<String>> parts = Lists.partition(Lists.newArrayList(group.getDataInfoIds()), maxItems);
+        List<List<String>> parts = Lists.partition(Lists.newArrayList(change.getValue()), maxItems);
         for (int i = 0; i < parts.size(); i++) {
           events.add(new DataChangeEvent(dataCenter, parts.get(i)));
         }
-        group.clear();
+        change.getValue().clear();
       }
     } finally {
       lock.writeLock().unlock();
@@ -425,8 +425,8 @@ public final class DataChangeEventCenter {
     public void runUnthrowable() {
       try {
         Server server = boltExchange.getServer(dataServerConfig.getNotifyPort());
-        Map<String, Channel> channelMap = server.selectAvailableChannelsForHostAddress();
-        handleChanges(Lists.newArrayList(channelMap.values()));
+        Map<String, List<Channel>> channelMap = server.selectAllAvailableChannelsForHostAddress();
+        handleChanges(channelMap);
         handleExpire();
       } catch (Throwable e) {
         LOGGER.error("failed to merge change", e);

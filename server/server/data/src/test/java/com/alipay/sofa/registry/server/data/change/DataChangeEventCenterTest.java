@@ -21,6 +21,7 @@ import static com.alipay.sofa.registry.server.data.change.ChangeMetrics.*;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.store.Publisher;
+import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
@@ -28,9 +29,11 @@ import com.alipay.sofa.registry.server.data.TestBaseUtils;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.junit.Assert;
 import org.junit.Test;
@@ -74,27 +77,29 @@ public class DataChangeEventCenterTest {
   @Test
   public void testHandleChangeNotInit() {
     setCenter();
-    Assert.assertFalse(center.handleChanges(Collections.EMPTY_LIST));
+    Assert.assertFalse(center.handleChanges(Maps.newHashMap()));
 
     List<String> changes1 = Lists.newArrayList("1", "2");
     center.onChange(changes1, DC);
-    Assert.assertFalse(center.handleChanges(Collections.EMPTY_LIST));
+    Assert.assertFalse(center.handleChanges(Maps.newHashMap()));
 
     TestBaseUtils.MockBlotChannel channel = TestBaseUtils.newChannel(9620, "localhost", 1000);
     center.onChange(changes1, DC);
-    Assert.assertTrue(center.handleChanges(Lists.newArrayList(channel)));
+    Map<String, List<Channel>> channelsMap = Maps.newHashMap();
+    channelsMap.put("localhost", Lists.newArrayList(channel));
+    Assert.assertTrue(center.handleChanges(channelsMap));
 
     Publisher pub = TestBaseUtils.createTestPublisher("testDataId");
     center.onChange(Lists.newArrayList(pub.getDataInfoId()), DC);
     datumCache.getLocalDatumStorage().put(pub);
     // npe
-    Assert.assertTrue(center.handleChanges(Lists.newArrayList(channel)));
+    Assert.assertTrue(center.handleChanges(channelsMap));
 
     // reject
     center.setNotifyExecutor(TestBaseUtils.rejectExecutor());
     center.onChange(Lists.newArrayList(pub.getDataInfoId()), DC);
     double pre = ChangeMetrics.CHANGE_SKIP_COUNTER.get();
-    Assert.assertTrue(center.handleChanges(Lists.newArrayList(channel)));
+    Assert.assertTrue(center.handleChanges(channelsMap));
     Assert.assertTrue(ChangeMetrics.CHANGE_SKIP_COUNTER.get() == (pre + 1));
   }
 
@@ -298,6 +303,13 @@ public class DataChangeEventCenterTest {
         .thenReturn(
             Collections.singletonMap(
                 channel.getRemoteAddress().getAddress().getHostAddress(), channel));
+
+    Mockito.when(server.selectAllAvailableChannelsForHostAddress())
+        .thenReturn(
+            Collections.singletonMap(
+                channel.getRemoteAddress().getAddress().getHostAddress(),
+                Lists.newArrayList(channel)));
+
     Mockito.when(server.sendSync(Mockito.anyObject(), Mockito.anyObject(), Mockito.anyInt()))
         .thenThrow(new UnsupportedOperationException());
 

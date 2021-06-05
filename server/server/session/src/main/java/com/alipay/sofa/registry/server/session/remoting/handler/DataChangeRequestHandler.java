@@ -95,6 +95,7 @@ public class DataChangeRequestHandler extends AbstractClientHandler<DataChangeRe
       }
       final TriggerPushContext changeCtx =
           new TriggerPushContext(dataCenter, version.getValue(), dataNode, changeTimestamp);
+      changeCtx.getTimes().extend(dataChangeRequest.getTimes());
       firePushService.fireOnChange(dataInfoId, changeCtx);
     }
     return null;

@@ -177,6 +177,17 @@ public class BoltServer implements Server {
 
   @Override
   public Map<String, Channel> selectAvailableChannelsForHostAddress() {
+    Map<String, List<Channel>> chns = selectAllAvailableChannelsForHostAddress();
+    Map<String, Channel> ret = Maps.newHashMapWithExpectedSize(chns.size());
+    for (Map.Entry<String, List<Channel>> e : chns.entrySet()) {
+      List<Channel> list = e.getValue();
+      ret.put(e.getKey(), CollectionUtils.getRandom(list));
+    }
+    return ret;
+  }
+
+  @Override
+  public Map<String, List<Channel>> selectAllAvailableChannelsForHostAddress() {
     Collection<Channel> chnList = getChannels();
     if (chnList.isEmpty()) {
       return Collections.emptyMap();
@@ -188,12 +199,7 @@ public class BoltServer implements Server {
               chn.getRemoteAddress().getAddress().getHostAddress(), k -> Lists.newArrayList());
       list.add(chn);
     }
-    Map<String, Channel> ret = Maps.newHashMapWithExpectedSize(chns.size());
-    for (Map.Entry<String, List<Channel>> e : chns.entrySet()) {
-      List<Channel> list = e.getValue();
-      ret.put(e.getKey(), CollectionUtils.getRandom(list));
-    }
-    return ret;
+    return chns;
   }
 
   @Override

@@ -45,7 +45,6 @@ public class FetchBlackListTest extends FetchBlackListService {
     this.setSessionRegistry(sessionRegistry)
         .setSessionServerConfig(sessionServerConfig)
         .setConnectionsService(connectionsService);
-
   }
 
   @Test

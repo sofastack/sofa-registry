@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.common.model.sessionserver;
 
+import com.alipay.sofa.registry.common.model.TraceTimes;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.util.StringFormatter;
 import java.io.Serializable;
@@ -36,9 +37,12 @@ public class DataChangeRequest implements Serializable {
 
   private final String dataCenter;
 
+  private final TraceTimes times;
+
   public DataChangeRequest(String dataCenter, Map<String, DatumVersion> dataInfoIds) {
     this.dataCenter = dataCenter;
     this.dataInfoIds = dataInfoIds;
+    this.times = new TraceTimes();
   }
 
   public Map<String, DatumVersion> getDataInfoIds() {
@@ -47,6 +51,10 @@ public class DataChangeRequest implements Serializable {
 
   public String getDataCenter() {
     return dataCenter;
+  }
+
+  public TraceTimes getTimes() {
+    return times;
   }
 
   @Override

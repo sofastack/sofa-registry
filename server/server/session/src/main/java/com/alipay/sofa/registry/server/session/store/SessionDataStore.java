@@ -17,11 +17,11 @@
 package com.alipay.sofa.registry.server.session.store;
 
 import com.alipay.sofa.registry.common.model.PublisherUtils;
+import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
-import com.google.common.collect.Maps;
 import java.util.Map;
 
 /**
@@ -42,35 +42,8 @@ public class SessionDataStore extends AbstractDataManager<Publisher> implements 
     ParaCheckUtil.checkNotNull(publisher.getRegisterTimestamp(), "publisher.registerTimestamp");
 
     PublisherUtils.internPublisher(publisher);
-    Map<String, Publisher> publishers =
-        stores.computeIfAbsent(publisher.getDataInfoId(), k -> Maps.newConcurrentMap());
-
-    boolean toAdd = true;
-    Publisher existingPublisher = null;
-    write.lock();
-    try {
-      existingPublisher = publishers.get(publisher.getRegisterId());
-      if (existingPublisher != null) {
-        if (!existingPublisher.registerVersion().orderThan(publisher.registerVersion())) {
-          toAdd = false;
-        }
-      }
-      if (toAdd) {
-        publishers.put(publisher.getRegisterId(), publisher);
-      }
-    } finally {
-      write.unlock();
-    }
-    // log without lock
-    if (existingPublisher != null && !toAdd) {
-      LOGGER.warn(
-          "conflict publisher {}, {}, exist={}, input={}",
-          publisher.getDataInfoId(),
-          publisher.getRegisterId(),
-          existingPublisher.registerVersion(),
-          publisher.registerVersion());
-    }
-    return toAdd;
+    Tuple<Publisher, Boolean> ret = addData(publisher);
+    return ret.o2;
   }
 
   @Override

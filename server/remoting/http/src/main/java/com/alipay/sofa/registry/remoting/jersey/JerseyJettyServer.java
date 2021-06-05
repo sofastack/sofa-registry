@@ -154,6 +154,11 @@ public class JerseyJettyServer implements Server {
   }
 
   @Override
+  public Map<String, List<Channel>> selectAllAvailableChannelsForHostAddress() {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
   public Channel getChannel(InetSocketAddress remoteAddress) {
     return null;
   }

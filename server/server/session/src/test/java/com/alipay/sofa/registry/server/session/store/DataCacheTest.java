@@ -35,6 +35,7 @@ import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 import org.junit.Assert;
 import org.junit.Test;
@@ -285,15 +286,15 @@ public class DataCacheTest extends BaseTest {
     publisher2.setTargetAddress(new URL("192.168.1.2", 9600));
     publisher2.setVersion(2L);
     publisher2.setRegisterTimestamp(System.currentTimeMillis());
-    sessionDataStore.add(publisher1);
-    sessionDataStore.add(publisher2);
+    Assert.assertTrue(sessionDataStore.add(publisher1));
+    Assert.assertTrue(sessionDataStore.add(publisher2));
 
     Assert.assertEquals(
         sessionDataStore
             .queryByConnectId(ConnectId.parse("192.168.1.1:12345_192.168.1.2:9600"))
             .size(),
         2);
-    sessionDataStore.add(publisher2);
+    Assert.assertFalse(sessionDataStore.add(publisher2));
 
     Assert.assertEquals(
         sessionDataStore
@@ -317,10 +318,10 @@ public class DataCacheTest extends BaseTest {
     publisher4.setSourceAddress(new URL("192.168.1.1", 12346));
     publisher4.setTargetAddress(new URL("192.168.1.2", 9600));
     publisher4.setVersion(2L);
-    publisher4.setRegisterTimestamp(System.currentTimeMillis());
+    publisher4.setRegisterTimestamp(System.currentTimeMillis()+1000);
 
-    sessionDataStore.add(publisher3);
-    sessionDataStore.add(publisher4);
+    Assert.assertTrue(sessionDataStore.add(publisher3));
+    Assert.assertTrue(sessionDataStore.add(publisher4));
 
     Assert.assertEquals(
         sessionDataStore
@@ -344,7 +345,7 @@ public class DataCacheTest extends BaseTest {
     SessionServerConfig config = new SessionServerConfigBean(new CommonConfig());
     sessionInterests.setSessionServerConfig(config);
 
-    Subscriber subscriber1 = new Subscriber();
+    Subscriber subscriber1 = createSubscriber();
     subscriber1.setScope(ScopeEnum.dataCenter);
     subscriber1.setClientVersion(BaseInfo.ClientVersion.StoreData);
     subscriber1.setDataInfoId("dataInfoId1");
@@ -353,7 +354,7 @@ public class DataCacheTest extends BaseTest {
     subscriber1.setSourceAddress(new URL("192.168.1.1", 12345));
     subscriber1.setTargetAddress(new URL("192.168.1.2", 9600));
 
-    Subscriber subscriber2 = new Subscriber();
+    Subscriber subscriber2 = createSubscriber();
     subscriber2.setScope(ScopeEnum.dataCenter);
     subscriber2.setClientVersion(BaseInfo.ClientVersion.StoreData);
     subscriber2.setDataInfoId("dataInfoId2");
@@ -362,8 +363,8 @@ public class DataCacheTest extends BaseTest {
     subscriber2.setSourceAddress(new URL("192.168.1.1", 12345));
     subscriber2.setTargetAddress(new URL("192.168.1.2", 9600));
 
-    sessionInterests.add(subscriber1);
-    sessionInterests.add(subscriber2);
+    Assert.assertTrue(sessionInterests.add(subscriber1));
+    Assert.assertTrue(sessionInterests.add(subscriber2));
 
     Assert.assertEquals(
         sessionInterests
@@ -378,26 +379,28 @@ public class DataCacheTest extends BaseTest {
             .size(),
         2);
 
-    Subscriber subscriber3 = new Subscriber();
+    Subscriber subscriber3 = createSubscriber();
     subscriber3.setScope(ScopeEnum.dataCenter);
     subscriber3.setClientVersion(BaseInfo.ClientVersion.StoreData);
+    subscriber3.setVersion(1);
     subscriber3.setDataInfoId(subscriber1.getDataInfoId());
     subscriber3.setDataId(subscriber1.getDataId());
     subscriber3.setRegisterId(subscriber1.getRegisterId());
     subscriber3.setSourceAddress(new URL("192.168.1.1", 12346));
     subscriber3.setTargetAddress(new URL("192.168.1.2", 9600));
 
-    Subscriber subscriber4 = new Subscriber();
+    Subscriber subscriber4 = createSubscriber();
     subscriber4.setScope(ScopeEnum.dataCenter);
     subscriber4.setClientVersion(BaseInfo.ClientVersion.StoreData);
+    subscriber4.setVersion(1);
     subscriber4.setDataInfoId(subscriber2.getDataInfoId());
     subscriber4.setDataId(subscriber2.getDataId());
     subscriber4.setRegisterId(subscriber2.getRegisterId());
     subscriber4.setSourceAddress(new URL("192.168.1.1", 12346));
     subscriber4.setTargetAddress(new URL("192.168.1.2", 9600));
 
-    sessionInterests.add(subscriber3);
-    sessionInterests.add(subscriber4);
+    Assert.assertTrue(sessionInterests.add(subscriber3));
+    Assert.assertTrue(sessionInterests.add(subscriber4));
 
     Assert.assertEquals(
         sessionInterests
@@ -416,22 +419,22 @@ public class DataCacheTest extends BaseTest {
 
     SessionWatchers sessionWatchers = new SessionWatchers();
 
-    Watcher watcher1 = new Watcher();
+    Watcher watcher1 = createWatcher();
     watcher1.setDataInfoId("dataInfoId1");
     watcher1.setDataId("dataId1");
     watcher1.setRegisterId("RegisterId1");
     watcher1.setSourceAddress(new URL("192.168.1.1", 12345));
     watcher1.setTargetAddress(new URL("192.168.1.2", 9600));
 
-    Watcher watcher2 = new Watcher();
+    Watcher watcher2 = createWatcher();
     watcher2.setDataInfoId("dataInfoId2");
     watcher2.setDataId("dataId2");
     watcher2.setRegisterId("RegisterId2");
     watcher2.setSourceAddress(new URL("192.168.1.1", 12345));
     watcher2.setTargetAddress(new URL("192.168.1.2", 9600));
 
-    sessionWatchers.add(watcher1);
-    sessionWatchers.add(watcher2);
+    Assert.assertTrue(sessionWatchers.add(watcher1));
+    Assert.assertTrue(sessionWatchers.add(watcher2));
 
     Assert.assertEquals(
         sessionWatchers
@@ -446,22 +449,24 @@ public class DataCacheTest extends BaseTest {
             .size(),
         2);
 
-    Watcher watcher3 = new Watcher();
+    Watcher watcher3 = createWatcher();
     watcher3.setDataInfoId(watcher1.getDataInfoId());
     watcher3.setDataId(watcher1.getDataId());
+    watcher3.setVersion(1);
     watcher3.setRegisterId(watcher1.getRegisterId());
     watcher3.setSourceAddress(new URL("192.168.1.1", 12346));
     watcher3.setTargetAddress(new URL("192.168.1.2", 9600));
 
-    Watcher watcher4 = new Watcher();
+    Watcher watcher4 = createWatcher();
     watcher4.setDataInfoId(watcher2.getDataInfoId());
+    watcher4.setVersion(1);
     watcher4.setDataId(watcher2.getDataId());
     watcher4.setRegisterId(watcher2.getRegisterId());
     watcher4.setSourceAddress(new URL("192.168.1.1", 12346));
     watcher4.setTargetAddress(new URL("192.168.1.2", 9600));
 
-    sessionWatchers.add(watcher3);
-    sessionWatchers.add(watcher4);
+    Assert.assertTrue(sessionWatchers.add(watcher3));
+    Assert.assertTrue(sessionWatchers.add(watcher4));
 
     Assert.assertEquals(
         sessionWatchers
@@ -481,7 +486,7 @@ public class DataCacheTest extends BaseTest {
     SessionServerConfig config = new SessionServerConfigBean(null);
     sessionInterests.setSessionServerConfig(config);
 
-    Subscriber subscriber1 = new Subscriber();
+    Subscriber subscriber1 = createSubscriber();
     subscriber1.setScope(ScopeEnum.dataCenter);
     subscriber1.setClientVersion(BaseInfo.ClientVersion.StoreData);
     subscriber1.setDataInfoId("dataInfoId1");
@@ -489,18 +494,19 @@ public class DataCacheTest extends BaseTest {
     subscriber1.setRegisterId("RegisterId1");
     subscriber1.setSourceAddress(new URL("192.168.1.1", 12345));
     subscriber1.setTargetAddress(new URL("192.168.1.2", 9600));
-    sessionInterests.add(subscriber1);
+    Assert.assertTrue(sessionInterests.add(subscriber1));
 
-    Subscriber subscriber2 = new Subscriber();
+    Subscriber subscriber2 = createSubscriber();
     subscriber2.setScope(subscriber1.getScope());
     subscriber2.setClientVersion(subscriber1.getClientVersion());
     subscriber2.setDataInfoId(subscriber1.getDataInfoId());
     subscriber2.setDataId(subscriber1.getDataId());
+    subscriber2.setVersion(1);
     subscriber2.setRegisterId(subscriber1.getRegisterId());
     subscriber2.setSourceAddress(new URL("192.168.1.1", 12346));
     subscriber2.setTargetAddress(new URL("192.168.1.2", 9600));
 
-    sessionInterests.add(subscriber2);
+    Assert.assertTrue(sessionInterests.add(subscriber2));
 
     sessionInterests.deleteByConnectId(
         ConnectId.parse(
@@ -525,5 +531,23 @@ public class DataCacheTest extends BaseTest {
     Assert.assertEquals(addressMap.get(new InetSocketAddress("192.168.1.1", 12346)).size(), 1);
     Assert.assertEquals(sessionInterests.getDatas(subscriber1.getDataInfoId()).size(), 1);
     Assert.assertTrue(sessionInterests.getDatas(subscriber1.getDataInfoId()).contains(subscriber2));
+  }
+
+  private Subscriber createSubscriber() {
+    Subscriber subscriber = new Subscriber();
+    subscriber.setRegisterId(UUID.randomUUID().toString());
+    return subscriber;
+  }
+
+  private Watcher createWatcher() {
+    Watcher watcher = new Watcher();
+    watcher.setRegisterId(UUID.randomUUID().toString());
+    return watcher;
+  }
+
+  private Publisher createPublisher() {
+    Publisher publisher = new Publisher();
+    publisher.setRegisterId(UUID.randomUUID().toString());
+    return publisher;
   }
 }

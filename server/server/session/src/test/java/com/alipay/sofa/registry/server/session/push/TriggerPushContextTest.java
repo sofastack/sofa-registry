@@ -28,12 +28,12 @@ public class TriggerPushContextTest {
     Assert.assertEquals(ctx.dataCenter, "testDc");
     Assert.assertEquals(ctx.dataNode, "testData");
     Assert.assertEquals(ctx.getExpectDatumVersion(), 100);
-    Assert.assertEquals(ctx.getTriggerSessionTimestamp(), 200);
+    Assert.assertEquals(ctx.getTimes().getTriggerSession(), 200);
 
     ctx.setExpectDatumVersion(300);
-    ctx.setTriggerSessionTimestamp(500);
+    ctx.getTimes().setTriggerSession(500);
 
     Assert.assertEquals(ctx.getExpectDatumVersion(), 300);
-    Assert.assertEquals(ctx.getTriggerSessionTimestamp(), 500);
+    Assert.assertEquals(ctx.getTimes().getTriggerSession(), 500);
   }
 }

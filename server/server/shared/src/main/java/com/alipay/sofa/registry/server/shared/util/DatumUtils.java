@@ -81,6 +81,7 @@ public final class DatumUtils {
         publishers,
         datum.getDataId(),
         datum.getInstanceId(),
-        datum.getGroup());
+        datum.getGroup(),
+        datum.getRecentVersions());
   }
 }
