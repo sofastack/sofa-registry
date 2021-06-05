@@ -29,14 +29,10 @@ import java.util.List;
 public class DataChangeEvent {
   private final String dataCenter;
   private final List<String> dataInfoIds;
-  private final long firstTime;
-  private final long lastTime;
 
-  public DataChangeEvent(String dataCenter, List<String> dataInfoIds, long firstTime, long lastTime) {
+  public DataChangeEvent(String dataCenter, List<String> dataInfoIds) {
     this.dataCenter = dataCenter;
     this.dataInfoIds = Collections.unmodifiableList(Lists.newArrayList(dataInfoIds));
-    this.firstTime = firstTime;
-    this.lastTime = lastTime;
   }
 
   /**

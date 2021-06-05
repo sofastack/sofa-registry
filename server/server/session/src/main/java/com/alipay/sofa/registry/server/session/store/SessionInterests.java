@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.store;
 
+import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
@@ -46,20 +47,8 @@ public class SessionInterests extends AbstractDataManager<Subscriber> implements
 
     Subscriber.internSubscriber(subscriber);
 
-    Subscriber existingSubscriber = addData(subscriber);
-
-    if (existingSubscriber != null) {
-      LOGGER.info(
-          "dups subscriber, {}, {}, exist={}/{}, input={}/{}",
-          existingSubscriber.getDataInfoId(),
-          existingSubscriber.getRegisterId(),
-          // not use get registerVersion, avoid the subscriber.version is null
-          existingSubscriber.getVersion(),
-          existingSubscriber.getRegisterTimestamp(),
-          subscriber.getVersion(),
-          subscriber.getRegisterTimestamp());
-    }
-    return true;
+    Tuple<Subscriber, Boolean> ret = addData(subscriber);
+    return ret.o2;
   }
 
   @Override

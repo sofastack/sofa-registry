@@ -31,6 +31,7 @@ import com.alipay.sofa.registry.server.session.provideData.FetchStopPushService;
 import com.alipay.sofa.registry.server.session.push.FirePushService;
 import com.alipay.sofa.registry.server.session.push.PushSwitchService;
 import java.util.Collections;
+import org.assertj.core.util.Lists;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -87,7 +88,8 @@ public class DataPushRequestHandlerTest {
             Collections.emptyList(),
             "testDataId",
             "testInstanceId",
-            "testGroup");
+            "testGroup",
+            Lists.newArrayList(System.currentTimeMillis()));
     DataPushRequest request = new DataPushRequest(subDatum);
     Assert.assertTrue(request.toString(), request.toString().contains("dataInfoId"));
     Assert.assertEquals(request.getDatum(), subDatum);

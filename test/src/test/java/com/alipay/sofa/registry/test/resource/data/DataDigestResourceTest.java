@@ -56,7 +56,7 @@ public class DataDigestResourceTest extends BaseIntegrationTest {
   @BeforeClass
   public static void beforeClass() throws Exception {
     clientOff();
-    Thread.sleep(2000L);
+    Thread.sleep(4000L);
 
     PublisherRegistration registration = new PublisherRegistration(dataId);
     registryClient1.register(registration, value);
@@ -71,7 +71,7 @@ public class DataDigestResourceTest extends BaseIntegrationTest {
     assertEquals(LOCAL_REGION, observer.userData.getLocalZone());
     assertEquals(1, observer.userData.getZoneData().size());
     assertEquals(1, observer.userData.getZoneData().values().size());
-    assertEquals(true, observer.userData.getZoneData().containsKey(LOCAL_REGION));
+    assertTrue(observer.userData.getZoneData().containsKey(LOCAL_REGION));
     assertEquals(1, observer.userData.getZoneData().get(LOCAL_REGION).size());
     assertEquals(value, observer.userData.getZoneData().get(LOCAL_REGION).get(0));
   }

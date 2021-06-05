@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.store;
 
+import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.store.Watcher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -42,20 +43,8 @@ public class SessionWatchers extends AbstractDataManager<Watcher> implements Wat
   @Override
   public boolean add(Watcher watcher) {
     Watcher.internWatcher(watcher);
-
-    Watcher existingWatcher = addData(watcher);
-    if (existingWatcher != null) {
-      LOGGER.warn(
-          "dups watcher, {}, {}, exist={}/{}, input={}/{}",
-          existingWatcher.getDataInfoId(),
-          existingWatcher.getRegisterId(),
-          // not use get registerVersion, avoid the subscriber.version is null
-          existingWatcher.getVersion(),
-          existingWatcher.getRegisterTimestamp(),
-          watcher.getVersion(),
-          watcher.getRegisterTimestamp());
-    }
-    return true;
+    Tuple<Watcher, Boolean> ret = addData(watcher);
+    return ret.o2;
   }
 
   @Override

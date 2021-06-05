@@ -49,6 +49,8 @@ public class TaskMetrics {
 
   private static boolean boltRegistered = false;
 
+  private static final String EXECUTE_NAME_SEP = Pattern.quote(".");
+
   private TaskMetrics() {
     ExecutorMetricsWatchDog executorMetricsWatchDog = new ExecutorMetricsWatchDog();
     ConcurrentUtils.createDaemonThread("executorMetrics", executorMetricsWatchDog).start();
@@ -128,11 +130,11 @@ public class TaskMetrics {
 
     @Override
     public void runUnthrowable() {
-      String sep = Pattern.quote(".");
       for (String executorName : executors) {
         Map<String, Gauge> map =
             metrics.getGauges(
-                (name, value) -> name.contains(".") && name.split(sep)[0].equals(executorName));
+                (name, value) ->
+                    name.contains(".") && name.split(EXECUTE_NAME_SEP)[0].equals(executorName));
         StringBuilder sb = new StringBuilder();
         sb.append(executorName);
         map.forEach(

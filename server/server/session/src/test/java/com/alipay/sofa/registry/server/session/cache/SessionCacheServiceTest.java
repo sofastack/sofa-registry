@@ -20,6 +20,7 @@ import com.alipay.sofa.registry.common.model.store.SubDatum;
 import com.alipay.sofa.registry.server.session.TestUtils;
 import com.alipay.sofa.registry.server.session.node.service.DataNodeService;
 import java.util.Collections;
+import org.assertj.core.util.Lists;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -60,7 +61,8 @@ public class SessionCacheServiceTest {
             Collections.emptyList(),
             "testDataId",
             "testInstanceId",
-            "testGroup");
+            "testGroup",
+            Lists.newArrayList(System.currentTimeMillis()));
 
     Mockito.when(generator.dataNodeService.fetch(Mockito.anyString(), Mockito.anyString()))
         .thenReturn(subDatum);

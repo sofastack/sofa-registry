@@ -36,6 +36,7 @@ import com.google.common.collect.Sets;
 import java.util.*;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.stream.Collectors;
 import org.apache.commons.collections.MapUtils;
 
 /**
@@ -61,6 +62,10 @@ public final class PublisherGroup {
   final Map<String /*registerId*/, PublisherEnvelope> pubMap = Maps.newConcurrentMap();
 
   private volatile long version;
+
+  private static final int RECENT_VERSIONS_CAP = 10;
+
+  private final ArrayDeque<Long> recentVersions = new ArrayDeque<>(RECENT_VERSIONS_CAP);
 
   PublisherGroup(String dataInfoId, String dataCenter) {
     DataInfo dataInfo = DataInfo.valueOf(dataInfoId);
@@ -90,6 +95,8 @@ public final class PublisherGroup {
     long ver;
     List<Publisher> list = new ArrayList<>(pubMap.size());
     lock.readLock().lock();
+    datum.setRecentVersions(
+        recentVersions.stream().filter(Objects::nonNull).collect(Collectors.toList()));
     try {
       ver = this.version;
       for (PublisherEnvelope envelope : pubMap.values()) {
@@ -129,20 +136,28 @@ public final class PublisherGroup {
     final boolean useConfreg = DatumVersionUtil.useConfregVersionGen();
     lock.writeLock().lock();
     try {
+      long lastVersion = this.version;
       if (useConfreg) {
-        this.version = DatumVersionUtil.confregNextId(this.version);
+        this.version = DatumVersionUtil.confregNextId(lastVersion);
       } else {
         this.version = DatumVersionUtil.nextId();
       }
+      appendRecentVersion(lastVersion);
       return new DatumVersion(version);
     } finally {
       lock.writeLock().unlock();
     }
   }
 
+  private void appendRecentVersion(long version) {
+    for (int i = 0; recentVersions.size() >= RECENT_VERSIONS_CAP && i < 3; i++) {
+      this.recentVersions.pollFirst();
+    }
+    this.recentVersions.addLast(version);
+  }
+
   private boolean tryAddPublisher(Publisher publisher) {
     PublisherEnvelope exist = pubMap.get(publisher.getRegisterId());
-
     final RegisterVersion registerVersion = publisher.registerVersion();
     if (exist != null) {
       if (exist.registerVersion.equals(registerVersion)) {

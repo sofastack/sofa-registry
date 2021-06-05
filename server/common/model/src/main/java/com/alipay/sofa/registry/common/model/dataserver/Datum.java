@@ -22,6 +22,7 @@ import com.alipay.sofa.registry.util.DatumVersionUtil;
 import com.google.common.collect.Maps;
 import java.io.Serializable;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -48,6 +49,8 @@ public class Datum implements Serializable {
 
   private long version;
 
+  private List<Long> recentVersions;
+
   /** constructor */
   public Datum() {}
 
@@ -60,6 +63,7 @@ public class Datum implements Serializable {
   public Datum(String dataInfoId, String dataCenter) {
     this.dataInfoId = WordCache.getWordCache(dataInfoId);
     this.dataCenter = WordCache.getWordCache(dataCenter);
+    this.recentVersions = Collections.EMPTY_LIST;
     updateVersion();
   }
 
@@ -91,6 +95,7 @@ public class Datum implements Serializable {
     this.dataId = publisher.getDataId();
     this.instanceId = publisher.getInstanceId();
     this.group = publisher.getGroup();
+    this.recentVersions = Collections.EMPTY_LIST;
     addPublisher(publisher);
   }
 
@@ -257,5 +262,13 @@ public class Datum implements Serializable {
     if (pubMap != null) {
       this.pubMap.putAll(pubMap);
     }
+  }
+
+  public List<Long> getRecentVersions() {
+    return recentVersions;
+  }
+
+  public void setRecentVersions(List<Long> recentVersions) {
+    this.recentVersions = recentVersions;
   }
 }

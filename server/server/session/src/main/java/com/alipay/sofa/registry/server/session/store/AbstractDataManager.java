@@ -17,8 +17,10 @@
 package com.alipay.sofa.registry.server.session.store;
 
 import com.alipay.sofa.registry.common.model.ConnectId;
+import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.store.BaseInfo;
 import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.google.common.collect.Lists;
@@ -38,6 +40,8 @@ import org.springframework.util.CollectionUtils;
  */
 public abstract class AbstractDataManager<T extends BaseInfo>
     implements DataManager<T, String, String> {
+  private static final Logger LOGGER = LoggerFactory.getLogger(AbstractDataManager.class);
+
   private final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
   protected final Lock read = readWriteLock.readLock();
   protected final Lock write = readWriteLock.writeLock();
@@ -52,12 +56,40 @@ public abstract class AbstractDataManager<T extends BaseInfo>
     this.logger = logger;
   }
 
-  protected T addData(T data) {
+  protected Tuple<T, Boolean> addData(T data) {
     Map<String, T> dataMap =
         stores.computeIfAbsent(data.getDataInfoId(), k -> Maps.newConcurrentMap());
-
-    T existing = dataMap.put(data.getRegisterId(), data);
-    return existing;
+    boolean toAdd = true;
+    if (dataMap.putIfAbsent(data.getRegisterId(), data) == null) {
+      return new Tuple<>(null, true);
+    }
+    T existing = null;
+    write.lock();
+    try {
+      existing = dataMap.get(data.getRegisterId());
+      if (existing != null) {
+        if (!existing.registerVersion().orderThan(data.registerVersion())) {
+          toAdd = false;
+        }
+      }
+      if (toAdd) {
+        dataMap.put(data.getRegisterId(), data);
+      }
+    } finally {
+      write.unlock();
+    }
+    if (existing != null && !toAdd) {
+      LOGGER.warn(
+          "conflict {} {}, {}, exist={}/{}, input={}/{}",
+          data.getClass().getSimpleName(),
+          data.getDataInfoId(),
+          data.getRegisterId(),
+          existing.registerVersion(),
+          existing.getRegisterTimestamp(),
+          data.registerVersion(),
+          data.getRegisterTimestamp());
+    }
+    return new Tuple<>(existing, toAdd);
   }
 
   @Override

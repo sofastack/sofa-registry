@@ -37,10 +37,13 @@ public class SessionInterestsTest extends AbstractSessionServerTestBase {
 
   @Test
   public void testAdd() {
-    Subscriber subscriber = randomSubscriber();
-    Assert.assertNotNull(subscriber.getDataInfoId());
-    Assert.assertTrue(interests.add(subscriber));
-    Assert.assertTrue(interests.add(subscriber));
+    Subscriber subscriber1 = randomSubscriber();
+    subscriber1.setVersion(0);
+    Subscriber subscriber2 = randomSubscriber();
+    subscriber2.setVersion(1);
+    Assert.assertNotNull(subscriber1.getDataInfoId());
+    Assert.assertTrue(interests.add(subscriber1));
+    Assert.assertTrue(interests.add(subscriber2));
   }
 
   @Test

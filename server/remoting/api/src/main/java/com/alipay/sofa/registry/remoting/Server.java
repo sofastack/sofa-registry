@@ -49,6 +49,9 @@ public interface Server extends Endpoint {
    * @param remoteAddress
    * @return channel
    */
+  /** select all available channels for every ip */
+  Map<String, List<Channel>> selectAllAvailableChannelsForHostAddress();
+
   Channel getChannel(InetSocketAddress remoteAddress);
 
   /**

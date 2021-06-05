@@ -230,7 +230,14 @@ public class TestUtils {
     String dataInfo = DataInfo.toDataInfoId(dataId, INSTANCE, GROUP);
     SubDatum subDatum =
         new SubDatum(
-            dataInfo, "dataCenter", version, publishers, dataId, "testInstance", "testGroup");
+            dataInfo,
+            "dataCenter",
+            version,
+            publishers,
+            dataId,
+            "testInstance",
+            "testGroup",
+            Lists.newArrayList(System.currentTimeMillis()));
     return subDatum;
   }
 

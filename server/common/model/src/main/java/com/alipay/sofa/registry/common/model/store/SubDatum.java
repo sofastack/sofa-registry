@@ -41,6 +41,8 @@ public final class SubDatum implements Serializable, Sizer {
 
   private final long version;
 
+  private final List<Long> recentVersions;
+
   public SubDatum(
       String dataInfoId,
       String dataCenter,
@@ -49,6 +51,26 @@ public final class SubDatum implements Serializable, Sizer {
       String dataId,
       String instanceId,
       String group) {
+    this(
+        dataInfoId,
+        dataCenter,
+        version,
+        publishers,
+        dataId,
+        instanceId,
+        group,
+        Lists.newArrayList());
+  }
+
+  public SubDatum(
+      String dataInfoId,
+      String dataCenter,
+      long version,
+      Collection<SubPublisher> publishers,
+      String dataId,
+      String instanceId,
+      String group,
+      List<Long> recentVersions) {
     this.dataInfoId = dataInfoId;
     this.dataCenter = dataCenter;
     this.version = version;
@@ -56,6 +78,7 @@ public final class SubDatum implements Serializable, Sizer {
     this.dataId = dataId;
     this.instanceId = instanceId;
     this.group = group;
+    this.recentVersions = recentVersions;
   }
 
   public String getDataInfoId() {
@@ -135,7 +158,18 @@ public final class SubDatum implements Serializable, Sizer {
               publisher.getPublishSource()));
     }
     return new SubDatum(
-        dataInfoId, dataCenter, datum.version, publishers, dataId, instanceId, group);
+        dataInfoId,
+        dataCenter,
+        datum.version,
+        publishers,
+        dataId,
+        instanceId,
+        group,
+        datum.recentVersions);
+  }
+
+  public List<Long> getRecentVersions() {
+    return recentVersions;
   }
 
   public int size() {

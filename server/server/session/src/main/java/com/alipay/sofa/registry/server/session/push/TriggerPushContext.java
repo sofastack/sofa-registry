@@ -16,28 +16,26 @@
  */
 package com.alipay.sofa.registry.server.session.push;
 
+import com.alipay.sofa.registry.common.model.TraceTimes;
 import com.alipay.sofa.registry.util.StringFormatter;
 
 public final class TriggerPushContext {
   public final String dataCenter;
   public final String dataNode;
   private long expectDatumVersion;
-  private long triggerSessionTimestamp;
+  private final TraceTimes times;
 
   public TriggerPushContext(
       String dataCenter, long expectDatumVersion, String dataNode, long triggerSessionTimestamp) {
     this.dataCenter = dataCenter;
     this.dataNode = dataNode;
     this.expectDatumVersion = expectDatumVersion;
-    this.triggerSessionTimestamp = triggerSessionTimestamp;
+    this.times = new TraceTimes();
+    this.times.setTriggerSession(triggerSessionTimestamp);
   }
 
-  public long getTriggerSessionTimestamp() {
-    return triggerSessionTimestamp;
-  }
-
-  public void setTriggerSessionTimestamp(long triggerSessionTimestamp) {
-    this.triggerSessionTimestamp = triggerSessionTimestamp;
+  public TraceTimes getTimes() {
+    return this.times;
   }
 
   public long getExpectDatumVersion() {
@@ -51,10 +49,10 @@ public final class TriggerPushContext {
   @Override
   public String toString() {
     return StringFormatter.format(
-        "TriggerPushCtx{{},ver={},ts={},dc={}}",
+        "TriggerPushCtx{{},ver={},dc={},times={}}",
         dataNode,
         expectDatumVersion,
-        triggerSessionTimestamp,
-        dataCenter);
+        dataCenter,
+        times);
   }
 }
