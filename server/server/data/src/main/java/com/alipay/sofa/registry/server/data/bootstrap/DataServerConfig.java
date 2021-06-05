@@ -43,7 +43,7 @@ public class DataServerConfig {
 
   private int httpServerPort = 9622;
 
-  private int notifyExecutorPoolSize = OsUtils.getCpuCount() * 3;
+  private int notifyExecutorPoolSize = OsUtils.getCpuCount() * 10;
 
   private int notifyExecutorQueueSize = 10000;
 

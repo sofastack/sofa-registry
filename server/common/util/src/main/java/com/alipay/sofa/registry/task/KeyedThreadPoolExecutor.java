@@ -18,6 +18,7 @@ package com.alipay.sofa.registry.task;
 
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.metrics.TaskMetrics;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import io.prometheus.client.Counter;
 import java.util.concurrent.BlockingQueue;
@@ -34,12 +35,14 @@ public class KeyedThreadPoolExecutor {
   private final AbstractWorker[] workers;
   protected final String executorName;
   protected final int coreBufferSize;
+  protected final int coreSize;
 
   private final Counter taskCounter;
 
   public KeyedThreadPoolExecutor(String executorName, int coreSize, int coreBufferSize) {
     this.executorName = executorName;
     this.coreBufferSize = coreBufferSize;
+    this.coreSize = coreSize;
     this.taskCounter =
         Counter.build()
             .namespace("keyedExecutor")
@@ -52,6 +55,7 @@ public class KeyedThreadPoolExecutor {
     for (int i = 0; i < coreSize; i++) {
       ConcurrentUtils.createDaemonThread(executorName + "_" + i, workers[i]).start();
     }
+    TaskMetrics.getInstance().registerKeyThreadExecutor("KeyedExecutor-" + executorName, this);
   }
 
   protected AbstractWorker[] createWorkers(int coreSize, int coreBufferSize) {
@@ -98,6 +102,7 @@ public class KeyedThreadPoolExecutor {
     final int idx;
     final Counter.Child workerExecCounter;
     final Counter.Child workerCommitCounter;
+    volatile boolean running;
 
     protected AbstractWorker(int idx) {
       this.idx = idx;
@@ -114,21 +119,58 @@ public class KeyedThreadPoolExecutor {
             LOGGER.info("{}_{} idle", executorName, idx);
             continue;
           }
+          running = true;
           task.run();
           workerExecCounter.inc();
         } catch (Throwable e) {
           LOGGER.error("{}_{} run task error", executorName, idx, e);
+        } finally {
+          running = false;
         }
       }
     }
+
+    protected boolean isActive() {
+      return running;
+    }
   }
 
-  protected int getQueueSize() {
+  public int getQueueSize() {
     int size = 0;
     for (Worker w : workers) {
       size += w.size();
     }
     return size;
+  }
+
+  public int getActiveCount() {
+    int count = 0;
+    for (AbstractWorker w : workers) {
+      if (w.isActive()) {
+        count++;
+      }
+    }
+    return count;
+  }
+
+  public long getTaskCount() {
+    long count = 0;
+    for (AbstractWorker w : workers) {
+      count += w.workerCommitCounter.get();
+    }
+    return count;
+  }
+
+  public long getCompletedTaskCount() {
+    long count = 0;
+    for (AbstractWorker w : workers) {
+      count += w.workerExecCounter.get();
+    }
+    return count;
+  }
+
+  public int getCoreSize() {
+    return coreSize;
   }
 
   public <T extends Runnable> KeyedTask<T> execute(Object key, T runnable) {

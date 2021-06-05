@@ -21,6 +21,7 @@ import com.alipay.remoting.ProtocolManager;
 import com.alipay.remoting.rpc.protocol.RpcProtocol;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.task.KeyedThreadPoolExecutor;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import com.codahale.metrics.Gauge;
@@ -31,6 +32,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.regex.Pattern;
 
 /**
  * @author shangyu.wh
@@ -73,6 +75,25 @@ public class TaskMetrics {
     boltRegistered = true;
   }
 
+  public void registerKeyThreadExecutor(String executorName, KeyedThreadPoolExecutor executor) {
+    registerIfAbsent(
+        MetricRegistry.name(executorName, "queue"), (Gauge<Integer>) executor::getQueueSize);
+
+    registerIfAbsent(
+        MetricRegistry.name(executorName, "poolSize"), (Gauge<Integer>) executor::getCoreSize);
+
+    registerIfAbsent(
+        MetricRegistry.name(executorName, "active"), (Gauge<Integer>) executor::getActiveCount);
+
+    registerIfAbsent(
+        MetricRegistry.name(executorName, "completed"),
+        (Gauge<Long>) executor::getCompletedTaskCount);
+
+    registerIfAbsent(
+        MetricRegistry.name(executorName, "task"), (Gauge<Long>) executor::getTaskCount);
+    executors.add(executorName);
+  }
+
   public void registerThreadExecutor(String executorName, ThreadPoolExecutor executor) {
     registerIfAbsent(
         MetricRegistry.name(executorName, "queue"),
@@ -107,8 +128,11 @@ public class TaskMetrics {
 
     @Override
     public void runUnthrowable() {
+      String sep = Pattern.quote(".");
       for (String executorName : executors) {
-        Map<String, Gauge> map = metrics.getGauges((name, value) -> name.startsWith(executorName));
+        Map<String, Gauge> map =
+            metrics.getGauges(
+                (name, value) -> name.contains(".") && name.split(sep)[0].equals(executorName));
         StringBuilder sb = new StringBuilder();
         sb.append(executorName);
         map.forEach(
