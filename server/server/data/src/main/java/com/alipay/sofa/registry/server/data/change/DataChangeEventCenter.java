@@ -61,7 +61,7 @@ public final class DataChangeEventCenter {
 
   @Autowired private Exchange boltExchange;
 
-  private final Map<String, Set<String>> dataCenter2Changes = Maps.newConcurrentMap();
+  private final Map<String, DataChangeGroup> dataCenter2Changes = Maps.newConcurrentMap();
   private final ReadWriteLock lock = new ReentrantReadWriteLock();
   private final LinkedList<ChangeNotifierRetry> retryNotifiers = Lists.newLinkedList();
 
@@ -108,8 +108,8 @@ public final class DataChangeEventCenter {
   }
 
   public void onChange(Collection<String> dataInfoIds, String dataCenter) {
-    Set<String> changes =
-        dataCenter2Changes.computeIfAbsent(dataCenter, k -> Sets.newConcurrentHashSet());
+    DataChangeGroup changes =
+        dataCenter2Changes.computeIfAbsent(dataCenter, k -> new DataChangeGroup());
     lock.readLock().lock();
     try {
       changes.addAll(dataInfoIds);
@@ -177,6 +177,13 @@ public final class DataChangeEventCenter {
         }
         DataChangeRequest request = new DataChangeRequest(dataCenter, dataInfoIds);
         doNotify(request, channel);
+        for (Map.Entry<String, DatumVersion> entry : dataInfoIds.entrySet()) {
+          LOGGER.info(
+              "success to notify {}, {}, {}",
+              channel.getRemoteAddress(),
+              entry.getKey(),
+              entry.getValue().getValue());
+        }
         CHANGE_SUCCESS_COUNTER.inc();
       } catch (Throwable e) {
         CHANGE_FAIL_COUNTER.inc();
@@ -397,14 +404,14 @@ public final class DataChangeEventCenter {
     final List<DataChangeEvent> events = Lists.newArrayList();
     lock.writeLock().lock();
     try {
-      for (Map.Entry<String, Set<String>> change : dataCenter2Changes.entrySet()) {
+      for (Map.Entry<String, DataChangeGroup> change : dataCenter2Changes.entrySet()) {
         final String dataCenter = change.getKey();
-        List<String> dataInfoIds = Lists.newArrayList(change.getValue());
-        change.getValue().clear();
-        List<List<String>> parts = Lists.partition(dataInfoIds, maxItems);
+        DataChangeGroup group = change.getValue();
+        List<List<String>> parts = Lists.partition(Lists.newArrayList(group.getDataInfoIds()), maxItems);
         for (int i = 0; i < parts.size(); i++) {
           events.add(new DataChangeEvent(dataCenter, parts.get(i)));
         }
+        group.clear();
       }
     } finally {
       lock.writeLock().unlock();

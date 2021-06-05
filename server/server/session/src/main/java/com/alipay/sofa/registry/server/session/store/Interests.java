@@ -50,7 +50,7 @@ public interface Interests extends DataManager<Subscriber, String, String> {
     ;
     public final boolean interested;
 
-    private InterestVersionCheck(boolean Interested) {
+    InterestVersionCheck(boolean Interested) {
       this.interested = Interested;
     }
   }
