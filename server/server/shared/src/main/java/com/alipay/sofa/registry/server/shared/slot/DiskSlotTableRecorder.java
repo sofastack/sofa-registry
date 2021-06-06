@@ -29,14 +29,17 @@ public class DiskSlotTableRecorder implements SlotTableRecorder {
 
   private static final Logger logger = LoggerFactory.getLogger(DiskSlotTableRecorder.class);
 
+  private volatile SlotTable lastRecord;
+
   @Override
   public void record(SlotTable slotTable) {
     try {
-      String slotStr = JsonUtils.writeValueAsString(slotTable);
-      if (logger.isInfoEnabled()) {
+      if (lastRecord == null || lastRecord.getEpoch() != slotTable.getEpoch()) {
+        String slotStr = JsonUtils.writeValueAsString(slotTable);
         logger.info("[record] record slot: {}", slotStr);
+        this.lastRecord = slotTable;
       }
-    } catch (Exception e) {
+    } catch (Throwable e) {
       logger.error("[record]", e);
     }
   }
