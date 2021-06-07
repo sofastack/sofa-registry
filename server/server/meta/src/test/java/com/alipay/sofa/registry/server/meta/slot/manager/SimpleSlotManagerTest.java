@@ -88,6 +88,24 @@ public class SimpleSlotManagerTest extends AbstractMetaServerTestBase {
   }
 
   @Test
+  public void testNoChangesShouldReturnFalse() {
+    List<DataNode> dataNodes =
+            Lists.newArrayList(
+                    new DataNode(randomURL(randomIp()), getDc()),
+                    new DataNode(randomURL(randomIp()), getDc()),
+                    new DataNode(randomURL(randomIp()), getDc()),
+                    new DataNode(randomURL(randomIp()), getDc()),
+                    new DataNode(randomURL(randomIp()), getDc()));
+    SlotTable slotTable = new SlotTableGenerator(dataNodes).createSlotTable();
+    NotifyObserversCounter counter = new NotifyObserversCounter();
+    Assert.assertTrue(slotManager.refresh(slotTable));
+    int duplicateTimes = 10;
+    for (int i = 0; i < duplicateTimes; i++) {
+      Assert.assertFalse(slotManager.refresh(slotTable));
+    }
+  }
+
+  @Test
   public void testConcurrentModification() throws InterruptedException {
     CyclicBarrier barrier = new CyclicBarrier(2);
     CountDownLatch latch = new CountDownLatch(2);
