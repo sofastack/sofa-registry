@@ -318,7 +318,7 @@ public class DataCacheTest extends BaseTest {
     publisher4.setSourceAddress(new URL("192.168.1.1", 12346));
     publisher4.setTargetAddress(new URL("192.168.1.2", 9600));
     publisher4.setVersion(2L);
-    publisher4.setRegisterTimestamp(System.currentTimeMillis()+1000);
+    publisher4.setRegisterTimestamp(System.currentTimeMillis() + 1000);
 
     Assert.assertTrue(sessionDataStore.add(publisher3));
     Assert.assertTrue(sessionDataStore.add(publisher4));

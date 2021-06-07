@@ -19,12 +19,14 @@ package com.alipay.sofa.registry.server.meta.cleaner;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
+import com.alipay.sofa.registry.cache.ConsecutiveSuccess;
 import com.alipay.sofa.registry.common.model.metaserver.cleaner.AppRevisionSlice;
 import com.alipay.sofa.registry.jdbc.config.DefaultCommonConfig;
 import com.alipay.sofa.registry.jdbc.config.MetadataConfig;
 import com.alipay.sofa.registry.jdbc.domain.AppRevisionDomain;
 import com.alipay.sofa.registry.jdbc.mapper.AppRevisionMapper;
 import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
+import java.util.Collections;
 import org.assertj.core.util.Lists;
 import org.assertj.core.util.Maps;
 import org.assertj.core.util.Sets;
@@ -43,6 +45,7 @@ public class AppRevisionCleanerTest extends AbstractMetaServerTestBase {
     appRevisionCleaner.appRevisionMapper = mock(AppRevisionMapper.class);
     appRevisionCleaner.defaultCommonConfig = mock(DefaultCommonConfig.class);
     appRevisionCleaner.metadataConfig = mock(MetadataConfig.class);
+    appRevisionCleaner.consecutiveSuccess = new ConsecutiveSuccess(2, 1000);
     when(appRevisionCleaner.metadataConfig.getRevisionRenewIntervalMinutes()).thenReturn(10000);
     when(appRevisionCleaner.defaultCommonConfig.getClusterId())
         .thenReturn("DEFAULT_LOCALDATACENTER");
@@ -71,19 +74,28 @@ public class AppRevisionCleanerTest extends AbstractMetaServerTestBase {
   }
 
   @Test
-  public void testClean() {
+  public void testClean() throws Exception {
     AppRevisionCleaner mocked = spy(appRevisionCleaner);
     AppRevisionDomain domain = mock(AppRevisionDomain.class);
     doReturn(Lists.newArrayList(domain))
         .when(mocked.appRevisionMapper)
         .getExpired(anyString(), any(), anyInt());
     doReturn(1).when(mocked.appRevisionMapper).cleanDeleted(anyString(), any(), anyInt());
+    doReturn(
+            Collections.singletonMap(
+                "localhost", new AppRevisionSlice(Collections.singleton("test-123"))))
+        .when(mocked)
+        .broadcastInvoke(any(), anyInt());
+    mocked.renew();
+    mocked.renew();
     mocked.markDeleted();
     mocked.cleanup();
     verify(domain, times(1)).setDeleted(true);
     verify(mocked.appRevisionMapper, times(1)).replace(domain);
     mocked.cleaner.getWaitingMillis();
     mocked.cleaner.runUnthrowable();
+    mocked.becomeLeader();
+    mocked.loseLeader();
   }
 
   @Test
