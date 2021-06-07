@@ -22,7 +22,6 @@ import com.alipay.sofa.registry.jraft.config.RaftConfiguration;
 import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.remoting.jersey.exchange.JerseyExchange;
-import com.alipay.sofa.registry.server.meta.MetaLeaderService.MetaLeaderElectorListener;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfigBean;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
@@ -64,7 +63,6 @@ import com.alipay.sofa.registry.util.DefaultExecutorFactory;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
 import com.alipay.sofa.registry.util.OsUtils;
 import com.alipay.sofa.registry.util.PropertySplitter;
-import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.ExecutorService;
@@ -249,15 +247,6 @@ public class MetaServerConfiguration {
 
   @Configuration
   public static class MetadataConfiguration {
-
-    @Bean(name = "metaLeaderListeners")
-    public Collection<MetaLeaderElectorListener> metaLeaderListeners() {
-      return Lists.newArrayList(
-          provideDataService(),
-          clientManagerService(),
-          appRevisionCleaner(),
-          interfaceAppsIndexCleaner());
-    }
 
     @Bean
     public ProvideDataService provideDataService() {

@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.meta.lease.impl;
 
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.alipay.sofa.registry.exception.InitializeException;
@@ -25,6 +26,7 @@ import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.metaserver.CrossDcMetaServer;
+import com.alipay.sofa.registry.server.meta.metaserver.impl.DefaultMetaLeaderElector;
 import com.google.common.collect.ImmutableMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
@@ -110,6 +112,7 @@ public class CrossDcMetaServerManagerTest extends AbstractMetaServerTestBase {
                 Lists.newArrayList(randomIp(), randomIp(), randomIp()),
                 "dc3",
                 Lists.newArrayList(randomIp(), randomIp(), randomIp())));
+    crossDcMetaServerManager.metaLeaderService = mock(DefaultMetaLeaderElector.class);
     crossDcMetaServerManager.postConstruct();
     crossDcMetaServerManager.becomeLeader();
     waitConditionUntilTimeOut(

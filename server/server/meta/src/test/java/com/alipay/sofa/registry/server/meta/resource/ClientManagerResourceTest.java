@@ -34,7 +34,8 @@ public class ClientManagerResourceTest extends AbstractMetaServerTestBase {
 
   private ClientManagerResource clientManagerResource;
 
-  private ClientManagerService clientManagerService = spy(new InMemoryClientManagerServiceRepo());
+  private final ClientManagerService clientManagerService =
+      spy(new InMemoryClientManagerServiceRepo());
 
   private static final String CLIENT_OFF_STR = "1.1.1.1;2.2.2.2";
   private static final String CLIENT_OPEN_STR = "2.2.2.2;3.3.3.3";

@@ -71,6 +71,8 @@ public class AppRevisionCleaner extends DefaultSessionServerService
     ConcurrentUtils.createDaemonThread(
             AppRevisionCleaner.class.getSimpleName() + "-cleaner", cleaner)
         .start();
+
+    metaLeaderService.registerListener(this);
   }
 
   void renew() {

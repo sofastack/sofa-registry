@@ -78,6 +78,8 @@ public class ScheduledSlotArranger extends AbstractLifecycleObservable
 
   private final Lock lock = new ReentrantLock();
 
+  private volatile boolean slotTableProtectionMode = true;
+
   @Autowired
   public ScheduledSlotArranger(
       DefaultDataServerManager dataServerManager,
@@ -205,6 +207,10 @@ public class ScheduledSlotArranger extends AbstractLifecycleObservable
     return arranger.isSuspended();
   }
 
+  public boolean isSlotTableProtectionMode() {
+    return slotTableProtectionMode;
+  }
+
   private final class Arranger extends WakeUpLoopRunnable {
 
     private final int waitingMillis =
@@ -280,9 +286,11 @@ public class ScheduledSlotArranger extends AbstractLifecycleObservable
         return false;
       } else {
         if (dataNodes.size() <= minDataNodeNum) {
+          slotTableProtectionMode = true;
           logger.warn("[ProtectionMode] dataServers={} <= {}", dataNodes.size(), minDataNodeNum);
           return false;
         }
+        slotTableProtectionMode = false;
         Metrics.SlotArrange.begin();
         try {
           return tryArrangeSlots(dataNodes);

@@ -75,6 +75,7 @@ public class InterfaceAppsIndexCleaner implements MetaLeaderService.MetaLeaderEl
     ConcurrentUtils.createDaemonThread(
             InterfaceAppsIndexCleaner.class.getSimpleName() + "-cleaner", cleaner)
         .start();
+    metaLeaderService.registerListener(this);
   }
 
   void renew() {
