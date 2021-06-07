@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.meta.cleaner;
 
+import com.alipay.sofa.registry.cache.ConsecutiveSuccess;
 import com.alipay.sofa.registry.common.model.store.AppRevision;
 import com.alipay.sofa.registry.jdbc.config.DefaultCommonConfig;
 import com.alipay.sofa.registry.jdbc.config.MetadataConfig;
@@ -36,7 +37,7 @@ import javax.annotation.PostConstruct;
 import org.glassfish.jersey.internal.guava.Sets;
 import org.springframework.beans.factory.annotation.Autowired;
 
-public class InterfaceAppsIndexCleaner {
+public class InterfaceAppsIndexCleaner implements MetaLeaderService.MetaLeaderElectorListener {
 
   private static final Logger LOG = LoggerFactory.getLogger("METADATA-EXCHANGE", "[InterfaceApps]");
 
@@ -55,6 +56,8 @@ public class InterfaceAppsIndexCleaner {
 
   @Autowired MetadataConfig metadataConfig;
 
+  ConsecutiveSuccess consecutiveSuccess;
+
   public InterfaceAppsIndexCleaner() {}
 
   public InterfaceAppsIndexCleaner(MetaLeaderService metaLeaderService) {
@@ -63,6 +66,9 @@ public class InterfaceAppsIndexCleaner {
 
   @PostConstruct
   public void init() {
+    consecutiveSuccess =
+        new ConsecutiveSuccess(
+            1, metadataConfig.getInterfaceAppsIndexRenewIntervalMinutes() * 60 * 1000 * 2);
     ConcurrentUtils.createDaemonThread(
             InterfaceAppsIndexCleaner.class.getSimpleName() + "-renewer", renewer)
         .start();
@@ -75,37 +81,44 @@ public class InterfaceAppsIndexCleaner {
     if (!metaLeaderService.amILeader()) {
       return;
     }
-    int start = 0;
-    int page = 100;
-    Map<String, Set<String>> mappings = Maps.newHashMap();
-    while (true) {
-      List<AppRevisionDomain> revisionDomains =
-          appRevisionMapper.listRevisions(defaultCommonConfig.getClusterId(), start, page);
-      for (AppRevisionDomain domain : revisionDomains) {
-        if (domain.isDeleted()) {
-          continue;
+    try {
+      long start = 0;
+      int page = 100;
+      Map<String, Set<String>> mappings = Maps.newHashMap();
+      while (true) {
+        List<AppRevisionDomain> revisionDomains =
+            appRevisionMapper.listRevisions(defaultCommonConfig.getClusterId(), start, page);
+        if (revisionDomains.size() == 0) {
+          break;
         }
-        AppRevision revision = AppRevisionDomainConvertor.convert2Revision(domain);
-        String appName = domain.getAppName();
-        for (String interfaceName : revision.getInterfaceMap().keySet()) {
-          mappings.computeIfAbsent(appName, k -> Sets.newHashSet()).add(interfaceName);
+        for (AppRevisionDomain domain : revisionDomains) {
+          start = Math.max(start, domain.getId());
+          if (domain.isDeleted()) {
+            continue;
+          }
+          AppRevision revision = AppRevisionDomainConvertor.convert2Revision(domain);
+          String appName = domain.getAppName();
+          for (String interfaceName : revision.getInterfaceMap().keySet()) {
+            mappings.computeIfAbsent(appName, k -> Sets.newHashSet()).add(interfaceName);
+          }
         }
       }
-      if (revisionDomains.size() < page) {
-        break;
-      }
-    }
-    for (Map.Entry<String, Set<String>> entry : mappings.entrySet()) {
-      String appName = entry.getKey();
-      for (String interfaceName : entry.getValue()) {
-        InterfaceAppsIndexDomain domain =
-            new InterfaceAppsIndexDomain(
-                defaultCommonConfig.getClusterId(), interfaceName, appName);
-        if (interfaceAppsIndexMapper.update(domain) == 0) {
-          interfaceAppsIndexMapper.replace(domain);
+      for (Map.Entry<String, Set<String>> entry : mappings.entrySet()) {
+        String appName = entry.getKey();
+        for (String interfaceName : entry.getValue()) {
+          InterfaceAppsIndexDomain domain =
+              new InterfaceAppsIndexDomain(
+                  defaultCommonConfig.getClusterId(), interfaceName, appName);
+          if (interfaceAppsIndexMapper.update(domain) == 0) {
+            interfaceAppsIndexMapper.replace(domain);
+          }
+          ConcurrentUtils.sleepUninterruptibly(10, TimeUnit.MILLISECONDS);
         }
-        ConcurrentUtils.sleepUninterruptibly(10, TimeUnit.MILLISECONDS);
       }
+      consecutiveSuccess.success();
+    } catch (Throwable e) {
+      LOG.error("renew interface apps index failed:", e);
+      consecutiveSuccess.fail();
     }
   }
 
@@ -117,6 +130,9 @@ public class InterfaceAppsIndexCleaner {
 
   void markDeleted() {
     if (!metaLeaderService.amILeader()) {
+      return;
+    }
+    if (!consecutiveSuccess.check()) {
       return;
     }
     List<InterfaceAppsIndexDomain> expiredDomains =
@@ -133,6 +149,16 @@ public class InterfaceAppsIndexCleaner {
           domain.getAppName());
       ConcurrentUtils.sleepUninterruptibly(10, TimeUnit.MILLISECONDS);
     }
+  }
+
+  @Override
+  public void becomeLeader() {
+    consecutiveSuccess.clear();
+  }
+
+  @Override
+  public void loseLeader() {
+    consecutiveSuccess.clear();
   }
 
   final class Renewer extends WakeUpLoopRunnable {

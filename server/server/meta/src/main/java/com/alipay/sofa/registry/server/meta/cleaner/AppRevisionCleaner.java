@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.meta.cleaner;
 
+import com.alipay.sofa.registry.cache.ConsecutiveSuccess;
 import com.alipay.sofa.registry.common.model.metaserver.cleaner.AppRevisionSlice;
 import com.alipay.sofa.registry.common.model.metaserver.cleaner.AppRevisionSliceRequest;
 import com.alipay.sofa.registry.jdbc.config.DefaultCommonConfig;
@@ -34,7 +35,8 @@ import java.util.concurrent.TimeUnit;
 import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 
-public class AppRevisionCleaner extends DefaultSessionServerService {
+public class AppRevisionCleaner extends DefaultSessionServerService
+    implements MetaLeaderService.MetaLeaderElectorListener {
   private static final Logger LOG = LoggerFactory.getLogger("METADATA-EXCHANGE", "[AppRevision]");
 
   private int lastSlotId = -1;
@@ -50,6 +52,8 @@ public class AppRevisionCleaner extends DefaultSessionServerService {
 
   @Autowired MetadataConfig metadataConfig;
 
+  ConsecutiveSuccess consecutiveSuccess;
+
   public AppRevisionCleaner() {}
 
   public AppRevisionCleaner(MetaLeaderService metaLeaderService) {
@@ -58,6 +62,9 @@ public class AppRevisionCleaner extends DefaultSessionServerService {
 
   @PostConstruct
   public void init() {
+    consecutiveSuccess =
+        new ConsecutiveSuccess(
+            slotNum, metadataConfig.getRevisionRenewIntervalMinutes() * 60 * 1000 * 2);
     ConcurrentUtils.createDaemonThread(
             AppRevisionCleaner.class.getSimpleName() + "-renewer", renewer)
         .start();
@@ -77,12 +84,14 @@ public class AppRevisionCleaner extends DefaultSessionServerService {
           broadcastInvoke(new AppRevisionSliceRequest(slotNum, slotId), 1000 * 30).values()) {
         slices.add((AppRevisionSlice) result);
       }
-    } catch (Exception e) {
-      LOG.error("Fetch syncing service list from session failed:", e);
-    }
-    for (String revision : AppRevisionSlice.merge(slices).getRevisions()) {
-      appRevisionMapper.heartbeat(defaultCommonConfig.getClusterId(), revision);
-      ConcurrentUtils.sleepUninterruptibly(10, TimeUnit.MILLISECONDS);
+      for (String revision : AppRevisionSlice.merge(slices).getRevisions()) {
+        appRevisionMapper.heartbeat(defaultCommonConfig.getClusterId(), revision);
+        ConcurrentUtils.sleepUninterruptibly(10, TimeUnit.MILLISECONDS);
+      }
+      consecutiveSuccess.success();
+    } catch (Throwable e) {
+      LOG.error("renew app revisions failed:", e);
+      consecutiveSuccess.fail();
     }
   }
 
@@ -94,6 +103,9 @@ public class AppRevisionCleaner extends DefaultSessionServerService {
 
   void markDeleted() {
     if (!metaLeaderService.amILeader()) {
+      return;
+    }
+    if (!consecutiveSuccess.check()) {
       return;
     }
     List<AppRevisionDomain> expiredDomains =
@@ -113,6 +125,9 @@ public class AppRevisionCleaner extends DefaultSessionServerService {
     if (!metaLeaderService.amILeader()) {
       return;
     }
+    if (!consecutiveSuccess.check()) {
+      return;
+    }
     int count =
         appRevisionMapper.cleanDeleted(
             defaultCommonConfig.getClusterId(),
@@ -126,6 +141,16 @@ public class AppRevisionCleaner extends DefaultSessionServerService {
   synchronized int nextSlotId() {
     lastSlotId = (lastSlotId + 1) % slotNum;
     return lastSlotId;
+  }
+
+  @Override
+  public void becomeLeader() {
+    consecutiveSuccess.clear();
+  }
+
+  @Override
+  public void loseLeader() {
+    consecutiveSuccess.clear();
   }
 
   final class Renewer extends WakeUpLoopRunnable {

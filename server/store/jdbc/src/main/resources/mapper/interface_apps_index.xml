@@ -18,7 +18,6 @@
         <![CDATA[
               update interface_apps_index set gmt_modified = NOW(6)
               WHERE data_center = #{dataCenter} AND app_name = #{appName} AND hashcode = #{hashcode} AND reference = true
-
         ]]>
     </update>
 

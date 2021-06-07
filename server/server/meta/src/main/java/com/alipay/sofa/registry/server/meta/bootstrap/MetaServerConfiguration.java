@@ -252,7 +252,11 @@ public class MetaServerConfiguration {
 
     @Bean(name = "metaLeaderListeners")
     public Collection<MetaLeaderElectorListener> metaLeaderListeners() {
-      return Lists.newArrayList(provideDataService(), clientManagerService());
+      return Lists.newArrayList(
+          provideDataService(),
+          clientManagerService(),
+          appRevisionCleaner(),
+          interfaceAppsIndexCleaner());
     }
 
     @Bean
@@ -263,6 +267,16 @@ public class MetaServerConfiguration {
     @Bean
     public ClientManagerService clientManagerService() {
       return new DefaultClientManagerService();
+    }
+
+    @Bean
+    public AppRevisionCleaner appRevisionCleaner() {
+      return new AppRevisionCleaner();
+    }
+
+    @Bean
+    public InterfaceAppsIndexCleaner interfaceAppsIndexCleaner() {
+      return new InterfaceAppsIndexCleaner();
     }
   }
 
@@ -340,19 +354,6 @@ public class MetaServerConfiguration {
     @Bean
     public RegistryCoreOpsResource registryCoreOpsResource() {
       return new RegistryCoreOpsResource();
-    }
-  }
-
-  @Configuration
-  public static class CleanerConfiguration {
-    @Bean
-    public AppRevisionCleaner appRevisionCleaner() {
-      return new AppRevisionCleaner();
-    }
-
-    @Bean
-    public InterfaceAppsIndexCleaner interfaceAppsIndexCleaner() {
-      return new InterfaceAppsIndexCleaner();
     }
   }
 
