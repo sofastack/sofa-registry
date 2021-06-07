@@ -49,8 +49,7 @@ public class AbstractFetchSystemPropertyServiceTest
   }
 
   public AbstractFetchSystemPropertyServiceTest() {
-    super(ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID);
-    storage.set(new MyTestStorage(INIT_VERSION, false));
+    super(ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID, new MyTestStorage(INIT_VERSION, false));
   }
 
   @Override
@@ -68,7 +67,8 @@ public class AbstractFetchSystemPropertyServiceTest
     return true;
   }
 
-  protected class MyTestStorage extends AbstractFetchSystemPropertyService.SystemDataStorage {
+  protected static class MyTestStorage
+      extends AbstractFetchSystemPropertyService.SystemDataStorage {
     protected final boolean stopPushSwitch;
 
     public MyTestStorage(long version, boolean stopPushSwitch) {

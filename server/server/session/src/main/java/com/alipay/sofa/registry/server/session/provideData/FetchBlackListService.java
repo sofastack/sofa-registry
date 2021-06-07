@@ -58,8 +58,9 @@ public class FetchBlackListService extends AbstractFetchSystemPropertyService<Bl
   @Autowired private SessionServerConfig sessionServerConfig;
 
   public FetchBlackListService() {
-    super(ValueConstants.BLACK_LIST_DATA_ID);
-    storage.set(new BlacklistStorage(INIT_VERSION, Lists.newArrayList()));
+    super(
+        ValueConstants.BLACK_LIST_DATA_ID,
+        new BlacklistStorage(INIT_VERSION, Lists.newArrayList()));
   }
 
   private Map<String, Map<String, Set<String>>> convertBlacklistConfig(
@@ -169,7 +170,8 @@ public class FetchBlackListService extends AbstractFetchSystemPropertyService<Bl
     return false;
   }
 
-  protected class BlacklistStorage extends AbstractFetchSystemPropertyService.SystemDataStorage {
+  protected static class BlacklistStorage
+      extends AbstractFetchSystemPropertyService.SystemDataStorage {
     final List<BlacklistConfig> blacklistConfigList;
 
     public BlacklistStorage(long version, List<BlacklistConfig> blacklistConfigList) {
