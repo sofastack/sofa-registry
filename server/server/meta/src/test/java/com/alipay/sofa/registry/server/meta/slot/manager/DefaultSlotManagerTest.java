@@ -24,13 +24,12 @@ import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.exception.SofaRegistryRuntimeException;
 import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
 import com.alipay.sofa.registry.server.meta.remoting.notifier.Notifier;
+import java.util.List;
 import org.assertj.core.util.Lists;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.MockitoAnnotations;
-
-import java.util.List;
 
 public class DefaultSlotManagerTest extends AbstractMetaServerTestBase {
 
@@ -57,12 +56,12 @@ public class DefaultSlotManagerTest extends AbstractMetaServerTestBase {
   @Test
   public void testNoChangesShouldReturnFalse() {
     List<DataNode> dataNodes =
-            Lists.newArrayList(
-                    new DataNode(randomURL(randomIp()), getDc()),
-                    new DataNode(randomURL(randomIp()), getDc()),
-                    new DataNode(randomURL(randomIp()), getDc()),
-                    new DataNode(randomURL(randomIp()), getDc()),
-                    new DataNode(randomURL(randomIp()), getDc()));
+        Lists.newArrayList(
+            new DataNode(randomURL(randomIp()), getDc()),
+            new DataNode(randomURL(randomIp()), getDc()),
+            new DataNode(randomURL(randomIp()), getDc()),
+            new DataNode(randomURL(randomIp()), getDc()),
+            new DataNode(randomURL(randomIp()), getDc()));
     SlotTable slotTable = new SlotTableGenerator(dataNodes).createSlotTable();
     NotifyObserversCounter counter = new NotifyObserversCounter();
     slotManager.addObserver(counter);

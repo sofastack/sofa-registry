@@ -88,9 +88,6 @@ public class InterfaceAppsIndexCleaner implements MetaLeaderService.MetaLeaderEl
       while (true) {
         List<AppRevisionDomain> revisionDomains =
             appRevisionMapper.listRevisions(defaultCommonConfig.getClusterId(), start, page);
-        if (revisionDomains.size() == 0) {
-          break;
-        }
         for (AppRevisionDomain domain : revisionDomains) {
           start = Math.max(start, domain.getId());
           if (domain.isDeleted()) {
@@ -101,6 +98,9 @@ public class InterfaceAppsIndexCleaner implements MetaLeaderService.MetaLeaderEl
           for (String interfaceName : revision.getInterfaceMap().keySet()) {
             mappings.computeIfAbsent(appName, k -> Sets.newHashSet()).add(interfaceName);
           }
+        }
+        if (revisionDomains.size() < page) {
+          break;
         }
       }
       for (Map.Entry<String, Set<String>> entry : mappings.entrySet()) {

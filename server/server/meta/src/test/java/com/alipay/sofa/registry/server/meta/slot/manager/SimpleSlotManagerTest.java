@@ -90,12 +90,12 @@ public class SimpleSlotManagerTest extends AbstractMetaServerTestBase {
   @Test
   public void testNoChangesShouldReturnFalse() {
     List<DataNode> dataNodes =
-            Lists.newArrayList(
-                    new DataNode(randomURL(randomIp()), getDc()),
-                    new DataNode(randomURL(randomIp()), getDc()),
-                    new DataNode(randomURL(randomIp()), getDc()),
-                    new DataNode(randomURL(randomIp()), getDc()),
-                    new DataNode(randomURL(randomIp()), getDc()));
+        Lists.newArrayList(
+            new DataNode(randomURL(randomIp()), getDc()),
+            new DataNode(randomURL(randomIp()), getDc()),
+            new DataNode(randomURL(randomIp()), getDc()),
+            new DataNode(randomURL(randomIp()), getDc()),
+            new DataNode(randomURL(randomIp()), getDc()));
     SlotTable slotTable = new SlotTableGenerator(dataNodes).createSlotTable();
     NotifyObserversCounter counter = new NotifyObserversCounter();
     Assert.assertTrue(slotManager.refresh(slotTable));

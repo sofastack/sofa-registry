@@ -54,13 +54,12 @@ public class SimpleSlotManager extends AbstractLifecycleObservable implements Sl
   }
 
   /**
-   * The function means to update slot-table if possible(like CAS(xxx, xxx))
-   * return
-   * 1. true: if there were any changes on slot-table (by check whether slot-table epoch getting bigger)
-   * 2. false: if there were no changes, including we try to refresh a lower or equal epoch slot-table
+   * The function means to update slot-table if possible(like CAS(xxx, xxx)) return 1. true: if
+   * there were any changes on slot-table (by check whether slot-table epoch getting bigger) 2.
+   * false: if there were no changes, including we try to refresh a lower or equal epoch slot-table
    *
-   * Then, it will notify observers about this slot-table change event
-   * */
+   * <p>Then, it will notify observers about this slot-table change event
+   */
   @Override
   public boolean refresh(SlotTable slotTable) {
     lock.writeLock().lock();
