@@ -55,10 +55,10 @@ public class ConsecutiveSuccess {
   public boolean check() {
     long currentTs = System.currentTimeMillis();
     lock.lock();
-    if (records.size() < size) {
-      return false;
-    }
     try {
+      if (records.size() < size) {
+        return false;
+      }
       for (record r : records) {
         if (!r.success || r.timestamp < currentTs - expiredIntervalMs) {
           return false;

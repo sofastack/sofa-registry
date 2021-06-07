@@ -48,5 +48,6 @@ public class ConsecutiveSuccessTest {
     s.success();
     s.clear();
     Assert.assertFalse(s.check());
+    Assert.assertFalse(s.check());
   }
 }
