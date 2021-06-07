@@ -27,10 +27,10 @@ import com.alipay.sofa.registry.server.meta.monitor.Metrics;
 import com.alipay.sofa.registry.store.api.elector.LeaderAware;
 import com.alipay.sofa.registry.store.api.elector.LeaderElector;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -48,22 +48,19 @@ public class DefaultMetaLeaderElector extends AbstractLifecycleObservable
 
   private final AtomicReference<LeaderState> leaderState = new AtomicReference<>();
 
-  @Autowired private LeaderElector leaderElector;
+  private final List<MetaLeaderElectorListener> listeners = new CopyOnWriteArrayList<>();
 
-  @Autowired private MetaServerConfig metaServerConfig;
+  @Autowired private final LeaderElector leaderElector;
 
-  @Resource(name = "metaLeaderListeners")
-  private List<MetaLeaderElectorListener> listeners;
+  @Autowired private final MetaServerConfig metaServerConfig;
 
-  public DefaultMetaLeaderElector() {}
-
-  public DefaultMetaLeaderElector(
-      LeaderElector leaderElector,
-      MetaServerConfig metaServerConfig,
-      List<MetaLeaderElectorListener> listeners) {
+  public DefaultMetaLeaderElector(LeaderElector leaderElector, MetaServerConfig metaServerConfig) {
     this.leaderElector = leaderElector;
     this.metaServerConfig = metaServerConfig;
-    this.listeners = listeners;
+  }
+
+  public void registerListener(MetaLeaderElectorListener listener) {
+    listeners.add(listener);
   }
 
   @PostConstruct
@@ -104,7 +101,8 @@ public class DefaultMetaLeaderElector extends AbstractLifecycleObservable
     if (wasLeader.compareAndSet(false, true)) {
       leaderState.set(
           new LeaderState(LeaderElector.ElectorRole.LEADER, System.currentTimeMillis()));
-      becomeLeader();
+      logger.info("[becomeLeader] change from follower to elector, {}", this.leaderState.get());
+      listeners.forEach(MetaLeaderElectorListener::becomeLeader);
     }
   }
 
@@ -113,39 +111,16 @@ public class DefaultMetaLeaderElector extends AbstractLifecycleObservable
     if (wasLeader.compareAndSet(true, false)) {
       leaderState.set(
           new LeaderState(LeaderElector.ElectorRole.FOLLOWER, System.currentTimeMillis()));
-      loseLeader();
-    }
-  }
-
-  protected void becomeLeader() {
-    if (logger.isInfoEnabled()) {
-      logger.info("[becomeLeader] change from follower to elector, {}", this.leaderState.get());
-    }
-    if (listeners != null && !listeners.isEmpty()) {
-      listeners.forEach(
-          listener -> {
-            listener.becomeLeader();
-          });
+      logger.info("[becomeFollow] change from elector to follower, {}", this.leaderState.get());
+      // not leader, clear the leader/follower metrics
+      Metrics.DataSlot.clearLeaderNumbers();
+      Metrics.DataSlot.clearFollowerNumbers();
+      listeners.forEach(MetaLeaderElectorListener::loseLeader);
     }
   }
 
   private long getWarmupMilli() {
     return metaServerConfig.getMetaLeaderWarmupMillis();
-  }
-
-  protected void loseLeader() {
-    if (logger.isInfoEnabled()) {
-      logger.info("[becomeFollow] change from elector to follower, {}", this.leaderState.get());
-    }
-    // not leader, clear the leader/follower metrics
-    Metrics.DataSlot.clearLeaderNumbers();
-    Metrics.DataSlot.clearFollowerNumbers();
-    if (listeners != null && !listeners.isEmpty()) {
-      listeners.forEach(
-          listener -> {
-            listener.loseLeader();
-          });
-    }
   }
 
   private static final class LeaderState {

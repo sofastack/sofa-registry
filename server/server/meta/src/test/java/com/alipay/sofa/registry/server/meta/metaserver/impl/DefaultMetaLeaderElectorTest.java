@@ -24,7 +24,6 @@ import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.store.api.elector.LeaderElector;
 import java.util.concurrent.atomic.AtomicInteger;
-import org.assertj.core.util.Lists;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,7 +41,7 @@ public class DefaultMetaLeaderElectorTest extends AbstractMetaServerTestBase {
   @Before
   public void beforeDefaultMetaLeaderElectorTest() {
     MockitoAnnotations.initMocks(this);
-    metaLeaderElector = new DefaultMetaLeaderElector(leaderElector, metaServerConfig, null);
+    metaLeaderElector = new DefaultMetaLeaderElector(leaderElector, metaServerConfig);
     when(metaServerConfig.getMetaLeaderWarmupMillis()).thenReturn(200L);
   }
 
@@ -81,22 +80,19 @@ public class DefaultMetaLeaderElectorTest extends AbstractMetaServerTestBase {
   public void testLeaderNotify() {
     AtomicInteger leaderCounter = new AtomicInteger(0);
     AtomicInteger followerCounter = new AtomicInteger(0);
-    metaLeaderElector =
-        new DefaultMetaLeaderElector(
-            leaderElector,
-            metaServerConfig,
-            Lists.newArrayList(
-                new MetaLeaderService.MetaLeaderElectorListener() {
-                  @Override
-                  public void becomeLeader() {
-                    leaderCounter.incrementAndGet();
-                  }
+    metaLeaderElector = new DefaultMetaLeaderElector(leaderElector, metaServerConfig);
+    metaLeaderElector.registerListener(
+        new MetaLeaderService.MetaLeaderElectorListener() {
+          @Override
+          public void becomeLeader() {
+            leaderCounter.incrementAndGet();
+          }
 
-                  @Override
-                  public void loseLeader() {
-                    followerCounter.incrementAndGet();
-                  }
-                }));
+          @Override
+          public void loseLeader() {
+            followerCounter.incrementAndGet();
+          }
+        });
     metaLeaderElector.leaderNotify();
     Assert.assertEquals(1, leaderCounter.get());
     Assert.assertEquals(0, followerCounter.get());
@@ -111,22 +107,19 @@ public class DefaultMetaLeaderElectorTest extends AbstractMetaServerTestBase {
   public void testFollowNotify() {
     AtomicInteger leaderCounter = new AtomicInteger(0);
     AtomicInteger followerCounter = new AtomicInteger(0);
-    metaLeaderElector =
-        new DefaultMetaLeaderElector(
-            leaderElector,
-            metaServerConfig,
-            Lists.newArrayList(
-                new MetaLeaderService.MetaLeaderElectorListener() {
-                  @Override
-                  public void becomeLeader() {
-                    leaderCounter.incrementAndGet();
-                  }
+    metaLeaderElector = new DefaultMetaLeaderElector(leaderElector, metaServerConfig);
+    metaLeaderElector.registerListener(
+        new MetaLeaderService.MetaLeaderElectorListener() {
+          @Override
+          public void becomeLeader() {
+            leaderCounter.incrementAndGet();
+          }
 
-                  @Override
-                  public void loseLeader() {
-                    followerCounter.incrementAndGet();
-                  }
-                }));
+          @Override
+          public void loseLeader() {
+            followerCounter.incrementAndGet();
+          }
+        });
     metaLeaderElector.leaderNotify();
     Assert.assertEquals(1, leaderCounter.get());
     Assert.assertEquals(0, followerCounter.get());

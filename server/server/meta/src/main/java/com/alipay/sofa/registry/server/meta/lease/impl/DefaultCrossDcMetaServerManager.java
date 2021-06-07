@@ -68,7 +68,7 @@ public class DefaultCrossDcMetaServerManager extends AbstractLifecycle
 
   @Autowired private MetaServerConfig metaServerConfig;
 
-  @Autowired private MetaLeaderService metaLeaderService;
+  @Autowired MetaLeaderService metaLeaderService;
 
   @Resource(name = SHARED_SCHEDULE_EXECUTOR)
   private ScheduledExecutorService scheduled;

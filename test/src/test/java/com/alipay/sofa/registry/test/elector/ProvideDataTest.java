@@ -19,6 +19,7 @@ package com.alipay.sofa.registry.test.elector;
 import com.alipay.sofa.registry.common.model.console.PersistenceData;
 import com.alipay.sofa.registry.common.model.console.PersistenceDataBuilder;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
+import com.alipay.sofa.registry.server.meta.provide.data.DefaultProvideDataService;
 import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataService;
 import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
@@ -67,16 +68,11 @@ public class ProvideDataTest extends BaseIntegrationTest {
 
     PersistenceData newData = new PersistenceData();
     BeanUtils.copyProperties(data, newData);
-    provideDataService.loseLeader();
     long exceptVersion = newData.getVersion();
     newData.setData("new valueA");
     newData.setVersion(System.currentTimeMillis());
     boolean put = provideDataRepository.put(newData, exceptVersion);
     Assert.assertTrue(put);
-
-    Thread.sleep(5000);
-    Assert.assertEquals(
-        value, provideDataService.queryProvideData(dataInfoId).getEntity().getData());
 
     provideDataService.becomeLeader();
     Thread.sleep(5000);

@@ -20,15 +20,15 @@ import com.alipay.sofa.registry.common.model.console.PersistenceData;
 import com.alipay.sofa.registry.common.model.console.PersistenceDataBuilder;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.server.meta.MetaLeaderService;
 import com.alipay.sofa.registry.store.api.DBResponse;
 import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
-import com.alipay.sofa.registry.util.LoopRunnable;
+import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import javax.annotation.PostConstruct;
@@ -48,16 +48,17 @@ public class DefaultProvideDataService implements ProvideDataService {
 
   private final ProvideDataRefresh refresher = new ProvideDataRefresh();
 
+  @Autowired MetaLeaderService metaLeaderService;
+
   @Autowired private ProvideDataRepository provideDataRepository;
 
   @PostConstruct
   public void init() {
     ConcurrentUtils.createDaemonThread("provideData_refresh", refresher).start();
-    // resume when become leader
-    refresher.suspend();
+    metaLeaderService.registerListener(this);
   }
 
-  private final class ProvideDataRefresh extends LoopRunnable {
+  private final class ProvideDataRefresh extends WakeUpLoopRunnable {
 
     @Override
     public void runUnthrowable() {
@@ -65,16 +66,18 @@ public class DefaultProvideDataService implements ProvideDataService {
     }
 
     @Override
-    public void waitingUnthrowable() {
-      ConcurrentUtils.sleepUninterruptibly(3000, TimeUnit.MILLISECONDS);
+    public int getWaitingMillis() {
+      return 3000;
     }
   }
 
   private void provideDataRefresh() {
+    if (!metaLeaderService.amILeader()) {
+      return;
+    }
     Collection<PersistenceData> provideDatas = provideDataRepository.getAll();
     Map<String, PersistenceData> newCache = new HashMap<>();
-    provideDatas.stream()
-        .forEach(data -> newCache.put(PersistenceDataBuilder.getDataInfoId(data), data));
+    provideDatas.forEach(data -> newCache.put(PersistenceDataBuilder.getDataInfoId(data), data));
 
     lock.writeLock().lock();
     try {
@@ -92,13 +95,11 @@ public class DefaultProvideDataService implements ProvideDataService {
 
   @Override
   public void becomeLeader() {
-    refresher.resume();
+    refresher.wakeup();
   }
 
   @Override
-  public void loseLeader() {
-    refresher.suspend();
-  }
+  public void loseLeader() {}
 
   /**
    * save or update provideData

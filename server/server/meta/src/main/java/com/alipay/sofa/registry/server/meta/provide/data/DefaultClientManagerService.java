@@ -103,6 +103,7 @@ public class DefaultClientManagerService implements ClientManagerService {
     ConcurrentUtils.createDaemonThread("clientManager_refresher", refresher).start();
 
     refreshLimit = metaServerConfig.getClientManagerRefreshLimit();
+    metaLeaderService.registerListener(this);
   }
 
   /**
@@ -160,7 +161,9 @@ public class DefaultClientManagerService implements ClientManagerService {
   }
 
   @Override
-  public void loseLeader() {}
+  public void loseLeader() {
+    init();
+  }
 
   private final class ClientManagerRefresher extends WakeUpLoopRunnable {
 
