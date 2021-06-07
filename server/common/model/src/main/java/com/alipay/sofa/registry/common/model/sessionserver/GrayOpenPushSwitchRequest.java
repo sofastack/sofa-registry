@@ -16,10 +16,12 @@
  */
 package com.alipay.sofa.registry.common.model.sessionserver;
 
+import com.google.common.collect.Lists;
+
 import java.util.List;
 
 public class GrayOpenPushSwitchRequest {
-  private List<String> ips;
+  private List<String> ips = Lists.newArrayList();
 
   public List<String> getIps() {
     return ips;

@@ -52,7 +52,7 @@ public class FetchGrayPushSwitchService
   public FetchGrayPushSwitchService() {
     super(
         ValueConstants.PUSH_SWITCH_GRAY_OPEN_DATA_ID,
-        new GrayPushSwitchStorage(INIT_VERSION, Lists.newArrayList()));
+        new GrayPushSwitchStorage(INIT_VERSION, Collections.emptySet()));
   }
 
   @Override
