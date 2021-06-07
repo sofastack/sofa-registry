@@ -40,8 +40,7 @@ public class FetchStopPushService extends AbstractFetchSystemPropertyService<Sto
   @Autowired private SessionServerConfig sessionServerConfig;
 
   public FetchStopPushService() {
-    super(ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID);
-    storage.set(new StopPushStorage(INIT_VERSION, false));
+    super(ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID, new StopPushStorage(INIT_VERSION, false));
   }
 
   @Override
@@ -92,7 +91,8 @@ public class FetchStopPushService extends AbstractFetchSystemPropertyService<Sto
     return storage.get().stopPushSwitch;
   }
 
-  protected class StopPushStorage extends AbstractFetchSystemPropertyService.SystemDataStorage {
+  protected static class StopPushStorage
+      extends AbstractFetchSystemPropertyService.SystemDataStorage {
     protected final boolean stopPushSwitch;
 
     public StopPushStorage(long version, boolean stopPushSwitch) {

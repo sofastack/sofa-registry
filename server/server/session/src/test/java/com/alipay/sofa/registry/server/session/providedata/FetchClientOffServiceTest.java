@@ -68,7 +68,7 @@ public class FetchClientOffServiceTest {
 
   @Test
   public void test() throws InterruptedException {
-
+    fetchClientOffAddressService.postConstruct();
     Assert.assertEquals(0, fetchClientOffAddressService.getClientOffAddress().size());
 
     Set<String> openIps = CollectionSdks.toIpSet("1.1.1.1;2.2.2.2;3.3.3.3");

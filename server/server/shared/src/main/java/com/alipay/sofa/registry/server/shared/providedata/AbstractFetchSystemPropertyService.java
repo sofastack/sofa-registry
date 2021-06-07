@@ -54,6 +54,12 @@ public abstract class AbstractFetchSystemPropertyService<T extends SystemDataSto
 
   @Autowired protected MetaServerService metaNodeService;
 
+  protected AbstractFetchSystemPropertyService(String dataInfoId, T t) {
+    ParaCheckUtil.checkNotNull(t, "storage is null");
+    this.dataInfoId = dataInfoId;
+    storage.set(t);
+  }
+
   protected final class WatchDog extends WakeUpLoopRunnable {
 
     @Override
@@ -88,10 +94,6 @@ public abstract class AbstractFetchSystemPropertyService<T extends SystemDataSto
 
     // do process
     return processorData(response.getProvideData(), expect);
-  }
-
-  public AbstractFetchSystemPropertyService(String dataInfoId) {
-    this.dataInfoId = dataInfoId;
   }
 
   @Override
@@ -149,7 +151,7 @@ public abstract class AbstractFetchSystemPropertyService<T extends SystemDataSto
 
   protected abstract boolean doProcess(T expect, ProvideData data);
 
-  public abstract class SystemDataStorage {
+  public abstract static class SystemDataStorage {
     final long version;
 
     public SystemDataStorage(long version) {

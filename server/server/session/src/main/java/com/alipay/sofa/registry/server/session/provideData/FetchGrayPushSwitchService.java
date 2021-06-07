@@ -29,8 +29,11 @@ import com.alipay.sofa.registry.util.JsonUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Set;
 import javax.annotation.Resource;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
@@ -47,8 +50,9 @@ public class FetchGrayPushSwitchService
   @Autowired private SessionServerConfig sessionServerConfig;
 
   public FetchGrayPushSwitchService() {
-    super(ValueConstants.PUSH_SWITCH_GRAY_OPEN_DATA_ID);
-    storage.set(new GrayPushSwitchStorage(INIT_VERSION, Lists.newArrayList()));
+    super(
+        ValueConstants.PUSH_SWITCH_GRAY_OPEN_DATA_ID,
+        new GrayPushSwitchStorage(INIT_VERSION, Lists.newArrayList()));
   }
 
   @Override
@@ -86,13 +90,13 @@ public class FetchGrayPushSwitchService
     return true;
   }
 
-  protected class GrayPushSwitchStorage
+  protected static class GrayPushSwitchStorage
       extends AbstractFetchSystemPropertyService.SystemDataStorage {
-    final Collection<String> openIps;
+    final Set<String> openIps;
 
     public GrayPushSwitchStorage(long version, Collection<String> openIps) {
       super(version);
-      this.openIps = openIps;
+      this.openIps = openIps == null ? Collections.emptySet() : Sets.newHashSet(openIps);
     }
   }
 

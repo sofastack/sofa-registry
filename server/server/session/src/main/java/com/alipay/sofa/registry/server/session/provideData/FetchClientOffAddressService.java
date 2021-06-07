@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import javax.annotation.PostConstruct;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -57,8 +58,13 @@ public class FetchClientOffAddressService
   @Autowired private Registry sessionRegistry;
 
   public FetchClientOffAddressService() {
-    super(ValueConstants.CLIENT_OFF_ADDRESS_DATA_ID);
-    storage.set(new ClientOffAddressStorage(INIT_VERSION, Sets.newHashSet(), null));
+    super(
+        ValueConstants.CLIENT_OFF_ADDRESS_DATA_ID,
+        new ClientOffAddressStorage(INIT_VERSION, Sets.newHashSet(), null));
+  }
+
+  @PostConstruct
+  public void postConstruct() {
     ConcurrentUtils.createDaemonThread("ClientManagerProcessor", clientManagerProcessor).start();
   }
 
@@ -99,7 +105,7 @@ public class FetchClientOffAddressService
     return true;
   }
 
-  protected class ClientOffAddressStorage
+  protected static class ClientOffAddressStorage
       extends AbstractFetchSystemPropertyService.SystemDataStorage {
     final Set<String> clientOffAddress;
 
@@ -113,7 +119,7 @@ public class FetchClientOffAddressService
     }
   }
 
-  final class ClientOffTable {
+  static final class ClientOffTable {
     final Set<String> adds;
 
     final Set<String> removes;
@@ -121,24 +127,6 @@ public class FetchClientOffAddressService
     public ClientOffTable(Set<String> adds, Set<String> removes) {
       this.adds = adds;
       this.removes = removes;
-    }
-
-    /**
-     * Getter method for property <tt>adds</tt>.
-     *
-     * @return property value of adds
-     */
-    public Set<String> getAdds() {
-      return adds;
-    }
-
-    /**
-     * Getter method for property <tt>removes</tt>.
-     *
-     * @return property value of removes
-     */
-    public Set<String> getRemoves() {
-      return removes;
     }
   }
 
