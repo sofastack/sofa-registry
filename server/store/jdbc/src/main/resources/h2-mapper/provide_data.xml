@@ -56,7 +56,7 @@
     <update id="update">
         <![CDATA[
        update provide_data set data_value = #{data.dataValue}, data_version = #{data.dataVersion}, gmt_modified = CURRENT_TIMESTAMP
-       where data_key = #{data.dataKey} and data_version = #{exceptVersion}
+       where data_center = #{dataCenter} and data_key = #{data.dataKey} and data_version = #{exceptVersion}
        ]]>
     </update>
 
