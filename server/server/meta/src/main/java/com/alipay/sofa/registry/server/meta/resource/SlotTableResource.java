@@ -247,7 +247,7 @@ public class SlotTableResource {
     private final boolean isSlotTableFollowerBalanced;
 
     private final boolean isSlotTableStable;
-    private final boolean isProtectionMode;
+    private final boolean protectionMode;
 
     private final Map<String, Integer> leaderCount;
 
@@ -258,13 +258,13 @@ public class SlotTableResource {
         boolean slotTableLeaderBalanced,
         boolean slotTableFollowerBalanced,
         boolean slotTableStable,
-        boolean protectMode,
+        boolean protectionMode,
         Map<String, Integer> leaderCount,
         Map<String, Integer> followerCount) {
       this.slotTableEpoch = slotTableEpoch;
       this.isSlotTableLeaderBalanced = slotTableLeaderBalanced;
       this.isSlotTableFollowerBalanced = slotTableFollowerBalanced;
-      this.isProtectionMode = protectMode;
+      this.protectionMode = protectionMode;
       this.isSlotTableStable = slotTableStable;
       this.leaderCount = leaderCount;
       this.followerCount = followerCount;
@@ -288,6 +288,14 @@ public class SlotTableResource {
 
     public boolean isSlotTableFollowerBalanced() {
       return isSlotTableFollowerBalanced;
+    }
+
+    public long getSlotTableEpoch() {
+      return slotTableEpoch;
+    }
+
+    public boolean isProtectionMode() {
+      return protectionMode;
     }
   }
 

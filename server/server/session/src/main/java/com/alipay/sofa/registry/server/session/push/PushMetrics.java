@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.server.session.push;
 
 import io.prometheus.client.Counter;
+import io.prometheus.client.Histogram;
 
 public final class PushMetrics {
   private PushMetrics() {}
@@ -111,6 +112,14 @@ public final class PushMetrics {
             .name("retry_total")
             .help("retry count")
             .labelNames("reason")
+            .register();
+    static final Histogram PUSH_DELAY_HISTOGRAM = Histogram.build().
+            linearBuckets(0, 1000, 30)
+            .namespace("session")
+            .subsystem("push")
+            .name("push_delay")
+            .help("push delay")
+            .labelNames("cause")
             .register();
   }
 }
