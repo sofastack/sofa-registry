@@ -155,6 +155,11 @@ public class DefaultClientManagerService implements ClientManagerService {
   }
 
   @Override
+  public boolean reduce(Set<String> ipSet) {
+    return clientManagerAddressRepository.reduce(ipSet);
+  }
+
+  @Override
   public void becomeLeader() {
     init();
     refresher.wakeup();

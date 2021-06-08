@@ -111,4 +111,7 @@ public class ValueConstants {
   public static final String CLIENT_OFF = "clientOff";
 
   public static final String CLIENT_OPEN = "clientOpen";
+
+  public static final String REDUCE = "reduce";
+
 }
