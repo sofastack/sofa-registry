@@ -159,7 +159,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
   private volatile Optional<Pattern> invalidIgnoreDataIdPattern = null;
 
   private int dataClientConnNum = 10;
-  private int dataNotifyClientConnNum = 2;
+  private int dataNotifyClientConnNum = 5;
   private int sessionSchedulerPoolSize = OsUtils.getCpuCount();
 
   private int slotSyncPublisherMaxNum = 512;

@@ -49,7 +49,7 @@ public class DataServerConfig {
 
   private int notifyRetryQueueSize = 10000;
 
-  private int notifyMaxItems = 300;
+  private int notifyMaxItems = 400;
 
   private int notifyIntervalMillis = 1000;
 
