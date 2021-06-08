@@ -99,11 +99,11 @@ public class ClientManagerAddressJdbcRepository implements ClientManagerAddressR
     return true;
   }
 
-  private void doStorage(Set<String> ipSet, String reduce) {
+  private void doStorage(Set<String> ipSet, String operation) {
     for (String address : ipSet) {
       ClientManagerAddress update =
               new ClientManagerAddress(
-                      defaultCommonConfig.getClusterId(), address, reduce);
+                      defaultCommonConfig.getClusterId(), address, operation);
       int effectRows = clientManagerAddressMapper.update(update);
 
       if (effectRows == 0) {
