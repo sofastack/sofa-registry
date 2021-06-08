@@ -269,6 +269,7 @@ public class DefaultClientManagerService implements ClientManagerService {
           clientOpenAddress.remove(clientManagerAddress.getAddress());
           break;
         case ValueConstants.CLIENT_OPEN:
+        case ValueConstants.REDUCE:
           clientOpenAddress.add(clientManagerAddress.getAddress());
           clientOffAddress.remove(clientManagerAddress.getAddress());
           break;
