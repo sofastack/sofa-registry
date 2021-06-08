@@ -47,16 +47,7 @@ public class ClientManagerAddressJdbcRepository implements ClientManagerAddressR
   public boolean clientOpen(Set<String> ipSet) {
 
     try {
-      for (String address : ipSet) {
-        ClientManagerAddress update =
-            new ClientManagerAddress(
-                defaultCommonConfig.getClusterId(), address, ValueConstants.CLIENT_OPEN);
-        int effectRows = clientManagerAddressMapper.update(update);
-
-        if (effectRows == 0) {
-          clientManagerAddressMapper.insertOnReplace(update);
-        }
-      }
+      doStorage(ipSet, ValueConstants.CLIENT_OPEN);
       CLIENT_MANAGER_UPDATE_COUNTER.inc(ipSet.size());
     } catch (Throwable t) {
       LOG.error("clientOpen:{} error.", ipSet, t);
@@ -68,17 +59,7 @@ public class ClientManagerAddressJdbcRepository implements ClientManagerAddressR
   @Override
   public boolean clientOff(Set<String> ipSet) {
     try {
-
-      for (String address : ipSet) {
-        ClientManagerAddress update =
-            new ClientManagerAddress(
-                defaultCommonConfig.getClusterId(), address, ValueConstants.CLIENT_OFF);
-        int effectRows = clientManagerAddressMapper.update(update);
-
-        if (effectRows == 0) {
-          clientManagerAddressMapper.insertOnReplace(update);
-        }
-      }
+      doStorage(ipSet, ValueConstants.CLIENT_OFF);
       CLIENT_MANAGER_UPDATE_COUNTER.inc(ipSet.size());
     } catch (Throwable t) {
       LOG.error("clientOff:{} error.", ipSet, t);
@@ -103,6 +84,32 @@ public class ClientManagerAddressJdbcRepository implements ClientManagerAddressR
   public int queryTotalCount() {
     CLIENT_MANAGER_QUERY_COUNTER.inc();
     return clientManagerAddressMapper.queryTotalCount(defaultCommonConfig.getClusterId());
+  }
+
+  @Override
+  public boolean reduce(Set<String> ipSet) {
+    try {
+
+      doStorage(ipSet, ValueConstants.REDUCE);
+      CLIENT_MANAGER_UPDATE_COUNTER.inc(ipSet.size());
+    } catch (Throwable t) {
+      LOG.error("clientOff:{} error.", ipSet, t);
+      return false;
+    }
+    return true;
+  }
+
+  private void doStorage(Set<String> ipSet, String reduce) {
+    for (String address : ipSet) {
+      ClientManagerAddress update =
+              new ClientManagerAddress(
+                      defaultCommonConfig.getClusterId(), address, reduce);
+      int effectRows = clientManagerAddressMapper.update(update);
+
+      if (effectRows == 0) {
+        clientManagerAddressMapper.insertOnReplace(update);
+      }
+    }
   }
 
   /**

@@ -59,4 +59,11 @@ public interface ClientManagerAddressRepository {
   List<ClientManagerAddress> queryAfterThan(long maxId, long limit);
 
   int queryTotalCount();
+
+  /**
+   * reduce
+   * @param ipSet
+   * @return
+   */
+  boolean reduce(Set<String> ipSet);
 }

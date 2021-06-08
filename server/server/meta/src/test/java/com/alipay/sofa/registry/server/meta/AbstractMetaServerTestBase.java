@@ -710,6 +710,12 @@ public class AbstractMetaServerTestBase extends AbstractTestBase {
     }
 
     @Override
+    public boolean reduce(Set<String> ipSet) {
+      version.incrementAndGet();
+      return cache.get().removeAll(ipSet);
+    }
+
+    @Override
     public void becomeLeader() {}
 
     @Override

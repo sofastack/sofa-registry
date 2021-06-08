@@ -91,6 +91,24 @@ public class ClientManagerResource {
   }
 
   /** Client Open */
+  @POST
+  @Path("/reduce")
+  public CommonResponse reduce(@FormParam("ips") String ips) {
+    if (StringUtils.isBlank(ips)) {
+      return CommonResponse.buildFailedResponse("ips is empty");
+    }
+    Set<String> ipSet = CollectionSdks.toIpSet(ips);
+
+    boolean ret = clientManagerService.reduce(ipSet);
+
+    DB_LOGGER.info("reduce result:{}, ips:{}", ret, ips);
+
+    CommonResponse response = CommonResponse.buildSuccessResponse();
+    response.setSuccess(ret);
+    return response;
+  }
+
+  /** Client Open */
   @GET
   @Path("/query")
   public GenericResponse<ClientOffAddressModel> query() {

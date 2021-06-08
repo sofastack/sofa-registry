@@ -49,4 +49,11 @@ public interface ClientManagerService extends MetaLeaderElectorListener {
    * @return
    */
   DBResponse<ProvideData> queryClientOffSet();
+
+  /**
+   * reduce
+   * @param ipSet
+   * @return
+   */
+  boolean reduce(Set<String> ipSet);
 }
