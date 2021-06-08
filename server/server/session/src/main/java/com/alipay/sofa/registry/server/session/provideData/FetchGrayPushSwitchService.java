@@ -97,7 +97,6 @@ public class FetchGrayPushSwitchService
       super(version);
       this.openIps = openIps == null ? Collections.emptySet() : Sets.newHashSet(openIps);
     }
-
   }
 
   public Collection<String> getOpenIps() {

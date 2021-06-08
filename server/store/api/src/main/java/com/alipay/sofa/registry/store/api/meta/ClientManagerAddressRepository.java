@@ -62,6 +62,7 @@ public interface ClientManagerAddressRepository {
 
   /**
    * reduce
+   *
    * @param ipSet
    * @return
    */
