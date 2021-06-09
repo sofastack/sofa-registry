@@ -197,9 +197,7 @@ public class SlotTableResource {
       return false;
     }
     int leaderHighAverage = MathUtils.divideCeil(expectedLeaderTotal, dataNodes.size());
-    int leaderLowAverage = Math.floorDiv(expectedLeaderTotal, dataNodes.size());
     int leaderHighWaterMark = balancePolicy.getHighWaterMarkSlotLeaderNums(leaderHighAverage);
-    int leaderLowWaterMark = balancePolicy.getLowWaterMarkSlotLeaderNums(leaderLowAverage);
 
     for (DataNode dataNode : dataNodes) {
       String dataIp = dataNode.getIp();
@@ -207,7 +205,7 @@ public class SlotTableResource {
         return false;
       }
       int leaderCount = leaderCounter.getOrDefault(dataIp, 0);
-      if (leaderCount > leaderHighWaterMark || leaderCount < leaderLowWaterMark) {
+      if (leaderCount > leaderHighWaterMark) {
         return false;
       }
     }
@@ -225,14 +223,12 @@ public class SlotTableResource {
       }
     }
     int followerHighAverage = MathUtils.divideCeil(expectedFollowerTotal, dataNodes.size());
-    int followerLowAverage = Math.floorDiv(expectedFollowerTotal, dataNodes.size());
     int followerHighWaterMark = balancePolicy.getHighWaterMarkSlotFollowerNums(followerHighAverage);
-    int followerLowWaterMark = balancePolicy.getLowWaterMarkSlotFollowerNums(followerLowAverage);
 
     for (DataNode dataNode : dataNodes) {
       String dataIp = dataNode.getIp();
       int followerCount = followerCounter.getOrDefault(dataIp, 0);
-      if (followerCount > followerHighWaterMark || followerCount < followerLowWaterMark) {
+      if (followerCount > followerHighWaterMark) {
         return false;
       }
     }

@@ -33,7 +33,10 @@ import com.alipay.sofa.registry.server.meta.slot.arrange.ScheduledSlotArranger;
 import com.alipay.sofa.registry.server.meta.slot.manager.SimpleSlotManager;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeoutException;
+
+import com.google.common.collect.Maps;
 import org.assertj.core.util.Lists;
 import org.junit.Assert;
 import org.junit.Before;
@@ -200,5 +203,23 @@ public class SlotTableResourceTest extends AbstractMetaServerTestBase {
     Assert.assertFalse(slotTableStatus.isSlotTableLeaderBalanced());
     Assert.assertFalse(slotTableStatus.isSlotTableFollowerBalanced());
     Assert.assertTrue(slotTableStatus.isSlotTableStable());
+  }
+
+  @Test
+  public void isLeaderBalanced(){
+    Map<String,Integer> leaderCounter = Maps.newHashMap();
+    leaderCounter.put("33.185.68.97", 57);
+    leaderCounter.put("33.185.71.12", 38);
+    leaderCounter.put("33.185.100.146", 58);
+    leaderCounter.put("33.185.70.254", 45);
+    leaderCounter.put("33.185.82.122", 58);
+    ((SimpleSlotManager)slotManager).setSlotNums(256);
+
+    Assert.assertTrue(resource.isSlotTableLeaderBalanced(leaderCounter, Lists.newArrayList(
+           new DataNode(randomURL("33.185.68.97"), getDc()),
+            new DataNode(randomURL("33.185.70.254"), getDc()),
+            new DataNode(randomURL("33.185.100.146"), getDc()),
+            new DataNode(randomURL("33.185.71.12"), getDc()),
+            new DataNode(randomURL("33.185.82.122"), getDc()))));
   }
 }
