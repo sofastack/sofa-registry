@@ -26,6 +26,7 @@ import com.alipay.sofa.registry.lifecycle.impl.AbstractLifecycle;
 import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
 import com.alipay.sofa.registry.observer.Observable;
 import com.alipay.sofa.registry.observer.UnblockingObserver;
+import com.alipay.sofa.registry.server.meta.MetaLeaderService;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.monitor.Metrics;
 import com.alipay.sofa.registry.server.meta.monitor.SlotTableMonitor;
@@ -60,6 +61,8 @@ public class DefaultSlotTableMonitor extends AbstractLifecycle
   @Autowired private SlotGenericResource slotGenericResource;
 
   @Autowired private MetaServerConfig metaServerConfig;
+
+  @Autowired private MetaLeaderService metaLeaderService;
 
   private final Map<String, Integer> dataServerLagCounter = Maps.newConcurrentMap();
 
@@ -159,6 +162,10 @@ public class DefaultSlotTableMonitor extends AbstractLifecycle
 
   @Override
   public void onHeartbeat(HeartbeatRequest<DataNode> heartbeat) {
+    if (!metaLeaderService.amIStableAsLeader()) {
+      logger.info("[onHeartbeat] I'm not leader or not stable now, do not update slot stats");
+      return;
+    }
     long slotTableEpoch = heartbeat.getSlotTableEpoch();
     if (slotTableEpoch < slotManager.getSlotTable().getEpoch()) {
       // after slot-table changed, first time data-server report heartbeat, the epoch is less than
@@ -180,5 +187,22 @@ public class DefaultSlotTableMonitor extends AbstractLifecycle
     dataServerLagCounter.put(heartbeat.getNode().getIp(), 0);
     Metrics.DataSlot.setDataServerSlotLagTimes(heartbeat.getNode().getIp(), 0);
     slotTableStats.checkSlotStatuses(heartbeat.getNode(), heartbeat.getSlotStatus());
+  }
+
+  @VisibleForTesting
+  public DefaultSlotTableMonitor setMetaLeaderService(MetaLeaderService metaLeaderService) {
+    this.metaLeaderService = metaLeaderService;
+    return this;
+  }
+
+  @VisibleForTesting
+  public SlotTableStats getSlotTableStats() {
+    return slotTableStats;
+  }
+
+  @VisibleForTesting
+  public DefaultSlotTableMonitor setSlotTableStats(SlotTableStats slotTableStats) {
+    this.slotTableStats = slotTableStats;
+    return this;
   }
 }
