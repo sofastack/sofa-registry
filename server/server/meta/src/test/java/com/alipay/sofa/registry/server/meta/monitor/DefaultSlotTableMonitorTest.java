@@ -55,6 +55,8 @@ public class DefaultSlotTableMonitorTest extends AbstractMetaServerTestBase {
     slotManager = spy(slotManager);
     monitor.setSlotManager(slotManager);
     monitor.setMetaServerConfig(new MetaServerConfigBean());
+    monitor.setMetaLeaderService(metaLeaderService);
+    makeMetaLeader();
     monitor.postConstruct();
   }
 
@@ -270,5 +272,23 @@ public class DefaultSlotTableMonitorTest extends AbstractMetaServerTestBase {
                 SlotConfig.SLOT_NUM, SlotConfig.SLOT_REPLICAS, SlotConfig.FUNC),
             Lists.newArrayList()));
     Assert.assertTrue(Metrics.DataSlot.getDataServerSlotLagTimes(ip) > 1);
+  }
+
+  @Test
+  public void testNotStableWillNotCheckSlotStats() {
+    when(metaLeaderService.amIStableAsLeader()).thenReturn(false);
+    SlotTableStats slotTableStats = mock(SlotTableStats.class);
+    monitor.setSlotTableStats(slotTableStats);
+    String ip = randomIp();
+    monitor.onHeartbeat(
+            new HeartbeatRequest<DataNode>(
+                    new DataNode(randomURL(ip), getDc()),
+                    slotManager.getSlotTable().getEpoch() + 1,
+                    getDc(),
+                    System.currentTimeMillis(),
+                    new SlotConfig.SlotBasicInfo(
+                            SlotConfig.SLOT_NUM, SlotConfig.SLOT_REPLICAS, SlotConfig.FUNC),
+                    Lists.newArrayList()));
+    verify(slotTableStats, never()).checkSlotStatuses(any(), any());
   }
 }
