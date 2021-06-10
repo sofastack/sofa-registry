@@ -350,4 +350,5 @@ public class DefaultSlotTableStatsTest extends AbstractMetaServerTestBase {
     slotTableStats.initialize();
     slotTableStats.isSlotFollowersStable();
   }
+
 }
