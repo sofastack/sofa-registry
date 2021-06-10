@@ -342,4 +342,12 @@ public class DefaultSlotTableStatsTest extends AbstractMetaServerTestBase {
         new SlotTableGenerator(dataNodes).setNextLeader(1).setNextFollower(2).createSlotTable());
     Assert.assertFalse(slotTableStats.isSlotLeadersStable());
   }
+
+  @Test
+  public void testIsFollowerStableNPE() {
+    slotManager = new SimpleSlotManager();
+    slotTableStats = new DefaultSlotTableStats(slotManager, new MetaServerConfigBean());
+    slotTableStats.initialize();
+    slotTableStats.isSlotFollowersStable();
+  }
 }
