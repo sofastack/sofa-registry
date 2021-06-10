@@ -19,7 +19,6 @@ package com.alipay.sofa.registry.server.data.bootstrap;
 import com.alipay.sofa.registry.common.model.ProcessId;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
-import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -35,17 +34,11 @@ import com.alipay.sofa.registry.server.data.slot.SlotManager;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
-import com.github.rholder.retry.Retryer;
-import com.github.rholder.retry.RetryerBuilder;
-import com.github.rholder.retry.StopStrategies;
-import com.github.rholder.retry.WaitStrategies;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Predicate;
 import java.lang.annotation.Annotation;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Resource;
 import javax.ws.rs.Path;
@@ -102,20 +95,6 @@ public class DataServerBootstrap {
   private final AtomicBoolean serverForSessionStarted = new AtomicBoolean(false);
 
   private final AtomicBoolean serverForDataSyncStarted = new AtomicBoolean(false);
-
-  private final Retryer<Boolean> retryer =
-      RetryerBuilder.<Boolean>newBuilder()
-          .retryIfException()
-          .retryIfResult(
-              new Predicate<Boolean>() {
-                @Override
-                public boolean apply(Boolean input) {
-                  return !input;
-                }
-              })
-          .withWaitStrategy(WaitStrategies.exponentialWait(1000, 10000, TimeUnit.MILLISECONDS))
-          .withStopStrategy(StopStrategies.stopAfterAttempt(10))
-          .build();
 
   /** start dataserver */
   public void start() {
