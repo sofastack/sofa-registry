@@ -69,10 +69,15 @@ public class DefaultSlotTableStats extends AbstractLifecycle implements SlotTabl
 
   @Override
   public boolean isSlotLeadersStable() {
+    lock.readLock().lock();
     try {
-      lock.readLock().lock();
+      if (slotManager.getSlotTable() == SlotTable.INIT) {
+        logger.warn("[isSlotLeadersStable] slot table empty now");
+        return false;
+      }
       for (int slotId = 0; slotId < SlotConfig.SLOT_NUM; slotId++) {
-        String leader = slotManager.getSlotTable().getSlot(slotId).getLeader();
+        Slot slot = slotManager.getSlotTable().getSlot(slotId);
+        String leader = slot.getLeader();
         SlotStats slotStats = slotStatses.get(slotId);
         if (StringUtils.isBlank(leader)
             || !slotStats.getSlot().getLeader().equals(leader)
@@ -89,8 +94,12 @@ public class DefaultSlotTableStats extends AbstractLifecycle implements SlotTabl
 
   @Override
   public boolean isSlotFollowersStable() {
+    lock.readLock().lock();
     try {
-      lock.readLock().lock();
+      if (slotManager.getSlotTable() == SlotTable.INIT) {
+        logger.warn("[isSlotFollowersStable] slot table empty now");
+        return false;
+      }
       for (Map.Entry<Integer, SlotStats> entry : slotStatses.entrySet()) {
         Set<String> followers = slotManager.getSlotTable().getSlot(entry.getKey()).getFollowers();
         for (String follower : followers) {

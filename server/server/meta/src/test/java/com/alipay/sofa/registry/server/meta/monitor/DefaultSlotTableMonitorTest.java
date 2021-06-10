@@ -27,6 +27,8 @@ import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.monitor.impl.DefaultSlotTableMonitor;
 import com.alipay.sofa.registry.server.meta.slot.manager.SimpleSlotManager;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
+
 import org.assertj.core.util.Lists;
 import org.junit.After;
 import org.junit.Assert;
@@ -290,5 +292,18 @@ public class DefaultSlotTableMonitorTest extends AbstractMetaServerTestBase {
                 SlotConfig.SLOT_NUM, SlotConfig.SLOT_REPLICAS, SlotConfig.FUNC),
             Lists.newArrayList()));
     verify(slotTableStats, never()).checkSlotStatuses(any(), any());
+  }
+
+  @Test
+  public void testSlotTableNullWillCauseNPE() throws Exception {
+    slotManager = new SimpleSlotManager();
+    monitor.setSlotManager(slotManager);
+    monitor.setMetaServerConfig(new MetaServerConfigBean());
+    monitor.setMetaLeaderService(metaLeaderService);
+    makeMetaLeader();
+    //init again to re-build slot-table-stats
+    monitor.preDestroy();
+    monitor.postConstruct();
+    monitor.isStableTableStable();
   }
 }
