@@ -27,6 +27,8 @@ import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricRegistry;
+import com.google.common.annotations.VisibleForTesting;
+
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
@@ -150,5 +152,10 @@ public class TaskMetrics {
     public int getWaitingMillis() {
       return 5000;
     }
+  }
+
+  @VisibleForTesting
+  public static void setBoltRegistered(boolean boltRegistered) {
+    TaskMetrics.boltRegistered = boltRegistered;
   }
 }

@@ -53,7 +53,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @author qian.lqlq
  * @version $Id: DataChangeEventCenter.java, v 0.1 2018-03-09 14:25 qian.lqlq Exp $
  */
-public final class DataChangeEventCenter {
+public class DataChangeEventCenter {
   private static final Logger LOGGER = LoggerFactory.getLogger(DataChangeEventCenter.class);
 
   @Autowired private DataServerConfig dataServerConfig;

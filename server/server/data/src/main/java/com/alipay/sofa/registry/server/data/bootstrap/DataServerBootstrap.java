@@ -39,6 +39,7 @@ import com.github.rholder.retry.Retryer;
 import com.github.rholder.retry.RetryerBuilder;
 import com.github.rholder.retry.StopStrategies;
 import com.github.rholder.retry.WaitStrategies;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Predicate;
 import java.lang.annotation.Annotation;
 import java.util.Collection;
@@ -133,12 +134,6 @@ public class DataServerBootstrap {
 
       renewNode();
       fetchProviderData();
-
-      // wait until slot table is get
-      retryer.call(
-          () -> {
-            return slotManager.getSlotTableEpoch() != SlotTable.INIT.getEpoch();
-          });
 
       startScheduler();
 
@@ -315,4 +310,57 @@ public class DataServerBootstrap {
   public boolean getServerForDataSyncStarted() {
     return serverForDataSyncStarted.get();
   }
+
+  @VisibleForTesting
+  DataServerBootstrap setSlotManager(SlotManager slotManager) {
+    this.slotManager = slotManager;
+    return this;
+  }
+
+  @VisibleForTesting DataServerBootstrap setDataServerConfig(DataServerConfig dataServerConfig) {
+    this.dataServerConfig = dataServerConfig;
+    return this;
+  }
+
+  @VisibleForTesting DataServerBootstrap setMetaServerService(MetaServerService metaServerService) {
+    this.metaServerService = metaServerService;
+    return this;
+  }
+
+  @VisibleForTesting DataServerBootstrap setApplicationContext(ApplicationContext applicationContext) {
+    this.applicationContext = applicationContext;
+    return this;
+  }
+
+  @VisibleForTesting DataServerBootstrap setJerseyResourceConfig(ResourceConfig jerseyResourceConfig) {
+    this.jerseyResourceConfig = jerseyResourceConfig;
+    return this;
+  }
+
+  @VisibleForTesting DataServerBootstrap setJerseyExchange(Exchange jerseyExchange) {
+    this.jerseyExchange = jerseyExchange;
+    return this;
+  }
+
+  @VisibleForTesting DataServerBootstrap setBoltExchange(Exchange boltExchange) {
+    this.boltExchange = boltExchange;
+    return this;
+  }
+
+  @VisibleForTesting DataServerBootstrap setDataChangeEventCenter(DataChangeEventCenter dataChangeEventCenter) {
+    this.dataChangeEventCenter = dataChangeEventCenter;
+    return this;
+  }
+
+  @VisibleForTesting DataServerBootstrap setServerHandlers(Collection<AbstractServerHandler> serverHandlers) {
+    this.serverHandlers = serverHandlers;
+    return this;
+  }
+
+  @VisibleForTesting DataServerBootstrap setServerSyncHandlers(Collection<AbstractServerHandler> serverSyncHandlers) {
+    this.serverSyncHandlers = serverSyncHandlers;
+    return this;
+  }
+
+
 }
