@@ -281,14 +281,14 @@ public class DefaultSlotTableMonitorTest extends AbstractMetaServerTestBase {
     monitor.setSlotTableStats(slotTableStats);
     String ip = randomIp();
     monitor.onHeartbeat(
-            new HeartbeatRequest<DataNode>(
-                    new DataNode(randomURL(ip), getDc()),
-                    slotManager.getSlotTable().getEpoch() + 1,
-                    getDc(),
-                    System.currentTimeMillis(),
-                    new SlotConfig.SlotBasicInfo(
-                            SlotConfig.SLOT_NUM, SlotConfig.SLOT_REPLICAS, SlotConfig.FUNC),
-                    Lists.newArrayList()));
+        new HeartbeatRequest<DataNode>(
+            new DataNode(randomURL(ip), getDc()),
+            slotManager.getSlotTable().getEpoch() + 1,
+            getDc(),
+            System.currentTimeMillis(),
+            new SlotConfig.SlotBasicInfo(
+                SlotConfig.SLOT_NUM, SlotConfig.SLOT_REPLICAS, SlotConfig.FUNC),
+            Lists.newArrayList()));
     verify(slotTableStats, never()).checkSlotStatuses(any(), any());
   }
 }

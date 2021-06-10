@@ -30,7 +30,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
-
 import org.apache.commons.collections.CollectionUtils;
 
 public final class PushTrace {
@@ -47,7 +46,6 @@ public final class PushTrace {
 
   private volatile long pushStartTimestamp;
   private final int subNum;
-
 
   private PushTrace(
       SubDatum datum,
@@ -179,7 +177,9 @@ public final class PushTrace {
       datumModifyPushSpanMillis = firstPubPushDelayMillis;
     }
     String cause = pushCause.pushType.toString();
-    PushMetrics.Push.PUSH_DELAY_HISTOGRAM.labels(cause).observe(Math.max(datumModifyPushSpanMillis, datumVersionPushSpanMillis));
+    PushMetrics.Push.PUSH_DELAY_HISTOGRAM
+        .labels(cause)
+        .observe(Math.max(datumModifyPushSpanMillis, datumVersionPushSpanMillis));
     LOGGER.info(
         "{},{},{},{},{},cause={},pubNum={},pubBytes={},pubNew={},delay={},{},{},{},{},"
             + "session={},cliIO={},firstPubDelay={},lastPubDelay={},"

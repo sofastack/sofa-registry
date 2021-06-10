@@ -44,7 +44,7 @@ public class AppRevisionCleaner extends DefaultSessionServerService
 
   final Renewer renewer = new Renewer();
   final Cleaner cleaner = new Cleaner();
-  private final int maxRemoved = 100;
+  private final int maxRemoved = 500;
 
   @Autowired AppRevisionMapper appRevisionMapper;
 
@@ -64,7 +64,7 @@ public class AppRevisionCleaner extends DefaultSessionServerService
   public void init() {
     consecutiveSuccess =
         new ConsecutiveSuccess(
-            slotNum, metadataConfig.getRevisionRenewIntervalMinutes() * 60 * 1000 * 2);
+            slotNum * 3, metadataConfig.getRevisionRenewIntervalMinutes() * 60 * 1000 * 4);
     ConcurrentUtils.createDaemonThread(
             AppRevisionCleaner.class.getSimpleName() + "-renewer", renewer)
         .start();

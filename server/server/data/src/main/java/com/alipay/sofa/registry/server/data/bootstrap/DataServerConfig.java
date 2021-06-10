@@ -117,7 +117,7 @@ public class DataServerConfig {
 
   private int cacheDigestIntervalMinutes = 15;
 
-  private int cacheCountIntervalSecs = 30;
+  private int cacheCountIntervalSecs = 60;
 
   private int lowWaterMark = 1024 * 128;
   private int highWaterMark = 1024 * 256;

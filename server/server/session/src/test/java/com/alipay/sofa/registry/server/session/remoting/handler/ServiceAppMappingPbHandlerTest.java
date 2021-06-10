@@ -19,14 +19,27 @@ package com.alipay.sofa.registry.server.session.remoting.handler;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Mockito.*;
 
+import com.alipay.remoting.Connection;
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.client.pb.ServiceAppMappingRequest;
+import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
+import com.alipay.sofa.registry.remoting.bolt.BoltChannel;
 import com.alipay.sofa.registry.server.session.TestUtils;
 import com.alipay.sofa.registry.server.session.bootstrap.ExecutorManager;
+import com.alipay.sofa.registry.server.session.push.PushSwitchService;
 import com.alipay.sofa.registry.server.session.strategy.AppRevisionHandlerStrategy;
+import com.alipay.sofa.registry.server.shared.env.ServerEnv;
+import io.netty.util.Attribute;
+import io.netty.util.AttributeKey;
 import org.junit.Assert;
 import org.junit.Test;
+import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
+
+import java.net.InetSocketAddress;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ServiceAppMappingPbHandlerTest {
   @Test
@@ -50,8 +63,11 @@ public class ServiceAppMappingPbHandlerTest {
   @Test
   public void testHandle() {
     ServiceAppMappingPbHandler handler = newHandler();
+    handler.pushSwitchService = mock(PushSwitchService.class);
+    when(handler.pushSwitchService.canIpPush(anyString())).thenReturn(true);
 
-    handler.doHandle(null, request());
+    Channel channel = new TestUtils.MockBlotChannel(9600, "192.168.0.3", 56555);
+    handler.doHandle(channel, request());
     verify(handler.appRevisionHandlerStrategy, times(1)).queryApps(anyList());
   }
 

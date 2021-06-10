@@ -18,7 +18,6 @@ package com.alipay.sofa.registry.server.meta.cleaner;
 
 import static org.mockito.Mockito.*;
 
-import com.alipay.sofa.registry.cache.ConsecutiveSuccess;
 import com.alipay.sofa.registry.jdbc.config.DefaultCommonConfig;
 import com.alipay.sofa.registry.jdbc.config.MetadataConfig;
 import com.alipay.sofa.registry.jdbc.domain.AppRevisionDomain;
@@ -45,7 +44,6 @@ public class InterfaceAppsIndexCleanerTest extends AbstractMetaServerTestBase {
         .thenReturn(10000);
     when(interfaceAppsIndexCleaner.defaultCommonConfig.getClusterId())
         .thenReturn("DEFAULT_LOCALDATACENTER");
-    interfaceAppsIndexCleaner.consecutiveSuccess = new ConsecutiveSuccess(3, 1000);
   }
 
   @Test
@@ -69,7 +67,6 @@ public class InterfaceAppsIndexCleanerTest extends AbstractMetaServerTestBase {
     mocked.renewer.runUnthrowable();
     mocked.init();
     mocked.renewer.close();
-    mocked.cleaner.close();
   }
 
   @Test
@@ -83,13 +80,5 @@ public class InterfaceAppsIndexCleanerTest extends AbstractMetaServerTestBase {
     mocked.renew();
     mocked.renew();
     mocked.renew();
-    mocked.markDeleted();
-    verify(domain1, times(1)).setReference(false);
-    verify(domain2, times(1)).setReference(false);
-    verify(mocked.interfaceAppsIndexMapper, times(2)).replace(any());
-    mocked.cleaner.getWaitingMillis();
-    mocked.cleaner.runUnthrowable();
-    mocked.becomeLeader();
-    mocked.loseLeader();
   }
 }

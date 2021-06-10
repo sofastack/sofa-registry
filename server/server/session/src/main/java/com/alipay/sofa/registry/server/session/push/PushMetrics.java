@@ -113,8 +113,9 @@ public final class PushMetrics {
             .help("retry count")
             .labelNames("reason")
             .register();
-    static final Histogram PUSH_DELAY_HISTOGRAM = Histogram.build().
-            linearBuckets(0, 1000, 30)
+    static final Histogram PUSH_DELAY_HISTOGRAM =
+        Histogram.build()
+            .linearBuckets(0, 1000, 30)
             .namespace("session")
             .subsystem("push")
             .name("push_delay")

@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.registry.server.meta.cleaner;
 
-import com.alipay.sofa.registry.cache.ConsecutiveSuccess;
 import com.alipay.sofa.registry.common.model.store.AppRevision;
 import com.alipay.sofa.registry.jdbc.config.DefaultCommonConfig;
 import com.alipay.sofa.registry.jdbc.config.MetadataConfig;
@@ -37,14 +36,11 @@ import javax.annotation.PostConstruct;
 import org.glassfish.jersey.internal.guava.Sets;
 import org.springframework.beans.factory.annotation.Autowired;
 
-public class InterfaceAppsIndexCleaner implements MetaLeaderService.MetaLeaderElectorListener {
+public class InterfaceAppsIndexCleaner {
 
   private static final Logger LOG = LoggerFactory.getLogger("METADATA-EXCHANGE", "[InterfaceApps]");
 
   final Renewer renewer = new Renewer();
-  final Cleaner cleaner = new Cleaner();
-
-  private final int maxRemoved = 100;
 
   @Autowired AppRevisionMapper appRevisionMapper;
 
@@ -56,8 +52,6 @@ public class InterfaceAppsIndexCleaner implements MetaLeaderService.MetaLeaderEl
 
   @Autowired MetadataConfig metadataConfig;
 
-  ConsecutiveSuccess consecutiveSuccess;
-
   public InterfaceAppsIndexCleaner() {}
 
   public InterfaceAppsIndexCleaner(MetaLeaderService metaLeaderService) {
@@ -66,19 +60,12 @@ public class InterfaceAppsIndexCleaner implements MetaLeaderService.MetaLeaderEl
 
   @PostConstruct
   public void init() {
-    consecutiveSuccess =
-        new ConsecutiveSuccess(
-            1, metadataConfig.getInterfaceAppsIndexRenewIntervalMinutes() * 60 * 1000 * 2);
     ConcurrentUtils.createDaemonThread(
             InterfaceAppsIndexCleaner.class.getSimpleName() + "-renewer", renewer)
         .start();
-    ConcurrentUtils.createDaemonThread(
-            InterfaceAppsIndexCleaner.class.getSimpleName() + "-cleaner", cleaner)
-        .start();
-    metaLeaderService.registerListener(this);
   }
 
-  void renew() {
+  public void renew() {
     if (!metaLeaderService.amILeader()) {
       return;
     }
@@ -116,50 +103,9 @@ public class InterfaceAppsIndexCleaner implements MetaLeaderService.MetaLeaderEl
           ConcurrentUtils.sleepUninterruptibly(10, TimeUnit.MILLISECONDS);
         }
       }
-      consecutiveSuccess.success();
     } catch (Throwable e) {
       LOG.error("renew interface apps index failed:", e);
-      consecutiveSuccess.fail();
     }
-  }
-
-  private Date dateBeforeNow(int minutes) {
-    Calendar calendar = Calendar.getInstance();
-    calendar.add(Calendar.MINUTE, -minutes);
-    return calendar.getTime();
-  }
-
-  void markDeleted() {
-    if (!metaLeaderService.amILeader()) {
-      return;
-    }
-    if (!consecutiveSuccess.check()) {
-      return;
-    }
-    List<InterfaceAppsIndexDomain> expiredDomains =
-        interfaceAppsIndexMapper.getExpired(
-            defaultCommonConfig.getClusterId(),
-            dateBeforeNow(metadataConfig.getInterfaceAppsIndexRenewIntervalMinutes() * 5),
-            maxRemoved);
-    for (InterfaceAppsIndexDomain domain : expiredDomains) {
-      domain.setReference(false);
-      interfaceAppsIndexMapper.replace(domain);
-      LOG.info(
-          "mark deleted interface app mapping: {}=>{}",
-          domain.getInterfaceName(),
-          domain.getAppName());
-      ConcurrentUtils.sleepUninterruptibly(10, TimeUnit.MILLISECONDS);
-    }
-  }
-
-  @Override
-  public void becomeLeader() {
-    consecutiveSuccess.clear();
-  }
-
-  @Override
-  public void loseLeader() {
-    consecutiveSuccess.clear();
   }
 
   final class Renewer extends WakeUpLoopRunnable {
@@ -171,19 +117,6 @@ public class InterfaceAppsIndexCleaner implements MetaLeaderService.MetaLeaderEl
     @Override
     public void runUnthrowable() {
       renew();
-    }
-  }
-
-  final class Cleaner extends WakeUpLoopRunnable {
-    @Override
-    public int getWaitingMillis() {
-      int base = metadataConfig.getInterfaceAppsIndexRenewIntervalMinutes() * 60 * 1000;
-      return (int) (base + Math.random() * base);
-    }
-
-    @Override
-    public void runUnthrowable() {
-      markDeleted();
     }
   }
 }

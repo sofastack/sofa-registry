@@ -44,16 +44,7 @@ import com.alipay.sofa.registry.server.meta.remoting.handler.HeartbeatRequestHan
 import com.alipay.sofa.registry.server.meta.remoting.handler.RegistryForbiddenServerHandler;
 import com.alipay.sofa.registry.server.meta.remoting.meta.MetaNodeExchange;
 import com.alipay.sofa.registry.server.meta.remoting.meta.MetaServerRenewService;
-import com.alipay.sofa.registry.server.meta.resource.BlacklistDataResource;
-import com.alipay.sofa.registry.server.meta.resource.ClientManagerResource;
-import com.alipay.sofa.registry.server.meta.resource.HealthResource;
-import com.alipay.sofa.registry.server.meta.resource.MetaDigestResource;
-import com.alipay.sofa.registry.server.meta.resource.MetaLeaderResource;
-import com.alipay.sofa.registry.server.meta.resource.ProvideDataResource;
-import com.alipay.sofa.registry.server.meta.resource.RegistryCoreOpsResource;
-import com.alipay.sofa.registry.server.meta.resource.SlotSyncResource;
-import com.alipay.sofa.registry.server.meta.resource.SlotTableResource;
-import com.alipay.sofa.registry.server.meta.resource.StopPushDataResource;
+import com.alipay.sofa.registry.server.meta.resource.*;
 import com.alipay.sofa.registry.server.meta.resource.filter.LeaderAwareFilter;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.alipay.sofa.registry.server.shared.resource.MetricsResource;
@@ -308,6 +299,12 @@ public class MetaServerConfiguration {
     @ConditionalOnMissingBean
     public StopPushDataResource stopPushDataResource() {
       return new StopPushDataResource();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public CleanerResource cleanerResource() {
+      return new CleanerResource();
     }
 
     @Bean

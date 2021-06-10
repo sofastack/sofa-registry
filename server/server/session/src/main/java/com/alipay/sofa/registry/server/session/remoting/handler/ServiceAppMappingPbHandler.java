@@ -18,10 +18,13 @@ package com.alipay.sofa.registry.server.session.remoting.handler;
 
 import com.alipay.sofa.registry.common.model.client.pb.ServiceAppMappingRequest;
 import com.alipay.sofa.registry.common.model.client.pb.ServiceAppMappingResponse;
+import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.remoting.Channel;
+import com.alipay.sofa.registry.server.session.push.PushSwitchService;
 import com.alipay.sofa.registry.server.shared.remoting.RemotingHelper;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author xiaojian.xj
@@ -29,6 +32,14 @@ import java.util.List;
  */
 public class ServiceAppMappingPbHandler
     extends AbstractClientMetadataRequestHandler<ServiceAppMappingRequest> {
+
+  @Autowired PushSwitchService pushSwitchService;
+
+  private final ServiceAppMappingResponse stopPushResponse =
+      ServiceAppMappingResponse.newBuilder()
+          .setStatusCode(ValueConstants.METADATA_STATUS_PROCESS_ERROR)
+          .setMessage("push stopped")
+          .build();
 
   @Override
   public void checkParam(ServiceAppMappingRequest request) {
@@ -39,20 +50,24 @@ public class ServiceAppMappingPbHandler
   @Override
   public Object doHandle(Channel channel, ServiceAppMappingRequest request) {
     List<String> services = request.getServiceIdsList();
-    ServiceAppMappingResponse response = appRevisionHandlerStrategy.queryApps(services);
-    return response;
+    if (!pushSwitchService.canIpPush(channel.getRemoteAddress().getAddress().getHostAddress())) {
+      return stopPushResponse;
+    }
+    return appRevisionHandlerStrategy.queryApps(services);
   }
 
   @Override
   protected void logRequest(Channel channel, ServiceAppMappingRequest request) {
     if (exchangeLog.isInfoEnabled()) {
-      StringBuilder sb = new StringBuilder(256);
-      sb.append("[").append(this.getClass().getSimpleName()).append("] ");
-      sb.append("Remote:")
-          .append(RemotingHelper.getChannelRemoteAddress(channel))
-          .append(" ServiceCount: ")
-          .append(request.getServiceIdsList().size());
-      exchangeLog.info(sb.toString());
+      String sb =
+          "["
+              + this.getClass().getSimpleName()
+              + "] "
+              + "Remote:"
+              + RemotingHelper.getChannelRemoteAddress(channel)
+              + " ServiceCount: "
+              + request.getServiceIdsList().size();
+      exchangeLog.info(sb);
     }
   }
 
