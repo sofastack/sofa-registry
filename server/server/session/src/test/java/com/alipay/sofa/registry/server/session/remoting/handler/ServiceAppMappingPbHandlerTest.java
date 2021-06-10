@@ -63,9 +63,6 @@ public class ServiceAppMappingPbHandlerTest {
   @Test
   public void testHandle() {
     ServiceAppMappingPbHandler handler = newHandler();
-    handler.pushSwitchService = mock(PushSwitchService.class);
-    when(handler.pushSwitchService.canIpPush(anyString())).thenReturn(true);
-
     Channel channel = new TestUtils.MockBlotChannel(9600, "192.168.0.3", 56555);
     handler.doHandle(channel, request());
     verify(handler.appRevisionHandlerStrategy, times(1)).queryApps(anyList());

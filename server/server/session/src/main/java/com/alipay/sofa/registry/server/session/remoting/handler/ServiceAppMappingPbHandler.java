@@ -17,14 +17,10 @@
 package com.alipay.sofa.registry.server.session.remoting.handler;
 
 import com.alipay.sofa.registry.common.model.client.pb.ServiceAppMappingRequest;
-import com.alipay.sofa.registry.common.model.client.pb.ServiceAppMappingResponse;
-import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.server.session.push.PushSwitchService;
 import com.alipay.sofa.registry.server.shared.remoting.RemotingHelper;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import java.util.List;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author xiaojian.xj
@@ -32,14 +28,6 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public class ServiceAppMappingPbHandler
     extends AbstractClientMetadataRequestHandler<ServiceAppMappingRequest> {
-
-  @Autowired PushSwitchService pushSwitchService;
-
-  private final ServiceAppMappingResponse stopPushResponse =
-      ServiceAppMappingResponse.newBuilder()
-          .setStatusCode(ValueConstants.METADATA_STATUS_PROCESS_ERROR)
-          .setMessage("push stopped")
-          .build();
 
   @Override
   public void checkParam(ServiceAppMappingRequest request) {
@@ -50,9 +38,6 @@ public class ServiceAppMappingPbHandler
   @Override
   public Object doHandle(Channel channel, ServiceAppMappingRequest request) {
     List<String> services = request.getServiceIdsList();
-    if (!pushSwitchService.canIpPush(channel.getRemoteAddress().getAddress().getHostAddress())) {
-      return stopPushResponse;
-    }
     return appRevisionHandlerStrategy.queryApps(services);
   }
 
