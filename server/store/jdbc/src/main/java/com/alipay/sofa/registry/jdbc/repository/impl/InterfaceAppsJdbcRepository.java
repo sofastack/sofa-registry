@@ -63,6 +63,11 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository {
             return interfaceAppsIndexMapper.queryLargeThan(
                 defaultCommonConfig.getClusterId(), start, limit);
           }
+
+          @Override
+          protected Logger getLogger() {
+            return LOG;
+          }
         };
   }
 

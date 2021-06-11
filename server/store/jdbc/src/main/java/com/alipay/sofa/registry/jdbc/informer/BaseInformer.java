@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.jdbc.informer;
 
+import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import java.util.List;
@@ -40,11 +41,12 @@ public abstract class BaseInformer<T extends DbEntry, C extends DbEntryContainer
 
   protected int watchLoopIntervalMs = 1000;
   protected int listLoopIntervalMs = 1000 * 60 * 30;
-  protected int checkLoopIntervalMs = 100 * 60 * 5;
   private final String name;
+  private final Logger logger;
 
   public BaseInformer(String name) {
     this.name = name;
+    this.logger = getLogger();
   }
 
   public synchronized void start() {
@@ -52,18 +54,34 @@ public abstract class BaseInformer<T extends DbEntry, C extends DbEntryContainer
       return;
     }
     ConcurrentUtils.createDaemonThread(name + "-WatchLoop", watchLoop).start();
-    ConcurrentUtils.createDaemonThread(name + "-ListLoop", listLoop).start();
+    //    ConcurrentUtils.createDaemonThread(name + "-ListLoop", listLoop).start();
     started = true;
   }
 
   private void watch() {
     syncStart();
     try {
-      long maxId = listOnePage(this.container, lastLoadId, 1);
-      if (maxId == lastLoadId) {
+      long start = lastLoadId;
+      long maxId =
+          listOnePage(
+              (T entry) -> {
+                container.onEntry(entry);
+                logger.info("start watch from {} received entry: {}", start, entry);
+              },
+              lastLoadId,
+              1);
+      if (maxId == start) {
         return;
       }
-      maxId = listToTail(this.container, maxId, 100);
+      maxId =
+          listToTail(
+              (T entry) -> {
+                container.onEntry(entry);
+                logger.info("watch received entry: {}", entry);
+              },
+              maxId,
+              100);
+      logger.info("end watch to {}", maxId);
       lastLoadId = maxId;
     } finally {
       syncEnd();
@@ -74,7 +92,8 @@ public abstract class BaseInformer<T extends DbEntry, C extends DbEntryContainer
     syncStart();
     try {
       C newContainer = containerFactory();
-      long maxId = listToTail(newContainer, 0, 1000);
+      long maxId = listToTail(newContainer::onEntry, 0, 1000);
+      logger.info("end list to {}", maxId);
       this.container = newContainer;
       lastLoadId = maxId;
     } finally {
@@ -82,10 +101,10 @@ public abstract class BaseInformer<T extends DbEntry, C extends DbEntryContainer
     }
   }
 
-  private long listToTail(C result, long start, int page) {
+  private long listToTail(EntryCallable<T> callable, long start, int page) {
     long maxId;
     while (true) {
-      maxId = listOnePage(result, start, page);
+      maxId = listOnePage(callable, start, page);
       if (maxId == start) {
         break;
       }
@@ -95,11 +114,11 @@ public abstract class BaseInformer<T extends DbEntry, C extends DbEntryContainer
     return maxId;
   }
 
-  private long listOnePage(C result, long start, int page) {
+  private long listOnePage(EntryCallable<T> callable, long start, int page) {
     long maxId = start;
     List<T> entries = listFromStorage(start, page);
     for (T entry : entries) {
-      result.onEntry(entry);
+      callable.onEntry(entry);
       start = Math.max(start, entry.getId());
       maxId = start;
     }
@@ -138,6 +157,8 @@ public abstract class BaseInformer<T extends DbEntry, C extends DbEntryContainer
   protected abstract C containerFactory();
 
   protected abstract List<T> listFromStorage(long start, int limit);
+
+  protected abstract Logger getLogger();
 
   private final class WatchLoop extends WakeUpLoopRunnable {
 
@@ -179,5 +200,9 @@ public abstract class BaseInformer<T extends DbEntry, C extends DbEntryContainer
         listLock.unlock();
       }
     }
+  }
+
+  interface EntryCallable<T> {
+    void onEntry(T entry);
   }
 }

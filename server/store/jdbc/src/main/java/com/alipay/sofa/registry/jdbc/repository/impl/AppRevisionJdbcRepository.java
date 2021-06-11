@@ -102,6 +102,11 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository {
             return appRevisionMapper.listRevisions(
                 defaultCommonConfig.getClusterId(), start, limit);
           }
+
+          @Override
+          protected Logger getLogger() {
+            return LOG;
+          }
         };
   }
 

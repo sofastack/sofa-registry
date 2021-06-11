@@ -223,4 +223,36 @@ public class AppRevisionDomain implements DbEntry {
   public void setDeleted(boolean deleted) {
     this.deleted = deleted;
   }
+
+  @Override
+  public String toString() {
+    return "AppRevisionDomain{"
+        + "id="
+        + id
+        + ", dataCenter='"
+        + dataCenter
+        + '\''
+        + ", revision='"
+        + revision
+        + '\''
+        + ", appName='"
+        + appName
+        + '\''
+        + ", clientVersion='"
+        + clientVersion
+        + '\''
+        + ", baseParams='"
+        + baseParams
+        + '\''
+        + ", serviceParams='"
+        + serviceParams
+        + '\''
+        + ", gmtCreate="
+        + gmtCreate
+        + ", gmtModify="
+        + gmtModify
+        + ", deleted="
+        + deleted
+        + '}';
+  }
 }
