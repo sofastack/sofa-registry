@@ -28,7 +28,6 @@ import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricRegistry;
 import com.google.common.annotations.VisibleForTesting;
-
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;

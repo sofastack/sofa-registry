@@ -93,6 +93,8 @@ public interface SessionServerConfig extends ServerShareConfig {
 
   int getPushTaskExecutorQueueSize();
 
+  int getPushTaskBufferBucketSize();
+
   int getPushTaskRetryTimes();
 
   int getPushDataTaskRetryFirstDelayMillis();
