@@ -194,6 +194,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
   private int systemPropertyIntervalMillis = 3000;
 
+  private int pushTaskBufferBucketSize = 4;
   /**
    * constructor
    *
@@ -1206,5 +1207,14 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
   public void setConsoleExecutorQueueSize(int consoleExecutorQueueSize) {
     this.consoleExecutorQueueSize = consoleExecutorQueueSize;
+  }
+
+  @Override
+  public int getPushTaskBufferBucketSize() {
+    return pushTaskBufferBucketSize;
+  }
+
+  public void setPushTaskBufferBucketSize(int pushTaskBufferBucketSize) {
+    this.pushTaskBufferBucketSize = pushTaskBufferBucketSize;
   }
 }

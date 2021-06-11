@@ -296,50 +296,57 @@ public class DataServerBootstrap {
     return this;
   }
 
-  @VisibleForTesting DataServerBootstrap setDataServerConfig(DataServerConfig dataServerConfig) {
+  @VisibleForTesting
+  DataServerBootstrap setDataServerConfig(DataServerConfig dataServerConfig) {
     this.dataServerConfig = dataServerConfig;
     return this;
   }
 
-  @VisibleForTesting DataServerBootstrap setMetaServerService(MetaServerService metaServerService) {
+  @VisibleForTesting
+  DataServerBootstrap setMetaServerService(MetaServerService metaServerService) {
     this.metaServerService = metaServerService;
     return this;
   }
 
-  @VisibleForTesting DataServerBootstrap setApplicationContext(ApplicationContext applicationContext) {
+  @VisibleForTesting
+  DataServerBootstrap setApplicationContext(ApplicationContext applicationContext) {
     this.applicationContext = applicationContext;
     return this;
   }
 
-  @VisibleForTesting DataServerBootstrap setJerseyResourceConfig(ResourceConfig jerseyResourceConfig) {
+  @VisibleForTesting
+  DataServerBootstrap setJerseyResourceConfig(ResourceConfig jerseyResourceConfig) {
     this.jerseyResourceConfig = jerseyResourceConfig;
     return this;
   }
 
-  @VisibleForTesting DataServerBootstrap setJerseyExchange(Exchange jerseyExchange) {
+  @VisibleForTesting
+  DataServerBootstrap setJerseyExchange(Exchange jerseyExchange) {
     this.jerseyExchange = jerseyExchange;
     return this;
   }
 
-  @VisibleForTesting DataServerBootstrap setBoltExchange(Exchange boltExchange) {
+  @VisibleForTesting
+  DataServerBootstrap setBoltExchange(Exchange boltExchange) {
     this.boltExchange = boltExchange;
     return this;
   }
 
-  @VisibleForTesting DataServerBootstrap setDataChangeEventCenter(DataChangeEventCenter dataChangeEventCenter) {
+  @VisibleForTesting
+  DataServerBootstrap setDataChangeEventCenter(DataChangeEventCenter dataChangeEventCenter) {
     this.dataChangeEventCenter = dataChangeEventCenter;
     return this;
   }
 
-  @VisibleForTesting DataServerBootstrap setServerHandlers(Collection<AbstractServerHandler> serverHandlers) {
+  @VisibleForTesting
+  DataServerBootstrap setServerHandlers(Collection<AbstractServerHandler> serverHandlers) {
     this.serverHandlers = serverHandlers;
     return this;
   }
 
-  @VisibleForTesting DataServerBootstrap setServerSyncHandlers(Collection<AbstractServerHandler> serverSyncHandlers) {
+  @VisibleForTesting
+  DataServerBootstrap setServerSyncHandlers(Collection<AbstractServerHandler> serverSyncHandlers) {
     this.serverSyncHandlers = serverSyncHandlers;
     return this;
   }
-
-
 }

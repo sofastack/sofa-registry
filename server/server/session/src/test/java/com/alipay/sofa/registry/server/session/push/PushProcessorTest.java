@@ -16,8 +16,6 @@
  */
 package com.alipay.sofa.registry.server.session.push;
 
-import static com.alipay.sofa.registry.server.session.push.PushMetrics.Push.*;
-
 import com.alipay.remoting.rpc.exception.InvokeTimeoutException;
 import com.alipay.sofa.registry.common.model.store.BaseInfo;
 import com.alipay.sofa.registry.common.model.store.SubDatum;
@@ -30,14 +28,16 @@ import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfigBean
 import com.alipay.sofa.registry.server.session.node.service.ClientNodeService;
 import com.alipay.sofa.registry.server.session.provideData.FetchGrayPushSwitchService;
 import com.alipay.sofa.registry.server.session.provideData.FetchStopPushService;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.atomic.AtomicReference;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
+
+import java.util.Collections;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.atomic.AtomicReference;
+
+import static com.alipay.sofa.registry.server.session.push.PushMetrics.Push.*;
 
 public class PushProcessorTest {
   private String zone = "testZone";
@@ -46,20 +46,18 @@ public class PushProcessorTest {
 
   @Test
   public void testFire() throws Exception {
-    PushProcessor processor = new PushProcessor();
-    processor.sessionServerConfig = TestUtils.newSessionConfig("testDc");
-    processor.pushSwitchService = new PushSwitchService();
-    processor.pushSwitchService.setFetchStopPushService(new FetchStopPushService());
-    processor.pushSwitchService.setFetchGrayPushSwitchService(new FetchGrayPushSwitchService());
-    Assert.assertTrue(processor.watchDog.getWaitingMillis() < 200);
+    final double skip = PENDING_SKIP_COUNTER.get();
+    final double replace = PENDING_REPLACE_COUNTER.get();
+    PushProcessor processor = newProcessor();
+    final PushTaskBuffer.BufferWorker worker = processor.taskBuffer.workers[0];
 
-    Assert.assertEquals(processor.watchCommit().size(), 0);
+    Assert.assertEquals(processor.taskBuffer.watchBuffer(worker), 0);
     TriggerPushContext ctx =
         new TriggerPushContext("testDc", 100, null, System.currentTimeMillis());
     PushCause pushCause = new PushCause(ctx, PushType.Reg, System.currentTimeMillis());
     Subscriber subscriber = TestUtils.newZoneSubscriber(dataId, zone);
     SubDatum datum = TestUtils.newSubDatum(subscriber.getDataId(), 100, Collections.emptyList());
-    Assert.assertTrue(processor.pendingTasks.isEmpty());
+    Assert.assertTrue(worker.bufferMap.isEmpty());
 
     long now1 = System.currentTimeMillis();
     processor.firePush(
@@ -69,17 +67,17 @@ public class PushProcessorTest {
         datum);
     long now2 = System.currentTimeMillis();
 
-    Assert.assertEquals(processor.pendingTasks.size(), 1);
-    PushProcessor.PendingTaskKey taskKey = processor.pendingTasks.keySet().iterator().next();
+    Assert.assertEquals(worker.bufferMap.size(), 1);
+    PushTaskBuffer.BufferTaskKey taskKey = worker.bufferMap.keySet().iterator().next();
     Assert.assertTrue(taskKey.toString(), taskKey.toString().contains(dataId));
 
-    PushProcessor.PushTask task = processor.pendingTasks.values().iterator().next();
+    PushTask task = worker.bufferMap.values().iterator().next();
     TestUtils.assertBetween(
         task.expireTimestamp,
         now1 + processor.sessionServerConfig.getPushDataTaskDebouncingMillis(),
         now2 + processor.sessionServerConfig.getPushDataTaskDebouncingMillis());
 
-    Assert.assertEquals(PENDING_SKIP_COUNTER.get(), 0, 0);
+    Assert.assertEquals(PENDING_SKIP_COUNTER.get(), skip, 0);
     // make sure the expire ts is diff
     Thread.sleep(1);
     // fire again, skip
@@ -88,20 +86,20 @@ public class PushProcessorTest {
         NetUtil.getLocalSocketAddress(),
         Collections.singletonMap(subscriber.getRegisterId(), subscriber),
         datum);
-    Assert.assertEquals(PENDING_SKIP_COUNTER.get(), 1, 0);
-    Assert.assertEquals(processor.pendingTasks.size(), 1, 0);
+    Assert.assertEquals(PENDING_SKIP_COUNTER.get(), skip + 1, 0);
+    Assert.assertEquals(worker.bufferMap.size(), 1, 0);
 
     // fire after
-    Assert.assertEquals(PENDING_REPLACE_COUNTER.get(), 0, 0);
+    Assert.assertEquals(PENDING_REPLACE_COUNTER.get(), replace, 0);
     datum = TestUtils.newSubDatum(subscriber.getDataId(), 200, Collections.emptyList());
     processor.firePush(
         pushCause,
         NetUtil.getLocalSocketAddress(),
         Collections.singletonMap(subscriber.getRegisterId(), subscriber),
         datum);
-    Assert.assertEquals(PENDING_REPLACE_COUNTER.get(), 1, 0);
-    Assert.assertEquals(processor.pendingTasks.size(), 1, 0);
-    PushProcessor.PushTask replaceTask = processor.pendingTasks.get(taskKey);
+    Assert.assertEquals(PENDING_REPLACE_COUNTER.get(), replace + 1, 0);
+    Assert.assertEquals(worker.bufferMap.size(), 1, 0);
+    PushTask replaceTask = worker.bufferMap.get(taskKey);
     Assert.assertNotEquals(replaceTask, task);
     // replace.task expire set to prev.expire
     Assert.assertEquals(replaceTask.expireTimestamp, task.expireTimestamp);
@@ -109,13 +107,13 @@ public class PushProcessorTest {
 
     // now there is one pending task with delay
     processor.pushSwitchService.fetchStopPushService.setStopPushSwitch(version, true);
-    Assert.assertEquals(processor.watchCommit().size(), 0);
+    Assert.assertEquals(processor.taskBuffer.watchBuffer(worker), 0);
 
     processor.pushSwitchService.fetchStopPushService.setStopPushSwitch(version, false);
     // task has clean
-    Assert.assertEquals(processor.watchCommit().size(), 0);
+    Assert.assertEquals(processor.taskBuffer.watchBuffer(worker), 0);
     // first suspend, avoid run watchdog
-    processor.watchDog.suspend();
+    processor.taskBuffer.suspend();
     // pushExecutor init
     processor.init();
     // push again
@@ -132,36 +130,29 @@ public class PushProcessorTest {
         NetUtil.getLocalSocketAddress(),
         Collections.singletonMap(subscriber.getRegisterId() + "-test", subscriber),
         datum);
-    Assert.assertEquals(processor.pendingTasks.size(), 2);
+    Assert.assertEquals(worker.bufferMap.size(), 2);
     // only one, sub is not expire
-    List<PushProcessor.PushTask> commits = processor.watchCommit();
-    Assert.assertEquals(1, commits.size());
-    Assert.assertEquals(processor.watchCommit().size(), 0);
-    Assert.assertEquals(processor.pendingTasks.size(), 1);
+    Assert.assertEquals(1, processor.taskBuffer.watchBuffer(worker));
+    Assert.assertEquals(processor.taskBuffer.watchBuffer(worker), 0);
+    Assert.assertEquals(worker.bufferMap.size(), 1);
 
-    task = processor.pendingTasks.values().iterator().next();
+    task = worker.bufferMap.values().iterator().next();
     Assert.assertEquals(task.trace.pushCause.pushType, PushType.Sub);
     // make task expire
     task.expireTimestamp = System.currentTimeMillis();
 
-    commits = processor.watchCommit();
-    Assert.assertEquals(commits.size(), 1);
-    Assert.assertEquals(processor.watchCommit().size(), 0);
-    Assert.assertEquals(processor.pendingTasks.size(), 0);
+    Assert.assertEquals(processor.taskBuffer.watchBuffer(worker), 1);
+    Assert.assertEquals(processor.taskBuffer.watchBuffer(worker), 0);
+    Assert.assertEquals(worker.bufferMap.size(), 0);
 
-    processor.watchDog.resume();
+    processor.taskBuffer.resume();
   }
 
   @Test
   public void testPush() throws Exception {
-    PushProcessor processor = new PushProcessor();
-    SessionServerConfigBean config = TestUtils.newSessionConfig("testDc");
-    processor.sessionServerConfig = config;
-    processor.pushSwitchService = new PushSwitchService();
-    processor.pushSwitchService.setFetchStopPushService(new FetchStopPushService());
-    processor.pushSwitchService.setFetchGrayPushSwitchService(new FetchGrayPushSwitchService());
-    processor.pushDataGenerator = new PushDataGenerator();
-    processor.pushDataGenerator.sessionServerConfig = config;
+    PushProcessor processor = newProcessor();
+    final PushTaskBuffer.BufferWorker worker = processor.taskBuffer.workers[0];
+
     TriggerPushContext ctx =
         new TriggerPushContext("testDc", 100, null, System.currentTimeMillis());
     PushCause pushCause = new PushCause(ctx, PushType.Reg, System.currentTimeMillis());
@@ -174,14 +165,15 @@ public class PushProcessorTest {
         Collections.singletonMap(subscriber.getRegisterId(), subscriber),
         datum);
 
-    PushProcessor.PushTask task = processor.pendingTasks.values().iterator().next();
-    processor.pendingTasks.clear();
+    PushTask task = worker.bufferMap.values().iterator().next();
+    worker.bufferMap.clear();
 
     processor.pushSwitchService.fetchStopPushService.setStopPushSwitch(version, true);
     Assert.assertFalse(processor.doPush(task));
 
     processor.pushSwitchService.fetchStopPushService.setStopPushSwitch(version, false);
     // clientNodeService is null
+    processor.clientNodeService = null;
     Assert.assertFalse(processor.doPush(task));
     Assert.assertEquals(processor.pushingTasks.size(), 0);
 
@@ -193,25 +185,25 @@ public class PushProcessorTest {
         .pushWithCallback(Mockito.anyObject(), Mockito.anyObject(), Mockito.anyObject());
     Assert.assertEquals(processor.pushingTasks.size(), 1);
 
-    PushProcessor.PushTask pushing = processor.pushingTasks.values().iterator().next();
+    PushTask pushing = processor.pushingTasks.values().iterator().next();
     Assert.assertEquals(pushing, task);
-    PushProcessor.PushingTaskKey pushingKey = processor.pushingTasks.keySet().iterator().next();
+    PushTask.PushingTaskKey pushingKey = processor.pushingTasks.keySet().iterator().next();
     Assert.assertTrue(pushingKey.toString(), pushingKey.toString().contains(dataId));
-    PushProcessor.PushingTaskKey otherPushingKey =
-        new PushProcessor.PushingTaskKey(
+    PushTask.PushingTaskKey otherPushingKey =
+        new PushTask.PushingTaskKey(
             pushingKey.dataInfoId,
             pushingKey.addr,
             pushingKey.scopeEnum,
             BaseInfo.ClientVersion.MProtocolpackage);
 
     Assert.assertNotEquals(pushingKey, otherPushingKey);
-
+    SessionServerConfigBean config = (SessionServerConfigBean) processor.sessionServerConfig;
     // make sure check pushing success
     config.setClientNodeExchangeTimeoutMillis(1000 * 30);
     // no retry
     config.setPushTaskRetryTimes(0);
     Assert.assertFalse(processor.doPush(task));
-    Assert.assertEquals(processor.pendingTasks.size(), 0);
+    Assert.assertEquals(worker.bufferMap.size(), 0);
     Assert.assertEquals(task.retryCount, 1);
 
     // support retry
@@ -221,7 +213,7 @@ public class PushProcessorTest {
     long now1 = System.currentTimeMillis();
     Assert.assertFalse(processor.doPush(task));
     // has add pending
-    Assert.assertEquals(processor.pendingTasks.size(), 1);
+    Assert.assertEquals(worker.bufferMap.size(), 1);
     TestUtils.assertBetween(
         task.expireTimestamp,
         now1 + processor.getRetryBackoffTime(1),
@@ -291,6 +283,8 @@ public class PushProcessorTest {
   @Test
   public void testOnCallback() throws Exception {
     PushProcessor processor = newProcessor();
+    final PushTaskBuffer.BufferWorker worker = processor.taskBuffer.workers[0];
+
     TriggerPushContext ctx =
         new TriggerPushContext("testDc", 100, null, System.currentTimeMillis());
     PushCause pushCause = new PushCause(ctx, PushType.Reg, System.currentTimeMillis());
@@ -303,7 +297,7 @@ public class PushProcessorTest {
         Collections.singletonMap(subscriber.getRegisterId(), subscriber),
         datum);
 
-    PushProcessor.PushTask task = processor.pendingTasks.values().iterator().next();
+    PushTask task = worker.bufferMap.values().iterator().next();
     processor.doPush(task);
     Thread.sleep(1);
     Assert.assertEquals(processor.pushingTasks.size(), 1);
@@ -319,6 +313,7 @@ public class PushProcessorTest {
   private PushProcessor newProcessor() {
     PushProcessor processor = new PushProcessor();
     SessionServerConfigBean config = TestUtils.newSessionConfig("testDc");
+    config.setPushTaskBufferBucketSize(1);
     processor.sessionServerConfig = config;
     processor.clientNodeService = Mockito.mock(ClientNodeService.class);
     processor.pushSwitchService = new PushSwitchService();
@@ -326,12 +321,15 @@ public class PushProcessorTest {
     processor.pushSwitchService.setFetchGrayPushSwitchService(new FetchGrayPushSwitchService());
     processor.pushDataGenerator = new PushDataGenerator();
     processor.pushDataGenerator.sessionServerConfig = config;
+    processor.intTaskBuffer();
+    Assert.assertEquals(1, processor.taskBuffer.workers.length);
     return processor;
   }
 
   @Test
   public void testOnException() throws Exception {
     PushProcessor processor = newProcessor();
+    final PushTaskBuffer.BufferWorker worker = processor.taskBuffer.workers[0];
     TriggerPushContext ctx =
         new TriggerPushContext("testDc", 100, null, System.currentTimeMillis());
     PushCause pushCause = new PushCause(ctx, PushType.Reg, System.currentTimeMillis());
@@ -344,7 +342,7 @@ public class PushProcessorTest {
         Collections.singletonMap(subscriber.getRegisterId(), subscriber),
         datum);
 
-    PushProcessor.PushTask task = processor.pendingTasks.values().iterator().next();
+    PushTask task = worker.bufferMap.values().iterator().next();
     processor.doPush(task);
     Thread.sleep(1);
     Assert.assertEquals(processor.pushingTasks.size(), 1);
@@ -366,6 +364,8 @@ public class PushProcessorTest {
   @Test
   public void testClean() {
     PushProcessor processor = newProcessor();
+    final PushTaskBuffer.BufferWorker worker = processor.taskBuffer.workers[0];
+
     Assert.assertEquals(0, processor.cleanPushingTaskRunTooLong());
     TriggerPushContext ctx =
         new TriggerPushContext("testDc", 100, null, System.currentTimeMillis());
@@ -378,7 +378,7 @@ public class PushProcessorTest {
         NetUtil.getLocalSocketAddress(),
         Collections.singletonMap(subscriber.getRegisterId(), subscriber),
         datum);
-    PushProcessor.PushTask task = processor.pendingTasks.values().iterator().next();
+    PushTask task = worker.bufferMap.values().iterator().next();
     processor.doPush(task);
     // no run too long
     Assert.assertEquals(0, processor.cleanPushingTaskRunTooLong());
@@ -392,9 +392,9 @@ public class PushProcessorTest {
     PushProcessor processor = new PushProcessor();
     Subscriber subscriber = TestUtils.newZoneSubscriber(dataId, zone);
     SubDatum datum = TestUtils.newSubDatum(subscriber.getDataId(), 100, Collections.emptyList());
-    PushProcessor.PushTask task =
+    PushTask task =
         processor
-        .new PushTask(
+        .new PushTaskImpl(
             null, null, Collections.singletonMap(subscriber.getRegisterId(), subscriber), datum);
 
     Assert.assertTrue(processor.interestOfDatum(task));

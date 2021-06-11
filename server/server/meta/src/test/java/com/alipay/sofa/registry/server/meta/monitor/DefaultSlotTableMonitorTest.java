@@ -27,8 +27,6 @@ import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.monitor.impl.DefaultSlotTableMonitor;
 import com.alipay.sofa.registry.server.meta.slot.manager.SimpleSlotManager;
 import java.util.List;
-import java.util.concurrent.TimeoutException;
-
 import org.assertj.core.util.Lists;
 import org.junit.After;
 import org.junit.Assert;
@@ -301,7 +299,7 @@ public class DefaultSlotTableMonitorTest extends AbstractMetaServerTestBase {
     monitor.setMetaServerConfig(new MetaServerConfigBean());
     monitor.setMetaLeaderService(metaLeaderService);
     makeMetaLeader();
-    //init again to re-build slot-table-stats
+    // init again to re-build slot-table-stats
     monitor.preDestroy();
     monitor.postConstruct();
     monitor.isStableTableStable();
