@@ -199,4 +199,30 @@ public class InterfaceAppsIndexDomain implements DbEntry {
   public void setHashcode(String hashcode) {
     this.hashcode = hashcode;
   }
+
+  @Override
+  public String toString() {
+    return "InterfaceAppsIndexDomain{"
+        + "id="
+        + id
+        + ", dataCenter='"
+        + dataCenter
+        + '\''
+        + ", interfaceName='"
+        + interfaceName
+        + '\''
+        + ", appName='"
+        + appName
+        + '\''
+        + ", reference="
+        + reference
+        + ", hashcode='"
+        + hashcode
+        + '\''
+        + ", gmtCreate="
+        + gmtCreate
+        + ", gmtModify="
+        + gmtModify
+        + '}';
+  }
 }
