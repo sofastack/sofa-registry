@@ -33,9 +33,9 @@ import org.springframework.util.CollectionUtils;
  */
 public class AppRevisionDomainConvertor {
 
-  public static final TypeReference BASE_FORMAT =
+  public static final TypeReference<HashMap<String, List<String>>> BASE_FORMAT =
       new TypeReference<HashMap<String, List<String>>>() {};
-  public static final TypeReference SERVICE_FORMAT =
+  public static final TypeReference<HashMap<String, AppRevisionInterface>> SERVICE_FORMAT =
       new TypeReference<HashMap<String, AppRevisionInterface>>() {};
 
   public static AppRevisionDomain convert2Domain(String dataCenter, AppRevision appRevision) {

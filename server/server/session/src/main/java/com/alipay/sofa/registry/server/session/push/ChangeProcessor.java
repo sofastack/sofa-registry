@@ -17,7 +17,6 @@
 package com.alipay.sofa.registry.server.session.push;
 
 import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.StringFormatter;
@@ -30,7 +29,7 @@ import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class ChangeProcessor {
-  private static final Logger LOGGER = LoggerFactory.getLogger(ChangeProcessor.class);
+  private static final Logger LOGGER = PushLog.LOGGER;
 
   @Autowired SessionServerConfig sessionServerConfig;
 

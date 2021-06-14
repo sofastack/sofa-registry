@@ -28,7 +28,7 @@ rem set user.home
 set "JAVA_OPT=%JAVA_OPT% -Duser.home=%BASE_DIR%"
 
 rem springboot conf
-set "SPRINGBOOT_OPTS=%SPRINGBOOT_OPTS% -DLog4jContextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector -Dlogging.config=%BASE_DIR%\conf\log4j2.xml -Dlog4j.configurationFile=%BASE_DIR%\conf\log4j2.xml"
+set "SPRINGBOOT_OPTS=%SPRINGBOOT_OPTS% -DLog4jContextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector -Dlog4j2.debug=true -DAsyncLogger.WaitStrategy=YIELD -Dlogging.config=%BASE_DIR%\conf\log4j2.xml -Dlog4j.configurationFile=%BASE_DIR%\conf\log4j2.xml"
 
 rem heap size
 set HEAP_MAX=512

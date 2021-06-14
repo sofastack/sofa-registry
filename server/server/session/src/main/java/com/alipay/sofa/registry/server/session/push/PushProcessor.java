@@ -24,7 +24,6 @@ import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.store.SubDatum;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.CallbackHandler;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.ChannelOverflowException;
@@ -48,7 +47,7 @@ import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class PushProcessor {
-  private static final Logger LOGGER = LoggerFactory.getLogger(PushProcessor.class);
+  private static final Logger LOGGER = PushLog.LOGGER;
 
   private KeyedThreadPoolExecutor pushExecutor;
   PushTaskBuffer taskBuffer;
@@ -252,7 +251,7 @@ public class PushProcessor {
       pushingTasks.put(task.pushingTaskKey, task);
       clientNodeService.pushWithCallback(
           data, task.subscriber.getSourceAddress(), new PushClientCallback(task));
-      PUSH_CLIENT_PUSHING_COUNTER.inc();
+      PUSH_CLIENT_ING_COUNTER.inc();
       LOGGER.info("[pushing]{},{}", task.taskID, task.pushingTaskKey);
       return true;
     } catch (Throwable e) {
@@ -351,7 +350,6 @@ public class PushProcessor {
       }
       this.pushTask.trace.finishPush(
           PushTrace.PushStatus.OK, pushTask.taskID, subscriberPushedVersion);
-      PUSH_CLIENT_SUCCESS_COUNTER.inc();
     }
 
     @Override
@@ -379,7 +377,6 @@ public class PushProcessor {
           LOGGER.error("[PushChanClosed]taskId={}, {}", pushTask.taskID, pushTask.pushingTaskKey);
         }
       }
-      PUSH_CLIENT_FAIL_COUNTER.inc();
     }
 
     @Override

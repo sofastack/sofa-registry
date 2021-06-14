@@ -35,7 +35,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -66,8 +65,8 @@ public class FetchBlackListService extends AbstractFetchSystemPropertyService<Bl
   private Map<String, Map<String, Set<String>>> convertBlacklistConfig(
       String config, List<BlacklistConfig> blacklistConfigs) {
 
-    TypeReference<HashMap<String, HashMap<String, HashSet<String>>>> typeReference =
-        new TypeReference<HashMap<String, HashMap<String, HashSet<String>>>>() {};
+    TypeReference<Map<String, Map<String, Set<String>>>> typeReference =
+        new TypeReference<Map<String, Map<String, Set<String>>>>() {};
 
     ObjectMapper mapper = JsonUtils.getJacksonObjectMapper();
 

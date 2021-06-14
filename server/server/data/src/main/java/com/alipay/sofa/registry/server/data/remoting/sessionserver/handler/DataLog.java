@@ -14,27 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.meta.remoting;
+package com.alipay.sofa.registry.server.data.remoting.sessionserver.handler;
 
-import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
-import com.alipay.sofa.registry.server.shared.remoting.ServerSideExchanger;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
+import org.apache.logging.log4j.core.async.Hack;
 
-/**
- * @author shangyu.wh
- * @version $Id: MetaNodeExchanger.java, v 0.1 2018-02-12 14:22 shangyu.wh Exp $
- */
-public class MetaServerExchanger extends ServerSideExchanger {
+public final class DataLog {
+  private DataLog() {}
 
-  @Autowired private MetaServerConfig metaServerConfig;
-
-  @Override
-  public int getRpcTimeoutMillis() {
-    return metaServerConfig.getMetaNodeExchangeTimeoutMillis();
-  }
-
-  @Override
-  public int getServerPort() {
-    return metaServerConfig.getMetaServerPort();
-  }
+  static final Logger PUT_LOGGER = Hack.hackLoggerDisruptor(LoggerFactory.getLogger("PUT"));
+  static final Logger GET_LOGGER = Hack.hackLoggerDisruptor(LoggerFactory.getLogger("GET"));
 }

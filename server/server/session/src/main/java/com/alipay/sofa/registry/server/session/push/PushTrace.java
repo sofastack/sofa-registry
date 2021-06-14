@@ -31,9 +31,14 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.logging.log4j.core.async.Hack;
 
 public final class PushTrace {
-  private static final Logger LOGGER = LoggerFactory.getLogger("PUSH-TRACE");
+  // config the push trace log to use a separate disruptor
+  private static final Logger LOGGER =
+      Hack.hackLoggerDisruptor(LoggerFactory.getLogger("PUSH-TRACE"));
+  private static final Logger SLOW_LOGGER =
+      Hack.hackLoggerDisruptor(LoggerFactory.getLogger("PUSH-TRACE-SLOW"));
   private static final int MAX_NTP_TIME_PRECISION_MILLIS = 200;
   private final SubDatum datum;
   final long pushCreateTimestamp = System.currentTimeMillis();
@@ -176,11 +181,11 @@ public final class PushTrace {
       // if sub, use first.publisher.registerTs as modifyTs
       datumModifyPushSpanMillis = firstPubPushDelayMillis;
     }
-    String cause = pushCause.pushType.toString();
-    PushMetrics.Push.PUSH_DELAY_HISTOGRAM
-        .labels(cause)
-        .observe(Math.max(datumModifyPushSpanMillis, datumVersionPushSpanMillis));
-    LOGGER.info(
+    PushMetrics.Push.observePushDelayHistogram(
+        pushCause.pushType, Math.max(datumModifyPushSpanMillis, datumVersionPushSpanMillis));
+    PushMetrics.Push.countPushClient(status);
+    final Logger log = datumModifyPushSpanMillis > 5000 ? SLOW_LOGGER : LOGGER;
+    log.info(
         "{},{},{},{},{},cause={},pubNum={},pubBytes={},pubNew={},delay={},{},{},{},{},"
             + "session={},cliIO={},firstPubDelay={},lastPubDelay={},"
             + "subNum={},addr={},expectVer={},dataNode={},taskID={},pushedVer={},regTs={},"
@@ -190,7 +195,7 @@ public final class PushTrace {
         datum.getVersion(),
         subApp,
         datum.getDataCenter(),
-        cause,
+        pushCause.pushType,
         datum.getPublishers().size(),
         datum.getDataBoxBytes(),
         newPublisherNum,

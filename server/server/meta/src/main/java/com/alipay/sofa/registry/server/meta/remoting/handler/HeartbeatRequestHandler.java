@@ -39,7 +39,6 @@ import com.alipay.sofa.registry.server.meta.monitor.session.SessionMessageListen
 import com.alipay.sofa.registry.server.shared.slot.SlotTableUtils;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 /**
  * Handle session/data node's heartbeat request
@@ -47,7 +46,6 @@ import org.springframework.stereotype.Component;
  * @author shangyu.wh
  * @version $Id: RenewNodesRequestHandler.java, v 0.1 2018-03-30 19:58 shangyu.wh Exp $
  */
-@Component
 public class HeartbeatRequestHandler extends BaseMetaServerHandler<HeartbeatRequest<Node>> {
   private static final Logger HEARTBEAT_LOG = LoggerFactory.getLogger("HEARTBEAT");
   private static final Logger LOGGER = LoggerFactory.getLogger(HeartbeatRequestHandler.class);
