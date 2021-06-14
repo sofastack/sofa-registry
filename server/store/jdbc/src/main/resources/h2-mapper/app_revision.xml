@@ -15,6 +15,10 @@
         <result property="gmtModify" column="gmt_modified" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
     </resultMap>
 
+    <resultMap type="com.alipay.sofa.registry.jdbc.domain.DateNowDomain" id="dateNowResult">
+        <result property="now" column="now" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
     <select id="queryRevision" resultMap="appRevisionResultMap">
         <![CDATA[
          select * from app_revision
@@ -57,7 +61,9 @@
     </select>
 
     <select id="listRevisions" resultMap="appRevisionResultMap">
+    <![CDATA[
         select * from app_revision where data_center = #{dataCenter} and id > #{afterId} order by id limit #{limit}
+    ]]>
     </select>
 
     <update id="heartbeat">
@@ -92,10 +98,10 @@
         ) on duplicate key update deleted = #{deleted};
     </insert>
     <select id="getExpired" resultMap="appRevisionResultMap">
-<![CDATA[
+    <![CDATA[
         select * from app_revision where data_center=#{dataCenter} and gmt_modified < #{beforeTime} and deleted='0'
         limit #{limit}
-]]>
+    ]]>
     </select>
     <delete id="cleanDeleted">
         <![CDATA[
@@ -103,4 +109,8 @@
         limit #{limit}
         ]]>
     </delete>
+
+    <select id="getNow" resultMap="dateNowResult">
+        select NOW(6) as now;
+    </select>
 </mapper>

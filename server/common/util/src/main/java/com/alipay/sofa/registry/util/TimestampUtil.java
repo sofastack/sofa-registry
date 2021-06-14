@@ -28,4 +28,10 @@ public final class TimestampUtil {
   public static long getNanosLong(Timestamp timestamp) {
     return timestamp.getTime() / 1000 * 1000000000 + timestamp.getNanos();
   }
+
+  public static Timestamp fromNanosLong(long nanos){
+      Timestamp ts =  new Timestamp(nanos/1000000);
+      ts.setNanos((int) (nanos%1000000000));
+      return ts;
+  }
 }

@@ -14,29 +14,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.util;
+package com.alipay.sofa.registry.jdbc.domain;
 
-import java.sql.Timestamp;
-import org.junit.Assert;
-import org.junit.Test;
+import java.util.Date;
 
-public class TimestampUtilTest {
-  @Test
-  public void test() {
-    long now = System.currentTimeMillis();
-    Timestamp ts = new Timestamp(now);
-    Assert.assertEquals(String.valueOf(now), TimestampUtil.getNanosLong(ts), now * 1000000);
+public class DateNowDomain {
+  public DateNowDomain() {}
+
+  public DateNowDomain(Date now) {
+    this.now = now;
   }
 
-  @Test
-  public void testNanos() {
-    long now = System.currentTimeMillis();
-    long nanos = now / 1000 * 1000000000;
-    Timestamp ts = new Timestamp(now);
-    for (int i = 0; i <= 999999999; i++) {
-      ts.setNanos(i);
-      Assert.assertEquals(TimestampUtil.getNanosLong(ts), nanos + i);
-    }
-    Assert.assertEquals(ts, TimestampUtil.fromNanosLong(TimestampUtil.getNanosLong(ts)));
+  private Date now;
+
+  public Date getNow() {
+    return now;
+  }
+
+  public void setNow(Date now) {
+    this.now = now;
   }
 }

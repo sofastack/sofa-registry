@@ -39,6 +39,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -68,7 +69,7 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository {
 
   @Autowired private DefaultCommonConfig defaultCommonConfig;
 
-  private final BaseInformer<AppRevisionDomain, AppRevisionContainer> informer;
+  final Informer informer;
 
   public AppRevisionJdbcRepository() {
     this.registry =
@@ -90,24 +91,7 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository {
                   }
                 });
     CacheCleaner.autoClean(localRevisions, 1000 * 60 * 10);
-    informer =
-        new BaseInformer<AppRevisionDomain, AppRevisionContainer>("AppRevision") {
-          @Override
-          protected AppRevisionContainer containerFactory() {
-            return new AppRevisionContainer();
-          }
-
-          @Override
-          protected List<AppRevisionDomain> listFromStorage(long start, int limit) {
-            return appRevisionMapper.listRevisions(
-                defaultCommonConfig.getClusterId(), start, limit);
-          }
-
-          @Override
-          protected Logger getLogger() {
-            return LOG;
-          }
-        };
+    informer = new Informer();
   }
 
   @PostConstruct
@@ -199,5 +183,27 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository {
   @Override
   public void waitSynced() {
     informer.waitSynced();
+  }
+
+  class Informer extends BaseInformer<AppRevisionDomain, AppRevisionContainer> {
+
+    public Informer() {
+      super("AppRevision", LOG);
+    }
+
+    @Override
+    protected AppRevisionContainer containerFactory() {
+      return new AppRevisionContainer();
+    }
+
+    @Override
+    protected List<AppRevisionDomain> listFromStorage(long start, int limit) {
+      return appRevisionMapper.listRevisions(defaultCommonConfig.getClusterId(), start, limit);
+    }
+
+    @Override
+    protected Date getNow() {
+      return appRevisionMapper.getNow().getNow();
+    }
   }
 }
