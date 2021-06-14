@@ -97,8 +97,9 @@ public class AppRevisionCleaner extends DefaultSessionServerService
     }
   }
 
-  private Date dateBeforeNow(int minutes) {
+  Date dateBeforeNow(int minutes) {
     Calendar calendar = Calendar.getInstance();
+    calendar.setTime(appRevisionMapper.getNow().getNow());
     calendar.add(Calendar.MINUTE, -minutes);
     return calendar.getTime();
   }

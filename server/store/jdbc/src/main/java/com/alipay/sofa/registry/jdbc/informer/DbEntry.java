@@ -16,6 +16,10 @@
  */
 package com.alipay.sofa.registry.jdbc.informer;
 
+import java.util.Date;
+
 public interface DbEntry {
   long getId();
+
+  Date getGmtCreate();
 }

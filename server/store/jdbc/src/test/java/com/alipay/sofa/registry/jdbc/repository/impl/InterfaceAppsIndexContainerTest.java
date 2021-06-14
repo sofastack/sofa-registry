@@ -28,6 +28,7 @@ public class InterfaceAppsIndexContainerTest {
     InterfaceAppsIndexDomain domain1 = new InterfaceAppsIndexDomain("dc", "service1", "app1");
     domain1.setGmtCreate(new Timestamp(10));
     InterfaceAppsIndexDomain domain2 = new InterfaceAppsIndexDomain("dc", "service1", "app2");
+    domain2.toString();
     domain2.setGmtCreate(new Timestamp(20));
     container.onEntry(domain1);
     container.onEntry(domain2);
@@ -48,5 +49,6 @@ public class InterfaceAppsIndexContainerTest {
     Assert.assertEquals(0, container.getAppMapping("service2").getApps().size());
     Assert.assertEquals(30000000, container.getAppMapping("service2").getNanosVersion());
     Assert.assertNull(container.getAppMapping("service3"));
+    Assert.assertEquals(container.interfaces().size(), 2);
   }
 }

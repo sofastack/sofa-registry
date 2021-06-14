@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.server.session.push;
 
+import static com.alipay.sofa.registry.server.session.push.PushMetrics.Push.*;
+
 import com.alipay.remoting.rpc.exception.InvokeTimeoutException;
 import com.alipay.sofa.registry.common.model.store.BaseInfo;
 import com.alipay.sofa.registry.common.model.store.SubDatum;
@@ -28,16 +30,13 @@ import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfigBean
 import com.alipay.sofa.registry.server.session.node.service.ClientNodeService;
 import com.alipay.sofa.registry.server.session.provideData.FetchGrayPushSwitchService;
 import com.alipay.sofa.registry.server.session.provideData.FetchStopPushService;
-import org.junit.Assert;
-import org.junit.Test;
-import org.mockito.Mockito;
-
 import java.util.Collections;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicReference;
-
-import static com.alipay.sofa.registry.server.session.push.PushMetrics.Push.*;
+import org.junit.Assert;
+import org.junit.Test;
+import org.mockito.Mockito;
 
 public class PushProcessorTest {
   private String zone = "testZone";

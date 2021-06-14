@@ -22,6 +22,7 @@ import com.alipay.sofa.registry.concurrent.CachedExecutor;
 import com.alipay.sofa.registry.jdbc.config.DefaultCommonConfig;
 import com.alipay.sofa.registry.jdbc.domain.InterfaceAppsIndexDomain;
 import com.alipay.sofa.registry.jdbc.informer.BaseInformer;
+import com.alipay.sofa.registry.jdbc.mapper.AppRevisionMapper;
 import com.alipay.sofa.registry.jdbc.mapper.InterfaceAppsIndexMapper;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -41,34 +42,17 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository {
   private static final Logger LOG = LoggerFactory.getLogger("METADATA-EXCHANGE", "[InterfaceApps]");
 
   @Autowired private InterfaceAppsIndexMapper interfaceAppsIndexMapper;
+  @Autowired private AppRevisionMapper appRevisionMapper;
 
   @Autowired private DefaultCommonConfig defaultCommonConfig;
 
   private final CachedExecutor<Tuple<String, String>, Boolean> cachedExecutor =
       new CachedExecutor<>(1000 * 10);
 
-  private final BaseInformer<InterfaceAppsIndexDomain, InterfaceAppsIndexContainer> informer;
+  final Informer informer;
 
   public InterfaceAppsJdbcRepository() {
-    informer =
-        new BaseInformer<InterfaceAppsIndexDomain, InterfaceAppsIndexContainer>(
-            "InterfaceAppsIndex") {
-          @Override
-          protected InterfaceAppsIndexContainer containerFactory() {
-            return new InterfaceAppsIndexContainer();
-          }
-
-          @Override
-          protected List<InterfaceAppsIndexDomain> listFromStorage(long start, int limit) {
-            return interfaceAppsIndexMapper.queryLargeThan(
-                defaultCommonConfig.getClusterId(), start, limit);
-          }
-
-          @Override
-          protected Logger getLogger() {
-            return LOG;
-          }
-        };
+    informer = new Informer();
   }
 
   @PostConstruct
@@ -126,5 +110,56 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository {
   @VisibleForTesting
   void cleanCache() {
     cachedExecutor.clean();
+  }
+
+  class Informer extends BaseInformer<InterfaceAppsIndexDomain, InterfaceAppsIndexContainer> {
+      private ConflictCallback conflictCallback;
+    public Informer() {
+      super("InterfaceAppsIndex", LOG);
+    }
+
+    @Override
+    protected InterfaceAppsIndexContainer containerFactory() {
+      return new InterfaceAppsIndexContainer();
+    }
+
+    @Override
+    protected List<InterfaceAppsIndexDomain> listFromStorage(long start, int limit) {
+      return interfaceAppsIndexMapper.queryLargeThan(
+          defaultCommonConfig.getClusterId(), start, limit);
+    }
+
+    @Override
+    protected Date getNow() {
+      return appRevisionMapper.getNow().getNow();
+    }
+
+    @VisibleForTesting
+    public void setConflictCallback(ConflictCallback runnable){
+      conflictCallback = runnable;
+    }
+
+    @Override
+    protected void preList(InterfaceAppsIndexContainer newContainer) {
+      InterfaceAppsIndexContainer current = this.container;
+      for (String interfaceName : current.interfaces()) {
+        InterfaceMapping newMapping = newContainer.getAppMapping(interfaceName);
+        InterfaceMapping currentMapping = current.getAppMapping(interfaceName);
+        if (newMapping == null
+            || newMapping.getNanosVersion() < currentMapping.getNanosVersion()
+            || (newMapping.getNanosVersion() == currentMapping.getNanosVersion()
+                && !newMapping.getApps().equals(currentMapping.getApps()))) {
+          if(conflictCallback != null){
+            conflictCallback.callback(current, newContainer);
+          }
+          LOG.error("version conflict current: {}, new: {}", currentMapping, newMapping);
+
+        }
+      }
+    }
+  }
+
+  interface ConflictCallback {
+    void callback(InterfaceAppsIndexContainer current, InterfaceAppsIndexContainer newContainer);
   }
 }

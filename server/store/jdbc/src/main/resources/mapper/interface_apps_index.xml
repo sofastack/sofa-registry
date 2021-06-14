@@ -41,8 +41,9 @@
 
 
     <select id="queryLargeThan" resultMap="interfaceAppsResultMap">
-        select * from interface_apps_index where data_center = #{dataCenter} and id > #{maxId}
-        order by id limit #{limitCount}
+    <![CDATA[
+        select * from interface_apps_index where data_center = #{dataCenter} and id > #{maxId} order by id limit #{limitCount}
+    ]]>
     </select>
 
     <select id="getExpired" resultMap="interfaceAppsResultMap">

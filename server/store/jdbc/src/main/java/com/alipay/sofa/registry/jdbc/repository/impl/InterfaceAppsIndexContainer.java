@@ -22,6 +22,7 @@ import com.alipay.sofa.registry.jdbc.informer.DbEntryContainer;
 import com.alipay.sofa.registry.util.TimestampUtil;
 import com.google.common.collect.Maps;
 import java.util.Map;
+import java.util.Set;
 
 public class InterfaceAppsIndexContainer implements DbEntryContainer<InterfaceAppsIndexDomain> {
 
@@ -59,6 +60,10 @@ public class InterfaceAppsIndexContainer implements DbEntryContainer<InterfaceAp
 
   public InterfaceMapping getAppMapping(String interfaceName) {
     return data.get(interfaceName);
+  }
+
+  public Set<String> interfaces() {
+    return data.keySet();
   }
 
   @Override

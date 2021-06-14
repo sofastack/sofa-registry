@@ -24,9 +24,11 @@ import com.alipay.sofa.registry.common.model.metaserver.cleaner.AppRevisionSlice
 import com.alipay.sofa.registry.jdbc.config.DefaultCommonConfig;
 import com.alipay.sofa.registry.jdbc.config.MetadataConfig;
 import com.alipay.sofa.registry.jdbc.domain.AppRevisionDomain;
+import com.alipay.sofa.registry.jdbc.domain.DateNowDomain;
 import com.alipay.sofa.registry.jdbc.mapper.AppRevisionMapper;
 import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
 import java.util.Collections;
+import java.util.Date;
 import org.assertj.core.util.Lists;
 import org.assertj.core.util.Maps;
 import org.assertj.core.util.Sets;
@@ -58,6 +60,15 @@ public class AppRevisionCleanerTest extends AbstractMetaServerTestBase {
   }
 
   @Test
+  public void testDateBeforeNow() {
+    AppRevisionCleaner mocked = spy(appRevisionCleaner);
+    Date now = new Date();
+    doReturn(new DateNowDomain(now)).when(mocked.appRevisionMapper).getNow();
+    Date before = mocked.dateBeforeNow(1);
+    Assert.assertEquals(before.getTime(), now.getTime() - 60000);
+  }
+
+  @Test
   public void testRenew() throws Exception {
     AppRevisionCleaner mocked = spy(appRevisionCleaner);
     doReturn(
@@ -80,6 +91,7 @@ public class AppRevisionCleanerTest extends AbstractMetaServerTestBase {
     doReturn(Lists.newArrayList(domain))
         .when(mocked.appRevisionMapper)
         .getExpired(anyString(), any(), anyInt());
+    doReturn(new DateNowDomain(new Date())).when(mocked.appRevisionMapper).getNow();
     doReturn(1).when(mocked.appRevisionMapper).cleanDeleted(anyString(), any(), anyInt());
     doReturn(
             Collections.singletonMap(

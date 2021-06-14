@@ -67,7 +67,7 @@ public class InterfaceAppsJdbcRepositoryTest extends BaseIntegrationTest {
         Assert.assertEquals(1, appNames.getApps().size());
         Assert.assertTrue(appNames.getApps().contains(app));
       } else {
-        Assert.assertTrue(appNames.getNanosVersion() == -1);
+        Assert.assertEquals(appNames.getNanosVersion(), -1);
       }
     }
     for (String service : services) {
