@@ -21,13 +21,11 @@ import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.shared.remoting.ServerSideExchanger;
 import com.google.common.annotations.VisibleForTesting;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 /**
  * @author shangyu.wh
  * @version $Id: DataNodeExchanger.java, v 0.1 2018-01-23 19:18 shangyu.wh Exp $
  */
-@Component
 public class DataNodeExchanger extends ServerSideExchanger {
 
   @Autowired private MetaServerConfig metaServerConfig;

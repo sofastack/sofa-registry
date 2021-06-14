@@ -24,7 +24,6 @@ import com.alipay.sofa.registry.common.model.slot.SlotAccess;
 import com.alipay.sofa.registry.common.model.slot.SlotAccessGenericResponse;
 import com.alipay.sofa.registry.common.model.store.SubDatum;
 import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.shared.util.DatumUtils;
@@ -41,7 +40,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @version $Id: GetDataProcessor.java, v 0.1 2017-12-01 15:48 qian.lqlq Exp $
  */
 public class GetDataHandler extends AbstractDataHandler<GetDataRequest> {
-  private static final Logger LOGGER = LoggerFactory.getLogger("GET");
+  private static final Logger LOGGER = DataLog.GET_LOGGER;
   @Autowired private DatumCache datumCache;
 
   @Autowired private ThreadPoolExecutor getDataProcessorExecutor;

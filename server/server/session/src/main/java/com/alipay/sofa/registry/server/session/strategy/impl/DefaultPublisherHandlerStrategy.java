@@ -31,6 +31,7 @@ import com.alipay.sofa.registry.server.session.converter.PublisherConverter;
 import com.alipay.sofa.registry.server.session.registry.Registry;
 import com.alipay.sofa.registry.server.session.strategy.PublisherHandlerStrategy;
 import org.apache.commons.lang.StringUtils;
+import org.apache.logging.log4j.core.async.Hack;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -38,7 +39,8 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @since 2019/2/15
  */
 public class DefaultPublisherHandlerStrategy implements PublisherHandlerStrategy {
-  private static final Logger PUB_LOGGER = LoggerFactory.getLogger("PUB-RECEIVE");
+  private static final Logger PUB_LOGGER =
+      Hack.hackLoggerDisruptor(LoggerFactory.getLogger("PUB-RECEIVE"));
   @Autowired protected Registry sessionRegistry;
 
   @Override

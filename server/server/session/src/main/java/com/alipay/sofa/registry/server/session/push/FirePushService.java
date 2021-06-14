@@ -25,7 +25,6 @@ import com.alipay.sofa.registry.common.model.store.SubDatum;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.cache.CacheService;
 import com.alipay.sofa.registry.server.session.cache.DatumKey;
@@ -47,7 +46,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 
 public class FirePushService {
-  private static final Logger LOGGER = LoggerFactory.getLogger(FirePushService.class);
+  private static final Logger LOGGER = PushLog.LOGGER;
 
   @Autowired PushSwitchService pushSwitchService;
   @Autowired SessionServerConfig sessionServerConfig;

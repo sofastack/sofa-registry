@@ -83,7 +83,7 @@ public class DataServerBeanConfiguration {
   }
 
   @Configuration
-  protected static class DataServerBootstrapConfigConfiguration {
+  public static class DataServerBootstrapConfigConfiguration {
 
     @Bean
     public CommonConfig commonConfig() {

@@ -265,4 +265,6 @@ public interface Logger {
    * @return
    */
   Object getLogger();
+
+  String getName();
 }

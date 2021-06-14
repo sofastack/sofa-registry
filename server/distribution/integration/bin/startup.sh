@@ -26,7 +26,7 @@ JAVA_OPTS="$JAVA_OPTS -Dspring.config.location=${BASE_DIR}/conf/application.prop
 JAVA_OPTS="$JAVA_OPTS -Duser.home=${BASE_DIR}"
 
 # springboot conf
-SPRINGBOOT_OPTS="${SPRINGBOOT_OPTS} -DLog4jContextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector -Dlogging.config=${BASE_DIR}/conf/log4j2.xml -Dlog4j.configurationFile=${BASE_DIR}/conf/log4j2.xml"
+SPRINGBOOT_OPTS="${SPRINGBOOT_OPTS} -DLog4jContextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector -Dlog4j2.debug=true -DAsyncLogger.WaitStrategy=YIELD -Dlogging.config=${BASE_DIR}/conf/log4j2.xml -Dlog4j.configurationFile=${BASE_DIR}/conf/log4j2.xml"
 
 # heap size
 HEAP_MAX=512

@@ -307,11 +307,31 @@ public class SLF4JLogger implements Logger, Serializable {
     if (msgPrefix.isEmpty()) {
       return msg;
     }
-    return msgPrefix + SPACE + msg;
+    StringBuilder sb = new StringBuilder(msgPrefix.length() + 1 + msg == null ? 8 : msg.length());
+    return sb.append(msgPrefix).append(SPACE).append(msg).toString();
   }
 
   @Override
   public Object getLogger() {
     return logger;
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  @Override
+  public String toString() {
+    return "SLF4JLogger{"
+        + "name='"
+        + name
+        + '\''
+        + ", msgPrefix='"
+        + msgPrefix
+        + '\''
+        + ", logger='"
+        + logger
+        + '\''
+        + '}';
   }
 }

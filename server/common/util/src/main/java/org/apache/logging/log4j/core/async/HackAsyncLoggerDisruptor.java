@@ -14,27 +14,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.meta.remoting;
+package org.apache.logging.log4j.core.async;
 
-import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
-import com.alipay.sofa.registry.server.shared.remoting.ServerSideExchanger;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.alipay.sofa.registry.util.StringFormatter;
+import java.util.concurrent.atomic.LongAdder;
 
-/**
- * @author shangyu.wh
- * @version $Id: MetaNodeExchanger.java, v 0.1 2018-02-12 14:22 shangyu.wh Exp $
- */
-public class MetaServerExchanger extends ServerSideExchanger {
+public final class HackAsyncLoggerDisruptor extends AsyncLoggerDisruptor {
+  private final LongAdder fullCount = new LongAdder();
 
-  @Autowired private MetaServerConfig metaServerConfig;
-
-  @Override
-  public int getRpcTimeoutMillis() {
-    return metaServerConfig.getMetaNodeExchangeTimeoutMillis();
+  HackAsyncLoggerDisruptor(String contextName) {
+    super(contextName);
   }
 
   @Override
-  public int getServerPort() {
-    return metaServerConfig.getMetaServerPort();
+  boolean tryPublish(final RingBufferLogEventTranslator translator) {
+    boolean published = super.tryPublish(translator);
+    if (!published) {
+      fullCount.increment();
+    }
+    return published;
+  }
+
+  long fullCountAndReset() {
+    return fullCount.sumThenReset();
+  }
+
+  @Override
+  public String toString() {
+    return StringFormatter.format(
+        "HackAsyncLoggerDisruptor{ctx={},{}}", getContextName(), super.toString());
   }
 }

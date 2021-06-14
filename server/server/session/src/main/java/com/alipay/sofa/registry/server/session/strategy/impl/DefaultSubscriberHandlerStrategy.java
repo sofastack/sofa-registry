@@ -32,6 +32,7 @@ import com.alipay.sofa.registry.server.session.converter.SubscriberConverter;
 import com.alipay.sofa.registry.server.session.registry.Registry;
 import com.alipay.sofa.registry.server.session.strategy.SubscriberHandlerStrategy;
 import org.apache.commons.lang.StringUtils;
+import org.apache.logging.log4j.core.async.Hack;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -39,7 +40,8 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @since 2019/2/15
  */
 public class DefaultSubscriberHandlerStrategy implements SubscriberHandlerStrategy {
-  private static final Logger SUB_LOGGER = LoggerFactory.getLogger("SUB-RECEIVE");
+  private static final Logger SUB_LOGGER =
+      Hack.hackLoggerDisruptor(LoggerFactory.getLogger("SUB-RECEIVE"));
 
   @Autowired protected Registry sessionRegistry;
 

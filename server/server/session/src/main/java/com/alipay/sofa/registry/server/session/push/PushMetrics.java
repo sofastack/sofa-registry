@@ -93,17 +93,44 @@ public final class PushMetrics {
             .name("fire_commit_total")
             .help("commit task")
             .register();
-    private static final Counter PUSH_CLIENT_COUNTER =
+
+    private static final Counter PUSH_CLIENT_STATUS_COUNTER =
         Counter.build()
             .namespace("session")
             .subsystem("push")
             .name("push_client_total")
             .help("push client task")
-            .labelNames("type")
+            .labelNames("status")
             .register();
-    static final Counter.Child PUSH_CLIENT_PUSHING_COUNTER = PUSH_CLIENT_COUNTER.labels("I");
-    static final Counter.Child PUSH_CLIENT_SUCCESS_COUNTER = PUSH_CLIENT_COUNTER.labels("Y");
-    static final Counter.Child PUSH_CLIENT_FAIL_COUNTER = PUSH_CLIENT_COUNTER.labels("N");
+
+    private static final Counter.Child COUNT_OK =
+        PUSH_CLIENT_STATUS_COUNTER.labels(PushTrace.PushStatus.OK.name());
+    static final Counter.Child COUNT_TIMEOUT =
+        PUSH_CLIENT_STATUS_COUNTER.labels(PushTrace.PushStatus.Timeout.name());
+    static final Counter.Child COUNT_FAIL =
+        PUSH_CLIENT_STATUS_COUNTER.labels(PushTrace.PushStatus.Fail.name());
+
+    static void countPushClient(PushTrace.PushStatus status) {
+      // quick path
+      if (status == PushTrace.PushStatus.OK) {
+        COUNT_OK.inc();
+      } else if (status == PushTrace.PushStatus.Timeout) {
+        COUNT_TIMEOUT.inc();
+      } else if (status == PushTrace.PushStatus.Fail) {
+        new Exception().printStackTrace();
+        COUNT_FAIL.inc();
+      } else {
+        PUSH_CLIENT_STATUS_COUNTER.labels(status.name()).inc();
+      }
+    }
+
+    static final Counter PUSH_CLIENT_ING_COUNTER =
+        Counter.build()
+            .namespace("session")
+            .subsystem("push")
+            .name("push_client_ing_total")
+            .help("pushing client task")
+            .register();
 
     static final Counter PUSH_RETRY_COUNTER =
         Counter.build()
@@ -113,7 +140,7 @@ public final class PushMetrics {
             .help("retry count")
             .labelNames("reason")
             .register();
-    static final Histogram PUSH_DELAY_HISTOGRAM =
+    private static final Histogram PUSH_DELAY_HISTOGRAM =
         Histogram.build()
             .linearBuckets(0, 1000, 30)
             .namespace("session")
@@ -122,5 +149,19 @@ public final class PushMetrics {
             .help("push delay")
             .labelNames("cause")
             .register();
+
+    private static final Histogram.Child SUB = PUSH_DELAY_HISTOGRAM.labels(PushType.Sub.name());
+    private static final Histogram.Child REG = PUSH_DELAY_HISTOGRAM.labels(PushType.Reg.name());
+
+    static void observePushDelayHistogram(PushType pushType, long millis) {
+      // quick path
+      if (pushType == PushType.Sub) {
+        SUB.observe(millis);
+      } else if (pushType == PushType.Reg) {
+        REG.observe(millis);
+      } else {
+        PUSH_DELAY_HISTOGRAM.labels(pushType.name()).observe(millis);
+      }
+    }
   }
 }

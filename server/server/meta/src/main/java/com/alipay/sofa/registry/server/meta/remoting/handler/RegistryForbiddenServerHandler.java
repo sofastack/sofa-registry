@@ -25,13 +25,11 @@ import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.meta.MetaLeaderService;
 import com.alipay.sofa.registry.server.meta.lease.filter.RegistryForbiddenServerManager;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 /**
  * @author chen.zhu
  *     <p>Mar 18, 2021
  */
-@Component
 public class RegistryForbiddenServerHandler
     extends BaseMetaServerHandler<RegistryForbiddenServerRequest> {
 

@@ -563,7 +563,6 @@
             <appender-ref ref="COMMON-ERROR-APPENDER"/>
         </logger>
 
-
         <logger name="org.eclipse.jetty" level="${LOG_LEVEL}" additivity="false">
             <appender-ref ref="JETTY-SERVER-APPENDER"/>
             <appender-ref ref="COMMON-ERROR-APPENDER"/>
@@ -576,5 +575,6 @@
             <appender-ref ref="COMMON-ERROR-APPENDER"/>
             <appender-ref ref="STDOUT-APPENDER"/>
         </root>
+
     </loggers>
 </configuration>

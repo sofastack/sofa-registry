@@ -27,7 +27,6 @@ import com.alipay.sofa.registry.common.model.slot.SlotAccessGenericResponse;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.UnPublisher;
 import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.google.common.collect.Sets;
@@ -37,7 +36,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class BatchPutDataHandler extends AbstractDataHandler<BatchRequest> {
-  private static final Logger LOGGER = LoggerFactory.getLogger("PUT");
+  private static final Logger LOGGER = DataLog.PUT_LOGGER;
   @Autowired private ThreadPoolExecutor publishProcessorExecutor;
 
   @Override

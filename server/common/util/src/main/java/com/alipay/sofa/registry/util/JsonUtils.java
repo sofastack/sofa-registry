@@ -41,7 +41,7 @@ public final class JsonUtils {
     }
   }
 
-  public static <T> T read(String str, TypeReference typeReference) {
+  public static <T> T read(String str, TypeReference<T> typeReference) {
     try {
       return JACKSON_MAPPER.get().readValue(str, typeReference);
     } catch (Throwable e) {
