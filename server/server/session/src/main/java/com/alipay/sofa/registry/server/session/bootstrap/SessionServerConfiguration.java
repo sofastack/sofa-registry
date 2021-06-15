@@ -754,13 +754,7 @@ public class SessionServerConfiguration {
 
     @Bean
     public SystemPropertyProcessorManager systemPropertyProcessorManager() {
-      SystemPropertyProcessorManager systemPropertyProcessorManager =
-          new SystemPropertyProcessorManager();
-      systemPropertyProcessorManager.addSystemDataProcessor(fetchStopPushService());
-      systemPropertyProcessorManager.addSystemDataProcessor(fetchGrayPushSwitchService());
-      systemPropertyProcessorManager.addSystemDataProcessor(fetchBlackListService());
-      systemPropertyProcessorManager.addSystemDataProcessor(fetchClientOffAddressService());
-      return systemPropertyProcessorManager;
+      return new SystemPropertyProcessorManager();
     }
 
     @Bean
@@ -769,23 +763,34 @@ public class SessionServerConfiguration {
     }
 
     @Bean
-    public FetchSystemPropertyService fetchBlackListService() {
-      return new FetchBlackListService();
+    public FetchSystemPropertyService fetchBlackListService(SystemPropertyProcessorManager systemPropertyProcessorManager) {
+      FetchBlackListService fetchBlackListService = new FetchBlackListService();
+      systemPropertyProcessorManager.addSystemDataProcessor(fetchBlackListService);
+      return fetchBlackListService;
     }
 
     @Bean
-    public FetchSystemPropertyService fetchStopPushService() {
-      return new FetchStopPushService();
+    public FetchSystemPropertyService fetchStopPushService(SystemPropertyProcessorManager systemPropertyProcessorManager) {
+      FetchStopPushService fetchStopPushService = new FetchStopPushService();
+      systemPropertyProcessorManager.addSystemDataProcessor(fetchStopPushService);
+
+      return fetchStopPushService;
     }
 
     @Bean
-    public FetchSystemPropertyService fetchClientOffAddressService() {
-      return new FetchClientOffAddressService();
+    public FetchSystemPropertyService fetchClientOffAddressService(SystemPropertyProcessorManager systemPropertyProcessorManager) {
+      FetchClientOffAddressService fetchClientOffAddressService = new FetchClientOffAddressService();
+      systemPropertyProcessorManager.addSystemDataProcessor(fetchClientOffAddressService);
+
+      return fetchClientOffAddressService;
     }
 
     @Bean
-    public FetchSystemPropertyService fetchGrayPushSwitchService() {
-      return new FetchGrayPushSwitchService();
+    public FetchSystemPropertyService fetchGrayPushSwitchService(SystemPropertyProcessorManager systemPropertyProcessorManager) {
+      FetchGrayPushSwitchService fetchGrayPushSwitchService = new FetchGrayPushSwitchService();
+      systemPropertyProcessorManager.addSystemDataProcessor(fetchGrayPushSwitchService);
+
+      return fetchGrayPushSwitchService;
     }
   }
 }
