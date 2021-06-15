@@ -14,21 +14,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.remoting.exchange.message;
+package com.alipay.sofa.registry.task;
 
-import com.alipay.sofa.registry.common.model.store.URL;
-import org.junit.Assert;
-import org.junit.Test;
+import java.util.concurrent.RejectedExecutionHandler;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.atomic.LongAdder;
 
-public class SyncRequestTest {
-  @Test
-  public void test() {
-    Object obj = new Object();
-    URL url = new URL("192.168.1.1", 8888);
-    SyncRequest req = new SyncRequest(obj, url);
-    Assert.assertEquals(req.getRequestBody(), obj);
-    Assert.assertEquals(req.getRequestUrl(), url);
-    Assert.assertEquals(req.getRetryTimes().get(), 0);
-    Assert.assertEquals(req.getCallBackHandler(), null);
+public final class RejectedDiscardHandler implements RejectedExecutionHandler {
+  private final LongAdder count = new LongAdder();
+
+  public void rejectedExecution(Runnable r, ThreadPoolExecutor e) {
+    count.increment();
+  }
+
+  public long getDiscardCountThenReset() {
+    return count.sumThenReset();
   }
 }

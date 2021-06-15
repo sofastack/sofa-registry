@@ -19,39 +19,33 @@ package com.alipay.sofa.registry.remoting.exchange.message;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.remoting.CallbackHandler;
 
-/**
- * The interface Request.
- *
- * @param <T> the type parameter
- * @author shangyu.wh
- * @version $Id : Request.java, v 0.1 2017-11-30 17:33 shangyu.wh Exp $
- */
-public interface Request<T> {
+public class SimpleRequest<T> implements Request<T> {
+  private final T req;
+  private final URL url;
+  private final CallbackHandler callback;
 
-  /**
-   * Gets request body.
-   *
-   * @return the request body
-   */
-  T getRequestBody();
-
-  /**
-   * Gets request url.
-   *
-   * @return the request url
-   */
-  URL getRequestUrl();
-
-  /**
-   * Gets call back handler.
-   *
-   * @return the call back handler
-   */
-  default CallbackHandler getCallBackHandler() {
-    return null;
+  public SimpleRequest(T req, URL url) {
+    this(req, url, null);
   }
 
-  default Integer getTimeout() {
-    return null;
+  public SimpleRequest(T req, URL url, CallbackHandler callback) {
+    this.req = req;
+    this.url = url;
+    this.callback = callback;
+  }
+
+  @Override
+  public T getRequestBody() {
+    return req;
+  }
+
+  @Override
+  public URL getRequestUrl() {
+    return url;
+  }
+
+  @Override
+  public CallbackHandler getCallBackHandler() {
+    return callback;
   }
 }

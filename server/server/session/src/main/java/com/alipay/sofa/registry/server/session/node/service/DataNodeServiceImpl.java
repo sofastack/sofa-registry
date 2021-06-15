@@ -27,22 +27,31 @@ import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.common.model.store.UnPublisher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.remoting.CallbackHandler;
+import com.alipay.sofa.registry.remoting.Channel;
+import com.alipay.sofa.registry.remoting.exchange.ExchangeCallback;
 import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
 import com.alipay.sofa.registry.remoting.exchange.RequestException;
 import com.alipay.sofa.registry.remoting.exchange.message.Request;
 import com.alipay.sofa.registry.remoting.exchange.message.Response;
+import com.alipay.sofa.registry.remoting.exchange.message.SimpleRequest;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.util.DatumUtils;
 import com.alipay.sofa.registry.task.BlockingQueues;
 import com.alipay.sofa.registry.task.FastRejectedExecutionException;
+import com.alipay.sofa.registry.task.MetricsableThreadPoolExecutor;
+import com.alipay.sofa.registry.task.RejectedDiscardHandler;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
+import com.alipay.sofa.registry.util.OsUtils;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.PostConstruct;
 import org.apache.commons.lang.StringUtils;
@@ -64,6 +73,11 @@ public class DataNodeServiceImpl implements DataNodeService {
 
   private Worker[] workers;
   private BlockingQueues<Req> blockingQueues;
+
+  final RejectedDiscardHandler discardHandler = new RejectedDiscardHandler();
+  private final ThreadPoolExecutor callbackExecutor =
+      MetricsableThreadPoolExecutor.newExecutor(
+          "DataNodeCallback", OsUtils.getCpuCount() * 3, 4096, discardHandler);
 
   @PostConstruct
   public void init() {
@@ -116,50 +130,74 @@ public class DataNodeServiceImpl implements DataNodeService {
   }
 
   @Override
-  public Map<String /*datainfoid*/, DatumVersion> fetchDataVersion(
-      String dataCenter, int slotId, Map<String, DatumVersion> interests) {
-    String dataNodeIp = null;
+  public void fetchDataVersion(
+      String dataCenter,
+      int slotId,
+      Map<String, DatumVersion> interests,
+      ExchangeCallback<Map<String, DatumVersion>> callback) {
+    final Slot slot = getSlot(slotId);
+    final String dataNodeIp = slot.getLeader();
     try {
-      final Slot slot = getSlot(slotId);
-      dataNodeIp = slot.getLeader();
       final GetDataVersionRequest request =
           new GetDataVersionRequest(dataCenter, ServerEnv.PROCESS_ID, slotId, interests);
       request.setSlotTableEpoch(slotTableCache.getEpoch());
       request.setSlotLeaderEpoch(slot.getLeaderEpoch());
-      Request<GetDataVersionRequest> getDataVersionRequestRequest =
-          new Request<GetDataVersionRequest>() {
+      final CallbackHandler handler =
+          new CallbackHandler() {
             @Override
-            public GetDataVersionRequest getRequestBody() {
-              return request;
+            public void onCallback(Channel channel, Object message) {
+              handleFetchDataVersionCallback(
+                  channel, message, slotId, dataNodeIp, dataCenter, callback);
             }
 
             @Override
-            public URL getRequestUrl() {
-              return getUrl(slot);
+            public void onException(Channel channel, Throwable exception) {
+              callback.onException(channel, exception);
+            }
+
+            @Override
+            public Executor getExecutor() {
+              return callbackExecutor;
             }
           };
-
+      Request<GetDataVersionRequest> getDataVersionRequestRequest =
+          new SimpleRequest<>(request, getUrl(slot), handler);
       Response response = dataNodeExchanger.request(getDataVersionRequestRequest);
-      Object result = response.getResult();
-      SlotAccessGenericResponse<Map<String, DatumVersion>> genericResponse =
-          (SlotAccessGenericResponse<Map<String, DatumVersion>>) result;
-      if (genericResponse.isSuccess()) {
-        Map<String, DatumVersion> map = genericResponse.getData();
-        return DatumUtils.intern(map);
-      } else {
-        throw new RuntimeException(
-            StringFormatter.format(
-                "GetDataVersion got fail response {}, {}, slotId={}, access={}, msg:{}",
-                dataNodeIp,
-                dataCenter,
-                slotId,
-                genericResponse.getSlotAccess(),
-                genericResponse.getMessage()));
+      Response.ResultStatus result = (Response.ResultStatus) response.getResult();
+      if (result != Response.ResultStatus.SUCCESSFUL) {
+        throw new RequestException("response not success, status=" + result);
       }
     } catch (RequestException e) {
       throw new RuntimeException(
           StringFormatter.format(
               "GetDataVersion fail {}@{}, slotId={}", dataNodeIp, dataCenter, slotId, e));
+    }
+  }
+
+  void handleFetchDataVersionCallback(
+      Channel channel,
+      Object message,
+      int slotId,
+      String dataNodeIp,
+      String dataCenter,
+      ExchangeCallback<Map<String, DatumVersion>> callback) {
+    SlotAccessGenericResponse<Map<String, DatumVersion>> genericResponse =
+        (SlotAccessGenericResponse<Map<String, DatumVersion>>) message;
+    if (genericResponse.isSuccess()) {
+      Map<String, DatumVersion> map = genericResponse.getData();
+      DatumUtils.intern(map);
+      callback.onCallback(channel, map);
+    } else {
+      callback.onException(
+          channel,
+          new RuntimeException(
+              StringFormatter.format(
+                  "GetDataVersion failed, {}@{}, slotId={}, access={}, msg:{}",
+                  dataNodeIp,
+                  dataCenter,
+                  slotId,
+                  genericResponse.getSlotAccess(),
+                  genericResponse.getMessage())));
     }
   }
 

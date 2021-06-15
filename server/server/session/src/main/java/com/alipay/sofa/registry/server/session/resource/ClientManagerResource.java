@@ -25,7 +25,7 @@ import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
-import com.alipay.sofa.registry.remoting.exchange.message.SyncRequest;
+import com.alipay.sofa.registry.remoting.exchange.message.SimpleRequest;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.connections.ConnectionsService;
 import com.alipay.sofa.registry.server.session.mapper.ConnectionMapper;
@@ -122,7 +122,7 @@ public class ClientManagerResource {
               (URL url) -> {
                 final ClientOffRequest req = new ClientOffRequest(ipList);
                 return (CommonResponse)
-                    sessionConsoleExchanger.request(new SyncRequest(req, url)).getResult();
+                    sessionConsoleExchanger.request(new SimpleRequest(req, url)).getResult();
               },
               3000);
       return Sdks.getFailedResponseIfAbsent(list);
@@ -152,7 +152,7 @@ public class ClientManagerResource {
               (URL url) -> {
                 final ClientOnRequest req = new ClientOnRequest(ipList);
                 return (CommonResponse)
-                    sessionConsoleExchanger.request(new SyncRequest(req, url)).getResult();
+                    sessionConsoleExchanger.request(new SimpleRequest(req, url)).getResult();
               },
               3000);
       return Sdks.getFailedResponseIfAbsent(list);
