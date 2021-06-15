@@ -30,6 +30,25 @@
             <charset>${LOG_ENCODE}</charset>
         </encoder>
     </appender>
+    <appender name="META-PROFILE-DIGEST-APPENDER" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <append>true</append>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>${LOG_LEVEL}</level>
+        </filter>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>DENY</onMatch>
+        </filter>
+        <file>${META_LOG_HOME}/profile-digest.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <FileNamePattern>${META_LOG_HOME}/profile-digest.log.%d{yyyy-MM-dd}</FileNamePattern>
+            <MaxHistory>30</MaxHistory>
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>[%d{ISO8601}][%p][%t][%c{0}] - %m%n</pattern>
+            <charset>${LOG_ENCODE}</charset>
+        </encoder>
+    </appender>
 
     <appender name="COMMON-DEFAULT-APPENDER" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <append>true</append>
@@ -254,6 +273,10 @@
 
     <logger name="REGISTRY-METRICS" level="${LOG_LEVEL}" additivity="false">
         <appender-ref ref="REGISTRY-METRICS-APPENDER"/>
+        <appender-ref ref="COMMON-ERROR-APPENDER"/>
+    </logger>
+    <logger name="META-PROFILE-DIGEST" level="${LOG_LEVEL}" additivity="false">
+        <appender-ref ref="META-PROFILE-DIGEST-APPENDER"/>
         <appender-ref ref="COMMON-ERROR-APPENDER"/>
     </logger>
 

@@ -222,4 +222,14 @@ public interface SessionServerConfig {
     int getDataClientConnNum();
 
     int getSessionSchedulerPoolSize();
+
+    boolean isEnableSessionLoadbalancePolicy();
+
+    int getDefaultRequestExecutorMinPoolSize();
+
+    int getDefaultRequestExecutorMaxPoolSize();
+
+    int getDefaultRequestExecutorQueueSize();
+
+    long getDefaultRequestExecutorKeepAliveTime();
 }

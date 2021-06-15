@@ -24,7 +24,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import java.util.List;
-import java.util.Set;
 
 @Path("connections")
 public class ConnectionsResource {
