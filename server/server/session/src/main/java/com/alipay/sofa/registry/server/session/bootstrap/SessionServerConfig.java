@@ -170,4 +170,6 @@ public interface SessionServerConfig extends ServerShareConfig {
   int getRevisionHeartbeatMinutes();
 
   int getClientManagerIntervalMillis();
+
+  int getSkipPushEmptySilentMs();
 }

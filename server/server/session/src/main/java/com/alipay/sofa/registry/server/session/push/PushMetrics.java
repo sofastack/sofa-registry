@@ -163,5 +163,13 @@ public final class PushMetrics {
         PUSH_DELAY_HISTOGRAM.labels(pushType.name()).observe(millis);
       }
     }
+
+    static final Counter PUSH_EMPTY_SKIP_COUNTER =
+        Counter.build()
+            .namespace("session")
+            .subsystem("push")
+            .name("push_empty_skip")
+            .help("push empty skip count")
+            .register();
   }
 }

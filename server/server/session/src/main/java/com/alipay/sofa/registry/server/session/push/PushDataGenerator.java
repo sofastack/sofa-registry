@@ -17,6 +17,8 @@
 package com.alipay.sofa.registry.server.session.push;
 
 import com.alipay.sofa.registry.common.model.SubscriberUtils;
+import com.alipay.sofa.registry.common.model.client.pb.DataBoxesPb;
+import com.alipay.sofa.registry.common.model.client.pb.ReceivedDataPb;
 import com.alipay.sofa.registry.common.model.store.BaseInfo;
 import com.alipay.sofa.registry.common.model.store.SubDatum;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
@@ -26,7 +28,9 @@ import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.converter.ReceivedDataConverter;
 import com.alipay.sofa.registry.server.session.converter.pb.ReceivedDataConvertor;
 import com.alipay.sofa.registry.server.session.predicate.ZonePredicate;
+import com.alipay.sofa.registry.util.StringFormatter;
 import com.google.common.collect.Lists;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,9 +59,19 @@ public class PushDataGenerator {
             zonePredicate);
     receivedData.setVersion(datum.getVersion());
     final Byte serializerIndex = subscriber.getSourceAddress().getSerializerIndex();
-    if (serializerIndex != null && URL.PROTOBUF == serializerIndex.byteValue()) {
+    if (serializerIndex != null && URL.PROTOBUF == serializerIndex) {
       return ReceivedDataConvertor.convert2Pb(receivedData);
     }
     return receivedData;
+  }
+
+  public int pushDataCount(Object obj) {
+    if (obj instanceof ReceivedDataPb) {
+      return ((ReceivedDataPb) obj)
+          .getDataMap().values().stream().mapToInt(DataBoxesPb::getDataCount).sum();
+    } else if (obj instanceof ReceivedData) {
+      return ((ReceivedData) obj).getData().values().stream().mapToInt(List::size).sum();
+    }
+    throw new RuntimeException(StringFormatter.format("unknown push data {}", obj));
   }
 }

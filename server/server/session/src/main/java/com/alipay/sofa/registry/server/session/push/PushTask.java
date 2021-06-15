@@ -39,6 +39,7 @@ public abstract class PushTask {
 
   protected final PushingTaskKey pushingTaskKey;
   protected final PushTrace trace;
+  private int pushDataCount = -1;
 
   protected PushTask(
       PushCause pushCause,
@@ -105,6 +106,14 @@ public abstract class PushTask {
         .append(",retry=")
         .append(retryCount);
     return sb.toString();
+  }
+
+  public int getPushDataCount() {
+    return pushDataCount;
+  }
+
+  public void setPushDataCount(int pushDataCount) {
+    this.pushDataCount = pushDataCount;
   }
 
   protected static final class PushingTaskKey {

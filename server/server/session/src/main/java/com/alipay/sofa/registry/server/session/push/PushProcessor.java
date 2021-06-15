@@ -32,12 +32,10 @@ import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.node.service.ClientNodeService;
 import com.alipay.sofa.registry.task.KeyedThreadPoolExecutor;
 import com.alipay.sofa.registry.task.MetricsableThreadPoolExecutor;
-import com.alipay.sofa.registry.util.CollectionUtils;
-import com.alipay.sofa.registry.util.ConcurrentUtils;
-import com.alipay.sofa.registry.util.LoopRunnable;
-import com.alipay.sofa.registry.util.OsUtils;
+import com.alipay.sofa.registry.util.*;
 import com.google.common.collect.Lists;
 import java.net.InetSocketAddress;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -50,7 +48,7 @@ public class PushProcessor {
   private static final Logger LOGGER = PushLog.LOGGER;
 
   private KeyedThreadPoolExecutor pushExecutor;
-  PushTaskBuffer taskBuffer;
+  volatile PushTaskBuffer taskBuffer;
 
   final Map<PushTask.PushingTaskKey, PushTask> pushingTasks = new ConcurrentHashMap<>(1024 * 16);
 
@@ -76,8 +74,8 @@ public class PushProcessor {
             "PushExecutor",
             sessionServerConfig.getPushTaskExecutorPoolSize(),
             sessionServerConfig.getPushTaskExecutorQueueSize());
-    ConcurrentUtils.createDaemonThread("PushCleaner", cleaner).start();
     intTaskBuffer();
+    ConcurrentUtils.createDaemonThread("PushCleaner", cleaner).start();
     this.taskBuffer.start();
   }
 
@@ -206,6 +204,30 @@ public class PushProcessor {
     }
   }
 
+  boolean checkSkipPushEmptyAndUpdateVersion(PushTask task) {
+    int skipCount = 0;
+    long now = System.currentTimeMillis();
+    Collection<Subscriber> subs = task.subscriberMap.values();
+    for (Subscriber subscriber : subs) {
+      if (subscriber.getRegisterTimestamp() < now - sessionServerConfig.getSkipPushEmptySilentMs()
+          && subscriber.checkSkipPushEmpty(
+              task.datum.getDataCenter(), task.datum.getVersion(), task.getPushDataCount())) {
+        skipCount++;
+      }
+    }
+    if (subs.size() > skipCount) {
+      return true;
+    }
+    for (Subscriber subscriber : subs) {
+      subscriber.checkAndUpdateVersion(
+          task.datum.getDataCenter(), task.datum.getVersion(), task.getPushDataCount());
+    }
+    PUSH_EMPTY_SKIP_COUNTER.inc();
+    LOGGER.info(
+        "[pushEmptySkip]{},{},{}", task.taskID, task.pushingTaskKey, task.datum.getVersion());
+    return false;
+  }
+
   private boolean retry(PushTask task, String reason) {
     task.retryCount++;
     final int retry = task.retryCount;
@@ -225,7 +247,7 @@ public class PushProcessor {
   }
 
   boolean doPush(PushTask task) {
-    if (!pushSwitchService.canPush()) {
+    if (!pushSwitchService.canIpPush(task.addr.getAddress().getHostAddress())) {
       return false;
     }
 
@@ -242,17 +264,28 @@ public class PushProcessor {
       }
 
       final Object data = task.createPushData();
-      task.trace.startPush();
+      task.setPushDataCount(pushDataGenerator.pushDataCount(data));
 
       // double check
       if (!causeContinue(task)) {
         return false;
       }
+      // check push empty can skip (last push is also empty)
+      if (!checkSkipPushEmptyAndUpdateVersion(task)) {
+        return false;
+      }
+
+      task.trace.startPush();
       pushingTasks.put(task.pushingTaskKey, task);
       clientNodeService.pushWithCallback(
           data, task.subscriber.getSourceAddress(), new PushClientCallback(task));
       PUSH_CLIENT_ING_COUNTER.inc();
-      LOGGER.info("[pushing]{},{}", task.taskID, task.pushingTaskKey);
+      LOGGER.info(
+          "[pushing]{},{},{},{}",
+          task.taskID,
+          task.pushingTaskKey,
+          task.datum.getVersion(),
+          task.getPushDataCount());
       return true;
     } catch (Throwable e) {
       handleDoPushException(task, e);
@@ -341,7 +374,7 @@ public class PushProcessor {
         if (!subscriber.checkAndUpdateVersion(
             pushTask.datum.getDataCenter(),
             pushTask.datum.getVersion(),
-            pushTask.datum.getPublishers().size())) {
+            pushTask.getPushDataCount())) {
           LOGGER.info(
               "PushY, but failed to updateVersion, {}, {}",
               pushTask.taskID,
