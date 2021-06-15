@@ -16,8 +16,6 @@
  */
 package com.alipay.sofa.registry.server.session.push;
 
-import static com.alipay.sofa.registry.server.session.push.PushMetrics.Push.*;
-
 import com.alipay.remoting.rpc.exception.InvokeTimeoutException;
 import com.alipay.sofa.registry.common.model.SubscriberUtils;
 import com.alipay.sofa.registry.common.model.Tuple;
@@ -32,23 +30,32 @@ import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.node.service.ClientNodeService;
 import com.alipay.sofa.registry.task.KeyedThreadPoolExecutor;
 import com.alipay.sofa.registry.task.MetricsableThreadPoolExecutor;
-import com.alipay.sofa.registry.util.*;
+import com.alipay.sofa.registry.task.RejectedDiscardHandler;
+import com.alipay.sofa.registry.util.CollectionUtils;
+import com.alipay.sofa.registry.util.ConcurrentUtils;
+import com.alipay.sofa.registry.util.LoopRunnable;
+import com.alipay.sofa.registry.util.OsUtils;
 import com.google.common.collect.Lists;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import javax.annotation.PostConstruct;
 import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicLong;
-import javax.annotation.PostConstruct;
-import org.springframework.beans.factory.annotation.Autowired;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
+import static com.alipay.sofa.registry.server.session.push.PushMetrics.Push.*;
 
 public class PushProcessor {
   private static final Logger LOGGER = PushLog.LOGGER;
 
   private KeyedThreadPoolExecutor pushExecutor;
-  volatile PushTaskBuffer taskBuffer;
+  PushTaskBuffer taskBuffer;
 
   final Map<PushTask.PushingTaskKey, PushTask> pushingTasks = new ConcurrentHashMap<>(1024 * 16);
 
@@ -62,10 +69,10 @@ public class PushProcessor {
 
   final Cleaner cleaner = new Cleaner();
 
-  final AtomicLong callbackDiscardCount = new AtomicLong();
+  final RejectedDiscardHandler discardHandler = new RejectedDiscardHandler();
   private final ThreadPoolExecutor pushCallbackExecutor =
       MetricsableThreadPoolExecutor.newExecutor(
-          "PushCallback", OsUtils.getCpuCount() * 5, 40000, new DiscardRunHandler());
+          "PushCallback", OsUtils.getCpuCount() * 5, 40000, discardHandler);
 
   @PostConstruct
   public void init() {
@@ -117,7 +124,7 @@ public class PushProcessor {
       LOGGER.info(
           "cleans={}, callbackDiscardCounter={}, buffer={}, pushing={}",
           cleans,
-          callbackDiscardCount.getAndSet(0),
+          discardHandler.getDiscardCountThenReset(),
           taskBuffer.size(),
           pushingTasks.size());
     }
@@ -154,7 +161,11 @@ public class PushProcessor {
       // force to remove the prev task
       final boolean cleaned = pushingTasks.remove(task.pushingTaskKey, task);
       if (cleaned) {
-        task.trace.finishPush(PushTrace.PushStatus.Busy, task.taskID, task.getMaxPushedVersion(), task.getPushDataCount());
+        task.trace.finishPush(
+            PushTrace.PushStatus.Busy,
+            task.taskID,
+            task.getMaxPushedVersion(),
+            task.getPushDataCount());
       }
       return span;
     }
@@ -298,7 +309,10 @@ public class PushProcessor {
     boolean cleaned = pushingTasks.remove(task.pushingTaskKey) != null;
     if (e instanceof RequestChannelClosedException) {
       task.trace.finishPush(
-          PushTrace.PushStatus.ChanClosed, task.taskID, task.getMaxPushedVersion(), task.getPushDataCount());
+          PushTrace.PushStatus.ChanClosed,
+          task.taskID,
+          task.getMaxPushedVersion(),
+          task.getPushDataCount());
       LOGGER.error(
           "{}, channel closed, {}, cleaned={}, {}",
           task.taskID,
@@ -309,7 +323,10 @@ public class PushProcessor {
     }
     if (e instanceof ChannelOverflowException) {
       task.trace.finishPush(
-          PushTrace.PushStatus.ChanOverflow, task.taskID, task.getMaxPushedVersion(), task.getPushDataCount());
+          PushTrace.PushStatus.ChanOverflow,
+          task.taskID,
+          task.getMaxPushedVersion(),
+          task.getPushDataCount());
       LOGGER.error(
           "{}, channel overflow, {}, cleaned={}, {}",
           task.taskID,
@@ -318,7 +335,11 @@ public class PushProcessor {
           e.getMessage());
       return;
     }
-    task.trace.finishPush(PushTrace.PushStatus.Fail, task.taskID, task.getMaxPushedVersion(), task.getPushDataCount());
+    task.trace.finishPush(
+        PushTrace.PushStatus.Fail,
+        task.taskID,
+        task.getMaxPushedVersion(),
+        task.getPushDataCount());
     LOGGER.error(
         "{}, failed to pushing {}, cleaned={}", task.taskID, task.pushingTaskKey, cleaned, e);
   }
@@ -382,7 +403,10 @@ public class PushProcessor {
         }
       }
       this.pushTask.trace.finishPush(
-          PushTrace.PushStatus.OK, pushTask.taskID, subscriberPushedVersion, this.pushTask.getPushDataCount());
+          PushTrace.PushStatus.OK,
+          pushTask.taskID,
+          subscriberPushedVersion,
+          this.pushTask.getPushDataCount());
     }
 
     @Override
@@ -397,18 +421,27 @@ public class PushProcessor {
 
       if (exception instanceof InvokeTimeoutException) {
         this.pushTask.trace.finishPush(
-            PushTrace.PushStatus.Timeout, pushTask.taskID, pushTask.getMaxPushedVersion(), pushTask.getPushDataCount());
+            PushTrace.PushStatus.Timeout,
+            pushTask.taskID,
+            pushTask.getMaxPushedVersion(),
+            pushTask.getPushDataCount());
         LOGGER.error("[PushTimeout]taskId={}, {}", pushTask.taskID, pushTask.pushingTaskKey);
       } else {
         if (channelConnected) {
           this.pushTask.trace.finishPush(
-              PushTrace.PushStatus.Fail, pushTask.taskID, pushTask.getMaxPushedVersion(), pushTask.getPushDataCount());
+              PushTrace.PushStatus.Fail,
+              pushTask.taskID,
+              pushTask.getMaxPushedVersion(),
+              pushTask.getPushDataCount());
           LOGGER.error(
               "[PushFailed]taskId={}, {}", pushTask.taskID, pushTask.pushingTaskKey, exception);
         } else {
           needRecord = false;
           this.pushTask.trace.finishPush(
-              PushTrace.PushStatus.ChanClosed, pushTask.taskID, pushTask.getMaxPushedVersion(), pushTask.getPushDataCount());
+              PushTrace.PushStatus.ChanClosed,
+              pushTask.taskID,
+              pushTask.getMaxPushedVersion(),
+              pushTask.getPushDataCount());
           // TODO no need to error?
           LOGGER.error("[PushChanClosed]taskId={}, {}", pushTask.taskID, pushTask.pushingTaskKey);
         }
@@ -428,12 +461,6 @@ public class PushProcessor {
     @Override
     public Executor getExecutor() {
       return pushCallbackExecutor;
-    }
-  }
-
-  final class DiscardRunHandler implements RejectedExecutionHandler {
-    public void rejectedExecution(Runnable r, ThreadPoolExecutor e) {
-      callbackDiscardCount.incrementAndGet();
     }
   }
 

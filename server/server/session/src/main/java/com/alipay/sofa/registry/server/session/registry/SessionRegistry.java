@@ -24,6 +24,7 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
+import com.alipay.sofa.registry.remoting.exchange.ExchangeCallback;
 import com.alipay.sofa.registry.remoting.exchange.RequestChannelClosedException;
 import com.alipay.sofa.registry.server.session.acceptor.ClientOffWriteDataRequest;
 import com.alipay.sofa.registry.server.session.acceptor.PublisherWriteDataRequest;
@@ -48,6 +49,7 @@ import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.LoopRunnable;
+import com.alipay.sofa.registry.util.StringFormatter;
 import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -300,6 +302,7 @@ public class SessionRegistry implements Registry {
 
   private final class VersionWatchDog extends WakeUpLoopRunnable {
     boolean prevStopPushSwitch;
+    long scanRound;
 
     @Override
     public void runUnthrowable() {
@@ -310,7 +313,7 @@ public class SessionRegistry implements Registry {
         // 2. stopPush.val = true in meta
         // 3. scanVerEnable=true after session start and config the stopPush.val
         if (!stop && scanVerEnable) {
-          scanVersions();
+          scanVersions(scanRound++);
           scanSubscribers();
           if (prevStopPushSwitch) {
             SCAN_VER_LOGGER.info("[ReSub] resub after stopPushSwitch closed");
@@ -328,21 +331,78 @@ public class SessionRegistry implements Registry {
     }
   }
 
-  private void scanVersions() {
+  private void scanVersions(long round) {
     // TODO not support multi cluster
+    final String dataCenter = sessionServerConfig.getSessionServerDataCenter();
     Map<String, DatumVersion> interestVersions =
         sessionInterests.getInterestVersions(sessionServerConfig.getSessionServerDataCenter());
     Map<Integer, Map<String, DatumVersion>> interestVersionsGroup = groupBySlot(interestVersions);
+
+    Map<Integer, FetchVersionResult> resultMap =
+        Maps.newHashMapWithExpectedSize(interestVersions.size());
     for (Map.Entry<Integer, Map<String, DatumVersion>> group : interestVersionsGroup.entrySet()) {
-      final int slotId = group.getKey();
+      final Integer slotId = group.getKey();
       try {
-        fetchChangDataProcess(
-            sessionServerConfig.getSessionServerDataCenter(), slotId, group.getValue());
+        final FetchVersionResult result =
+            fetchDataVersionAsync(dataCenter, slotId, group.getValue(), round);
+        if (result != null) {
+          resultMap.put(slotId, result);
+        }
       } catch (Throwable e) {
         SCAN_VER_LOGGER.error(
             "failed to fetch versions slotId={}, size={}", slotId, group.getValue().size(), e);
       }
     }
+    final int timeoutMillis = sessionServerConfig.getDataNodeExchangeTimeoutMillis();
+    final long waitDeadline = System.currentTimeMillis() + timeoutMillis + 1000;
+    // wait async finish
+    ConcurrentUtils.sleepUninterruptibly(100, TimeUnit.MILLISECONDS);
+    // check callback result, use for.count to avoid the clock skew
+    for (int i = 0; i < (timeoutMillis * 2) / 50; i++) {
+      handleFetchResult(round, dataCenter, resultMap);
+      if (resultMap.isEmpty() || System.currentTimeMillis() > waitDeadline) {
+        break;
+      }
+      ConcurrentUtils.sleepUninterruptibly(50, TimeUnit.MILLISECONDS);
+    }
+    if (!resultMap.isEmpty()) {
+      SCAN_VER_LOGGER.error("[fetchSlotVerTimeout]callbacks={},{}", resultMap.size(), resultMap);
+    }
+  }
+
+  int handleFetchResult(long round, String dataCenter, Map<Integer, FetchVersionResult> resultMap) {
+    int count = 0;
+    final Iterator<Map.Entry<Integer, FetchVersionResult>> it = resultMap.entrySet().iterator();
+    while (it.hasNext()) {
+      final Map.Entry<Integer, FetchVersionResult> e = it.next();
+      FetchVersionResult result = e.getValue();
+      if (result.callback == null) {
+        // not finish
+        continue;
+      }
+      it.remove();
+      count++;
+      // success
+      if (result.callback.versions != null) {
+        final long now = System.currentTimeMillis();
+        for (Map.Entry<String, DatumVersion> version : result.callback.versions.entrySet()) {
+          final String dataInfoId = version.getKey();
+          final long verVal = version.getValue().getValue();
+          if (sessionInterests.checkInterestVersion(dataCenter, dataInfoId, verVal).interested) {
+            TriggerPushContext ctx = new TriggerPushContext(dataCenter, verVal, result.leader, now);
+            firePushService.fireOnChange(dataInfoId, ctx);
+            SCAN_VER_LOGGER.info(
+                "[fetchSlotVerNotify]round={},{},{},{},{}",
+                round,
+                e.getKey(),
+                dataInfoId,
+                dataCenter,
+                verVal);
+          }
+        }
+      }
+    }
+    return count;
   }
 
   public String getDataCenterWhenPushEmpty() {
@@ -411,37 +471,73 @@ public class SessionRegistry implements Registry {
     return ret;
   }
 
-  private void fetchChangDataProcess(
-      String dataCenter, int slotId, Map<String, DatumVersion> interestVersions) {
+  private static final class FetchVersionResult {
+    final String leader;
+    final int slotId;
+    volatile FetchVersionCallback callback;
+
+    FetchVersionResult(int slotId, String leader) {
+      this.leader = leader;
+      this.slotId = slotId;
+    }
+
+    @Override
+    public String toString() {
+      return StringFormatter.format(
+          "FetchResult{slotId={},{},finish={}}", slotId, leader, callback != null);
+    }
+  }
+
+  private static final class FetchVersionCallback {
+    final Map<String, DatumVersion> versions;
+
+    FetchVersionCallback(Map<String, DatumVersion> versions) {
+      this.versions = versions;
+    }
+  }
+
+  FetchVersionResult fetchDataVersionAsync(
+      String dataCenter, int slotId, Map<String, DatumVersion> interestVersions, long round) {
     final String leader = slotTableCache.getLeader(slotId);
     if (StringUtils.isBlank(leader)) {
-      SCAN_VER_LOGGER.warn("slot not assigned, {}", slotId);
-      return;
+      SCAN_VER_LOGGER.warn("round={}, slot not assigned, {}", round, slotId);
+      return null;
     }
-
-    Map<String /*datainfoid*/, DatumVersion> dataVersions =
-        dataNodeService.fetchDataVersion(dataCenter, slotId, interestVersions);
-
-    SCAN_VER_LOGGER.info(
-        "[fetchSlotVer]{},{},{},interests={},gets={}",
-        slotId,
+    final FetchVersionResult result = new FetchVersionResult(slotId, leader);
+    dataNodeService.fetchDataVersion(
         dataCenter,
-        leader,
-        interestVersions.size(),
-        dataVersions.size());
-    Map<String, DatumVersion> mergedVersions = new HashMap<>(interestVersions);
-    mergedVersions.putAll(dataVersions);
-    final long now = System.currentTimeMillis();
-    for (Map.Entry<String, DatumVersion> version : mergedVersions.entrySet()) {
-      final String dataInfoId = version.getKey();
-      final long verVal = version.getValue().getValue();
-      if (sessionInterests.checkInterestVersion(dataCenter, dataInfoId, verVal).interested) {
-        TriggerPushContext ctx = new TriggerPushContext(dataCenter, verVal, leader, now);
-        firePushService.fireOnChange(dataInfoId, ctx);
-        SCAN_VER_LOGGER.info(
-            "[fetchSlotVerNotify]{},{},{},{}", slotId, dataInfoId, dataCenter, verVal);
-      }
-    }
+        slotId,
+        interestVersions,
+        new ExchangeCallback<Map<String, DatumVersion>>() {
+          @Override
+          public void onCallback(Channel channel, Map<String, DatumVersion> message) {
+            // merge the version
+            Map<String, DatumVersion> mergedVersions = new HashMap<>(interestVersions);
+            mergedVersions.putAll(message);
+            result.callback = new FetchVersionCallback(mergedVersions);
+            SCAN_VER_LOGGER.info(
+                "[fetchSlotVer]round={},{},{},leader={},interests={},gets={}",
+                round,
+                slotId,
+                dataCenter,
+                leader,
+                interestVersions.size(),
+                message.size());
+          }
+
+          @Override
+          public void onException(Channel channel, Throwable e) {
+            result.callback = new FetchVersionCallback(null);
+            SCAN_VER_LOGGER.error(
+                "round={},failed to fetch versions,slotId={},leader={},size={}",
+                round,
+                slotId,
+                leader,
+                interestVersions.size(),
+                e);
+          }
+        });
+    return result;
   }
 
   public void cleanClientConnect() {

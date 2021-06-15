@@ -384,6 +384,7 @@ public final class SlotManagerImpl implements SlotManager {
       slotState.syncLeaderTask = null;
       final Set<String> sessions = metaServerService.getSessionServerList();
       if (slotState.migrated) {
+
         syncSessions(slotState, sessions, syncSessionIntervalMs, slotTableEpoch);
       } else {
         syncMigrating(slotState, sessions, syncSessionIntervalMs, slotTableEpoch);

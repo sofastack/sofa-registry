@@ -34,6 +34,8 @@ import java.util.Collections;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicReference;
+
+import com.alipay.sofa.registry.task.RejectedDiscardHandler;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -264,8 +266,7 @@ public class PushProcessorTest {
 
   @Test
   public void testRun() {
-    PushProcessor processor = new PushProcessor();
-    PushProcessor.DiscardRunHandler discardRunHandler = processor.new DiscardRunHandler();
+    RejectedDiscardHandler discardRunHandler = new RejectedDiscardHandler();
     Thread t = Thread.currentThread();
     final AtomicReference<Thread> runT = new AtomicReference<>();
     discardRunHandler.rejectedExecution(

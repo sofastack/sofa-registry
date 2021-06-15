@@ -30,7 +30,7 @@ import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
 import com.alipay.sofa.registry.remoting.exchange.RequestException;
 import com.alipay.sofa.registry.remoting.exchange.message.Request;
 import com.alipay.sofa.registry.remoting.exchange.message.Response;
-import com.alipay.sofa.registry.remoting.exchange.message.SyncRequest;
+import com.alipay.sofa.registry.remoting.exchange.message.SimpleRequest;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import com.google.common.annotations.VisibleForTesting;
@@ -92,7 +92,7 @@ public abstract class ClientSideExchanger implements NodeExchanger {
   }
 
   public Response requestRaw(String ip, Object raw) throws RequestException {
-    Request req = new SyncRequest(raw, new URL(ip, getServerPort()));
+    Request req = new SimpleRequest(raw, new URL(ip, getServerPort()));
     return request(req);
   }
 

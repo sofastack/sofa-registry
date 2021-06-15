@@ -27,8 +27,8 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.CallbackHandler;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
-import com.alipay.sofa.registry.remoting.exchange.message.Request;
 import com.alipay.sofa.registry.remoting.exchange.message.Response;
+import com.alipay.sofa.registry.remoting.exchange.message.SimpleRequest;
 import com.alipay.sofa.registry.server.meta.MetaLeaderService;
 import com.alipay.sofa.registry.server.meta.remoting.connection.NodeConnectManager;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
@@ -45,7 +45,6 @@ import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -137,7 +136,7 @@ public abstract class AbstractNotifier<T extends Node> implements Notifier {
             if (ret.containsKey(address)) {
               return;
             }
-            Response resp = getNodeExchanger().request(new SimpleRequest<>(req, connection));
+            Response resp = getNodeExchanger().request(new SimpleRequest(req, new URL(connection)));
             if (resp != null) {
               ret.put(address, resp.getResult());
             } else {
@@ -179,40 +178,11 @@ public abstract class AbstractNotifier<T extends Node> implements Notifier {
     }
   }
 
-  private static class SimpleRequest<E> implements Request<E> {
-
-    protected static final Logger logger = LoggerFactory.getLogger(SimpleRequest.class);
-
-    private final E event;
-
-    private final InetSocketAddress connection;
-
-    public SimpleRequest(E event, InetSocketAddress connection) {
-      this.event = event;
-      this.connection = connection;
-    }
-
-    @Override
-    public E getRequestBody() {
-      return event;
-    }
-
-    @Override
-    public URL getRequestUrl() {
-      return new URL(connection);
-    }
-
-    @Override
-    public AtomicInteger getRetryTimes() {
-      return new AtomicInteger(3);
-    }
-  }
-
-  private static final class NotifyRequest<E> extends SimpleRequest<E> {
+  private final class NotifyRequest<E> extends SimpleRequest<E> {
     private final Executor executors;
 
     public NotifyRequest(E event, InetSocketAddress connection, Executor executors) {
-      super(event, connection);
+      super(event, new URL(connection));
       this.executors = executors;
     }
 

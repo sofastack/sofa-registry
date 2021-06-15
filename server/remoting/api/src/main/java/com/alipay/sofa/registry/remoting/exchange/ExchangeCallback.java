@@ -14,26 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.remoting.exchange.message;
+package com.alipay.sofa.registry.remoting.exchange;
 
-import com.alipay.sofa.registry.common.model.store.URL;
+import com.alipay.sofa.registry.remoting.Channel;
 
-public class SyncRequest<T> implements Request<T> {
-  private final T req;
-  private final URL url;
+public interface ExchangeCallback<T> {
+  // callback channel maybe is null
+  void onCallback(Channel channel, T message);
 
-  public SyncRequest(T req, URL url) {
-    this.req = req;
-    this.url = url;
-  }
-
-  @Override
-  public T getRequestBody() {
-    return req;
-  }
-
-  @Override
-  public URL getRequestUrl() {
-    return url;
-  }
+  // callback channel maybe is null
+  void onException(Channel channel, Throwable exception);
 }

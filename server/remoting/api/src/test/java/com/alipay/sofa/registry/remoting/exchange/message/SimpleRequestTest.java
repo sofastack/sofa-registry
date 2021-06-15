@@ -18,40 +18,35 @@ package com.alipay.sofa.registry.remoting.exchange.message;
 
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.remoting.CallbackHandler;
+import com.alipay.sofa.registry.remoting.Channel;
+import java.util.concurrent.Executor;
+import org.junit.Assert;
+import org.junit.Test;
 
-/**
- * The interface Request.
- *
- * @param <T> the type parameter
- * @author shangyu.wh
- * @version $Id : Request.java, v 0.1 2017-11-30 17:33 shangyu.wh Exp $
- */
-public interface Request<T> {
+public class SimpleRequestTest {
+  @Test
+  public void test() {
+    Object obj = new Object();
+    URL url = new URL("192.168.1.1", 8888);
+    SimpleRequest req = new SimpleRequest(obj, url);
+    Assert.assertEquals(req.getRequestBody(), obj);
+    Assert.assertEquals(req.getRequestUrl(), url);
+    Assert.assertEquals(req.getCallBackHandler(), null);
 
-  /**
-   * Gets request body.
-   *
-   * @return the request body
-   */
-  T getRequestBody();
+    CallbackHandler callback =
+        new CallbackHandler() {
+          @Override
+          public void onCallback(Channel channel, Object message) {}
 
-  /**
-   * Gets request url.
-   *
-   * @return the request url
-   */
-  URL getRequestUrl();
+          @Override
+          public void onException(Channel channel, Throwable exception) {}
 
-  /**
-   * Gets call back handler.
-   *
-   * @return the call back handler
-   */
-  default CallbackHandler getCallBackHandler() {
-    return null;
-  }
-
-  default Integer getTimeout() {
-    return null;
+          @Override
+          public Executor getExecutor() {
+            return null;
+          }
+        };
+    req = new SimpleRequest(obj, url, callback);
+    Assert.assertEquals(req.getCallBackHandler(), callback);
   }
 }
