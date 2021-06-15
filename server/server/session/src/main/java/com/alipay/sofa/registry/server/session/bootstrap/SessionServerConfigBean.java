@@ -195,6 +195,8 @@ public class SessionServerConfigBean implements SessionServerConfig {
   private int systemPropertyIntervalMillis = 3000;
 
   private int pushTaskBufferBucketSize = 4;
+
+  private int skipPushEmptySilentMs = 30 * 1000;
   /**
    * constructor
    *
@@ -1216,5 +1218,13 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
   public void setPushTaskBufferBucketSize(int pushTaskBufferBucketSize) {
     this.pushTaskBufferBucketSize = pushTaskBufferBucketSize;
+  }
+
+  public int getSkipPushEmptySilentMs() {
+    return skipPushEmptySilentMs;
+  }
+
+  public void setSkipPushEmptySilentMs(int skipPushEmptySilentMs) {
+    this.skipPushEmptySilentMs = skipPushEmptySilentMs;
   }
 }

@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.common.model.store;
 
 import com.alipay.sofa.registry.common.model.ElementType;
+import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -78,6 +79,23 @@ public class Subscriber extends BaseInfo {
       return true;
     }
     return false;
+  }
+
+  public synchronized boolean checkSkipPushEmpty(String dataCenter, long pushVersion, int num) {
+    final PushContext ctx = lastPushContexts.computeIfAbsent(dataCenter, k -> new PushContext());
+    long lastPushMaxVersion = ctx.lastMaxPushVersion;
+    long lastPushVersion = ctx.lastPushVersion;
+    ctx.lastMaxPushVersion = Math.max(lastPushMaxVersion, pushVersion);
+    ctx.lastPushVersion = pushVersion;
+    if (num > 0) {
+      return false;
+    }
+    if (lastPushMaxVersion <= ValueConstants.DEFAULT_NO_DATUM_VERSION) {
+      return false;
+    }
+    return lastPushVersion == lastPushMaxVersion
+        && lastPushMaxVersion == ctx.pushedVersion
+        && ctx.pushedNum == 0;
   }
 
   public synchronized boolean needPushEmpty(String dataCenter) {
@@ -178,13 +196,19 @@ public class Subscriber extends BaseInfo {
 
   private static class PushContext {
     long pushedVersion;
+    long lastMaxPushVersion = -1;
+    long lastPushVersion = -1;
     long emptyVersion;
     int pushedNum = -1;
 
     @Override
     public String toString() {
       return StringFormatter.format(
-          "PushCtx{{},num={},empty={}}", pushedVersion, pushedNum, emptyVersion);
+          "PushCtx{pushedVer={},lastMaxPushVer={},num={},empty={}}",
+          pushedVersion,
+          lastMaxPushVersion,
+          pushedNum,
+          emptyVersion);
     }
   }
 }

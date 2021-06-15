@@ -113,7 +113,8 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository {
   }
 
   class Informer extends BaseInformer<InterfaceAppsIndexDomain, InterfaceAppsIndexContainer> {
-      private ConflictCallback conflictCallback;
+    private ConflictCallback conflictCallback;
+
     public Informer() {
       super("InterfaceAppsIndex", LOG);
     }
@@ -135,7 +136,7 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository {
     }
 
     @VisibleForTesting
-    public void setConflictCallback(ConflictCallback runnable){
+    public void setConflictCallback(ConflictCallback runnable) {
       conflictCallback = runnable;
     }
 
@@ -149,11 +150,10 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository {
             || newMapping.getNanosVersion() < currentMapping.getNanosVersion()
             || (newMapping.getNanosVersion() == currentMapping.getNanosVersion()
                 && !newMapping.getApps().equals(currentMapping.getApps()))) {
-          if(conflictCallback != null){
+          if (conflictCallback != null) {
             conflictCallback.callback(current, newContainer);
           }
           LOG.error("version conflict current: {}, new: {}", currentMapping, newMapping);
-
         }
       }
     }

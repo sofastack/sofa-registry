@@ -21,11 +21,10 @@ import com.alipay.sofa.registry.jdbc.AbstractH2DbTestBase;
 import com.alipay.sofa.registry.jdbc.domain.InterfaceAppsIndexDomain;
 import com.alipay.sofa.registry.store.api.repository.AppRevisionRepository;
 import com.alipay.sofa.registry.store.api.repository.InterfaceAppsRepository;
+import com.alipay.sofa.registry.util.TimestampUtil;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import com.alipay.sofa.registry.util.TimestampUtil;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,7 +41,7 @@ public class InterfaceAppsJdbcRepositoryTest extends AbstractH2DbTestBase {
   @Test
   public void batchSaveTest() {
 
-    InterfaceAppsJdbcRepository impl = (InterfaceAppsJdbcRepository)  interfaceAppsJdbcRepository;
+    InterfaceAppsJdbcRepository impl = (InterfaceAppsJdbcRepository) interfaceAppsJdbcRepository;
     String app1 = "app1";
     String app2 = "app2";
     List<String> services = new ArrayList<>();
@@ -62,13 +61,16 @@ public class InterfaceAppsJdbcRepositoryTest extends AbstractH2DbTestBase {
       Assert.assertTrue(appNames.getApps().contains(app2));
     }
     AtomicInteger conflictCount = new AtomicInteger();
-    impl.informer.setConflictCallback(((current, newContainer) -> {
-      conflictCount.getAndIncrement();
-    }));
+    impl.informer.setConflictCallback(
+        ((current, newContainer) -> {
+          conflictCount.getAndIncrement();
+        }));
     InterfaceAppsIndexContainer c1 = new InterfaceAppsIndexContainer();
-    for(String interfaceName: impl.informer.getContainer().interfaces()){
+    for (String interfaceName : impl.informer.getContainer().interfaces()) {
       InterfaceMapping mapping = impl.getAppNames(interfaceName);
-      InterfaceAppsIndexDomain domain  = new InterfaceAppsIndexDomain("", interfaceName, mapping.getApps().stream().findFirst().get());
+      InterfaceAppsIndexDomain domain =
+          new InterfaceAppsIndexDomain(
+              "", interfaceName, mapping.getApps().stream().findFirst().get());
       domain.setGmtCreate(TimestampUtil.fromNanosLong(mapping.getNanosVersion()));
       c1.onEntry(domain);
     }

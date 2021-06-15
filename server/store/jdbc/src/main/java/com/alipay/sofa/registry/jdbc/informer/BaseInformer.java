@@ -19,6 +19,7 @@ package com.alipay.sofa.registry.jdbc.informer;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
+import com.google.common.collect.Lists;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -124,12 +125,14 @@ public abstract class BaseInformer<T extends DbEntry, C extends DbEntryContainer
       allSynced = true;
       return Collections.EMPTY_LIST;
     }
-    for (int i = entries.size() - 1; i >= 0; i--) {
-      if (entries.get(i).getGmtCreate().getTime() < now.getTime() - DB_INSERT_DELAY_MS) {
-        return entries.subList(0, i + 1);
+    List<T> result = Lists.newArrayListWithExpectedSize(entries.size());
+    for (T entry : entries) {
+      if (entry.getGmtCreate().getTime() >= now.getTime() - DB_INSERT_DELAY_MS) {
+        break;
       }
+      result.add(entry);
     }
-    return Collections.EMPTY_LIST;
+    return result;
   }
 
   public C getContainer() {

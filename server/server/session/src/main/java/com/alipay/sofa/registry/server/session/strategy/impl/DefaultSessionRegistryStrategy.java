@@ -53,7 +53,7 @@ public class DefaultSessionRegistryStrategy implements SessionRegistryStrategy {
 
   @Override
   public void afterSubscriberRegister(Subscriber subscriber) {
-    if (pushSwitchService.canPush()) {
+    if (pushSwitchService.canIpPush(subscriber.getSourceAddress().getIpAddress())) {
       firePushService.fireOnRegister(subscriber);
     }
   }
