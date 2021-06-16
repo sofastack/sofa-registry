@@ -30,6 +30,7 @@ import com.alipay.sofa.registry.server.session.acceptor.PublisherWriteDataReques
 import com.alipay.sofa.registry.server.session.acceptor.WriteDataAcceptor;
 import com.alipay.sofa.registry.server.session.acceptor.WriteDataRequest;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
+import com.alipay.sofa.registry.server.session.circuit.breaker.CircuitBreakerUtil;
 import com.alipay.sofa.registry.server.session.loggers.Loggers;
 import com.alipay.sofa.registry.server.session.node.service.DataNodeService;
 import com.alipay.sofa.registry.server.session.push.FirePushService;
@@ -353,9 +354,20 @@ public class SessionRegistry implements Registry {
     List<Subscriber> subscribers = sessionInterests.getDataList();
     int regCount = 0;
     int emptyCount = 0;
+    int circuitBreaker = 0;
     final String dataCenter = getDataCenterWhenPushEmpty();
     for (Subscriber subscriber : subscribers) {
       try {
+        CircuitBreakerStatistic statistic = subscriber.getStatistic(dataCenter);
+
+        if (CircuitBreakerUtil.circuitBreaker(
+            statistic,
+            sessionServerConfig.getPushCircuitBreakerThreshold(),
+            sessionServerConfig.getPushCircuitBreakerSleepMillis())) {
+          circuitBreaker++;
+          continue;
+        }
+
         if (subscriber.needPushEmpty(dataCenter)) {
           firePushService.fireOnPushEmpty(subscriber, dataCenter);
           emptyCount++;
@@ -370,7 +382,11 @@ public class SessionRegistry implements Registry {
       }
     }
     SCAN_VER_LOGGER.info(
-        "scan subscribers, total={}, reg={}, empty={}", subscribers.size(), regCount, emptyCount);
+        "scan subscribers, total={}, reg={}, empty={}, circuitBreaker={}",
+        subscribers.size(),
+        regCount,
+        emptyCount,
+        circuitBreaker);
   }
 
   @Override

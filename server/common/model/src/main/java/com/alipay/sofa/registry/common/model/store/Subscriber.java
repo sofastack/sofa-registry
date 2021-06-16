@@ -70,12 +70,25 @@ public class Subscriber extends BaseInfo {
     return ctx.pushedVersion < version && ctx.emptyVersion == 0;
   }
 
-  public synchronized boolean checkAndUpdateVersion(String dataCenter, long pushVersion, int num) {
+  public synchronized boolean checkAndUpdateCtx(String dataCenter, long pushVersion, int num) {
     final PushContext ctx = lastPushContexts.computeIfAbsent(dataCenter, k -> new PushContext());
 
     if (ctx.pushedVersion < pushVersion) {
       ctx.pushedVersion = pushVersion;
       ctx.pushedNum = num;
+      ctx.pushedFailCount = 0;
+      ctx.lastPushedFailTimeStamp = 0;
+      return true;
+    }
+    return false;
+  }
+
+  public synchronized boolean onPushFail(String dataCenter, long pushVersion) {
+    final PushContext ctx = lastPushContexts.computeIfAbsent(dataCenter, k -> new PushContext());
+
+    if (ctx.pushedVersion < pushVersion) {
+      ctx.pushedFailCount += 1;
+      ctx.lastPushedFailTimeStamp = System.currentTimeMillis();
       return true;
     }
     return false;
@@ -176,6 +189,13 @@ public class Subscriber extends BaseInfo {
     final PushContext ctx = lastPushContexts.computeIfAbsent(dataCenter, k -> new PushContext());
     return ctx.emptyVersion != 0;
   }
+
+  /** @return */
+  public synchronized CircuitBreakerStatistic getStatistic(String dataCenter) {
+    final PushContext ctx = lastPushContexts.computeIfAbsent(dataCenter, k -> new PushContext());
+    return new CircuitBreakerStatistic(ctx.pushedFailCount, ctx.lastPushedFailTimeStamp);
+  }
+
   /**
    * change subscriber word cache
    *
@@ -200,15 +220,19 @@ public class Subscriber extends BaseInfo {
     long lastPushVersion = -1;
     long emptyVersion;
     int pushedNum = -1;
+    int pushedFailCount = 0;
+    long lastPushedFailTimeStamp = 0;
 
     @Override
     public String toString() {
       return StringFormatter.format(
-          "PushCtx{pushedVer={},lastMaxPushVer={},num={},empty={}}",
+          "PushCtx{pushedVer={},lastMaxPushVer={},num={},empty={},failCount={},failTs={}}",
           pushedVersion,
           lastMaxPushVersion,
           pushedNum,
-          emptyVersion);
+          emptyVersion,
+          pushedFailCount,
+          lastPushedFailTimeStamp);
     }
   }
 }

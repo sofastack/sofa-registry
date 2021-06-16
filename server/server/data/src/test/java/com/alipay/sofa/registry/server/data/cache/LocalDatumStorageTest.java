@@ -26,6 +26,7 @@ import com.alipay.sofa.registry.common.model.slot.func.SlotFunctionRegistry;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.server.data.TestBaseUtils;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -75,6 +76,14 @@ public class LocalDatumStorageTest {
   @Test
   public void testPut() {
     LocalDatumStorage storage = TestBaseUtils.newLocalStorage(testDc, true);
+
+    String sessionIp = "notFound";
+    Map<String, Map<String, DatumSummary>> sessionSummaryMap =
+            storage.getDatumSummary(0, Sets.newHashSet(sessionIp));
+    Map<String, DatumSummary> summaryMap = sessionSummaryMap.get(sessionIp);
+    Assert.assertEquals(sessionSummaryMap.size(), 1);
+    Assert.assertEquals(summaryMap.size(), 0);
+
     Publisher publisher = TestBaseUtils.createTestPublisher(testDataId);
     DatumVersion v = storage.put(publisher);
     Assert.assertNotNull(v);
@@ -117,10 +126,16 @@ public class LocalDatumStorageTest {
     Assert.assertEquals(processIds.size(), 1);
     Assert.assertTrue(processIds.contains(publisher.getSessionProcessId()));
 
-    Map<String, DatumSummary> summaryMap = storage.getDatumSummary(slotId, "xxx");
+    sessionIp = "notFound";
+    sessionSummaryMap =
+        storage.getDatumSummary(slotId, Sets.newHashSet(sessionIp));
+    summaryMap = sessionSummaryMap.get(sessionIp);
+    Assert.assertEquals(sessionSummaryMap.size(), 1);
     Assert.assertEquals(summaryMap.size(), 0);
 
-    summaryMap = storage.getDatumSummary(slotId, publisher.getTargetAddress().getIpAddress());
+    sessionIp = publisher.getTargetAddress().getIpAddress();
+    sessionSummaryMap = storage.getDatumSummary(slotId, Sets.newHashSet(sessionIp));
+    summaryMap = sessionSummaryMap.get(sessionIp);
     Assert.assertEquals(summaryMap.size(), 1);
     Assert.assertEquals(
         summaryMap.get(publisher.getDataInfoId()).getDataInfoId(), publisher.getDataInfoId());
@@ -132,7 +147,8 @@ public class LocalDatumStorageTest {
             .get(publisher.getRegisterId()),
         publisher.registerVersion());
 
-    summaryMap = storage.getDatumSummary(slotId, null);
+    summaryMap = storage.getDatumSummary(slotId);
+
     Assert.assertEquals(summaryMap.size(), 1);
     Assert.assertEquals(
         summaryMap.get(publisher.getDataInfoId()).getDataInfoId(), publisher.getDataInfoId());

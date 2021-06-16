@@ -182,8 +182,8 @@ public final class SlotDiffSyncer {
       long slotTableEpoch,
       String summaryTargetIp,
       int maxPublishers,
-      SyncContinues continues) {
-    Map<String, DatumSummary> summaryMap = datumStorage.getDatumSummary(slotId, summaryTargetIp);
+      SyncContinues continues,
+      Map<String, DatumSummary> summaryMap) {
     final boolean syncSession = summaryTargetIp != null;
     if (syncSession) {
       SyncSession.observeSyncSessionId(slotId, summaryMap.size());
@@ -283,14 +283,37 @@ public final class SlotDiffSyncer {
     return result;
   }
 
+  /**
+   * summary == null means can not assembly summary at first(migrating); do
+   * getDatumSummary(sessionIp)
+   *
+   * @param slotId
+   * @param sessionIp
+   * @param exchanger
+   * @param slotTableEpoch
+   * @param continues
+   * @param summary
+   * @return
+   * @throws RequestException
+   */
   public boolean syncSession(
       int slotId,
       String sessionIp,
       SessionNodeExchanger exchanger,
       long slotTableEpoch,
-      SyncContinues continues)
+      SyncContinues continues,
+      Map<String, DatumSummary> summary)
       throws RequestException {
     ParaCheckUtil.checkNotBlank(sessionIp, "sessionIp");
+
+    // summary == null means can not assembly summary before(eg:migrating);
+    // can not change to CollectionUtils.isEmpty
+    if (summary == null) {
+      Map<String, Map<String, DatumSummary>> datumSummary =
+          datumStorage.getDatumSummary(slotId, Collections.singleton(sessionIp));
+      summary = datumSummary.get(sessionIp);
+    }
+
     return sync(
         slotId,
         sessionIp,
@@ -298,7 +321,8 @@ public final class SlotDiffSyncer {
         slotTableEpoch,
         sessionIp,
         dataServerConfig.getSlotSyncPublisherDigestMaxNum(),
-        continues);
+        continues,
+        summary);
   }
 
   public boolean syncSlotLeader(
@@ -309,6 +333,7 @@ public final class SlotDiffSyncer {
       SyncContinues continues)
       throws RequestException {
     ParaCheckUtil.checkNotBlank(slotLeaderIp, "slotLeaderIp");
+    Map<String, DatumSummary> summary = datumStorage.getDatumSummary(slotId);
     return sync(
         slotId,
         slotLeaderIp,
@@ -316,7 +341,8 @@ public final class SlotDiffSyncer {
         slotTableEpoch,
         null,
         dataServerConfig.getSlotSyncPublisherDigestMaxNum(),
-        continues);
+        continues,
+        summary);
   }
 
   static Map<String, DatumSummary> pickSummaries(Map<String, DatumSummary> syncSummaries, int n) {

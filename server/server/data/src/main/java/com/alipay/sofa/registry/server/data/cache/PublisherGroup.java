@@ -34,6 +34,7 @@ import com.alipay.sofa.registry.util.StringFormatter;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.util.*;
+import java.util.Map.Entry;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
@@ -321,21 +322,46 @@ public final class PublisherGroup {
     }
   }
 
-  DatumSummary getSummary(String sessionIpAddress) {
+  DatumSummary getAllSummary() {
     Map<String /*registerId*/, RegisterVersion> publisherVersions =
-        Maps.newHashMapWithExpectedSize(64);
+        Maps.newHashMapWithExpectedSize(pubMap.size());
     for (Map.Entry<String, PublisherEnvelope> e : pubMap.entrySet()) {
       PublisherEnvelope envelope = e.getValue();
       RegisterVersion v = envelope.getVersionIfPub();
       if (v == null) {
         continue;
       }
-      if (sessionIpAddress == null
-          || sessionIpAddress.equals(envelope.sessionProcessId.getHostAddress())) {
-        publisherVersions.put(e.getKey(), v);
+      publisherVersions.put(e.getKey(), v);
+    }
+
+    return new DatumSummary(dataInfoId, publisherVersions);
+  }
+
+  Map<String, DatumSummary> getSummary(Set<String> sessionIps) {
+    Map<String, Map<String /*registerId*/, RegisterVersion>> summaryMap =
+        Maps.newHashMapWithExpectedSize(sessionIps.size());
+
+    for (String sessionIp : sessionIps) {
+      summaryMap.computeIfAbsent(sessionIp, k -> Maps.newHashMapWithExpectedSize(64));
+    }
+
+    for (Map.Entry<String, PublisherEnvelope> e : pubMap.entrySet()) {
+      PublisherEnvelope envelope = e.getValue();
+      RegisterVersion v = envelope.getVersionIfPub();
+      if (v == null) {
+        continue;
+      }
+
+      if (sessionIps.contains(envelope.sessionProcessId.getHostAddress())) {
+        summaryMap.get(envelope.sessionProcessId.getHostAddress()).put(e.getKey(), v);
       }
     }
-    return new DatumSummary(dataInfoId, publisherVersions);
+
+    Map<String, DatumSummary> result = Maps.newHashMapWithExpectedSize(summaryMap.size());
+    for (Entry<String, Map<String, RegisterVersion>> entry : summaryMap.entrySet()) {
+      result.put(entry.getKey(), new DatumSummary(dataInfoId, entry.getValue()));
+    }
+    return result;
   }
 
   Collection<ProcessId> getSessionProcessIds() {

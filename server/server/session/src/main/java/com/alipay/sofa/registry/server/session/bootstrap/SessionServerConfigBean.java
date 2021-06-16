@@ -196,7 +196,12 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
   private int pushTaskBufferBucketSize = 4;
 
+  private int pushCircuitBreakerThreshold = 20;
+
+  private int pushCircuitBreakerSleepMillis = 60 * 1000;
+
   private int skipPushEmptySilentMs = 30 * 1000;
+
   /**
    * constructor
    *
@@ -233,6 +238,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
   public void setServerPort(int serverPort) {
     this.serverPort = serverPort;
   }
+
 
   /**
    * Getter method for property <tt>schedulerHeartbeatIntervalSec</tt>.
@@ -1218,6 +1224,45 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
   public void setPushTaskBufferBucketSize(int pushTaskBufferBucketSize) {
     this.pushTaskBufferBucketSize = pushTaskBufferBucketSize;
+  }
+
+  /**
+   * Getter method for property <tt>pushCircuitBreakerThreshold</tt>.
+   *
+   * @return property value of pushCircuitBreakerThreshold
+   */
+  @Override
+  public int getPushCircuitBreakerThreshold() {
+    return pushCircuitBreakerThreshold;
+  }
+
+  /**
+   * Setter method for property <tt>pushCircuitBreakerThreshold</tt>.
+   *
+   * @param pushCircuitBreakerThreshold value to be assigned to property pushCircuitBreakerThreshold
+   */
+  public void setPushCircuitBreakerThreshold(int pushCircuitBreakerThreshold) {
+    this.pushCircuitBreakerThreshold = pushCircuitBreakerThreshold;
+  }
+
+  /**
+   * Getter method for property <tt>pushCircuitBreakerSleepMillis</tt>.
+   *
+   * @return property value of pushCircuitBreakerSleepMillis
+   */
+  @Override
+  public int getPushCircuitBreakerSleepMillis() {
+    return pushCircuitBreakerSleepMillis;
+  }
+
+  /**
+   * Setter method for property <tt>pushCircuitBreakerSleepMillis</tt>.
+   *
+   * @param pushCircuitBreakerSleepMillis value to be assigned to property
+   *     pushCircuitBreakerSleepMillis
+   */
+  public void setPushCircuitBreakerSleepMillis(int pushCircuitBreakerSleepMillis) {
+    this.pushCircuitBreakerSleepMillis = pushCircuitBreakerSleepMillis;
   }
 
   public int getSkipPushEmptySilentMs() {

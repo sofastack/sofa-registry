@@ -398,11 +398,11 @@ public class PushProcessorTest {
             null, null, Collections.singletonMap(subscriber.getRegisterId(), subscriber), datum);
 
     Assert.assertTrue(processor.interestOfDatum(task));
-    subscriber.checkAndUpdateVersion(datum.getDataCenter(), 90, 100);
+    subscriber.checkAndUpdateCtx(datum.getDataCenter(), 90, 100);
     Assert.assertTrue(processor.interestOfDatum(task));
-    subscriber.checkAndUpdateVersion(datum.getDataCenter(), 100, 100);
+    subscriber.checkAndUpdateCtx(datum.getDataCenter(), 100, 100);
     Assert.assertFalse(processor.interestOfDatum(task));
-    subscriber.checkAndUpdateVersion(datum.getDataCenter(), 110, 100);
+    subscriber.checkAndUpdateCtx(datum.getDataCenter(), 110, 100);
     Assert.assertFalse(processor.interestOfDatum(task));
   }
 }
