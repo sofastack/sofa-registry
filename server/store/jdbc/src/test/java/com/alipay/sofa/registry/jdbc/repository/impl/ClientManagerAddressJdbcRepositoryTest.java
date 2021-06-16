@@ -23,13 +23,17 @@ import static org.mockito.Mockito.when;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress;
 import com.alipay.sofa.registry.jdbc.AbstractH2DbTestBase;
+import com.alipay.sofa.registry.jdbc.config.DefaultCommonConfig;
+import com.alipay.sofa.registry.jdbc.domain.ClientManagerAddressDomain;
 import com.alipay.sofa.registry.jdbc.mapper.ClientManagerAddressMapper;
 import com.google.common.collect.Sets;
+import com.google.common.collect.Sets.SetView;
 import java.util.List;
 import java.util.Set;
 import javax.annotation.Resource;
 import org.junit.Assert;
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author xiaojian.xj
@@ -40,15 +44,17 @@ public class ClientManagerAddressJdbcRepositoryTest extends AbstractH2DbTestBase
 
   @Resource private ClientManagerAddressJdbcRepository clientManagerAddressJdbcRepository;
 
+  @Autowired private ClientManagerAddressMapper clientManagerAddressMapper;
+
+  @Autowired private DefaultCommonConfig defaultCommonConfig;
+
   public static final Set<String> clientOffSet = Sets.newHashSet("1.1.1.1", "2.2.2.2");
   public static final Set<String> clientOpenSet = Sets.newHashSet("2.2.2.2", "3.3.3.3");
 
-  private ClientManagerAddressMapper clientManagerAddressMapper =
-      mock(ClientManagerAddressMapper.class);
+  private ClientManagerAddressMapper mapper = mock(ClientManagerAddressMapper.class);
 
   @Test
   public void testClientManager() {
-    long current = System.currentTimeMillis();
     boolean clientOff =
         clientManagerAddressJdbcRepository.clientOff(
             ClientManagerAddressJdbcRepositoryTest.clientOffSet);
@@ -59,19 +65,17 @@ public class ClientManagerAddressJdbcRepositoryTest extends AbstractH2DbTestBase
             ClientManagerAddressJdbcRepositoryTest.clientOpenSet);
     Assert.assertTrue(clientOpen);
 
-    int total = clientManagerAddressJdbcRepository.queryTotalCount();
-    Assert.assertEquals(3, total);
+    clientManagerAddressJdbcRepository.waitSynced();
 
-    List<ClientManagerAddress> clientManagerAddress =
-        clientManagerAddressJdbcRepository.queryAfterThan(-1L);
-    List<ClientManagerAddress> addresses =
-        clientManagerAddressJdbcRepository.queryAfterThan(-1L, 1000);
-    Assert.assertEquals(total, clientManagerAddress.size());
-    Assert.assertEquals(total, addresses.size());
-    Assert.assertTrue(addresses.stream().findFirst().get().getGmtCreate().getTime() > current);
-    Assert.assertTrue(addresses.stream().findFirst().get().getGmtModify().getTime() > current);
+    ClientManagerAddress query = clientManagerAddressJdbcRepository.queryClientOffData();
+    SetView<String> difference = Sets.difference(clientOffSet, clientOpenSet);
+    Assert.assertEquals(query.getClientOffAddress(), difference);
 
-    for (ClientManagerAddress address : clientManagerAddress) {
+    List<ClientManagerAddressDomain> clientManagerAddress =
+        clientManagerAddressMapper.queryAfterThanByLimit(
+            defaultCommonConfig.getClusterId(), -1L, 100);
+
+    for (ClientManagerAddressDomain address : clientManagerAddress) {
       if (clientOpenSet.contains(address.getAddress())) {
         Assert.assertEquals(ValueConstants.CLIENT_OPEN, address.getOperation());
       } else {
@@ -82,8 +86,8 @@ public class ClientManagerAddressJdbcRepositoryTest extends AbstractH2DbTestBase
 
   @Test
   public void testClientManagerError() {
-    clientManagerAddressJdbcRepository.setClientManagerAddressMapper(clientManagerAddressMapper);
-    when(clientManagerAddressMapper.update(anyObject()))
+    clientManagerAddressJdbcRepository.setClientManagerAddressMapper(mapper);
+    when(mapper.update(anyObject()))
         .thenThrow(new RuntimeException("expected exception"));
     boolean clientOff =
         clientManagerAddressJdbcRepository.clientOff(

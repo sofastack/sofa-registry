@@ -24,7 +24,7 @@ import com.alipay.sofa.registry.common.model.store.CircuitBreakerStatistic;
  */
 public final class CircuitBreakerUtil {
 
-  private CircuitBreakerUtil(){}
+  private CircuitBreakerUtil() {}
 
   public static boolean circuitBreaker(
       CircuitBreakerStatistic statistic, int counterThreshold, int sleepMillis) {

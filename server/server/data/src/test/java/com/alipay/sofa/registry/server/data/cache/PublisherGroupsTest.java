@@ -86,7 +86,8 @@ public class PublisherGroupsTest {
     Assert.assertEquals(publishers.get(publisher.getDataInfoId()).get(0), publisher);
 
     String sessionIp = "noFound";
-    Map<String, Map<String, DatumSummary>> sessionSummary = groups.getSummary(Sets.newHashSet(sessionIp));
+    Map<String, Map<String, DatumSummary>> sessionSummary =
+        groups.getSummary(Sets.newHashSet(sessionIp));
     Map<String, DatumSummary> summaryMap = sessionSummary.get(sessionIp);
     Assert.assertEquals(summaryMap.size(), 0);
 

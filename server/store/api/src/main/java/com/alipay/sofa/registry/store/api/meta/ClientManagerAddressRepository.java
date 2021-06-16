@@ -17,7 +17,6 @@
 package com.alipay.sofa.registry.store.api.meta;
 
 import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -43,28 +42,14 @@ public interface ClientManagerAddressRepository {
   boolean clientOff(Set<String> ipSet);
 
   /**
-   * query records
-   *
-   * @param maxId
-   * @return
-   */
-  List<ClientManagerAddress> queryAfterThan(long maxId);
-
-  /**
-   * query records
-   *
-   * @param maxId
-   * @return
-   */
-  List<ClientManagerAddress> queryAfterThan(long maxId, long limit);
-
-  int queryTotalCount();
-
-  /**
    * reduce
    *
    * @param ipSet
    * @return
    */
   boolean reduce(Set<String> ipSet);
+
+  ClientManagerAddress queryClientOffData();
+
+  void waitSynced();
 }

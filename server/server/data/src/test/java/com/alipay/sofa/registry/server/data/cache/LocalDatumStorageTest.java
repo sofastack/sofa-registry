@@ -79,7 +79,7 @@ public class LocalDatumStorageTest {
 
     String sessionIp = "notFound";
     Map<String, Map<String, DatumSummary>> sessionSummaryMap =
-            storage.getDatumSummary(0, Sets.newHashSet(sessionIp));
+        storage.getDatumSummary(0, Sets.newHashSet(sessionIp));
     Map<String, DatumSummary> summaryMap = sessionSummaryMap.get(sessionIp);
     Assert.assertEquals(sessionSummaryMap.size(), 1);
     Assert.assertEquals(summaryMap.size(), 0);
@@ -127,8 +127,7 @@ public class LocalDatumStorageTest {
     Assert.assertTrue(processIds.contains(publisher.getSessionProcessId()));
 
     sessionIp = "notFound";
-    sessionSummaryMap =
-        storage.getDatumSummary(slotId, Sets.newHashSet(sessionIp));
+    sessionSummaryMap = storage.getDatumSummary(slotId, Sets.newHashSet(sessionIp));
     summaryMap = sessionSummaryMap.get(sessionIp);
     Assert.assertEquals(sessionSummaryMap.size(), 1);
     Assert.assertEquals(summaryMap.size(), 0);

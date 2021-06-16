@@ -16,166 +16,38 @@
  */
 package com.alipay.sofa.registry.common.model.metaserver;
 
-import java.util.Date;
+import java.util.Set;
 
 /**
  * @author xiaojian.xj
- * @version $Id: ClientManagerAddress.java, v 0.1 2021年05月12日 20:11 xiaojian.xj Exp $
+ * @version $Id: ClientManagerAddress.java, v 0.1 2021年06月16日 21:21 xiaojian.xj Exp $
  */
 public class ClientManagerAddress {
 
-  /** primary key */
-  private long id;
+  private final long version;
 
-  /** local data center */
-  private String dataCenter;
+  private final Set<String> clientOffAddress;
 
-  /** local data center */
-  private String address;
-
-  /** CLIENT_OFF/CLIENT_OPEN */
-  private String operation;
-
-  /** create time */
-  private Date gmtCreate;
-
-  /** last update time */
-  private Date gmtModify;
-
-  public ClientManagerAddress() {}
-
-  public ClientManagerAddress(String dataCenter, String address, String operation) {
-    this.dataCenter = dataCenter;
-    this.address = address;
-    this.operation = operation;
+  public ClientManagerAddress(long version, Set<String> clientOffAddress) {
+    this.version = version;
+    this.clientOffAddress = clientOffAddress;
   }
 
   /**
-   * Getter method for property <tt>id</tt>.
+   * Getter method for property <tt>version</tt>.
    *
-   * @return property value of id
+   * @return property value of version
    */
-  public long getId() {
-    return id;
+  public long getVersion() {
+    return version;
   }
 
   /**
-   * Setter method for property <tt>id</tt>.
+   * Getter method for property <tt>clientOffAddress</tt>.
    *
-   * @param id value to be assigned to property id
+   * @return property value of clientOffAddress
    */
-  public void setId(long id) {
-    this.id = id;
-  }
-
-  /**
-   * Getter method for property <tt>dataCenter</tt>.
-   *
-   * @return property value of dataCenter
-   */
-  public String getDataCenter() {
-    return dataCenter;
-  }
-
-  /**
-   * Setter method for property <tt>dataCenter</tt>.
-   *
-   * @param dataCenter value to be assigned to property dataCenter
-   */
-  public void setDataCenter(String dataCenter) {
-    this.dataCenter = dataCenter;
-  }
-
-  /**
-   * Getter method for property <tt>address</tt>.
-   *
-   * @return property value of address
-   */
-  public String getAddress() {
-    return address;
-  }
-
-  /**
-   * Setter method for property <tt>address</tt>.
-   *
-   * @param address value to be assigned to property address
-   */
-  public void setAddress(String address) {
-    this.address = address;
-  }
-
-  /**
-   * Getter method for property <tt>operation</tt>.
-   *
-   * @return property value of operation
-   */
-  public String getOperation() {
-    return operation;
-  }
-
-  /**
-   * Setter method for property <tt>operation</tt>.
-   *
-   * @param operation value to be assigned to property operation
-   */
-  public void setOperation(String operation) {
-    this.operation = operation;
-  }
-
-  /**
-   * Getter method for property <tt>gmtCreate</tt>.
-   *
-   * @return property value of gmtCreate
-   */
-  public Date getGmtCreate() {
-    return gmtCreate;
-  }
-
-  /**
-   * Setter method for property <tt>gmtCreate</tt>.
-   *
-   * @param gmtCreate value to be assigned to property gmtCreate
-   */
-  public void setGmtCreate(Date gmtCreate) {
-    this.gmtCreate = gmtCreate;
-  }
-
-  /**
-   * Getter method for property <tt>gmtModify</tt>.
-   *
-   * @return property value of gmtModify
-   */
-  public Date getGmtModify() {
-    return gmtModify;
-  }
-
-  /**
-   * Setter method for property <tt>gmtModify</tt>.
-   *
-   * @param gmtModify value to be assigned to property gmtModify
-   */
-  public void setGmtModify(Date gmtModify) {
-    this.gmtModify = gmtModify;
-  }
-
-  @Override
-  public String toString() {
-    return "ClientManagerAddress{"
-        + "id="
-        + id
-        + ", dataCenter='"
-        + dataCenter
-        + '\''
-        + ", address='"
-        + address
-        + '\''
-        + ", operation='"
-        + operation
-        + '\''
-        + ", gmtCreate="
-        + gmtCreate
-        + ", gmtModify="
-        + gmtModify
-        + '}';
+  public Set<String> getClientOffAddress() {
+    return clientOffAddress;
   }
 }

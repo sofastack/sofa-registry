@@ -17,7 +17,6 @@
 package com.alipay.sofa.registry.server.meta.provide.data;
 
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
-import com.alipay.sofa.registry.server.meta.MetaLeaderService.MetaLeaderElectorListener;
 import com.alipay.sofa.registry.store.api.DBResponse;
 import java.util.Set;
 
@@ -25,7 +24,7 @@ import java.util.Set;
  * @author xiaojian.xj
  * @version $Id: ClientManagerService.java, v 0.1 2021年05月12日 15:19 xiaojian.xj Exp $
  */
-public interface ClientManagerService extends MetaLeaderElectorListener {
+public interface ClientManagerService {
 
   /**
    * client open
@@ -57,4 +56,6 @@ public interface ClientManagerService extends MetaLeaderElectorListener {
    * @return
    */
   boolean reduce(Set<String> ipSet);
+
+  void waitSynced();
 }

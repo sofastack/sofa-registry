@@ -86,7 +86,9 @@ public class AppRevisionCleaner implements MetaLeaderService.MetaLeaderElectorLi
     Collection<AppRevisionSlice> slices = Lists.newArrayList();
     try {
       for (Object result :
-          sessionServerService.broadcastInvoke(new AppRevisionSliceRequest(slotNum, slotId), 1000 * 30).values()) {
+          sessionServerService
+              .broadcastInvoke(new AppRevisionSliceRequest(slotNum, slotId), 1000 * 30)
+              .values()) {
         slices.add((AppRevisionSlice) result);
       }
       for (String revision : AppRevisionSlice.merge(slices).getRevisions()) {

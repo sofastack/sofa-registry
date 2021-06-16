@@ -39,7 +39,6 @@ public class ClientManagerServiceTest extends AbstractH2DbTestBase {
 
   @Test
   public void testClientManager() throws InterruptedException {
-    clientManagerService.becomeLeader();
 
     clientManagerService.clientOff(clientOffSet);
 

@@ -222,8 +222,10 @@ public class FirePushService {
           sessionServerConfig.getPushCircuitBreakerThreshold(),
           sessionServerConfig.getPushCircuitBreakerSleepMillis())) {
 
-        LOGGER.info("[CircuitBreaker]subscriber:{} push check circuit break, statistic:{}",
-                subscriber.shortDesc(), statistic);
+        LOGGER.info(
+            "[CircuitBreaker]subscriber:{} push check circuit break, statistic:{}",
+            subscriber.shortDesc(),
+            statistic);
         continue;
       }
 

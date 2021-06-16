@@ -111,7 +111,8 @@ public final class PushTrace {
     this.pushStartTimestamp = System.currentTimeMillis();
   }
 
-  public void finishPush(PushStatus status, TraceID taskID, long subscriberPushedVersion, int pushNum) {
+  public void finishPush(
+      PushStatus status, TraceID taskID, long subscriberPushedVersion, int pushNum) {
     final long pushFinishTimestamp = System.currentTimeMillis();
     // push.finish- first.newly.publisher.registryTs
     long datumModifyPushSpanMillis;

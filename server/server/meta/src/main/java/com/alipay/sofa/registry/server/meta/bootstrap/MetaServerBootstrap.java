@@ -27,6 +27,7 @@ import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
+import com.alipay.sofa.registry.server.meta.provide.data.ClientManagerService;
 import com.alipay.sofa.registry.server.meta.remoting.meta.MetaNodeExchange;
 import com.alipay.sofa.registry.server.meta.remoting.meta.MetaServerRenewService;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
@@ -86,6 +87,8 @@ public class MetaServerBootstrap {
 
   @Autowired private MetaNodeExchange metaNodeExchange;
 
+  @Autowired private ClientManagerService clientManagerService;
+
   private Server sessionServer;
 
   private Server dataServer;
@@ -124,6 +127,7 @@ public class MetaServerBootstrap {
       LOGGER.info("the configuration items are as follows: " + metaServerConfig.toString());
       ReporterUtils.enablePrometheusDefaultExports();
 
+      clientManagerService.waitSynced();
       openSessionRegisterServer();
 
       openDataRegisterServer();
