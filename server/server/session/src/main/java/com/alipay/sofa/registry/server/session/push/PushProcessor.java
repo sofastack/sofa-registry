@@ -154,7 +154,7 @@ public class PushProcessor {
       // force to remove the prev task
       final boolean cleaned = pushingTasks.remove(task.pushingTaskKey, task);
       if (cleaned) {
-        task.trace.finishPush(PushTrace.PushStatus.Busy, task.taskID, task.getMaxPushedVersion());
+        task.trace.finishPush(PushTrace.PushStatus.Busy, task.taskID, task.getMaxPushedVersion(), task.getPushDataCount());
       }
       return span;
     }
@@ -216,7 +216,7 @@ public class PushProcessor {
       }
     }
     if (subs.size() > skipCount) {
-      return true;
+      return false;
     }
     for (Subscriber subscriber : subs) {
       subscriber.checkAndUpdateCtx(
@@ -225,7 +225,7 @@ public class PushProcessor {
     PUSH_EMPTY_SKIP_COUNTER.inc();
     LOGGER.info(
         "[pushEmptySkip]{},{},{}", task.taskID, task.pushingTaskKey, task.datum.getVersion());
-    return false;
+    return true;
   }
 
   private boolean retry(PushTask task, String reason) {
@@ -271,7 +271,7 @@ public class PushProcessor {
         return false;
       }
       // check push empty can skip (last push is also empty)
-      if (!checkSkipPushEmptyAndUpdateVersion(task)) {
+      if (checkSkipPushEmptyAndUpdateVersion(task)) {
         return false;
       }
 
@@ -298,7 +298,7 @@ public class PushProcessor {
     boolean cleaned = pushingTasks.remove(task.pushingTaskKey) != null;
     if (e instanceof RequestChannelClosedException) {
       task.trace.finishPush(
-          PushTrace.PushStatus.ChanClosed, task.taskID, task.getMaxPushedVersion());
+          PushTrace.PushStatus.ChanClosed, task.taskID, task.getMaxPushedVersion(), task.getPushDataCount());
       LOGGER.error(
           "{}, channel closed, {}, cleaned={}, {}",
           task.taskID,
@@ -309,7 +309,7 @@ public class PushProcessor {
     }
     if (e instanceof ChannelOverflowException) {
       task.trace.finishPush(
-          PushTrace.PushStatus.ChanOverflow, task.taskID, task.getMaxPushedVersion());
+          PushTrace.PushStatus.ChanOverflow, task.taskID, task.getMaxPushedVersion(), task.getPushDataCount());
       LOGGER.error(
           "{}, channel overflow, {}, cleaned={}, {}",
           task.taskID,
@@ -318,7 +318,7 @@ public class PushProcessor {
           e.getMessage());
       return;
     }
-    task.trace.finishPush(PushTrace.PushStatus.Fail, task.taskID, task.getMaxPushedVersion());
+    task.trace.finishPush(PushTrace.PushStatus.Fail, task.taskID, task.getMaxPushedVersion(), task.getPushDataCount());
     LOGGER.error(
         "{}, failed to pushing {}, cleaned={}", task.taskID, task.pushingTaskKey, cleaned, e);
   }
@@ -382,7 +382,7 @@ public class PushProcessor {
         }
       }
       this.pushTask.trace.finishPush(
-          PushTrace.PushStatus.OK, pushTask.taskID, subscriberPushedVersion);
+          PushTrace.PushStatus.OK, pushTask.taskID, subscriberPushedVersion, this.pushTask.getPushDataCount());
     }
 
     @Override
@@ -397,18 +397,18 @@ public class PushProcessor {
 
       if (exception instanceof InvokeTimeoutException) {
         this.pushTask.trace.finishPush(
-            PushTrace.PushStatus.Timeout, pushTask.taskID, pushTask.getMaxPushedVersion());
+            PushTrace.PushStatus.Timeout, pushTask.taskID, pushTask.getMaxPushedVersion(), pushTask.getPushDataCount());
         LOGGER.error("[PushTimeout]taskId={}, {}", pushTask.taskID, pushTask.pushingTaskKey);
       } else {
         if (channelConnected) {
           this.pushTask.trace.finishPush(
-              PushTrace.PushStatus.Fail, pushTask.taskID, pushTask.getMaxPushedVersion());
+              PushTrace.PushStatus.Fail, pushTask.taskID, pushTask.getMaxPushedVersion(), pushTask.getPushDataCount());
           LOGGER.error(
               "[PushFailed]taskId={}, {}", pushTask.taskID, pushTask.pushingTaskKey, exception);
         } else {
           needRecord = false;
           this.pushTask.trace.finishPush(
-              PushTrace.PushStatus.ChanClosed, pushTask.taskID, pushTask.getMaxPushedVersion());
+              PushTrace.PushStatus.ChanClosed, pushTask.taskID, pushTask.getMaxPushedVersion(), pushTask.getPushDataCount());
           // TODO no need to error?
           LOGGER.error("[PushChanClosed]taskId={}, {}", pushTask.taskID, pushTask.pushingTaskKey);
         }

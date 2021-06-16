@@ -111,7 +111,7 @@ public final class PushTrace {
     this.pushStartTimestamp = System.currentTimeMillis();
   }
 
-  public void finishPush(PushStatus status, TraceID taskID, long subscriberPushedVersion) {
+  public void finishPush(PushStatus status, TraceID taskID, long subscriberPushedVersion, int pushNum) {
     final long pushFinishTimestamp = System.currentTimeMillis();
     // push.finish- first.newly.publisher.registryTs
     long datumModifyPushSpanMillis;
@@ -189,7 +189,7 @@ public final class PushTrace {
         "{},{},{},{},{},cause={},pubNum={},pubBytes={},pubNew={},delay={},{},{},{},{},"
             + "session={},cliIO={},firstPubDelay={},lastPubDelay={},"
             + "subNum={},addr={},expectVer={},dataNode={},taskID={},pushedVer={},regTs={},"
-            + "notifyCreateTs={},commitOverride={},datumRecentDelay={}",
+            + "notifyCreateTs={},commitOverride={},datumRecentDelay={},pushNum={}",
         status,
         datum.getDataInfoId(),
         datum.getVersion(),
@@ -217,7 +217,8 @@ public final class PushTrace {
         subRegTimestamp,
         pushCause.triggerPushCtx.getTimes().getDatumNotifyCreate(),
         pushCause.triggerPushCtx.getTimes().getOverrideCount(),
-        formatDatumPushedDelayList(pushFinishTimestamp, lastPushTimestamp));
+        formatDatumPushedDelayList(pushFinishTimestamp, lastPushTimestamp),
+        pushNum);
   }
 
   enum PushStatus {
