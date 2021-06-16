@@ -38,6 +38,7 @@ import com.alipay.sofa.registry.common.model.sessionserver.CancelAddressRequest;
 import com.alipay.sofa.registry.common.model.slot.SlotConfig;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.URL;
+import com.alipay.sofa.registry.core.model.Result;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.net.NetUtil;
@@ -58,8 +59,11 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+
 import org.apache.commons.lang.StringUtils;
 import org.h2.tools.Server;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.springframework.beans.factory.annotation.Value;
@@ -157,6 +161,7 @@ public class BaseIntegrationTest extends AbstractTest {
   protected static void beforeInit() throws Exception {
     startServerIfNecessary();
     initRegistryClientAndChannel();
+    openPush();
   }
 
   public static void startServerIfNecessary() throws Exception {
@@ -251,6 +256,10 @@ public class BaseIntegrationTest extends AbstractTest {
     ParaCheckUtil.checkNotNull(sessionChannel.getWebTarget(), "sessionChannel");
     ParaCheckUtil.checkNotNull(dataChannel.getWebTarget(), "dataChannel");
     ParaCheckUtil.checkNotNull(metaChannel.getWebTarget(), "metaChannel");
+  }
+  protected static void openPush(){
+      Result result = metaChannel.getWebTarget().path("/stopPushDataSwitch/close").request().get(Result.class);
+    Assert.assertTrue(result.isSuccess());
   }
 
   public static class MySubscriberDataObserver implements SubscriberDataObserver {

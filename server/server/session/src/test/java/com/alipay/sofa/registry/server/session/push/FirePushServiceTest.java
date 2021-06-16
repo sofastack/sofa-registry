@@ -123,6 +123,7 @@ public class FirePushServiceTest {
         .thenReturn(Collections.singletonList(subscriber));
     svc.pushSwitchService = new PushSwitchService();
     svc.pushSwitchService.setFetchStopPushService(new FetchStopPushService());
+    svc.pushSwitchService.fetchStopPushService.setStopPushSwitch(System.currentTimeMillis(), false);
     svc.pushSwitchService.setFetchGrayPushSwitchService(new FetchGrayPushSwitchService());
     Assert.assertTrue(svc.doExecuteOnChange("testDataId", ctx));
     Mockito.verify(svc.pushProcessor, Mockito.times(1))

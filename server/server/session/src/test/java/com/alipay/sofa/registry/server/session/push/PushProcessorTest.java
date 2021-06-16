@@ -38,12 +38,17 @@ import java.util.concurrent.atomic.AtomicReference;
 import com.alipay.sofa.registry.task.RejectedDiscardHandler;
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.mockito.Mockito;
 
 public class PushProcessorTest {
   private String zone = "testZone";
   private String dataId = "testDataId";
   private long version = -1L;
+
+  @BeforeEach
+  public void beforeEach(){
+  }
 
   @Test
   public void testFire() throws Exception {
@@ -319,6 +324,7 @@ public class PushProcessorTest {
     processor.pushSwitchService = new PushSwitchService();
     processor.pushSwitchService.setFetchStopPushService(new FetchStopPushService());
     processor.pushSwitchService.setFetchGrayPushSwitchService(new FetchGrayPushSwitchService());
+    processor.pushSwitchService.fetchStopPushService.setStopPushSwitch(System.currentTimeMillis(), false);
     processor.pushDataGenerator = new PushDataGenerator();
     processor.pushDataGenerator.sessionServerConfig = config;
     processor.intTaskBuffer();
