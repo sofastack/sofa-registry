@@ -35,8 +35,7 @@ import java.util.concurrent.TimeUnit;
 import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 
-public class AppRevisionCleaner extends DefaultSessionServerService
-    implements MetaLeaderService.MetaLeaderElectorListener {
+public class AppRevisionCleaner implements MetaLeaderService.MetaLeaderElectorListener {
   private static final Logger LOG = LoggerFactory.getLogger("METADATA-EXCHANGE", "[AppRevision]");
 
   private int lastSlotId = -1;
@@ -51,6 +50,10 @@ public class AppRevisionCleaner extends DefaultSessionServerService
   @Autowired DefaultCommonConfig defaultCommonConfig;
 
   @Autowired MetadataConfig metadataConfig;
+
+  @Autowired DefaultSessionServerService sessionServerService;
+
+  @Autowired MetaLeaderService metaLeaderService;
 
   ConsecutiveSuccess consecutiveSuccess;
 
@@ -83,7 +86,7 @@ public class AppRevisionCleaner extends DefaultSessionServerService
     Collection<AppRevisionSlice> slices = Lists.newArrayList();
     try {
       for (Object result :
-          broadcastInvoke(new AppRevisionSliceRequest(slotNum, slotId), 1000 * 30).values()) {
+          sessionServerService.broadcastInvoke(new AppRevisionSliceRequest(slotNum, slotId), 1000 * 30).values()) {
         slices.add((AppRevisionSlice) result);
       }
       for (String revision : AppRevisionSlice.merge(slices).getRevisions()) {

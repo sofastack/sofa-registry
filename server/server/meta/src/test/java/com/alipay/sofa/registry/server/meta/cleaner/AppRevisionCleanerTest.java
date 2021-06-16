@@ -29,6 +29,8 @@ import com.alipay.sofa.registry.jdbc.mapper.AppRevisionMapper;
 import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
 import java.util.Collections;
 import java.util.Date;
+
+import com.alipay.sofa.registry.server.meta.remoting.session.DefaultSessionServerService;
 import org.assertj.core.util.Lists;
 import org.assertj.core.util.Maps;
 import org.assertj.core.util.Sets;
@@ -45,12 +47,15 @@ public class AppRevisionCleanerTest extends AbstractMetaServerTestBase {
     makeMetaLeader();
     appRevisionCleaner = new AppRevisionCleaner(metaLeaderService);
     appRevisionCleaner.appRevisionMapper = mock(AppRevisionMapper.class);
+    appRevisionCleaner.sessionServerService = mock(DefaultSessionServerService.class);
     appRevisionCleaner.defaultCommonConfig = mock(DefaultCommonConfig.class);
     appRevisionCleaner.metadataConfig = mock(MetadataConfig.class);
     appRevisionCleaner.consecutiveSuccess = new ConsecutiveSuccess(2, 1000);
     when(appRevisionCleaner.metadataConfig.getRevisionRenewIntervalMinutes()).thenReturn(10000);
     when(appRevisionCleaner.defaultCommonConfig.getClusterId())
         .thenReturn("DEFAULT_LOCALDATACENTER");
+    doReturn(new DateNowDomain(new Date())).when(appRevisionCleaner.appRevisionMapper).getNow();
+
   }
 
   @After
@@ -73,7 +78,7 @@ public class AppRevisionCleanerTest extends AbstractMetaServerTestBase {
     AppRevisionCleaner mocked = spy(appRevisionCleaner);
     doReturn(
             Maps.newHashMap("session1", new AppRevisionSlice(Sets.newLinkedHashSet("1", "2", "3"))))
-        .when(mocked)
+        .when(mocked.sessionServerService)
         .broadcastInvoke(any(), anyInt());
     mocked.renewer.getWaitingMillis();
     mocked.renew();
@@ -81,7 +86,7 @@ public class AppRevisionCleanerTest extends AbstractMetaServerTestBase {
     mocked.init();
     mocked.renewer.close();
     mocked.cleaner.close();
-    verify(mocked.appRevisionMapper, times(3)).heartbeat(anyString(), anyString());
+    verify(mocked.appRevisionMapper, times(6)).heartbeat(anyString(), anyString());
   }
 
   @Test
@@ -96,7 +101,7 @@ public class AppRevisionCleanerTest extends AbstractMetaServerTestBase {
     doReturn(
             Collections.singletonMap(
                 "localhost", new AppRevisionSlice(Collections.singleton("test-123"))))
-        .when(mocked)
+        .when(mocked.sessionServerService)
         .broadcastInvoke(any(), anyInt());
     mocked.renew();
     mocked.renew();
