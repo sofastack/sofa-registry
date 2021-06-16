@@ -46,9 +46,11 @@ public final class CircuitBreakerStatistic {
 
   @Override
   public String toString() {
-    return "Statistic{" +
-            "failCount=" + failCount +
-            ", lastFailTimeStamp=" + lastFailTimeStamp +
-            '}';
+    return "Statistic{"
+        + "failCount="
+        + failCount
+        + ", lastFailTimeStamp="
+        + lastFailTimeStamp
+        + '}';
   }
 }

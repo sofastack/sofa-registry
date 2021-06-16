@@ -192,6 +192,8 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
   private volatile Collection<String> metaAddresses;
 
+  private int clientManagerAddressIntervalMillis = 1000;
+
   private int systemPropertyIntervalMillis = 3000;
 
   private int pushTaskBufferBucketSize = 4;
@@ -238,7 +240,6 @@ public class SessionServerConfigBean implements SessionServerConfig {
   public void setServerPort(int serverPort) {
     this.serverPort = serverPort;
   }
-
 
   /**
    * Getter method for property <tt>schedulerHeartbeatIntervalSec</tt>.
@@ -1188,6 +1189,15 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
   public void setSystemPropertyIntervalMillis(int systemPropertyIntervalMillis) {
     this.systemPropertyIntervalMillis = systemPropertyIntervalMillis;
+  }
+
+  @Override
+  public int getClientManagerAddressIntervalMillis() {
+    return clientManagerAddressIntervalMillis;
+  }
+
+  public void setClientManagerAddressIntervalMillis(int clientManagerAddressIntervalMillis) {
+    this.clientManagerAddressIntervalMillis = clientManagerAddressIntervalMillis;
   }
 
   @Override

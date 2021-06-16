@@ -70,7 +70,7 @@ public class FetchClientOffAddressService
 
   @Override
   protected int getSystemPropertyIntervalMillis() {
-    return sessionServerConfig.getSystemPropertyIntervalMillis();
+    return sessionServerConfig.getClientManagerAddressIntervalMillis();
   }
 
   @Override

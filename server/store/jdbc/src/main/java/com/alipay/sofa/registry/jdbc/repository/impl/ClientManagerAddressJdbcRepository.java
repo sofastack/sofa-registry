@@ -16,19 +16,22 @@
  */
 package com.alipay.sofa.registry.jdbc.repository.impl;
 
-import static com.alipay.sofa.registry.jdbc.repository.impl.MetadataMetrics.ProvideData.CLIENT_MANAGER_QUERY_COUNTER;
 import static com.alipay.sofa.registry.jdbc.repository.impl.MetadataMetrics.ProvideData.CLIENT_MANAGER_UPDATE_COUNTER;
 
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress;
 import com.alipay.sofa.registry.jdbc.config.DefaultCommonConfig;
+import com.alipay.sofa.registry.jdbc.domain.ClientManagerAddressDomain;
+import com.alipay.sofa.registry.jdbc.informer.BaseInformer;
 import com.alipay.sofa.registry.jdbc.mapper.ClientManagerAddressMapper;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.store.api.meta.ClientManagerAddressRepository;
 import com.google.common.annotations.VisibleForTesting;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
+import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -42,6 +45,18 @@ public class ClientManagerAddressJdbcRepository implements ClientManagerAddressR
   @Autowired private DefaultCommonConfig defaultCommonConfig;
 
   @Autowired private ClientManagerAddressMapper clientManagerAddressMapper;
+
+  final Informer informer;
+
+  public ClientManagerAddressJdbcRepository() {
+    informer = new Informer();
+  }
+
+  @PostConstruct
+  public void init() {
+    informer.setEnabled(true);
+    informer.start();
+  }
 
   @Override
   public boolean clientOpen(Set<String> ipSet) {
@@ -69,24 +84,6 @@ public class ClientManagerAddressJdbcRepository implements ClientManagerAddressR
   }
 
   @Override
-  public List<ClientManagerAddress> queryAfterThan(long maxId) {
-    return clientManagerAddressMapper.queryAfterThan(defaultCommonConfig.getClusterId(), maxId);
-  }
-
-  @Override
-  public List<ClientManagerAddress> queryAfterThan(long maxId, long limit) {
-    CLIENT_MANAGER_QUERY_COUNTER.inc();
-    return clientManagerAddressMapper.queryAfterThanByLimit(
-        defaultCommonConfig.getClusterId(), maxId, limit);
-  }
-
-  @Override
-  public int queryTotalCount() {
-    CLIENT_MANAGER_QUERY_COUNTER.inc();
-    return clientManagerAddressMapper.queryTotalCount(defaultCommonConfig.getClusterId());
-  }
-
-  @Override
   public boolean reduce(Set<String> ipSet) {
     try {
 
@@ -99,15 +96,49 @@ public class ClientManagerAddressJdbcRepository implements ClientManagerAddressR
     return true;
   }
 
+  @Override
+  public ClientManagerAddress queryClientOffData() {
+    long version = informer.getLastLoadId();
+    return new ClientManagerAddress(version, informer.getContainer().queryClientOffData());
+  }
+
+  @Override
+  public void waitSynced() {
+    informer.waitSynced();
+  }
+
   private void doStorage(Set<String> ipSet, String operation) {
     for (String address : ipSet) {
-      ClientManagerAddress update =
-          new ClientManagerAddress(defaultCommonConfig.getClusterId(), address, operation);
+      ClientManagerAddressDomain update =
+          new ClientManagerAddressDomain(defaultCommonConfig.getClusterId(), address, operation);
       int effectRows = clientManagerAddressMapper.update(update);
 
       if (effectRows == 0) {
         clientManagerAddressMapper.insertOnReplace(update);
       }
+    }
+  }
+
+  class Informer extends BaseInformer<ClientManagerAddressDomain, ClientManagerAddressContainer> {
+
+    public Informer() {
+      super("ClientManager", LOG);
+    }
+
+    @Override
+    protected ClientManagerAddressContainer containerFactory() {
+      return new ClientManagerAddressContainer();
+    }
+
+    @Override
+    protected List<ClientManagerAddressDomain> listFromStorage(long start, int limit) {
+      return clientManagerAddressMapper.queryAfterThanByLimit(
+          defaultCommonConfig.getClusterId(), start, limit);
+    }
+
+    @Override
+    protected Date getNow() {
+      return clientManagerAddressMapper.getNow().getNow();
     }
   }
 

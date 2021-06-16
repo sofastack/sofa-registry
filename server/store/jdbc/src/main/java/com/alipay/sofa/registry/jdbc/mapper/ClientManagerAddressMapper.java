@@ -16,7 +16,8 @@
  */
 package com.alipay.sofa.registry.jdbc.mapper;
 
-import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress;
+import com.alipay.sofa.registry.jdbc.domain.ClientManagerAddressDomain;
+import com.alipay.sofa.registry.jdbc.domain.DateNowDomain;
 import java.util.List;
 import org.apache.ibatis.annotations.Param;
 
@@ -26,8 +27,6 @@ import org.apache.ibatis.annotations.Param;
  */
 public interface ClientManagerAddressMapper {
 
-  int queryTotalCount(@Param("dataCenter") String dataCenter);
-
   /**
    * query after than maxId
    *
@@ -35,19 +34,16 @@ public interface ClientManagerAddressMapper {
    * @param limit
    * @return
    */
-  List<ClientManagerAddress> queryAfterThanByLimit(
+  List<ClientManagerAddressDomain> queryAfterThanByLimit(
       @Param("dataCenter") String dataCenter,
       @Param("maxId") long maxId,
       @Param("limit") long limit);
-
-  List<ClientManagerAddress> queryAfterThan(
-      @Param("dataCenter") String dataCenter, @Param("maxId") long maxId);
 
   /**
    * @param clientManagerAddress
    * @return effect rows
    */
-  int update(ClientManagerAddress clientManagerAddress);
+  int update(ClientManagerAddressDomain clientManagerAddress);
 
   /**
    * insert on replace
@@ -55,5 +51,7 @@ public interface ClientManagerAddressMapper {
    * @param clientManagerAddress
    * @return
    */
-  int insertOnReplace(ClientManagerAddress clientManagerAddress);
+  int insertOnReplace(ClientManagerAddressDomain clientManagerAddress);
+
+  DateNowDomain getNow();
 }

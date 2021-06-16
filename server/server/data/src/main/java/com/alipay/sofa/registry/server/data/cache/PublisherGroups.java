@@ -134,7 +134,8 @@ public final class PublisherGroups {
   }
 
   Map<String, Map<String, DatumSummary>> getSummary(Set<String> sessions) {
-    Map<String /*sessionIp*/, Map<String /*dataInfoId*/, DatumSummary>> summaries = Maps.newHashMap();
+    Map<String /*sessionIp*/, Map<String /*dataInfoId*/, DatumSummary>> summaries =
+        Maps.newHashMap();
 
     for (String sessionIp : sessions) {
       summaries.computeIfAbsent(sessionIp, v -> Maps.newHashMapWithExpectedSize(64));

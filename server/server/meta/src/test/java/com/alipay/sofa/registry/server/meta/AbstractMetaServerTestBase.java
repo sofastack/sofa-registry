@@ -716,10 +716,7 @@ public class AbstractMetaServerTestBase extends AbstractTestBase {
     }
 
     @Override
-    public void becomeLeader() {}
-
-    @Override
-    public void loseLeader() {}
+    public void waitSynced() {}
   }
 
   public static class SimpleNode implements Node {

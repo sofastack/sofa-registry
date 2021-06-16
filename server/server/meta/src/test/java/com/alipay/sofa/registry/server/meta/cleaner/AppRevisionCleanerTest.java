@@ -27,10 +27,9 @@ import com.alipay.sofa.registry.jdbc.domain.AppRevisionDomain;
 import com.alipay.sofa.registry.jdbc.domain.DateNowDomain;
 import com.alipay.sofa.registry.jdbc.mapper.AppRevisionMapper;
 import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
+import com.alipay.sofa.registry.server.meta.remoting.session.DefaultSessionServerService;
 import java.util.Collections;
 import java.util.Date;
-
-import com.alipay.sofa.registry.server.meta.remoting.session.DefaultSessionServerService;
 import org.assertj.core.util.Lists;
 import org.assertj.core.util.Maps;
 import org.assertj.core.util.Sets;
@@ -55,7 +54,6 @@ public class AppRevisionCleanerTest extends AbstractMetaServerTestBase {
     when(appRevisionCleaner.defaultCommonConfig.getClusterId())
         .thenReturn("DEFAULT_LOCALDATACENTER");
     doReturn(new DateNowDomain(new Date())).when(appRevisionCleaner.appRevisionMapper).getNow();
-
   }
 
   @After

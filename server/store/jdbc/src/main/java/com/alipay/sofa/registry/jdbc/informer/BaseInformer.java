@@ -55,6 +55,15 @@ public abstract class BaseInformer<T extends DbEntry, C extends DbEntryContainer
     this.logger = logger;
   }
 
+  /**
+   * Getter method for property <tt>lastLoadId</tt>.
+   *
+   * @return property value of lastLoadId
+   */
+  public long getLastLoadId() {
+    return lastLoadId;
+  }
+
   public synchronized void start() {
     if (started) {
       return;
