@@ -21,10 +21,11 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
-import java.io.InputStream;
-import java.util.*;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
+
+import java.io.InputStream;
+import java.util.*;
 
 /**
  * @author yuzhi.lyz
@@ -77,13 +78,17 @@ public final class ServerEnv {
   }
 
   public static Map<String, Object> getReleaseProps() {
-    InputStream inputStream = ServerEnv.class.getClassLoader().getResourceAsStream(GIT_PROPS_FILE);
+    return getReleaseProps(GIT_PROPS_FILE);
+  }
+
+  public static Map<String, Object> getReleaseProps(String resource) {
+    InputStream inputStream = ServerEnv.class.getClassLoader().getResourceAsStream(resource);
     Properties properties = new Properties();
     if (inputStream != null) {
       try {
         properties.load(inputStream);
       } catch (Throwable e) {
-        LOGGER.warn("failed to start release props file");
+        LOGGER.warn("failed to start release props file {}", resource);
       } finally {
         IOUtils.closeQuietly(inputStream);
       }
