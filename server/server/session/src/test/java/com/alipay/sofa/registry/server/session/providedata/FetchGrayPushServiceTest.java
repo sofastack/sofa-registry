@@ -41,13 +41,9 @@ public class FetchGrayPushServiceTest extends FetchGrayPushSwitchService {
 
   @Before
   public void beforeFetchStopPushServiceTest() {
-    Registry sessionRegistry = mock(Registry.class);
     SessionServerConfig sessionServerConfig = mock(SessionServerConfig.class);
-    FetchStopPushService fetchStopPushService = mock(FetchStopPushService.class);
 
-    this.setSessionRegistry(sessionRegistry);
     this.setSessionServerConfig(sessionServerConfig);
-    this.setFetchStopPushService(fetchStopPushService);
   }
 
   @Test

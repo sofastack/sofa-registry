@@ -22,7 +22,6 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.provideData.FetchStopPushService.StopPushStorage;
-import com.alipay.sofa.registry.server.session.registry.Registry;
 import com.alipay.sofa.registry.server.shared.providedata.AbstractFetchSystemPropertyService;
 import com.google.common.annotations.VisibleForTesting;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,12 +34,11 @@ public class FetchStopPushService extends AbstractFetchSystemPropertyService<Sto
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FetchStopPushService.class);
 
-  @Autowired private Registry sessionRegistry;
-
   @Autowired private SessionServerConfig sessionServerConfig;
 
   public FetchStopPushService() {
-    super(ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID, new StopPushStorage(INIT_VERSION, false));
+    // default value is stop.push
+    super(ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID, new StopPushStorage(INIT_VERSION, true));
   }
 
   @Override
@@ -63,11 +61,6 @@ public class FetchStopPushService extends AbstractFetchSystemPropertyService<Sto
 
       if (!compareAndSet(expect, update)) {
         return false;
-      }
-
-      if (expect.stopPushSwitch && !update.stopPushSwitch) {
-        // prev is stop, now close stop, trigger push
-        sessionRegistry.fetchChangDataProcess();
       }
       LOGGER.info(
           "Fetch session stopPushSwitch={}, prev={}, current={}",
@@ -109,17 +102,6 @@ public class FetchStopPushService extends AbstractFetchSystemPropertyService<Sto
   @VisibleForTesting
   public void setStopPushSwitch(long version, boolean stopPushSwitch) {
     this.storage.set(new StopPushStorage(version, stopPushSwitch));
-  }
-
-  /**
-   * Setter method for property <tt>sessionRegistry</tt>.
-   *
-   * @param sessionRegistry value to be assigned to property sessionRegistry
-   */
-  @VisibleForTesting
-  protected FetchStopPushService setSessionRegistry(Registry sessionRegistry) {
-    this.sessionRegistry = sessionRegistry;
-    return this;
   }
 
   /**
