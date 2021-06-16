@@ -65,7 +65,7 @@ public class SessionInterestsTest extends AbstractSessionServerTestBase {
             DataInfo.toDataInfoId(dataInfo, instanceId, "default-group"),
             System.currentTimeMillis() + 100));
 
-    Assert.assertTrue(subscriber.checkAndUpdateVersion(getDc(), 100, 10));
+    Assert.assertTrue(subscriber.checkAndUpdateCtx(getDc(), 100, 10));
     Assert.assertFalse(subscriber.needPushEmpty(getDc()));
     subscriber.markPushEmpty(getDc(), 100);
     Assert.assertTrue(subscriber.needPushEmpty(getDc()));
@@ -85,7 +85,7 @@ public class SessionInterestsTest extends AbstractSessionServerTestBase {
       }
     }
 
-    subscriber2.checkAndUpdateVersion(getDc(), 80, 20);
+    subscriber2.checkAndUpdateCtx(getDc(), 80, 20);
 
     // get sub2.dc1
     map = interests.getInterestVersions(getDc() + "1");

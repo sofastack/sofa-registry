@@ -28,9 +28,10 @@ import com.google.common.collect.Maps;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
-import org.apache.commons.collections.CollectionUtils;
 import org.glassfish.jersey.internal.guava.Sets;
+import org.springframework.util.CollectionUtils;
 
 /**
  * @author yuzhi.lyz
@@ -132,11 +133,33 @@ public final class PublisherGroups {
     return group == null ? null : group.remove(sessionProcessId, removedPublishers);
   }
 
-  Map<String, DatumSummary> getSummary(String sessionIpAddress) {
+  Map<String, Map<String, DatumSummary>> getSummary(Set<String> sessions) {
+    Map<String /*sessionIp*/, Map<String /*dataInfoId*/, DatumSummary>> summaries = Maps.newHashMap();
+
+    for (String sessionIp : sessions) {
+      summaries.computeIfAbsent(sessionIp, v -> Maps.newHashMapWithExpectedSize(64));
+    }
+
+    for (Entry<String, PublisherGroup> pubEntry : publisherGroupMap.entrySet()) {
+      Map<String /*sessionIp*/, DatumSummary> summary = pubEntry.getValue().getSummary(sessions);
+
+      for (Entry<String, DatumSummary> entry : summary.entrySet()) {
+        if (entry.getValue().isEmpty()) {
+          continue;
+        }
+        Map<String, DatumSummary> summaryMap = summaries.get(entry.getKey());
+        summaryMap.put(pubEntry.getKey(), entry.getValue());
+      }
+    }
+
+    return summaries;
+  }
+
+  Map<String, DatumSummary> getAllSummary() {
     Map<String, DatumSummary> summaries = Maps.newHashMap();
     publisherGroupMap.forEach(
         (k, g) -> {
-          DatumSummary summary = g.getSummary(sessionIpAddress);
+          DatumSummary summary = g.getAllSummary();
           if (!summary.isEmpty()) {
             summaries.put(k, summary);
           }

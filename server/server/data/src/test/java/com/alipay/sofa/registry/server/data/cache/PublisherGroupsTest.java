@@ -24,6 +24,7 @@ import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.server.data.TestBaseUtils;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -84,10 +85,12 @@ public class PublisherGroupsTest {
     Assert.assertEquals(publishers.size(), 1);
     Assert.assertEquals(publishers.get(publisher.getDataInfoId()).get(0), publisher);
 
-    Map<String, DatumSummary> summaryMap = groups.getSummary("noFound");
+    String sessionIp = "noFound";
+    Map<String, Map<String, DatumSummary>> sessionSummary = groups.getSummary(Sets.newHashSet(sessionIp));
+    Map<String, DatumSummary> summaryMap = sessionSummary.get(sessionIp);
     Assert.assertEquals(summaryMap.size(), 0);
 
-    summaryMap = groups.getSummary(null);
+    summaryMap = groups.getAllSummary();
     Assert.assertEquals(summaryMap.size(), 1);
     Assert.assertEquals(
         summaryMap
@@ -96,7 +99,10 @@ public class PublisherGroupsTest {
             .get(publisher.getRegisterId()),
         publisher.registerVersion());
 
-    summaryMap = groups.getSummary(publisher.getTargetAddress().getIpAddress());
+    sessionIp = publisher.getTargetAddress().getIpAddress();
+    sessionSummary = groups.getSummary(Sets.newHashSet(sessionIp));
+    summaryMap = sessionSummary.get(sessionIp);
+
     Assert.assertEquals(summaryMap.size(), 1);
     Assert.assertEquals(
         summaryMap
@@ -136,10 +142,12 @@ public class PublisherGroupsTest {
     Assert.assertEquals(publishers.get(publisher.getDataInfoId()).get(0), publisher);
     Assert.assertEquals(publishers.get(publisher2.getDataInfoId()).get(0), publisher2);
 
-    summaryMap = groups.getSummary("noFound");
+    sessionIp = "noFound";
+    sessionSummary = groups.getSummary(Sets.newHashSet(sessionIp));
+    summaryMap = sessionSummary.get(sessionIp);
     Assert.assertEquals(summaryMap.size(), 0);
 
-    summaryMap = groups.getSummary(null);
+    summaryMap = groups.getAllSummary();
     Assert.assertEquals(summaryMap.size(), 2);
     Assert.assertEquals(
         summaryMap
@@ -154,7 +162,10 @@ public class PublisherGroupsTest {
             .get(publisher2.getRegisterId()),
         publisher2.registerVersion());
 
-    summaryMap = groups.getSummary(publisher.getTargetAddress().getIpAddress());
+    sessionIp = publisher.getTargetAddress().getIpAddress();
+    sessionSummary = groups.getSummary(Sets.newHashSet(sessionIp));
+    summaryMap = sessionSummary.get(sessionIp);
+
     Assert.assertEquals(summaryMap.size(), 2);
     Assert.assertEquals(
         summaryMap

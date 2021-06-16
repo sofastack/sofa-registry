@@ -763,14 +763,16 @@ public class SessionServerConfiguration {
     }
 
     @Bean
-    public FetchSystemPropertyService fetchBlackListService(SystemPropertyProcessorManager systemPropertyProcessorManager) {
+    public FetchSystemPropertyService fetchBlackListService(
+        SystemPropertyProcessorManager systemPropertyProcessorManager) {
       FetchBlackListService fetchBlackListService = new FetchBlackListService();
       systemPropertyProcessorManager.addSystemDataProcessor(fetchBlackListService);
       return fetchBlackListService;
     }
 
     @Bean
-    public FetchSystemPropertyService fetchStopPushService(SystemPropertyProcessorManager systemPropertyProcessorManager) {
+    public FetchSystemPropertyService fetchStopPushService(
+        SystemPropertyProcessorManager systemPropertyProcessorManager) {
       FetchStopPushService fetchStopPushService = new FetchStopPushService();
       systemPropertyProcessorManager.addSystemDataProcessor(fetchStopPushService);
 
@@ -778,15 +780,18 @@ public class SessionServerConfiguration {
     }
 
     @Bean
-    public FetchSystemPropertyService fetchClientOffAddressService(SystemPropertyProcessorManager systemPropertyProcessorManager) {
-      FetchClientOffAddressService fetchClientOffAddressService = new FetchClientOffAddressService();
+    public FetchSystemPropertyService fetchClientOffAddressService(
+        SystemPropertyProcessorManager systemPropertyProcessorManager) {
+      FetchClientOffAddressService fetchClientOffAddressService =
+          new FetchClientOffAddressService();
       systemPropertyProcessorManager.addSystemDataProcessor(fetchClientOffAddressService);
 
       return fetchClientOffAddressService;
     }
 
     @Bean
-    public FetchSystemPropertyService fetchGrayPushSwitchService(SystemPropertyProcessorManager systemPropertyProcessorManager) {
+    public FetchSystemPropertyService fetchGrayPushSwitchService(
+        SystemPropertyProcessorManager systemPropertyProcessorManager) {
       FetchGrayPushSwitchService fetchGrayPushSwitchService = new FetchGrayPushSwitchService();
       systemPropertyProcessorManager.addSystemDataProcessor(fetchGrayPushSwitchService);
 

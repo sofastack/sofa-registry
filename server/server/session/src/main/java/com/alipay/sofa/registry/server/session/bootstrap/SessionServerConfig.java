@@ -171,5 +171,9 @@ public interface SessionServerConfig extends ServerShareConfig {
 
   int getClientManagerIntervalMillis();
 
+  int getPushCircuitBreakerThreshold();
+
+  int getPushCircuitBreakerSleepMillis();
+
   int getSkipPushEmptySilentMs();
 }

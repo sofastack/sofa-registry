@@ -219,7 +219,7 @@ public class PushProcessor {
       return true;
     }
     for (Subscriber subscriber : subs) {
-      subscriber.checkAndUpdateVersion(
+      subscriber.checkAndUpdateCtx(
           task.datum.getDataCenter(), task.datum.getVersion(), task.getPushDataCount());
     }
     PUSH_EMPTY_SKIP_COUNTER.inc();
@@ -371,7 +371,7 @@ public class PushProcessor {
           SubscriberUtils.getMaxPushedVersion(
               pushTask.datum.getDataCenter(), pushTask.subscriberMap.values());
       for (Subscriber subscriber : pushTask.subscriberMap.values()) {
-        if (!subscriber.checkAndUpdateVersion(
+        if (!subscriber.checkAndUpdateCtx(
             pushTask.datum.getDataCenter(),
             pushTask.datum.getVersion(),
             pushTask.getPushDataCount())) {
@@ -388,6 +388,8 @@ public class PushProcessor {
     @Override
     public void onException(Channel channel, Throwable exception) {
       pushingTasks.remove(pushTask.pushingTaskKey, pushTask);
+
+      boolean needRecord = true;
       final boolean channelConnected = channel.isConnected();
       if (channelConnected) {
         retry(pushTask, "err");
@@ -404,10 +406,21 @@ public class PushProcessor {
           LOGGER.error(
               "[PushFailed]taskId={}, {}", pushTask.taskID, pushTask.pushingTaskKey, exception);
         } else {
+          needRecord = false;
           this.pushTask.trace.finishPush(
               PushTrace.PushStatus.ChanClosed, pushTask.taskID, pushTask.getMaxPushedVersion());
           // TODO no need to error?
           LOGGER.error("[PushChanClosed]taskId={}, {}", pushTask.taskID, pushTask.pushingTaskKey);
+        }
+      }
+
+      if (needRecord) {
+        // record push fail
+        for (Subscriber subscriber : pushTask.subscriberMap.values()) {
+          if (!subscriber.onPushFail(pushTask.datum.getDataCenter(), pushTask.datum.getVersion())) {
+            LOGGER.info(
+                "PushN, failed to do onPushFail, {}, {}", pushTask.taskID, pushTask.pushingTaskKey);
+          }
         }
       }
     }

@@ -197,7 +197,8 @@ public class SlotDiffSyncerTest {
 
   @Test
   public void testSyncSession() {
-    MockSync mockSync = mockSync(10, "testDc");
+    int slotId = 10;
+    MockSync mockSync = mockSync(slotId, "testDc");
     SlotDiffSyncer syncer = mockSync.syncer;
     LocalDatumStorage storage = (LocalDatumStorage) syncer.getDatumStorage();
     List<Publisher> p1 = mockSync.p1;
@@ -205,10 +206,14 @@ public class SlotDiffSyncerTest {
     List<Publisher> p3 = mockSync.p3;
     List<Publisher> p4 = mockSync.p4;
 
+    Map<String, Map<String, DatumSummary>> sessionDatumSummary =
+        syncer.getDatumStorage().getDatumSummary(slotId, Collections.singleton(ServerEnv.IP));
+    Map<String, DatumSummary> summary = sessionDatumSummary.get(ServerEnv.IP);
+
     // sync failed or empty
     SessionNodeExchanger exchanger =
         mockExchange(SessionNodeExchanger.class, null, DataSlotDiffDigestRequest.class, null, null);
-    Assert.assertFalse(syncer.syncSession(10, ServerEnv.IP, exchanger, 10, TRUE));
+    Assert.assertFalse(syncer.syncSession(10, ServerEnv.IP, exchanger, 10, TRUE, summary));
 
     exchanger =
         mockExchange(
@@ -217,7 +222,7 @@ public class SlotDiffSyncerTest {
             DataSlotDiffDigestRequest.class,
             null,
             null);
-    Assert.assertFalse(syncer.syncSession(10, ServerEnv.IP, exchanger, 10, TRUE));
+    Assert.assertFalse(syncer.syncSession(10, ServerEnv.IP, exchanger, 10, TRUE, summary));
 
     exchanger =
         mockExchange(
@@ -226,7 +231,7 @@ public class SlotDiffSyncerTest {
             DataSlotDiffDigestRequest.class,
             null,
             null);
-    Assert.assertTrue(syncer.syncSession(10, ServerEnv.IP, exchanger, 10, TRUE));
+    Assert.assertTrue(syncer.syncSession(10, ServerEnv.IP, exchanger, 10, TRUE, summary));
 
     // update p1.0, remove p2.0, remove p3.all, add p4
     GenericResponse digestResp =
@@ -252,7 +257,7 @@ public class SlotDiffSyncerTest {
             DataSlotDiffDigestRequest.class,
             publisherResp,
             DataSlotDiffPublisherRequest.class);
-    boolean v = syncer.syncSession(10, ServerEnv.IP, exchanger, 10, TRUE);
+    boolean v = syncer.syncSession(10, ServerEnv.IP, exchanger, 10, TRUE, summary);
     Assert.assertTrue(v);
 
     // p1 update
@@ -280,7 +285,8 @@ public class SlotDiffSyncerTest {
 
   @Test
   public void testSyncBreak() {
-    MockSync mockSync = mockSync(10, "testDc");
+    int slotId = 10;
+    MockSync mockSync = mockSync(slotId, "testDc");
     SlotDiffSyncer syncer = mockSync.syncer;
     LocalDatumStorage storage = (LocalDatumStorage) syncer.getDatumStorage();
     List<Publisher> p1 = mockSync.p1;
@@ -312,7 +318,12 @@ public class SlotDiffSyncerTest {
             DataSlotDiffDigestRequest.class,
             publisherResp,
             DataSlotDiffPublisherRequest.class);
-    boolean v = syncer.syncSession(10, ServerEnv.IP, exchanger, 10, FALSE);
+
+    Map<String, Map<String, DatumSummary>> sessionDatumSummary =
+        syncer.getDatumStorage().getDatumSummary(slotId, Collections.singleton(ServerEnv.IP));
+    Map<String, DatumSummary> summary = sessionDatumSummary.get(ServerEnv.IP);
+
+    boolean v = syncer.syncSession(10, ServerEnv.IP, exchanger, 10, FALSE, summary);
     Assert.assertTrue(v);
 
     // sync break, only remove dataInfoIds

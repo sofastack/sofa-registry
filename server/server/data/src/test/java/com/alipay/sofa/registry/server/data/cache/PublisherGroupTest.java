@@ -28,6 +28,7 @@ import com.alipay.sofa.registry.server.data.TestBaseUtils;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import java.util.Collections;
 import java.util.Map;
 import org.junit.Assert;
@@ -211,11 +212,17 @@ public class PublisherGroupTest {
     Assert.assertEquals(group.getSessionProcessIds().size(), 1);
     Assert.assertTrue(group.getSessionProcessIds().contains(ServerEnv.PROCESS_ID));
 
-    DatumSummary summary = group.getSummary("xxx");
+    String sessionIp = "notFound";
+    Map<String, DatumSummary> sessionSummary = group.getSummary(Sets.newHashSet(sessionIp));
+    DatumSummary summary = sessionSummary.get(sessionIp);
+    Assert.assertEquals(sessionSummary.size(), 1);
     Assert.assertEquals(summary.getDataInfoId(), group.dataInfoId);
+    Assert.assertEquals(summary.size(), 0);
     Assert.assertEquals(summary.getPublisherVersions().size(), 0);
 
-    summary = group.getSummary(publisher.getTargetAddress().getIpAddress());
+    sessionIp = publisher.getTargetAddress().getIpAddress();
+    sessionSummary = group.getSummary(Sets.newHashSet(sessionIp));
+    summary = sessionSummary.get(sessionIp);
     Assert.assertEquals(summary.getPublisherVersions().size(), 1);
 
     final ProcessId mockProcessId =
@@ -230,10 +237,12 @@ public class PublisherGroupTest {
     Assert.assertTrue(group.getPublishers().contains(newer));
     Assert.assertTrue(group.getPublishers().contains(add));
 
-    summary = group.getSummary(publisher.getTargetAddress().getIpAddress());
+    sessionIp = publisher.getTargetAddress().getIpAddress();
+    sessionSummary = group.getSummary(Sets.newHashSet(sessionIp));
+    summary = sessionSummary.get(sessionIp);
     Assert.assertEquals(summary.getPublisherVersions().size(), 2);
 
-    summary = group.getSummary(null);
+    summary = group.getAllSummary();
     Assert.assertEquals(summary.getPublisherVersions().size(), 2);
 
     Assert.assertEquals(group.getSessionProcessIds().size(), 2);
@@ -260,7 +269,7 @@ public class PublisherGroupTest {
     Assert.assertEquals(group.getSessionProcessIds().size(), 1);
     Assert.assertTrue(group.getSessionProcessIds().contains(ServerEnv.PROCESS_ID));
 
-    summary = group.getSummary(null);
+    summary = group.getAllSummary();
     Assert.assertEquals(summary.getPublisherVersions().size(), 1);
 
     conns = group.getByConnectId(add.connectId());

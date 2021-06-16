@@ -155,7 +155,7 @@ public class FirePushServiceTest {
   public void testOnSubscriber() {
     FirePushService svc = mockFirePushService();
     Subscriber subscriber = TestUtils.newZoneSubscriber("testZone");
-    subscriber.checkAndUpdateVersion("testDc", 100, 10);
+    subscriber.checkAndUpdateCtx("testDc", 100, 10);
     Assert.assertFalse(svc.doExecuteOnSubscriber("testDc", subscriber));
     FirePushService.RegisterTask task = svc.new RegisterTask(subscriber);
     task.run();
