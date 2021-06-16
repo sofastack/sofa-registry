@@ -16,17 +16,16 @@
  */
 package com.alipay.sofa.registry.server.session.providedata;
 
-import static org.mockito.Mockito.mock;
-
 import com.alipay.sofa.registry.common.model.ServerDataBox;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.provideData.FetchStopPushService;
-import com.alipay.sofa.registry.server.session.registry.Registry;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+
+import static org.mockito.Mockito.mock;
 
 /**
  * @author xiaojian.xj
@@ -36,22 +35,14 @@ public class FetchStopPushServiceTest extends FetchStopPushService {
 
   @Before
   public void beforeFetchStopPushServiceTest() {
-    Registry sessionRegistry = mock(Registry.class);
     SessionServerConfig sessionServerConfig = mock(SessionServerConfig.class);
 
-    this.setSessionRegistry(sessionRegistry);
     this.setSessionServerConfig(sessionServerConfig);
   }
 
   @Test
   public void test() {
-    Assert.assertFalse(isStopPushSwitch());
-    Assert.assertTrue(
-        doProcess(
-            storage.get(),
-            new ProvideData(
-                new ServerDataBox("true"), ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID, 1L)));
-    Assert.assertEquals(isStopPushSwitch(), true);
+    Assert.assertTrue(isStopPushSwitch());
 
     Assert.assertTrue(
         doProcess(
@@ -59,5 +50,12 @@ public class FetchStopPushServiceTest extends FetchStopPushService {
             new ProvideData(
                 new ServerDataBox("false"), ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID, 2L)));
     Assert.assertEquals(isStopPushSwitch(), false);
+
+    Assert.assertTrue(
+        doProcess(
+            storage.get(),
+            new ProvideData(
+                new ServerDataBox("true"), ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID, 1L)));
+    Assert.assertEquals(isStopPushSwitch(), true);
   }
 }

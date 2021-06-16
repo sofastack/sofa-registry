@@ -106,8 +106,6 @@ public class SessionRegistry implements Registry {
 
   private final VersionWatchDog versionWatchDog = new VersionWatchDog();
 
-  private volatile boolean scanVerEnable = false;
-
   @PostConstruct
   public void init() {
     ConcurrentUtils.createDaemonThread("SessionVerWatchDog", versionWatchDog).start();
@@ -309,10 +307,8 @@ public class SessionRegistry implements Registry {
       try {
         final boolean stop = !pushSwitchService.canPush();
         // could not start scan ver at begin
-        // 1. stopPush.val = false in session.default
-        // 2. stopPush.val = true in meta
-        // 3. scanVerEnable=true after session start and config the stopPush.val
-        if (!stop && scanVerEnable) {
+        // 1. stopPush.val = true default in session.default
+        if (!stop) {
           scanVersions(scanRound++);
           scanSubscribers();
           if (prevStopPushSwitch) {
@@ -447,12 +443,6 @@ public class SessionRegistry implements Registry {
         regCount,
         emptyCount,
         circuitBreaker);
-  }
-
-  @Override
-  public void fetchChangDataProcess() {
-    scanVerEnable = true;
-    versionWatchDog.wakeup();
   }
 
   private Map<Integer, Map<String, DatumVersion>> groupBySlot(

@@ -23,7 +23,6 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.provideData.FetchGrayPushSwitchService.GrayPushSwitchStorage;
-import com.alipay.sofa.registry.server.session.registry.Registry;
 import com.alipay.sofa.registry.server.shared.providedata.AbstractFetchSystemPropertyService;
 import com.alipay.sofa.registry.util.JsonUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -33,7 +32,6 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
-import javax.annotation.Resource;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,10 +39,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class FetchGrayPushSwitchService
     extends AbstractFetchSystemPropertyService<GrayPushSwitchStorage> {
   private static final Logger LOGGER = LoggerFactory.getLogger(FetchGrayPushSwitchService.class);
-
-  @Autowired private Registry sessionRegistry;
-
-  @Resource private FetchStopPushService fetchStopPushService;
 
   @Autowired private SessionServerConfig sessionServerConfig;
 
@@ -82,9 +76,6 @@ public class FetchGrayPushSwitchService
       return false;
     }
 
-    if (fetchStopPushService.isStopPushSwitch() && canPush()) {
-      sessionRegistry.fetchChangDataProcess();
-    }
     LOGGER.info("fetch session gray pushSwitch={}, prev={}", req, expect.openIps);
     return true;
   }
@@ -110,29 +101,6 @@ public class FetchGrayPushSwitchService
   @VisibleForTesting
   public void setOpenIps(long version, Collection<String> openIps) {
     storage.set(new GrayPushSwitchStorage(version, openIps));
-  }
-
-  /**
-   * Setter method for property <tt>sessionRegistry</tt>.
-   *
-   * @param sessionRegistry value to be assigned to property sessionRegistry
-   */
-  @VisibleForTesting
-  protected FetchGrayPushSwitchService setSessionRegistry(Registry sessionRegistry) {
-    this.sessionRegistry = sessionRegistry;
-    return this;
-  }
-
-  /**
-   * Setter method for property <tt>fetchStopPushService</tt>.
-   *
-   * @param fetchStopPushService value to be assigned to property fetchStopPushService
-   */
-  @VisibleForTesting
-  protected FetchGrayPushSwitchService setFetchStopPushService(
-      FetchStopPushService fetchStopPushService) {
-    this.fetchStopPushService = fetchStopPushService;
-    return this;
   }
 
   /**

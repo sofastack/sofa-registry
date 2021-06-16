@@ -312,8 +312,6 @@ public class SessionServerBootstrap {
       // start fetch system property data
       retryer.call(() -> systemPropertyProcessorManager.start());
 
-      // start fetch change data after got the switch
-      sessionRegistry.fetchChangDataProcess();
       metaStart.set(true);
 
       LOGGER.info(
