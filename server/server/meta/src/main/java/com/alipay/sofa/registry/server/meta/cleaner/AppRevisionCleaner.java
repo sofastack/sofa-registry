@@ -59,7 +59,8 @@ public class AppRevisionCleaner
 
   @Autowired MetaLeaderService metaLeaderService;
 
-  ConsecutiveSuccess consecutiveSuccess;
+  ConsecutiveSuccess consecutiveSuccess =  new ConsecutiveSuccess(
+          slotNum * 3, metadataConfig.getRevisionRenewIntervalMinutes() * 60 * 1000 * 4);;
 
   public AppRevisionCleaner() {}
 
@@ -73,9 +74,6 @@ public class AppRevisionCleaner
   }
 
   public void start() {
-    consecutiveSuccess =
-        new ConsecutiveSuccess(
-            slotNum * 3, metadataConfig.getRevisionRenewIntervalMinutes() * 60 * 1000 * 4);
     ConcurrentUtils.createDaemonThread(
             AppRevisionCleaner.class.getSimpleName() + "-renewer", renewer)
         .start();
