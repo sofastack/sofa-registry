@@ -51,7 +51,7 @@ public class SessionServerInitializer implements SmartLifecycle {
     } catch (Throwable ex) {
       SessionServerInitializer.this.running.set(false);
       LOGGER.error("Could not initialize Session server!", ex);
-      System.exit(-1);
+      Runtime.getRuntime().halt(-1);
     }
   }
 
