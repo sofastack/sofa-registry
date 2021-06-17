@@ -51,7 +51,7 @@ public class DataServerInitializer implements SmartLifecycle {
     } catch (Throwable ex) {
       this.isRunning = false;
       LOGGER.error("Could not initalized Data server", ex);
-      System.exit(-1);
+      Runtime.getRuntime().halt(-1);
     }
   }
 

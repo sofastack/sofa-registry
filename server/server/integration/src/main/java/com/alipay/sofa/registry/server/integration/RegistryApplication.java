@@ -159,7 +159,7 @@ public class RegistryApplication {
         Thread.sleep(1000);
       }
     }
-    System.exit(1);
+    Runtime.getRuntime().halt(-1);
   }
 
   private static boolean nodeHealthCheck(String serverAddress, int httpPort) {
