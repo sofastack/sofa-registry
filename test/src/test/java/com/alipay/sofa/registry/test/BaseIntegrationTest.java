@@ -46,6 +46,8 @@ import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.jersey.JerseyClient;
 import com.alipay.sofa.registry.server.data.cache.DatumStorage;
 import com.alipay.sofa.registry.server.meta.resource.ClientManagerResource;
+import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
+import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfigBean;
 import com.alipay.sofa.registry.server.session.provideData.FetchClientOffAddressService;
 import com.alipay.sofa.registry.server.session.registry.SessionRegistry;
 import com.alipay.sofa.registry.server.session.store.DataStore;
@@ -105,6 +107,7 @@ public class BaseIntegrationTest extends AbstractTest {
   protected static volatile ClientManagerResource clientManagerResource;
   protected static volatile FetchClientOffAddressService fetchClientOffAddressService;
 
+  protected static volatile SessionServerConfigBean sessionServerConfig;
   protected static int sessionPort = 9603;
   protected static int consolePort = 9604;
   protected static int metaPort = 9615;
@@ -188,6 +191,10 @@ public class BaseIntegrationTest extends AbstractTest {
           sessionApplicationContext.getBean(
               "fetchClientOffAddressService", FetchClientOffAddressService.class);
 
+      sessionServerConfig =
+              (SessionServerConfigBean)sessionApplicationContext.getBean(
+                      "sessionServerConfig", SessionServerConfig.class);
+      sessionServerConfig.setSchedulerScanVersionIntervalMillis(1000);
       localDatumStorage = dataApplicationContext.getBean("localDatumStorage", DatumStorage.class);
       LOGGER.info(
           "startServerNecessary, {} loaded by {}",

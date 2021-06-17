@@ -24,8 +24,12 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
+import com.alipay.sofa.registry.util.LoopRunnable;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
 import com.google.common.annotations.VisibleForTesting;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -33,8 +37,6 @@ import java.util.Map.Entry;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import javax.annotation.PostConstruct;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author qian.lqlq
@@ -59,7 +61,40 @@ public class CacheCountTask {
     ScheduledExecutorService executor =
         new ScheduledThreadPoolExecutor(1, new NamedThreadFactory("CacheCountTask"));
     executor.scheduleWithFixedDelay(() -> count(), intervalSec, intervalSec, TimeUnit.SECONDS);
+    ConcurrentUtils.createDaemonThread("cache-printer", new PrintTotal()).start();
     return true;
+  }
+
+  final class PrintTotal extends LoopRunnable {
+
+    @Override
+    public void runUnthrowable() {
+      printTotal();
+    }
+
+    @Override
+    public void waitingUnthrowable() {
+      // support minute-level statistics
+      ConcurrentUtils.sleepUninterruptibly(60, TimeUnit.SECONDS);
+    }
+  }
+
+  boolean printTotal() {
+    Map<String, Map<String, List<Publisher>>> allMap = datumCache.getAllPublisher();
+    Map<String, List<Publisher>> pubs = allMap.get(dataServerConfig.getLocalDataCenter());
+    if (pubs.isEmpty()) {
+      COUNT_LOGGER.info(
+          "[Total]{},pubs={},dataIds={}", dataServerConfig.getLocalDataCenter(), 0, 0);
+      return false;
+    } else {
+      int pubCount = pubs.values().stream().mapToInt(p -> p.size()).sum();
+      COUNT_LOGGER.info(
+          "[Total]{},pubs={},dataIds={}",
+          dataServerConfig.getLocalDataCenter(),
+          pubCount,
+          pubs.size());
+      return true;
+    }
   }
 
   boolean count() {
@@ -110,7 +145,7 @@ public class CacheCountTask {
               tupleCount.o1,
               tupleCount.o2);
         }
-        ConcurrentUtils.sleepUninterruptibly(100, TimeUnit.MILLISECONDS);
+        ConcurrentUtils.sleepUninterruptibly(10, TimeUnit.MILLISECONDS);
       }
     }
   }

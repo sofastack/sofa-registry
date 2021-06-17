@@ -30,7 +30,6 @@ import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.data.change.DataChangeEventCenter;
 import com.alipay.sofa.registry.server.data.lease.SessionLeaseManager;
-import com.alipay.sofa.registry.server.data.slot.SlotManager;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
@@ -63,8 +62,6 @@ public class DataServerBootstrap {
   @Autowired private ApplicationContext applicationContext;
 
   @Autowired private ResourceConfig jerseyResourceConfig;
-
-  @Autowired private SlotManager slotManager;
 
   @Autowired private Exchange jerseyExchange;
 
@@ -288,12 +285,6 @@ public class DataServerBootstrap {
 
   public boolean getServerForDataSyncStarted() {
     return serverForDataSyncStarted.get();
-  }
-
-  @VisibleForTesting
-  DataServerBootstrap setSlotManager(SlotManager slotManager) {
-    this.slotManager = slotManager;
-    return this;
   }
 
   @VisibleForTesting

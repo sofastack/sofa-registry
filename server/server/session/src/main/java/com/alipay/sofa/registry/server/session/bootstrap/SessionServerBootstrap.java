@@ -34,7 +34,6 @@ import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
 import com.alipay.sofa.registry.server.session.metadata.AppRevisionCacheRegistry;
 import com.alipay.sofa.registry.server.session.provideData.SystemPropertyProcessorManager;
-import com.alipay.sofa.registry.server.session.registry.SessionRegistry;
 import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
@@ -72,8 +71,6 @@ public class SessionServerBootstrap {
   @Autowired private Exchange jerseyExchange;
 
   @Autowired private ExecutorManager executorManager;
-
-  @Autowired private SessionRegistry sessionRegistry;
 
   @Resource(name = "serverHandlers")
   private Collection<AbstractServerHandler> serverHandlers;
