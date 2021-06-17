@@ -54,14 +54,15 @@ import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
+
+import javax.annotation.PostConstruct;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
-import javax.annotation.PostConstruct;
-import org.apache.commons.lang.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.util.CollectionUtils;
 
 /**
  * @author shangyu.wh
@@ -301,18 +302,27 @@ public class SessionRegistry implements Registry {
   private final class VersionWatchDog extends WakeUpLoopRunnable {
     boolean prevStopPushSwitch;
     long scanRound;
+    long lastScanTimestamp;
 
     @Override
     public void runUnthrowable() {
       try {
+        final int intervalMillis = sessionServerConfig.getSchedulerScanVersionIntervalMillis();
         final boolean stop = !pushSwitchService.canPush();
         // could not start scan ver at begin
         // 1. stopPush.val = true default in session.default
-        if (!stop) {
-          scanVersions(scanRound++);
-          scanSubscribers();
-          if (prevStopPushSwitch) {
-            SCAN_VER_LOGGER.info("[ReSub] resub after stopPushSwitch closed");
+        if (stop) {
+          SCAN_VER_LOGGER.info("[stopPush]");
+        } else {
+          final long now = System.currentTimeMillis();
+          // abs avoid the clock attack
+          if (Math.abs(now - lastScanTimestamp) >= intervalMillis || prevStopPushSwitch) {
+            try {
+              scanVersions(scanRound++);
+              scanSubscribers();
+            } finally {
+              lastScanTimestamp = System.currentTimeMillis();
+            }
           }
         }
         prevStopPushSwitch = stop;
@@ -323,7 +333,7 @@ public class SessionRegistry implements Registry {
 
     @Override
     public int getWaitingMillis() {
-      return sessionServerConfig.getSchedulerScanVersionIntervalMillis();
+      return 1000;
     }
   }
 
