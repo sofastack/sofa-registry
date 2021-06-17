@@ -41,6 +41,7 @@ public class CacheCountTaskTest {
     Assert.assertFalse(task.init());
     // empty
     Assert.assertTrue(task.count());
+    Assert.assertFalse(task.printTotal());
 
     cfg.setCacheCountIntervalSecs(1);
     Publisher pub = TestBaseUtils.createTestPublisher("testDataId");
@@ -48,5 +49,6 @@ public class CacheCountTaskTest {
     // has item
     Assert.assertTrue(task.count());
     Assert.assertTrue(task.init());
+    Assert.assertTrue(task.printTotal());
   }
 }
