@@ -45,7 +45,6 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 /**
  * @author chen.zhu
@@ -56,8 +55,6 @@ import org.springframework.stereotype.Component;
  * watches leader event and trigger cross-dc-metaservers' refresh job when leader term and stop all
  * of them when it's not a raft-cluster leader
  */
-@Component
-// @Profile(value = "cloud")
 public class DefaultCrossDcMetaServerManager extends AbstractLifecycle
     implements CrossDcMetaServerManager {
 
@@ -76,6 +73,7 @@ public class DefaultCrossDcMetaServerManager extends AbstractLifecycle
   @Resource(name = GLOBAL_EXECUTOR)
   private ExecutorService executors;
 
+  // TODO the ref cause circular dependency
   @Autowired private Exchange boltExchange;
 
   @PostConstruct

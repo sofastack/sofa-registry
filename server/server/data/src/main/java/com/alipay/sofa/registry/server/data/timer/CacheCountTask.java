@@ -86,15 +86,14 @@ public class CacheCountTask {
       COUNT_LOGGER.info(
           "[Total]{},pubs={},dataIds={}", dataServerConfig.getLocalDataCenter(), 0, 0);
       return false;
-    } else {
-      int pubCount = pubs.values().stream().mapToInt(p -> p.size()).sum();
-      COUNT_LOGGER.info(
-          "[Total]{},pubs={},dataIds={}",
-          dataServerConfig.getLocalDataCenter(),
-          pubCount,
-          pubs.size());
-      return true;
     }
+    int pubCount = pubs.values().stream().mapToInt(p -> p.size()).sum();
+    COUNT_LOGGER.info(
+        "[Total]{},pubs={},dataIds={}",
+        dataServerConfig.getLocalDataCenter(),
+        pubCount,
+        pubs.size());
+    return true;
   }
 
   boolean count() {

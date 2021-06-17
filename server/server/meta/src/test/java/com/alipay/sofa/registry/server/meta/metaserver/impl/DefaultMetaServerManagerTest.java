@@ -23,7 +23,6 @@ import com.alipay.sofa.registry.common.model.metaserver.cluster.VersionedList;
 import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.lease.data.DataServerManager;
-import com.alipay.sofa.registry.server.meta.lease.impl.DefaultCrossDcMetaServerManager;
 import com.alipay.sofa.registry.server.meta.lease.session.SessionServerManager;
 import com.alipay.sofa.registry.server.meta.metaserver.CurrentDcMetaServer;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
@@ -34,8 +33,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 public class DefaultMetaServerManagerTest extends AbstractMetaServerTestBase {
-
-  @Mock private DefaultCrossDcMetaServerManager crossDcMetaServerManager;
 
   @Mock private CurrentDcMetaServer currentDcMetaServer;
 
@@ -52,7 +49,6 @@ public class DefaultMetaServerManagerTest extends AbstractMetaServerTestBase {
     MockitoAnnotations.initMocks(this);
     manager = new DefaultMetaServerManager();
     manager
-        .setCrossDcMetaServerManager(crossDcMetaServerManager)
         .setCurrentDcMetaServer(currentDcMetaServer)
         .setSessionManager(sessionServerManager)
         .setDataServerManager(dataServerManager)

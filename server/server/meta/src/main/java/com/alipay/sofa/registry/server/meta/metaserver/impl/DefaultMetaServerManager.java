@@ -23,7 +23,6 @@ import com.alipay.sofa.registry.common.model.metaserver.nodes.MetaNode;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.lease.data.DataServerManager;
-import com.alipay.sofa.registry.server.meta.lease.impl.DefaultCrossDcMetaServerManager;
 import com.alipay.sofa.registry.server.meta.lease.session.SessionServerManager;
 import com.alipay.sofa.registry.server.meta.metaserver.CurrentDcMetaServer;
 import com.google.common.annotations.VisibleForTesting;
@@ -39,8 +38,6 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class DefaultMetaServerManager {
-
-  @Autowired private DefaultCrossDcMetaServerManager crossDcMetaServerManager;
 
   @Autowired private CurrentDcMetaServer currentDcMetaServer;
 
@@ -69,12 +66,9 @@ public class DefaultMetaServerManager {
     result.setLocalDataCenter(nodeConfig.getLocalDataCenter());
     Map<String, Map<String, MetaNode>> nodeMap = Maps.newHashMap();
     Map<String, Long> epochMap = Maps.newHashMap();
-    for (String dcName : nodeConfig.getMetaNodeIP().keySet()) {
-      List<MetaNode> metaNodeList =
-          crossDcMetaServerManager.getOrCreate(dcName).getClusterMembers();
-      nodeMap.put(dcName, transform(metaNodeList));
-      epochMap.put(dcName, crossDcMetaServerManager.getOrCreate(dcName).getEpoch());
-    }
+//    for (String dcName : nodeConfig.getMetaNodeIP().keySet()) {
+//    }
+    // TODO unsupported multi-cross dataCenter
     nodeMap.put(
         nodeConfig.getLocalDataCenter(), transform(currentDcMetaServer.getClusterMembers()));
     epochMap.put(nodeConfig.getLocalDataCenter(), currentDcMetaServer.getEpoch());
@@ -119,13 +113,6 @@ public class DefaultMetaServerManager {
       map.put(node.getNodeUrl().getIpAddress(), node);
     }
     return map;
-  }
-
-  @VisibleForTesting
-  DefaultMetaServerManager setCrossDcMetaServerManager(
-      DefaultCrossDcMetaServerManager crossDcMetaServerManager) {
-    this.crossDcMetaServerManager = crossDcMetaServerManager;
-    return this;
   }
 
   @VisibleForTesting
