@@ -81,17 +81,18 @@ public abstract class AbstractFetchSystemPropertyService<T extends SystemDataSto
         metaNodeService.fetchSystemProperty(dataInfoId, expect.version);
 
     ParaCheckUtil.checkNotNull(response, "fetchSystemPropertyResult");
-    if (LOGGER.isInfoEnabled()) {
-      LOGGER.info(
-          "[FetchSystemProperty]dataInfoId:{}, version:{}, response:{}",
-          dataInfoId,
-          expect,
-          response);
-    }
+
     if (!response.isVersionUpgrade()) {
       return true;
     }
 
+    if (LOGGER.isInfoEnabled()) {
+      LOGGER.info(
+              "[FetchSystemProperty]dataInfoId:{}, version:{}, response:{}",
+              dataInfoId,
+              expect,
+              response);
+    }
     // do process
     return processorData(response.getProvideData(), expect);
   }
