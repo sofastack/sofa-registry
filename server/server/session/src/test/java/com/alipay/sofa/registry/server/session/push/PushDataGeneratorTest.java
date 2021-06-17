@@ -16,10 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.push;
 
-import com.alipay.sofa.registry.common.model.store.BaseInfo;
-import com.alipay.sofa.registry.common.model.store.SubDatum;
-import com.alipay.sofa.registry.common.model.store.SubPublisher;
-import com.alipay.sofa.registry.common.model.store.Subscriber;
+import com.alipay.sofa.registry.common.model.store.*;
 import com.alipay.sofa.registry.core.model.ReceivedData;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.server.session.TestUtils;
@@ -67,11 +64,16 @@ public class PushDataGeneratorTest {
     Subscriber sub2 = TestUtils.newZoneSubscriber(zone);
     subscriberMap.put(sub1.getRegisterId(), sub1);
     subscriberMap.put(sub2.getRegisterId(), sub2);
-    List<SubPublisher> list = Lists.newArrayList(TestUtils.newSubPublisher(10, 20));
+    SubPublisher pub = TestUtils.newSubPublisher(10, 20, "TESTZONE");
+    SubPublisher pub2 = TestUtils.newSubPublisher(10, 20, "TESTZONE");
+    List<SubPublisher> list = Lists.newArrayList(pub, pub2);
     SubDatum subDatum = TestUtils.newSubDatum("testDataId", 200, list);
-    ReceivedData receivedData = (ReceivedData) generator.createPushData(subDatum, subscriberMap);
+    PushData<ReceivedData> pushData = generator.createPushData(subDatum, subscriberMap);
+    ReceivedData receivedData = pushData.getPayload();
     Assert.assertEquals(receivedData.getVersion().longValue(), subDatum.getVersion());
     Assert.assertEquals(
         Sets.newHashSet(receivedData.getSubscriberRegistIds()), subscriberMap.keySet());
+    Assert.assertEquals(2, pushData.getDataCount());
+    Assert.assertEquals(2, receivedData.getData().values().stream().mapToInt(List::size).sum());
   }
 }

@@ -18,6 +18,7 @@ package com.alipay.sofa.registry.server.session.converter;
 
 import com.alipay.sofa.registry.common.model.ServerDataBox;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
+import com.alipay.sofa.registry.common.model.store.PushData;
 import com.alipay.sofa.registry.common.model.store.SubDatum;
 import com.alipay.sofa.registry.common.model.store.SubPublisher;
 import com.alipay.sofa.registry.core.model.DataBox;
@@ -52,7 +53,7 @@ public final class ReceivedDataConverter {
    * @param regionLocal the region local
    * @return received data multi
    */
-  public static ReceivedData getReceivedDataMulti(
+  public static PushData<ReceivedData> getReceivedDataMulti(
       SubDatum datum,
       ScopeEnum scope,
       List subscriberRegisterIdList,
@@ -60,7 +61,7 @@ public final class ReceivedDataConverter {
       Predicate<String> zonePredicate) {
 
     if (null == datum) {
-      return null;
+      return new PushData<>(null, 0);
     }
 
     // todo judge server mode to decide local region
@@ -81,8 +82,9 @@ public final class ReceivedDataConverter {
     List<SubPublisher> publishers = datum.getPublishers();
     if (publishers.isEmpty()) {
       receivedData.setData(swizzMap);
-      return receivedData;
+      return new PushData<>(receivedData, 0);
     }
+    int dataCount = 0;
     for (SubPublisher publisher : publishers) {
       List<ServerDataBox> datas = publisher.getDataList();
 
@@ -91,18 +93,17 @@ public final class ReceivedDataConverter {
       if (zonePredicate.test(region)) {
         continue;
       }
-
       if (null == datas) {
         datas = new ArrayList<>();
       }
-
       List<DataBox> regionDatas = swizzMap.computeIfAbsent(region, k -> new ArrayList<>());
       fillRegionDatas(regionDatas, datas);
+      dataCount += datas.size();
     }
 
     receivedData.setData(swizzMap);
 
-    return receivedData;
+    return new PushData<>(receivedData, dataCount);
   }
 
   private static void fillRegionDatas(List<DataBox> regionDatas, List<ServerDataBox> datas) {

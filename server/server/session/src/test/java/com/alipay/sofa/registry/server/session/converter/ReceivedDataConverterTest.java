@@ -42,12 +42,13 @@ public class ReceivedDataConverterTest {
   public void testGetReceivedDataMulti() throws Exception {
     Assert.assertNull(
         ReceivedDataConverter.getReceivedDataMulti(
-            null, ScopeEnum.zone, Collections.emptyList(), null, null));
+            null, ScopeEnum.zone, Collections.emptyList(), null, null).getPayload());
     SubDatum subDatum = TestUtils.newSubDatum(dataId, 100, Collections.emptyList());
     List<String> subIds = Collections.singletonList("testSubId");
     ReceivedData data =
         ReceivedDataConverter.getReceivedDataMulti(
-            subDatum, ScopeEnum.dataCenter, subIds, localZone, null);
+                subDatum, ScopeEnum.dataCenter, subIds, localZone, null)
+            .getPayload();
 
     assertReceivedData(data, subDatum, subIds, localZone);
     Assert.assertEquals(data.getData().size(), 0);
@@ -56,12 +57,13 @@ public class ReceivedDataConverterTest {
     subDatum = TestUtils.newSubDatum(dataId, 100, Collections.singletonList(subPublisher));
     data =
         ReceivedDataConverter.getReceivedDataMulti(
-            subDatum,
-            ScopeEnum.dataCenter,
-            subIds,
-            localZone,
-            ZonePredicate.zonePredicate(
-                subDatum.getDataId(), localZone, ScopeEnum.dataCenter, configBean));
+                subDatum,
+                ScopeEnum.dataCenter,
+                subIds,
+                localZone,
+                ZonePredicate.zonePredicate(
+                    subDatum.getDataId(), localZone, ScopeEnum.dataCenter, configBean))
+            .getPayload();
 
     assertReceivedData(data, subDatum, subIds, localZone);
     Assert.assertEquals(data.getData().size(), 1);

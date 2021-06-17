@@ -20,6 +20,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.store.URL;
+import com.alipay.sofa.registry.core.model.Result;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
@@ -38,6 +39,8 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Collection;
+
+import com.alipay.sofa.registry.util.StringFormatter;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.util.Strings;
@@ -94,9 +97,12 @@ public class RegistryApplication {
     metaApplicationContext = springApplicationBuilder.run();
     LOGGER.warn("waiting meta");
     // wait meta cluster start
+    int metaPort =  Integer.parseInt(commonContext.getEnvironment().getProperty(META_HTTP_SERVER_PORT));
     waitClusterStart(
         serverList,
-        Integer.parseInt(commonContext.getEnvironment().getProperty(META_HTTP_SERVER_PORT)));
+        metaPort);
+
+    openPush(serverList.stream().findFirst().get(), metaPort);
 
     // start data
     LOGGER.warn("starting data");
@@ -309,6 +315,15 @@ public class RegistryApplication {
         conn.setAutoCommit(true);
         conn.close();
       }
+    }
+  }
+
+  protected static void openPush(String metaAddress, int metaPort){
+    JerseyClient jerseyClient = JerseyClient.getInstance();
+    Channel channel = jerseyClient.connect(new URL(metaAddress, metaPort));
+    Result result = channel.getWebTarget().path("/stopPushDataSwitch/close").request().get(Result.class);
+    if(!result.isSuccess()){
+        throw new RuntimeException(StringFormatter.format("open push failed: {}", result.getMessage()));
     }
   }
 }

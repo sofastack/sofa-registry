@@ -18,6 +18,7 @@ package com.alipay.sofa.registry.server.session.push;
 
 import com.alipay.sofa.registry.common.model.SubscriberUtils;
 import com.alipay.sofa.registry.common.model.store.BaseInfo;
+import com.alipay.sofa.registry.common.model.store.PushData;
 import com.alipay.sofa.registry.common.model.store.SubDatum;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
@@ -66,7 +67,7 @@ public abstract class PushTask {
 
   protected abstract boolean commit();
 
-  protected abstract Object createPushData();
+  protected abstract PushData createPushData();
 
   protected void expireAfter(long intervalMs) {
     this.expireTimestamp = System.currentTimeMillis() + intervalMs;

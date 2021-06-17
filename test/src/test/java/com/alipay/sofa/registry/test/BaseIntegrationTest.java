@@ -61,8 +61,6 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-
 import org.apache.commons.lang.StringUtils;
 import org.h2.tools.Server;
 import org.junit.Assert;
@@ -264,8 +262,10 @@ public class BaseIntegrationTest extends AbstractTest {
     ParaCheckUtil.checkNotNull(dataChannel.getWebTarget(), "dataChannel");
     ParaCheckUtil.checkNotNull(metaChannel.getWebTarget(), "metaChannel");
   }
-  protected static void openPush(){
-      Result result = metaChannel.getWebTarget().path("/stopPushDataSwitch/close").request().get(Result.class);
+
+  protected static void openPush() {
+    Result result =
+        metaChannel.getWebTarget().path("/stopPushDataSwitch/close").request().get(Result.class);
     Assert.assertTrue(result.isSuccess());
   }
 
