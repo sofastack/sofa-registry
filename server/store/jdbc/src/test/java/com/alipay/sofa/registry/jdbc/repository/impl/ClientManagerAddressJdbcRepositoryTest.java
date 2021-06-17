@@ -87,8 +87,7 @@ public class ClientManagerAddressJdbcRepositoryTest extends AbstractH2DbTestBase
   @Test
   public void testClientManagerError() {
     clientManagerAddressJdbcRepository.setClientManagerAddressMapper(mapper);
-    when(mapper.update(anyObject()))
-        .thenThrow(new RuntimeException("expected exception"));
+    when(mapper.update(anyObject())).thenThrow(new RuntimeException("expected exception"));
     boolean clientOff =
         clientManagerAddressJdbcRepository.clientOff(
             ClientManagerAddressJdbcRepositoryTest.clientOffSet);

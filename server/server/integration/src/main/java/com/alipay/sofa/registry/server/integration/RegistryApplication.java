@@ -33,14 +33,13 @@ import com.alipay.sofa.registry.server.session.SessionApplication;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerBootstrap;
 import com.alipay.sofa.registry.util.FileUtils;
 import com.alipay.sofa.registry.util.PropertySplitter;
+import com.alipay.sofa.registry.util.StringFormatter;
 import java.io.*;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Collection;
-
-import com.alipay.sofa.registry.util.StringFormatter;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.util.Strings;
@@ -97,10 +96,9 @@ public class RegistryApplication {
     metaApplicationContext = springApplicationBuilder.run();
     LOGGER.warn("waiting meta");
     // wait meta cluster start
-    int metaPort =  Integer.parseInt(commonContext.getEnvironment().getProperty(META_HTTP_SERVER_PORT));
-    waitClusterStart(
-        serverList,
-        metaPort);
+    int metaPort =
+        Integer.parseInt(commonContext.getEnvironment().getProperty(META_HTTP_SERVER_PORT));
+    waitClusterStart(serverList, metaPort);
 
     openPush(serverList.stream().findFirst().get(), metaPort);
 
@@ -318,12 +316,14 @@ public class RegistryApplication {
     }
   }
 
-  protected static void openPush(String metaAddress, int metaPort){
+  protected static void openPush(String metaAddress, int metaPort) {
     JerseyClient jerseyClient = JerseyClient.getInstance();
     Channel channel = jerseyClient.connect(new URL(metaAddress, metaPort));
-    Result result = channel.getWebTarget().path("/stopPushDataSwitch/close").request().get(Result.class);
-    if(!result.isSuccess()){
-        throw new RuntimeException(StringFormatter.format("open push failed: {}", result.getMessage()));
+    Result result =
+        channel.getWebTarget().path("/stopPushDataSwitch/close").request().get(Result.class);
+    if (!result.isSuccess()) {
+      throw new RuntimeException(
+          StringFormatter.format("open push failed: {}", result.getMessage()));
     }
   }
 }

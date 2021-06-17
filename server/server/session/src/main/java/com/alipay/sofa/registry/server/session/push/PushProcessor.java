@@ -253,7 +253,11 @@ public class PushProcessor {
 
   // check push empty, some group maybe could not tolerate push empty
   protected boolean interruptOnPushEmpty(
-      SubDatum datum, PushCause pushCause, Subscriber sub, InetSocketAddress addr) {
+      SubDatum datum,
+      PushData pushData,
+      PushCause pushCause,
+      Subscriber sub,
+      InetSocketAddress addr) {
     return false;
   }
 
@@ -266,9 +270,6 @@ public class PushProcessor {
       if (!checkPushRunning(task)) {
         return false;
       }
-      if (interruptOnPushEmpty(task.datum, task.trace.pushCause, task.subscriber, task.addr)) {
-        return false;
-      }
 
       if (!causeContinue(task)) {
         return false;
@@ -276,6 +277,11 @@ public class PushProcessor {
 
       final PushData pushData = task.createPushData();
       task.setPushDataCount(pushData.getDataCount());
+
+      if (interruptOnPushEmpty(
+          task.datum, pushData, task.trace.pushCause, task.subscriber, task.addr)) {
+        return false;
+      }
 
       // double check
       if (!causeContinue(task)) {

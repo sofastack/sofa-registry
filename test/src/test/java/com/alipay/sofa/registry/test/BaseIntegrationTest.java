@@ -190,8 +190,8 @@ public class BaseIntegrationTest extends AbstractTest {
               "fetchClientOffAddressService", FetchClientOffAddressService.class);
 
       sessionServerConfig =
-              (SessionServerConfigBean)sessionApplicationContext.getBean(
-                      "sessionServerConfig", SessionServerConfig.class);
+          (SessionServerConfigBean)
+              sessionApplicationContext.getBean("sessionServerConfig", SessionServerConfig.class);
       sessionServerConfig.setSchedulerScanVersionIntervalMillis(1000);
       localDatumStorage = dataApplicationContext.getBean("localDatumStorage", DatumStorage.class);
       LOGGER.info(

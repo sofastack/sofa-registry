@@ -32,9 +32,6 @@ import com.alibaba.druid.filter.logging.Slf4jLogFilter;
 import com.alibaba.druid.filter.stat.StatFilter;
 import com.alibaba.druid.pool.DruidDataSource;
 import com.alibaba.druid.pool.DruidDataSourceFactory;
-import com.alipay.sofa.registry.jdbc.repository.batch.AppRevisionBatchQueryCallable;
-import com.alipay.sofa.registry.jdbc.repository.batch.AppRevisionHeartbeatBatchCallable;
-import com.alipay.sofa.registry.jdbc.repository.batch.InterfaceAppBatchQueryCallable;
 import com.alipay.sofa.registry.jdbc.repository.impl.AppRevisionJdbcRepository;
 import com.alipay.sofa.registry.jdbc.repository.impl.ClientManagerAddressJdbcRepository;
 import com.alipay.sofa.registry.jdbc.repository.impl.InterfaceAppsJdbcRepository;
@@ -237,22 +234,6 @@ public class JdbcConfiguration {
     @Bean
     public ClientManagerAddressRepository clientManagerAddressJdbcRepository() {
       return new ClientManagerAddressJdbcRepository();
-    }
-
-    /** batch callable */
-    @Bean
-    public AppRevisionBatchQueryCallable appRevisionBatchQueryCallable() {
-      return new AppRevisionBatchQueryCallable();
-    }
-
-    @Bean
-    public InterfaceAppBatchQueryCallable interfaceAppBatchQueryCallable() {
-      return new InterfaceAppBatchQueryCallable();
-    }
-
-    @Bean
-    public AppRevisionHeartbeatBatchCallable appRevisionHeartbeatBatchCallable() {
-      return new AppRevisionHeartbeatBatchCallable();
     }
   }
 }

@@ -107,7 +107,7 @@ public class ChangeProcessorTest {
     TriggerPushContext ctx =
         new TriggerPushContext(dataCenter, 100, null, System.currentTimeMillis());
     processor.fireChange(dataInfoId, handler, ctx);
-    Thread.sleep(configBean.getDataChangeDebouncingMillis() + 100);
+    Thread.sleep(configBean.getDataChangeDebouncingMillis() + 200);
     verify(handler, times(1)).onChange(anyString(), anyObject());
   }
 

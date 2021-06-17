@@ -34,8 +34,12 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.event.ContextRefreshedEvent;
 
-public class AppRevisionCleaner implements MetaLeaderService.MetaLeaderElectorListener {
+public class AppRevisionCleaner
+    implements MetaLeaderService.MetaLeaderElectorListener,
+        ApplicationListener<ContextRefreshedEvent> {
   private static final Logger LOG = LoggerFactory.getLogger("METADATA-EXCHANGE", "[AppRevision]");
 
   private int lastSlotId = -1;
@@ -65,6 +69,10 @@ public class AppRevisionCleaner implements MetaLeaderService.MetaLeaderElectorLi
 
   @PostConstruct
   public void init() {
+    metaLeaderService.registerListener(this);
+  }
+
+  public void start() {
     consecutiveSuccess =
         new ConsecutiveSuccess(
             slotNum * 3, metadataConfig.getRevisionRenewIntervalMinutes() * 60 * 1000 * 4);
@@ -74,8 +82,7 @@ public class AppRevisionCleaner implements MetaLeaderService.MetaLeaderElectorLi
     ConcurrentUtils.createDaemonThread(
             AppRevisionCleaner.class.getSimpleName() + "-cleaner", cleaner)
         .start();
-
-    metaLeaderService.registerListener(this);
+    LOG.info("AppRevisionCleaner started");
   }
 
   void renew() {
@@ -159,6 +166,11 @@ public class AppRevisionCleaner implements MetaLeaderService.MetaLeaderElectorLi
   @Override
   public void loseLeader() {
     consecutiveSuccess.clear();
+  }
+
+  @Override
+  public void onApplicationEvent(ContextRefreshedEvent event) {
+    start();
   }
 
   final class Renewer extends WakeUpLoopRunnable {

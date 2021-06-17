@@ -73,7 +73,7 @@ public class AppRevisionDomainConvertor {
 
   public static List<AppRevision> convert2Revisions(List<AppRevisionDomain> domains) {
     if (CollectionUtils.isEmpty(domains)) {
-      return Collections.EMPTY_LIST;
+      return Collections.emptyList();
     }
 
     List<AppRevision> revisions = new ArrayList<>();
