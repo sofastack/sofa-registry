@@ -40,7 +40,6 @@ public class DefaultSlotManager extends SimpleSlotManager implements SlotManager
   @Autowired(required = false)
   private List<Notifier> notifiers;
 
-
   @Autowired private MetaLeaderService metaLeaderService;
 
   public DefaultSlotManager() {}

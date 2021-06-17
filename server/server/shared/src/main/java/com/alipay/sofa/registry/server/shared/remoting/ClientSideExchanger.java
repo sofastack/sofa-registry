@@ -36,14 +36,16 @@ import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import java.util.*;
-import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.event.ContextRefreshedEvent;
 
 /**
  * @author yuzhi.lyz
  * @version v 0.1 2020-11-29 12:08 yuzhi.lyz Exp $
  */
-public abstract class ClientSideExchanger implements NodeExchanger {
+public abstract class ClientSideExchanger
+    implements NodeExchanger, ApplicationListener<ContextRefreshedEvent> {
   private static final Logger LOGGER = LoggerFactory.getLogger(ClientSideExchanger.class);
   protected final String serverType;
 
@@ -57,11 +59,14 @@ public abstract class ClientSideExchanger implements NodeExchanger {
     this.connector = new Connector();
   }
 
-  @PostConstruct
+  @Override
+  public void onApplicationEvent(ContextRefreshedEvent event) {
+    init();
+  }
+
   public void init() {
-    // init blotClient
     ConcurrentUtils.createDaemonThread(serverType + "-async-connector", connector).start();
-    LOGGER.info("init connector");
+    LOGGER.info("{} init connector", serverType);
   }
 
   @Override

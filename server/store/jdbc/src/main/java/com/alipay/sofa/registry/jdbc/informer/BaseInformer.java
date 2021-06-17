@@ -71,6 +71,7 @@ public abstract class BaseInformer<T extends DbEntry, C extends DbEntryContainer
     ConcurrentUtils.createDaemonThread(name + "-WatchLoop", watchLoop).start();
     ConcurrentUtils.createDaemonThread(name + "-ListLoop", listLoop).start();
     started = true;
+    logger.info("{}-Informer started", name);
   }
 
   private void watch() {
@@ -132,7 +133,7 @@ public abstract class BaseInformer<T extends DbEntry, C extends DbEntryContainer
     allSynced = false;
     if (CollectionUtils.isEmpty(entries)) {
       allSynced = true;
-      return Collections.EMPTY_LIST;
+      return Collections.emptyList();
     }
     List<T> result = Lists.newArrayListWithExpectedSize(entries.size());
     for (T entry : entries) {

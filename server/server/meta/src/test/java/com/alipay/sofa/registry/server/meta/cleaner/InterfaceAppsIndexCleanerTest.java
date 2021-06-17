@@ -65,7 +65,7 @@ public class InterfaceAppsIndexCleanerTest extends AbstractMetaServerTestBase {
     verify(mocked.interfaceAppsIndexMapper, times(3)).replace(any());
     mocked.renewer.getWaitingMillis();
     mocked.renewer.runUnthrowable();
-    mocked.init();
+    mocked.start();
     mocked.renewer.close();
   }
 

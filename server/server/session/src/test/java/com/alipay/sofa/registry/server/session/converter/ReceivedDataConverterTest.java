@@ -42,7 +42,8 @@ public class ReceivedDataConverterTest {
   public void testGetReceivedDataMulti() throws Exception {
     Assert.assertNull(
         ReceivedDataConverter.getReceivedDataMulti(
-            null, ScopeEnum.zone, Collections.emptyList(), null, null).getPayload());
+                null, ScopeEnum.zone, Collections.emptyList(), null, null)
+            .getPayload());
     SubDatum subDatum = TestUtils.newSubDatum(dataId, 100, Collections.emptyList());
     List<String> subIds = Collections.singletonList("testSubId");
     ReceivedData data =

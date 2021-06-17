@@ -116,7 +116,7 @@ public final class Hack {
 
     @Override
     public void waitingUnthrowable() {
-      ConcurrentUtils.sleepUninterruptibly(10, TimeUnit.SECONDS);
+      ConcurrentUtils.sleepUninterruptibly(30, TimeUnit.SECONDS);
     }
   }
 }

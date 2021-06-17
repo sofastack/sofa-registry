@@ -32,11 +32,12 @@ import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import com.google.common.collect.Maps;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import javax.annotation.PostConstruct;
 import org.glassfish.jersey.internal.guava.Sets;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.event.ContextRefreshedEvent;
 
-public class InterfaceAppsIndexCleaner {
+public class InterfaceAppsIndexCleaner implements ApplicationListener<ContextRefreshedEvent> {
 
   private static final Logger LOG = LoggerFactory.getLogger("METADATA-EXCHANGE", "[InterfaceApps]");
 
@@ -58,11 +59,16 @@ public class InterfaceAppsIndexCleaner {
     this.metaLeaderService = metaLeaderService;
   }
 
-  @PostConstruct
-  public void init() {
+  @Override
+  public void onApplicationEvent(ContextRefreshedEvent event) {
+    start();
+  }
+
+  public void start() {
     ConcurrentUtils.createDaemonThread(
             InterfaceAppsIndexCleaner.class.getSimpleName() + "-renewer", renewer)
         .start();
+    LOG.info("InterfaceAppsIndexCleaner started");
   }
 
   public void renew() {

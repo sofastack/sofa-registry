@@ -154,7 +154,9 @@ public final class PushTaskBuffer {
         count++;
       }
     }
-    LOGGER.info("buffers={}, commits={}", pending.size(), count);
+    if (pending.size() > 0 || count > 0) {
+      LOGGER.info("buffers={}, commits={}", pending.size(), count);
+    }
     return count;
   }
 
