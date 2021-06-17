@@ -21,6 +21,7 @@ import static com.alipay.sofa.registry.server.session.push.PushMetrics.Push.*;
 import com.alipay.remoting.rpc.exception.InvokeTimeoutException;
 import com.alipay.sofa.registry.common.model.SubscriberUtils;
 import com.alipay.sofa.registry.common.model.Tuple;
+import com.alipay.sofa.registry.common.model.store.PushData;
 import com.alipay.sofa.registry.common.model.store.SubDatum;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.log.Logger;
@@ -273,8 +274,8 @@ public class PushProcessor {
         return false;
       }
 
-      final Object data = task.createPushData();
-      task.setPushDataCount(pushDataGenerator.pushDataCount(data));
+      final PushData pushData = task.createPushData();
+      task.setPushDataCount(pushData.getDataCount());
 
       // double check
       if (!causeContinue(task)) {
@@ -288,7 +289,7 @@ public class PushProcessor {
       task.trace.startPush();
       pushingTasks.put(task.pushingTaskKey, task);
       clientNodeService.pushWithCallback(
-          data, task.subscriber.getSourceAddress(), new PushClientCallback(task));
+          pushData.getPayload(), task.subscriber.getSourceAddress(), new PushClientCallback(task));
       PUSH_CLIENT_ING_COUNTER.inc();
       LOGGER.info(
           "[pushing]{},{},{},{}",
@@ -352,7 +353,7 @@ public class PushProcessor {
       super(pushCause, addr, subscriberMap, datum);
     }
 
-    protected Object createPushData() {
+    protected PushData createPushData() {
       return pushDataGenerator.createPushData(datum, subscriberMap);
     }
 

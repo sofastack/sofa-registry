@@ -46,8 +46,7 @@ public class PushProcessorTest {
   private long version = -1L;
 
   @BeforeEach
-  public void beforeEach(){
-  }
+  public void beforeEach() {}
 
   @Test
   public void testFire() throws Exception {
@@ -323,7 +322,8 @@ public class PushProcessorTest {
     processor.pushSwitchService = new PushSwitchService();
     processor.pushSwitchService.setFetchStopPushService(new FetchStopPushService());
     processor.pushSwitchService.setFetchGrayPushSwitchService(new FetchGrayPushSwitchService());
-    processor.pushSwitchService.fetchStopPushService.setStopPushSwitch(System.currentTimeMillis(), false);
+    processor.pushSwitchService.fetchStopPushService.setStopPushSwitch(
+        System.currentTimeMillis(), false);
     processor.pushDataGenerator = new PushDataGenerator();
     processor.pushDataGenerator.sessionServerConfig = config;
     processor.intTaskBuffer();

@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.push;
 
+import com.alipay.sofa.registry.common.model.store.PushData;
 import com.alipay.sofa.registry.common.model.store.SubDatum;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.net.NetUtil;
@@ -79,7 +80,7 @@ public class PushTaskBufferTest {
     }
 
     @Override
-    protected Object createPushData() {
+    protected PushData createPushData() {
       return null;
     }
   }

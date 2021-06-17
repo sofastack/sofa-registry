@@ -210,21 +210,26 @@ public class TestUtils {
   }
 
   public static SubPublisher newSubPublisher(long version, long timestamp) {
+    return newSubPublisher(version, timestamp, "testCell");
+  }
+
+  public static SubPublisher newSubPublisher(long version, long timestamp, String cell) {
     String registerId = "testRegisterId-" + REGISTER_ID_SEQ.incrementAndGet();
     List<ServerDataBox> dataList = Lists.newArrayList();
     dataList.add(new ServerDataBox("testDataBox"));
     SubPublisher publisher =
-        new SubPublisher(
-            registerId,
-            "testCell",
-            dataList,
-            "testClient",
-            version,
-            "192.168.0.1:8888",
-            timestamp,
-            PublishSource.CLIENT);
+            new SubPublisher(
+                    registerId,
+                    cell,
+                    dataList,
+                    "testClient",
+                    version,
+                    "192.168.0.1:8888",
+                    timestamp,
+                    PublishSource.CLIENT);
     return publisher;
   }
+
 
   public static SubDatum newSubDatum(String dataId, long version, List<SubPublisher> publishers) {
     String dataInfo = DataInfo.toDataInfoId(dataId, INSTANCE, GROUP);

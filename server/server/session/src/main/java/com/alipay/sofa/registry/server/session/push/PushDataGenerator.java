@@ -17,20 +17,13 @@
 package com.alipay.sofa.registry.server.session.push;
 
 import com.alipay.sofa.registry.common.model.SubscriberUtils;
-import com.alipay.sofa.registry.common.model.client.pb.DataBoxesPb;
-import com.alipay.sofa.registry.common.model.client.pb.ReceivedDataPb;
-import com.alipay.sofa.registry.common.model.store.BaseInfo;
-import com.alipay.sofa.registry.common.model.store.SubDatum;
-import com.alipay.sofa.registry.common.model.store.Subscriber;
-import com.alipay.sofa.registry.common.model.store.URL;
+import com.alipay.sofa.registry.common.model.store.*;
 import com.alipay.sofa.registry.core.model.ReceivedData;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.converter.ReceivedDataConverter;
 import com.alipay.sofa.registry.server.session.converter.pb.ReceivedDataConvertor;
 import com.alipay.sofa.registry.server.session.predicate.ZonePredicate;
-import com.alipay.sofa.registry.util.StringFormatter;
 import com.google.common.collect.Lists;
-import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,7 +32,7 @@ public class PushDataGenerator {
 
   @Autowired protected SessionServerConfig sessionServerConfig;
 
-  public Object createPushData(SubDatum datum, Map<String, Subscriber> subscriberMap) {
+  public PushData createPushData(SubDatum datum, Map<String, Subscriber> subscriberMap) {
     SubscriberUtils.getAndAssertHasSameScope(subscriberMap.values());
     // only supported 4.x
     SubscriberUtils.assertClientVersion(subscriberMap.values(), BaseInfo.ClientVersion.StoreData);
@@ -50,28 +43,19 @@ public class PushDataGenerator {
     Predicate<String> zonePredicate =
         ZonePredicate.zonePredicate(dataId, clientCell, subscriber.getScope(), sessionServerConfig);
 
-    ReceivedData receivedData =
+    PushData<ReceivedData> pushData =
         ReceivedDataConverter.getReceivedDataMulti(
             datum,
             subscriber.getScope(),
             Lists.newArrayList(subscriberMap.keySet()),
             clientCell,
             zonePredicate);
-    receivedData.setVersion(datum.getVersion());
+    pushData.getPayload().setVersion(datum.getVersion());
     final Byte serializerIndex = subscriber.getSourceAddress().getSerializerIndex();
     if (serializerIndex != null && URL.PROTOBUF == serializerIndex) {
-      return ReceivedDataConvertor.convert2Pb(receivedData);
+      return new PushData<>(
+          ReceivedDataConvertor.convert2Pb(pushData.getPayload()), pushData.getDataCount());
     }
-    return receivedData;
-  }
-
-  public int pushDataCount(Object obj) {
-    if (obj instanceof ReceivedDataPb) {
-      return ((ReceivedDataPb) obj)
-          .getDataMap().values().stream().mapToInt(DataBoxesPb::getDataCount).sum();
-    } else if (obj instanceof ReceivedData) {
-      return ((ReceivedData) obj).getData().values().stream().mapToInt(List::size).sum();
-    }
-    throw new RuntimeException(StringFormatter.format("unknown push data {}", obj));
+    return pushData;
   }
 }
