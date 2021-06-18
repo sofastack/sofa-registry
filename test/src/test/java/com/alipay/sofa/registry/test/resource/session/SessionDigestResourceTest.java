@@ -32,10 +32,12 @@ import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
+import com.alipay.sofa.registry.util.ConcurrentUtils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
@@ -81,6 +83,7 @@ public class SessionDigestResourceTest extends BaseIntegrationTest {
   public static void afterClass() {
     registryClient1.unregister(dataId, DEFAULT_GROUP, RegistryType.SUBSCRIBER);
     registryClient1.unregister(dataId, DEFAULT_GROUP, RegistryType.PUBLISHER);
+    ConcurrentUtils.sleepUninterruptibly(2, TimeUnit.SECONDS);
   }
 
   @Test

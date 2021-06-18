@@ -65,6 +65,10 @@ public abstract class PushTask {
             subscriber.getDataInfoId(), addr, subscriber.getScope(), subscriber.getClientVersion());
   }
 
+  public boolean isReg() {
+    return trace.pushCause.pushType == PushType.Reg && subscriberMap.size() == 1;
+  }
+
   protected abstract boolean commit();
 
   protected abstract PushData createPushData();
@@ -74,6 +78,9 @@ public abstract class PushTask {
   }
 
   protected boolean afterThan(PushTask t) {
+    if (isReg() && t.isReg()) {
+      return subscriber.getVersion() > t.subscriber.getVersion();
+    }
     return datum.getVersion() > t.datum.getVersion();
   }
 

@@ -55,6 +55,8 @@ public interface SessionServerConfig extends ServerShareConfig {
 
   int getClientNodeExchangeTimeoutMillis();
 
+  int getClientNodePushConcurrencyLevel();
+
   int getDataNodeExchangeTimeoutMillis();
 
   int getDataNodeExchangeForFetchDatumTimeoutMillis();
@@ -175,7 +177,7 @@ public interface SessionServerConfig extends ServerShareConfig {
 
   int getPushCircuitBreakerSleepMillis();
 
-  int getSkipPushEmptySilentMs();
+  int getSkipPushEmptySilentMillis();
 
   int getClientManagerAddressIntervalMillis();
 }

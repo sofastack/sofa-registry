@@ -92,12 +92,13 @@ public final class PushTaskBuffer {
         } else {
           PENDING_SKIP_COUNTER.inc();
           LOGGER.info(
-              "[SkipBuffer]key={},prev={},ver={}, now={},ver={}, retry={}",
+              "[SkipBuffer]key={},prev={},ver={},now={},ver={},reg={},retry={}",
               key,
               prev.taskID,
               prev.datum.getVersion(),
               pushTask.taskID,
               pushTask.datum.getVersion(),
+              prev.isReg() && pushTask.isReg(),
               pushTask.retryCount);
           return false;
         }
