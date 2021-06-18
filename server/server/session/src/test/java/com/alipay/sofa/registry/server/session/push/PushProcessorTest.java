@@ -58,7 +58,7 @@ public class PushProcessorTest {
     Assert.assertEquals(processor.taskBuffer.watchBuffer(worker), 0);
     TriggerPushContext ctx =
         new TriggerPushContext("testDc", 100, null, System.currentTimeMillis());
-    PushCause pushCause = new PushCause(ctx, PushType.Reg, System.currentTimeMillis());
+    PushCause pushCause = new PushCause(ctx, PushType.Sub, System.currentTimeMillis());
     Subscriber subscriber = TestUtils.newZoneSubscriber(dataId, zone);
     SubDatum datum = TestUtils.newSubDatum(subscriber.getDataId(), 100, Collections.emptyList());
     Assert.assertTrue(worker.bufferMap.isEmpty());
@@ -150,6 +150,55 @@ public class PushProcessorTest {
     Assert.assertEquals(worker.bufferMap.size(), 0);
 
     processor.taskBuffer.resume();
+  }
+
+  @Test
+  public void testReg() throws Exception {
+    PushProcessor processor = newProcessor();
+    final PushTaskBuffer.BufferWorker worker = processor.taskBuffer.workers[0];
+
+    TriggerPushContext ctx =
+        new TriggerPushContext("testDc", 100, null, System.currentTimeMillis());
+    PushCause pushCause = new PushCause(ctx, PushType.Reg, System.currentTimeMillis());
+    Subscriber subscriber = TestUtils.newZoneSubscriber(dataId, zone);
+    SubDatum datum = TestUtils.newSubDatum(subscriber.getDataId(), 100, Collections.emptyList());
+
+    PushTask task1 =
+        processor
+            .createPushTask(
+                pushCause,
+                NetUtil.getLocalSocketAddress(),
+                Collections.singletonMap(subscriber.getRegisterId(), subscriber),
+                datum)
+            .get(0);
+
+    Assert.assertTrue(processor.taskBuffer.buffer(task1));
+
+    Subscriber subscriber2 = TestUtils.newZoneSubscriber(dataId, zone);
+    subscriber2.setVersion(subscriber.getVersion() - 1);
+    subscriber2.setRegisterId(subscriber.getRegisterId());
+
+    PushTask task2 =
+        processor
+            .createPushTask(
+                pushCause,
+                NetUtil.getLocalSocketAddress(),
+                Collections.singletonMap(subscriber.getRegisterId(), subscriber2),
+                datum)
+            .get(0);
+
+    Assert.assertFalse(processor.taskBuffer.buffer(task2));
+
+    subscriber2.setVersion(subscriber.getVersion() + 10);
+    task2 =
+        processor
+            .createPushTask(
+                pushCause,
+                NetUtil.getLocalSocketAddress(),
+                Collections.singletonMap(subscriber.getRegisterId(), subscriber2),
+                datum)
+            .get(0);
+    Assert.assertTrue(processor.taskBuffer.buffer(task2));
   }
 
   @Test

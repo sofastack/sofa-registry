@@ -117,7 +117,6 @@ public final class PushMetrics {
       } else if (status == PushTrace.PushStatus.Timeout) {
         COUNT_TIMEOUT.inc();
       } else if (status == PushTrace.PushStatus.Fail) {
-        new Exception().printStackTrace();
         COUNT_FAIL.inc();
       } else {
         PUSH_CLIENT_STATUS_COUNTER.labels(status.name()).inc();

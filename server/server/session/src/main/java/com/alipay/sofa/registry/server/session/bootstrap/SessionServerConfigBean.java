@@ -52,7 +52,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
   private int clientIOLowWaterMark = 1024 * 48;
 
-  private int clientIOHighWaterMark = 1024 * 96;
+  private int clientIOHighWaterMark = 1024 * 160;
 
   private int metaServerPort = 9610;
 
@@ -108,7 +108,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
   private int consoleExecutorQueueSize = 2000;
 
   private int clientNodeExchangeTimeoutMillis = 2000;
-
+  private int clientNodePushConcurrencyLevel = 4;
   private int dataNodeExchangeTimeoutMillis = 3000;
 
   private int dataNodeExchangeForFetchDatumTimeoutMillis = 5000;
@@ -202,7 +202,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
   private int pushCircuitBreakerSleepMillis = 60 * 1000;
 
-  private int skipPushEmptySilentMs = 30 * 1000;
+  private int skipPushEmptySilentMillis = 30 * 1000;
 
   /**
    * constructor
@@ -1275,11 +1275,20 @@ public class SessionServerConfigBean implements SessionServerConfig {
     this.pushCircuitBreakerSleepMillis = pushCircuitBreakerSleepMillis;
   }
 
-  public int getSkipPushEmptySilentMs() {
-    return skipPushEmptySilentMs;
+  public int getSkipPushEmptySilentMillis() {
+    return skipPushEmptySilentMillis;
   }
 
-  public void setSkipPushEmptySilentMs(int skipPushEmptySilentMs) {
-    this.skipPushEmptySilentMs = skipPushEmptySilentMs;
+  public void setSkipPushEmptySilentMillis(int skipPushEmptySilentMillis) {
+    this.skipPushEmptySilentMillis = skipPushEmptySilentMillis;
+  }
+
+  @Override
+  public int getClientNodePushConcurrencyLevel() {
+    return clientNodePushConcurrencyLevel;
+  }
+
+  public void setClientNodePushConcurrencyLevel(int clientNodePushConcurrencyLevel) {
+    this.clientNodePushConcurrencyLevel = clientNodePushConcurrencyLevel;
   }
 }

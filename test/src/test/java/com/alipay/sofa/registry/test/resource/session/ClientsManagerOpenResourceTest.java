@@ -27,7 +27,9 @@ import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.server.session.resource.ClientManagerResource;
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
+import com.alipay.sofa.registry.util.ConcurrentUtils;
 import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
@@ -74,7 +76,7 @@ public class ClientsManagerOpenResourceTest extends BaseIntegrationTest {
     // clientOn
     response = mockedResource.clientOn(sessionChannel.getLocalAddress().getHostString());
     assertTrue(response.getMessage(), response.isSuccess());
-    Thread.sleep(3000L);
+    Thread.sleep(5000L);
     count =
         sessionDataStore.getDataList().stream().filter(p -> p.getDataId().equals(dataId)).count();
     Assert.assertEquals(count, 1);
@@ -83,5 +85,6 @@ public class ClientsManagerOpenResourceTest extends BaseIntegrationTest {
   @After
   public void clean() {
     registryClient1.unregister(dataId, ValueConstants.DEFAULT_GROUP, RegistryType.PUBLISHER);
+    ConcurrentUtils.sleepUninterruptibly(2, TimeUnit.SECONDS);
   }
 }

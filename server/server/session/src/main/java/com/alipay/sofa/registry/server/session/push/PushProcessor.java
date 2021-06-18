@@ -220,7 +220,8 @@ public class PushProcessor {
     long now = System.currentTimeMillis();
     Collection<Subscriber> subs = task.subscriberMap.values();
     for (Subscriber subscriber : subs) {
-      if (subscriber.getRegisterTimestamp() < now - sessionServerConfig.getSkipPushEmptySilentMs()
+      if (subscriber.getRegisterTimestamp()
+              < now - sessionServerConfig.getSkipPushEmptySilentMillis()
           && subscriber.checkSkipPushEmpty(
               task.datum.getDataCenter(), task.datum.getVersion(), task.getPushDataCount())) {
         skipCount++;
@@ -366,9 +367,11 @@ public class PushProcessor {
     @Override
     protected boolean commit() {
       try {
-        // keyed by client.addr && (pushingKey%8)
+        // keyed by client.addr && (pushingKey%concurrencyLevel)
         // avoid generating too many pushes for the same client at the same time
-        pushExecutor.execute(new Tuple(pushingTaskKey.addr, pushingTaskKey.hashCode() % 6), this);
+        final int level = sessionServerConfig.getClientNodePushConcurrencyLevel();
+        pushExecutor.execute(
+            new Tuple(pushingTaskKey.addr, pushingTaskKey.hashCode() % level), this);
         COMMIT_COUNTER.inc();
         return true;
       } catch (Throwable e) {
