@@ -193,7 +193,8 @@ public class Subscriber extends BaseInfo {
   /** @return */
   public synchronized CircuitBreakerStatistic getStatistic(String dataCenter) {
     final PushContext ctx = lastPushContexts.computeIfAbsent(dataCenter, k -> new PushContext());
-    return new CircuitBreakerStatistic(ctx.pushedFailCount, ctx.lastPushedFailTimeStamp);
+    return new CircuitBreakerStatistic(
+        getGroup(), ctx.pushedFailCount, ctx.lastPushedFailTimeStamp);
   }
 
   /**

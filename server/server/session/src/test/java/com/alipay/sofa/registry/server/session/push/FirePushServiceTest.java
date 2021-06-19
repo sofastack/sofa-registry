@@ -23,6 +23,7 @@ import com.alipay.sofa.registry.server.session.TestUtils;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfigBean;
 import com.alipay.sofa.registry.server.session.cache.CacheService;
 import com.alipay.sofa.registry.server.session.cache.Value;
+import com.alipay.sofa.registry.server.session.circuit.breaker.CircuitBreakerService;
 import com.alipay.sofa.registry.server.session.provideData.FetchGrayPushSwitchService;
 import com.alipay.sofa.registry.server.session.provideData.FetchStopPushService;
 import com.alipay.sofa.registry.server.session.store.Interests;
@@ -49,6 +50,7 @@ public class FirePushServiceTest {
     svc.pushProcessor = Mockito.mock(PushProcessor.class);
     svc.pushSwitchService.setFetchStopPushService(fetchStopPushService);
     svc.pushSwitchService.setFetchGrayPushSwitchService(new FetchGrayPushSwitchService());
+    svc.circuitBreakerService = Mockito.mock(CircuitBreakerService.class);
 
     TriggerPushContext ctx =
         new TriggerPushContext("testDc", 100, "testDataNode", System.currentTimeMillis());
@@ -125,6 +127,7 @@ public class FirePushServiceTest {
     svc.pushSwitchService.setFetchStopPushService(new FetchStopPushService());
     svc.pushSwitchService.fetchStopPushService.setStopPushSwitch(System.currentTimeMillis(), false);
     svc.pushSwitchService.setFetchGrayPushSwitchService(new FetchGrayPushSwitchService());
+    svc.circuitBreakerService = Mockito.mock(CircuitBreakerService.class);
     Assert.assertTrue(svc.doExecuteOnChange("testDataId", ctx));
     Mockito.verify(svc.pushProcessor, Mockito.times(1))
         .firePush(

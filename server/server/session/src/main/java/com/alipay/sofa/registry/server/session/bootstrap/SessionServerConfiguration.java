@@ -28,6 +28,8 @@ import com.alipay.sofa.registry.server.session.cache.CacheGenerator;
 import com.alipay.sofa.registry.server.session.cache.CacheService;
 import com.alipay.sofa.registry.server.session.cache.DatumCacheGenerator;
 import com.alipay.sofa.registry.server.session.cache.SessionCacheService;
+import com.alipay.sofa.registry.server.session.circuit.breaker.CircuitBreakerService;
+import com.alipay.sofa.registry.server.session.circuit.breaker.DefaultCircuitBreakerService;
 import com.alipay.sofa.registry.server.session.connections.ConnectionsService;
 import com.alipay.sofa.registry.server.session.filter.IPMatchStrategy;
 import com.alipay.sofa.registry.server.session.filter.ProcessFilter;
@@ -340,6 +342,12 @@ public class SessionServerConfiguration {
     @Bean
     public AbstractServerHandler syncConfigPbHandler() {
       return new SyncConfigPbHandler();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(name = "circuitBreakerService")
+    public CircuitBreakerService circuitBreakerService() {
+      return new DefaultCircuitBreakerService();
     }
 
     @Bean(name = "dataNotifyClientHandlers")

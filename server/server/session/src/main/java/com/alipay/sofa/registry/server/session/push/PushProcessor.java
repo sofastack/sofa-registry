@@ -341,6 +341,18 @@ public class PushProcessor {
           e.getMessage());
       return;
     }
+
+    if (circuitBreakerRecordWhenDoPushError(task.datum)) {
+      // record push exception
+      for (Subscriber subscriber : task.subscriberMap.values()) {
+        if (!subscriber.onPushFail(task.datum.getDataCenter(), task.datum.getVersion())) {
+          LOGGER.info(
+              "[handleDoPushException]failed to do onPushFail, {}, {}",
+              task.taskID,
+              task.pushingTaskKey);
+        }
+      }
+    }
     if (e instanceof ChannelOverflowException) {
       task.trace.finishPush(
           PushTrace.PushStatus.ChanOverflow,
@@ -362,6 +374,10 @@ public class PushProcessor {
         task.getPushDataCount());
     LOGGER.error(
         "{}, failed to pushing {}, cleaned={}", task.taskID, task.pushingTaskKey, cleaned, e);
+  }
+
+  boolean circuitBreakerRecordWhenDoPushError(SubDatum datum) {
+    return false;
   }
 
   class PushTaskImpl extends PushTask implements Runnable {
