@@ -17,20 +17,24 @@
 package com.alipay.sofa.registry.server.session.circuit.breaker;
 
 import com.alipay.sofa.registry.common.model.store.CircuitBreakerStatistic;
+import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author xiaojian.xj
- * @version $Id: CircuitBreakerUtil.java, v 0.1 2021年06月15日 21:43 xiaojian.xj Exp $
+ * @version $Id: DefaultCircuitBreakerService.java, v 0.1 2021年06月15日 21:43 xiaojian.xj Exp $
  */
-public final class CircuitBreakerUtil {
+public class DefaultCircuitBreakerService implements CircuitBreakerService {
 
-  private CircuitBreakerUtil() {}
+  @Autowired private SessionServerConfig sessionServerConfig;
 
-  public static boolean circuitBreaker(
-      CircuitBreakerStatistic statistic, int counterThreshold, int sleepMillis) {
+  public boolean pushCircuitBreaker(CircuitBreakerStatistic statistic) {
     if (statistic == null) {
       return false;
     }
+
+    int counterThreshold = sessionServerConfig.getPushCircuitBreakerThreshold();
+    int sleepMillis = sessionServerConfig.getPushCircuitBreakerSleepMillis();
     return statistic.getFailCount() > counterThreshold
         && System.currentTimeMillis() < statistic.getLastFailTimeStamp() + sleepMillis;
   }

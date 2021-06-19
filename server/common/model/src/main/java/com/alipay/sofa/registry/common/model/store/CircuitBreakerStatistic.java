@@ -17,13 +17,25 @@
 package com.alipay.sofa.registry.common.model.store;
 
 public final class CircuitBreakerStatistic {
+  final String group;
+
   final int failCount;
 
   final long lastFailTimeStamp;
 
-  public CircuitBreakerStatistic(int failCount, long lastFailTimeStamp) {
+  public CircuitBreakerStatistic(String group, int failCount, long lastFailTimeStamp) {
+    this.group = group;
     this.failCount = failCount;
     this.lastFailTimeStamp = lastFailTimeStamp;
+  }
+
+  /**
+   * Getter method for property <tt>group</tt>.
+   *
+   * @return property value of group
+   */
+  public String getGroup() {
+    return group;
   }
 
   /**

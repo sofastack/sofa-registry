@@ -31,7 +31,7 @@ import com.alipay.sofa.registry.server.session.cache.CacheService;
 import com.alipay.sofa.registry.server.session.cache.DatumKey;
 import com.alipay.sofa.registry.server.session.cache.Key;
 import com.alipay.sofa.registry.server.session.cache.Value;
-import com.alipay.sofa.registry.server.session.circuit.breaker.CircuitBreakerUtil;
+import com.alipay.sofa.registry.server.session.circuit.breaker.CircuitBreakerService;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.shared.util.DatumUtils;
 import com.alipay.sofa.registry.task.FastRejectedExecutionException;
@@ -56,6 +56,8 @@ public class FirePushService {
   @Autowired CacheService sessionCacheService;
 
   @Autowired Interests sessionInterests;
+
+  @Autowired CircuitBreakerService circuitBreakerService;
 
   private KeyedThreadPoolExecutor registerFetchExecutor;
 
@@ -217,10 +219,7 @@ public class FirePushService {
     List<Subscriber> subscribersSend = Lists.newArrayList();
     for (Subscriber subscriber : subscribers) {
       CircuitBreakerStatistic statistic = subscriber.getStatistic(dataCenter);
-      if (CircuitBreakerUtil.circuitBreaker(
-          statistic,
-          sessionServerConfig.getPushCircuitBreakerThreshold(),
-          sessionServerConfig.getPushCircuitBreakerSleepMillis())) {
+      if (circuitBreakerService.pushCircuitBreaker(statistic)) {
 
         LOGGER.info(
             "[CircuitBreaker]subscriber:{} push check circuit break, statistic:{}",

@@ -31,7 +31,7 @@ import com.alipay.sofa.registry.server.session.acceptor.PublisherWriteDataReques
 import com.alipay.sofa.registry.server.session.acceptor.WriteDataAcceptor;
 import com.alipay.sofa.registry.server.session.acceptor.WriteDataRequest;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import com.alipay.sofa.registry.server.session.circuit.breaker.CircuitBreakerUtil;
+import com.alipay.sofa.registry.server.session.circuit.breaker.CircuitBreakerService;
 import com.alipay.sofa.registry.server.session.loggers.Loggers;
 import com.alipay.sofa.registry.server.session.node.service.DataNodeService;
 import com.alipay.sofa.registry.server.session.push.FirePushService;
@@ -103,6 +103,8 @@ public class SessionRegistry implements Registry {
   @Autowired private SlotTableCache slotTableCache;
 
   @Autowired private FirePushService firePushService;
+
+  @Autowired private CircuitBreakerService circuitBreakerService;
 
   private final VersionWatchDog versionWatchDog = new VersionWatchDog();
 
@@ -425,10 +427,7 @@ public class SessionRegistry implements Registry {
       try {
         CircuitBreakerStatistic statistic = subscriber.getStatistic(dataCenter);
 
-        if (CircuitBreakerUtil.circuitBreaker(
-            statistic,
-            sessionServerConfig.getPushCircuitBreakerThreshold(),
-            sessionServerConfig.getPushCircuitBreakerSleepMillis())) {
+        if (circuitBreakerService.pushCircuitBreaker(statistic)) {
           circuitBreaker++;
           SCAN_VER_LOGGER.info(
               "[CircuitBreaker]scan subscribers, dataInfoId={}, statistic={}",
