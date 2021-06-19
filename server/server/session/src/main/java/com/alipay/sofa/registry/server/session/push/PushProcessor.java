@@ -200,7 +200,7 @@ public class PushProcessor {
       return true;
     }
     // task after the prev, but prev.pushClient not callback, retry
-    retry(task, "waiting");
+    retry(task, RetryReason.Waiting);
     return false;
   }
 
@@ -240,13 +240,26 @@ public class PushProcessor {
     return true;
   }
 
-  private boolean retry(PushTask task, String reason) {
+  protected enum RetryReason {
+    Waiting,
+    Error,
+  }
+
+  // some groupId not need to retry
+  protected boolean needRetry(PushTask task, RetryReason reason) {
+    return true;
+  }
+
+  private boolean retry(PushTask task, RetryReason reason) {
+    if (!needRetry(task, reason)) {
+      return false;
+    }
     task.retryCount++;
     final int retry = task.retryCount;
     if (retry <= sessionServerConfig.getPushTaskRetryTimes() && causeContinue(task)) {
       final int backoffMillis = getRetryBackoffTime(retry);
       task.expireAfter(backoffMillis);
-      PUSH_RETRY_COUNTER.labels(reason).inc();
+      PUSH_RETRY_COUNTER.labels(reason.name()).inc();
       return taskBuffer.buffer(task);
     }
     return false;
@@ -425,7 +438,7 @@ public class PushProcessor {
       boolean needRecord = true;
       final boolean channelConnected = channel.isConnected();
       if (channelConnected) {
-        retry(pushTask, "err");
+        retry(pushTask, RetryReason.Error);
       }
 
       if (exception instanceof InvokeTimeoutException) {
