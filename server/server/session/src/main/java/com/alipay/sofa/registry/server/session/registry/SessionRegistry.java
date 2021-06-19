@@ -430,6 +430,10 @@ public class SessionRegistry implements Registry {
             sessionServerConfig.getPushCircuitBreakerThreshold(),
             sessionServerConfig.getPushCircuitBreakerSleepMillis())) {
           circuitBreaker++;
+          SCAN_VER_LOGGER.info(
+                  "[CircuitBreaker]scan subscribers, dataInfoId={}, statistic={}",
+                  subscriber.shortDesc(),
+                  statistic);
           continue;
         }
 
