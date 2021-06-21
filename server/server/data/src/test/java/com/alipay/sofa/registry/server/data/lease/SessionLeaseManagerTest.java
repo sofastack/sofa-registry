@@ -26,6 +26,7 @@ import com.alipay.sofa.registry.server.data.TestBaseUtils;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.CleanContinues;
 import com.alipay.sofa.registry.server.data.cache.LocalDatumStorage;
+import com.alipay.sofa.registry.server.data.change.DataChangeEventCenter;
 import com.alipay.sofa.registry.server.data.slot.SlotManager;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
@@ -51,6 +52,7 @@ public class SessionLeaseManagerTest {
     slm.dataServerConfig = cfg;
     slm.metaServerService = Mockito.mock(MetaServerService.class);
     slm.slotManager = mockSM();
+    slm.dataChangeEventCenter = Mockito.mock(DataChangeEventCenter.class);
     Exchange boltExchange = Mockito.mock(BoltExchange.class);
     slm.boltExchange = boltExchange;
     Set<ProcessId> processIds = slm.getProcessIdsInConnection();
@@ -85,7 +87,8 @@ public class SessionLeaseManagerTest {
     Assert.assertTrue(slm.contains(ServerEnv.PROCESS_ID));
     Assert.assertEquals(storage.tombstoneNum(), 0);
     Assert.assertEquals(storage.get(p.getDataInfoId()).getPubMap().get(p.getRegisterId()), p);
-
+    Mockito.verify(slm.dataChangeEventCenter, Mockito.times(0))
+        .onChange(Mockito.anyCollection(), Mockito.anyString());
     // reset the connections
     Mockito.when(server.getChannels()).thenReturn(Collections.emptyList());
     Thread.sleep(1500);
@@ -94,12 +97,16 @@ public class SessionLeaseManagerTest {
     Assert.assertFalse(slm.contains(ServerEnv.PROCESS_ID));
     Assert.assertEquals(storage.tombstoneNum(), 0);
     Assert.assertEquals(storage.get(p.getDataInfoId()).publisherSize(), 0);
+    Mockito.verify(slm.dataChangeEventCenter, Mockito.times(1))
+        .onChange(Mockito.anyCollection(), Mockito.anyString());
 
     // wait to compact
     Thread.sleep(1500);
     slm.clean();
     Assert.assertEquals(storage.tombstoneNum(), 0);
     Assert.assertEquals(storage.get(p.getDataInfoId()).publisherSize(), 0);
+    Mockito.verify(slm.dataChangeEventCenter, Mockito.times(1))
+        .onChange(Mockito.anyCollection(), Mockito.anyString());
   }
 
   @Test
@@ -107,6 +114,7 @@ public class SessionLeaseManagerTest {
     SessionLeaseManager slm = new SessionLeaseManager();
     BoltExchange boltExchange = Mockito.mock(BoltExchange.class);
     slm.boltExchange = boltExchange;
+    slm.dataChangeEventCenter = Mockito.mock(DataChangeEventCenter.class);
     slm.metaServerService = Mockito.mock(MetaServerService.class);
     DataServerConfig cfg = TestBaseUtils.newDataConfig("testDc");
     slm.dataServerConfig = cfg;
@@ -133,7 +141,8 @@ public class SessionLeaseManagerTest {
     Thread.sleep(2000);
     Assert.assertEquals(storage.tombstoneNum(), 0);
     Assert.assertEquals(storage.get(p.getDataInfoId()).publisherSize(), 0);
-
+    Mockito.verify(slm.dataChangeEventCenter, Mockito.times(1))
+        .onChange(Mockito.anyCollection(), Mockito.anyString());
     // put again
     storage.put(p);
     Assert.assertEquals(storage.get(p.getDataInfoId()).publisherSize(), 1);
@@ -141,6 +150,8 @@ public class SessionLeaseManagerTest {
         .thenReturn(Sets.newHashSet(ServerEnv.PROCESS_ID));
     // could not clean
     slm.cleanStorage();
+    Mockito.verify(slm.dataChangeEventCenter, Mockito.times(1))
+        .onChange(Mockito.anyCollection(), Mockito.anyString());
     Assert.assertEquals(storage.get(p.getDataInfoId()).publisherSize(), 1);
   }
 

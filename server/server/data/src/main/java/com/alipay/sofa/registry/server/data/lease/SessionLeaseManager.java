@@ -30,6 +30,7 @@ import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.CleanContinues;
 import com.alipay.sofa.registry.server.data.cache.DatumStorage;
+import com.alipay.sofa.registry.server.data.change.DataChangeEventCenter;
 import com.alipay.sofa.registry.server.data.slot.SlotManager;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
@@ -65,6 +66,8 @@ public final class SessionLeaseManager {
   @Autowired SlotManager slotManager;
 
   @Autowired MetaServerService metaServerService;
+
+  @Autowired DataChangeEventCenter dataChangeEventCenter;
 
   private final Map<ProcessId, Long> connectIdRenewTimestampMap = new ConcurrentHashMap<>();
 
@@ -156,6 +159,8 @@ public final class SessionLeaseManager {
             CleanLeaseContinues continues = new CleanLeaseContinues(deadlineTimestamp);
             Map<String, DatumVersion> versionMap = localDatumStorage.clean(i, p, continues);
             if (!versionMap.isEmpty()) {
+              dataChangeEventCenter.onChange(
+                  versionMap.keySet(), dataServerConfig.getLocalDataCenter());
               LOGGER.info(
                   "[cleanDatum]broken={},slotId={},datas={},pubs={},span={},{}",
                   continues.broken,

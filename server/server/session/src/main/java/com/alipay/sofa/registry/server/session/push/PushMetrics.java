@@ -94,35 +94,6 @@ public final class PushMetrics {
             .help("commit task")
             .register();
 
-    private static final Counter PUSH_CLIENT_STATUS_COUNTER =
-        Counter.build()
-            .namespace("session")
-            .subsystem("push")
-            .name("push_client_total")
-            .help("push client task")
-            .labelNames("status")
-            .register();
-
-    private static final Counter.Child COUNT_OK =
-        PUSH_CLIENT_STATUS_COUNTER.labels(PushTrace.PushStatus.OK.name());
-    static final Counter.Child COUNT_TIMEOUT =
-        PUSH_CLIENT_STATUS_COUNTER.labels(PushTrace.PushStatus.Timeout.name());
-    static final Counter.Child COUNT_FAIL =
-        PUSH_CLIENT_STATUS_COUNTER.labels(PushTrace.PushStatus.Fail.name());
-
-    static void countPushClient(PushTrace.PushStatus status) {
-      // quick path
-      if (status == PushTrace.PushStatus.OK) {
-        COUNT_OK.inc();
-      } else if (status == PushTrace.PushStatus.Timeout) {
-        COUNT_TIMEOUT.inc();
-      } else if (status == PushTrace.PushStatus.Fail) {
-        COUNT_FAIL.inc();
-      } else {
-        PUSH_CLIENT_STATUS_COUNTER.labels(status.name()).inc();
-      }
-    }
-
     static final Counter PUSH_CLIENT_ING_COUNTER =
         Counter.build()
             .namespace("session")
@@ -146,21 +117,28 @@ public final class PushMetrics {
             .subsystem("push")
             .name("push_delay")
             .help("push delay")
-            .labelNames("cause")
+            .labelNames("cause", "status")
             .register();
 
-    private static final Histogram.Child SUB = PUSH_DELAY_HISTOGRAM.labels(PushType.Sub.name());
-    private static final Histogram.Child REG = PUSH_DELAY_HISTOGRAM.labels(PushType.Reg.name());
+    private static final Histogram.Child SUB_OK =
+        PUSH_DELAY_HISTOGRAM.labels(PushType.Sub.name(), PushTrace.PushStatus.OK.name());
+    private static final Histogram.Child REG_OK =
+        PUSH_DELAY_HISTOGRAM.labels(PushType.Reg.name(), PushTrace.PushStatus.OK.name());
 
-    static void observePushDelayHistogram(PushType pushType, long millis) {
+    static void observePushDelayHistogram(
+        PushType pushType, long millis, PushTrace.PushStatus status) {
       // quick path
-      if (pushType == PushType.Sub) {
-        SUB.observe(millis);
-      } else if (pushType == PushType.Reg) {
-        REG.observe(millis);
-      } else {
-        PUSH_DELAY_HISTOGRAM.labels(pushType.name()).observe(millis);
+      if (status == PushTrace.PushStatus.OK) {
+        if (pushType == PushType.Sub) {
+          SUB_OK.observe(millis);
+          return;
+        }
+        if (pushType == PushType.Reg) {
+          REG_OK.observe(millis);
+          return;
+        }
       }
+      PUSH_DELAY_HISTOGRAM.labels(pushType.name(), status.name()).observe(millis);
     }
 
     static final Counter PUSH_EMPTY_SKIP_COUNTER =
