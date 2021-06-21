@@ -382,7 +382,6 @@ public class PushProcessorTest {
 
   @Test
   public void testOnException() throws Exception {
-    final double fail = COUNT_FAIL.get();
     PushProcessor processor = newProcessor();
     final PushTaskBuffer.BufferWorker worker = processor.taskBuffer.workers[0];
     TriggerPushContext ctx =
@@ -406,12 +405,10 @@ public class PushProcessorTest {
     Assert.assertEquals(0, subscriber.getPushedVersion(datum.getDataCenter()));
     TestUtils.MockBlotChannel channel = TestUtils.newChannel(9600, "192.168.1.1", 1234);
     callback.onException(channel, new InvokeTimeoutException());
-    Assert.assertEquals(COUNT_TIMEOUT.get(), 1, 0);
     Assert.assertEquals(processor.pushingTasks.size(), 0);
     Assert.assertEquals(0, subscriber.getPushedVersion(datum.getDataCenter()));
 
     callback.onException(channel, new Exception());
-    Assert.assertEquals(COUNT_FAIL.get(), fail + 1, 0);
     Assert.assertEquals(processor.pushingTasks.size(), 0);
     Assert.assertEquals(0, subscriber.getPushedVersion(datum.getDataCenter()));
   }

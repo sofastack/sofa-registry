@@ -42,17 +42,20 @@ public class DatumCacheGenerator implements CacheGenerator {
       final String dataInfoId = datumKey.getDataInfoId();
       ParaCheckUtil.checkNotBlank(dataCenter, "dataCenter");
       ParaCheckUtil.checkNotBlank(dataInfoId, "dataInfoId");
+      final long now = System.currentTimeMillis();
       SubDatum datum = dataNodeService.fetch(dataInfoId, dataCenter);
+      final long span = System.currentTimeMillis() - now;
       if (datum == null) {
-        LOGGER.info("loadNil,{},{}", dataInfoId, dataCenter);
+        LOGGER.info("loadNil,{},{},span={}", dataInfoId, dataCenter, span);
       } else {
         LOGGER.info(
-            "start,{},{},{},{},{}",
+            "loadD,{},{},{},{},{},span={}",
             dataInfoId,
             dataCenter,
             datum.getPublishers().size(),
             datum.getDataBoxBytes(),
-            datum.getVersion());
+            datum.getVersion(),
+            span);
       }
       return new Value((SubDatum) datum);
     }

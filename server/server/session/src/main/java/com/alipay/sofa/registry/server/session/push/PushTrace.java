@@ -23,6 +23,7 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.trace.TraceID;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
+import com.alipay.sofa.registry.util.StringFormatter;
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Longs;
 import java.net.InetSocketAddress;
@@ -183,43 +184,50 @@ public final class PushTrace {
       datumModifyPushSpanMillis = firstPubPushDelayMillis;
     }
     PushMetrics.Push.observePushDelayHistogram(
-        pushCause.pushType, Math.max(datumModifyPushSpanMillis, datumVersionPushSpanMillis));
-    PushMetrics.Push.countPushClient(status);
-    final Logger log = datumModifyPushSpanMillis > 5000 ? SLOW_LOGGER : LOGGER;
-    log.info(
-        "{},{},{},{},{},cause={},pubNum={},pubBytes={},pubNew={},delay={},{},{},{},{},"
-            + "session={},cliIO={},firstPubDelay={},lastPubDelay={},"
-            + "subNum={},addr={},expectVer={},dataNode={},taskID={},pushedVer={},regTs={},"
-            + "notifyCreateTs={},commitOverride={},datumRecentDelay={},pushNum={}",
-        status,
-        datum.getDataInfoId(),
-        datum.getVersion(),
-        subApp,
-        datum.getDataCenter(),
         pushCause.pushType,
-        datum.getPublishers().size(),
-        datum.getDataBoxBytes(),
-        newPublisherNum,
-        datumModifyPushSpanMillis,
-        datumVersionPushSpanMillis,
-        datumVersionTriggerSpanMillis,
-        pushTaskPrepareSpanMillis,
-        pushTaskQueueSpanMillis,
-        pushTaskSessionSpanMillis,
-        pushTaskClientIOSpanMillis,
-        firstPubPushDelayMillis,
-        lastPubPushDelayMillis,
-        subNum,
-        subAddress,
-        pushCause.triggerPushCtx.getExpectDatumVersion(),
-        pushCause.triggerPushCtx.dataNode,
-        taskID,
-        subscriberPushedVersion,
-        subRegTimestamp,
-        pushCause.triggerPushCtx.getTimes().getDatumNotifyCreate(),
-        pushCause.triggerPushCtx.getTimes().getOverrideCount(),
-        formatDatumPushedDelayList(pushFinishTimestamp, lastPushTimestamp),
-        pushNum);
+        Math.max(datumModifyPushSpanMillis, datumVersionPushSpanMillis),
+        status);
+    if (LOGGER.isInfoEnabled() || SLOW_LOGGER.isInfoEnabled()) {
+      final String msg =
+          StringFormatter.format(
+              "{},{},{},{},{},cause={},pubNum={},pubBytes={},pubNew={},delay={},{},{},{},{},"
+                  + "session={},cliIO={},firstPubDelay={},lastPubDelay={},"
+                  + "subNum={},addr={},expectVer={},dataNode={},taskID={},pushedVer={},regTs={},"
+                  + "notifyTs={},commits={},recentDelay={},pushNum={}",
+              status,
+              datum.getDataInfoId(),
+              datum.getVersion(),
+              subApp,
+              datum.getDataCenter(),
+              pushCause.pushType,
+              datum.getPublishers().size(),
+              datum.getDataBoxBytes(),
+              newPublisherNum,
+              datumModifyPushSpanMillis,
+              datumVersionPushSpanMillis,
+              datumVersionTriggerSpanMillis,
+              pushTaskPrepareSpanMillis,
+              pushTaskQueueSpanMillis,
+              pushTaskSessionSpanMillis,
+              pushTaskClientIOSpanMillis,
+              firstPubPushDelayMillis,
+              lastPubPushDelayMillis,
+              subNum,
+              subAddress,
+              pushCause.triggerPushCtx.getExpectDatumVersion(),
+              pushCause.triggerPushCtx.dataNode,
+              taskID,
+              subscriberPushedVersion,
+              subRegTimestamp,
+              pushCause.triggerPushCtx.getTimes().getDatumNotifyCreate(),
+              pushCause.triggerPushCtx.getTimes().getOverrideCount(),
+              formatDatumPushedDelayList(pushFinishTimestamp, lastPushTimestamp),
+              pushNum);
+      LOGGER.info(msg);
+      if (datumModifyPushSpanMillis > 6000) {
+        SLOW_LOGGER.info(msg);
+      }
+    }
   }
 
   enum PushStatus {
