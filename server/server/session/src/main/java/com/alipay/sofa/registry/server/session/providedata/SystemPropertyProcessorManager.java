@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.provideData;
+package com.alipay.sofa.registry.server.session.providedata;
 
 import com.alipay.sofa.registry.server.shared.providedata.FetchSystemPropertyService;
 import java.util.ArrayList;

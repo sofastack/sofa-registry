@@ -258,6 +258,19 @@ public class TestUtils {
     return subscriber;
   }
 
+  public static Watcher newWatcher(String dataId) {
+    Watcher wat = new Watcher();
+    wat.setDataId(dataId);
+    wat.setRegisterId("test-Watcher-" + REGISTER_ID_SEQ.incrementAndGet());
+    wat.setClientVersion(BaseInfo.ClientVersion.StoreData);
+    wat.setGroup(GROUP);
+    wat.setInstanceId(INSTANCE);
+    wat.setSourceAddress(new URL("192.168.1.1", 8888));
+    String dataInfo = DataInfo.toDataInfoId(dataId, wat.getInstanceId(), wat.getGroup());
+    wat.setDataInfoId(dataInfo);
+    return wat;
+  }
+
   public static Subscriber newZoneSubscriber(String dataId, String cell) {
     Subscriber subscriber = newZoneSubscriber(cell);
     subscriber.setDataId(dataId);

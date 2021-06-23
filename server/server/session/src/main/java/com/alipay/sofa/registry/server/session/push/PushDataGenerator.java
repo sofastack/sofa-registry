@@ -18,6 +18,7 @@ package com.alipay.sofa.registry.server.session.push;
 
 import com.alipay.sofa.registry.common.model.SubscriberUtils;
 import com.alipay.sofa.registry.common.model.store.*;
+import com.alipay.sofa.registry.core.model.ReceivedConfigData;
 import com.alipay.sofa.registry.core.model.ReceivedData;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.converter.ReceivedDataConverter;
@@ -57,5 +58,14 @@ public class PushDataGenerator {
           ReceivedDataConvertor.convert2Pb(pushData.getPayload()), pushData.getDataCount());
     }
     return pushData;
+  }
+
+  public PushData createPushData(Watcher watcher, ReceivedConfigData data) {
+    URL url = watcher.getSourceAddress();
+    Object o = data;
+    if (url.getSerializerIndex() != null && URL.PROTOBUF == url.getSerializerIndex()) {
+      o = ReceivedDataConvertor.convert2Pb(data);
+    }
+    return new PushData(o, 1);
   }
 }

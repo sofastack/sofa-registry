@@ -239,6 +239,12 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
   }
 
   @Override
+  public Map<String, ProvideData> fetchData(Map<String, Long> dataInfoIdsWithVersion) {
+    // TODO unsupported this now
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
   public FetchSystemPropertyResult fetchSystemProperty(String dataInfoId, long version) {
     final String leaderIp = metaServerManager.getMetaServerLeader();
 

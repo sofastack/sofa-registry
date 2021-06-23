@@ -20,6 +20,7 @@ import com.alipay.remoting.AsyncContext;
 import com.alipay.remoting.BizContext;
 import com.alipay.remoting.Connection;
 import com.alipay.sofa.registry.remoting.Channel;
+import com.alipay.sofa.registry.util.StringFormatter;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.Map;
@@ -43,6 +44,8 @@ public class BoltChannel implements Channel {
   public BoltChannel(Connection conn) {
     this.connection = conn;
   }
+
+  private volatile boolean markProtobuf;
 
   @Override
   public InetSocketAddress getRemoteAddress() {
@@ -69,7 +72,7 @@ public class BoltChannel implements Channel {
     if (attributes == null) {
       attributes = new HashMap<>();
     }
-    if (value == null) { // The null value unallowed in the ConcurrentHashMap.
+    if (value == null) {
       attributes.remove(key);
     } else {
       attributes.put(key, value);
@@ -131,9 +134,23 @@ public class BoltChannel implements Channel {
     this.bizContext = bizContext;
   }
 
+  public void markProtobuf() {
+    if (!markProtobuf) {
+      this.markProtobuf = true;
+    }
+  }
+
+  public boolean isMarkProtobuf() {
+    return markProtobuf;
+  }
+
   @Override
   public String toString() {
-    return String.format(
-        "connected=%s, remote=%s, local=%s", isConnected(), getRemoteAddress(), getLocalAddress());
+    return StringFormatter.format(
+        "connected={},remote={},local={},pb={}",
+        isConnected(),
+        getRemoteAddress(),
+        getLocalAddress(),
+        markProtobuf);
   }
 }

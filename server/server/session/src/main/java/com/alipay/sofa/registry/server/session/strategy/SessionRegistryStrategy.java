@@ -26,6 +26,8 @@ import com.alipay.sofa.registry.common.model.store.Watcher;
  */
 public interface SessionRegistryStrategy {
 
+  void start();
+
   void afterPublisherRegister(Publisher publisher);
 
   void afterSubscriberRegister(Subscriber subscriber);

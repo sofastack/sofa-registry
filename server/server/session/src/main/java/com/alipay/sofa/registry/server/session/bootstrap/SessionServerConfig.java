@@ -51,7 +51,7 @@ public interface SessionServerConfig extends ServerShareConfig {
 
   int getSchedulerHeartbeatIntervalSecs();
 
-  int getSchedulerScanVersionIntervalMillis();
+  int getScanSubscriberIntervalMillis();
 
   int getClientNodeExchangeTimeoutMillis();
 
@@ -68,8 +68,6 @@ public interface SessionServerConfig extends ServerShareConfig {
   String getClientCell(String clientCell);
 
   String getSessionServerDataCenter();
-
-  int getSubscriberRegisterFetchRetryTimes();
 
   int getAccessDataExecutorPoolSize();
 
@@ -114,6 +112,10 @@ public interface SessionServerConfig extends ServerShareConfig {
   int getSubscriberRegisterTaskWorkerSize();
 
   int getSubscriberRegisterTaskMaxBufferSize();
+
+  int getWatchPushTaskWorkerSize();
+
+  int getWatchPushTaskMaxBufferSize();
 
   boolean isInvalidForeverZone(String zoneId);
 
@@ -180,4 +182,14 @@ public interface SessionServerConfig extends ServerShareConfig {
   int getSkipPushEmptySilentMillis();
 
   int getClientManagerAddressIntervalMillis();
+
+  int getWatchConfigFetchBatchSize();
+
+  int getWatchConfigFetchIntervalMillis();
+
+  int getWatchConfigFetchLeaseSecs();
+
+  boolean isWatchConfigEnable();
+
+  int getScanWatcherIntervalMillis();
 }

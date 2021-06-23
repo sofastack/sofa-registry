@@ -25,12 +25,6 @@ import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.store.DataStore;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.session.store.Watchers;
-import com.alipay.sofa.registry.task.batcher.AcceptorExecutor;
-import com.alipay.sofa.registry.task.batcher.TaskDispatcher;
-import com.alipay.sofa.registry.task.batcher.TaskDispatchers;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Map.Entry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 
@@ -90,43 +84,5 @@ public class SyncClientsHeartbeatTask {
         countPub,
         countSubW,
         channelCount);
-  }
-
-  @Scheduled(
-      initialDelayString = "${session.server.printTask.fixedDelay}",
-      fixedDelayString = "${session.server.printTask.fixedDelay}")
-  public void printTaskExecute() {
-
-    Map<String, TaskDispatcher> taskDispatcherMap = TaskDispatchers.getTaskDispatcherMap();
-    if (taskDispatcherMap != null) {
-
-      StringBuilder sb = new StringBuilder();
-      logInfo(sb, taskDispatcherMap, "TaskDispatcher");
-      PRO_LOGGER.info(sb.toString());
-    }
-  }
-
-  protected void logInfo(
-      StringBuilder sb0, Map<String, TaskDispatcher> taskDispatcherMap, String info) {
-    sb0.append("\n").append(info).append(" >>>>>>>");
-    StringBuilder sb = new StringBuilder();
-    for (Iterator<Entry<String, TaskDispatcher>> i = taskDispatcherMap.entrySet().iterator();
-        i.hasNext(); ) {
-      Entry<String, TaskDispatcher> entry = i.next();
-      AcceptorExecutor acceptorExecutor = entry.getValue().getAcceptorExecutor();
-      String outterTreeSymbol = SYMBOLIC1;
-      if (!i.hasNext()) {
-        outterTreeSymbol = SYMBOLIC2;
-      }
-      sb.append(outterTreeSymbol).append(entry.getKey());
-      sb.append(", AcceptedTasks:").append(acceptorExecutor.getAcceptedTasks());
-      sb.append(", ReplayedTasks:").append(acceptorExecutor.getReplayedTasks());
-      sb.append(", QueueOverflows:").append(acceptorExecutor.getQueueOverflows());
-      sb.append(" ,PendingTaskSize:").append(acceptorExecutor.getPendingTaskSize());
-      sb.append(", ExpiredTasks:").append(acceptorExecutor.getExpiredTasks());
-      sb.append(", OverriddenTasks:").append(acceptorExecutor.getOverriddenTasks());
-      sb.append(", MaxBuffer:").append(acceptorExecutor.getMaxBufferSize()).append("\n");
-    }
-    sb0.append("\n").append(sb);
   }
 }

@@ -17,10 +17,8 @@
 package com.alipay.sofa.registry.server.session.converter;
 
 import com.alipay.sofa.registry.common.model.ServerDataBox;
-import com.alipay.sofa.registry.common.model.store.DataInfo;
-import com.alipay.sofa.registry.common.model.store.PushData;
-import com.alipay.sofa.registry.common.model.store.SubDatum;
-import com.alipay.sofa.registry.common.model.store.SubPublisher;
+import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
+import com.alipay.sofa.registry.common.model.store.*;
 import com.alipay.sofa.registry.core.model.DataBox;
 import com.alipay.sofa.registry.core.model.ReceivedConfigData;
 import com.alipay.sofa.registry.core.model.ReceivedData;
@@ -28,6 +26,7 @@ import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
+import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -56,7 +55,7 @@ public final class ReceivedDataConverter {
   public static PushData<ReceivedData> getReceivedDataMulti(
       SubDatum datum,
       ScopeEnum scope,
-      List subscriberRegisterIdList,
+      List<String> subscriberRegisterIdList,
       String regionLocal,
       Predicate<String> zonePredicate) {
 
@@ -136,6 +135,16 @@ public final class ReceivedDataConverter {
       version = DatumVersionUtil.nextId();
     }
     receivedConfigData.setVersion(DatumVersionUtil.transferDatumVersion(version));
+    return receivedConfigData;
+  }
+
+  public static ReceivedConfigData createReceivedConfigData(
+      Watcher watcher, ProvideData provideData) {
+    DataInfo dataInfo = DataInfo.valueOf(watcher.getDataInfoId());
+    ReceivedConfigData receivedConfigData =
+        ReceivedDataConverter.getReceivedConfigData(
+            provideData.getProvideData(), dataInfo, provideData.getVersion());
+    receivedConfigData.setConfiguratorRegistIds(Lists.newArrayList(watcher.getRegisterId()));
     return receivedConfigData;
   }
 }

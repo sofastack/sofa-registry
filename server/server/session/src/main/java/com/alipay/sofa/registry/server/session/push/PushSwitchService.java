@@ -16,8 +16,8 @@
  */
 package com.alipay.sofa.registry.server.session.push;
 
-import com.alipay.sofa.registry.server.session.provideData.FetchGrayPushSwitchService;
-import com.alipay.sofa.registry.server.session.provideData.FetchStopPushService;
+import com.alipay.sofa.registry.server.session.providedata.FetchGrayPushSwitchService;
+import com.alipay.sofa.registry.server.session.providedata.FetchStopPushService;
 import com.google.common.annotations.VisibleForTesting;
 import javax.annotation.Resource;
 import org.apache.commons.collections.CollectionUtils;

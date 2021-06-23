@@ -31,6 +31,7 @@ import com.alipay.sofa.registry.remoting.bolt.BoltUtil;
 import com.alipay.sofa.registry.server.session.converter.SubscriberConverter;
 import com.alipay.sofa.registry.server.session.registry.Registry;
 import com.alipay.sofa.registry.server.session.strategy.SubscriberHandlerStrategy;
+import com.alipay.sofa.registry.server.shared.remoting.RemotingHelper;
 import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.core.async.Hack;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,6 +50,7 @@ public class DefaultSubscriberHandlerStrategy implements SubscriberHandlerStrate
   public void handleSubscriberRegister(
       Channel channel, SubscriberRegister subscriberRegister, RegisterResponse registerResponse) {
     Subscriber subscriber = null;
+    boolean fromPb = RemotingHelper.isMarkProtobuf(channel);
     try {
       String ip = channel.getRemoteAddress().getAddress().getHostAddress();
       int port = channel.getRemoteAddress().getPort();
@@ -66,9 +68,9 @@ public class DefaultSubscriberHandlerStrategy implements SubscriberHandlerStrate
       subscriber = SubscriberConverter.convert(subscriberRegister);
       subscriber.setProcessId(ip + ":" + port);
 
-      handle(subscriber, channel, subscriberRegister, registerResponse);
+      handle(subscriber, channel, subscriberRegister, registerResponse, fromPb);
     } catch (Throwable e) {
-      handleError(subscriberRegister, subscriber, registerResponse, e);
+      handleError(subscriberRegister, subscriber, registerResponse, fromPb, e);
     }
   }
 
@@ -76,7 +78,8 @@ public class DefaultSubscriberHandlerStrategy implements SubscriberHandlerStrate
       Subscriber subscriber,
       Channel channel,
       SubscriberRegister subscriberRegister,
-      RegisterResponse registerResponse) {
+      RegisterResponse registerResponse,
+      boolean pb) {
     subscriber.setSourceAddress(
         new URL(channel.getRemoteAddress(), BoltUtil.getBoltCustomSerializer(channel)));
     subscriber.setTargetAddress(new URL(channel.getLocalAddress()));
@@ -93,14 +96,15 @@ public class DefaultSubscriberHandlerStrategy implements SubscriberHandlerStrate
     registerResponse.setRegistId(subscriberRegister.getRegistId());
     registerResponse.setSuccess(true);
     registerResponse.setMessage("Subscriber register success!");
-    log(true, subscriberRegister, subscriber);
+    log(true, subscriberRegister, subscriber, pb);
   }
 
-  private void log(boolean success, SubscriberRegister subscriberRegister, Subscriber subscriber) {
+  private void log(
+      boolean success, SubscriberRegister subscriberRegister, Subscriber subscriber, boolean pb) {
     // [Y|N],[R|U|N],app,zone,dataInfoId,registerId,scope,elementType,clientVersion,clientIp,clientPort
     Metrics.Access.subCount(success);
     SUB_LOGGER.info(
-        "{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}",
+        "{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},pb={}",
         success ? 'Y' : 'N',
         EventTypeConstants.getEventTypeFlag(subscriberRegister.getEventType()),
         subscriberRegister.getAppName(),
@@ -115,15 +119,17 @@ public class DefaultSubscriberHandlerStrategy implements SubscriberHandlerStrate
         subscriber == null ? "" : subscriber.getRegisterTimestamp(),
         subscriber == null ? "" : subscriber.getVersion(),
         subscriberRegister.getIp(),
-        subscriberRegister.getPort());
+        subscriberRegister.getPort(),
+        pb ? 'Y' : 'N');
   }
 
   protected void handleError(
       SubscriberRegister subscriberRegister,
       Subscriber subscriber,
       RegisterResponse registerResponse,
+      boolean pb,
       Throwable e) {
-    log(false, subscriberRegister, subscriber);
+    log(false, subscriberRegister, subscriber, pb);
     RegisterLogs.logError(subscriberRegister, "Subscriber", registerResponse, e);
   }
 }

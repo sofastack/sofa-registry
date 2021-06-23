@@ -22,11 +22,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
-import com.alipay.sofa.registry.server.session.provideData.FetchBlackListService;
-import com.alipay.sofa.registry.server.session.provideData.FetchClientOffAddressService;
-import com.alipay.sofa.registry.server.session.provideData.FetchGrayPushSwitchService;
-import com.alipay.sofa.registry.server.session.provideData.FetchStopPushService;
-import com.alipay.sofa.registry.server.session.provideData.SystemPropertyProcessorManager;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;

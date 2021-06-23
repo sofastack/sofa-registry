@@ -30,6 +30,7 @@ import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.session.converter.PublisherConverter;
 import com.alipay.sofa.registry.server.session.registry.Registry;
 import com.alipay.sofa.registry.server.session.strategy.PublisherHandlerStrategy;
+import com.alipay.sofa.registry.server.shared.remoting.RemotingHelper;
 import com.alipay.sofa.registry.server.shared.util.DatumUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.core.async.Hack;
@@ -48,6 +49,7 @@ public class DefaultPublisherHandlerStrategy implements PublisherHandlerStrategy
   public void handlePublisherRegister(
       Channel channel, PublisherRegister publisherRegister, RegisterResponse registerResponse) {
     Publisher publisher = null;
+    boolean fromPb = RemotingHelper.isMarkProtobuf(channel);
     try {
       String ip = channel.getRemoteAddress().getAddress().getHostAddress();
       int port = channel.getRemoteAddress().getPort();
@@ -65,9 +67,9 @@ public class DefaultPublisherHandlerStrategy implements PublisherHandlerStrategy
       publisher = PublisherConverter.convert(publisherRegister);
       publisher.setProcessId(ip + ":" + port);
 
-      handle(publisher, channel, publisherRegister, registerResponse);
+      handle(publisher, channel, publisherRegister, registerResponse, fromPb);
     } catch (Throwable e) {
-      handleError(publisherRegister, publisher, registerResponse, e);
+      handleError(publisherRegister, publisher, registerResponse, fromPb, e);
     }
   }
 
@@ -75,7 +77,8 @@ public class DefaultPublisherHandlerStrategy implements PublisherHandlerStrategy
       Publisher publisher,
       Channel channel,
       PublisherRegister publisherRegister,
-      RegisterResponse registerResponse) {
+      RegisterResponse registerResponse,
+      boolean pb) {
     publisher.setSourceAddress(new URL(channel.getRemoteAddress()));
     publisher.setTargetAddress(new URL(channel.getLocalAddress()));
     final String eventType = publisherRegister.getEventType();
@@ -90,16 +93,17 @@ public class DefaultPublisherHandlerStrategy implements PublisherHandlerStrategy
     registerResponse.setVersion(publisher.getVersion());
     registerResponse.setRegistId(publisherRegister.getRegistId());
     registerResponse.setMessage("Publisher register success!");
-    log(true, publisherRegister, publisher);
+    log(true, publisherRegister, publisher, pb);
   }
 
-  private void log(boolean success, PublisherRegister publisherRegister, Publisher publisher) {
+  private void log(
+      boolean success, PublisherRegister publisherRegister, Publisher publisher, boolean pb) {
     // [Y|N],[R|U|N],app,zone,dataInfoId,registerId,version,registerTimestamp,clientVersion,clientIp,clientPort,dataSize
     long size = DatumUtils.DataBoxListSize(publisherRegister.getDataList());
     Metrics.Access.pubCount(success);
     Metrics.Access.REGISTRY_CLIENT_PUB_SIZE.observe(size);
     PUB_LOGGER.info(
-        "{},{},{},{},{},{},{},{},{},{},{},{},{},{}",
+        "{},{},{},{},{},{},{},{},{},{},{},{},{},size={},pb={}",
         success ? 'Y' : 'N',
         EventTypeConstants.getEventTypeFlag(publisherRegister.getEventType()),
         publisherRegister.getAppName(),
@@ -113,15 +117,17 @@ public class DefaultPublisherHandlerStrategy implements PublisherHandlerStrategy
         publisher == null ? "" : publisher.getClientVersion(),
         publisherRegister.getIp(),
         publisherRegister.getPort(),
-        size);
+        size,
+        pb ? 'Y' : 'N');
   }
 
   protected void handleError(
       PublisherRegister publisherRegister,
       Publisher publisher,
       RegisterResponse registerResponse,
+      boolean pb,
       Throwable e) {
-    log(false, publisherRegister, publisher);
+    log(false, publisherRegister, publisher, pb);
     RegisterLogs.logError(publisherRegister, "Publisher", registerResponse, e);
   }
 }

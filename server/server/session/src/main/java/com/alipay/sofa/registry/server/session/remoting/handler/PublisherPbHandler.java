@@ -24,6 +24,7 @@ import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.RemotingException;
 import com.alipay.sofa.registry.server.session.converter.pb.PublisherRegisterConvertor;
 import com.alipay.sofa.registry.server.session.converter.pb.RegisterResponseConvertor;
+import com.alipay.sofa.registry.server.shared.remoting.RemotingHelper;
 import java.util.concurrent.Executor;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -52,6 +53,7 @@ public class PublisherPbHandler extends AbstractClientDataRequestHandler<Publish
    */
   @Override
   public Object doHandle(Channel channel, PublisherRegisterPb message) {
+    RemotingHelper.markProtobuf(channel);
     RegisterResponsePb.Builder builder = RegisterResponsePb.newBuilder();
 
     Object response =
