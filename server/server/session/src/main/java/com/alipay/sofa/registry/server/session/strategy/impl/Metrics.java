@@ -17,11 +17,12 @@
 package com.alipay.sofa.registry.server.session.strategy.impl;
 
 import io.prometheus.client.Counter;
+import io.prometheus.client.Histogram;
 
 public final class Metrics {
   private Metrics() {}
 
-  static final class Access {
+  public static final class Access {
     private static final Counter PUB_COUNTER =
         Counter.build()
             .namespace("session")
@@ -56,6 +57,17 @@ public final class Metrics {
 
     private static final Counter.Child WAT_COUNTER_Y = WAT_COUNTER.labels("Y");
     private static final Counter.Child WAT_COUNTER_N = WAT_COUNTER.labels("N");
+
+    public static final Histogram PUB_SIZE =
+        Histogram.build()
+            .exponentialBuckets(10, 2, 15)
+            .namespace("session")
+            .subsystem("access")
+            .name("pub_size")
+            .labelNames("client")
+            .help("publisher data size")
+            .register();
+    public static final Histogram.Child REGISTRY_CLIENT_PUB_SIZE = PUB_SIZE.labels("registry");
 
     static void pubCount(boolean success) {
       if (success) {

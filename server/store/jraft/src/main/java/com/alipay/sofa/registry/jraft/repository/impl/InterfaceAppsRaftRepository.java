@@ -48,4 +48,9 @@ public class InterfaceAppsRaftRepository implements InterfaceAppsRepository {
 
   @Override
   public void waitSynced() {}
+
+  @Override
+  public long getDataVersion() {
+    return 0;
+  }
 }

@@ -30,6 +30,7 @@ import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.session.converter.PublisherConverter;
 import com.alipay.sofa.registry.server.session.registry.Registry;
 import com.alipay.sofa.registry.server.session.strategy.PublisherHandlerStrategy;
+import com.alipay.sofa.registry.server.shared.util.DatumUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.core.async.Hack;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -93,10 +94,12 @@ public class DefaultPublisherHandlerStrategy implements PublisherHandlerStrategy
   }
 
   private void log(boolean success, PublisherRegister publisherRegister, Publisher publisher) {
-    // [Y|N],[R|U|N],app,zone,dataInfoId,registerId,version,registerTimestamp,clientVersion,clientIp,clientPort
+    // [Y|N],[R|U|N],app,zone,dataInfoId,registerId,version,registerTimestamp,clientVersion,clientIp,clientPort,dataSize
+    long size = DatumUtils.DataBoxListSize(publisherRegister.getDataList());
     Metrics.Access.pubCount(success);
+    Metrics.Access.REGISTRY_CLIENT_PUB_SIZE.observe(size);
     PUB_LOGGER.info(
-        "{},{},{},{},{},{},{},{},{},{},{},{},{}",
+        "{},{},{},{},{},{},{},{},{},{},{},{},{},{}",
         success ? 'Y' : 'N',
         EventTypeConstants.getEventTypeFlag(publisherRegister.getEventType()),
         publisherRegister.getAppName(),
@@ -109,7 +112,8 @@ public class DefaultPublisherHandlerStrategy implements PublisherHandlerStrategy
         publisher == null ? "" : publisher.getRegisterTimestamp(),
         publisher == null ? "" : publisher.getClientVersion(),
         publisherRegister.getIp(),
-        publisherRegister.getPort());
+        publisherRegister.getPort(),
+        size);
   }
 
   protected void handleError(

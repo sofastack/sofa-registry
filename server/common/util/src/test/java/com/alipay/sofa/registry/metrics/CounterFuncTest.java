@@ -14,27 +14,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.store.api.repository;
+package com.alipay.sofa.registry.metrics;
 
-import com.alipay.sofa.registry.common.model.appmeta.InterfaceMapping;
+import org.junit.Assert;
+import org.junit.Test;
 
-/**
- * @author xiaojian.xj
- * @version $Id: InterfaceAppsRepository.java, v 0.1 2021年01月24日 19:33 xiaojian.xj Exp $
- */
-public interface InterfaceAppsRepository {
+public class CounterFuncTest {
 
-  /**
-   * get revisions by interfaceName
-   *
-   * @param dataInfoId
-   * @return return <appName, revisions>
-   */
-  InterfaceMapping getAppNames(String dataInfoId);
-
-  void register(String interfaceName, String appName);
-
-  void waitSynced();
-
-  long getDataVersion();
+  @Test
+  public void testCounterFunc() {
+    CounterFunc f1 =
+        CounterFunc.build().name("countername").help("help").create().func(() -> 1).register();
+    Assert.assertEquals(1, f1.collect().get(0).samples.size());
+    CounterFunc f2 =
+        CounterFunc.build().name("countername1").labelNames("childName").help("help").create().register();
+    f2.labels("child1").func(() -> 2);
+    f2.labels("child2").func(() -> 2);
+    System.out.println(f2.collect());
+    Assert.assertEquals(2, f2.collect().get(0).samples.size());
+  }
 }

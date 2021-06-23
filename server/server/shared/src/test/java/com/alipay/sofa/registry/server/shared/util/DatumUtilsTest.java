@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.server.shared.util;
 
 import com.alipay.sofa.registry.common.model.PublishSource;
+import com.alipay.sofa.registry.common.model.ServerDataBox;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
@@ -25,6 +26,10 @@ import com.alipay.sofa.registry.common.model.store.SubDatum;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
 import java.util.Collections;
 import java.util.Map;
+
+import com.alipay.sofa.registry.core.model.DataBox;
+import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
+import com.google.common.collect.Lists;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -92,4 +97,17 @@ public class DatumUtilsTest {
     Assert.assertEquals(p.getRegisterTimestamp(), publisher.getRegisterTimestamp());
     Assert.assertEquals(p.getPublishSource(), publisher.getPublishSource());
   }
+
+  @Test
+  public void testDataBoxListSize(){
+    DataBox box = new DataBox();
+    box.setData("111111111111111111111111111111111");
+    Assert.assertEquals(33, DatumUtils.DataBoxListSize(Lists.newArrayList(box)));
+  }
+  @Test
+  public void testServerDataBoxListSize(){
+    ServerDataBox box = new ServerDataBox("111111111111111111111111111111111");
+    Assert.assertEquals(40, DatumUtils.ServerDataBoxListSize(Lists.newArrayList(box)));
+  }
+
 }

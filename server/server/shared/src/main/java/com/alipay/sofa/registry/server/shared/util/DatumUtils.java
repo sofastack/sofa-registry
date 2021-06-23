@@ -16,9 +16,11 @@
  */
 package com.alipay.sofa.registry.server.shared.util;
 
+import com.alipay.sofa.registry.common.model.ServerDataBox;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.store.*;
+import com.alipay.sofa.registry.core.model.DataBox;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.util.Collections;
@@ -83,5 +85,28 @@ public final class DatumUtils {
         datum.getInstanceId(),
         datum.getGroup(),
         datum.getRecentVersions());
+  }
+
+  public static long DataBoxListSize(List<DataBox> boxes) {
+    long sum = 0;
+    for (DataBox box : boxes) {
+      if (box == null || box.getData() == null) {
+        continue;
+      }
+      sum += box.getData().length();
+    }
+    return sum;
+  }
+
+  public static long ServerDataBoxListSize(List<ServerDataBox> boxes) {
+    long sum = 0;
+    for (ServerDataBox box : boxes) {
+      if (box == null) {
+        continue;
+      }
+      box.object2bytes();
+      sum += box.byteSize();
+    }
+    return sum;
   }
 }

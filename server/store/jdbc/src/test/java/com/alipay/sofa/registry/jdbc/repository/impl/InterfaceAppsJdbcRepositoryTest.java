@@ -78,5 +78,6 @@ public class InterfaceAppsJdbcRepositoryTest extends AbstractH2DbTestBase {
     Assert.assertEquals(conflictCount.getAndSet(0), 0);
     impl.informer.preList(c1);
     Assert.assertEquals(conflictCount.getAndSet(0), 100);
+    impl.getDataVersion();
   }
 }

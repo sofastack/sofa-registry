@@ -155,7 +155,7 @@ public class AcceptorExecutor<ID, T> {
         } catch (InterruptedException ex) {
           // Ignore
         } catch (Throwable e) {
-          LOGGER.warn("AcceptorThread error", e);
+          LOGGER.safeWarn("AcceptorThread error", e);
         }
       }
     }
