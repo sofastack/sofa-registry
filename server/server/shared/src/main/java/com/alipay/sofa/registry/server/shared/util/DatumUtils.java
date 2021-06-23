@@ -26,6 +26,7 @@ import com.google.common.collect.Maps;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import org.apache.commons.collections.CollectionUtils;
 
 /**
  * @author xuanbei
@@ -88,6 +89,9 @@ public final class DatumUtils {
   }
 
   public static long DataBoxListSize(List<DataBox> boxes) {
+    if (CollectionUtils.isEmpty(boxes)) {
+      return 0;
+    }
     long sum = 0;
     for (DataBox box : boxes) {
       if (box == null || box.getData() == null) {
@@ -99,6 +103,9 @@ public final class DatumUtils {
   }
 
   public static long ServerDataBoxListSize(List<ServerDataBox> boxes) {
+    if (CollectionUtils.isEmpty(boxes)) {
+      return 0;
+    }
     long sum = 0;
     for (ServerDataBox box : boxes) {
       if (box == null) {
