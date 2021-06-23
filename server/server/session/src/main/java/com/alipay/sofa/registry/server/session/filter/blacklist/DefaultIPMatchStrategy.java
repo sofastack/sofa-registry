@@ -17,7 +17,7 @@
 package com.alipay.sofa.registry.server.session.filter.blacklist;
 
 import com.alipay.sofa.registry.server.session.filter.IPMatchStrategy;
-import com.alipay.sofa.registry.server.session.provideData.FetchBlackListService;
+import com.alipay.sofa.registry.server.session.providedata.FetchBlackListService;
 import com.google.common.annotations.VisibleForTesting;
 import java.util.List;
 import java.util.Set;

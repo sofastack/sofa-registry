@@ -21,6 +21,7 @@ import com.alipay.sofa.registry.common.model.metaserver.FetchSystemPropertyResul
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.common.model.metaserver.SlotTableChangeEvent;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -55,6 +56,8 @@ public interface MetaServerService {
    * @return
    */
   ProvideData fetchData(String dataInfoId);
+
+  Map<String, ProvideData> fetchData(Map<String, Long> dataInfoIdsWithVersion);
 
   /** Add self to meta blacklist. */
   void addSelfToMetaBlacklist();

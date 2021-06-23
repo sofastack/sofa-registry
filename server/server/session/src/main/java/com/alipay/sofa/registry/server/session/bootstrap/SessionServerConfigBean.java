@@ -64,8 +64,6 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
   private int schedulerHeartbeatIntervalSecs = 1;
 
-  private int subscriberRegisterFetchRetryTimes = 3;
-
   private int accessDataExecutorPoolSize = OsUtils.getCpuCount() * 10;
 
   private int accessDataExecutorQueueSize = 10000;
@@ -139,7 +137,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
   private int dataNodeMaxBatchSize = 100;
 
-  private int schedulerScanVersionIntervalMillis = 1000 * 5;
+  private int scanSubscriberIntervalMillis = 1000 * 5;
 
   private double accessLimitRate = 30000.0;
 
@@ -203,6 +201,17 @@ public class SessionServerConfigBean implements SessionServerConfig {
   private int pushCircuitBreakerSleepMillis = 60 * 1000;
 
   private int skipPushEmptySilentMillis = 30 * 1000;
+
+  private int scanWatcherIntervalMillis = 1000 * 3;
+
+  private int watchConfigFetchBatchSize = 100;
+  private int watchConfigFetchIntervalMillis = 1000 * 30;
+  private int watchConfigFetchLeaseSecs = 30;
+  private boolean watchConfigEnable = false;
+
+  private int watchPushTaskWorkerSize = OsUtils.getCpuCount() * 3;
+
+  private int watchPushTaskMaxBufferSize = 10000;
 
   /**
    * constructor
@@ -268,26 +277,6 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
   public void setPushTaskRetryTimes(int pushTaskRetryTimes) {
     this.pushTaskRetryTimes = pushTaskRetryTimes;
-  }
-
-  /**
-   * Getter method for property <tt>subscriberRegisterFetchRetryTimes</tt>.
-   *
-   * @return property value of subscriberRegisterFetchRetryTimes
-   */
-  @Override
-  public int getSubscriberRegisterFetchRetryTimes() {
-    return subscriberRegisterFetchRetryTimes;
-  }
-
-  /**
-   * Setter method for property <tt>subscriberRegisterFetchRetryTimes</tt>.
-   *
-   * @param subscriberRegisterFetchRetryTimes value to be assigned to property
-   *     subscriberRegisterFetchRetryTimes
-   */
-  public void setSubscriberRegisterFetchRetryTimes(int subscriberRegisterFetchRetryTimes) {
-    this.subscriberRegisterFetchRetryTimes = subscriberRegisterFetchRetryTimes;
   }
 
   /**
@@ -886,18 +875,18 @@ public class SessionServerConfigBean implements SessionServerConfig {
    * @return property value of schedulerScanVersionIntervalMs
    */
   @Override
-  public int getSchedulerScanVersionIntervalMillis() {
-    return schedulerScanVersionIntervalMillis;
+  public int getScanSubscriberIntervalMillis() {
+    return scanSubscriberIntervalMillis;
   }
 
   /**
    * Setter method for property <tt>schedulerScanVersionIntervalMillis</tt>.
    *
-   * @param schedulerScanVersionIntervalMillis value to be assigned to property
+   * @param scanSubscriberIntervalMillis value to be assigned to property
    *     schedulerScanVersionIntervalMs
    */
-  public void setSchedulerScanVersionIntervalMillis(int schedulerScanVersionIntervalMillis) {
-    this.schedulerScanVersionIntervalMillis = schedulerScanVersionIntervalMillis;
+  public void setScanSubscriberIntervalMillis(int scanSubscriberIntervalMillis) {
+    this.scanSubscriberIntervalMillis = scanSubscriberIntervalMillis;
   }
 
   public int getSlotSyncMaxBufferSize() {
@@ -1290,5 +1279,68 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
   public void setClientNodePushConcurrencyLevel(int clientNodePushConcurrencyLevel) {
     this.clientNodePushConcurrencyLevel = clientNodePushConcurrencyLevel;
+  }
+
+  @Override
+  public int getScanWatcherIntervalMillis() {
+    return scanWatcherIntervalMillis;
+  }
+
+  public void setScanWatcherIntervalMillis(int scanWatcherIntervalMillis) {
+    this.scanWatcherIntervalMillis = scanWatcherIntervalMillis;
+  }
+
+  @Override
+  public int getWatchConfigFetchBatchSize() {
+    return watchConfigFetchBatchSize;
+  }
+
+  public void setWatchConfigFetchBatchSize(int watchConfigFetchBatchSize) {
+    this.watchConfigFetchBatchSize = watchConfigFetchBatchSize;
+  }
+
+  @Override
+  public int getWatchConfigFetchIntervalMillis() {
+    return watchConfigFetchIntervalMillis;
+  }
+
+  public void setWatchConfigFetchIntervalMillis(int watchConfigFetchIntervalMillis) {
+    this.watchConfigFetchIntervalMillis = watchConfigFetchIntervalMillis;
+  }
+
+  @Override
+  public int getWatchConfigFetchLeaseSecs() {
+    return watchConfigFetchLeaseSecs;
+  }
+
+  public void setWatchConfigFetchLeaseSecs(int watchConfigFetchLeaseSecs) {
+    this.watchConfigFetchLeaseSecs = watchConfigFetchLeaseSecs;
+  }
+
+  @Override
+  public boolean isWatchConfigEnable() {
+    return watchConfigEnable;
+  }
+
+  public void setWatchConfigEnable(boolean watchConfigEnable) {
+    this.watchConfigEnable = watchConfigEnable;
+  }
+
+  @Override
+  public int getWatchPushTaskWorkerSize() {
+    return watchPushTaskWorkerSize;
+  }
+
+  public void setWatchPushTaskWorkerSize(int watchPushTaskWorkerSize) {
+    this.watchPushTaskWorkerSize = watchPushTaskWorkerSize;
+  }
+
+  @Override
+  public int getWatchPushTaskMaxBufferSize() {
+    return watchPushTaskMaxBufferSize;
+  }
+
+  public void setWatchPushTaskMaxBufferSize(int watchPushTaskMaxBufferSize) {
+    this.watchPushTaskMaxBufferSize = watchPushTaskMaxBufferSize;
   }
 }

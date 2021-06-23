@@ -30,7 +30,7 @@ import com.alipay.sofa.registry.exception.SofaRegistryRuntimeException;
 import com.alipay.sofa.registry.remoting.CallbackHandler;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.Client;
-import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
+import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfigBean;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
 import com.alipay.sofa.registry.util.JsonUtils;
 import com.alipay.sofa.registry.util.ObjectFactory;
@@ -60,7 +60,7 @@ public class AbstractSessionServerTestBase extends AbstractTestBase {
 
   @Rule public TestName name = new TestName();
 
-  protected SessionServerConfig sessionServerConfig = TestUtils.newSessionConfig(getDc());
+  protected SessionServerConfigBean sessionServerConfig = TestUtils.newSessionConfig(getDc());
 
   @Before
   public void beforeAbstractMetaServerTest() {}

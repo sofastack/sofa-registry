@@ -45,6 +45,13 @@ public final class PushMetrics {
             .name("register_task_total")
             .help("register task")
             .register();
+    static final Counter WATCH_TASK_COUNTER =
+        Counter.build()
+            .namespace("session")
+            .subsystem("fetch")
+            .name("watch_task_total")
+            .help("register task")
+            .register();
     static final Counter PUSH_EMPTY_COUNTER =
         Counter.build()
             .namespace("session")

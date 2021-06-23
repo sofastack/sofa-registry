@@ -37,31 +37,12 @@ import com.alipay.sofa.registry.server.session.filter.blacklist.BlacklistMatchPr
 import com.alipay.sofa.registry.server.session.filter.blacklist.DefaultIPMatchStrategy;
 import com.alipay.sofa.registry.server.session.limit.AccessLimitService;
 import com.alipay.sofa.registry.server.session.limit.AccessLimitServiceImpl;
-import com.alipay.sofa.registry.server.session.listener.ProvideDataChangeFetchTaskListener;
-import com.alipay.sofa.registry.server.session.listener.ReceivedConfigDataPushTaskListener;
-import com.alipay.sofa.registry.server.session.listener.WatcherRegisterFetchTaskListener;
 import com.alipay.sofa.registry.server.session.mapper.ConnectionMapper;
 import com.alipay.sofa.registry.server.session.metadata.AppRevisionCacheRegistry;
 import com.alipay.sofa.registry.server.session.metadata.AppRevisionHeartbeatRegistry;
-import com.alipay.sofa.registry.server.session.node.processor.ClientNodeSingleTaskProcessor;
-import com.alipay.sofa.registry.server.session.node.processor.MetaNodeSingleTaskProcessor;
-import com.alipay.sofa.registry.server.session.node.service.ClientNodeService;
-import com.alipay.sofa.registry.server.session.node.service.ClientNodeServiceImpl;
-import com.alipay.sofa.registry.server.session.node.service.DataNodeService;
-import com.alipay.sofa.registry.server.session.node.service.DataNodeServiceImpl;
-import com.alipay.sofa.registry.server.session.node.service.MetaServerServiceImpl;
-import com.alipay.sofa.registry.server.session.node.service.SessionMetaServerManager;
-import com.alipay.sofa.registry.server.session.provideData.FetchBlackListService;
-import com.alipay.sofa.registry.server.session.provideData.FetchClientOffAddressService;
-import com.alipay.sofa.registry.server.session.provideData.FetchGrayPushSwitchService;
-import com.alipay.sofa.registry.server.session.provideData.FetchStopPushService;
-import com.alipay.sofa.registry.server.session.provideData.ProvideDataProcessorManager;
-import com.alipay.sofa.registry.server.session.provideData.SystemPropertyProcessorManager;
+import com.alipay.sofa.registry.server.session.node.service.*;
+import com.alipay.sofa.registry.server.session.providedata.*;
 import com.alipay.sofa.registry.server.session.push.*;
-import com.alipay.sofa.registry.server.session.push.ChangeProcessor;
-import com.alipay.sofa.registry.server.session.push.FirePushService;
-import com.alipay.sofa.registry.server.session.push.PushDataGenerator;
-import com.alipay.sofa.registry.server.session.push.PushProcessor;
 import com.alipay.sofa.registry.server.session.registry.Registry;
 import com.alipay.sofa.registry.server.session.registry.SessionRegistry;
 import com.alipay.sofa.registry.server.session.remoting.ClientNodeExchanger;
@@ -72,43 +53,16 @@ import com.alipay.sofa.registry.server.session.remoting.console.handler.ClientOf
 import com.alipay.sofa.registry.server.session.remoting.console.handler.ClientOnRequestHandler;
 import com.alipay.sofa.registry.server.session.remoting.console.handler.QuerySubscriberRequestHandler;
 import com.alipay.sofa.registry.server.session.remoting.handler.*;
-import com.alipay.sofa.registry.server.session.resource.ClientManagerResource;
-import com.alipay.sofa.registry.server.session.resource.ClientsOpenResource;
-import com.alipay.sofa.registry.server.session.resource.ConnectionsResource;
-import com.alipay.sofa.registry.server.session.resource.HealthResource;
-import com.alipay.sofa.registry.server.session.resource.SessionDigestResource;
-import com.alipay.sofa.registry.server.session.resource.SessionOpenResource;
+import com.alipay.sofa.registry.server.session.resource.*;
 import com.alipay.sofa.registry.server.session.scheduler.timertask.CacheCountTask;
 import com.alipay.sofa.registry.server.session.scheduler.timertask.SessionCacheDigestTask;
 import com.alipay.sofa.registry.server.session.scheduler.timertask.SyncClientsHeartbeatTask;
 import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
 import com.alipay.sofa.registry.server.session.slot.SlotTableCacheImpl;
-import com.alipay.sofa.registry.server.session.store.DataStore;
-import com.alipay.sofa.registry.server.session.store.Interests;
-import com.alipay.sofa.registry.server.session.store.SessionInterests;
-import com.alipay.sofa.registry.server.session.store.SessionWatchers;
-import com.alipay.sofa.registry.server.session.store.SlotSessionDataStore;
-import com.alipay.sofa.registry.server.session.store.Watchers;
-import com.alipay.sofa.registry.server.session.strategy.AppRevisionHandlerStrategy;
-import com.alipay.sofa.registry.server.session.strategy.DefaultAppRevisionHandlerStrategy;
-import com.alipay.sofa.registry.server.session.strategy.PublisherHandlerStrategy;
-import com.alipay.sofa.registry.server.session.strategy.ReceivedConfigDataPushTaskStrategy;
-import com.alipay.sofa.registry.server.session.strategy.SessionRegistryStrategy;
-import com.alipay.sofa.registry.server.session.strategy.SubscriberHandlerStrategy;
-import com.alipay.sofa.registry.server.session.strategy.SyncConfigHandlerStrategy;
-import com.alipay.sofa.registry.server.session.strategy.WatcherHandlerStrategy;
-import com.alipay.sofa.registry.server.session.strategy.impl.DefaultPublisherHandlerStrategy;
-import com.alipay.sofa.registry.server.session.strategy.impl.DefaultReceivedConfigDataPushTaskStrategy;
-import com.alipay.sofa.registry.server.session.strategy.impl.DefaultSessionRegistryStrategy;
-import com.alipay.sofa.registry.server.session.strategy.impl.DefaultSubscriberHandlerStrategy;
-import com.alipay.sofa.registry.server.session.strategy.impl.DefaultSyncConfigHandlerStrategy;
-import com.alipay.sofa.registry.server.session.strategy.impl.DefaultWatcherHandlerStrategy;
-import com.alipay.sofa.registry.server.session.wrapper.AccessLimitWrapperInterceptor;
-import com.alipay.sofa.registry.server.session.wrapper.BlacklistWrapperInterceptor;
-import com.alipay.sofa.registry.server.session.wrapper.ClientCheckWrapperInterceptor;
-import com.alipay.sofa.registry.server.session.wrapper.ClientOffWrapperInterceptor;
-import com.alipay.sofa.registry.server.session.wrapper.WrapperInterceptor;
-import com.alipay.sofa.registry.server.session.wrapper.WrapperInterceptorManager;
+import com.alipay.sofa.registry.server.session.store.*;
+import com.alipay.sofa.registry.server.session.strategy.*;
+import com.alipay.sofa.registry.server.session.strategy.impl.*;
+import com.alipay.sofa.registry.server.session.wrapper.*;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerManager;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.server.shared.providedata.FetchSystemPropertyService;
@@ -121,10 +75,6 @@ import com.alipay.sofa.registry.server.shared.resource.RegistryOpsResource;
 import com.alipay.sofa.registry.server.shared.resource.SlotGenericResource;
 import com.alipay.sofa.registry.server.shared.slot.DiskSlotTableRecorder;
 import com.alipay.sofa.registry.task.MetricsableThreadPoolExecutor;
-import com.alipay.sofa.registry.task.batcher.TaskProcessor;
-import com.alipay.sofa.registry.task.listener.DefaultTaskListenerManager;
-import com.alipay.sofa.registry.task.listener.TaskListener;
-import com.alipay.sofa.registry.task.listener.TaskListenerManager;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
 import com.alipay.sofa.registry.util.PropertySplitter;
 import java.util.ArrayList;
@@ -513,6 +463,12 @@ public class SessionServerConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
+    public WatchProcessor watchProcessor() {
+      return new WatchProcessor();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
     public ChangeProcessor changeProcessor() {
       return new ChangeProcessor();
     }
@@ -550,51 +506,6 @@ public class SessionServerConfiguration {
     @Bean
     public AppRevisionHeartbeatRegistry appRevisionHeartbeatRegistry() {
       return new AppRevisionHeartbeatRegistry();
-    }
-  }
-
-  @Configuration
-  public static class SessionTaskConfiguration {
-
-    @Bean
-    public TaskProcessor metaNodeSingleTaskProcessor() {
-      return new MetaNodeSingleTaskProcessor();
-    }
-
-    @Bean
-    public TaskProcessor clientNodeSingleTaskProcessor() {
-      return new ClientNodeSingleTaskProcessor();
-    }
-
-    @Bean
-    public TaskListener watcherRegisterFetchTaskListener(TaskListenerManager taskListenerManager) {
-      TaskListener taskListener =
-          new WatcherRegisterFetchTaskListener(metaNodeSingleTaskProcessor());
-      taskListenerManager.addTaskListener(taskListener);
-      return taskListener;
-    }
-
-    @Bean
-    public TaskListener provideDataChangeFetchTaskListener(
-        TaskListenerManager taskListenerManager) {
-      TaskListener taskListener =
-          new ProvideDataChangeFetchTaskListener(metaNodeSingleTaskProcessor());
-      taskListenerManager.addTaskListener(taskListener);
-      return taskListener;
-    }
-
-    @Bean
-    public TaskListener receivedConfigDataPushTaskListener(
-        TaskListenerManager taskListenerManager) {
-      TaskListener taskListener =
-          new ReceivedConfigDataPushTaskListener(clientNodeSingleTaskProcessor());
-      taskListenerManager.addTaskListener(taskListener);
-      return taskListener;
-    }
-
-    @Bean
-    public TaskListenerManager taskListenerManager() {
-      return new DefaultTaskListenerManager();
     }
   }
 
@@ -668,12 +579,6 @@ public class SessionServerConfiguration {
     @ConditionalOnMissingBean
     public WatcherHandlerStrategy watcherHandlerStrategy() {
       return new DefaultWatcherHandlerStrategy();
-    }
-
-    @Bean
-    @ConditionalOnMissingBean
-    public ReceivedConfigDataPushTaskStrategy receivedConfigDataPushTaskStrategy() {
-      return new DefaultReceivedConfigDataPushTaskStrategy();
     }
 
     @Bean
@@ -804,6 +709,11 @@ public class SessionServerConfiguration {
       systemPropertyProcessorManager.addSystemDataProcessor(fetchGrayPushSwitchService);
 
       return fetchGrayPushSwitchService;
+    }
+
+    @Bean
+    public ConfigProvideDataWatcher configProvideDataWatcher() {
+      return new ConfigProvideDataWatcher();
     }
   }
 }

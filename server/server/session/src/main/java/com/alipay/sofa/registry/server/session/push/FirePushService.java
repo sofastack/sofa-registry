@@ -19,11 +19,10 @@ package com.alipay.sofa.registry.server.session.push;
 import static com.alipay.sofa.registry.server.session.push.PushMetrics.Fetch.*;
 
 import com.alipay.sofa.registry.common.model.SubscriberUtils;
+import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
-import com.alipay.sofa.registry.common.model.store.CircuitBreakerStatistic;
-import com.alipay.sofa.registry.common.model.store.DataInfo;
-import com.alipay.sofa.registry.common.model.store.SubDatum;
-import com.alipay.sofa.registry.common.model.store.Subscriber;
+import com.alipay.sofa.registry.common.model.store.*;
+import com.alipay.sofa.registry.core.model.ReceivedConfigData;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
@@ -60,9 +59,11 @@ public class FirePushService {
   @Autowired CircuitBreakerService circuitBreakerService;
 
   private KeyedThreadPoolExecutor registerFetchExecutor;
+  private KeyedThreadPoolExecutor watchPushExecutor;
 
   @Autowired PushProcessor pushProcessor;
   @Autowired ChangeProcessor changeProcessor;
+  @Autowired WatchProcessor watchProcessor;
   final ChangeHandler changeHandler = new ChangeHandler();
 
   @PostConstruct
@@ -72,6 +73,12 @@ public class FirePushService {
             "RegisterFetchExecutor",
             sessionServerConfig.getSubscriberRegisterTaskWorkerSize(),
             sessionServerConfig.getSubscriberRegisterTaskMaxBufferSize());
+
+    watchPushExecutor =
+        new KeyedThreadPoolExecutor(
+            "WatchPushExecutor",
+            sessionServerConfig.getWatchPushTaskWorkerSize(),
+            sessionServerConfig.getWatchPushTaskMaxBufferSize());
   }
 
   public boolean fireOnChange(String dataInfoId, TriggerPushContext changeCtx) {
@@ -110,12 +117,36 @@ public class FirePushService {
     }
   }
 
+  public boolean fireOnWatcher(Watcher watcher, ReceivedConfigData configData) {
+    try {
+      int level = sessionServerConfig.getClientNodePushConcurrencyLevel();
+      Tuple key =
+          Tuple.of(
+              watcher.getSourceAddress().getAddressString(),
+              watcher.getDataInfoId().hashCode() % level);
+      watchPushExecutor.execute(key, new WatchTask(watcher, configData));
+      WATCH_TASK_COUNTER.inc();
+      return true;
+    } catch (Throwable e) {
+      handleFireOnWatchException(watcher, e);
+      return false;
+    }
+  }
+
   static void handleFireOnRegisterException(Subscriber subscriber, Throwable e) {
     if (e instanceof FastRejectedExecutionException) {
       LOGGER.error("failed to fireOnRegister {}, {}", subscriber.shortDesc(), e.getMessage());
       return;
     }
     LOGGER.error("failed to fireOnRegister {}", subscriber.shortDesc(), e);
+  }
+
+  static void handleFireOnWatchException(Watcher watcher, Throwable e) {
+    if (e instanceof FastRejectedExecutionException) {
+      LOGGER.error("failed to fireOnWatch {}, {}", watcher.shortDesc(), e.getMessage());
+      return;
+    }
+    LOGGER.error("failed to fireOnWatch {}", watcher.shortDesc(), e);
   }
 
   public boolean fireOnDatum(SubDatum datum, String dataNode) {
@@ -282,7 +313,29 @@ public class FirePushService {
       try {
         doExecuteOnSubscriber(dataCenter, subscriber);
       } catch (Throwable e) {
-        LOGGER.error("failed to do register Task, dataCenter={}, {}", dataCenter, subscriber, e);
+        LOGGER.error(
+            "failed to do register Task, dataCenter={}, {}", dataCenter, subscriber.shortDesc(), e);
+      }
+    }
+  }
+
+  final class WatchTask implements Runnable {
+    final long createTimestamp = System.currentTimeMillis();
+    final Watcher watcher;
+    final ReceivedConfigData data;
+
+    WatchTask(Watcher watcher, ReceivedConfigData data) {
+      this.watcher = watcher;
+      this.data = data;
+    }
+
+    @Override
+    public void run() {
+      try {
+        watchProcessor.doExecuteOnWatch(watcher, data, createTimestamp);
+      } catch (Throwable e) {
+        LOGGER.error(
+            "failed to do watch Task, {}, version={}", watcher.shortDesc(), data.getVersion(), e);
       }
     }
   }

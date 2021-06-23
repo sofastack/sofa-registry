@@ -18,15 +18,9 @@ package com.alipay.sofa.registry.server.session.remoting.handler;
 
 import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideDataChangeEvent;
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.server.session.provideData.SystemPropertyProcessorManager;
-import com.alipay.sofa.registry.server.session.store.Watchers;
+import com.alipay.sofa.registry.server.session.providedata.SystemPropertyProcessorManager;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractClientHandler;
-import com.alipay.sofa.registry.task.listener.TaskEvent;
-import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
-import com.alipay.sofa.registry.task.listener.TaskListenerManager;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadPoolExecutor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,17 +30,6 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @version $Id: DataChangeRequestHandler.java, v 0.1 2017-12-12 15:09 shangyu.wh Exp $
  */
 public class NotifyProvideDataChangeHandler extends AbstractClientHandler<ProvideDataChangeEvent> {
-
-  private static final Logger LOGGER =
-      LoggerFactory.getLogger(NotifyProvideDataChangeHandler.class);
-
-  private static final Logger TASK_LOGGER =
-      LoggerFactory.getLogger(NotifyProvideDataChangeHandler.class, "[Task]");
-  /** store watchers */
-  @Autowired Watchers sessionWatchers;
-
-  /** trigger task com.alipay.sofa.registry.server.meta.listener process */
-  @Autowired TaskListenerManager taskListenerManager;
 
   @Autowired ThreadPoolExecutor metaNodeExecutor;
 
@@ -62,30 +45,8 @@ public class NotifyProvideDataChangeHandler extends AbstractClientHandler<Provid
     final String notifyDataInfoId = provideDataChangeEvent.getDataInfoId();
 
     // system data do fetch
-    if (systemPropertyProcessorManager.doFetch(notifyDataInfoId)) {
-      return null;
-    }
-
-    // watcher
-    boolean result =
-        sessionWatchers.checkWatcherVersions(
-            provideDataChangeEvent.getDataInfoId(), provideDataChangeEvent.getVersion());
-    if (!result) {
-      LOGGER.info(
-          "Request message dataInfo {}, version {} not be interested or lower than current version!",
-          provideDataChangeEvent.getDataInfoId(),
-          provideDataChangeEvent.getVersion());
-      return null;
-    }
-    fireDataChangeFetchTask(provideDataChangeEvent);
+    systemPropertyProcessorManager.doFetch(notifyDataInfoId);
     return null;
-  }
-
-  private void fireDataChangeFetchTask(ProvideDataChangeEvent provideDataChangeEvent) {
-    TaskEvent taskEvent =
-        new TaskEvent(provideDataChangeEvent, TaskType.PROVIDE_DATA_CHANGE_FETCH_TASK);
-    TASK_LOGGER.info("send " + taskEvent.getTaskType() + " taskEvent:{}", taskEvent);
-    taskListenerManager.sendTaskEvent(taskEvent);
   }
 
   @Override

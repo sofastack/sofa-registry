@@ -16,10 +16,16 @@
  */
 package com.alipay.sofa.registry.server.session.push;
 
+import com.alipay.sofa.registry.common.model.client.pb.ReceivedConfigDataPb;
+import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.common.model.store.*;
+import com.alipay.sofa.registry.core.model.DataBox;
+import com.alipay.sofa.registry.core.model.ReceivedConfigData;
 import com.alipay.sofa.registry.core.model.ReceivedData;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.server.session.TestUtils;
+import com.alipay.sofa.registry.server.session.converter.ReceivedDataConverter;
+import com.alipay.sofa.registry.util.DatumVersionUtil;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.util.List;
@@ -75,5 +81,46 @@ public class PushDataGeneratorTest {
         Sets.newHashSet(receivedData.getSubscriberRegistIds()), subscriberMap.keySet());
     Assert.assertEquals(2, pushData.getDataCount());
     Assert.assertEquals(2, receivedData.getData().values().stream().mapToInt(List::size).sum());
+  }
+
+  @Test
+  public void testWatch() {
+    PushDataGenerator generator = new PushDataGenerator();
+    generator.sessionServerConfig = TestUtils.newSessionConfig("testDc", zone);
+    Watcher w = TestUtils.newWatcher("test-watch");
+    long start = DatumVersionUtil.nextId();
+    ReceivedConfigData data =
+        ReceivedDataConverter.createReceivedConfigData(
+            w, new ProvideData(null, w.getDataInfoId(), null));
+    PushData pushData = generator.createPushData(w, data);
+    Assert.assertEquals(1, pushData.getDataCount());
+    Assert.assertTrue(data == pushData.getPayload());
+    Assert.assertTrue(data.getVersion() >= start);
+    Assert.assertTrue(data.getVersion() <= DatumVersionUtil.nextId());
+    Assert.assertEquals(Lists.newArrayList(w.getRegisterId()), data.getConfiguratorRegistIds());
+    Assert.assertEquals(w.getDataId(), data.getDataId());
+    Assert.assertEquals(w.getGroup(), data.getGroup());
+    Assert.assertEquals(w.getInstanceId(), data.getInstanceId());
+    Assert.assertNull(data.getDataBox());
+
+    URL url =
+        new URL(
+            null,
+            w.getSourceAddress().getIpAddress(),
+            w.getSourceAddress().getPort(),
+            null,
+            null,
+            URL.PROTOBUF,
+            null);
+    w.setSourceAddress(url);
+    data.setDataBox(new DataBox());
+    pushData = generator.createPushData(w, data);
+    ReceivedConfigDataPb pb = (ReceivedConfigDataPb) pushData.getPayload();
+
+    Assert.assertEquals(w.getRegisterId(), pb.getConfiguratorRegistIds(0));
+    Assert.assertEquals(w.getDataId(), pb.getDataId());
+    Assert.assertEquals(w.getGroup(), pb.getGroup());
+    Assert.assertEquals(w.getInstanceId(), pb.getInstanceId());
+    Assert.assertTrue(pb.getDataBox().getData().length() == 0);
   }
 }

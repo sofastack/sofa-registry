@@ -25,6 +25,7 @@ import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.RemotingException;
 import com.alipay.sofa.registry.server.session.converter.pb.SyncConfigRequestConvertor;
 import com.alipay.sofa.registry.server.session.converter.pb.SyncConfigResponseConvertor;
+import com.alipay.sofa.registry.server.shared.remoting.RemotingHelper;
 import java.util.concurrent.Executor;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -51,6 +52,7 @@ public class SyncConfigPbHandler extends AbstractClientDataRequestHandler<SyncCo
    */
   @Override
   public Object doHandle(Channel channel, SyncConfigRequestPb message) {
+    RemotingHelper.markProtobuf(channel);
     Object response =
         syncConfigHandler.doHandle(channel, SyncConfigRequestConvertor.convert2Java(message));
     if (!(response instanceof SyncConfigResponse)) {

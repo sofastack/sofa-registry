@@ -16,7 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.filter.blacklist;
 
-import com.alipay.sofa.registry.server.session.provideData.FetchBlackListService;
+import com.alipay.sofa.registry.server.session.providedata.FetchBlackListService;
 import java.util.Collections;
 import java.util.List;
 import org.assertj.core.util.Lists;

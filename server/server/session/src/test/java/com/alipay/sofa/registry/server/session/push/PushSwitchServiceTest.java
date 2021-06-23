@@ -16,8 +16,8 @@
  */
 package com.alipay.sofa.registry.server.session.push;
 
-import com.alipay.sofa.registry.server.session.provideData.FetchGrayPushSwitchService;
-import com.alipay.sofa.registry.server.session.provideData.FetchStopPushService;
+import com.alipay.sofa.registry.server.session.providedata.FetchGrayPushSwitchService;
+import com.alipay.sofa.registry.server.session.providedata.FetchStopPushService;
 import java.util.Arrays;
 import org.junit.Assert;
 import org.junit.Test;

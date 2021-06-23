@@ -21,8 +21,10 @@ import static org.junit.Assert.assertTrue;
 
 import com.alipay.common.tracer.context.AbstractLogContext;
 import com.alipay.remoting.Connection;
+import com.alipay.sofa.registry.client.api.ConfigDataObserver;
 import com.alipay.sofa.registry.client.api.RegistryClientConfig;
 import com.alipay.sofa.registry.client.api.SubscriberDataObserver;
+import com.alipay.sofa.registry.client.api.model.ConfigData;
 import com.alipay.sofa.registry.client.api.model.UserData;
 import com.alipay.sofa.registry.client.provider.DefaultRegistryClient;
 import com.alipay.sofa.registry.client.provider.DefaultRegistryClientConfigBuilder;
@@ -48,7 +50,7 @@ import com.alipay.sofa.registry.server.data.cache.DatumStorage;
 import com.alipay.sofa.registry.server.meta.resource.ClientManagerResource;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfigBean;
-import com.alipay.sofa.registry.server.session.provideData.FetchClientOffAddressService;
+import com.alipay.sofa.registry.server.session.providedata.FetchClientOffAddressService;
 import com.alipay.sofa.registry.server.session.registry.SessionRegistry;
 import com.alipay.sofa.registry.server.session.store.DataStore;
 import com.alipay.sofa.registry.server.session.store.Interests;
@@ -192,7 +194,7 @@ public class BaseIntegrationTest extends AbstractTest {
       sessionServerConfig =
           (SessionServerConfigBean)
               sessionApplicationContext.getBean("sessionServerConfig", SessionServerConfig.class);
-      sessionServerConfig.setSchedulerScanVersionIntervalMillis(1000);
+      sessionServerConfig.setScanSubscriberIntervalMillis(1000);
       localDatumStorage = dataApplicationContext.getBean("localDatumStorage", DatumStorage.class);
       LOGGER.info(
           "startServerNecessary, {} loaded by {}",
@@ -275,6 +277,18 @@ public class BaseIntegrationTest extends AbstractTest {
 
     @Override
     public void handleData(String dataId, UserData data) {
+      this.dataId = dataId;
+      this.userData = data;
+      LOGGER.info("handleData: {}, {}", dataId, data);
+    }
+  }
+
+  public static class MyConfigDataObserver implements ConfigDataObserver {
+    public volatile String dataId;
+    public volatile ConfigData userData;
+
+    @Override
+    public void handleData(String dataId, ConfigData data) {
       this.dataId = dataId;
       this.userData = data;
       LOGGER.info("handleData: {}, {}", dataId, data);

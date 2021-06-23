@@ -360,7 +360,7 @@ public class PushProcessor {
           task.getMaxPushedVersion(),
           task.getPushDataCount());
       LOGGER.error(
-          "{}, channel overflow, {}, cleaned={}, {}",
+          "[PushChanOverflow]{}, channel overflow, {}, cleaned={}, {}",
           task.taskID,
           task.pushingTaskKey,
           cleaned,
@@ -373,7 +373,11 @@ public class PushProcessor {
         task.getMaxPushedVersion(),
         task.getPushDataCount());
     LOGGER.error(
-        "{}, failed to pushing {}, cleaned={}", task.taskID, task.pushingTaskKey, cleaned, e);
+        "[PushFail]{}, failed to pushing {}, cleaned={}",
+        task.taskID,
+        task.pushingTaskKey,
+        cleaned,
+        e);
   }
 
   boolean circuitBreakerRecordWhenDoPushError(SubDatum datum) {

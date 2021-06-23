@@ -31,9 +31,9 @@ import com.alipay.sofa.registry.server.session.acceptor.PublisherWriteDataReques
 import com.alipay.sofa.registry.server.session.acceptor.WriteDataAcceptor;
 import com.alipay.sofa.registry.server.session.acceptor.WriteDataRequest;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import com.alipay.sofa.registry.server.session.circuit.breaker.CircuitBreakerService;
 import com.alipay.sofa.registry.server.session.loggers.Loggers;
 import com.alipay.sofa.registry.server.session.node.service.DataNodeService;
+import com.alipay.sofa.registry.server.session.providedata.ConfigProvideDataWatcher;
 import com.alipay.sofa.registry.server.session.push.FirePushService;
 import com.alipay.sofa.registry.server.session.push.PushSwitchService;
 import com.alipay.sofa.registry.server.session.push.TriggerPushContext;
@@ -46,7 +46,6 @@ import com.alipay.sofa.registry.server.session.wrapper.Wrapper;
 import com.alipay.sofa.registry.server.session.wrapper.WrapperInterceptorManager;
 import com.alipay.sofa.registry.server.session.wrapper.WrapperInvocation;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
-import com.alipay.sofa.registry.task.listener.TaskListenerManager;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.LoopRunnable;
 import com.alipay.sofa.registry.util.StringFormatter;
@@ -54,14 +53,15 @@ import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
+
+import javax.annotation.PostConstruct;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
-import javax.annotation.PostConstruct;
-import org.apache.commons.lang.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.util.CollectionUtils;
 
 /**
  * @author shangyu.wh
@@ -69,42 +69,39 @@ import org.springframework.util.CollectionUtils;
  */
 public class SessionRegistry implements Registry {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(SessionRegistry.class);
+  protected static final Logger LOGGER = LoggerFactory.getLogger(SessionRegistry.class);
 
   protected static final Logger SCAN_VER_LOGGER = LoggerFactory.getLogger("SCAN-VER");
 
   /** store subscribers */
-  @Autowired private Interests sessionInterests;
+  @Autowired protected Interests sessionInterests;
 
   /** store watchers */
-  @Autowired private Watchers sessionWatchers;
+  @Autowired protected Watchers sessionWatchers;
 
   /** store publishers */
-  @Autowired private DataStore sessionDataStore;
+  @Autowired protected DataStore sessionDataStore;
 
   /** transfer data to DataNode */
-  @Autowired private DataNodeService dataNodeService;
+  @Autowired protected DataNodeService dataNodeService;
 
-  /** trigger task com.alipay.sofa.registry.server.meta.listener process */
-  @Autowired private TaskListenerManager taskListenerManager;
+  @Autowired protected SessionServerConfig sessionServerConfig;
 
-  @Autowired private SessionServerConfig sessionServerConfig;
+  @Autowired protected PushSwitchService pushSwitchService;
 
-  @Autowired private PushSwitchService pushSwitchService;
+  @Autowired protected Exchange boltExchange;
 
-  @Autowired private Exchange boltExchange;
+  @Autowired protected SessionRegistryStrategy sessionRegistryStrategy;
 
-  @Autowired private SessionRegistryStrategy sessionRegistryStrategy;
+  @Autowired protected WrapperInterceptorManager wrapperInterceptorManager;
 
-  @Autowired private WrapperInterceptorManager wrapperInterceptorManager;
+  @Autowired protected WriteDataAcceptor writeDataAcceptor;
 
-  @Autowired private WriteDataAcceptor writeDataAcceptor;
+  @Autowired protected SlotTableCache slotTableCache;
 
-  @Autowired private SlotTableCache slotTableCache;
+  @Autowired protected FirePushService firePushService;
 
-  @Autowired private FirePushService firePushService;
-
-  @Autowired private CircuitBreakerService circuitBreakerService;
+  @Autowired protected ConfigProvideDataWatcher configProvideDataWatcher;
 
   private final VersionWatchDog versionWatchDog = new VersionWatchDog();
 
@@ -312,7 +309,7 @@ public class SessionRegistry implements Registry {
     @Override
     public void runUnthrowable() {
       try {
-        final int intervalMillis = sessionServerConfig.getSchedulerScanVersionIntervalMillis();
+        final int intervalMillis = sessionServerConfig.getScanSubscriberIntervalMillis();
         final boolean stop = !pushSwitchService.canPush();
         // could not start scan ver at begin
         // 1. stopPush.val = true default in session.default
@@ -423,42 +420,19 @@ public class SessionRegistry implements Registry {
 
   private void scanSubscribers() {
     List<Subscriber> subscribers = sessionInterests.getDataList();
-    int regCount = 0;
     int emptyCount = 0;
-    int circuitBreaker = 0;
     final String dataCenter = getDataCenterWhenPushEmpty();
     for (Subscriber subscriber : subscribers) {
       try {
-        CircuitBreakerStatistic statistic = subscriber.getStatistic(dataCenter);
-
-        if (circuitBreakerService.pushCircuitBreaker(statistic)) {
-          circuitBreaker++;
-          SCAN_VER_LOGGER.info(
-              "[CircuitBreaker]scan subscribers, dataInfoId={}, statistic={}",
-              subscriber.shortDesc(),
-              statistic);
-          continue;
-        }
-
         if (subscriber.needPushEmpty(dataCenter)) {
           firePushService.fireOnPushEmpty(subscriber, dataCenter);
           emptyCount++;
-          continue;
-        }
-        if (!subscriber.hasPushed()) {
-          firePushService.fireOnRegister(subscriber);
-          regCount++;
         }
       } catch (Throwable e) {
         SCAN_VER_LOGGER.error("failed to scan subscribers, {}", subscriber, e);
       }
     }
-    SCAN_VER_LOGGER.info(
-        "scan subscribers, total={}, reg={}, empty={}, circuitBreaker={}",
-        subscribers.size(),
-        regCount,
-        emptyCount,
-        circuitBreaker);
+    SCAN_VER_LOGGER.info("scan subscribers, total={}, empty={}", subscribers.size(), emptyCount);
   }
 
   private Map<Integer, Map<String, DatumVersion>> groupBySlot(
@@ -565,32 +539,5 @@ public class SessionRegistry implements Registry {
       }
     }
     clean(connectIds);
-  }
-
-  /**
-   * Getter method for property <tt>sessionInterests</tt>.
-   *
-   * @return property value of sessionInterests
-   */
-  protected Interests getSessionInterests() {
-    return sessionInterests;
-  }
-
-  /**
-   * Getter method for property <tt>sessionDataStore</tt>.
-   *
-   * @return property value of sessionDataStore
-   */
-  protected DataStore getSessionDataStore() {
-    return sessionDataStore;
-  }
-
-  /**
-   * Getter method for property <tt>taskListenerManager</tt>.
-   *
-   * @return property value of taskListenerManager
-   */
-  protected TaskListenerManager getTaskListenerManager() {
-    return taskListenerManager;
   }
 }

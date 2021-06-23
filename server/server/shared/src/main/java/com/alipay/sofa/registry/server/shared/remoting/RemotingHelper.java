@@ -16,8 +16,11 @@
  */
 package com.alipay.sofa.registry.server.shared.remoting;
 
+import com.alipay.remoting.InvokeContext;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.remoting.Channel;
+import com.alipay.sofa.registry.remoting.bolt.BoltChannel;
+import com.alipay.sofa.registry.remoting.bolt.serializer.ProtobufSerializer;
 import java.net.InetSocketAddress;
 
 /**
@@ -25,6 +28,8 @@ import java.net.InetSocketAddress;
  * @version v 0.1 2020-12-14 11:39 yuzhi.lyz Exp $
  */
 public final class RemotingHelper {
+  private static final Byte PB = ProtobufSerializer.PROTOCOL_PROTOBUF;
+
   private RemotingHelper() {}
 
   public static InetSocketAddress getChannelRemoteAddress(Channel channel) {
@@ -37,5 +42,33 @@ public final class RemotingHelper {
 
   public static String getAddressString(URL url) {
     return url == null ? null : url.getAddressString();
+  }
+
+  public static void markProtobuf(Channel channel) {
+    if (channel instanceof BoltChannel) {
+      ((BoltChannel) channel).markProtobuf();
+    }
+  }
+
+  public static boolean isMarkProtobuf(Channel channel) {
+    if (channel instanceof BoltChannel) {
+      return ((BoltChannel) channel).isMarkProtobuf();
+    }
+    return false;
+  }
+
+  public static void setPbSerializer(Channel channel) {
+    if (channel instanceof BoltChannel) {
+      BoltChannel boltChannel = (BoltChannel) channel;
+      InvokeContext invokeContext = boltChannel.getBizContext().getInvokeContext();
+
+      if (null != invokeContext) {
+        // set client custom codec for request command if not null
+        Object clientCustomCodec = invokeContext.get(InvokeContext.BOLT_CUSTOM_SERIALIZER);
+        if (!PB.equals(clientCustomCodec)) {
+          invokeContext.put(InvokeContext.BOLT_CUSTOM_SERIALIZER, PB);
+        }
+      }
+    }
   }
 }

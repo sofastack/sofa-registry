@@ -16,6 +16,11 @@
  */
 package com.alipay.sofa.registry.test.client;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
+import com.alipay.sofa.registry.client.api.Configurator;
+import com.alipay.sofa.registry.client.api.registration.ConfiguratorRegistration;
 import com.alipay.sofa.registry.client.api.registration.PublisherRegistration;
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.GenericResponse;
@@ -23,9 +28,11 @@ import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.server.meta.resource.model.ClientOffAddressModel;
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
+import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.junit.Assert;
 import org.junit.Test;
@@ -103,5 +110,18 @@ public class ClientManagerTest extends BaseIntegrationTest {
     Assert.assertTrue(isExist(sessionDataStore.getDatas(dataInfo.getDataInfoId()), localAddress));
     Assert.assertTrue(
         isExist(localDatumStorage.getAllPublisher().get(dataInfo.getDataInfoId()), localAddress));
+  }
+
+  @Test
+  public void testConfig() {
+    String dataId = "testDataId";
+    MyConfigDataObserver dataObserver = new MyConfigDataObserver();
+    ConfiguratorRegistration registration = new ConfiguratorRegistration(dataId, dataObserver);
+
+    Configurator configurator = registryClient1.register(registration);
+    assertNotNull(configurator);
+    assertEquals(dataId, configurator.getDataId());
+    ConcurrentUtils.sleepUninterruptibly(2, TimeUnit.SECONDS);
+    assertEquals(dataObserver.dataId, dataId);
   }
 }

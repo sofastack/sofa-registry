@@ -33,13 +33,17 @@ import com.alipay.sofa.registry.remoting.bolt.serializer.ProtobufSerializer;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
 import com.alipay.sofa.registry.server.session.metadata.AppRevisionCacheRegistry;
-import com.alipay.sofa.registry.server.session.provideData.SystemPropertyProcessorManager;
+import com.alipay.sofa.registry.server.session.providedata.ConfigProvideDataWatcher;
+import com.alipay.sofa.registry.server.session.providedata.SystemPropertyProcessorManager;
 import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
+import com.alipay.sofa.registry.server.session.strategy.SessionRegistryStrategy;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
-import com.alipay.sofa.registry.task.batcher.TaskDispatchers;
-import com.github.rholder.retry.*;
+import com.github.rholder.retry.Retryer;
+import com.github.rholder.retry.RetryerBuilder;
+import com.github.rholder.retry.StopStrategies;
+import com.github.rholder.retry.WaitStrategies;
 import com.google.common.base.Predicate;
 import java.lang.annotation.Annotation;
 import java.util.Collection;
@@ -87,6 +91,9 @@ public class SessionServerBootstrap {
 
   @Autowired private SlotTableCache slotTableCache;
 
+  @Autowired private ConfigProvideDataWatcher configProvideDataWatcher;
+
+  @Autowired private SessionRegistryStrategy sessionRegistryStrategy;
   private Server server;
 
   private Server dataSyncServer;
@@ -164,6 +171,8 @@ public class SessionServerBootstrap {
             return true;
           });
 
+      sessionRegistryStrategy.start();
+      configProvideDataWatcher.start();
       registerSerializer();
       openConsoleServer();
       openSessionServer();
@@ -189,7 +198,6 @@ public class SessionServerBootstrap {
       LOGGER.info("{} Shutting down Session Server..", new Date().toString());
 
       executorManager.stopScheduler();
-      TaskDispatchers.stopDefaultSingleTaskDispatcher();
       stopHttpServer();
       stopServer();
       stopDataSyncServer();

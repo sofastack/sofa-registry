@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.provideData;
+package com.alipay.sofa.registry.server.session.providedata;
 
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
@@ -22,7 +22,7 @@ import com.alipay.sofa.registry.common.model.sessionserver.GrayOpenPushSwitchReq
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import com.alipay.sofa.registry.server.session.provideData.FetchGrayPushSwitchService.GrayPushSwitchStorage;
+import com.alipay.sofa.registry.server.session.providedata.FetchGrayPushSwitchService.GrayPushSwitchStorage;
 import com.alipay.sofa.registry.server.shared.providedata.AbstractFetchSystemPropertyService;
 import com.alipay.sofa.registry.util.JsonUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;

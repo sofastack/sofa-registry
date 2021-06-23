@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.registry.server.session.remoting.handler;
 
-import com.alipay.remoting.InvokeContext;
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.client.pb.RegisterResponsePb;
 import com.alipay.sofa.registry.common.model.client.pb.SubscriberRegisterPb;
@@ -24,10 +23,9 @@ import com.alipay.sofa.registry.core.model.RegisterResponse;
 import com.alipay.sofa.registry.core.model.SubscriberRegister;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.RemotingException;
-import com.alipay.sofa.registry.remoting.bolt.BoltChannel;
-import com.alipay.sofa.registry.remoting.bolt.serializer.ProtobufSerializer;
 import com.alipay.sofa.registry.server.session.converter.pb.RegisterResponseConvertor;
 import com.alipay.sofa.registry.server.session.converter.pb.SubscriberRegisterConvertor;
+import com.alipay.sofa.registry.server.shared.remoting.RemotingHelper;
 import java.util.concurrent.Executor;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -54,22 +52,10 @@ public class SubscriberPbHandler extends AbstractClientDataRequestHandler<Subscr
    */
   @Override
   public Object doHandle(Channel channel, SubscriberRegisterPb message) {
+    RemotingHelper.markProtobuf(channel);
+    RemotingHelper.setPbSerializer(channel);
+
     RegisterResponsePb.Builder builder = RegisterResponsePb.newBuilder();
-
-    if (channel instanceof BoltChannel) {
-      BoltChannel boltChannel = (BoltChannel) channel;
-      InvokeContext invokeContext = boltChannel.getBizContext().getInvokeContext();
-
-      if (null != invokeContext) {
-        // set client custom codec for request command if not null
-        Object clientCustomCodec = invokeContext.get(InvokeContext.BOLT_CUSTOM_SERIALIZER);
-        if (null == clientCustomCodec) {
-          invokeContext.put(
-              InvokeContext.BOLT_CUSTOM_SERIALIZER, ProtobufSerializer.PROTOCOL_PROTOBUF);
-        }
-      }
-    }
-
     SubscriberRegister register = SubscriberRegisterConvertor.convert2Java(message);
     Object response = subscriberHandler.doHandle(channel, register);
     if (!(response instanceof RegisterResponse)) {

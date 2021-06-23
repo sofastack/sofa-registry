@@ -22,9 +22,36 @@ package com.alipay.sofa.registry.common.model.store;
  */
 public class Watcher extends BaseInfo {
 
+  private volatile long pushedVersion;
+
   @Override
   public DataType getDataType() {
     return DataType.WATCHER;
+  }
+
+  public synchronized boolean hasPushed() {
+    return pushedVersion > 0;
+  }
+
+  public synchronized long getPushedVersion() {
+    return pushedVersion;
+  }
+
+  public synchronized boolean updatePushedVersion(long v) {
+    if (pushedVersion < v) {
+      this.pushedVersion = v;
+      return true;
+    }
+    return false;
+  }
+
+  public String shortDesc() {
+    final StringBuilder sb = new StringBuilder(256);
+    sb.append("dataInfoId=").append(getDataInfoId()).append(", ");
+    sb.append("registerId=").append(getRegisterId()).append(", ");
+    sb.append("pushed=").append(pushedVersion).append(", ");
+    sb.append("sourceAddress=").append(getSourceAddress().getAddressString());
+    return sb.toString();
   }
 
   /**
