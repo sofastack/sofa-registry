@@ -27,7 +27,12 @@ public class CounterFuncTest {
         CounterFunc.build().name("countername").help("help").create().func(() -> 1).register();
     Assert.assertEquals(1, f1.collect().get(0).samples.size());
     CounterFunc f2 =
-        CounterFunc.build().name("countername1").labelNames("childName").help("help").create().register();
+        CounterFunc.build()
+            .name("countername1")
+            .labelNames("childName")
+            .help("help")
+            .create()
+            .register();
     f2.labels("child1").func(() -> 2);
     f2.labels("child2").func(() -> 2);
     System.out.println(f2.collect());
