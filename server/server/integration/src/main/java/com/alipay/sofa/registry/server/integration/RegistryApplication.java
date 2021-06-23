@@ -53,6 +53,8 @@ import org.springframework.context.ConfigurableApplicationContext;
  */
 public class RegistryApplication {
   private static final Logger LOGGER = LoggerFactory.getLogger(RegistryApplication.class);
+  private static final Logger CRITICAL_LOGGER = LoggerFactory.getLogger("CRITICAL-ERROR");
+
   private static final String META_HTTP_SERVER_PORT = "meta.server.httpServerPort";
   private static final String DATA_HTTP_SERVER_PORT = "data.server.httpServerPort";
   private static final String SESSION_HTTP_SERVER_PORT = "session.server.httpServerPort";
@@ -69,10 +71,9 @@ public class RegistryApplication {
     System.setProperty("registry.elector.warm.up.millis", "2000");
     // setup DefaultUncaughtExceptionHandler
     Thread.setDefaultUncaughtExceptionHandler(
-        (t, e) -> {
-          LOGGER.error(
-              String.format("UncaughtException in Thread(%s): %s", t.getName(), e.getMessage()), e);
-        });
+        (t, e) ->
+            CRITICAL_LOGGER.safeError(
+                "UncaughtException in Thread({}): {}", t.getName(), e.getMessage(), e));
 
     // start registry application
     ConfigurableApplicationContext commonContext =

@@ -123,7 +123,7 @@ public class KeyedThreadPoolExecutor {
           task.run();
           workerExecCounter.inc();
         } catch (Throwable e) {
-          LOGGER.error("{}_{} run task error", executorName, idx, e);
+          LOGGER.safeError("{}_{} run task error", executorName, idx, e);
         } finally {
           running = false;
         }

@@ -386,7 +386,7 @@ public class DataNodeServiceImpl implements DataNodeService {
             }
           }
         } catch (Throwable e) {
-          LOGGER.error("failed to request batch", e);
+          LOGGER.safeError("failed to request batch", e);
         }
       }
     }

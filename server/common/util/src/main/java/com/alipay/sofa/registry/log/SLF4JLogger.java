@@ -40,6 +40,8 @@ public class SLF4JLogger implements Logger, Serializable {
 
   private final String msgPrefix;
 
+  private final SafeLogger safeLogger = SafeLogger.getInstance();
+
   /** symbol : */
   public static final char SPACE = ' ';
 
@@ -301,6 +303,16 @@ public class SLF4JLogger implements Logger, Serializable {
   @Override
   public boolean isErrorEnabled() {
     return logger.isErrorEnabled();
+  }
+
+  @Override
+  public void safeError(String format, Object... arguments) {
+    safeLogger.wrap(() -> error(format, arguments));
+  }
+
+  @Override
+  public void safeWarn(String format, Object... arguments) {
+    safeLogger.wrap(() -> warn(format, arguments));
   }
 
   private String processMsg(String msg) {

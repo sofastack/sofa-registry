@@ -18,6 +18,8 @@ package com.alipay.sofa.registry.server.session.remoting.handler;
 
 import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.Node;
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.session.bootstrap.ExecutorManager;
 import com.alipay.sofa.registry.server.session.registry.Registry;
@@ -30,6 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @version $Id: ServerConnectionLisener.java, v 0.1 2017-11-30 15:04 shangyu.wh Exp $
  */
 public class ClientNodeConnectionHandler extends ListenServerChannelHandler {
+  private final Logger LOG = LoggerFactory.getLogger("SRV-CONNECT");
 
   @Autowired Registry sessionRegistry;
 
@@ -47,8 +50,12 @@ public class ClientNodeConnectionHandler extends ListenServerChannelHandler {
   }
 
   void clean(Channel channel) {
-    ConnectId connectId = ConnectId.of(channel.getRemoteAddress(), channel.getLocalAddress());
-    sessionRegistry.clean(Collections.singletonList(connectId));
+    try {
+      ConnectId connectId = ConnectId.of(channel.getRemoteAddress(), channel.getLocalAddress());
+      sessionRegistry.clean(Collections.singletonList(connectId));
+    } catch (Throwable e) {
+      LOG.safeError("clean connection failed:", e);
+    }
   }
 
   private void fireCancelClient(Channel channel) {

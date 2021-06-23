@@ -103,7 +103,7 @@ public class CacheCountTask {
       printInstanceIdGroupAppCount("[Wat]", watCounts);
       return true;
     } catch (Throwable e) {
-      LOGGER.error("cache count error", e);
+      LOGGER.safeError("cache count error", e);
       return false;
     }
   }

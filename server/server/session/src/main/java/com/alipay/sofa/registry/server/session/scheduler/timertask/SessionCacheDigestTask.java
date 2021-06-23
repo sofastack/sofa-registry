@@ -98,7 +98,7 @@ public class SessionCacheDigestTask {
               });
       return true;
     } catch (Throwable t) {
-      LOGGER.error("[CacheDigestTask] cache digest error", t);
+      LOGGER.safeError("[CacheDigestTask] cache digest error", t);
       return false;
     }
   }

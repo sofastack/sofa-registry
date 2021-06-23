@@ -112,6 +112,10 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository {
     cachedExecutor.clean();
   }
 
+  public long getDataVersion() {
+    return informer.getLastLoadId();
+  }
+
   class Informer extends BaseInformer<InterfaceAppsIndexDomain, InterfaceAppsIndexContainer> {
     private ConflictCallback conflictCallback;
 

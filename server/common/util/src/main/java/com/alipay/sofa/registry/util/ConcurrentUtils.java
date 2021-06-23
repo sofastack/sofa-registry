@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
@@ -51,16 +52,34 @@ public final class ConcurrentUtils {
     public void run() {
       for (T t : list) {
         executors.execute(
-            new Runnable() {
-              @Override
-              public void run() {
-                try {
-                  doRun0(t);
-                } catch (Throwable e) {
-                  logger.error("[SafeParaLoop][{}]", getInfo(t), e);
-                }
+            () -> {
+              try {
+                doRun0(t);
+              } catch (Throwable e) {
+                logger.safeError("[SafeParaLoop][{}]", getInfo(t), e);
               }
             });
+      }
+    }
+
+    public boolean runAndWait(long timeoutMillis) {
+      CountDownLatch latch = new CountDownLatch(list.size());
+      for (T t : list) {
+        executors.execute(
+            () -> {
+              try {
+                doRun0(t);
+              } catch (Throwable e) {
+                logger.safeError("[SafeParaLoop][{}]", getInfo(t), e);
+              } finally {
+                latch.countDown();
+              }
+            });
+      }
+      try {
+        return latch.await(timeoutMillis, TimeUnit.MILLISECONDS);
+      } catch (InterruptedException e) {
+        return false;
       }
     }
 

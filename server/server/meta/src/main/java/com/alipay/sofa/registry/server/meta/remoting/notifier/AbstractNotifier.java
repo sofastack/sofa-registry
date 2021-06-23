@@ -42,7 +42,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -124,33 +123,36 @@ public abstract class AbstractNotifier<T extends Node> implements Notifier {
       Collection<InetSocketAddress> connections = nodeConnections.getSecond();
 
       Map<String, Object> ret = Maps.newConcurrentMap();
-      final CountDownLatch latch = new CountDownLatch(connections.size());
-      new ConcurrentUtils.SafeParaLoop<InetSocketAddress>(executors, connections) {
-        @Override
-        protected void doRun0(InetSocketAddress connection) throws Exception {
-          try {
-            String address = connection.getAddress().getHostAddress();
-            if (!ipAddresses.contains(address)) {
-              return;
+      boolean succeed =
+          new ConcurrentUtils.SafeParaLoop<InetSocketAddress>(executors, connections) {
+            @Override
+            protected void doRun0(InetSocketAddress connection) throws Exception {
+              try {
+                String address = connection.getAddress().getHostAddress();
+                if (!ipAddresses.contains(address)) {
+                  return;
+                }
+                if (ret.containsKey(address)) {
+                  return;
+                }
+                Response resp =
+                    getNodeExchanger().request(new SimpleRequest(req, new URL(connection)));
+                if (resp != null) {
+                  ret.put(address, resp.getResult());
+                } else {
+                  logger.error(
+                      "broadcast request {} to {} failed: response null",
+                      req,
+                      connection.getAddress());
+                }
+              } catch (Throwable e) {
+                logger.error("broadcast request {} to {} failed:", req, connection.getAddress(), e);
+              }
             }
-            if (ret.containsKey(address)) {
-              return;
-            }
-            Response resp = getNodeExchanger().request(new SimpleRequest(req, new URL(connection)));
-            if (resp != null) {
-              ret.put(address, resp.getResult());
-            } else {
-              logger.error(
-                  "broadcast request {} to {} failed: response null", req, connection.getAddress());
-            }
-          } catch (Throwable e) {
-            logger.error("broadcast request {} to {} failed:", req, connection.getAddress(), e);
-          } finally {
-            latch.countDown();
-          }
-        }
-      }.run();
-      latch.await(timeout, TimeUnit.MILLISECONDS);
+          }.runAndWait(timeout);
+      if (!succeed) {
+        logger.error("broadcast request {} failed:", req);
+      }
       return ret;
     }
   }

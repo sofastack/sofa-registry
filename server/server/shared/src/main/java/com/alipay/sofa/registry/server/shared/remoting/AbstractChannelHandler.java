@@ -49,7 +49,7 @@ public abstract class AbstractChannelHandler<T> implements ChannelHandler<T> {
 
   @Override
   public void caught(Channel channel, T message, Throwable exception) {
-    exchangeLog.error(
+    exchangeLog.safeError(
         "{} caughtException, channel {}, msg={}",
         getConnectNodeType(),
         channel,
@@ -72,7 +72,7 @@ public abstract class AbstractChannelHandler<T> implements ChannelHandler<T> {
       checkParam(request);
       return doHandle(channel, request);
     } catch (Throwable e) {
-      exchangeLog.error("[{}] handle request failed", getClassName(), e);
+      exchangeLog.safeError("[{}] handle request failed", getClassName(), e);
       return buildFailedResponse(e.getMessage());
     } finally {
       MDC.finishTraceRequest();

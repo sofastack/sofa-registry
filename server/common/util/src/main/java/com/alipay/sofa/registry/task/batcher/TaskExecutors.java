@@ -153,11 +153,11 @@ public class TaskExecutors<ID, T> {
           } catch (InterruptedException e) {
             // Ignore
           } catch (Throwable e) {
-            LOGGER.error("Single WorkerThread process error", e);
+            LOGGER.safeError("Single WorkerThread process error", e);
           }
         }
       } catch (Throwable e) {
-        LOGGER.error("WorkerThread error", e);
+        LOGGER.safeError("WorkerThread error", e);
       }
     }
   }

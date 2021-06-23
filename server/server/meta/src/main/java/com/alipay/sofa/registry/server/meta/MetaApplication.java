@@ -33,15 +33,14 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableScheduling
 public class MetaApplication {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(MetaApplication.class);
+  private static final Logger CRITICAL_LOGGER = LoggerFactory.getLogger("CRITICAL-ERROR");
 
   public static void main(String[] args) {
     // setup DefaultUncaughtExceptionHandler
     Thread.setDefaultUncaughtExceptionHandler(
-        (t, e) -> {
-          LOGGER.error(
-              String.format("UncaughtException in Thread(%s): %s", t.getName(), e.getMessage()), e);
-        });
+        (t, e) ->
+            CRITICAL_LOGGER.safeError(
+                "UncaughtException in Thread({}): {}", t.getName(), e.getMessage(), e));
 
     SpringApplication.run(MetaApplication.class, args);
   }

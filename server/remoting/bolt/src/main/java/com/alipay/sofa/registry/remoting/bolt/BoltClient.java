@@ -62,7 +62,7 @@ public class BoltClient implements Client {
   }
 
   private void configIO() {
-    final int max = 1024 * (128 + 256);
+    final int max = 1024 * (256 + 256);
     final int low = Integer.getInteger(Configs.NETTY_BUFFER_LOW_WATERMARK, max / 2);
     final int high = Integer.getInteger(Configs.NETTY_BUFFER_HIGH_WATERMARK, max);
     rpcClient.initWriteBufferWaterMark(low, high);

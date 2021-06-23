@@ -14,27 +14,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.store.api.repository;
+package com.alipay.sofa.registry.log;
 
-import com.alipay.sofa.registry.common.model.appmeta.InterfaceMapping;
+import org.junit.Assert;
+import org.junit.Test;
 
-/**
- * @author xiaojian.xj
- * @version $Id: InterfaceAppsRepository.java, v 0.1 2021年01月24日 19:33 xiaojian.xj Exp $
- */
-public interface InterfaceAppsRepository {
-
-  /**
-   * get revisions by interfaceName
-   *
-   * @param dataInfoId
-   * @return return <appName, revisions>
-   */
-  InterfaceMapping getAppNames(String dataInfoId);
-
-  void register(String interfaceName, String appName);
-
-  void waitSynced();
-
-  long getDataVersion();
+public class SafeLoggerTest {
+  @Test
+  public void testSafeLogger() {
+    SafeLogger safeLogger = SafeLogger.getInstance();
+    safeLogger.wrap(
+        () -> {
+          throw new OutOfMemoryError();
+        });
+    safeLogger.wrap(
+        () -> {
+          throw new OutOfMemoryError();
+        });
+    safeLogger.wrap(
+        () -> {
+          throw new RuntimeException();
+        });
+    Assert.assertEquals(2, (long) SafeLogger.OOM_COUNTER.get());
+    Assert.assertEquals(1, (long) SafeLogger.UNKNOWN_COUNTER.get());
+  }
 }

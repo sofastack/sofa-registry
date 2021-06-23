@@ -267,4 +267,8 @@ public interface Logger {
   Object getLogger();
 
   String getName();
+
+  void safeError(String format, Object... arguments);
+
+  void safeWarn(String format, Object... arguments);
 }
