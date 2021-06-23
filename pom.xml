@@ -78,7 +78,7 @@
         <jraft.version>1.3.5.Alpha1</jraft.version>
         <metrics.version>4.0.2</metrics.version>
         <commons-io.version>2.4</commons-io.version>
-        <jetty.version>9.4.19.v20190610</jetty.version>
+        <jetty.version>9.4.41.v20210516</jetty.version>
         <rocksdbjni.version>6.4.6</rocksdbjni.version>
         <main.user.dir>${user.dir}</main.user.dir>
         <argLine>-Dnetwork_interface_denylist=docker0</argLine>
