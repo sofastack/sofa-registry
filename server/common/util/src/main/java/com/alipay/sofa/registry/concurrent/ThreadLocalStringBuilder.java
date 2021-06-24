@@ -23,12 +23,27 @@ public class ThreadLocalStringBuilder {
 
   public static StringBuilder get() {
     StringBuilder b = builder.get();
-    if (b.length() > maxBufferSize) {
+    if (b.capacity() > maxBufferSize) {
       b = new StringBuilder(maxBufferSize);
       builder.set(b);
     } else {
       b.setLength(0);
     }
     return b;
+  }
+
+  public static String join(String e1, String e2, String e3, String e4, String e5) {
+    StringBuilder sb = get();
+    sb.append(e1).append(e2).append(e3).append(e4).append(e5);
+    return sb.toString();
+  }
+
+  public static String join(String e1, String e2, String e3, String e4, String e5, String... es) {
+    StringBuilder sb = get();
+    sb.append(e1).append(e2).append(e3).append(e4).append(e5);
+    for (String e : es) {
+      sb.append(e);
+    }
+    return sb.toString();
   }
 }
