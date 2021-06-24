@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.concurrent;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 public class ThreadLocalStringBuilderTest {
@@ -26,5 +27,11 @@ public class ThreadLocalStringBuilderTest {
       sb.append("1");
     }
     ThreadLocalStringBuilder.get();
+  }
+
+  @Test
+  public void testJoin() {
+    Assert.assertEquals("12345", ThreadLocalStringBuilder.join("1", "2", "3", "4", "5"));
+    Assert.assertEquals("123456", ThreadLocalStringBuilder.join("1", "2", "3", "4", "5", "6"));
   }
 }

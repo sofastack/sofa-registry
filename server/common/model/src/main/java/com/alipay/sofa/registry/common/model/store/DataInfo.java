@@ -60,27 +60,19 @@ public class DataInfo implements Serializable {
    * @return
    */
   public static String toDataInfoId(String dataId, String instanceId, String group) {
-    StringBuilder buf = ThreadLocalStringBuilder.get();
     if (dataId == null || dataId.isEmpty()) {
       throw new IllegalArgumentException("error dataId:" + dataId);
     }
-    if (ValueConstants.DISABLE_DATA_ID_CASE_SENSITIVE) {
-      buf.append(dataId.toUpperCase());
-    } else {
-      buf.append(dataId);
-    }
-
     if (instanceId == null || instanceId.isEmpty()) {
       throw new IllegalArgumentException("error instanceId:" + instanceId);
     }
-    buf.append(DELIMITER).append(instanceId);
-
     if (group == null || group.isEmpty()) {
       throw new IllegalArgumentException("error group:" + group);
     }
-    buf.append(DELIMITER).append(group);
-
-    return buf.toString();
+    if (ValueConstants.DISABLE_DATA_ID_CASE_SENSITIVE) {
+      dataId = dataId.toUpperCase();
+    }
+    return ThreadLocalStringBuilder.join(dataId, DELIMITER, instanceId, DELIMITER, group);
   }
 
   /**
