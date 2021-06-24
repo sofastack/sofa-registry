@@ -19,6 +19,7 @@ package com.alipay.sofa.registry.server.session.push;
 import com.alipay.sofa.registry.common.model.store.Sizer;
 import com.alipay.sofa.registry.common.model.store.SubDatum;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
+import com.alipay.sofa.registry.common.model.store.Watcher;
 import com.alipay.sofa.registry.server.session.TestUtils;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfigBean;
 import com.alipay.sofa.registry.server.session.cache.CacheService;
@@ -28,6 +29,7 @@ import com.alipay.sofa.registry.server.session.providedata.FetchGrayPushSwitchSe
 import com.alipay.sofa.registry.server.session.providedata.FetchStopPushService;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.task.FastRejectedExecutionException;
+import com.google.common.collect.Lists;
 import java.util.Collections;
 import org.junit.Assert;
 import org.junit.Test;
@@ -90,11 +92,10 @@ public class FirePushServiceTest {
   }
 
   @Test
-  public void testHandleFireOnRegisterException() {
-    Subscriber subscriber = TestUtils.newZoneSubscriber(dataId, zone);
-    FirePushService.handleFireOnRegisterException(subscriber, new Exception());
-    FirePushService.handleFireOnRegisterException(
-        subscriber, new FastRejectedExecutionException("test"));
+  public void testHandleFireOnWatchException() {
+    Watcher watcher = TestUtils.newWatcher(dataId);
+    FirePushService.handleFireOnWatchException(watcher, new Exception());
+    FirePushService.handleFireOnWatchException(watcher, new FastRejectedExecutionException("test"));
   }
 
   private FirePushService mockFirePushService() {
@@ -104,6 +105,8 @@ public class FirePushServiceTest {
     svc.sessionInterests = Mockito.mock(Interests.class);
     svc.pushProcessor = Mockito.mock(PushProcessor.class);
     svc.sessionCacheService = Mockito.mock(CacheService.class);
+    svc.pushSwitchService = Mockito.mock(PushSwitchService.class);
+    svc.circuitBreakerService = Mockito.mock(CircuitBreakerService.class);
     return svc;
   }
 
@@ -160,8 +163,6 @@ public class FirePushServiceTest {
     FirePushService svc = mockFirePushService();
     Subscriber subscriber = TestUtils.newZoneSubscriber("testZone");
     subscriber.checkAndUpdateCtx("testDc", 100, 10);
-    Assert.assertFalse(svc.doExecuteOnSubscriber("testDc", subscriber));
-    FirePushService.RegisterTask task = svc.new RegisterTask(subscriber);
-    task.run();
+    Assert.assertTrue(svc.doExecuteOnReg("testDc", Lists.newArrayList(subscriber)));
   }
 }

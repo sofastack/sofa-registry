@@ -26,13 +26,11 @@ import java.util.Collections;
 import java.util.Map;
 import org.junit.Assert;
 import org.junit.Test;
-import org.mockito.Mockito;
 
 public class PushTaskBufferTest {
   @Test
   public void test() {
-    PushSwitchService mockSvc = Mockito.mock(PushSwitchService.class);
-    PushTaskBuffer buffer = new PushTaskBuffer(2, mockSvc);
+    PushTaskBuffer buffer = new PushTaskBuffer(2);
     Assert.assertEquals(2, buffer.workers.length);
 
     String dataId = "testDataId";
@@ -46,10 +44,8 @@ public class PushTaskBufferTest {
             Collections.singletonMap(subscriber.getRegisterId(), subscriber),
             datum);
     task.expireTimestamp = 1;
-    Assert.assertFalse(buffer.buffer(task));
-
-    Mockito.when(mockSvc.canIpPush(Mockito.anyString())).thenReturn(true);
     Assert.assertTrue(buffer.buffer(task));
+
     Assert.assertFalse(buffer.buffer(task));
 
     datum = TestUtils.newSubDatum(subscriber.getDataId(), 101, Collections.emptyList());

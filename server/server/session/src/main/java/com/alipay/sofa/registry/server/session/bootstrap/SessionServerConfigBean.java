@@ -82,9 +82,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
   private int dataChangeFetchTaskWorkerSize = OsUtils.getCpuCount() * 5;
 
-  private int subscriberRegisterTaskMaxBufferSize = 500000;
-
-  private int subscriberRegisterTaskWorkerSize = OsUtils.getCpuCount() * 5;
+  private int subscriberRegisterTaskWorkerSize = OsUtils.getCpuCount() * 4;
 
   private int dataChangeDebouncingMillis = 1000;
   private int dataChangeMaxDebouncingMillis = 3000;
@@ -1135,14 +1133,6 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
   public void setMetaNodeWorkerSize(int metaNodeWorkerSize) {
     this.metaNodeWorkerSize = metaNodeWorkerSize;
-  }
-
-  public int getSubscriberRegisterTaskMaxBufferSize() {
-    return subscriberRegisterTaskMaxBufferSize;
-  }
-
-  public void setSubscriberRegisterTaskMaxBufferSize(int subscriberRegisterTaskMaxBufferSize) {
-    this.subscriberRegisterTaskMaxBufferSize = subscriberRegisterTaskMaxBufferSize;
   }
 
   public int getSubscriberRegisterTaskWorkerSize() {

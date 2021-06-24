@@ -21,20 +21,17 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.log.SLF4JLogger;
 import org.apache.logging.log4j.core.LoggerContext;
 import org.junit.Assert;
-import org.junit.Test;
 
 public class HackTest {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(HackTest.class);
 
-  @Test
   public void testSLF4jLogger() {
     Assert.assertTrue(LOGGER instanceof SLF4JLogger);
     Assert.assertEquals(LOGGER.getName(), HackTest.class.getName());
     Assert.assertTrue(LOGGER.toString(), LOGGER.toString().contains(HackTest.class.getName()));
   }
 
-  @Test
   public void test() throws Exception {
     final int num = Hack.printDisruptorStats();
     Assert.assertNull(Hack.hackLoggerDisruptor(null));

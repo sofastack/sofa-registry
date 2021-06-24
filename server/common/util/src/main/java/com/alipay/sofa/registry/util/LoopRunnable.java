@@ -72,20 +72,16 @@ public abstract class LoopRunnable implements Runnable, Suspendable {
           try {
             runUnthrowable();
           } catch (Throwable unexpect) {
-            LOGGER.safeError("run unexpect error", unexpect);
+            LOGGER.error("run unexpect error", unexpect);
           }
         }
         try {
           waitingUnthrowable();
         } catch (Throwable unexpect) {
-          LOGGER.safeError("waiting unexpect error", unexpect);
+          LOGGER.error("waiting unexpect error", unexpect);
         }
       } catch (Throwable e) {
-        // log oom, this may be happen
-        try {
-          LOGGER.safeError("loop unexpect error", e);
-        } catch (Throwable ignored) { // NOPMD
-        }
+        LOGGER.safeError("loop unexpect error", e);
       }
     }
     LOGGER.info("loop-run exit {}, closed={}", this.getClass().getSimpleName(), closed);

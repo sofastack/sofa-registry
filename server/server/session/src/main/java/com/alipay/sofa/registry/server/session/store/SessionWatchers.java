@@ -20,10 +20,6 @@ import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.store.Watcher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.util.VersionsMapUtils;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import org.apache.commons.collections.MapUtils;
 
 /**
  * @author shangyu.wh
@@ -36,25 +32,10 @@ public class SessionWatchers extends AbstractDataManager<Watcher> implements Wat
     super(LOGGER);
   }
 
-  /** store watcher dataInfo version */
-  private ConcurrentHashMap<String /*dataInfoId*/, Long /*dataInfoVersion*/> watcherVersions =
-      new ConcurrentHashMap<>();
-
   @Override
   public boolean add(Watcher watcher) {
     Watcher.internWatcher(watcher);
     Tuple<Watcher, Boolean> ret = addData(watcher);
     return ret.o2;
-  }
-
-  @Override
-  public boolean checkWatcherVersions(String dataInfoId, long version) {
-    Map<String, Watcher> watcherMap = stores.get(dataInfoId);
-    if (MapUtils.isEmpty(watcherMap)) {
-      LOGGER.info(
-          "There are not Watcher Existed! Who are interest with dataInfoId {} !", dataInfoId);
-      return false;
-    }
-    return VersionsMapUtils.checkAndUpdateVersions(watcherVersions, dataInfoId, version);
   }
 }

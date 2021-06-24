@@ -27,18 +27,19 @@ import org.junit.Test;
 
 public class SubscriberUtilsTest {
   @Test
-  public void testGetMaxRegisterTimestamp() {
-    Assert.assertEquals(0, SubscriberUtils.getMaxRegisterTimestamp(Collections.emptyList()));
+  public void testGetMinRegisterTimestamp() {
+    Assert.assertEquals(
+        Long.MAX_VALUE, SubscriberUtils.getMinRegisterTimestamp(Collections.emptyList()));
     Subscriber s1 = new Subscriber();
     s1.setRegisterTimestamp(System.currentTimeMillis());
     Assert.assertEquals(
-        s1.getRegisterTimestamp(), SubscriberUtils.getMaxRegisterTimestamp(Lists.newArrayList(s1)));
+        s1.getRegisterTimestamp(), SubscriberUtils.getMinRegisterTimestamp(Lists.newArrayList(s1)));
     Subscriber s2 = new Subscriber();
     s2.setRegisterTimestamp(s1.getRegisterTimestamp() + 1);
 
     Assert.assertEquals(
-        s2.getRegisterTimestamp(),
-        SubscriberUtils.getMaxRegisterTimestamp(Lists.newArrayList(s1, s2)));
+        s1.getRegisterTimestamp(),
+        SubscriberUtils.getMinRegisterTimestamp(Lists.newArrayList(s1, s2)));
   }
 
   @Test
