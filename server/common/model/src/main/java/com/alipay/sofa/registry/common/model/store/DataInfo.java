@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.common.model.store;
 
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
+import com.alipay.sofa.registry.concurrent.ThreadLocalStringBuilder;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import java.io.Serializable;
 import java.util.Objects;
@@ -59,7 +60,7 @@ public class DataInfo implements Serializable {
    * @return
    */
   public static String toDataInfoId(String dataId, String instanceId, String group) {
-    StringBuilder buf = new StringBuilder();
+    StringBuilder buf = ThreadLocalStringBuilder.get();
     if (dataId == null || dataId.isEmpty()) {
       throw new IllegalArgumentException("error dataId:" + dataId);
     }
