@@ -230,7 +230,7 @@ public class SessionRegistry implements Registry {
     if (CollectionUtils.isEmpty(connectIds)) {
       return;
     }
-    Set<ConnectId> connectIdSet = Sets.newHashSet(connectIds);
+    Set<ConnectId> connectIdSet = Collections.unmodifiableSet(Sets.newHashSet(connectIds));
     final String dataCenter = getDataCenterWhenPushEmpty();
 
     if (checkSub) {
@@ -300,7 +300,7 @@ public class SessionRegistry implements Registry {
 
     @Override
     public void waitingUnthrowable() {
-      ConcurrentUtils.sleepUninterruptibly(1, TimeUnit.SECONDS);
+      ConcurrentUtils.sleepUninterruptibly(5, TimeUnit.SECONDS);
     }
   }
 

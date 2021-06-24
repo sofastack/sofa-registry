@@ -28,13 +28,13 @@ public class NaiveBalancePolicy implements BalancePolicy {
   public static final String PROP_FOLLOWER_MAX_MOVE = "registry.slot.follower.max.move";
   public static final String PROP_BALANCE_THRESHOLD = "registry.slot.balance.threshold";
 
-  public static final int DEF_LEADER_MAX_MOVE = 4;
+  public static final int DEF_LEADER_MAX_MOVE = 16;
 
   private int balanceThreshold = Integer.getInteger(PROP_BALANCE_THRESHOLD, 10);
 
   private int maxMoveLeaderSlots = Integer.getInteger(PROP_LEADER_MAX_MOVE, DEF_LEADER_MAX_MOVE);
 
-  private int maxMoveFollowerSlots = Integer.getInteger(PROP_FOLLOWER_MAX_MOVE, 16);
+  private int maxMoveFollowerSlots = Integer.getInteger(PROP_FOLLOWER_MAX_MOVE, 24);
 
   @Override
   public int getLowWaterMarkSlotLeaderNums(int average) {
