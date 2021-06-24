@@ -27,6 +27,7 @@ import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.store.DataStore;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.session.store.Watchers;
+import com.alipay.sofa.registry.server.shared.metrics.InterestGroup;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
 import io.prometheus.client.Gauge;
@@ -139,8 +140,8 @@ public class CacheCountTask {
       for (Entry<String, Tuple<Integer, Integer>> groups : count.getValue().entrySet()) {
         final String group = groups.getKey();
         Tuple<Integer, Integer> tupleCount = groups.getValue();
-        gauge.labels(instanceId, group).set(tupleCount.o1);
-        dataIDGauge.labels(instanceId, group).set(tupleCount.o2);
+        gauge.labels(instanceId, InterestGroup.normalizeGroup(group)).set(tupleCount.o1);
+        dataIDGauge.labels(instanceId,  InterestGroup.normalizeGroup(group)).set(tupleCount.o2);
         COUNT_LOGGER.info("{}{},{},{},{}", prefix, instanceId, group, tupleCount.o1, tupleCount.o2);
       }
     }
