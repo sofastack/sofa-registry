@@ -55,7 +55,7 @@ public interface DataManager<DATA, ID, DATAINFOID> {
    * @param connectIds
    * @return
    */
-  Map<ConnectId, Map<ID, DATA>> queryByConnectIds(List<ConnectId> connectIds);
+  Map<ConnectId, Map<ID, DATA>> queryByConnectIds(Set<ConnectId> connectIds);
 
   /**
    * remove data by client node connectId
@@ -69,7 +69,7 @@ public interface DataManager<DATA, ID, DATAINFOID> {
    *
    * @param connectIds
    */
-  Map<ConnectId, Map<ID, DATA>> deleteByConnectIds(List<ConnectId> connectIds);
+  Map<ConnectId, Map<ID, DATA>> deleteByConnectIds(Set<ConnectId> connectIds);
 
   DATA queryById(ID registerId, DATAINFOID dataInfoId);
 

@@ -227,11 +227,15 @@ public class SessionRegistry implements Registry {
 
   private void disableConnect(
       List<ConnectId> connectIds, boolean removeSubAndWat, boolean checkSub) {
+    if (CollectionUtils.isEmpty(connectIds)) {
+      return;
+    }
+    Set<ConnectId> connectIdSet = Sets.newHashSet(connectIds);
     final String dataCenter = getDataCenterWhenPushEmpty();
 
     if (checkSub) {
       Map<ConnectId, Map<String, Subscriber>> subMap =
-          sessionInterests.queryByConnectIds(connectIds);
+          sessionInterests.queryByConnectIds(connectIdSet);
       for (Entry<ConnectId, Map<String, Subscriber>> subEntry : subMap.entrySet()) {
         int subEmptyCount = 0;
         for (Subscriber sub : subEntry.getValue().values()) {
@@ -246,7 +250,7 @@ public class SessionRegistry implements Registry {
       }
     }
 
-    Map<ConnectId, List<Publisher>> pubMap = removeFromSession(connectIds, removeSubAndWat);
+    Map<ConnectId, List<Publisher>> pubMap = removeFromSession(connectIdSet, removeSubAndWat);
     for (Entry<ConnectId, List<Publisher>> pubEntry : pubMap.entrySet()) {
       clientOffToDataNode(pubEntry.getKey(), pubEntry.getValue());
       Loggers.CLIENT_OFF_LOG.info(
@@ -260,7 +264,7 @@ public class SessionRegistry implements Registry {
   }
 
   private Map<ConnectId, List<Publisher>> removeFromSession(
-      List<ConnectId> connectIds, boolean removeSubAndWat) {
+      Set<ConnectId> connectIds, boolean removeSubAndWat) {
     Map<ConnectId, Map<String, Publisher>> publisherMap =
         sessionDataStore.deleteByConnectIds(connectIds);
 

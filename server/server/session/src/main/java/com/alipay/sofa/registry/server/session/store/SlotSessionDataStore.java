@@ -131,9 +131,9 @@ public class SlotSessionDataStore implements DataStore {
   }
 
   @Override
-  public Map<ConnectId, Map<String, Publisher>> queryByConnectIds(List<ConnectId> connectIds) {
+  public Map<ConnectId, Map<String, Publisher>> queryByConnectIds(Set<ConnectId> connectIds) {
     if (CollectionUtils.isEmpty(connectIds)) {
-      return Collections.EMPTY_MAP;
+      return Collections.emptyMap();
     }
     Map<ConnectId, Map<String, Publisher>> ret = Maps.newHashMap();
     for (DataStore ds : slot2DataStores.values()) {
@@ -151,7 +151,7 @@ public class SlotSessionDataStore implements DataStore {
   public Map<String, Publisher> deleteByConnectId(ConnectId connectId) {
 
     Map<ConnectId, Map<String, Publisher>> ret =
-        deleteByConnectIds(Collections.singletonList(connectId));
+        deleteByConnectIds(Collections.singleton(connectId));
     Map<String, Publisher> publisherMap = ret.get(connectId);
     if (CollectionUtils.isEmpty(publisherMap)) {
       return Maps.newHashMap();
@@ -160,7 +160,10 @@ public class SlotSessionDataStore implements DataStore {
   }
 
   @Override
-  public Map<ConnectId, Map<String, Publisher>> deleteByConnectIds(List<ConnectId> connectIds) {
+  public Map<ConnectId, Map<String, Publisher>> deleteByConnectIds(Set<ConnectId> connectIds) {
+    if (CollectionUtils.isEmpty(connectIds)) {
+      return Collections.emptyMap();
+    }
     Map<ConnectId, Map<String, Publisher>> ret = Maps.newHashMap();
     for (DataStore ds : slot2DataStores.values()) {
       Map<ConnectId, Map<String, Publisher>> publisherMap = ds.deleteByConnectIds(connectIds);

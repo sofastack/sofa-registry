@@ -22,7 +22,6 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -92,7 +91,7 @@ public final class StoreHelpers {
   }
 
   public static <T extends BaseInfo> Map<ConnectId, Map<String, T>> getByConnectIds(
-      List<ConnectId> connectIds, Map<String, Map<String, T>> stores) {
+      Set<ConnectId> connectIds, Map<String, Map<String, T>> stores) {
     Map<ConnectId, Map<String, T>> retMap = Maps.newHashMap();
     for (Map<String, T> m : stores.values()) {
       for (Entry<String, T> entry : m.entrySet()) {

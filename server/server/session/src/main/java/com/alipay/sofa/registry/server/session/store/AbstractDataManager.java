@@ -110,7 +110,7 @@ public abstract class AbstractDataManager<T extends BaseInfo>
   @Override
   public Map<String, T> deleteByConnectId(ConnectId connectId) {
 
-    Map<ConnectId, Map<String, T>> ret = deleteByConnectIds(Lists.newArrayList(connectId));
+    Map<ConnectId, Map<String, T>> ret = deleteByConnectIds(Collections.singleton(connectId));
     Map<String, T> data = ret.get(connectId);
     if (CollectionUtils.isEmpty(data)) {
       return Maps.newHashMap();
@@ -120,7 +120,7 @@ public abstract class AbstractDataManager<T extends BaseInfo>
   }
 
   @Override
-  public Map<ConnectId, Map<String, T>> deleteByConnectIds(List<ConnectId> connectIds) {
+  public Map<ConnectId, Map<String, T>> deleteByConnectIds(Set<ConnectId> connectIds) {
     Map<ConnectId, Map<String, T>> ret = Maps.newHashMap();
 
     for (Map<String, T> map : stores.values()) {
@@ -176,7 +176,7 @@ public abstract class AbstractDataManager<T extends BaseInfo>
    * @return
    */
   @Override
-  public Map<ConnectId, Map<String, T>> queryByConnectIds(List<ConnectId> connectIds) {
+  public Map<ConnectId, Map<String, T>> queryByConnectIds(Set<ConnectId> connectIds) {
     return StoreHelpers.getByConnectIds(connectIds, stores);
   }
 
