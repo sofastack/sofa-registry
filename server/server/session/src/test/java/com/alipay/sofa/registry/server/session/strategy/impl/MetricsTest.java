@@ -16,11 +16,13 @@
  */
 package com.alipay.sofa.registry.server.session.strategy.impl;
 
+import com.alipay.sofa.registry.server.shared.metrics.InterestGroup;
+import org.junit.Assert;
 import org.junit.Test;
 
 public class MetricsTest {
   @Test
   public void testMetrics() {
-    Metrics.Access.REGISTRY_CLIENT_PUB_SIZE.observe(1);
+    Metrics.Access.pubSize("registry", "SOFA", 100);
   }
 }

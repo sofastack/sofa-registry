@@ -101,7 +101,7 @@ public class DefaultPublisherHandlerStrategy implements PublisherHandlerStrategy
     // [Y|N],[R|U|N],app,zone,dataInfoId,registerId,version,registerTimestamp,clientVersion,clientIp,clientPort,dataSize
     long size = DatumUtils.DataBoxListSize(publisherRegister.getDataList());
     Metrics.Access.pubCount(success);
-    Metrics.Access.REGISTRY_CLIENT_PUB_SIZE.observe(size);
+    Metrics.Access.pubSize("registry", publisherRegister.getGroup(), size);
     PUB_LOGGER.info(
         "{},{},{},{},{},{},{},{},{},{},{},{},{},size={},pb={}",
         success ? 'Y' : 'N',
