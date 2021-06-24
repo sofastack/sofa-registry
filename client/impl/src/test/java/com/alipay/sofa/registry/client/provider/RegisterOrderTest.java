@@ -71,7 +71,7 @@ public class RegisterOrderTest extends BaseTest {
       publisher.republish(dataPrefix + i);
     }
 
-    Thread.sleep(1000L);
+    Thread.sleep(2000L);
 
     DefaultPublisher defaultPublisher = (DefaultPublisher) publisher;
     String registeId = defaultPublisher.getRegistId();
@@ -107,7 +107,7 @@ public class RegisterOrderTest extends BaseTest {
       assertTrue(ex instanceof IllegalStateException);
     }
 
-    Thread.sleep(1000L);
+    Thread.sleep(2000L);
 
     assertTrue(publisher.isRegistered());
     assertFalse(publisher.isEnabled());

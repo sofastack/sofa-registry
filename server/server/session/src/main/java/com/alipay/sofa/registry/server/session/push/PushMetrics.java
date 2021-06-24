@@ -81,17 +81,17 @@ public final class PushMetrics {
   }
 
   static final class Push {
-    private static final Counter PENDING_COUNTER =
+    private static final Counter BUFFER_COUNTER =
         Counter.build()
             .namespace("session")
             .subsystem("push")
-            .name("pending_total")
-            .help("pending fetch")
+            .name("buffer_total")
+            .help("buffer count")
             .labelNames("type")
             .register();
-    static final Counter.Child PENDING_REPLACE_COUNTER = PENDING_COUNTER.labels("replace");
-    static final Counter.Child PENDING_NEW_COUNTER = PENDING_COUNTER.labels("new");
-    static final Counter.Child PENDING_SKIP_COUNTER = PENDING_COUNTER.labels("skip");
+    static final Counter.Child BUFFER_REPLACE_COUNTER = BUFFER_COUNTER.labels("replace");
+    static final Counter.Child BUFFER_NEW_COUNTER = BUFFER_COUNTER.labels("new");
+    static final Counter.Child BUFFER_SKIP_COUNTER = BUFFER_COUNTER.labels("skip");
 
     static final Counter COMMIT_COUNTER =
         Counter.build()
@@ -154,6 +154,21 @@ public final class PushMetrics {
             .subsystem("push")
             .name("push_empty_skip")
             .help("push empty skip count")
+            .register();
+
+    static final Counter PUSH_REG_SKIP_COUNTER =
+        Counter.build()
+            .namespace("session")
+            .subsystem("push")
+            .name("push_reg_skip")
+            .help("push reg skip count")
+            .register();
+    static final Counter PUSH_REG_COMMIT_COUNTER =
+        Counter.build()
+            .namespace("session")
+            .subsystem("push")
+            .name("push_reg_commit")
+            .help("push reg commit count")
             .register();
   }
 }

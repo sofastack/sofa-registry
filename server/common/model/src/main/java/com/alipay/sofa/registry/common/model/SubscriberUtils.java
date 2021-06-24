@@ -101,15 +101,15 @@ public final class SubscriberUtils {
     return max;
   }
 
-  public static long getMaxRegisterTimestamp(Collection<Subscriber> subscribers) {
-    long max = 0;
+  public static long getMinRegisterTimestamp(Collection<Subscriber> subscribers) {
+    long min = Long.MAX_VALUE;
     for (Subscriber sub : subscribers) {
       long v = sub.getRegisterTimestamp();
-      if (max < v) {
-        max = v;
+      if (min > v) {
+        min = v;
       }
     }
-    return max;
+    return min;
   }
 
   public static SimpleSubscriber convert(Subscriber subscriber) {

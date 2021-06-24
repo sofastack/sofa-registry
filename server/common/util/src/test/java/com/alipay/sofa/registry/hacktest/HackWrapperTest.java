@@ -14,33 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.util;
+package com.alipay.sofa.registry.hacktest;
 
-import java.util.Map;
+import org.apache.logging.log4j.core.async.HackTest;
+import org.junit.Test;
 
-/**
- * @author xuanbei
- * @since 2019/2/12
- */
-public class VersionsMapUtils {
-  public static boolean checkAndUpdateVersions(
-      Map<String, Long> versionsMap, String versionKey, Long version) {
-    while (true) {
-      Long oldValue = versionsMap.get(versionKey);
-      if (oldValue == null) {
-        // Add firstly
-        if (versionsMap.putIfAbsent(versionKey, version) == null) {
-          return true;
-        }
-      } else {
-        if (version > oldValue) {
-          if (versionsMap.replace(versionKey, oldValue, version)) {
-            return true;
-          }
-        } else {
-          return false;
-        }
-      }
-    }
+public class HackWrapperTest {
+  @Test
+  public void test() throws Exception {
+    HackTest hack = new HackTest();
+    hack.testSLF4jLogger();
+    hack.test();
   }
 }

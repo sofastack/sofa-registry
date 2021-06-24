@@ -22,14 +22,4 @@ import com.alipay.sofa.registry.common.model.store.Watcher;
  * @author shangyu.wh
  * @version $Id: SessionInterests.java, v 0.1 2017-11-30 15:53 shangyu.wh Exp $
  */
-public interface Watchers extends DataManager<Watcher, String, String> {
-
-  /**
-   * check watchers interest dataInfoId version if not exist add else check and update bigger one
-   *
-   * @param dataInfoId
-   * @param version
-   * @return
-   */
-  boolean checkWatcherVersions(String dataInfoId, long version);
-}
+public interface Watchers extends DataManager<Watcher, String, String> {}

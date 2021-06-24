@@ -111,8 +111,6 @@ public interface SessionServerConfig extends ServerShareConfig {
 
   int getSubscriberRegisterTaskWorkerSize();
 
-  int getSubscriberRegisterTaskMaxBufferSize();
-
   int getWatchPushTaskWorkerSize();
 
   int getWatchPushTaskMaxBufferSize();

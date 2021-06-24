@@ -58,27 +58,24 @@ public class FirePushService {
 
   @Autowired CircuitBreakerService circuitBreakerService;
 
-  private KeyedThreadPoolExecutor registerFetchExecutor;
   private KeyedThreadPoolExecutor watchPushExecutor;
 
   @Autowired PushProcessor pushProcessor;
   @Autowired ChangeProcessor changeProcessor;
   @Autowired WatchProcessor watchProcessor;
+  RegProcessor regProcessor;
   final ChangeHandler changeHandler = new ChangeHandler();
 
   @PostConstruct
   public void init() {
-    registerFetchExecutor =
-        new KeyedThreadPoolExecutor(
-            "RegisterFetchExecutor",
-            sessionServerConfig.getSubscriberRegisterTaskWorkerSize(),
-            sessionServerConfig.getSubscriberRegisterTaskMaxBufferSize());
-
     watchPushExecutor =
         new KeyedThreadPoolExecutor(
             "WatchPushExecutor",
             sessionServerConfig.getWatchPushTaskWorkerSize(),
             sessionServerConfig.getWatchPushTaskMaxBufferSize());
+    this.regProcessor =
+        new RegProcessor(
+            sessionServerConfig.getSubscriberRegisterTaskWorkerSize(), new RegHandler());
   }
 
   public boolean fireOnChange(String dataInfoId, TriggerPushContext changeCtx) {
@@ -108,11 +105,10 @@ public class FirePushService {
 
   public boolean fireOnRegister(Subscriber subscriber) {
     try {
-      registerFetchExecutor.execute(subscriber.getDataInfoId(), new RegisterTask(subscriber));
       REGISTER_TASK_COUNTER.inc();
-      return true;
+      return regProcessor.fireOnReg(subscriber);
     } catch (Throwable e) {
-      handleFireOnRegisterException(subscriber, e);
+      LOGGER.error("failed to fireOnRegister {}", subscriber.shortDesc(), e);
       return false;
     }
   }
@@ -131,14 +127,6 @@ public class FirePushService {
       handleFireOnWatchException(watcher, e);
       return false;
     }
-  }
-
-  static void handleFireOnRegisterException(Subscriber subscriber, Throwable e) {
-    if (e instanceof FastRejectedExecutionException) {
-      LOGGER.error("failed to fireOnRegister {}, {}", subscriber.shortDesc(), e.getMessage());
-      return;
-    }
-    LOGGER.error("failed to fireOnRegister {}", subscriber.shortDesc(), e);
   }
 
   static void handleFireOnWatchException(Watcher watcher, Throwable e) {
@@ -218,9 +206,6 @@ public class FirePushService {
         SubscriberUtils.groupBySourceAddress(subscriberList);
     for (Map.Entry<InetSocketAddress, Map<String, Subscriber>> e : group.entrySet()) {
       final InetSocketAddress addr = e.getKey();
-      if (!pushSwitchService.canIpPush(addr.getAddress().getHostAddress())) {
-        continue;
-      }
       final Map<String, Subscriber> subscriberMap = e.getValue();
       pushProcessor.firePush(pushCause, addr, subscriberMap, datum);
     }
@@ -251,7 +236,6 @@ public class FirePushService {
     for (Subscriber subscriber : subscribers) {
       CircuitBreakerStatistic statistic = subscriber.getStatistic(dataCenter);
       if (circuitBreakerService.pushCircuitBreaker(statistic)) {
-
         LOGGER.info(
             "[CircuitBreaker]subscriber:{} push check circuit break, statistic:{}",
             subscriber.shortDesc(),
@@ -281,42 +265,35 @@ public class FirePushService {
     }
   }
 
-  boolean doExecuteOnSubscriber(String dataCenter, Subscriber subscriber) {
-    if (subscriber.hasPushed()) {
-      return false;
-    }
-    final String subDataInfoId = subscriber.getDataInfoId();
-    SubDatum datum = getDatum(dataCenter, subDataInfoId, Long.MIN_VALUE);
-    if (datum == null) {
-      datum =
-          DatumUtils.newEmptySubDatum(
-              subscriber, dataCenter, ValueConstants.DEFAULT_NO_DATUM_VERSION);
-      LOGGER.warn("[registerEmptyPush] {},{},{}", subDataInfoId, dataCenter, subscriber);
-    }
-    TriggerPushContext pushCtx =
-        new TriggerPushContext(dataCenter, 0, null, subscriber.getRegisterTimestamp());
-    PushCause cause = new PushCause(pushCtx, PushType.Reg, System.currentTimeMillis());
-    processPush(cause, datum, Collections.singletonList(subscriber));
-    return true;
-  }
-
-  final class RegisterTask implements Runnable {
-    final Subscriber subscriber;
-
-    RegisterTask(Subscriber subscriber) {
-      this.subscriber = subscriber;
-    }
+  final class RegHandler implements RegProcessor.RegHandler {
 
     @Override
-    public void run() {
-      final String dataCenter = sessionServerConfig.getSessionServerDataCenter();
-      try {
-        doExecuteOnSubscriber(dataCenter, subscriber);
-      } catch (Throwable e) {
-        LOGGER.error(
-            "failed to do register Task, dataCenter={}, {}", dataCenter, subscriber.shortDesc(), e);
-      }
+    public boolean onReg(String dataInfoId, List<Subscriber> subscribers) {
+      return doExecuteOnReg(dataInfoId, subscribers);
     }
+  }
+
+  boolean doExecuteOnReg(String dataInfoId, List<Subscriber> subscribers) {
+    // TODO multi datacenter
+    final String dataCenter = sessionServerConfig.getSessionServerDataCenter();
+    SubDatum datum = getDatum(dataCenter, dataInfoId, Long.MIN_VALUE);
+    if (datum == null) {
+      Subscriber first = subscribers.get(0);
+      datum =
+          DatumUtils.newEmptySubDatum(first, dataCenter, ValueConstants.DEFAULT_NO_DATUM_VERSION);
+      LOGGER.warn(
+          "[registerEmptyPush]{},{},subNum={},{}",
+          dataInfoId,
+          dataCenter,
+          subscribers.size(),
+          first.shortDesc());
+    }
+    TriggerPushContext pushCtx =
+        new TriggerPushContext(
+            dataCenter, 0, null, SubscriberUtils.getMinRegisterTimestamp(subscribers));
+    PushCause cause = new PushCause(pushCtx, PushType.Reg, System.currentTimeMillis());
+    processPush(cause, datum, subscribers);
+    return true;
   }
 
   final class WatchTask implements Runnable {

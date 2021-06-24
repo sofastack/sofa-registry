@@ -38,12 +38,6 @@ public class SyncClientsHeartbeatTask {
   private static final Logger CONSOLE_COUNT_LOGGER =
       LoggerFactory.getLogger("SESSION-CONSOLE", "[Count]");
 
-  private static final Logger PRO_LOGGER =
-      LoggerFactory.getLogger("SESSION-PROFILE-DIGEST", "[TaskExecute]");
-
-  public static final String SYMBOLIC1 = "  ├─ ";
-  public static final String SYMBOLIC2 = "  └─ ";
-
   @Autowired Exchange boltExchange;
 
   @Autowired SessionServerConfig sessionServerConfig;

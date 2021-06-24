@@ -33,13 +33,13 @@ public abstract class PushTask {
   protected volatile long expireTimestamp;
 
   protected final SubDatum datum;
-  protected final InetSocketAddress addr;
   protected final Map<String, Subscriber> subscriberMap;
   protected final Subscriber subscriber;
-  protected int retryCount;
 
   protected final PushingTaskKey pushingTaskKey;
   protected final PushTrace trace;
+
+  protected int retryCount;
   private int pushDataCount = -1;
 
   protected PushTask(
@@ -49,7 +49,6 @@ public abstract class PushTask {
       SubDatum datum) {
     this.taskID = TraceID.newTraceID();
     this.datum = datum;
-    this.addr = addr;
     this.subscriberMap = subscriberMap;
     this.subscriber = subscriberMap.values().iterator().next();
     this.trace =
@@ -59,14 +58,10 @@ public abstract class PushTask {
             subscriber.getAppName(),
             pushCause,
             subscriberMap.size(),
-            SubscriberUtils.getMaxRegisterTimestamp(subscriberMap.values()));
+            SubscriberUtils.getMinRegisterTimestamp(subscriberMap.values()));
     this.pushingTaskKey =
         new PushingTaskKey(
             subscriber.getDataInfoId(), addr, subscriber.getScope(), subscriber.getClientVersion());
-  }
-
-  public boolean isReg() {
-    return trace.pushCause.pushType == PushType.Reg && subscriberMap.size() == 1;
   }
 
   protected abstract boolean commit();
@@ -77,8 +72,12 @@ public abstract class PushTask {
     this.expireTimestamp = System.currentTimeMillis() + intervalMs;
   }
 
+  public boolean isSingletonReg() {
+    return trace.pushCause.pushType == PushType.Reg && subscriberMap.size() == 1;
+  }
+
   protected boolean afterThan(PushTask t) {
-    if (isReg() && t.isReg()) {
+    if (isSingletonReg() && t.isSingletonReg()) {
       return subscriber.getVersion() > t.subscriber.getVersion();
     }
     return datum.getVersion() > t.datum.getVersion();
@@ -104,7 +103,7 @@ public abstract class PushTask {
         .append(",ver=")
         .append(datum.getVersion())
         .append(",addr=")
-        .append(addr)
+        .append(pushingTaskKey.addr)
         .append(",scope=")
         .append(subscriber.getScope())
         .append(",subIds=")

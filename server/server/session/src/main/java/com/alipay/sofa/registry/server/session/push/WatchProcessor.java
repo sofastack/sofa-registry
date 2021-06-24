@@ -34,7 +34,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class WatchProcessor {
-  private static final Logger LOGGER = PushLog.LOGGER;
+  private static final Logger LOGGER = LoggerFactory.getLogger(WatchProcessor.class);
   private static final Logger WATCH_LOGGER = LoggerFactory.getLogger("WATCH-PUSH");
   @Autowired protected SessionServerConfig sessionServerConfig;
 

@@ -23,6 +23,7 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.net.InetSocketAddress;
@@ -36,34 +37,23 @@ public final class PushTaskBuffer {
   private static final Logger LOGGER = LoggerFactory.getLogger(PushTaskBuffer.class);
 
   final BufferWorker[] workers;
-  final PushSwitchService pushSwitchService;
 
-  PushTaskBuffer(int buckets, PushSwitchService pushSwitchService) {
-    this.pushSwitchService = pushSwitchService;
-    this.workers = new BufferWorker[buckets];
-    for (int i = 0; i < buckets; i++) {
+  PushTaskBuffer(int workerSize) {
+    this.workers = new BufferWorker[workerSize];
+    for (int i = 0; i < workerSize; i++) {
       BufferWorker worker = new BufferWorker();
-      worker.t = ConcurrentUtils.createDaemonThread("PushTaskBuffer-" + i, worker);
       this.workers[i] = worker;
-    }
-  }
-
-  void start() {
-    for (BufferWorker w : workers) {
-      w.t.start();
+      ConcurrentUtils.createDaemonThread("PushTaskBuffer-" + i, worker).start();
     }
   }
 
   boolean buffer(PushTask pushTask) {
-    if (!pushSwitchService.canIpPush(pushTask.addr.getAddress().getHostAddress())) {
-      return false;
-    }
     final BufferTaskKey key = bufferTaskKey(pushTask);
     final BufferWorker worker = workerOf(key);
     if (worker.bufferMap.putIfAbsent(key, pushTask) == null) {
       // fast path
       wakeup(worker, pushTask);
-      PENDING_NEW_COUNTER.inc();
+      BUFFER_NEW_COUNTER.inc();
       return true;
     }
 
@@ -73,7 +63,7 @@ public final class PushTaskBuffer {
         if (worker.bufferMap.putIfAbsent(key, pushTask) == null) {
           // prev has remove at this time
           wakeup(worker, pushTask);
-          PENDING_NEW_COUNTER.inc();
+          BUFFER_NEW_COUNTER.inc();
           return true;
         }
       } else {
@@ -83,22 +73,23 @@ public final class PushTaskBuffer {
           pushTask.expireTimestamp = prev.expireTimestamp;
           if (worker.bufferMap.replace(key, prev, pushTask)) {
             wakeup(worker, pushTask);
-            PENDING_REPLACE_COUNTER.inc();
+            BUFFER_REPLACE_COUNTER.inc();
             return true;
           } else {
             // put failed, recover the expireTimestamp
             pushTask.expireTimestamp = originExpireTimestamp;
           }
         } else {
-          PENDING_SKIP_COUNTER.inc();
+          BUFFER_SKIP_COUNTER.inc();
           LOGGER.info(
-              "[SkipBuffer]key={},prev={},ver={},now={},ver={},reg={},retry={}",
+              "[SkipBuffer]key={},prev={},ver={}/{},now={},ver={}/{},retry={}",
               key,
               prev.taskID,
               prev.datum.getVersion(),
+              prev.trace.pushCause.pushType,
               pushTask.taskID,
               pushTask.datum.getVersion(),
-              prev.isReg() && pushTask.isReg(),
+              prev.trace.pushCause.pushType,
               pushTask.retryCount);
           return false;
         }
@@ -114,7 +105,6 @@ public final class PushTaskBuffer {
 
   final class BufferWorker extends WakeUpLoopRunnable {
     final Map<BufferTaskKey, PushTask> bufferMap = new ConcurrentHashMap<>(4096);
-    Thread t;
 
     @Override
     public void runUnthrowable() {
@@ -125,30 +115,25 @@ public final class PushTaskBuffer {
     public int getWaitingMillis() {
       return 200;
     }
-  }
 
-  private List<PushTask> transferAndMerge(BufferWorker worker) {
-    List<PushTask> pending = Lists.newArrayListWithCapacity(1024);
-    final long now = System.currentTimeMillis();
-    for (Map.Entry<BufferTaskKey, PushTask> e : worker.bufferMap.entrySet()) {
-      final PushTask task = e.getValue();
-      // no delay or expire, push immediately
-      if (task.trace.pushCause.pushType.noDelay || task.expireTimestamp <= now) {
-        pending.add(task);
-        // the task maybe update
-        worker.bufferMap.remove(e.getKey(), task);
+    private List<PushTask> transferAndMerge() {
+      List<PushTask> pending = Lists.newArrayListWithCapacity(1024);
+      final long now = System.currentTimeMillis();
+      for (Map.Entry<BufferTaskKey, PushTask> e : bufferMap.entrySet()) {
+        final PushTask task = e.getValue();
+        // no delay or expire, push immediately
+        if (task.trace.pushCause.pushType.noDelay || task.expireTimestamp <= now) {
+          pending.add(task);
+          // the task maybe update
+          bufferMap.remove(e.getKey(), task);
+        }
       }
+      return pending;
     }
-    return pending;
   }
 
   int watchBuffer(BufferWorker worker) {
-    if (!pushSwitchService.canPush()) {
-      // stop push, clean the task
-      worker.bufferMap.clear();
-      return 0;
-    }
-    List<PushTask> pending = transferAndMerge(worker);
+    List<PushTask> pending = worker.transferAndMerge();
     int count = 0;
     for (PushTask task : pending) {
       if (task.commit()) {
@@ -156,7 +141,7 @@ public final class PushTaskBuffer {
       }
     }
     if (pending.size() > 0 || count > 0) {
-      LOGGER.info("buffers={}, commits={}", pending.size(), count);
+      LOGGER.info("buffers={},commits={}", pending.size(), count);
     }
     return count;
   }
@@ -164,7 +149,7 @@ public final class PushTaskBuffer {
   BufferTaskKey bufferTaskKey(PushTask task) {
     return new BufferTaskKey(
         task.datum.getDataCenter(),
-        task.addr,
+        task.pushingTaskKey.addr,
         task.subscriber.getDataInfoId(),
         task.subscriberMap.keySet());
   }
@@ -227,12 +212,14 @@ public final class PushTaskBuffer {
     return size;
   }
 
+  @VisibleForTesting
   void suspend() {
     for (BufferWorker w : workers) {
       w.suspend();
     }
   }
 
+  @VisibleForTesting
   void resume() {
     for (BufferWorker w : workers) {
       w.resume();

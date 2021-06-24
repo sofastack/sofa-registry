@@ -83,13 +83,11 @@ public class PushProcessor {
             sessionServerConfig.getPushTaskExecutorQueueSize());
     intTaskBuffer();
     ConcurrentUtils.createDaemonThread("PushCleaner", cleaner).start();
-    this.taskBuffer.start();
   }
 
   void intTaskBuffer() {
     if (this.taskBuffer == null) {
-      this.taskBuffer =
-          new PushTaskBuffer(sessionServerConfig.getPushTaskBufferBucketSize(), pushSwitchService);
+      this.taskBuffer = new PushTaskBuffer(sessionServerConfig.getPushTaskBufferBucketSize());
     }
   }
 
@@ -109,6 +107,9 @@ public class PushProcessor {
       InetSocketAddress addr,
       Map<String, Subscriber> subscriberMap,
       SubDatum datum) {
+    if (!pushSwitchService.canIpPush(addr.getAddress().getHostAddress())) {
+      return;
+    }
     // most of the time, element size is 1, SingleMap to save the memory
     subscriberMap = CollectionUtils.toSingletonMap(subscriberMap);
     List<PushTask> fires = createPushTask(pushCause, addr, subscriberMap, datum);
@@ -276,7 +277,7 @@ public class PushProcessor {
   }
 
   boolean doPush(PushTask task) {
-    if (!pushSwitchService.canIpPush(task.addr.getAddress().getHostAddress())) {
+    if (!pushSwitchService.canIpPush(task.pushingTaskKey.addr.getAddress().getHostAddress())) {
       return false;
     }
 
@@ -293,7 +294,7 @@ public class PushProcessor {
       task.setPushDataCount(pushData.getDataCount());
 
       if (interruptOnPushEmpty(
-          task.datum, pushData, task.trace.pushCause, task.subscriber, task.addr)) {
+          task.datum, pushData, task.trace.pushCause, task.subscriber, task.pushingTaskKey.addr)) {
         return false;
       }
 
@@ -400,6 +401,9 @@ public class PushProcessor {
     @Override
     protected boolean commit() {
       try {
+        if (!pushSwitchService.canIpPush(pushingTaskKey.addr.getAddress().getHostAddress())) {
+          return false;
+        }
         // keyed by client.addr && (pushingKey%concurrencyLevel)
         // avoid generating too many pushes for the same client at the same time
         final int level = sessionServerConfig.getClientNodePushConcurrencyLevel();
