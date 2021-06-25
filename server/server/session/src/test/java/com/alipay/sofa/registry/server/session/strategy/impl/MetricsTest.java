@@ -16,8 +16,6 @@
  */
 package com.alipay.sofa.registry.server.session.strategy.impl;
 
-import com.alipay.sofa.registry.server.shared.metrics.InterestGroup;
-import org.junit.Assert;
 import org.junit.Test;
 
 public class MetricsTest {

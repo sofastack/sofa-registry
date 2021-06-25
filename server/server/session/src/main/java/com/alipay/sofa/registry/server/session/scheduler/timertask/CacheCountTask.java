@@ -141,7 +141,7 @@ public class CacheCountTask {
         final String group = groups.getKey();
         Tuple<Integer, Integer> tupleCount = groups.getValue();
         gauge.labels(instanceId, InterestGroup.normalizeGroup(group)).set(tupleCount.o1);
-        dataIDGauge.labels(instanceId,  InterestGroup.normalizeGroup(group)).set(tupleCount.o2);
+        dataIDGauge.labels(instanceId, InterestGroup.normalizeGroup(group)).set(tupleCount.o2);
         COUNT_LOGGER.info("{}{},{},{},{}", prefix, instanceId, group, tupleCount.o1, tupleCount.o2);
       }
     }
