@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.server.session.store;
 
 import com.alipay.sofa.registry.common.model.ConnectId;
+import com.alipay.sofa.registry.common.model.Tuple;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -82,12 +83,8 @@ public interface DataManager<DATA, ID, DATAINFOID> {
    */
   boolean deleteById(ID registerId, DATAINFOID dataInfoId);
 
-  /**
-   * count pub and sub number
-   *
-   * @return
-   */
-  long count();
+  /** dataInfoId.size and data.size */
+  Tuple<Long, Long> count();
 
   Set<ConnectId> getConnectIds();
 

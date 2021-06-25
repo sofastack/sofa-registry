@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.server.session.store;
 
 import com.alipay.sofa.registry.common.model.ConnectId;
+import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.store.BaseInfo;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -46,12 +47,17 @@ public final class StoreHelpers {
     return sets;
   }
 
-  public static <T extends BaseInfo> long count(Map<String, Map<String, T>> maps) {
-    long count = 0;
+  public static <T extends BaseInfo> Tuple<Long, Long> count(Map<String, Map<String, T>> maps) {
+    long dataInfoIdCount = 0;
+    long dataCount = 0;
     for (Map<String, T> map : maps.values()) {
-      count += map.size();
+      int size = map.size();
+      dataCount += size;
+      if (size != 0) {
+        dataInfoIdCount++;
+      }
     }
-    return count;
+    return Tuple.of(dataInfoIdCount, dataCount);
   }
 
   public static <T extends BaseInfo> Map<String, T> getByConnectId(

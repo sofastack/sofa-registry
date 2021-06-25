@@ -38,4 +38,9 @@ public class SessionWatchers extends AbstractDataManager<Watcher> implements Wat
     Tuple<Watcher, Boolean> ret = addData(watcher);
     return ret.o2;
   }
+
+  @Override
+  protected int getInitMapSize() {
+    return 32;
+  }
 }

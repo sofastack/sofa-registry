@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.scheduler.timertask;
 
+import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.common.model.store.Watcher;
@@ -48,7 +49,7 @@ public class CacheTaskTest {
     watcher.setGroup(group);
     watcher.setInstanceId(instanceId);
     watcher.setDataInfoId(dataInfoId);
-    Mockito.when(watchers.count()).thenReturn(1L);
+    Mockito.when(watchers.count()).thenReturn(Tuple.of(1L, 1L));
     Mockito.when(watchers.getDataList()).thenReturn(Lists.newArrayList(watcher));
 
     this.interests = Mockito.mock(Interests.class);
@@ -57,7 +58,7 @@ public class CacheTaskTest {
     subscriber.setGroup(group);
     subscriber.setInstanceId(instanceId);
     subscriber.setDataInfoId(dataInfoId);
-    Mockito.when(interests.count()).thenReturn(2L);
+    Mockito.when(interests.count()).thenReturn(Tuple.of(1L, 2L));
     Mockito.when(interests.getDataList()).thenReturn(Lists.newArrayList(subscriber));
     Mockito.when(interests.getDataInfoIds()).thenReturn(Lists.newArrayList(dataInfoId));
     Mockito.when(interests.getDatas(Mockito.anyString()))
@@ -69,7 +70,7 @@ public class CacheTaskTest {
     publisher.setGroup(group);
     publisher.setInstanceId(instanceId);
     publisher.setDataInfoId(dataInfoId);
-    Mockito.when(dataStore.count()).thenReturn(3L);
+    Mockito.when(dataStore.count()).thenReturn(Tuple.of(1L, 3L));
     Mockito.when(dataStore.getDataList()).thenReturn(Lists.newArrayList(publisher));
     Mockito.when(dataStore.getDataInfoIds()).thenReturn(Lists.newArrayList(dataInfoId));
     Mockito.when(dataStore.getDatas(Mockito.anyString())).thenReturn(Lists.newArrayList(publisher));

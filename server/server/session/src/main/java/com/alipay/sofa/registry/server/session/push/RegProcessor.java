@@ -70,27 +70,33 @@ public final class RegProcessor {
       // the sub maybe replaced when adding
       final Map<String, Subscriber> currentSubs = subs;
       final String registerId = sub.getRegisterId();
-      Subscriber existing = currentSubs.putIfAbsent(registerId, sub);
       // quick path
-      if (existing == null) {
+      if (currentSubs.putIfAbsent(registerId, sub) == null) {
         PUSH_REG_COMMIT_COUNTER.inc();
         return true;
       }
       for (; ; ) {
-        if (!existing.registerVersion().orderThan(sub.registerVersion())) {
-          PUSH_REG_SKIP_COUNTER.inc();
-          LOGGER.info(
-              "[SkipReg]{}, existing={}, add={}",
-              sub.getDataInfoId(),
-              existing.registerVersion(),
-              sub.shortDesc());
-          return false;
+        final Subscriber existing = currentSubs.get(registerId);
+        if (existing == null) {
+          if (currentSubs.putIfAbsent(registerId, sub) == null) {
+            PUSH_REG_COMMIT_COUNTER.inc();
+            return true;
+          }
+        } else {
+          if (!existing.registerVersion().orderThan(sub.registerVersion())) {
+            PUSH_REG_SKIP_COUNTER.inc();
+            LOGGER.info(
+                "[SkipReg]{}, existing={}, add={}",
+                sub.getDataInfoId(),
+                existing.registerVersion(),
+                sub.shortDesc());
+            return false;
+          }
+          if (currentSubs.replace(registerId, existing, sub)) {
+            PUSH_REG_COMMIT_COUNTER.inc();
+            return true;
+          }
         }
-        if (currentSubs.replace(registerId, existing, sub)) {
-          PUSH_REG_COMMIT_COUNTER.inc();
-          return true;
-        }
-        existing = currentSubs.get(registerId);
       }
     }
 
