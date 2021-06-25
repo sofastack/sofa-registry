@@ -95,7 +95,7 @@ public final class Metrics {
     }
 
     public static void pubSize(String client, String group, double size) {
-        PUB_SIZE.labels(client, InterestGroup.normalizeGroup(group)).observe(size);
+      PUB_SIZE.labels(client, InterestGroup.normalizeGroup(group)).observe(size);
     }
   }
 }
