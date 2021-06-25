@@ -38,10 +38,10 @@ public class SlotSessionDataStoreTest {
     Mockito.when(store.slotTableCache.slotOf(publisher0.getDataInfoId())).thenReturn(0);
     Mockito.when(store.slotTableCache.slotOf(publisher1.getDataInfoId())).thenReturn(1);
 
-    Assert.assertEquals(store.count(), 0);
+    Assert.assertEquals(store.count().o2.longValue(), 0);
     store.add(publisher0);
     store.add(publisher1);
-    Assert.assertEquals(store.count(), 2);
+    Assert.assertEquals(store.count().o2.longValue(), 2);
 
     Map<String, Map<String, Publisher>> m = store.getDatas();
     Assert.assertEquals(m.size(), 2);

@@ -101,4 +101,9 @@ public class SessionInterests extends AbstractDataManager<Subscriber> implements
 
     return ret;
   }
+
+  @Override
+  protected int getInitMapSize() {
+    return 256;
+  }
 }

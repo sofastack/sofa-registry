@@ -25,8 +25,8 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.shared.slot.SlotTableRecorder;
 import com.google.common.annotations.VisibleForTesting;
 import java.util.List;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -40,8 +40,7 @@ public final class SlotTableCacheImpl implements SlotTableCache {
   private final SlotFunction slotFunction = SlotFunctionRegistry.getFunc();
 
   private volatile SlotTable slotTable = SlotTable.INIT;
-
-  private final ReadWriteLock lock = new ReentrantReadWriteLock();
+  private final Lock lock = new ReentrantLock();
 
   @Autowired(required = false)
   private List<SlotTableRecorder> recorders;
@@ -54,48 +53,28 @@ public final class SlotTableCacheImpl implements SlotTableCache {
   @Override
   public Slot getSlot(String dataInfoId) {
     int slotId = slotOf(dataInfoId);
-    lock.readLock().lock();
-    try {
-      return slotTable.getSlot(slotId);
-    } finally {
-      lock.readLock().unlock();
-    }
+    return slotTable.getSlot(slotId);
   }
 
   @Override
   public Slot getSlot(int slotId) {
-    lock.readLock().lock();
-    try {
-      return slotTable.getSlot(slotId);
-    } finally {
-      lock.readLock().unlock();
-    }
+    return slotTable.getSlot(slotId);
   }
 
   @Override
   public String getLeader(int slotId) {
-    lock.readLock().lock();
-    try {
-      final Slot slot = slotTable.getSlot(slotId);
-      return slot == null ? null : slot.getLeader();
-    } finally {
-      lock.readLock().unlock();
-    }
+    final Slot slot = slotTable.getSlot(slotId);
+    return slot == null ? null : slot.getLeader();
   }
 
   @Override
   public long getEpoch() {
-    lock.readLock().lock();
-    try {
-      return slotTable.getEpoch();
-    } finally {
-      lock.readLock().unlock();
-    }
+    return slotTable.getEpoch();
   }
 
   @Override
   public boolean updateSlotTable(SlotTable slotTable) {
-    lock.writeLock().lock();
+    lock.lock();
     final long curEpoch;
     try {
       curEpoch = this.slotTable.getEpoch();
@@ -106,9 +85,9 @@ public final class SlotTableCacheImpl implements SlotTableCache {
       recordSlotTable(slotTable);
       this.slotTable = slotTable;
     } finally {
-      lock.writeLock().unlock();
+      lock.unlock();
     }
-    checkForSlotTable(curEpoch);
+    checkForSlotTable(curEpoch, slotTable);
     return true;
   }
 
@@ -123,27 +102,20 @@ public final class SlotTableCacheImpl implements SlotTableCache {
     }
   }
 
-  protected void checkForSlotTable(long curEpoch) {
-    for (Slot slot : this.slotTable.getSlots()) {
+  protected void checkForSlotTable(long curEpoch, SlotTable updating) {
+    for (Slot slot : updating.getSlots()) {
       if (StringUtils.isBlank(slot.getLeader())) {
         LOGGER.error("[NoLeader] {}", slot);
       }
     }
     LOGGER.info(
-        "updating slot table, expect={}, current={}, {}",
-        slotTable.getEpoch(),
-        curEpoch,
-        this.slotTable);
+        "updating slot table, expect={}, current={}, {}", updating.getEpoch(), curEpoch, updating);
   }
 
   @Override
   public SlotTable getCurrentSlotTable() {
-    lock.readLock().lock();
-    try {
-      return new SlotTable(slotTable.getEpoch(), slotTable.getSlots());
-    } finally {
-      lock.readLock().unlock();
-    }
+    final SlotTable now = this.slotTable;
+    return new SlotTable(now.getEpoch(), now.getSlots());
   }
 
   @VisibleForTesting

@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.scheduler.timertask;
 
+import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Server;
@@ -57,9 +58,9 @@ public class SyncClientsHeartbeatTask {
       initialDelayString = "${session.server.syncHeartbeat.fixedDelay}",
       fixedDelayString = "${session.server.syncHeartbeat.fixedDelay}")
   public void syncCount() {
-    long countSub = sessionInterests.count();
-    long countPub = sessionDataStore.count();
-    long countSubW = sessionWatchers.count();
+    Tuple<Long, Long> countSub = sessionInterests.count();
+    Tuple<Long, Long> countPub = sessionDataStore.count();
+    Tuple<Long, Long> countSubW = sessionWatchers.count();
 
     int channelCount = 0;
     Server sessionServer = boltExchange.getServer(sessionServerConfig.getServerPort());
@@ -67,16 +68,19 @@ public class SyncClientsHeartbeatTask {
       channelCount = sessionServer.getChannelCount();
     }
 
-    Metrics.PUB_SUM.set(countPub);
-    Metrics.SUB_SUM.set(countSub);
-    Metrics.WAT_SUM.set(countSubW);
+    Metrics.PUB_SUM.set(countPub.o2);
+    Metrics.SUB_SUM.set(countSub.o2);
+    Metrics.WAT_SUM.set(countSubW.o2);
     Metrics.CHANNEL_SUM.set(channelCount);
 
     CONSOLE_COUNT_LOGGER.info(
-        "Subscriber count: {}, Publisher count: {}, Watcher count: {}, Connection count: {}",
-        countSub,
-        countPub,
-        countSubW,
-        channelCount);
+        "Subscriber count: {}, Publisher count: {}, Watcher count: {}, Connection count: {}, SubDataId={}, PubDataId={}, WatDataId={}",
+        countSub.o2,
+        countPub.o2,
+        countSubW.o2,
+        channelCount,
+        countSub.o1,
+        countPub.o1,
+        countSubW.o1);
   }
 }

@@ -50,4 +50,9 @@ public class SessionDataStore extends AbstractDataManager<Publisher> implements 
   public Map<String, Map<String, Publisher>> getDataInfoIdPublishers(int slotId) {
     throw new UnsupportedOperationException();
   }
+
+  @Override
+  protected int getInitMapSize() {
+    return 256;
+  }
 }

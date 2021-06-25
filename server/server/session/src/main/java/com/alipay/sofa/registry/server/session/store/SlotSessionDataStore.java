@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.server.session.store;
 
 import com.alipay.sofa.registry.common.model.ConnectId;
+import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
 import com.google.common.collect.Maps;
@@ -176,11 +177,14 @@ public class SlotSessionDataStore implements DataStore {
   }
 
   @Override
-  public long count() {
-    long count = 0;
+  public Tuple<Long, Long> count() {
+    long dataInfoIdCount = 0;
+    long dataCount = 0;
     for (DataStore ds : slot2DataStores.values()) {
-      count += ds.count();
+      Tuple<Long, Long> count = ds.count();
+      dataInfoIdCount += count.o1;
+      dataCount += count.o2;
     }
-    return count;
+    return Tuple.of(dataInfoIdCount, dataCount);
   }
 }

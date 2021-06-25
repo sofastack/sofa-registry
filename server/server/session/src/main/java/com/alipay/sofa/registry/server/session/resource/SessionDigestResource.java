@@ -19,6 +19,7 @@ package com.alipay.sofa.registry.server.session.resource;
 import static com.alipay.sofa.registry.common.model.constants.ValueConstants.CONNECT_ID_SPLIT;
 
 import com.alipay.sofa.registry.common.model.ConnectId;
+import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.StoreData;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
@@ -158,13 +159,13 @@ public class SessionDigestResource {
   @Path("/data/count")
   @Produces(MediaType.APPLICATION_JSON)
   public String getSessionDataCount() {
-    long countSub = sessionInterests.count();
-    long countPub = sessionDataStore.count();
-    long countSubW = sessionWatchers.count();
+    Tuple<Long, Long> countSub = sessionInterests.count();
+    Tuple<Long, Long> countPub = sessionDataStore.count();
+    Tuple<Long, Long> countSubW = sessionWatchers.count();
 
     return String.format(
         "Subscriber count: %s, Publisher count: %s, Watcher count: %s",
-        countSub, countPub, countSubW);
+        countSub.o2, countPub.o2, countSubW.o2);
   }
 
   /** return true mean push switch on */

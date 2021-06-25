@@ -20,15 +20,12 @@ import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.store.BaseInfo;
 import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 import org.apache.commons.collections.MapUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,14 +37,9 @@ import org.springframework.util.CollectionUtils;
  */
 public abstract class AbstractDataManager<T extends BaseInfo>
     implements DataManager<T, String, String> {
-  private static final Logger LOGGER = LoggerFactory.getLogger(AbstractDataManager.class);
-
-  private final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
-  protected final Lock read = readWriteLock.readLock();
-  protected final Lock write = readWriteLock.writeLock();
 
   protected final ConcurrentHashMap<String /*dataInfoId*/, Map<String /*registerId*/, T>> stores =
-      new ConcurrentHashMap<>();
+      new ConcurrentHashMap<>(1024 * 16);
   protected final Logger logger;
 
   @Autowired protected SessionServerConfig sessionServerConfig;
@@ -58,38 +50,38 @@ public abstract class AbstractDataManager<T extends BaseInfo>
 
   protected Tuple<T, Boolean> addData(T data) {
     Map<String, T> dataMap =
-        stores.computeIfAbsent(data.getDataInfoId(), k -> Maps.newConcurrentMap());
-    boolean toAdd = true;
-    if (dataMap.putIfAbsent(data.getRegisterId(), data) == null) {
+        stores.computeIfAbsent(
+            data.getDataInfoId(), k -> new ConcurrentHashMap<>(getInitMapSize()));
+    final String registerId = data.getRegisterId();
+
+    // quick path
+    if (dataMap.putIfAbsent(registerId, data) == null) {
       return new Tuple<>(null, true);
     }
-    T existing = null;
-    write.lock();
-    try {
-      existing = dataMap.get(data.getRegisterId());
-      if (existing != null) {
+
+    for (; ; ) {
+      final T existing = dataMap.get(registerId);
+      if (existing == null) {
+        if (dataMap.putIfAbsent(registerId, data) == null) {
+          return new Tuple<>(null, true);
+        }
+      } else {
         if (!existing.registerVersion().orderThan(data.registerVersion())) {
-          toAdd = false;
+          logger.warn(
+              "[conflict]{},{},exist={}/{},input={}/{}",
+              data.getDataInfoId(),
+              data.getRegisterId(),
+              existing.registerVersion(),
+              existing.getRegisterTimestamp(),
+              data.registerVersion(),
+              data.getRegisterTimestamp());
+          return new Tuple<>(existing, false);
+        }
+        if (dataMap.replace(registerId, existing, data)) {
+          return new Tuple<>(existing, true);
         }
       }
-      if (toAdd) {
-        dataMap.put(data.getRegisterId(), data);
-      }
-    } finally {
-      write.unlock();
     }
-    if (existing != null && !toAdd) {
-      LOGGER.warn(
-          "conflict {} {}, {}, exist={}/{}, input={}/{}",
-          data.getClass().getSimpleName(),
-          data.getDataInfoId(),
-          data.getRegisterId(),
-          existing.registerVersion(),
-          existing.getRegisterTimestamp(),
-          data.registerVersion(),
-          data.getRegisterTimestamp());
-    }
-    return new Tuple<>(existing, toAdd);
   }
 
   @Override
@@ -187,7 +179,7 @@ public abstract class AbstractDataManager<T extends BaseInfo>
   }
 
   @Override
-  public long count() {
+  public Tuple<Long, Long> count() {
     return StoreHelpers.count(stores);
   }
 
@@ -221,4 +213,6 @@ public abstract class AbstractDataManager<T extends BaseInfo>
   public void setSessionServerConfig(SessionServerConfig sessionServerConfig) {
     this.sessionServerConfig = sessionServerConfig;
   }
+
+  protected abstract int getInitMapSize();
 }
