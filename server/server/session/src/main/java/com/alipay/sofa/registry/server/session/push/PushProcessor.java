@@ -280,6 +280,7 @@ public class PushProcessor {
     }
 
     try {
+      task.trace.startPush();
       if (!checkPushRunning(task)) {
         return false;
       }
@@ -305,7 +306,6 @@ public class PushProcessor {
         return false;
       }
 
-      task.trace.startPush();
       pushingTasks.put(task.pushingTaskKey, task);
       clientNodeService.pushWithCallback(
           pushData.getPayload(), task.subscriber.getSourceAddress(), new PushClientCallback(task));

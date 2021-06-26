@@ -292,7 +292,10 @@ public class FirePushService {
         new TriggerPushContext(
             dataCenter, 0, null, SubscriberUtils.getMinRegisterTimestamp(subscribers));
     PushCause cause = new PushCause(pushCtx, PushType.Reg, System.currentTimeMillis());
-    processPush(cause, datum, subscribers);
+    Map<ScopeEnum, List<Subscriber>> scopes = SubscriberUtils.groupByScope(subscribers);
+    for (List<Subscriber> scopeList : scopes.values()) {
+      processPush(cause, datum, scopeList);
+    }
     return true;
   }
 

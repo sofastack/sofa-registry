@@ -26,12 +26,13 @@ import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import org.apache.commons.collections.CollectionUtils;
+
 import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import org.apache.commons.collections.CollectionUtils;
 
 public final class SubscriberUtils {
   private static final Logger LOGGER = LoggerFactory.getLogger(SubscriberUtils.class);
@@ -73,11 +74,15 @@ public final class SubscriberUtils {
   }
 
   public static ScopeEnum getAndAssertHasSameScope(Collection<Subscriber> subscribers) {
-    ScopeEnum scope = subscribers.stream().findFirst().get().getScope();
+    Subscriber first = subscribers.stream().findFirst().get();
+    ScopeEnum scope = first.getScope();
     for (Subscriber subscriber : subscribers) {
       if (scope != subscriber.getScope()) {
         throw new RuntimeException(
-            StringFormatter.format("conflict scope, first={}, one is {}", scope, subscriber));
+            StringFormatter.format(
+                "conflict scope, one is {}, anther is {}",
+                first.shortDesc(),
+                subscriber.shortDesc()));
       }
     }
     return scope;
