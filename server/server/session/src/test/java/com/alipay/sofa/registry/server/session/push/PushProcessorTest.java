@@ -29,6 +29,7 @@ import com.alipay.sofa.registry.server.session.node.service.ClientNodeService;
 import com.alipay.sofa.registry.server.session.providedata.FetchGrayPushSwitchService;
 import com.alipay.sofa.registry.server.session.providedata.FetchStopPushService;
 import com.alipay.sofa.registry.task.RejectedDiscardHandler;
+import com.alipay.sofa.registry.util.BackOffTimes;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.jupiter.api.BeforeEach;
@@ -272,7 +273,9 @@ public class PushProcessorTest {
     TestUtils.assertBetween(
         task.expireTimestamp,
         now1 + processor.getRetryBackoffTime(1),
-        System.currentTimeMillis() + processor.getRetryBackoffTime(1));
+        System.currentTimeMillis()
+            + processor.getRetryBackoffTime(1)
+            + BackOffTimes.maxBackOffRandoms());
 
     // expire has update
     Assert.assertNotEquals(task.expireTimestamp, expire);

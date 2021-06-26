@@ -16,9 +16,6 @@
  */
 package com.alipay.sofa.registry.server.session;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 import com.alipay.remoting.Connection;
 import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.ElementType;
@@ -39,15 +36,19 @@ import com.google.common.collect.Lists;
 import io.netty.channel.Channel;
 import io.netty.util.Attribute;
 import io.netty.util.AttributeKey;
-import java.net.InetSocketAddress;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
 import org.assertj.core.util.Maps;
 import org.junit.Assert;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
+
+import java.net.InetSocketAddress;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class TestUtils {
   private static final AtomicLong REGISTER_ID_SEQ = new AtomicLong();
@@ -205,8 +206,8 @@ public class TestUtils {
   }
 
   public static void assertBetween(long v, long low, long high) {
-    Assert.assertTrue(StringFormatter.format("v={}, low={}"), v >= low);
-    Assert.assertTrue(StringFormatter.format("v={}, high={}"), v <= high);
+    Assert.assertTrue(StringFormatter.format("v={}, low={}", v, low), v >= low);
+    Assert.assertTrue(StringFormatter.format("v={}, high={}", v, high), v <= high);
   }
 
   public static SubPublisher newSubPublisher(long version, long timestamp) {
