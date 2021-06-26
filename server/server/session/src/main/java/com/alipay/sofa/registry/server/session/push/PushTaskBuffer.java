@@ -27,10 +27,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.net.InetSocketAddress;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public final class PushTaskBuffer {
@@ -117,6 +114,9 @@ public final class PushTaskBuffer {
     }
 
     private List<PushTask> transferAndMerge() {
+      if (bufferMap.isEmpty()) {
+        return Collections.emptyList();
+      }
       List<PushTask> pending = Lists.newArrayListWithCapacity(1024);
       final long now = System.currentTimeMillis();
       for (Map.Entry<BufferTaskKey, PushTask> e : bufferMap.entrySet()) {
