@@ -46,13 +46,13 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
   private int consolePort = 9604;
 
-  private int syncSessionIOLowWaterMark = 1024 * 128;
+  private int syncSessionIOLowWaterMark = 1024 * 256;
 
-  private int syncSessionIOHighWaterMark = 1024 * 256;
+  private int syncSessionIOHighWaterMark = 1024 * 288;
 
-  private int clientIOLowWaterMark = 1024 * 160;
+  private int clientIOLowWaterMark = 1024 * 256;
 
-  private int clientIOHighWaterMark = 1024 * 256;
+  private int clientIOHighWaterMark = 1024 * 288;
 
   private int metaServerPort = 9610;
 
@@ -104,7 +104,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
   private int consoleExecutorQueueSize = 2000;
 
   private int clientNodeExchangeTimeoutMillis = 2000;
-  private int clientNodePushConcurrencyLevel = 4;
+  private int clientNodePushConcurrencyLevel = 1;
   private int dataNodeExchangeTimeoutMillis = 3000;
 
   private int dataNodeExchangeForFetchDatumTimeoutMillis = 5000;

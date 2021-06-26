@@ -72,6 +72,18 @@ public abstract class PushTask {
     this.expireTimestamp = System.currentTimeMillis() + intervalMs;
   }
 
+  public boolean hasPushed() {
+    if (subscriberMap.size() == 1) {
+      return subscriber.hasPushed();
+    }
+    for (Subscriber s : subscriberMap.values()) {
+      if (!s.hasPushed()) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   public boolean isSingletonReg() {
     return trace.pushCause.pushType == PushType.Reg && subscriberMap.size() == 1;
   }

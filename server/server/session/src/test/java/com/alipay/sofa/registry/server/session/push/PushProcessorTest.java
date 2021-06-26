@@ -16,8 +16,6 @@
  */
 package com.alipay.sofa.registry.server.session.push;
 
-import static com.alipay.sofa.registry.server.session.push.PushMetrics.Push.*;
-
 import com.alipay.remoting.rpc.exception.InvokeTimeoutException;
 import com.alipay.sofa.registry.common.model.store.BaseInfo;
 import com.alipay.sofa.registry.common.model.store.SubDatum;
@@ -31,14 +29,18 @@ import com.alipay.sofa.registry.server.session.node.service.ClientNodeService;
 import com.alipay.sofa.registry.server.session.providedata.FetchGrayPushSwitchService;
 import com.alipay.sofa.registry.server.session.providedata.FetchStopPushService;
 import com.alipay.sofa.registry.task.RejectedDiscardHandler;
-import java.util.Collections;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.atomic.AtomicReference;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.jupiter.api.BeforeEach;
 import org.mockito.Mockito;
+
+import java.util.Collections;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.atomic.AtomicReference;
+
+import static com.alipay.sofa.registry.server.session.push.PushMetrics.Push.BUFFER_REPLACE_COUNTER;
+import static com.alipay.sofa.registry.server.session.push.PushMetrics.Push.BUFFER_SKIP_COUNTER;
 
 public class PushProcessorTest {
   private String zone = "testZone";
@@ -306,14 +308,28 @@ public class PushProcessorTest {
     PushProcessor processor = new PushProcessor();
     SessionServerConfigBean config = TestUtils.newSessionConfig("testDc");
     processor.sessionServerConfig = config;
-    Assert.assertEquals(
-        processor.getRetryBackoffTime(0), config.getPushDataTaskRetryFirstDelayMillis());
-    Assert.assertEquals(
-        processor.getRetryBackoffTime(1), config.getPushDataTaskRetryFirstDelayMillis());
-    Assert.assertEquals(
-        processor.getRetryBackoffTime(2),
-        config.getPushDataTaskRetryFirstDelayMillis()
-            + config.getPushDataTaskRetryIncrementDelayMillis());
+    Assert.assertTrue(
+        processor.getRetryBackoffTime(0) > config.getPushDataTaskRetryFirstDelayMillis());
+    Assert.assertTrue(
+        processor.getRetryBackoffTime(0)
+            < config.getPushDataTaskRetryFirstDelayMillis()
+                + config.getPushDataTaskRetryIncrementDelayMillis());
+
+    Assert.assertTrue(
+        processor.getRetryBackoffTime(1) > config.getPushDataTaskRetryFirstDelayMillis());
+    Assert.assertTrue(
+        processor.getRetryBackoffTime(1)
+            < config.getPushDataTaskRetryFirstDelayMillis()
+                + config.getPushDataTaskRetryIncrementDelayMillis());
+
+    Assert.assertTrue(
+        processor.getRetryBackoffTime(2)
+            > config.getPushDataTaskRetryFirstDelayMillis()
+                + config.getPushDataTaskRetryIncrementDelayMillis());
+    Assert.assertTrue(
+        processor.getRetryBackoffTime(2)
+            < config.getPushDataTaskRetryFirstDelayMillis()
+                + config.getPushDataTaskRetryIncrementDelayMillis() * 2);
   }
 
   @Test

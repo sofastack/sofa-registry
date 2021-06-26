@@ -34,10 +34,7 @@ import com.alipay.sofa.registry.server.session.node.service.ClientNodeService;
 import com.alipay.sofa.registry.task.KeyedThreadPoolExecutor;
 import com.alipay.sofa.registry.task.MetricsableThreadPoolExecutor;
 import com.alipay.sofa.registry.task.RejectedDiscardHandler;
-import com.alipay.sofa.registry.util.CollectionUtils;
-import com.alipay.sofa.registry.util.ConcurrentUtils;
-import com.alipay.sofa.registry.util.LoopRunnable;
-import com.alipay.sofa.registry.util.OsUtils;
+import com.alipay.sofa.registry.util.*;
 import com.google.common.collect.Lists;
 import java.net.InetSocketAddress;
 import java.util.Collection;
@@ -208,7 +205,7 @@ public class PushProcessor {
   boolean causeContinue(PushTask task) {
     switch (task.trace.pushCause.pushType) {
       case Reg:
-        return !task.subscriber.hasPushed();
+        return !task.hasPushed();
       case Empty:
         return task.subscriber.needPushEmpty(task.datum.getDataCenter());
       default:
@@ -244,6 +241,7 @@ public class PushProcessor {
   protected enum RetryReason {
     Waiting,
     Error,
+    Overflow,
   }
 
   // some groupId not need to retry
@@ -327,7 +325,7 @@ public class PushProcessor {
 
   void handleDoPushException(PushTask task, Throwable e) {
     // try to delete self
-    boolean cleaned = pushingTasks.remove(task.pushingTaskKey) != null;
+    pushingTasks.remove(task.pushingTaskKey);
     if (e instanceof RequestChannelClosedException) {
       task.trace.finishPush(
           PushTrace.PushStatus.ChanClosed,
@@ -335,11 +333,7 @@ public class PushProcessor {
           task.getMaxPushedVersion(),
           task.getPushDataCount());
       LOGGER.error(
-          "{}, channel closed, {}, cleaned={}, {}",
-          task.taskID,
-          task.pushingTaskKey,
-          cleaned,
-          e.getMessage());
+          "[PushChanClosed]taskId={}, {}, {}", task.taskID, task.pushingTaskKey, e.getMessage());
       return;
     }
 
@@ -347,25 +341,19 @@ public class PushProcessor {
       // record push exception
       for (Subscriber subscriber : task.subscriberMap.values()) {
         if (!subscriber.onPushFail(task.datum.getDataCenter(), task.datum.getVersion())) {
-          LOGGER.info(
-              "[handleDoPushException]failed to do onPushFail, {}, {}",
-              task.taskID,
-              task.pushingTaskKey);
+          LOGGER.info("[handleDoPushException]taskId={}, {}", task.taskID, task.pushingTaskKey);
         }
       }
     }
     if (e instanceof ChannelOverflowException) {
+      retry(task, RetryReason.Overflow);
       task.trace.finishPush(
           PushTrace.PushStatus.ChanOverflow,
           task.taskID,
           task.getMaxPushedVersion(),
           task.getPushDataCount());
       LOGGER.error(
-          "[PushChanOverflow]{}, channel overflow, {}, cleaned={}, {}",
-          task.taskID,
-          task.pushingTaskKey,
-          cleaned,
-          e.getMessage());
+          "[PushChanOverflow]taskId={}, {}, {}", task.taskID, task.pushingTaskKey, e.getMessage());
       return;
     }
     task.trace.finishPush(
@@ -373,12 +361,7 @@ public class PushProcessor {
         task.taskID,
         task.getMaxPushedVersion(),
         task.getPushDataCount());
-    LOGGER.error(
-        "[PushFail]{}, failed to pushing {}, cleaned={}",
-        task.taskID,
-        task.pushingTaskKey,
-        cleaned,
-        e);
+    LOGGER.error("[PushFail]taskId={}, {}", task.taskID, task.pushingTaskKey, e);
   }
 
   boolean circuitBreakerRecordWhenDoPushError(SubDatum datum) {
@@ -511,12 +494,9 @@ public class PushProcessor {
   }
 
   int getRetryBackoffTime(int retry) {
-    final int initialSleepTime = sessionServerConfig.getPushDataTaskRetryFirstDelayMillis();
-    if (retry == 0) {
-      return initialSleepTime;
-    }
-    int increment = sessionServerConfig.getPushDataTaskRetryIncrementDelayMillis();
-    int result = initialSleepTime + (increment * (retry - 1));
-    return result >= 0L ? result : 0;
+    return BackOffTimes.getBackOffMillis(
+        retry,
+        sessionServerConfig.getPushDataTaskRetryFirstDelayMillis(),
+        sessionServerConfig.getPushDataTaskRetryIncrementDelayMillis());
   }
 }
