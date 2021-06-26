@@ -36,4 +36,8 @@ public final class BackOffTimes {
     }
     return initMillis + (incrementMillis * (retry - 1)) + rand;
   }
+
+  public static int maxBackOffRandoms() {
+    return RANDOM_MILLIS[RANDOM_MILLIS.length - 1];
+  }
 }
