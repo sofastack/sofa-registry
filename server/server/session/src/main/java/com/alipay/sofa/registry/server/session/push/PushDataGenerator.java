@@ -34,7 +34,9 @@ public class PushDataGenerator {
   @Autowired protected SessionServerConfig sessionServerConfig;
 
   public PushData createPushData(SubDatum datum, Map<String, Subscriber> subscriberMap) {
-    SubscriberUtils.getAndAssertHasSameScope(subscriberMap.values());
+    if (subscriberMap.size() > 1) {
+      SubscriberUtils.getAndAssertHasSameScope(subscriberMap.values());
+    }
     // only supported 4.x
     SubscriberUtils.assertClientVersion(subscriberMap.values(), BaseInfo.ClientVersion.StoreData);
 

@@ -113,12 +113,8 @@ public final class RegProcessor {
     }
   }
 
-  int processBuffer(Ref ref) {
-    final int size = ref.subscriberMap.size();
-    if (size == 0) {
-      return 0;
-    }
-    List<Subscriber> subscribers = Lists.newArrayListWithCapacity(size);
+  int processBuffer(Ref ref, int hitSize) {
+    List<Subscriber> subscribers = Lists.newArrayListWithCapacity(hitSize);
     for (Map.Entry<String, Subscriber> e : ref.subscriberMap.entrySet()) {
       final Subscriber sub = e.getValue();
       if (!sub.hasPushed()) {
@@ -182,17 +178,23 @@ public final class RegProcessor {
       int secondCount = 0;
       int subSize = 0;
       for (Ref ref : refs) {
-        firstCount += processBuffer(ref);
-        subSize += ref.size();
+        final int size = ref.size();
+        if (size != 0) {
+          subSize += size;
+          firstCount += processBuffer(ref, size);
+        }
       }
       // double process, maybe the sub.ref has update after first process
       ConcurrentUtils.sleepUninterruptibly(10, TimeUnit.MILLISECONDS);
       for (Ref ref : refs) {
-        secondCount += processBuffer(ref);
-        subSize += ref.size();
+        final int size = ref.size();
+        if (size != 0) {
+          subSize += size;
+          secondCount += processBuffer(ref, size);
+        }
       }
       LOGGER.info(
-          "[regBuffer]dataIds={},subs={},regs={},{},{}x",
+          "[regBuffer]dataIds={},subs={},regs={},{},{}",
           refs.size(),
           subSize,
           firstCount + secondCount,

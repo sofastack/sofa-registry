@@ -16,6 +16,9 @@
  */
 package com.alipay.sofa.registry.server.session.push;
 
+import static com.alipay.sofa.registry.server.session.push.PushMetrics.Push.BUFFER_REPLACE_COUNTER;
+import static com.alipay.sofa.registry.server.session.push.PushMetrics.Push.BUFFER_SKIP_COUNTER;
+
 import com.alipay.remoting.rpc.exception.InvokeTimeoutException;
 import com.alipay.sofa.registry.common.model.store.BaseInfo;
 import com.alipay.sofa.registry.common.model.store.SubDatum;
@@ -30,18 +33,14 @@ import com.alipay.sofa.registry.server.session.providedata.FetchGrayPushSwitchSe
 import com.alipay.sofa.registry.server.session.providedata.FetchStopPushService;
 import com.alipay.sofa.registry.task.RejectedDiscardHandler;
 import com.alipay.sofa.registry.util.BackOffTimes;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.jupiter.api.BeforeEach;
-import org.mockito.Mockito;
-
 import java.util.Collections;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicReference;
-
-import static com.alipay.sofa.registry.server.session.push.PushMetrics.Push.BUFFER_REPLACE_COUNTER;
-import static com.alipay.sofa.registry.server.session.push.PushMetrics.Push.BUFFER_SKIP_COUNTER;
+import org.junit.Assert;
+import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.mockito.Mockito;
 
 public class PushProcessorTest {
   private String zone = "testZone";
