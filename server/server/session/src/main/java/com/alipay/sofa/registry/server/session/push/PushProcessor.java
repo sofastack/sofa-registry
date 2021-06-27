@@ -218,10 +218,12 @@ public class PushProcessor {
     long now = System.currentTimeMillis();
     Collection<Subscriber> subs = task.subscriberMap.values();
     for (Subscriber subscriber : subs) {
-      if (subscriber.getRegisterTimestamp()
-              < now - sessionServerConfig.getSkipPushEmptySilentMillis()
-          && subscriber.checkSkipPushEmpty(
-              task.datum.getDataCenter(), task.datum.getVersion(), task.getPushDataCount())) {
+      boolean canSkip =
+          subscriber.checkSkipPushEmpty(
+              task.datum.getDataCenter(), task.datum.getVersion(), task.getPushDataCount());
+      if (canSkip
+          && subscriber.getRegisterTimestamp()
+              < now - sessionServerConfig.getSkipPushEmptySilentMillis()) {
         skipCount++;
       }
     }

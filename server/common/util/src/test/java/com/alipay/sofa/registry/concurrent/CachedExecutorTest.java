@@ -16,25 +16,30 @@
  */
 package com.alipay.sofa.registry.concurrent;
 
-import com.alipay.sofa.registry.cache.CacheCleaner;
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import java.util.concurrent.Callable;
+import com.alipay.sofa.registry.util.ConcurrentUtils;
+import com.google.common.collect.Sets;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import org.junit.Assert;
+import org.junit.Test;
 
-public class CachedExecutor<K, V> {
-  private final Cache<K, V> cache;
+public class CachedExecutorTest {
+  @Test
+  public void testExecute() {
+    AtomicInteger i = new AtomicInteger();
 
-  public CachedExecutor(long silentMs) {
-    cache = CacheBuilder.newBuilder().expireAfterWrite(silentMs, TimeUnit.MILLISECONDS).build();
-    CacheCleaner.autoClean(cache, 3 * silentMs);
-  }
+    CachedExecutor cachedExecutor = new CachedExecutor(100);
+    ThreadPoolExecutor e =
+        new ThreadPoolExecutor(5, 5, 10, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
+    new ConcurrentUtils.SafeParaLoop(e, Sets.newHashSet("1", "1", "1", "1", "1")) {
+      @Override
+      protected void doRun0(Object o) throws Exception {
+        cachedExecutor.execute("1", i::incrementAndGet);
+      }
+    }.runAndWait(1000);
 
-  public V execute(K key, Callable<V> callable) throws Exception {
-    return cache.get(key, callable::call);
-  }
-
-  public void clean() {
-    cache.invalidateAll();
+    Assert.assertEquals(1, i.get());
   }
 }

@@ -44,10 +44,13 @@ public class DefaultAppRevisionHandlerStrategy implements AppRevisionHandlerStra
 
   @Autowired private AppRevisionHeartbeatRegistry appRevisionHeartbeatRegistry;
 
+  protected void beforeRegister(AppRevision appRevision) {}
+
   @Override
   public void handleAppRevisionRegister(AppRevision appRevision, RegisterResponse response) {
     try {
       validate(appRevision);
+      beforeRegister(appRevision);
       appRevisionCacheService.register(appRevision);
       response.setSuccess(true);
       response.setMessage("app revision register success!");
