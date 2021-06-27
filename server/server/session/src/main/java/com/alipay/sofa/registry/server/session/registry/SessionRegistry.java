@@ -495,18 +495,29 @@ public class SessionRegistry implements Registry {
             mergedVersions.putAll(message);
             result.callback = new FetchVersionCallback(mergedVersions);
             SCAN_VER_LOGGER.info(
-                "[fetchSlotVer]round={},{},{},leader={},interests={},gets={}",
+                "[fetchSlotVer]round={},{},{},leader={},interests={},gets={},success={}",
                 round,
                 slotId,
                 dataCenter,
                 leader,
                 interestVersions.size(),
-                message.size());
+                message.size(),
+                "Y");
           }
 
           @Override
           public void onException(Channel channel, Throwable e) {
             result.callback = new FetchVersionCallback(null);
+            SCAN_VER_LOGGER.info(
+                    "[fetchSlotVer]round={},{},{},leader={},interests={},gets={},success={}",
+                    round,
+                    slotId,
+                    dataCenter,
+                    leader,
+                    interestVersions.size(),
+                    0,
+                    "N");
+
             SCAN_VER_LOGGER.error(
                 "round={},failed to fetch versions,slotId={},leader={},size={}",
                 round,
