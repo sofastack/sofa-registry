@@ -268,7 +268,12 @@ public interface Logger {
 
   String getName();
 
-  void safeError(String format, Object... arguments);
+  // zero allocate arguments
+  void safeError(String format, Object arg1, Object arg2, Object arg3, Throwable arg4);
 
-  void safeWarn(String format, Object... arguments);
+  void safeError(String format, Object arg1, Object arg2, Throwable arg3);
+
+  void safeError(String format, Object arg1, Throwable arg2);
+
+  void safeError(String format, Throwable arg1);
 }

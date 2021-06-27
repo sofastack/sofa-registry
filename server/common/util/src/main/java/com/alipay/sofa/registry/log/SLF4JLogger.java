@@ -305,16 +305,6 @@ public class SLF4JLogger implements Logger, Serializable {
     return logger.isErrorEnabled();
   }
 
-  @Override
-  public void safeError(String format, Object... arguments) {
-    safeLogger.wrap(() -> error(format, arguments));
-  }
-
-  @Override
-  public void safeWarn(String format, Object... arguments) {
-    safeLogger.wrap(() -> warn(format, arguments));
-  }
-
   private String processMsg(String msg) {
     if (msgPrefix.isEmpty()) {
       return msg;
@@ -330,6 +320,42 @@ public class SLF4JLogger implements Logger, Serializable {
 
   public String getName() {
     return name;
+  }
+
+  @Override
+  public void safeError(String format, Object arg1, Object arg2, Object arg3, Throwable arg4) {
+    try {
+      logger.error(format, arg1, arg2, arg3, arg4);
+    } catch (Throwable e) {
+      safeLogger.handleExp(e);
+    }
+  }
+
+  @Override
+  public void safeError(String format, Object arg1, Object arg2, Throwable arg3) {
+    try {
+      logger.error(format, arg1, arg2, arg3);
+    } catch (Throwable e) {
+      safeLogger.handleExp(e);
+    }
+  }
+
+  @Override
+  public void safeError(String format, Object arg1, Throwable arg2) {
+    try {
+      logger.error(format, arg1, arg2);
+    } catch (Throwable e) {
+      safeLogger.handleExp(e);
+    }
+  }
+
+  @Override
+  public void safeError(String format, Throwable arg1) {
+    try {
+      logger.error(format, arg1);
+    } catch (Throwable e) {
+      safeLogger.handleExp(e);
+    }
   }
 
   @Override

@@ -23,19 +23,10 @@ public class SafeLoggerTest {
   @Test
   public void testSafeLogger() {
     SafeLogger safeLogger = SafeLogger.getInstance();
-    safeLogger.wrap(
-        () -> {
-          throw new OutOfMemoryError();
-        });
-    safeLogger.wrap(
-        () -> {
-          throw new OutOfMemoryError();
-        });
-    safeLogger.wrap(
-        () -> {
-          throw new RuntimeException();
-        });
-    Assert.assertEquals(2, (long) SafeLogger.OOM_COUNTER.get());
-    Assert.assertEquals(1, (long) SafeLogger.UNKNOWN_COUNTER.get());
+    safeLogger.handleExp(new OutOfMemoryError());
+    safeLogger.handleExp(new OutOfMemoryError());
+    safeLogger.handleExp(new RuntimeException());
+    Assert.assertEquals(2, safeLogger.oom_count);
+    Assert.assertEquals(1, safeLogger.unknown_count);
   }
 }
