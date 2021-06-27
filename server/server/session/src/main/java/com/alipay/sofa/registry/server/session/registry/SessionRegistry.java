@@ -124,8 +124,9 @@ public class SessionRegistry implements Registry {
                   case PUBLISHER:
                     Publisher publisher = (Publisher) storeData;
                     publisher.setSessionProcessId(ServerEnv.PROCESS_ID);
-                    sessionDataStore.add(publisher);
-
+                    if (!sessionDataStore.add(publisher)) {
+                      break;
+                    }
                     // All write operations to DataServer (pub/unPub/clientoff/renew/snapshot)
                     // are handed over to WriteDataAcceptor
                     writeDataAcceptor.accept(
@@ -137,14 +138,18 @@ public class SessionRegistry implements Registry {
                   case SUBSCRIBER:
                     Subscriber subscriber = (Subscriber) storeData;
 
-                    sessionInterests.add(subscriber);
+                    if (!sessionInterests.add(subscriber)) {
+                      break;
+                    }
 
                     sessionRegistryStrategy.afterSubscriberRegister(subscriber);
                     break;
                   case WATCHER:
                     Watcher watcher = (Watcher) storeData;
 
-                    sessionWatchers.add(watcher);
+                    if (!sessionWatchers.add(watcher)) {
+                      break;
+                    }
 
                     sessionRegistryStrategy.afterWatcherRegister(watcher);
                     break;
@@ -178,8 +183,9 @@ public class SessionRegistry implements Registry {
         Publisher publisher = (Publisher) storeData;
         publisher.setSessionProcessId(ServerEnv.PROCESS_ID);
 
-        sessionDataStore.deleteById(storeData.getId(), publisher.getDataInfoId());
-
+        if (!sessionDataStore.deleteById(storeData.getId(), publisher.getDataInfoId())) {
+          break;
+        }
         // All write operations to DataServer (pub/unPub/clientoff/renew/snapshot)
         // are handed over to WriteDataAcceptor
         writeDataAcceptor.accept(
@@ -191,15 +197,18 @@ public class SessionRegistry implements Registry {
 
       case SUBSCRIBER:
         Subscriber subscriber = (Subscriber) storeData;
-        sessionInterests.deleteById(storeData.getId(), subscriber.getDataInfoId());
+        if (!sessionInterests.deleteById(storeData.getId(), subscriber.getDataInfoId())) {
+          break;
+        }
         sessionRegistryStrategy.afterSubscriberUnRegister(subscriber);
         break;
 
       case WATCHER:
         Watcher watcher = (Watcher) storeData;
 
-        sessionWatchers.deleteById(watcher.getId(), watcher.getDataInfoId());
-
+        if (!sessionWatchers.deleteById(watcher.getId(), watcher.getDataInfoId())) {
+          break;
+        }
         sessionRegistryStrategy.afterWatcherUnRegister(watcher);
         break;
       default:

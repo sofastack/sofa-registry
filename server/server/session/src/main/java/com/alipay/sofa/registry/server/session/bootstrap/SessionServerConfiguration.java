@@ -582,6 +582,7 @@ public class SessionServerConfiguration {
     }
 
     @Bean
+    @ConditionalOnMissingBean
     public AppRevisionHandlerStrategy appRevisionHandlerStrategy() {
       return new DefaultAppRevisionHandlerStrategy();
     }

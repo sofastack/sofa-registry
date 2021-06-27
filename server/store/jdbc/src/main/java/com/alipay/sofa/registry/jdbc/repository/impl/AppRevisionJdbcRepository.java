@@ -105,6 +105,9 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository {
     if (appRevision == null) {
       throw new RuntimeException("jdbc register app revision error, appRevision is null.");
     }
+    for (String interfaceName : appRevision.getInterfaceMap().keySet()) {
+      interfaceAppsJdbcRepository.register(interfaceName, appRevision.getAppName());
+    }
     localRevisions.put(appRevision.getRevision(), true);
     if (informer.getContainer().containsRevisionId(appRevision.getRevision())) {
       return;
@@ -113,10 +116,6 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository {
         AppRevisionDomainConvertor.convert2Domain(defaultCommonConfig.getClusterId(), appRevision);
     // new revision, save into database
     REVISION_REGISTER_COUNTER.inc();
-
-    for (String interfaceName : appRevision.getInterfaceMap().keySet()) {
-      interfaceAppsJdbcRepository.register(interfaceName, appRevision.getAppName());
-    }
     refreshEntryToStorage(domain);
   }
 
