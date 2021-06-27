@@ -16,46 +16,41 @@
  */
 package com.alipay.sofa.registry.log;
 
-import io.prometheus.client.Counter;
+import com.alipay.sofa.registry.metrics.CounterFunc;
 
 public class SafeLogger {
 
-  static final Counter COUNTER =
-      Counter.build()
+  final CounterFunc COUNTER =
+      CounterFunc.build()
           .namespace("safelogger")
           .name("critical")
           .labelNames("type")
           .help("sofa logger critical error")
           .create()
           .register();
-  static final Counter.Child OOM_COUNTER = COUNTER.labels("oom");
-  static final Counter.Child UNKNOWN_COUNTER = COUNTER.labels("unknown");
 
+  long oom_count = 0;
+  long unknown_count = 0;
   private static final SafeLogger instance = new SafeLogger();
+
+  private SafeLogger() {
+    COUNTER.labels("oom").func(() -> this.oom_count);
+    COUNTER.labels("unknown").func(() -> this.unknown_count);
+  }
 
   public static SafeLogger getInstance() {
     return instance;
   }
 
-  public synchronized void oomErr() {
-    OOM_COUNTER.inc();
-  }
-
-  public synchronized void unknownErr() {
-    UNKNOWN_COUNTER.inc();
-  }
-
-  public void wrap(UnsafeLog l) {
+  public void handleExp(Throwable e) {
     try {
-      l.logging();
-    } catch (OutOfMemoryError e) {
-      oomErr();
-    } catch (Throwable e) {
-      unknownErr();
+      if (e instanceof OutOfMemoryError) {
+        oom_count++;
+        return;
+      }
+      unknown_count++;
+    } catch (Throwable ignored) {
+      // do nothing to avoid cause exception
     }
-  }
-
-  interface UnsafeLog {
-    void logging();
   }
 }

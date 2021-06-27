@@ -56,7 +56,7 @@ public final class ConcurrentUtils {
               try {
                 doRun0(t);
               } catch (Throwable e) {
-                logger.safeError("[SafeParaLoop][{}]", getInfo(t), e);
+                logger.safeError("[SafeParaLoop][{}]", t, e);
               }
             });
       }
@@ -70,7 +70,7 @@ public final class ConcurrentUtils {
               try {
                 doRun0(t);
               } catch (Throwable e) {
-                logger.safeError("[SafeParaLoop][{}]", getInfo(t), e);
+                logger.safeError("[SafeParaLoop][{}]", t, e);
               } finally {
                 latch.countDown();
               }
@@ -84,10 +84,6 @@ public final class ConcurrentUtils {
     }
 
     protected abstract void doRun0(T t) throws Exception;
-
-    protected String getInfo(T t) {
-      return t.toString();
-    }
   }
 
   public static Thread createDaemonThread(String name, Runnable r) {
