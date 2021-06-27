@@ -16,8 +16,6 @@
  */
 package com.alipay.sofa.registry.server.session.push;
 
-import static com.alipay.sofa.registry.server.session.push.PushMetrics.Fetch.*;
-
 import com.alipay.sofa.registry.common.model.SubscriberUtils;
 import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
@@ -37,14 +35,17 @@ import com.alipay.sofa.registry.task.FastRejectedExecutionException;
 import com.alipay.sofa.registry.task.KeyedThreadPoolExecutor;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
 import com.google.common.collect.Lists;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
+
+import javax.annotation.PostConstruct;
 import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import javax.annotation.PostConstruct;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.util.CollectionUtils;
+
+import static com.alipay.sofa.registry.server.session.push.PushMetrics.Fetch.*;
 
 public class FirePushService {
   private static final Logger LOGGER = PushLog.LOGGER;
@@ -115,6 +116,9 @@ public class FirePushService {
 
   public boolean fireOnWatcher(Watcher watcher, ReceivedConfigData configData) {
     try {
+      if (!pushSwitchService.canIpPush(watcher.getSourceAddress().getIpAddress())) {
+        return false;
+      }
       int level = sessionServerConfig.getClientNodePushConcurrencyLevel();
       Tuple key =
           Tuple.of(
