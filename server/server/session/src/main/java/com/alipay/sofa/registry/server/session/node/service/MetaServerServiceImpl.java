@@ -69,7 +69,7 @@ public class MetaServerServiceImpl extends AbstractMetaServerService<BaseHeartBe
     if (result.getSlotTable() != null && result.getSlotTable() != SlotTable.INIT) {
       slotTableCache.updateSlotTable(result.getSlotTable());
     } else {
-      LOGGER.warn("[handleRenewResult] no slot table result");
+      RENEWER_LOGGER.warn("[handleRenewResult] no slot table result");
     }
   }
 
