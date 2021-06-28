@@ -103,7 +103,7 @@ public class CacheDigestTask {
       }
       return true;
     } catch (Throwable t) {
-      LOGGER.safeError("cache digest error", (Throwable)t);
+      LOGGER.safeError("cache digest error", (Throwable) t);
     }
     return false;
   }

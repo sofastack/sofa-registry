@@ -109,6 +109,9 @@ public class DataChangeEventCenter {
   }
 
   public void onChange(Collection<String> dataInfoIds, String dataCenter) {
+    if (dataInfoIds.isEmpty()) {
+      return;
+    }
     Set<String> changes =
         dataCenter2Changes.computeIfAbsent(dataCenter, k -> Sets.newConcurrentHashSet());
     lock.readLock().lock();

@@ -196,8 +196,15 @@ public final class PublisherGroups {
     return count;
   }
 
-  void updateVersion() {
-    publisherGroupMap.values().forEach(g -> g.updateVersion());
+  Map<String, DatumVersion> updateVersion() {
+    Map<String, DatumVersion> ret = Maps.newHashMapWithExpectedSize(publisherGroupMap.size());
+    for (PublisherGroup g : publisherGroupMap.values()) {
+      DatumVersion v = g.updateVersion();
+      if (v != null) {
+        ret.put(g.dataInfoId, v);
+      }
+    }
+    return ret;
   }
 
   DatumVersion updateVersion(String dataInfoId) {

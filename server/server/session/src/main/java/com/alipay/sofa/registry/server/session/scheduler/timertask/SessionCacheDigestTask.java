@@ -26,12 +26,13 @@ import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.store.DataStore;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
+import org.apache.commons.lang.time.DateUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import javax.annotation.PostConstruct;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import javax.annotation.PostConstruct;
-import org.apache.commons.lang.time.DateUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author xiaojian.xj
@@ -79,26 +80,24 @@ public class SessionCacheDigestTask {
       dataInfoIds.addAll(storeDataInfoIds);
       dataInfoIds.addAll(interestDataInfoIds);
 
-      dataInfoIds.stream()
-          .forEach(
-              dataInfoId -> {
-                Collection<Publisher> publishers = sessionDataStore.getDatas(dataInfoId);
-                Collection<Subscriber> subscribers = sessionInterests.getDatas(dataInfoId);
+      for (String dataInfoId : dataInfoIds) {
+        Collection<Publisher> publishers = sessionDataStore.getDatas(dataInfoId);
+        Collection<Subscriber> subscribers = sessionInterests.getDatas(dataInfoId);
 
-                LOGGER.info(
-                    "[dataInfo] {}; {}; {}; {}; [{}]; [{}]",
-                    sessionServerConfig.getSessionServerDataCenter(),
-                    dataInfoId,
-                    publishers.size(),
-                    subscribers.size(),
-                    logPubOrSub(publishers),
-                    logPubOrSub(subscribers));
-                // avoid io is too busy
-                ConcurrentUtils.sleepUninterruptibly(2, TimeUnit.MILLISECONDS);
-              });
+        LOGGER.info(
+            "[dataInfo] {}; {}; {}; {}; [{}]; [{}]",
+            sessionServerConfig.getSessionServerDataCenter(),
+            dataInfoId,
+            publishers.size(),
+            subscribers.size(),
+            logPubOrSub(publishers),
+            logPubOrSub(subscribers));
+        // avoid io is too busy
+        ConcurrentUtils.sleepUninterruptibly(1, TimeUnit.MILLISECONDS);
+      }
       return true;
     } catch (Throwable t) {
-      LOGGER.safeError("[CacheDigestTask] cache digest error", (Throwable)t);
+      LOGGER.safeError("[CacheDigestTask] cache digest error", (Throwable) t);
       return false;
     }
   }

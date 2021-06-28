@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.server.session.push;
 
+import static com.alipay.sofa.registry.server.session.push.PushMetrics.Fetch.*;
+
 import com.alipay.sofa.registry.common.model.SubscriberUtils;
 import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
@@ -35,17 +37,14 @@ import com.alipay.sofa.registry.task.FastRejectedExecutionException;
 import com.alipay.sofa.registry.task.KeyedThreadPoolExecutor;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
 import com.google.common.collect.Lists;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.util.CollectionUtils;
-
-import javax.annotation.PostConstruct;
 import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-
-import static com.alipay.sofa.registry.server.session.push.PushMetrics.Fetch.*;
+import javax.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
 
 public class FirePushService {
   private static final Logger LOGGER = PushLog.LOGGER;

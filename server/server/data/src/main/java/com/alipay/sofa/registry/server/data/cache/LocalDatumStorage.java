@@ -216,13 +216,12 @@ public final class LocalDatumStorage implements DatumStorage {
   }
 
   @Override
-  public boolean updateVersion(int slotId) {
+  public Map<String, DatumVersion> updateVersion(int slotId) {
     PublisherGroups groups = publisherGroupsMap.get(slotId);
     if (groups == null) {
-      return false;
+      return Collections.emptyMap();
     }
-    groups.updateVersion();
-    return true;
+    return groups.updateVersion();
   }
 
   @Override
