@@ -123,7 +123,7 @@ public class CacheCountTask {
           COUNT_LOGGER.info(
               "{}{},{},{},{},{}", prefix, instanceId, group, app, tupleCount.o1, tupleCount.o2);
         }
-        ConcurrentUtils.sleepUninterruptibly(10, TimeUnit.MILLISECONDS);
+        ConcurrentUtils.sleepUninterruptibly(2, TimeUnit.MILLISECONDS);
       }
     }
   }

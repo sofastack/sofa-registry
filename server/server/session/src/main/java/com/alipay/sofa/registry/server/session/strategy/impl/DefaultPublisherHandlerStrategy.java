@@ -103,7 +103,7 @@ public class DefaultPublisherHandlerStrategy implements PublisherHandlerStrategy
     Metrics.Access.pubCount(success);
     Metrics.Access.pubSize("registry", publisherRegister.getGroup(), size);
     PUB_LOGGER.info(
-        "{},{},{},{},{},{},{},{},{},{},{},{},{},size={},pb={}",
+        "{},{},{},{},{},G={},I={},{},{},{},{},{},{},size={},pb={}",
         success ? 'Y' : 'N',
         EventTypeConstants.getEventTypeFlag(publisherRegister.getEventType()),
         publisherRegister.getAppName(),

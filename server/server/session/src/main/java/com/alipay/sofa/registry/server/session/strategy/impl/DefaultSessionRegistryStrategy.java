@@ -35,14 +35,13 @@ import com.alipay.sofa.registry.server.session.strategy.SessionRegistryStrategy;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.LoopRunnable;
 import com.google.common.collect.Lists;
-import org.apache.commons.collections.CollectionUtils;
-import org.glassfish.jersey.internal.guava.Sets;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import org.apache.commons.collections.CollectionUtils;
+import org.glassfish.jersey.internal.guava.Sets;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author kezhu.wukz

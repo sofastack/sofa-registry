@@ -53,7 +53,8 @@ public abstract class AbstractChannelHandler<T> implements ChannelHandler<T> {
         "{} caughtException, channel {}, msg={}",
         getConnectNodeType(),
         channel,
-        message, (Throwable)exception);
+        message,
+        (Throwable) exception);
   }
 
   @Override

@@ -17,6 +17,8 @@
 package com.alipay.sofa.registry.server.data.slot;
 
 import com.alipay.sofa.registry.common.model.slot.*;
+import com.alipay.sofa.registry.common.model.store.Publisher;
+import com.alipay.sofa.registry.server.data.TestBaseUtils;
 import com.alipay.sofa.registry.server.data.cache.LocalDatumStorage;
 import com.alipay.sofa.registry.server.data.change.DataChangeEventCenter;
 import com.alipay.sofa.registry.server.data.lease.SessionLeaseManager;
@@ -68,10 +70,23 @@ public class SlotManagerImplTest {
     Assert.assertTrue(sm.updateSlotTable(slotTable));
     sm.processUpdating();
     LocalDatumStorage storage = (LocalDatumStorage) mock.mockSync.syncer.getDatumStorage();
-    // check slots, 2 slots [0,1]
-    Assert.assertTrue(storage.updateVersion(0));
-    Assert.assertTrue(storage.updateVersion(1));
-    Assert.assertFalse(storage.updateVersion(2));
+    // check slots, 2 slots [0,1], but no datas
+    Assert.assertTrue(storage.updateVersion(0).isEmpty());
+    Assert.assertTrue(storage.updateVersion(1).isEmpty());
+    Assert.assertTrue(storage.updateVersion(2).isEmpty());
+
+    Publisher p0 = TestBaseUtils.createTestPublishers(0, 1).get(0);
+    storage.put(p0);
+    Assert.assertFalse(storage.updateVersion(0).isEmpty());
+    Assert.assertTrue(storage.updateVersion(1).isEmpty());
+
+    Assert.assertTrue(storage.updateVersion(0).containsKey(p0.getDataInfoId()));
+    Assert.assertTrue(storage.updateVersion(0).size() == 1);
+
+    Publisher p1 = TestBaseUtils.createTestPublishers(1, 1).get(0);
+    storage.put(p1);
+    Assert.assertFalse(storage.updateVersion(0).isEmpty());
+    Assert.assertFalse(storage.updateVersion(1).isEmpty());
 
     Assert.assertTrue(sm.isLeader(0));
     Assert.assertTrue(sm.isFollower(1));
@@ -83,10 +98,10 @@ public class SlotManagerImplTest {
     Assert.assertTrue(sm.updateSlotTable(slotTable));
     sm.processUpdating();
     // check slots, 2 slots [1,2]
-    Assert.assertFalse(storage.updateVersion(0));
-    Assert.assertTrue(storage.updateVersion(1));
-    Assert.assertTrue(storage.updateVersion(2));
-    Assert.assertFalse(storage.updateVersion(3));
+    Assert.assertTrue(storage.updateVersion(0).isEmpty());
+    Assert.assertFalse(storage.updateVersion(1).isEmpty());
+    Assert.assertTrue(storage.updateVersion(2).isEmpty());
+    Assert.assertTrue(storage.updateVersion(3).isEmpty());
 
     Assert.assertTrue(sm.isLeader(1));
     Assert.assertTrue(sm.isFollower(2));

@@ -53,14 +53,15 @@ import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
+
+import javax.annotation.PostConstruct;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
-import javax.annotation.PostConstruct;
-import org.apache.commons.lang.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.util.CollectionUtils;
 
 /**
  * @author shangyu.wh
@@ -479,7 +480,7 @@ public class SessionRegistry implements Registry {
       String dataCenter, int slotId, Map<String, DatumVersion> interestVersions, long round) {
     final String leader = slotTableCache.getLeader(slotId);
     if (StringUtils.isBlank(leader)) {
-      SCAN_VER_LOGGER.warn("round={}, slot not assigned, {}", round, slotId);
+      SCAN_VER_LOGGER.error("[NoLeader]slotId={}, round={}", slotId, round);
       return null;
     }
     final FetchVersionResult result = new FetchVersionResult(slotId, leader);
@@ -509,14 +510,14 @@ public class SessionRegistry implements Registry {
           public void onException(Channel channel, Throwable e) {
             result.callback = new FetchVersionCallback(null);
             SCAN_VER_LOGGER.info(
-                    "[fetchSlotVer]round={},{},{},leader={},interests={},gets={},success={}",
-                    round,
-                    slotId,
-                    dataCenter,
-                    leader,
-                    interestVersions.size(),
-                    0,
-                    "N");
+                "[fetchSlotVer]round={},{},{},leader={},interests={},gets={},success={}",
+                round,
+                slotId,
+                dataCenter,
+                leader,
+                interestVersions.size(),
+                0,
+                "N");
 
             SCAN_VER_LOGGER.error(
                 "round={},failed to fetch versions,slotId={},leader={},size={}",

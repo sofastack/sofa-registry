@@ -104,7 +104,7 @@ public class DefaultSubscriberHandlerStrategy implements SubscriberHandlerStrate
     // [Y|N],[R|U|N],app,zone,dataInfoId,registerId,scope,elementType,clientVersion,clientIp,clientPort
     Metrics.Access.subCount(success);
     SUB_LOGGER.info(
-        "{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},pb={}",
+        "{},{},{},{},{},G={},I={},{},{},{},{},{},{},{},{},pb={}",
         success ? 'Y' : 'N',
         EventTypeConstants.getEventTypeFlag(subscriberRegister.getEventType()),
         subscriberRegister.getAppName(),
