@@ -50,8 +50,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
     implements MetaServerService {
-  protected final Logger LOGGER = LoggerFactory.getLogger(getClass());
-  protected final Logger RENEW_ERROR_LOG = LoggerFactory.getLogger("RENEW-ERROR");
+  protected final Logger RENEWER_LOGGER = LoggerFactory.getLogger("META-RENEW");
 
   @Autowired protected MetaServerManager metaServerManager;
 
@@ -73,13 +72,13 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
   @Override
   public void suspendRenewer() {
     renewer.suspend();
-    LOGGER.info("suspend the renewer");
+    RENEWER_LOGGER.info("suspend the renewer");
   }
 
   @Override
   public void resumeRenewer() {
     renewer.resume();
-    LOGGER.info("resume the renewer");
+    RENEWER_LOGGER.info("resume the renewer");
   }
 
   public abstract int getRenewIntervalSecs();
@@ -89,14 +88,14 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
     long epoch = event.getSlotTableEpoch();
     long currentEpoch = getCurrentSlotTableEpoch();
     if (currentEpoch >= epoch) {
-      LOGGER.warn(
+      RENEWER_LOGGER.warn(
           "[handleSlotTableChange] slot-table change event epoch: [{}], current epoch: [{}], "
               + "won't retrieve again",
           epoch,
           currentEpoch);
       return false;
     }
-    LOGGER.info(
+    RENEWER_LOGGER.info(
         "[handleSlotTableChange] slot table is changed, run heart-beat to retrieve new version");
     renewer.wakeup();
     return true;
@@ -121,7 +120,7 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
         checkRenewFailCounter();
         renewNode();
       } catch (Throwable e) {
-        LOGGER.error("failed to renewNode", e);
+        RENEWER_LOGGER.error("failed to renewNode", e);
       }
     }
 
@@ -134,19 +133,29 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
   @Override
   public void renewNode() {
     final String leaderIp = metaServerManager.getMetaServerLeader();
+    final long startTimestamp = System.currentTimeMillis();
+    boolean success = true;
     try {
       HeartbeatRequest heartbeatRequest = createRequest();
       GenericResponse<T> resp =
           (GenericResponse<T>) metaServerManager.sendRequest(heartbeatRequest).getResult();
       handleHeartbeatResponse(resp);
+
+      success = true;
     } catch (Throwable e) {
+      success = false;
       handleHeartbeatFailed(leaderIp, e);
+    } finally {
+      RENEWER_LOGGER.info("[renewMetaLeader]{},leader={},span={}",
+              success ? 'Y' : 'N',
+              leaderIp,
+              System.currentTimeMillis() - startTimestamp);
     }
   }
 
   boolean checkRenewFailCounter() {
     if (renewFailCounter.get() >= MAX_RENEW_FAIL_COUNT) {
-      LOGGER.error(
+      RENEWER_LOGGER.error(
           "renewNode failed [{}] times, prepare to reset leader from rest api.",
           renewFailCounter.get());
       metaServerManager.resetLeaderFromRestServer();
@@ -192,7 +201,7 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
 
   void handleHeartbeatFailed(String leaderIp, Throwable e) {
     renewFailCounter.incrementAndGet();
-    RENEW_ERROR_LOG.error(
+    RENEWER_LOGGER.error(
         "[RenewNodeTask] renew node to metaServer error, fail count:{}, leader: {}",
         renewFailCounter.get(),
         leaderIp,
@@ -210,7 +219,7 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
             response.getMetaLeader(),
             response.getMetaLeaderEpoch());
     this.state = s;
-    LOGGER.info(
+    RENEWER_LOGGER.info(
         "update MetaStat, sessions={}/{}, datas={}, metaLeader: {}, metaLeaderEpoch: {}",
         s.sessionServerEpoch,
         s.sessionNodes.keySet(),
@@ -229,11 +238,11 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
       if (result instanceof ProvideData) {
         return (ProvideData) result;
       } else {
-        LOGGER.error("fetch null provider data from {}", leaderIp);
+        RENEWER_LOGGER.error("fetch null provider data from {}", leaderIp);
         throw new RuntimeException("metaServerService fetch null provider data!");
       }
     } catch (Throwable e) {
-      LOGGER.error("fetch provider data error from {}", leaderIp, e);
+      RENEWER_LOGGER.error("fetch provider data error from {}", leaderIp, e);
       throw new RuntimeException("fetch provider data error! " + e.getMessage(), e);
     }
   }
@@ -255,7 +264,7 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
       FetchSystemPropertyResult result = (FetchSystemPropertyResult) response.getResult();
       return result;
     } catch (Throwable e) {
-      LOGGER.error(
+      RENEWER_LOGGER.error(
           "fetch system property data:{}, version:{}, from {} is null",
           dataInfoId,
           version,

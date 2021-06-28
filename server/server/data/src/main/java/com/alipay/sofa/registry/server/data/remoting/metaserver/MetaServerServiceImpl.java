@@ -81,7 +81,7 @@ public class MetaServerServiceImpl extends AbstractMetaServerService<BaseHeartBe
         && result.getSlotTable().getEpoch() != SlotTable.INIT.getEpoch()) {
       slotManager.updateSlotTable(result.getSlotTable());
     } else {
-      LOGGER.error(
+      RENEWER_LOGGER.error(
           "[handleRenewResult] slot table is {}",
           result.getSlotTable() == null ? "null" : "SlotTable.INIT");
     }
