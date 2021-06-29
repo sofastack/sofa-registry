@@ -46,13 +46,13 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
   private int consolePort = 9604;
 
-  private int syncSessionIOLowWaterMark = 1024 * 256;
+  private int syncSessionIOLowWaterMark = 1024 * 288;
 
-  private int syncSessionIOHighWaterMark = 1024 * 288;
+  private int syncSessionIOHighWaterMark = 1024 * 320;
 
-  private int clientIOLowWaterMark = 1024 * 256;
+  private int clientIOLowWaterMark = 1024 * 288;
 
-  private int clientIOHighWaterMark = 1024 * 288;
+  private int clientIOHighWaterMark = 1024 * 320;
 
   private int metaServerPort = 9610;
 
@@ -64,11 +64,11 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
   private int schedulerHeartbeatIntervalSecs = 1;
 
-  private int accessDataExecutorPoolSize = OsUtils.getCpuCount() * 10;
+  private int accessDataExecutorPoolSize = OsUtils.getCpuCount() * 4;
 
   private int accessDataExecutorQueueSize = 10000;
 
-  private int accessSubDataExecutorPoolSize = OsUtils.getCpuCount() * 8;
+  private int accessSubDataExecutorPoolSize = OsUtils.getCpuCount() * 4;
 
   private int accessSubDataExecutorQueueSize = 40000;
 
@@ -80,7 +80,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
   private int connectClientExecutorQueueSize = 2000;
 
-  private int dataChangeFetchTaskWorkerSize = OsUtils.getCpuCount() * 5;
+  private int dataChangeFetchTaskWorkerSize = OsUtils.getCpuCount() * 6;
 
   private int subscriberRegisterTaskWorkerSize = OsUtils.getCpuCount() * 4;
 
@@ -89,7 +89,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
   private int slotSyncMaxBufferSize = 5000;
 
-  private int slotSyncWorkerSize = OsUtils.getCpuCount() * 4;
+  private int slotSyncWorkerSize = OsUtils.getCpuCount() * 3;
 
   private int metaNodeBufferSize = 2000;
 
@@ -207,7 +207,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
   private int watchConfigFetchLeaseSecs = 30;
   private boolean watchConfigEnable = false;
 
-  private int watchPushTaskWorkerSize = OsUtils.getCpuCount() * 3;
+  private int watchPushTaskWorkerSize = OsUtils.getCpuCount() * 2;
 
   private int watchPushTaskMaxBufferSize = 10000;
 

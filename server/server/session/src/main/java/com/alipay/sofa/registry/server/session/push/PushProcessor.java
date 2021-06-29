@@ -69,7 +69,7 @@ public class PushProcessor {
   final RejectedDiscardHandler discardHandler = new RejectedDiscardHandler();
   private final ThreadPoolExecutor pushCallbackExecutor =
       MetricsableThreadPoolExecutor.newExecutor(
-          "PushCallback", OsUtils.getCpuCount() * 5, 40000, discardHandler);
+          "PushCallback", OsUtils.getCpuCount() * 3, 40000, discardHandler);
 
   @PostConstruct
   public void init() {

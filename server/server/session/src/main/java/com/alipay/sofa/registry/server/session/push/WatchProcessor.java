@@ -47,7 +47,7 @@ public class WatchProcessor {
   final RejectedDiscardHandler discardHandler = new RejectedDiscardHandler();
   private final ThreadPoolExecutor watchCallbackExecutor =
       MetricsableThreadPoolExecutor.newExecutor(
-          "WatchCallback", OsUtils.getCpuCount() * 3, 8000, discardHandler);
+          "WatchCallback", OsUtils.getCpuCount() * 2, 8000, discardHandler);
 
   boolean doExecuteOnWatch(Watcher watcher, ReceivedConfigData data, long triggerTimestamp) {
     if (!pushSwitchService.canIpPush(watcher.getSourceAddress().getIpAddress())) {
