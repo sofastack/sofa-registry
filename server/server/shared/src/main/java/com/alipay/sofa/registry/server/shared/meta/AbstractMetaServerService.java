@@ -146,10 +146,11 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
       success = false;
       handleHeartbeatFailed(leaderIp, e);
     } finally {
-      RENEWER_LOGGER.info("[renewMetaLeader]{},leader={},span={}",
-              success ? 'Y' : 'N',
-              leaderIp,
-              System.currentTimeMillis() - startTimestamp);
+      RENEWER_LOGGER.info(
+          "[renewMetaLeader]{},leader={},span={}",
+          success ? 'Y' : 'N',
+          leaderIp,
+          System.currentTimeMillis() - startTimestamp);
     }
   }
 

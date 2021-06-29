@@ -91,28 +91,25 @@ public class MetaServerRenewService {
     final long startTimestamp = System.currentTimeMillis();
     try {
       GenericResponse resp =
-              (GenericResponse) metaNodeExchange.sendRequest(heartbeatRequest).getResult();
+          (GenericResponse) metaNodeExchange.sendRequest(heartbeatRequest).getResult();
 
       if (resp == null || !resp.isSuccess()) {
         success = false;
         LOGGER.error(
-                "[RenewNodeTask] renew meta node to metaLeader error, leader: {}, resp: {}",
-                leaderIp,
-                resp);
+            "[RenewNodeTask] renew meta node to metaLeader error, leader: {}, resp: {}",
+            leaderIp,
+            resp);
       }
     } catch (Throwable t) {
       success = false;
-      LOGGER.error(
-              "[RenewNodeTask] renew node to metaLeader error, leader: {}",
-              leaderIp,
-              t);
+      LOGGER.error("[RenewNodeTask] renew node to metaLeader error, leader: {}", leaderIp, t);
     } finally {
-      LOGGER.info("[renewMetaLeader]{},leader={},span={}",
-              success ? 'Y' : 'N',
-              leaderIp,
-              System.currentTimeMillis() - startTimestamp);
+      LOGGER.info(
+          "[renewMetaLeader]{},leader={},span={}",
+          success ? 'Y' : 'N',
+          leaderIp,
+          System.currentTimeMillis() - startTimestamp);
     }
-
   }
 
   private MetaNode createNode() {

@@ -56,4 +56,31 @@ public final class PublisherUtils {
     }
     return sourceSummaryMap;
   }
+
+  public static Publisher clonePublisher(Publisher publisher) {
+    Publisher newPub = new Publisher();
+    newPub.setDataInfoId(publisher.getDataInfoId());
+    newPub.setDataId(publisher.getDataId());
+    newPub.setClientId(publisher.getClientId());
+    newPub.setInstanceId(publisher.getInstanceId());
+    newPub.setCell(publisher.getCell());
+    newPub.setAppName(publisher.getAppName());
+    newPub.setProcessId(publisher.getProcessId());
+    newPub.setRegisterId(publisher.getRegisterId());
+    newPub.setVersion(publisher.getVersion());
+    newPub.setSourceAddress(publisher.getSourceAddress());
+    newPub.setTargetAddress(publisher.getTargetAddress());
+    newPub.setClientVersion(publisher.getClientVersion());
+    newPub.setGroup(publisher.getGroup());
+    newPub.setRegisterTimestamp(publisher.getRegisterTimestamp());
+    newPub.setClientRegisterTimestamp(publisher.getClientRegisterTimestamp());
+    newPub.setAttributes(publisher.getAttributes());
+    newPub.setClientVersion(publisher.getClientVersion());
+
+    newPub.setDataList(publisher.getDataList());
+    newPub.setPublishType(publisher.getPublishType());
+    newPub.setPublishSource(publisher.getPublishSource());
+    newPub.setSessionProcessId(publisher.getSessionProcessId());
+    return newPub;
+  }
 }
