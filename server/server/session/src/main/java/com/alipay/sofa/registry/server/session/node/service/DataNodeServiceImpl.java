@@ -77,7 +77,7 @@ public class DataNodeServiceImpl implements DataNodeService {
   final RejectedDiscardHandler discardHandler = new RejectedDiscardHandler();
   private final ThreadPoolExecutor callbackExecutor =
       MetricsableThreadPoolExecutor.newExecutor(
-          "DataNodeCallback", OsUtils.getCpuCount() * 3, 4096, discardHandler);
+          "DataNodeCallback", OsUtils.getCpuCount() * 2, 4096, discardHandler);
 
   @PostConstruct
   public void init() {

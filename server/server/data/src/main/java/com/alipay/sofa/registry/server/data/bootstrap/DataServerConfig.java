@@ -68,17 +68,17 @@ public class DataServerConfig {
 
   private volatile Collection<String> metaAddresses = null;
 
-  private int getDataExecutorMinPoolSize = OsUtils.getCpuCount() * 5;
+  private int getDataExecutorMinPoolSize = OsUtils.getCpuCount() * 3;
 
-  private int getDataExecutorMaxPoolSize = OsUtils.getCpuCount() * 10;
+  private int getDataExecutorMaxPoolSize = OsUtils.getCpuCount() * 3;
 
   private int getDataExecutorQueueSize = 20000;
 
   private long getDataExecutorKeepAliveTime = 60;
 
-  private int publishExecutorMinPoolSize = OsUtils.getCpuCount() * 5;
+  private int publishExecutorMinPoolSize = OsUtils.getCpuCount() * 3;
 
-  private int publishExecutorMaxPoolSize = OsUtils.getCpuCount() * 10;
+  private int publishExecutorMaxPoolSize = OsUtils.getCpuCount() * 3;
 
   private int publishExecutorQueueSize = 10000;
 
@@ -119,8 +119,8 @@ public class DataServerConfig {
 
   private int cacheCountIntervalSecs = 60;
 
-  private int lowWaterMark = 1024 * 128;
-  private int highWaterMark = 1024 * 256;
+  private int lowWaterMark = 1024 * 256;
+  private int highWaterMark = 1024 * 288;
 
   private int migratingMaxSecs = 40;
   private int migratingMaxRetry = 15;
