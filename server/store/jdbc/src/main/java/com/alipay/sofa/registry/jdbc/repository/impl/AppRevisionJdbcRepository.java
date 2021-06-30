@@ -41,6 +41,8 @@ import com.google.common.cache.LoadingCache;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.PostConstruct;
@@ -98,6 +100,21 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository {
   public void init() {
     informer.setEnabled(true);
     informer.start();
+
+    Timer timer = new Timer("AppRevisionDigest", true);
+    timer.scheduleAtFixedRate(
+        new TimerTask() {
+          @Override
+          public void run() {
+            try {
+              LOG.info("informer revision size: {}", informer.getContainer().size());
+            } catch (Throwable t) {
+              LOG.safeError("informer revision size digest error", (Throwable) t);
+            }
+          }
+        },
+        60 * 1000,
+        60 * 1000);
   }
 
   @Override
