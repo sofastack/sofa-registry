@@ -40,9 +40,8 @@ public class DefaultAppRevisionHandlerStrategy implements AppRevisionHandlerStra
   private static final Logger LOG =
       LoggerFactory.getLogger(DefaultAppRevisionHandlerStrategy.class);
 
-
   private static final Logger REVISION_LOGGER =
-          LoggerFactory.getLogger("REVISION-RECEIVE", "[register]");
+      LoggerFactory.getLogger("REVISION-RECEIVE", "[register]");
 
   @Autowired private AppRevisionCacheRegistry appRevisionCacheService;
 
@@ -65,11 +64,11 @@ public class DefaultAppRevisionHandlerStrategy implements AppRevisionHandlerStra
       LOG.error(msg, e);
     } finally {
       REVISION_LOGGER.info(
-              "{},app={},revision={},size={}",
-              response.isSuccess() ? "Y" : "N",
-              appRevision.getAppName(),
-              appRevision.getRevision(),
-              appRevision.getSize());
+          "{},app={},revision={},size={}",
+          response.isSuccess() ? "Y" : "N",
+          appRevision.getAppName(),
+          appRevision.getRevision(),
+          appRevision.getSize());
     }
   }
 

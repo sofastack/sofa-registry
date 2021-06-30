@@ -108,7 +108,7 @@ public class DefaultPublisherHandlerStrategy implements PublisherHandlerStrategy
         EventTypeConstants.getEventTypeFlag(publisherRegister.getEventType()),
         publisherRegister.getAppName(),
         publisherRegister.getZone(),
-        publisherRegister.getDataId(),
+        publisher == null ? publisherRegister.getDataId() : publisher.getDataId(),
         publisherRegister.getGroup(),
         publisherRegister.getInstanceId(),
         publisherRegister.getRegistId(),

@@ -93,7 +93,7 @@ public class InterfaceAppsIndexCleaner implements ApplicationListener<ContextRef
           }
           AppRevision revision =
               revisionConvert(AppRevisionDomainConvertor.convert2Revision(domain));
-          String appName = domain.getAppName();
+          String appName = revision.getAppName();
           for (String interfaceName : revision.getInterfaceMap().keySet()) {
             mappings.computeIfAbsent(appName, k -> Sets.newHashSet()).add(interfaceName);
           }
@@ -110,13 +110,22 @@ public class InterfaceAppsIndexCleaner implements ApplicationListener<ContextRef
                   defaultCommonConfig.getClusterId(), interfaceName, appName);
           if (interfaceAppsIndexMapper.update(domain) == 0) {
             interfaceAppsIndexMapper.replace(domain);
+            LOG.info(
+                    "insert interface app mapping {}=>{} succeed",
+                    domain.getInterfaceName(),
+                    domain.getAppName());
           }
           ConcurrentUtils.sleepUninterruptibly(10, TimeUnit.MILLISECONDS);
         }
       }
+      LOG.info("renew interface apps index succeed");
     } catch (Throwable e) {
       LOG.error("renew interface apps index failed:", e);
     }
+  }
+
+  public void startRenew() {
+    renewer.wakeup();
   }
 
   final class Renewer extends WakeUpLoopRunnable {

@@ -36,13 +36,7 @@ public class MetaCenterResource {
   @Produces(MediaType.APPLICATION_JSON)
   public Result interfaceAppsIndexRenew() {
     Result result = new Result();
-    try {
-      interfaceAppsIndexCleaner.renew();
-    } catch (Exception e) {
-      result.setSuccess(false);
-      result.setMessage(e.getMessage());
-      return result;
-    }
+    interfaceAppsIndexCleaner.startRenew();
     result.setSuccess(true);
     return result;
   }
