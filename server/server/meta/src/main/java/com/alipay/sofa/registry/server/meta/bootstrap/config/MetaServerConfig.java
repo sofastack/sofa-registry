@@ -66,4 +66,8 @@ public interface MetaServerConfig {
   int getClientManagerWatchMillis();
 
   int getClientManagerRefreshLimit();
+
+  int getClientManagerCleanSecs();
+
+  int getClientManagerExpireDays();
 }
