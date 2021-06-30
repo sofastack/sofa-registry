@@ -260,6 +260,7 @@ public class MetaServerConfiguration {
     }
 
     @Bean
+    @ConditionalOnMissingBean
     public InterfaceAppsIndexCleaner interfaceAppsIndexCleaner() {
       return new InterfaceAppsIndexCleaner();
     }
@@ -308,8 +309,8 @@ public class MetaServerConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public CleanerResource cleanerResource() {
-      return new CleanerResource();
+    public MetaCenterResource cleanerResource() {
+      return new MetaCenterResource();
     }
 
     @Bean

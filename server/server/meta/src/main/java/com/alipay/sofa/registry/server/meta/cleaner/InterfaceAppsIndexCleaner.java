@@ -71,6 +71,10 @@ public class InterfaceAppsIndexCleaner implements ApplicationListener<ContextRef
     LOG.info("InterfaceAppsIndexCleaner started");
   }
 
+  protected AppRevision revisionConvert(AppRevision revision) {
+    return revision;
+  }
+
   public void renew() {
     if (!metaLeaderService.amILeader()) {
       return;
@@ -87,7 +91,8 @@ public class InterfaceAppsIndexCleaner implements ApplicationListener<ContextRef
           if (domain.isDeleted()) {
             continue;
           }
-          AppRevision revision = AppRevisionDomainConvertor.convert2Revision(domain);
+          AppRevision revision =
+              revisionConvert(AppRevisionDomainConvertor.convert2Revision(domain));
           String appName = domain.getAppName();
           for (String interfaceName : revision.getInterfaceMap().keySet()) {
             mappings.computeIfAbsent(appName, k -> Sets.newHashSet()).add(interfaceName);

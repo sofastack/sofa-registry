@@ -25,9 +25,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import org.springframework.beans.factory.annotation.Autowired;
 
-@Path("cleaner")
+@Path("metaCenter")
 @LeaderAwareRestController
-public class CleanerResource {
+public class MetaCenterResource {
 
   @Autowired private InterfaceAppsIndexCleaner interfaceAppsIndexCleaner;
 
@@ -47,7 +47,7 @@ public class CleanerResource {
     return result;
   }
 
-  CleanerResource setInterfaceAppsIndexCleaner(InterfaceAppsIndexCleaner cleaner) {
+  MetaCenterResource setInterfaceAppsIndexCleaner(InterfaceAppsIndexCleaner cleaner) {
     interfaceAppsIndexCleaner = cleaner;
     return this;
   }
