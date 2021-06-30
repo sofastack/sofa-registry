@@ -24,14 +24,15 @@ import org.junit.Test;
 
 public class CleanerResourceTest {
 
-  private CleanerResource cleanerResource;
+  private MetaCenterResource cleanerResource;
 
   private InterfaceAppsIndexCleaner interfaceAppsIndexCleaner =
       mock(InterfaceAppsIndexCleaner.class);
 
   @Before
   public void before() {
-    cleanerResource = new CleanerResource().setInterfaceAppsIndexCleaner(interfaceAppsIndexCleaner);
+    cleanerResource =
+        new MetaCenterResource().setInterfaceAppsIndexCleaner(interfaceAppsIndexCleaner);
   }
 
   @Test

@@ -46,7 +46,6 @@ public class MetaServiceConvertor {
   }
 
   public static AppRevisionInterface convert2Java(MetaService metaService) {
-
     AppRevisionInterface appRevisionInterface = new AppRevisionInterface();
     appRevisionInterface.setId(metaService.getId());
     Map<String, List<String>> serviceParams = new HashMap<>();
