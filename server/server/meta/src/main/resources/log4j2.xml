@@ -182,7 +182,7 @@
             <DefaultRolloverStrategy max="3">
                 <Delete basePath="${META_LOG_HOME}" maxDepth="2">
                     <IfFileName glob="registry-client-manager.log.*" />
-                    <IfLastModified age="30d" />
+                    <IfLastModified age="10d" />
                 </Delete>
             </DefaultRolloverStrategy>
         </RollingRandomAccessFile>

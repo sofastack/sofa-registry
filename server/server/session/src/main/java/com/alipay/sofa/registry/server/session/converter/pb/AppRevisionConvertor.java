@@ -54,6 +54,7 @@ public final class AppRevisionConvertor {
       interfaceMap.put(entry.getKey(), MetaServiceConvertor.convert2Java(entry.getValue()));
     }
     revision.setInterfaceMap(interfaceMap);
+    revision.setSize(metaRegister.getSerializedSize());
     return revision;
   }
 

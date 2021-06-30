@@ -36,4 +36,8 @@ public class AppRevisionContainer implements DbEntryContainer<AppRevisionDomain>
   public boolean containsRevisionId(String revisionId) {
     return data.contains(revisionId);
   }
+
+  public int size() {
+    return data.size();
+  }
 }

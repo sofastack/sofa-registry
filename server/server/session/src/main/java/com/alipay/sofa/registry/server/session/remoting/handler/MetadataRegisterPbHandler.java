@@ -29,11 +29,13 @@ import com.alipay.sofa.registry.server.shared.remoting.RemotingHelper;
  * @version $Id: MetadataRegisterPbHandler.java, v 0.1 2021年02月04日 17:13 xiaojian.xj Exp $
  */
 public class MetadataRegisterPbHandler extends AbstractClientMetadataRequestHandler<MetaRegister> {
+
   @Override
   public Object doHandle(Channel channel, MetaRegister request) {
     RegisterResponse registerResponse = new RegisterResponse();
     AppRevision appRevision = AppRevisionConvertor.convert2Java(request);
     appRevisionHandlerStrategy.handleAppRevisionRegister(appRevision, registerResponse);
+
     return RegisterResponseConvertor.convert2Pb(registerResponse);
   }
 

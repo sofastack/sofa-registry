@@ -41,6 +41,8 @@ public class AppRevision implements Serializable {
 
   private Date lastHeartbeat;
 
+  private int size;
+
   public AppRevision() {}
 
   public AppRevision(String dataCenter, String revision, Date lastHeartbeat) {
@@ -163,6 +165,24 @@ public class AppRevision implements Serializable {
    */
   public void setClientVersion(String clientVersion) {
     this.clientVersion = clientVersion;
+  }
+
+  /**
+   * Getter method for property <tt>size</tt>.
+   *
+   * @return property value of size
+   */
+  public int getSize() {
+    return size;
+  }
+
+  /**
+   * Setter method for property <tt>size</tt>.
+   *
+   * @param size value to be assigned to property size
+   */
+  public void setSize(int size) {
+    this.size = size;
   }
 
   @Override
