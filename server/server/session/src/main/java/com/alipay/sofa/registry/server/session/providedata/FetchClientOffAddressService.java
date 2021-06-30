@@ -32,8 +32,11 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
+import io.prometheus.client.Gauge;
 import java.util.List;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.PostConstruct;
@@ -57,6 +60,14 @@ public class FetchClientOffAddressService
 
   @Autowired private Registry sessionRegistry;
 
+  private static final Gauge CLIENT_OFF_GAUGE =
+      Gauge.build()
+          .namespace("session")
+          .subsystem("client_off")
+          .name("address_total")
+          .help("client off address total")
+          .register();
+
   public FetchClientOffAddressService() {
     super(
         ValueConstants.CLIENT_OFF_ADDRESS_DATA_ID,
@@ -65,6 +76,16 @@ public class FetchClientOffAddressService
 
   @PostConstruct
   public void postConstruct() {
+    Timer timer = new Timer("ClientOffAddressDigest", true);
+    timer.scheduleAtFixedRate(
+        new TimerTask() {
+          @Override
+          public void run() {
+            CLIENT_OFF_GAUGE.set(getClientOffAddress().size());
+          }
+        },
+        60 * 1000,
+        60 * 1000);
     ConcurrentUtils.createDaemonThread("ClientManagerProcessor", clientManagerProcessor).start();
   }
 

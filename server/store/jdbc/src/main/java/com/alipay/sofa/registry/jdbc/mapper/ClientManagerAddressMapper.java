@@ -18,6 +18,7 @@ package com.alipay.sofa.registry.jdbc.mapper;
 
 import com.alipay.sofa.registry.jdbc.domain.ClientManagerAddressDomain;
 import com.alipay.sofa.registry.jdbc.domain.DateNowDomain;
+import java.util.Date;
 import java.util.List;
 import org.apache.ibatis.annotations.Param;
 
@@ -54,4 +55,15 @@ public interface ClientManagerAddressMapper {
   int insertOnReplace(ClientManagerAddressDomain clientManagerAddress);
 
   DateNowDomain getNow();
+
+  List<String> getExpireAddress(
+      @Param("dataCenter") String dataCenter,
+      @Param("expireDate") Date expireDate,
+      @Param("limit") int limit);
+
+  int cleanExpired(
+      @Param("dataCenter") String dataCenter, @Param("expireAddress") List<String> expireAddress);
+
+  int getClientOffSizeBefore(
+      @Param("dataCenter") String dataCenter, @Param("expireDate") Date expireDate);
 }

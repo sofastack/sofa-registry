@@ -17,6 +17,8 @@
 package com.alipay.sofa.registry.store.api.meta;
 
 import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress;
+import java.util.Date;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -52,4 +54,12 @@ public interface ClientManagerAddressRepository {
   ClientManagerAddress queryClientOffData();
 
   void waitSynced();
+
+  Date getNow();
+
+  List<String> getExpireAddress(Date date, int limit);
+
+  int cleanExpired(List<String> expireAddress);
+
+  int getClientOffSizeBefore(Date date);
 }

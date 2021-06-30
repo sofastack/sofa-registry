@@ -41,4 +41,27 @@
         select NOW(6) as now;
     </select>
 
+    <select id="getExpireAddress" resultType="java.lang.String">
+        <![CDATA[
+            select address from client_manager_address where data_center=#{dataCenter} and gmt_modified < #{expireDate}
+            and operation in ('clientOpen','reduce')
+            limit #{limit}
+        ]]>
+    </select>
+
+    <select id="getClientOffSizeBefore" resultType="java.lang.Integer">
+        <![CDATA[
+            select count(1) from client_manager_address where data_center=#{dataCenter} and gmt_modified < #{expireDate} and operation='clientOff'
+        ]]>
+    </select>
+
+    <delete id="cleanExpired">
+        <if test="expireAddress != null and expireAddress.size() > 0">
+            delete from client_manager_address where data_center=#{dataCenter} and address in
+            <foreach collection="expireAddress" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+    </delete>
+
 </mapper>

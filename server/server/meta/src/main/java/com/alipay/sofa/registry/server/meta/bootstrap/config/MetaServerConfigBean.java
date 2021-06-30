@@ -68,6 +68,10 @@ public class MetaServerConfigBean implements MetaServerConfig {
 
   private int clientManagerRefreshLimit = 5000;
 
+  private int clientManagerCleanSecs = 300;
+
+  private int clientManagerExpireDays = 5;
+
   private long metaLeaderWarmupMillis =
       SystemUtils.getSystemLong(
           "registry.elector.warm.up.millis",
@@ -482,6 +486,34 @@ public class MetaServerConfigBean implements MetaServerConfig {
   @Override
   public int getClientManagerRefreshLimit() {
     return clientManagerRefreshLimit;
+  }
+
+  @Override
+  public int getClientManagerCleanSecs() {
+    return clientManagerCleanSecs;
+  }
+
+  @Override
+  public int getClientManagerExpireDays() {
+    return clientManagerExpireDays;
+  }
+
+  /**
+   * Setter method for property <tt>clientManagerCleanSecs</tt>.
+   *
+   * @param clientManagerCleanSecs value to be assigned to property clientManagerCleanSecs
+   */
+  public void setClientManagerCleanSecs(int clientManagerCleanSecs) {
+    this.clientManagerCleanSecs = clientManagerCleanSecs;
+  }
+
+  /**
+   * Setter method for property <tt>clientManagerExpireDays</tt>.
+   *
+   * @param clientManagerExpireDays value to be assigned to property clientManagerExpireDays
+   */
+  public void setClientManagerExpireDays(int clientManagerExpireDays) {
+    this.clientManagerExpireDays = clientManagerExpireDays;
   }
 
   /**

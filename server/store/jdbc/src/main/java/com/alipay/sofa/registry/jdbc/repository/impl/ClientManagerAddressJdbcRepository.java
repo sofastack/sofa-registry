@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Set;
 import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
 
 /**
  * @author xiaojian.xj
@@ -105,6 +106,33 @@ public class ClientManagerAddressJdbcRepository implements ClientManagerAddressR
   @Override
   public void waitSynced() {
     informer.waitSynced();
+  }
+
+  @Override
+  public Date getNow() {
+    return clientManagerAddressMapper.getNow().getNow();
+  }
+
+  @Override
+  public List<String> getExpireAddress(Date date, int limit) {
+    return clientManagerAddressMapper.getExpireAddress(
+        defaultCommonConfig.getClusterId(), date, limit);
+  }
+
+  @Override
+  public int cleanExpired(List<String> expireAddress) {
+    if (CollectionUtils.isEmpty(expireAddress)) {
+      return 0;
+    }
+
+    return clientManagerAddressMapper.cleanExpired(
+        defaultCommonConfig.getClusterId(), expireAddress);
+  }
+
+  @Override
+  public int getClientOffSizeBefore(Date date) {
+    return clientManagerAddressMapper.getClientOffSizeBefore(
+        defaultCommonConfig.getClusterId(), date);
   }
 
   private void doStorage(Set<String> ipSet, String operation) {

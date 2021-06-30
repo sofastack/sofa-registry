@@ -28,6 +28,7 @@ import com.alipay.sofa.registry.jdbc.domain.ClientManagerAddressDomain;
 import com.alipay.sofa.registry.jdbc.mapper.ClientManagerAddressMapper;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import javax.annotation.Resource;
@@ -97,5 +98,22 @@ public class ClientManagerAddressJdbcRepositoryTest extends AbstractH2DbTestBase
         clientManagerAddressJdbcRepository.clientOpen(
             ClientManagerAddressJdbcRepositoryTest.clientOpenSet);
     Assert.assertTrue(!clientOpen);
+  }
+
+  @Test
+  public void testExpired() {
+    testClientManager();
+    List<String> expireAddress =
+        clientManagerAddressJdbcRepository.getExpireAddress(new Date(), 100);
+    Assert.assertEquals(Sets.newHashSet(expireAddress), clientOpenSet);
+
+    int count = clientManagerAddressJdbcRepository.cleanExpired(expireAddress);
+    Assert.assertEquals(count, expireAddress.size());
+    expireAddress = clientManagerAddressJdbcRepository.getExpireAddress(new Date(), 100);
+    Assert.assertEquals(0, expireAddress.size());
+
+    SetView<String> difference = Sets.difference(clientOffSet, clientOpenSet);
+    int expireClientOffSize = clientManagerAddressJdbcRepository.getClientOffSizeBefore(new Date());
+    Assert.assertEquals(expireClientOffSize, difference.size());
   }
 }

@@ -114,9 +114,12 @@ public class FetchSystemPropertyRequestHandler
       } else {
         result = new FetchSystemPropertyResult(false);
       }
-      if (DB_LOGGER.isInfoEnabled()) {
-        DB_LOGGER.info("get SystemProperty {} from DB success!", result);
-      }
+      DB_LOGGER.info(
+          "[fetchSystemProperty]dataInfoId={} req={} res={}",
+          request.getDataInfoId(),
+          request.getVersion(),
+          data.getVersion());
+
       return result;
     } else {
       DB_LOGGER.error("get Data DB status error!");
