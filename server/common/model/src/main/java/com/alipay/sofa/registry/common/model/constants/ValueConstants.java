@@ -91,7 +91,8 @@ public class ValueConstants {
           SESSION_PROVIDE_DATA_INSTANCE_ID,
           SESSION_PROVIDE_DATA_GROUP);
 
-  public static final String DISABLE_DATA_ID_CASE_SENSITIVE_SWITCH = "disable.dataId.case.sensitive";
+  public static final String DISABLE_DATA_ID_CASE_SENSITIVE_SWITCH =
+      "disable.dataId.case.sensitive";
 
   /**
    * switch for dataId sensitive is disable or not, default value is false which means dataId is
