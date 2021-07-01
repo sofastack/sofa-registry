@@ -111,9 +111,9 @@ public class InterfaceAppsIndexCleaner implements ApplicationListener<ContextRef
           if (interfaceAppsIndexMapper.update(domain) == 0) {
             interfaceAppsIndexMapper.replace(domain);
             LOG.info(
-                    "insert interface app mapping {}=>{} succeed",
-                    domain.getInterfaceName(),
-                    domain.getAppName());
+                "insert interface app mapping {}=>{} succeed",
+                domain.getInterfaceName(),
+                domain.getAppName());
           }
           ConcurrentUtils.sleepUninterruptibly(10, TimeUnit.MILLISECONDS);
         }

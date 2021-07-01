@@ -80,24 +80,24 @@ public class DataChangeEventCenterTest {
     Assert.assertFalse(center.handleChanges(Maps.newHashMap()));
 
     List<String> changes1 = Lists.newArrayList("1", "2");
-    center.onChange(changes1, DC);
+    center.onChange(changes1, DataChangeType.PUT, DC);
     Assert.assertFalse(center.handleChanges(Maps.newHashMap()));
 
     TestBaseUtils.MockBlotChannel channel = TestBaseUtils.newChannel(9620, "localhost", 1000);
-    center.onChange(changes1, DC);
+    center.onChange(changes1, DataChangeType.PUT, DC);
     Map<String, List<Channel>> channelsMap = Maps.newHashMap();
     channelsMap.put("localhost", Lists.newArrayList(channel));
     Assert.assertTrue(center.handleChanges(channelsMap));
 
     Publisher pub = TestBaseUtils.createTestPublisher("testDataId");
-    center.onChange(Lists.newArrayList(pub.getDataInfoId()), DC);
+    center.onChange(Lists.newArrayList(pub.getDataInfoId()), DataChangeType.PUT, DC);
     datumCache.getLocalDatumStorage().put(pub);
     // npe
     Assert.assertTrue(center.handleChanges(channelsMap));
 
     // reject
     center.setNotifyExecutor(TestBaseUtils.rejectExecutor());
-    center.onChange(Lists.newArrayList(pub.getDataInfoId()), DC);
+    center.onChange(Lists.newArrayList(pub.getDataInfoId()), DataChangeType.PUT, DC);
     double pre = ChangeMetrics.CHANGE_SKIP_COUNTER.get();
     Assert.assertTrue(center.handleChanges(channelsMap));
     Assert.assertTrue(ChangeMetrics.CHANGE_SKIP_COUNTER.get() == (pre + 1));
@@ -245,13 +245,13 @@ public class DataChangeEventCenterTest {
   public void testTransfer() {
     setCenter();
     List<String> changes1 = Lists.newArrayList("1", "2", "3");
-    center.onChange(changes1, DC);
+    center.onChange(changes1, DataChangeType.PUT, DC);
     List<DataChangeEvent> events = center.transferChangeEvent(3);
     Assert.assertNotNull(events.get(0).toString());
     Assert.assertEquals(1, events.size());
     assertEvent(events, changes1);
 
-    center.onChange(changes1, DC);
+    center.onChange(changes1, DataChangeType.PUT, DC);
     events = center.transferChangeEvent(2);
     Assert.assertEquals(2, events.size());
     assertEvent(events, changes1);
@@ -270,13 +270,13 @@ public class DataChangeEventCenterTest {
   public void testOnChange() {
     setCenter();
     List<String> changes1 = Lists.newArrayList("1", "2");
-    center.onChange(changes1, DC);
+    center.onChange(changes1, DataChangeType.PUT, DC);
 
     List<String> changes2 = Lists.newArrayList("2", "3");
-    center.onChange(changes2, DC);
+    center.onChange(changes2, DataChangeType.PUT, DC);
 
     List<String> changes3 = Lists.newArrayList("4", "5");
-    center.onChange(changes3, DC + "1");
+    center.onChange(changes3, DataChangeType.PUT, DC + "1");
 
     Set<String> s1 = Sets.newHashSet(changes1);
     s1.addAll(changes2);
@@ -320,18 +320,18 @@ public class DataChangeEventCenterTest {
     this.dataServerConfig.setNotifyRetryBackoffMillis(1);
     this.dataServerConfig.setNotifyRetryTimes(1);
 
-    center.onChange(Lists.newArrayList(pub.getDataInfoId()), DC);
+    center.onChange(Lists.newArrayList(pub.getDataInfoId()), DataChangeType.PUT, DC);
     center.onTempPubChange(pub, DC);
     Thread.sleep(2000);
 
     channel.setActive(true);
     Assert.assertTrue(channel.isConnected());
 
-    center.onChange(Lists.newArrayList(pub.getDataInfoId()), DC);
+    center.onChange(Lists.newArrayList(pub.getDataInfoId()), DataChangeType.PUT, DC);
     center.onTempPubChange(pub, DC);
     Thread.sleep(2000);
 
-    center.onChange(Lists.newArrayList(pub.getDataInfoId()), DC);
+    center.onChange(Lists.newArrayList(pub.getDataInfoId()), DataChangeType.PUT, DC);
     center.onTempPubChange(pub, DC);
     Thread.sleep(2000);
     Mockito.verify(server, Mockito.times(6))

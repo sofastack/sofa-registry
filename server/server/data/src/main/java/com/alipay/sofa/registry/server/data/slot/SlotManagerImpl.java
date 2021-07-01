@@ -29,6 +29,7 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.DatumStorage;
 import com.alipay.sofa.registry.server.data.change.DataChangeEventCenter;
+import com.alipay.sofa.registry.server.data.change.DataChangeType;
 import com.alipay.sofa.registry.server.data.lease.SessionLeaseManager;
 import com.alipay.sofa.registry.server.data.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.server.data.remoting.SessionNodeExchanger;
@@ -429,7 +430,8 @@ public final class SlotManagerImpl implements SlotManager {
       Map<String, DatumVersion> versions = localDatumStorage.updateVersion(slotState.slotId);
       slotState.migrated = true;
       // versions has update, notify change
-      dataChangeEventCenter.onChange(versions.keySet(), dataServerConfig.getLocalDataCenter());
+      dataChangeEventCenter.onChange(
+          versions.keySet(), DataChangeType.MIGRATED, dataServerConfig.getLocalDataCenter());
       LOGGER.info(
           "[finish]slotId={}, span={}, slot={}, sessions={}",
           slotState.slotId,

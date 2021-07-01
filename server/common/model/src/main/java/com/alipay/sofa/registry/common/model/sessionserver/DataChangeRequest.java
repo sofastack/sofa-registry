@@ -39,10 +39,11 @@ public class DataChangeRequest implements Serializable {
 
   private final TraceTimes times;
 
-  public DataChangeRequest(String dataCenter, Map<String, DatumVersion> dataInfoIds) {
+  public DataChangeRequest(
+      String dataCenter, Map<String, DatumVersion> dataInfoIds, TraceTimes times) {
     this.dataCenter = dataCenter;
     this.dataInfoIds = dataInfoIds;
-    this.times = new TraceTimes();
+    this.times = times;
   }
 
   public Map<String, DatumVersion> getDataInfoIds() {

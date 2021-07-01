@@ -14,26 +14,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.push;
+package com.alipay.sofa.registry.common.model;
 
 import org.junit.Assert;
 import org.junit.Test;
 
-public class TriggerPushContextTest {
+public class TraceTimeTest {
   @Test
-  public void test() {
-    TriggerPushContext ctx = new TriggerPushContext("testDc", 100, "testData", 200);
-    Assert.assertTrue(ctx.toString(), ctx.toString().contains("100"));
-
-    Assert.assertEquals(ctx.dataCenter, "testDc");
-    Assert.assertEquals(ctx.dataNode, "testData");
-    Assert.assertEquals(ctx.getExpectDatumVersion(), 100);
-    Assert.assertEquals(ctx.getFirstTimes().getTriggerSession(), 200);
-
-    ctx.setExpectDatumVersion(300);
-    ctx.getFirstTimes().setTriggerSession(500);
-
-    Assert.assertEquals(ctx.getExpectDatumVersion(), 300);
-    Assert.assertEquals(ctx.getFirstTimes().getTriggerSession(), 500);
+  public void testCopy() throws InterruptedException {
+    TraceTimes times = new TraceTimes();
+    times.setDataChangeType(1);
+    times.setFirstDataChange(3);
+    times.setDatumNotifyCreate(5);
+    times.setDatumNotifySend(6);
+    times.setTriggerSession(7);
+    times = times.copy();
+    Assert.assertEquals(1, times.getDataChangeType());
+    Assert.assertEquals(3, times.getFirstDataChange());
+    Assert.assertEquals(5, times.getDatumNotifyCreate());
+    Assert.assertEquals(6, times.getDatumNotifySend());
+    Assert.assertEquals(7, times.getTriggerSession());
+    times.format(10);
+    Thread.sleep(10);
+    Assert.assertTrue(times.beforeThan(new TraceTimes()));
   }
 }

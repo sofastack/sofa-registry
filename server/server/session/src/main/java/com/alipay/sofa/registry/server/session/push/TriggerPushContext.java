@@ -23,19 +23,44 @@ public final class TriggerPushContext {
   public final String dataCenter;
   public final String dataNode;
   private long expectDatumVersion;
-  private final TraceTimes times;
+  private TraceTimes firstTraceTimes;
+  private TraceTimes lastTraceTimes;
 
   public TriggerPushContext(
       String dataCenter, long expectDatumVersion, String dataNode, long triggerSessionTimestamp) {
+    this(dataCenter, expectDatumVersion, dataNode, triggerSessionTimestamp, new TraceTimes());
+  }
+
+  public TriggerPushContext(
+      String dataCenter,
+      long expectDatumVersion,
+      String dataNode,
+      long triggerSessionTimestamp,
+      TraceTimes traceTimes) {
     this.dataCenter = dataCenter;
     this.dataNode = dataNode;
     this.expectDatumVersion = expectDatumVersion;
-    this.times = new TraceTimes();
-    this.times.setTriggerSession(triggerSessionTimestamp);
+    traceTimes.setTriggerSession(triggerSessionTimestamp);
+    this.firstTraceTimes = traceTimes;
+    this.lastTraceTimes = traceTimes;
   }
 
-  public TraceTimes getTimes() {
-    return this.times;
+  public TraceTimes getFirstTimes() {
+    return this.firstTraceTimes;
+  }
+
+  public void setTimes(TraceTimes times) {
+    this.firstTraceTimes = times;
+    this.lastTraceTimes = times;
+  }
+
+  public void addTraceTime(TraceTimes times) {
+    if (times.beforeThan(this.firstTraceTimes)) {
+      this.firstTraceTimes = times;
+    }
+    if (this.lastTraceTimes.beforeThan(times)) {
+      this.lastTraceTimes = times;
+    }
   }
 
   public long getExpectDatumVersion() {
@@ -46,13 +71,20 @@ public final class TriggerPushContext {
     this.expectDatumVersion = expectDatumVersion;
   }
 
+  public String formatTraceTimes(long pushFinishTimestamp) {
+    if (firstTraceTimes == lastTraceTimes) {
+      return StringFormatter.format("lastDataTrace={}", lastTraceTimes.format(pushFinishTimestamp));
+    } else {
+      return StringFormatter.format(
+          "firstDataTrace={},lastDataTrace={}",
+          firstTraceTimes.format(pushFinishTimestamp),
+          lastTraceTimes.format(pushFinishTimestamp));
+    }
+  }
+
   @Override
   public String toString() {
     return StringFormatter.format(
-        "TriggerPushCtx{{},ver={},dc={},times={}}",
-        dataNode,
-        expectDatumVersion,
-        dataCenter,
-        times);
+        "TriggerPushCtx{{},ver={},dc={}}", dataNode, expectDatumVersion, dataCenter);
   }
 }

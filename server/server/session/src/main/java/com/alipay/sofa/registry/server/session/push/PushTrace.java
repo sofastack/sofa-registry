@@ -153,15 +153,16 @@ public final class PushTrace {
     }
     datumVersionTriggerSpanMillis =
         Math.max(
-            pushCause.triggerPushCtx.getTimes().getTriggerSession() - pushCause.datumTimestamp, 0);
+            pushCause.triggerPushCtx.getFirstTimes().getTriggerSession() - pushCause.datumTimestamp,
+            0);
 
     // calc the task span millis
     pushTaskPrepareSpanMillis =
-        pushCreateTimestamp - pushCause.triggerPushCtx.getTimes().getTriggerSession();
+        pushCreateTimestamp - pushCause.triggerPushCtx.getFirstTimes().getTriggerSession();
     pushTaskQueueSpanMillis = pushStartTimestamp - pushCreateTimestamp;
     pushTaskClientIOSpanMillis = pushFinishTimestamp - pushStartTimestamp;
     pushTaskSessionSpanMillis =
-        pushStartTimestamp - pushCause.triggerPushCtx.getTimes().getTriggerSession();
+        pushStartTimestamp - pushCause.triggerPushCtx.getFirstTimes().getTriggerSession();
 
     final List<SubPublisher> publishers = datum.getPublishers();
     final long lastPushTimestamp =
@@ -193,7 +194,7 @@ public final class PushTrace {
               "{},{},{},{},{},cause={},pubNum={},pubBytes={},pubNew={},delay={},{},{},{},{},"
                   + "session={},cliIO={},firstPubDelay={},lastPubDelay={},"
                   + "subNum={},addr={},expectVer={},dataNode={},taskID={},pushedVer={},regTs={},"
-                  + "notifyTs={},commits={},recentDelay={},pushNum={}",
+                  + "{},recentDelay={},pushNum={}",
               status,
               datum.getDataInfoId(),
               datum.getVersion(),
@@ -219,8 +220,7 @@ public final class PushTrace {
               taskID,
               subscriberPushedVersion,
               subRegTimestamp,
-              pushCause.triggerPushCtx.getTimes().getDatumNotifyCreate(),
-              pushCause.triggerPushCtx.getTimes().getOverrideCount(),
+              pushCause.triggerPushCtx.formatTraceTimes(pushFinishTimestamp),
               formatDatumPushedDelayList(pushFinishTimestamp, lastPushTimestamp),
               pushNum);
       LOGGER.info(msg);

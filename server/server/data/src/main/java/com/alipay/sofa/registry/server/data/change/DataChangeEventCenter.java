@@ -18,6 +18,7 @@ package com.alipay.sofa.registry.server.data.change;
 
 import static com.alipay.sofa.registry.server.data.change.ChangeMetrics.*;
 
+import com.alipay.sofa.registry.common.model.TraceTimes;
 import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
@@ -62,7 +63,7 @@ public class DataChangeEventCenter {
 
   @Autowired private Exchange boltExchange;
 
-  private final Map<String, Set<String>> dataCenter2Changes = Maps.newConcurrentMap();
+  private final Map<String, DataChangeMerger> dataCenter2Changes = Maps.newConcurrentMap();
   private final ReadWriteLock lock = new ReentrantReadWriteLock();
   private final LinkedList<ChangeNotifierRetry> retryNotifiers = Lists.newLinkedList();
 
@@ -108,15 +109,16 @@ public class DataChangeEventCenter {
     }
   }
 
-  public void onChange(Collection<String> dataInfoIds, String dataCenter) {
+  public void onChange(
+      Collection<String> dataInfoIds, DataChangeType dataChangeType, String dataCenter) {
     if (dataInfoIds.isEmpty()) {
       return;
     }
-    Set<String> changes =
-        dataCenter2Changes.computeIfAbsent(dataCenter, k -> Sets.newConcurrentHashSet());
+    DataChangeMerger changes =
+        dataCenter2Changes.computeIfAbsent(dataCenter, k -> new DataChangeMerger());
     lock.readLock().lock();
     try {
-      changes.addAll(dataInfoIds);
+      changes.addChanges(dataInfoIds, dataChangeType);
     } finally {
       lock.readLock().unlock();
     }
@@ -162,17 +164,20 @@ public class DataChangeEventCenter {
     final Channel channel;
     final String dataCenter;
     final Map<String, DatumVersion> dataInfoIds;
+    final TraceTimes times;
 
-    final long createTime;
     volatile int retryCount;
 
     private ChangeNotifier(
-        Channel channel, String dataCenter, Map<String, DatumVersion> dataInfoIds) {
-      long currentTs = System.currentTimeMillis();
+        Channel channel,
+        String dataCenter,
+        Map<String, DatumVersion> dataInfoIds,
+        TraceTimes parentTimes) {
       this.dataCenter = dataCenter;
       this.channel = channel;
       this.dataInfoIds = dataInfoIds;
-      this.createTime = currentTs;
+      this.times = parentTimes.copy();
+      this.times.setDatumNotifyCreate(System.currentTimeMillis());
     }
 
     @Override
@@ -183,8 +188,8 @@ public class DataChangeEventCenter {
           LOGGER.info("change notify failed, conn is closed, {}", channel);
           return;
         }
-        DataChangeRequest request = new DataChangeRequest(dataCenter, dataInfoIds);
-        request.getTimes().setDatumNotifyCreate(createTime);
+        DataChangeRequest request = new DataChangeRequest(dataCenter, dataInfoIds, times);
+        request.getTimes().setDatumNotifySend(System.currentTimeMillis());
         doNotify(request, channel);
         LOGGER.info("success to notify {}, {}", channel.getRemoteAddress(), this);
         CHANGE_SUCCESS_COUNTER.inc();
@@ -206,11 +211,12 @@ public class DataChangeEventCenter {
     @Override
     public String toString() {
       return StringFormatter.format(
-          "ChangeNotifier{{},num={},size={},retry={}}",
+          "ChangeNotifier{{},num={},size={},retry={},traceTimes={}}",
           dataCenter,
           dataInfoIds.size(),
           size(),
-          retryCount);
+          retryCount,
+          times.format(System.currentTimeMillis()));
     }
   }
 
@@ -363,12 +369,15 @@ public class DataChangeEventCenter {
       if (changes.isEmpty()) {
         continue;
       }
+      for (Map.Entry<String, DatumVersion> entry : changes.entrySet()) {
+        LOGGER.info("datum change notify: {},{}", entry.getKey(), entry.getValue());
+      }
       for (Map.Entry<String, List<Channel>> entry : channelsMap.entrySet()) {
         Channel channel = CollectionUtils.getRandom(entry.getValue());
         try {
           notifyExecutor.execute(
               channel.getRemoteAddress(),
-              new ChangeNotifier(channel, event.getDataCenter(), changes));
+              new ChangeNotifier(channel, event.getDataCenter(), changes, event.getTraceTimes()));
           CHANGE_COMMIT_COUNTER.inc();
         } catch (FastRejectedExecutionException e) {
           CHANGE_SKIP_COUNTER.inc();
@@ -408,13 +417,16 @@ public class DataChangeEventCenter {
     final List<DataChangeEvent> events = Lists.newArrayList();
     lock.writeLock().lock();
     try {
-      for (Map.Entry<String, Set<String>> change : dataCenter2Changes.entrySet()) {
+      for (Map.Entry<String, DataChangeMerger> change : dataCenter2Changes.entrySet()) {
         final String dataCenter = change.getKey();
-        List<List<String>> parts = Lists.partition(Lists.newArrayList(change.getValue()), maxItems);
-        for (int i = 0; i < parts.size(); i++) {
-          events.add(new DataChangeEvent(dataCenter, parts.get(i)));
+        DataChangeMerger merger = change.getValue();
+        TraceTimes traceTimes = merger.createTraceTime();
+        List<List<String>> parts =
+            Lists.partition(Lists.newArrayList(merger.getDataInfoIds()), maxItems);
+        for (List<String> part : parts) {
+          events.add(new DataChangeEvent(dataCenter, part, traceTimes));
         }
-        change.getValue().clear();
+        merger.clear();
       }
     } finally {
       lock.writeLock().unlock();
@@ -445,8 +457,8 @@ public class DataChangeEventCenter {
 
   @VisibleForTesting
   Set<String> getOnChanges(String dataCenter) {
-    Set<String> changes = dataCenter2Changes.get(dataCenter);
-    return changes == null ? Collections.emptySet() : Sets.newHashSet(changes);
+    DataChangeMerger changes = dataCenter2Changes.get(dataCenter);
+    return changes == null ? Collections.emptySet() : Sets.newHashSet(changes.getDataInfoIds());
   }
 
   @VisibleForTesting
@@ -473,7 +485,7 @@ public class DataChangeEventCenter {
   @VisibleForTesting
   ChangeNotifier newChangeNotifier(
       Channel channel, String dataCenter, Map<String, DatumVersion> dataInfoIds) {
-    return new ChangeNotifier(channel, dataCenter, dataInfoIds);
+    return new ChangeNotifier(channel, dataCenter, dataInfoIds, new TraceTimes());
   }
 
   @VisibleForTesting

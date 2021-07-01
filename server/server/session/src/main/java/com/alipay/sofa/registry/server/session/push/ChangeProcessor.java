@@ -126,8 +126,8 @@ public class ChangeProcessor {
         if (task.expireTimestamp <= exist.expireDeadlineTimestamp) {
           // not reach deadline, requeue to wait
           task.expireDeadlineTimestamp = exist.expireDeadlineTimestamp;
-          // merge change, use exist.changeTs as current.changeTs
-          task.changeCtx.getTimes().override(exist.changeCtx.getTimes());
+          // merge change, merge tracetimes
+          task.changeCtx.addTraceTime(exist.changeCtx.getFirstTimes());
           // tasks is linkedMap, must remove the exist first, then enqueue in the tail
           tasks.remove(key);
           tasks.put(key, task);

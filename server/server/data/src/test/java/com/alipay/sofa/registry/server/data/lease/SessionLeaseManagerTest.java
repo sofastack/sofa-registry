@@ -88,7 +88,7 @@ public class SessionLeaseManagerTest {
     Assert.assertEquals(storage.tombstoneNum(), 0);
     Assert.assertEquals(storage.get(p.getDataInfoId()).getPubMap().get(p.getRegisterId()), p);
     Mockito.verify(slm.dataChangeEventCenter, Mockito.times(0))
-        .onChange(Mockito.anyCollection(), Mockito.anyString());
+        .onChange(Mockito.anyCollection(), Mockito.any(), Mockito.anyString());
     // reset the connections
     Mockito.when(server.getChannels()).thenReturn(Collections.emptyList());
     Thread.sleep(1500);
@@ -98,7 +98,7 @@ public class SessionLeaseManagerTest {
     Assert.assertEquals(storage.tombstoneNum(), 0);
     Assert.assertEquals(storage.get(p.getDataInfoId()).publisherSize(), 0);
     Mockito.verify(slm.dataChangeEventCenter, Mockito.times(1))
-        .onChange(Mockito.anyCollection(), Mockito.anyString());
+        .onChange(Mockito.anyCollection(), Mockito.any(), Mockito.anyString());
 
     // wait to compact
     Thread.sleep(1500);
@@ -106,7 +106,7 @@ public class SessionLeaseManagerTest {
     Assert.assertEquals(storage.tombstoneNum(), 0);
     Assert.assertEquals(storage.get(p.getDataInfoId()).publisherSize(), 0);
     Mockito.verify(slm.dataChangeEventCenter, Mockito.times(1))
-        .onChange(Mockito.anyCollection(), Mockito.anyString());
+        .onChange(Mockito.anyCollection(), Mockito.any(), Mockito.anyString());
   }
 
   @Test
@@ -142,7 +142,7 @@ public class SessionLeaseManagerTest {
     Assert.assertEquals(storage.tombstoneNum(), 0);
     Assert.assertEquals(storage.get(p.getDataInfoId()).publisherSize(), 0);
     Mockito.verify(slm.dataChangeEventCenter, Mockito.times(1))
-        .onChange(Mockito.anyCollection(), Mockito.anyString());
+        .onChange(Mockito.anyCollection(), Mockito.any(), Mockito.anyString());
     // put again
     storage.put(p);
     Assert.assertEquals(storage.get(p.getDataInfoId()).publisherSize(), 1);
@@ -151,7 +151,7 @@ public class SessionLeaseManagerTest {
     // could not clean
     slm.cleanStorage();
     Mockito.verify(slm.dataChangeEventCenter, Mockito.times(1))
-        .onChange(Mockito.anyCollection(), Mockito.anyString());
+        .onChange(Mockito.anyCollection(), Mockito.any(), Mockito.anyString());
     Assert.assertEquals(storage.get(p.getDataInfoId()).publisherSize(), 1);
   }
 

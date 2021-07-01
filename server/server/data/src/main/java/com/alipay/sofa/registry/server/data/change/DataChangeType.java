@@ -14,26 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.push;
+package com.alipay.sofa.registry.server.data.change;
 
-import org.junit.Assert;
-import org.junit.Test;
-
-public class TriggerPushContextTest {
-  @Test
-  public void test() {
-    TriggerPushContext ctx = new TriggerPushContext("testDc", 100, "testData", 200);
-    Assert.assertTrue(ctx.toString(), ctx.toString().contains("100"));
-
-    Assert.assertEquals(ctx.dataCenter, "testDc");
-    Assert.assertEquals(ctx.dataNode, "testData");
-    Assert.assertEquals(ctx.getExpectDatumVersion(), 100);
-    Assert.assertEquals(ctx.getFirstTimes().getTriggerSession(), 200);
-
-    ctx.setExpectDatumVersion(300);
-    ctx.getFirstTimes().setTriggerSession(500);
-
-    Assert.assertEquals(ctx.getExpectDatumVersion(), 300);
-    Assert.assertEquals(ctx.getFirstTimes().getTriggerSession(), 500);
-  }
+public enum DataChangeType {
+  UNKNOWN,
+  PUT,
+  SYNC,
+  MIGRATED,
+  LEASE,
 }
