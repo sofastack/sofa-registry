@@ -33,6 +33,7 @@ import com.alipay.sofa.registry.remoting.exchange.message.Response;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.DatumStorage;
 import com.alipay.sofa.registry.server.data.change.DataChangeEventCenter;
+import com.alipay.sofa.registry.server.data.change.DataChangeType;
 import com.alipay.sofa.registry.server.data.lease.SessionLeaseManager;
 import com.alipay.sofa.registry.server.data.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.server.data.remoting.SessionNodeExchanger;
@@ -112,7 +113,8 @@ public final class SlotDiffSyncer {
     }
     if (sessionProcessId != null && !changeDataIds.isEmpty()) {
       // only trigger event when sync from session
-      dataChangeEventCenter.onChange(changeDataIds, dataServerConfig.getLocalDataCenter());
+      dataChangeEventCenter.onChange(
+          changeDataIds, DataChangeType.SYNC, dataServerConfig.getLocalDataCenter());
     }
     DIFF_LOGGER.info(
         "DiffPublisher, slotId={} from {}, updatedP {}:{}, removedP {}:{}",
@@ -269,7 +271,8 @@ public final class SlotDiffSyncer {
 
     if (sessionProcessId != null && !changeDataIds.isEmpty()) {
       // only trigger event when sync from session
-      dataChangeEventCenter.onChange(changeDataIds, dataServerConfig.getLocalDataCenter());
+      dataChangeEventCenter.onChange(
+          changeDataIds, DataChangeType.SYNC, dataServerConfig.getLocalDataCenter());
     }
     DIFF_LOGGER.info(
         "DiffDigest, slotId={} from {}, update={}, add={}, remove={}, adds={}, removes={}",

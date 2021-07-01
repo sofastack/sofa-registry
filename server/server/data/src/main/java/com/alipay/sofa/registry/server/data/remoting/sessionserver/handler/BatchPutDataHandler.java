@@ -28,7 +28,9 @@ import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.UnPublisher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.remoting.Channel;
+import com.alipay.sofa.registry.server.data.change.DataChangeType;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.util.*;
 import java.util.concurrent.Executor;
@@ -74,39 +76,44 @@ public class BatchPutDataHandler extends AbstractDataHandler<BatchRequest> {
         // contains publisher and unPublisher
         if (req instanceof Publisher) {
           Publisher publisher = (Publisher) req;
-          changeDataInfoIds.addAll(doHandle(publisher));
+          Map<String, DatumVersion> updatedVersion = doHandle(publisher);
+          changeDataInfoIds.addAll(updatedVersion.keySet());
           if (publisher instanceof UnPublisher) {
             LOGGER.info(
-                "unpub,{},{},{},{},{}",
+                "unpub,{},{},{},{},{},{}",
                 slotIdStr,
                 publisher.getDataInfoId(),
                 publisher.getRegisterId(),
                 publisher.getVersion(),
-                publisher.getRegisterTimestamp());
+                publisher.getRegisterTimestamp(),
+                updatedVersion.get(publisher.getDataInfoId()));
           } else {
             LOGGER.info(
-                "pub,{},{},{},{},{}",
+                "pub,{},{},{},{},{},{}",
                 slotIdStr,
                 publisher.getDataInfoId(),
                 publisher.getRegisterId(),
                 publisher.getVersion(),
-                publisher.getRegisterTimestamp());
+                publisher.getRegisterTimestamp(),
+                updatedVersion.get(publisher.getDataInfoId()));
           }
         } else if (req instanceof ClientOffPublisher) {
           ClientOffPublisher clientOff = (ClientOffPublisher) req;
-          changeDataInfoIds.addAll(doHandle(clientOff, sessionProcessId));
+          Map<String, DatumVersion> updatedVersion = doHandle(clientOff, sessionProcessId);
+          changeDataInfoIds.addAll(updatedVersion.keySet());
           for (Map.Entry<String, Map<String, RegisterVersion>> e :
               clientOff.getPublisherMap().entrySet()) {
             final String dataInfoId = e.getKey();
             for (Map.Entry<String, RegisterVersion> ver : e.getValue().entrySet()) {
               RegisterVersion version = ver.getValue();
               LOGGER.info(
-                  "off,{},{},{},{},{}",
+                  "off,{},{},{},{},{},{}",
                   slotIdStr,
                   dataInfoId,
                   ver.getKey(),
                   version.getVersion(),
-                  version.getRegisterTimestamp());
+                  version.getRegisterTimestamp(),
+                  updatedVersion.get(dataInfoId));
             }
           }
         } else {
@@ -116,14 +123,15 @@ public class BatchPutDataHandler extends AbstractDataHandler<BatchRequest> {
     } finally {
       // if has exception, try to notify the req which was handled
       if (!changeDataInfoIds.isEmpty()) {
-        dataChangeEventCenter.onChange(changeDataInfoIds, dataServerConfig.getLocalDataCenter());
+        dataChangeEventCenter.onChange(
+            changeDataInfoIds, DataChangeType.PUT, dataServerConfig.getLocalDataCenter());
       }
     }
 
     return SlotAccessGenericResponse.successResponse(slotAccess, null);
   }
 
-  private List<String> doHandle(Publisher publisher) {
+  private Map<String, DatumVersion> doHandle(Publisher publisher) {
     publisher = Publisher.internPublisher(publisher);
     if (publisher.getPublishType() == PublishType.TEMPORARY) {
       // create datum for the temp publisher, we need the datum.version for check ver
@@ -134,22 +142,23 @@ public class BatchPutDataHandler extends AbstractDataHandler<BatchRequest> {
     } else {
       DatumVersion version = localDatumStorage.put(publisher);
       if (version != null) {
-        return Collections.singletonList(publisher.getDataInfoId());
+        return Collections.singletonMap(publisher.getDataInfoId(), version);
       }
     }
-    return Collections.emptyList();
+    return Collections.emptyMap();
   }
 
-  public List<String> doHandle(ClientOffPublisher request, ProcessId sessionProcessId) {
+  public Map<String, DatumVersion> doHandle(
+      ClientOffPublisher request, ProcessId sessionProcessId) {
     Map<String, Map<String, RegisterVersion>> publisherMap = request.getPublisherMap();
-    List<String> dataInfoIds = new ArrayList<>(publisherMap.size());
+    Map<String, DatumVersion> ret = Maps.newHashMapWithExpectedSize(publisherMap.size());
     for (Map.Entry<String, Map<String, RegisterVersion>> e : publisherMap.entrySet()) {
       DatumVersion version = localDatumStorage.remove(e.getKey(), sessionProcessId, e.getValue());
       if (version != null) {
-        dataInfoIds.add(e.getKey());
+        ret.put(e.getKey(), version);
       }
     }
-    return dataInfoIds;
+    return ret;
   }
 
   @Override

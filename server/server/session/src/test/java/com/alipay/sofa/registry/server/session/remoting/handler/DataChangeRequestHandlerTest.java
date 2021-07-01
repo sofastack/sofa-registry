@@ -19,6 +19,7 @@ package com.alipay.sofa.registry.server.session.remoting.handler;
 import static org.mockito.Mockito.*;
 
 import com.alipay.sofa.registry.common.model.Node;
+import com.alipay.sofa.registry.common.model.TraceTimes;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.sessionserver.DataChangeRequest;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
@@ -89,7 +90,7 @@ public class DataChangeRequestHandlerTest {
     Map<String, DatumVersion> dataInfoIds = new HashMap<>();
     dataInfoIds.put("testId1", new DatumVersion(100));
     dataInfoIds.put("testId2", new DatumVersion(200));
-    DataChangeRequest request = new DataChangeRequest("testDc", dataInfoIds);
+    DataChangeRequest request = new DataChangeRequest("testDc", dataInfoIds, new TraceTimes());
     Assert.assertTrue(request.toString(), request.toString().contains("testDc"));
     return request;
   }
