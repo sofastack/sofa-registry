@@ -16,7 +16,8 @@
  */
 package com.alipay.sofa.registry.common.model.store;
 
-import com.alipay.sofa.registry.common.model.*;
+import com.alipay.sofa.registry.common.model.ProcessId;
+import com.alipay.sofa.registry.common.model.PublishSource;
 import com.alipay.sofa.registry.common.model.PublishType;
 import com.alipay.sofa.registry.common.model.ServerDataBox;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -126,6 +127,12 @@ public class Publisher extends BaseInfo {
     publisher.setAppName(publisher.getAppName());
 
     return publisher;
+  }
+
+  public static void internPublisher(List<Publisher> publishers) {
+    for (Publisher p : publishers) {
+      internPublisher(p);
+    }
   }
 
   public PublishSource getPublishSource() {

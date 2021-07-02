@@ -16,7 +16,8 @@
  */
 package com.alipay.sofa.registry.server.data.slot;
 
-import static com.alipay.sofa.registry.server.data.slot.SlotMetrics.*;
+import static com.alipay.sofa.registry.server.data.slot.SlotMetrics.SyncLeader;
+import static com.alipay.sofa.registry.server.data.slot.SlotMetrics.SyncSession;
 
 import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.ProcessId;
@@ -24,8 +25,12 @@ import com.alipay.sofa.registry.common.model.PublisherDigestUtil;
 import com.alipay.sofa.registry.common.model.RegisterVersion;
 import com.alipay.sofa.registry.common.model.dataserver.DatumDigest;
 import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
-import com.alipay.sofa.registry.common.model.slot.*;
+import com.alipay.sofa.registry.common.model.slot.DataSlotDiffDigestRequest;
+import com.alipay.sofa.registry.common.model.slot.DataSlotDiffDigestResult;
+import com.alipay.sofa.registry.common.model.slot.DataSlotDiffPublisherRequest;
+import com.alipay.sofa.registry.common.model.slot.DataSlotDiffPublisherResult;
 import com.alipay.sofa.registry.common.model.store.Publisher;
+import com.alipay.sofa.registry.common.model.store.WordCache;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.exchange.RequestException;
@@ -92,8 +97,11 @@ public final class SlotDiffSyncer {
 
     final Set<String> changeDataIds = Sets.newHashSet();
     for (Map.Entry<String, List<Publisher>> e : result.getUpdatedPublishers().entrySet()) {
-      final String dataInfoId = e.getKey();
-      if (datumStorage.put(dataInfoId, e.getValue()) != null) {
+      // cache the dataInfoId as key
+      final String dataInfoId = WordCache.getWordCache(e.getKey());
+      final List<Publisher> publishers = e.getValue();
+      Publisher.internPublisher(publishers);
+      if (datumStorage.put(dataInfoId, publishers) != null) {
         changeDataIds.add(dataInfoId);
       }
     }

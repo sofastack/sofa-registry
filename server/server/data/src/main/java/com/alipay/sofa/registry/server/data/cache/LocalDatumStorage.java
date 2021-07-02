@@ -187,7 +187,8 @@ public final class LocalDatumStorage implements DatumStorage {
       return Collections.emptyMap();
     }
 
-    Map<String /*sessionIp*/, Map<String /*dataInfoId*/, DatumSummary>> summaries = Maps.newHashMapWithExpectedSize(sessions.size());
+    Map<String /*sessionIp*/, Map<String /*dataInfoId*/, DatumSummary>> summaries =
+        Maps.newHashMapWithExpectedSize(sessions.size());
     for (String sessionIp : sessions) {
       summaries.put(sessionIp, Collections.emptyMap());
     }
@@ -251,7 +252,12 @@ public final class LocalDatumStorage implements DatumStorage {
           slotId,
           k -> {
             PublisherGroups groups = new PublisherGroups(dataServerConfig.getLocalDataCenter());
-            LOGGER.info("{} add publisherGroup {}, role={}, slotNum={}", dataServerConfig.getLocalDataCenter(), slotId, role, publisherGroupsMap.size());
+            LOGGER.info(
+                "{} add publisherGroup {}, role={}, slotNum={}",
+                dataServerConfig.getLocalDataCenter(),
+                slotId,
+                role,
+                publisherGroupsMap.size());
             return groups;
           });
     }
