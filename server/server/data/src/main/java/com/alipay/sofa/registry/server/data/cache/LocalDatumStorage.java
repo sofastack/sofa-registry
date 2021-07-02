@@ -36,6 +36,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.util.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
 
 /**
  * @author yuzhi.lyz
@@ -178,7 +179,19 @@ public final class LocalDatumStorage implements DatumStorage {
   @Override
   public Map<String, Map<String, DatumSummary>> getDatumSummary(int slotId, Set<String> sessions) {
     final PublisherGroups groups = publisherGroupsMap.get(slotId);
-    return groups != null ? groups.getSummary(sessions) : Collections.emptyMap();
+    if (groups != null) {
+      return groups.getSummary(sessions);
+    }
+
+    if (CollectionUtils.isEmpty(sessions)) {
+      return Collections.emptyMap();
+    }
+
+    Map<String /*sessionIp*/, Map<String /*dataInfoId*/, DatumSummary>> summaries = Maps.newHashMapWithExpectedSize(sessions.size());
+    for (String sessionIp : sessions) {
+      summaries.put(sessionIp, Collections.emptyMap());
+    }
+    return summaries;
   }
 
   @Override
@@ -238,7 +251,7 @@ public final class LocalDatumStorage implements DatumStorage {
           slotId,
           k -> {
             PublisherGroups groups = new PublisherGroups(dataServerConfig.getLocalDataCenter());
-            LOGGER.info("{} add publisherGroup {}", dataServerConfig.getLocalDataCenter(), slotId);
+            LOGGER.info("{} add publisherGroup {}, role={}, slotNum={}", dataServerConfig.getLocalDataCenter(), slotId, role, publisherGroupsMap.size());
             return groups;
           });
     }
@@ -247,10 +260,12 @@ public final class LocalDatumStorage implements DatumStorage {
     public void onSlotRemove(int slotId, Slot.Role role) {
       boolean removed = publisherGroupsMap.remove(slotId) != null;
       LOGGER.info(
-          "{}, remove publisherGroup {}, removed={}",
+          "{}, remove publisherGroup {}, removed={}, role={}, slotNum={}",
           dataServerConfig.getLocalDataCenter(),
           slotId,
-          removed);
+          removed,
+          role,
+          publisherGroupsMap.size());
     }
   }
 

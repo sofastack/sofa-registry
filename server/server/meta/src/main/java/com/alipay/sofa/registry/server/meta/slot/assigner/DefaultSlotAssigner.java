@@ -82,12 +82,12 @@ public class DefaultSlotAssigner implements SlotAssigner {
       logger.info("[assign][after assignLeaderSlots] end -- no changes");
     }
 
-    logger.info("[assign][assignLeaderSlots] begin");
+    logger.info("[assign][assignFollowerSlots] begin");
     if (assignFollowerSlots()) {
-      logger.info("[assign][after assignLeaderSlots] end -- follower changed");
+      logger.info("[assign][after assignFollowerSlots] end -- follower changed");
       slotTableBuilder.incrEpoch();
     } else {
-      logger.info("[assign][assignLeaderSlots] end -- no changes");
+      logger.info("[assign][assignFollowerSlots] end -- no changes");
     }
     return slotTableBuilder.build();
   }

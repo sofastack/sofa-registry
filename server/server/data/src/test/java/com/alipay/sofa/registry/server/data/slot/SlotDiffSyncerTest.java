@@ -197,6 +197,9 @@ public class SlotDiffSyncerTest {
 
   @Test
   public void testSyncSession() {
+
+
+
     int slotId = 10;
     MockSync mockSync = mockSync(slotId, "testDc");
     SlotDiffSyncer syncer = mockSync.syncer;
@@ -207,6 +210,11 @@ public class SlotDiffSyncerTest {
     List<Publisher> p4 = mockSync.p4;
 
     Map<String, Map<String, DatumSummary>> sessionDatumSummary =
+            syncer.getDatumStorage().getDatumSummary(-1, Collections.singleton(ServerEnv.IP));
+    Assert.assertEquals(sessionDatumSummary.size(), 1);
+    Assert.assertTrue(sessionDatumSummary.get(ServerEnv.IP) != null);
+
+    sessionDatumSummary =
         syncer.getDatumStorage().getDatumSummary(slotId, Collections.singleton(ServerEnv.IP));
     Map<String, DatumSummary> summary = sessionDatumSummary.get(ServerEnv.IP);
 
