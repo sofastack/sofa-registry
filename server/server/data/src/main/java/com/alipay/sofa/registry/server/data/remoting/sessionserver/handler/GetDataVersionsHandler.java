@@ -22,6 +22,7 @@ import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.dataserver.GetDataVersionRequest;
 import com.alipay.sofa.registry.common.model.slot.SlotAccess;
 import com.alipay.sofa.registry.common.model.slot.SlotAccessGenericResponse;
+import com.alipay.sofa.registry.common.model.store.WordCache;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
@@ -121,7 +122,10 @@ public class GetDataVersionsHandler extends AbstractDataHandler<GetDataVersionRe
           // no datum in data node, this maybe happens an empty datum occurs migrating
           // there is subscriber subs the dataId. we create a empty datum to trace the version
           // the version will trigger the push after session.scan
-          final DatumVersion v = localDatumStorage.createEmptyDatumIfAbsent(dataInfoId, dataCenter);
+          // cache the dataInfoId
+          final String cacheDataInfoId = WordCache.getWordCache(dataInfoId);
+          final DatumVersion v =
+              localDatumStorage.createEmptyDatumIfAbsent(cacheDataInfoId, dataCenter);
           if (v != null) {
             ret.put(dataInfoId, v);
           }
