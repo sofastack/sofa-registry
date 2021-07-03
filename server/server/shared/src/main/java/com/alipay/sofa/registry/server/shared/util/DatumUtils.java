@@ -65,7 +65,7 @@ public final class DatumUtils {
     for (Publisher publisher : datum.getPubMap().values()) {
       final URL srcAddress = publisher.getSourceAddress();
       // temp publisher the srcAddress maybe null
-      final String srcAddressString = srcAddress == null ? null : srcAddress.getAddressString();
+      final String srcAddressString = srcAddress == null ? null : srcAddress.buildAddressString();
       publishers.add(
           new SubPublisher(
               publisher.getRegisterId(),

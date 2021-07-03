@@ -67,7 +67,7 @@ public class JerseyClient implements Client {
   public Channel connect(URL url) {
     try {
       JerseyChannel channel = new JerseyChannel(getTarget(url), getClient());
-      channels.put(url.getAddressString(), channel);
+      channels.put(url.buildAddressString(), channel);
       return channel;
     } catch (Exception e) {
       LOGGER.error("Create jersey connect:" + url + " error!", e);
@@ -131,7 +131,7 @@ public class JerseyClient implements Client {
 
   @Override
   public Channel getChannel(URL url) {
-    Channel c = channels.get(url.getAddressString());
+    Channel c = channels.get(url.buildAddressString());
     if (c == null) {
       return null;
     } else {

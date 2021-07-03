@@ -41,7 +41,7 @@ public final class RemotingHelper {
   }
 
   public static String getAddressString(URL url) {
-    return url == null ? null : url.getAddressString();
+    return url == null ? null : url.buildAddressString();
   }
 
   public static void markProtobuf(Channel channel) {

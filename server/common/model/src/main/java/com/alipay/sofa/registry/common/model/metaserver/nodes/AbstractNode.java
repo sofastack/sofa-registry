@@ -58,7 +58,7 @@ public abstract class AbstractNode implements Node {
   }
 
   public String getAddressString() {
-    return nodeUrl.getAddressString();
+    return nodeUrl.buildAddressString();
   }
 
   protected boolean equal(AbstractNode node) {

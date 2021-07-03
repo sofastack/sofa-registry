@@ -213,7 +213,7 @@ public class DatumApiResourceTest {
     param.setPublisherConnectId("192.168.1.1:123_192.168.1.2:456");
     Publisher publisher = resource.buildPublisher(null, param);
     Assert.assertEquals(param.getDataInfoId(), publisher.getDataInfoId());
-    Assert.assertEquals("192.168.1.1:123", publisher.getSourceAddress().getAddressString());
-    Assert.assertEquals("192.168.1.2:456", publisher.getTargetAddress().getAddressString());
+    Assert.assertEquals("192.168.1.1:123", publisher.getSourceAddress().buildAddressString());
+    Assert.assertEquals("192.168.1.2:456", publisher.getTargetAddress().buildAddressString());
   }
 }

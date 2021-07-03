@@ -164,10 +164,10 @@ public class DataCacheTest extends BaseTest {
       Assert.assertTrue(
           getCachePub(
               sessionDataStore,
-              connectIdss + ValueConstants.CONNECT_ID_SPLIT + p.getTargetAddress().getIpAddress()));
+              connectIdss + ValueConstants.CONNECT_ID_SPLIT + p.getTargetAddress().buildAddressString()));
     }
     for (Publisher p : publisherList) {
-      String c = connectId + ValueConstants.CONNECT_ID_SPLIT + p.getTargetAddress().getIpAddress();
+      String c = connectId + ValueConstants.CONNECT_ID_SPLIT + p.getTargetAddress().buildAddressString();
       Assert.assertFalse(getCachePub(sessionDataStore, c));
     }
   }
@@ -507,9 +507,9 @@ public class DataCacheTest extends BaseTest {
 
     sessionInterests.deleteByConnectId(
         ConnectId.parse(
-            subscriber1.getSourceAddress().getAddressString()
+            subscriber1.getSourceAddress().buildAddressString()
                 + "_"
-                + subscriber1.getTargetAddress().getAddressString()));
+                + subscriber1.getTargetAddress().buildAddressString()));
 
     Assert.assertEquals(
         sessionInterests
