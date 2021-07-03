@@ -19,8 +19,6 @@ package com.alipay.sofa.registry.common.model.store;
 import com.alipay.sofa.registry.concurrent.ThreadLocalStringBuilder;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
 import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -243,5 +241,4 @@ public final class URL implements Serializable {
     sb.append('}');
     return sb.toString();
   }
-
 }
