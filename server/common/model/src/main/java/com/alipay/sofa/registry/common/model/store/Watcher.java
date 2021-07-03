@@ -70,6 +70,9 @@ public class Watcher extends BaseInfo {
     watcher.setCell(watcher.getCell());
     watcher.setProcessId(watcher.getProcessId());
     watcher.setAppName(watcher.getAppName());
+    watcher.setSourceAddress(URL.internURL(watcher.getSourceAddress()));
+    watcher.setTargetAddress(URL.internURL(watcher.getTargetAddress()));
+    watcher.setAttributes(watcher.getAttributes());
 
     return watcher;
   }

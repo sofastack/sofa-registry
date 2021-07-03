@@ -125,12 +125,9 @@ public class Publisher extends BaseInfo {
     publisher.setCell(publisher.getCell());
     publisher.setProcessId(publisher.getProcessId());
     publisher.setAppName(publisher.getAppName());
-    URL sourceAddress = URL.internURL(publisher.getSourceAddress());
-    URL targetAddress = URL.internURL(publisher.getTargetAddress());
-
-    publisher.setSourceAddress(sourceAddress);
-    publisher.setTargetAddress(targetAddress);
-
+    publisher.setSourceAddress(URL.internURL(publisher.getSourceAddress()));
+    publisher.setTargetAddress(URL.internURL(publisher.getTargetAddress()));
+    publisher.setAttributes(publisher.getAttributes());
     return publisher;
   }
 

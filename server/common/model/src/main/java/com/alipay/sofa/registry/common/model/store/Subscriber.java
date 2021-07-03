@@ -212,11 +212,9 @@ public class Subscriber extends BaseInfo {
     subscriber.setProcessId(subscriber.getProcessId());
     subscriber.setAppName(subscriber.getAppName());
 
-    URL sourceAddress = URL.internURL(subscriber.getSourceAddress());
-    URL targetAddress = URL.internURL(subscriber.getTargetAddress());
-
-    subscriber.setSourceAddress(sourceAddress);
-    subscriber.setTargetAddress(targetAddress);
+    subscriber.setSourceAddress(URL.internURL(subscriber.getSourceAddress()));
+    subscriber.setTargetAddress(URL.internURL(subscriber.getTargetAddress()));
+    subscriber.setAttributes(subscriber.getAttributes());
 
     return subscriber;
   }

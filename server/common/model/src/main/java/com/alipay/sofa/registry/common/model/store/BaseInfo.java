@@ -19,10 +19,12 @@ package com.alipay.sofa.registry.common.model.store;
 import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.RegisterVersion;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.collect.Maps;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import org.springframework.util.CollectionUtils;
 
 /**
  * @author shangyu.wh
@@ -202,7 +204,7 @@ public abstract class BaseInfo implements Serializable, StoreData<String> {
    */
   public synchronized Map<String, String> getAttributes() {
     if (attributes == null) {
-      return Collections.EMPTY_MAP;
+      return Collections.emptyMap();
     }
     return new HashMap<>(attributes);
   }
@@ -216,7 +218,7 @@ public abstract class BaseInfo implements Serializable, StoreData<String> {
     if (attributes == null || attributes.isEmpty()) {
       this.attributes = null;
     } else {
-      this.attributes = new HashMap<>(attributes);
+      this.attributes = internAttributes(attributes);
     }
   }
 
@@ -295,7 +297,7 @@ public abstract class BaseInfo implements Serializable, StoreData<String> {
    * @param clientId value to be assigned to property clientId
    */
   public void setClientId(String clientId) {
-    this.clientId = WordCache.getWordCache(clientId);
+    this.clientId = clientId;
   }
 
   /**
@@ -413,6 +415,17 @@ public abstract class BaseInfo implements Serializable, StoreData<String> {
         getSourceAddress().getPort(),
         getTargetAddress().getIpAddress(),
         getTargetAddress().getPort());
+  }
+
+  private Map<String, String> internAttributes(Map<String, String> attributes) {
+    if (CollectionUtils.isEmpty(attributes)) {
+      return Collections.emptyMap();
+    }
+    Map<String, String> ret = Maps.newHashMapWithExpectedSize(attributes.size());
+    for (Map.Entry<String, String> entry : attributes.entrySet()) {
+      ret.put(WordCache.getWordCache(entry.getKey()), entry.getValue());
+    }
+    return ret;
   }
 
   public RegisterVersion registerVersion() {
