@@ -164,13 +164,10 @@ public class DataCacheTest extends BaseTest {
       Assert.assertTrue(
           getCachePub(
               sessionDataStore,
-              connectIdss
-                  + ValueConstants.CONNECT_ID_SPLIT
-                  + p.getTargetAddress().buildAddressString()));
+              connectIdss + ValueConstants.CONNECT_ID_SPLIT + p.getTargetAddress().getIpAddress()));
     }
     for (Publisher p : publisherList) {
-      String c =
-          connectId + ValueConstants.CONNECT_ID_SPLIT + p.getTargetAddress().buildAddressString();
+      String c = connectId + ValueConstants.CONNECT_ID_SPLIT + p.getTargetAddress().getIpAddress();
       Assert.assertFalse(getCachePub(sessionDataStore, c));
     }
   }

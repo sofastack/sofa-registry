@@ -426,7 +426,7 @@
             <dependency>
                 <groupId>com.alipay.common</groupId>
                 <artifactId>tracer</artifactId>
-                <version>1.0.56</version>
+                <version>1.0.55</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
