@@ -110,6 +110,6 @@ public class SessionCacheDigestTask {
   }
 
   private String logUrl(URL url) {
-    return url == null ? "null" : url.getAddressString();
+    return url == null ? "null" : url.buildAddressString();
   }
 }

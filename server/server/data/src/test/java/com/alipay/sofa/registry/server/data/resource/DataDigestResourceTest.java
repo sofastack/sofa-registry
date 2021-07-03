@@ -67,8 +67,8 @@ public class DataDigestResourceTest {
     mapMap =
         resource.getPublishersByConnectId(
             Collections.singletonMap(
-                pub.getSourceAddress().getAddressString(),
-                pub.getTargetAddress().getAddressString()));
+                pub.getSourceAddress().buildAddressString(),
+                pub.getTargetAddress().buildAddressString()));
     Assert.assertEquals(1, mapMap.size());
     Assert.assertEquals(mapMap.get(pub.connectId().toString()).get(pub.getRegisterId()), pub);
 

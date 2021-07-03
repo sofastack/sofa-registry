@@ -50,7 +50,7 @@ public class Watcher extends BaseInfo {
     sb.append("dataInfoId=").append(getDataInfoId()).append(", ");
     sb.append("registerId=").append(getRegisterId()).append(", ");
     sb.append("pushed=").append(pushedVersion).append(", ");
-    sb.append("sourceAddress=").append(getSourceAddress().getAddressString());
+    sb.append("sourceAddress=").append(getSourceAddress().buildAddressString());
     return sb.toString();
   }
 

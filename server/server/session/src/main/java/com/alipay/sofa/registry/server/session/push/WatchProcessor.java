@@ -126,6 +126,6 @@ public class WatchProcessor {
         finishTs - pushStartTimestamp,
         w.getRegisterTimestamp(),
         triggerTimestamp,
-        w.getSourceAddress().getAddressString());
+        w.getSourceAddress().buildAddressString());
   }
 }

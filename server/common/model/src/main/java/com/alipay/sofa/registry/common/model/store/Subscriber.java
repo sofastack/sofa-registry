@@ -142,7 +142,7 @@ public class Subscriber extends BaseInfo {
     sb.append("dataInfoId=").append(getDataInfoId()).append(", ");
     sb.append("registerId=").append(getRegisterId()).append(", ");
     sb.append("scope=").append(getScope()).append(", ");
-    sb.append("sourceAddress=").append(getSourceAddress().getAddressString());
+    sb.append("sourceAddress=").append(getSourceAddress().buildAddressString());
     return sb.toString();
   }
 

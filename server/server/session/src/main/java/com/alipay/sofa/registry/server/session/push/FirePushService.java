@@ -121,7 +121,7 @@ public class FirePushService {
       int level = sessionServerConfig.getClientNodePushConcurrencyLevel();
       Tuple key =
           Tuple.of(
-              watcher.getSourceAddress().getAddressString(),
+              watcher.getSourceAddress().buildAddressString(),
               watcher.getDataInfoId().hashCode() % level);
       watchPushExecutor.execute(key, new WatchTask(watcher, configData));
       WATCH_TASK_COUNTER.inc();

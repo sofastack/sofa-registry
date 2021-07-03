@@ -119,7 +119,7 @@ public final class SubscriberUtils {
   public static SimpleSubscriber convert(Subscriber subscriber) {
     return new SimpleSubscriber(
         subscriber.getClientId(),
-        subscriber.getSourceAddress().getAddressString(),
+        subscriber.getSourceAddress().buildAddressString(),
         subscriber.getAppName());
   }
 

@@ -52,7 +52,7 @@ public class SubscriberUtilsTest {
     SimpleSubscriber simple1 = SubscriberUtils.convert(s1);
     Assert.assertEquals(s1.getAppName(), simple1.getAppName());
     Assert.assertEquals(s1.getClientId(), simple1.getClientId());
-    Assert.assertEquals(s1.getSourceAddress().getAddressString(), simple1.getSourceAddress());
+    Assert.assertEquals(s1.getSourceAddress().buildAddressString(), simple1.getSourceAddress());
 
     Subscriber s2 = new Subscriber();
     s2.setAppName("testApp2");
@@ -66,10 +66,10 @@ public class SubscriberUtilsTest {
 
     Assert.assertEquals(s1.getAppName(), ss.get(0).getAppName());
     Assert.assertEquals(s1.getClientId(), ss.get(0).getClientId());
-    Assert.assertEquals(s1.getSourceAddress().getAddressString(), ss.get(0).getSourceAddress());
+    Assert.assertEquals(s1.getSourceAddress().buildAddressString(), ss.get(0).getSourceAddress());
 
     Assert.assertEquals(s2.getAppName(), ss.get(1).getAppName());
     Assert.assertEquals(s2.getClientId(), ss.get(1).getClientId());
-    Assert.assertEquals(s2.getSourceAddress().getAddressString(), ss.get(1).getSourceAddress());
+    Assert.assertEquals(s2.getSourceAddress().buildAddressString(), ss.get(1).getSourceAddress());
   }
 }

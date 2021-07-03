@@ -111,7 +111,7 @@ public class CacheDigestTask {
   private String logPublisher(Publisher publisher) {
     if (publisher != null) {
       URL url = publisher.getSourceAddress();
-      String urlStr = url != null ? url.getAddressString() : "null";
+      String urlStr = url != null ? url.buildAddressString() : "null";
       return StringFormatter.format(
           "{},{},{},{}",
           publisher.getRegisterId(),
