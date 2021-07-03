@@ -108,10 +108,7 @@ public class PushDataGeneratorTest {
             null,
             w.getSourceAddress().getIpAddress(),
             w.getSourceAddress().getPort(),
-            null,
-            null,
-            URL.PROTOBUF,
-            null);
+            URL.PROTOBUF);
     w.setSourceAddress(url);
     data.setDataBox(new DataBox());
     pushData = generator.createPushData(w, data);

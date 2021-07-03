@@ -16,13 +16,13 @@
  */
 package com.alipay.sofa.registry.common.model.store;
 
+import com.alipay.sofa.registry.concurrent.ThreadLocalStringBuilder;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
-import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -43,17 +43,11 @@ public final class URL implements Serializable {
 
   private ProtocolType protocol;
 
-  private String host;
-
   private String ipAddress;
 
   private int port;
 
-  private String path;
-
   private Byte serializerIndex;
-
-  private Map<String, String> parameters;
 
   private String addressString;
 
@@ -72,27 +66,14 @@ public final class URL implements Serializable {
    * @param protocol
    * @param ipAddress
    * @param port
-   * @param host
-   * @param path
    * @param serializerIndex
-   * @param parameters
    */
-  public URL(
-      ProtocolType protocol,
-      String ipAddress,
-      int port,
-      String host,
-      String path,
-      Byte serializerIndex,
-      Map<String, String> parameters) {
+  public URL(ProtocolType protocol, String ipAddress, int port, Byte serializerIndex) {
     this.protocol = protocol;
-    this.host = host;
     this.ipAddress = WordCache.getWordCache(getIPAddressFromDomain(ipAddress));
     this.port = port;
     this.addressString = WordCache.getWordCache(buildAddressString());
-    this.path = path;
     this.serializerIndex = serializerIndex;
-    this.parameters = parameters;
   }
 
   /**
@@ -102,7 +83,7 @@ public final class URL implements Serializable {
    * @param port
    */
   public URL(String ipAddress, int port) {
-    this(null, ipAddress, port, "", "", HESSIAN_2, null);
+    this(null, ipAddress, port, HESSIAN_2);
   }
 
   /**
@@ -111,7 +92,7 @@ public final class URL implements Serializable {
    * @param address
    */
   public URL(InetSocketAddress address) {
-    this(null, address.getAddress().getHostAddress(), address.getPort(), "", "", HESSIAN_2, null);
+    this(null, address.getAddress().getHostAddress(), address.getPort(), HESSIAN_2);
   }
 
   /**
@@ -121,14 +102,7 @@ public final class URL implements Serializable {
    * @param serializerIndex
    */
   public URL(InetSocketAddress address, Byte serializerIndex) {
-    this(
-        null,
-        address.getAddress().getHostAddress(),
-        address.getPort(),
-        "",
-        "",
-        serializerIndex,
-        null);
+    this(null, address.getAddress().getHostAddress(), address.getPort(), serializerIndex);
   }
 
   /**
@@ -140,6 +114,14 @@ public final class URL implements Serializable {
     this(ipAddress, 0);
   }
 
+  public static URL internURL(URL url) {
+    if (url == null) {
+      return null;
+    }
+    url.setIpAddress(url.getIpAddress());
+    url.setAddressString(url.getAddressString());
+    return url;
+  }
   /**
    * url transfer to InetSocketAddress
    *
@@ -160,15 +142,6 @@ public final class URL implements Serializable {
   }
 
   /**
-   * Getter method for property <tt>host</tt>.
-   *
-   * @return property value of host
-   */
-  public String getHost() {
-    return host;
-  }
-
-  /**
    * Getter method for property <tt>ipAddress</tt>.
    *
    * @return property value of ipAddress
@@ -184,24 +157,6 @@ public final class URL implements Serializable {
    */
   public int getPort() {
     return port;
-  }
-
-  /**
-   * Getter method for property <tt>path</tt>.
-   *
-   * @return property value of path
-   */
-  public String getPath() {
-    return path;
-  }
-
-  /**
-   * Getter method for property <tt>parameters</tt>.
-   *
-   * @return property value of parameters
-   */
-  public Map<String, String> getParameters() {
-    return parameters;
   }
 
   /**
@@ -244,6 +199,24 @@ public final class URL implements Serializable {
   }
 
   /**
+   * Setter method for property <tt>ipAddress</tt>.
+   *
+   * @param ipAddress value to be assigned to property ipAddress
+   */
+  public void setIpAddress(String ipAddress) {
+    this.ipAddress = WordCache.getWordCache(ipAddress);
+  }
+
+  /**
+   * Setter method for property <tt>addressString</tt>.
+   *
+   * @param addressString value to be assigned to property addressString
+   */
+  public void setAddressString(String addressString) {
+    this.addressString = WordCache.getWordCache(addressString);
+  }
+
+  /**
    * TODO Other protocol
    *
    * @param url
@@ -255,10 +228,8 @@ public final class URL implements Serializable {
       throw new IllegalArgumentException("url == null");
     }
     String ipAddress = "";
-    String path = "";
     int port = 0;
     ProtocolType protocol = null;
-    Map<String, String> parameters = null;
 
     int i = url.indexOf(":");
     if (i >= 0 && i < url.length() - 1) {
@@ -269,7 +240,7 @@ public final class URL implements Serializable {
       ipAddress = url;
     }
 
-    return new URL(protocol, ipAddress, port, "", path, HESSIAN_2, parameters);
+    return new URL(protocol, ipAddress, port, HESSIAN_2);
   }
 
   @Override
@@ -279,16 +250,13 @@ public final class URL implements Serializable {
     URL url = (URL) o;
     return port == url.port
         && protocol == url.protocol
-        && Objects.equals(host, url.host)
         && Objects.equals(ipAddress, url.ipAddress)
-        && Objects.equals(path, url.path)
-        && Objects.equals(parameters, url.parameters)
         && Objects.equals(addressString, url.addressString);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(protocol, host, ipAddress, port, path, parameters, addressString);
+    return Objects.hash(protocol, ipAddress, port, addressString);
   }
 
   @Override
