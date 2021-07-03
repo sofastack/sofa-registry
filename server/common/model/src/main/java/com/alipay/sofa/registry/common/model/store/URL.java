@@ -49,8 +49,6 @@ public final class URL implements Serializable {
 
   private Byte serializerIndex;
 
-  private String addressString;
-
   /** ProtocolType Enum */
   public enum ProtocolType {
     TR,
@@ -72,7 +70,6 @@ public final class URL implements Serializable {
     this.protocol = protocol;
     this.ipAddress = WordCache.getWordCache(getIPAddressFromDomain(ipAddress));
     this.port = port;
-    this.addressString = WordCache.getWordCache(buildAddressString());
     this.serializerIndex = serializerIndex;
   }
 
@@ -119,7 +116,6 @@ public final class URL implements Serializable {
       return null;
     }
     url.setIpAddress(url.getIpAddress());
-    url.setAddressString(url.getAddressString());
     return url;
   }
   /**
@@ -165,18 +161,9 @@ public final class URL implements Serializable {
    * @return property value of addressString
    */
   public String getAddressString() {
-    return addressString;
-  }
-
-  /**
-   * build address string
-   *
-   * @return
-   */
-  public String buildAddressString() {
-    StringBuilder sb = new StringBuilder(32);
-    sb.append(ipAddress).append(COLON).append(port);
-    return sb.toString();
+    StringBuilder builder =
+        ThreadLocalStringBuilder.get().append(ipAddress).append(COLON).append(port);
+    return builder.toString();
   }
 
   /**
@@ -205,15 +192,6 @@ public final class URL implements Serializable {
    */
   public void setIpAddress(String ipAddress) {
     this.ipAddress = WordCache.getWordCache(ipAddress);
-  }
-
-  /**
-   * Setter method for property <tt>addressString</tt>.
-   *
-   * @param addressString value to be assigned to property addressString
-   */
-  public void setAddressString(String addressString) {
-    this.addressString = WordCache.getWordCache(addressString);
   }
 
   /**
@@ -248,21 +226,18 @@ public final class URL implements Serializable {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     URL url = (URL) o;
-    return port == url.port
-        && protocol == url.protocol
-        && Objects.equals(ipAddress, url.ipAddress)
-        && Objects.equals(addressString, url.addressString);
+    return port == url.port && protocol == url.protocol && Objects.equals(ipAddress, url.ipAddress);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(protocol, ipAddress, port, addressString);
+    return Objects.hash(protocol, ipAddress, port);
   }
 
   @Override
   public String toString() {
     final StringBuilder sb = new StringBuilder("URL{");
-    sb.append("address='").append(addressString).append('\'');
+    sb.append("address='").append(ipAddress).append(COLON).append(port).append('\'');
     sb.append('}');
     return sb.toString();
   }
