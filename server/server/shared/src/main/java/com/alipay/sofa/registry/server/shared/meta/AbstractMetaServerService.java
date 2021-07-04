@@ -29,6 +29,8 @@ import com.alipay.sofa.registry.common.model.metaserver.blacklist.RegistryForbid
 import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.BaseHeartBeatResponse;
 import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.HeartbeatRequest;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
+import com.alipay.sofa.registry.common.model.slot.GetSlotTableStatusRequest;
+import com.alipay.sofa.registry.common.model.slot.SlotTableStatusResponse;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -272,6 +274,21 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
           leaderIp,
           e);
       throw new RuntimeException("fetch system property data error! " + e.getMessage(), e);
+    }
+  }
+
+  @Override
+  public SlotTableStatusResponse getSlotTableStatus() {
+
+    final String leaderIp = metaServerManager.getMetaServerLeader();
+
+    try {
+      Response response = metaServerManager.sendRequest(new GetSlotTableStatusRequest());
+      SlotTableStatusResponse result = (SlotTableStatusResponse) response.getResult();
+      return result;
+    } catch (Throwable e) {
+      RENEWER_LOGGER.error("fetch slot table status from={} error.", leaderIp, e);
+      return null;
     }
   }
 

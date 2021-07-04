@@ -399,6 +399,11 @@ public class SessionServerConfiguration {
     public ClientManagerResource clientManagerResource() {
       return new ClientManagerResource();
     }
+
+    @Bean
+    public SlotTableStatusResource slotTableStatusResource() {
+      return new SlotTableStatusResource();
+    }
   }
 
   @Configuration

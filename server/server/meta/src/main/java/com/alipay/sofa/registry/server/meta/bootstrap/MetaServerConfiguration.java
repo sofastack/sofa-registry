@@ -40,12 +40,14 @@ import com.alipay.sofa.registry.server.meta.remoting.connection.MetaConnectionMa
 import com.alipay.sofa.registry.server.meta.remoting.connection.SessionConnectionManager;
 import com.alipay.sofa.registry.server.meta.remoting.handler.FetchProvideDataRequestHandler;
 import com.alipay.sofa.registry.server.meta.remoting.handler.FetchSystemPropertyRequestHandler;
+import com.alipay.sofa.registry.server.meta.remoting.handler.GetSlotTableStatusRequestHandler;
 import com.alipay.sofa.registry.server.meta.remoting.handler.HeartbeatRequestHandler;
 import com.alipay.sofa.registry.server.meta.remoting.handler.RegistryForbiddenServerHandler;
 import com.alipay.sofa.registry.server.meta.remoting.meta.MetaNodeExchange;
 import com.alipay.sofa.registry.server.meta.remoting.meta.MetaServerRenewService;
 import com.alipay.sofa.registry.server.meta.resource.*;
 import com.alipay.sofa.registry.server.meta.resource.filter.LeaderAwareFilter;
+import com.alipay.sofa.registry.server.meta.slot.status.SlotTableStatusService;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.alipay.sofa.registry.server.shared.resource.MetricsResource;
 import com.alipay.sofa.registry.server.shared.resource.SlotGenericResource;
@@ -143,6 +145,7 @@ public class MetaServerConfiguration {
     @Autowired private FetchProvideDataRequestHandler fetchProvideDataRequestHandler;
     @Autowired private FetchSystemPropertyRequestHandler fetchSystemPropertyRequestHandler;
     @Autowired private RegistryForbiddenServerHandler registryForbiddenServerHandler;
+    @Autowired private GetSlotTableStatusRequestHandler getSlotTableStatusRequestHandler;
 
     @Bean
     public Exchange boltExchange() {
@@ -161,6 +164,7 @@ public class MetaServerConfiguration {
       list.add(fetchProvideDataRequestHandler);
       list.add(fetchSystemPropertyRequestHandler);
       list.add(registryForbiddenServerHandler);
+      list.add(getSlotTableStatusRequestHandler);
       return list;
     }
 
@@ -170,6 +174,7 @@ public class MetaServerConfiguration {
       list.add(heartbeatRequestHandler);
       list.add(fetchProvideDataRequestHandler);
       list.add(registryForbiddenServerHandler);
+      list.add(getSlotTableStatusRequestHandler);
       return list;
     }
 
@@ -198,6 +203,11 @@ public class MetaServerConfiguration {
     @Bean
     public HeartbeatRequestHandler heartbeatRequestHandler() {
       return new HeartbeatRequestHandler();
+    }
+
+    @Bean
+    public GetSlotTableStatusRequestHandler getSlotTableStatusRequestHandler() {
+      return new GetSlotTableStatusRequestHandler();
     }
 
     @Bean
@@ -238,6 +248,11 @@ public class MetaServerConfiguration {
     @Bean
     public MetaServerRenewService metaServerRenewService() {
       return new MetaServerRenewService();
+    }
+
+    @Bean
+    public SlotTableStatusService slotTableStatusService() {
+      return new SlotTableStatusService();
     }
   }
 

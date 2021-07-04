@@ -38,6 +38,9 @@ public class SlotTableCacheImplTest extends AbstractSessionServerTestBase {
 
   @Test
   public void testSlotOf() {
+
+    int i = slotTableCache.slotOf("pubprocess:12200#@#DEFAULT_INSTANCE_ID#@#SOFA_APP");
+
     String dataInfoId = randomString();
     int slotId = slotTableCache.slotOf(dataInfoId);
     Assert.assertEquals(SlotFunctionRegistry.getFunc().slotOf(dataInfoId), slotId);

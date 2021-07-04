@@ -158,7 +158,6 @@ public abstract class AbstractLeaderElector implements LeaderElector {
     if (leaderNotExpired()) {
       return leaderInfo.leader;
     }
-
     return LeaderInfo.HAS_NO_LEADER.leader;
   }
 
