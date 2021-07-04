@@ -22,7 +22,11 @@ import com.alipay.sofa.registry.common.model.slot.BaseSlotStatus;
 import com.alipay.sofa.registry.common.model.slot.FollowerSlotStatus;
 import com.alipay.sofa.registry.common.model.slot.LeaderSlotStatus;
 import com.alipay.sofa.registry.common.model.slot.Slot;
+import com.alipay.sofa.registry.common.model.slot.SlotTableStatusResponse;
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.data.slot.SlotManager;
+import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import java.util.List;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -40,7 +44,11 @@ public class SlotTableStatusResource {
   public static final long MAX_SYNC_GAP =
       Long.getLong("registry.data.replicate.max.gap.millis", 3 * 60 * 1000);
 
+  private final Logger logger = LoggerFactory.getLogger(getClass());
+
   @Autowired SlotManager slotManager;
+
+  @Autowired MetaServerService metaServerService;
 
   @GET
   @Path("/sync/task/status")
@@ -67,6 +75,22 @@ public class SlotTableStatusResource {
     }
     return new GenericResponse<>()
         .fillSucceed(new SlotTableSyncTaskStatus(epoch, isCurrentSlotStable, slotStatuses));
+  }
+
+  @GET
+  @Path("/status")
+  @Produces(MediaType.APPLICATION_JSON)
+  public GenericResponse<Object> getSlotTableStatus() {
+    logger.info("[getSlotTableStatus] begin");
+    try {
+      SlotTableStatusResponse slotTableStatus = metaServerService.getSlotTableStatus();
+      return new GenericResponse<>().fillSucceed(slotTableStatus);
+    } catch (Throwable th) {
+      logger.error("[getSlotTableStatus]", th);
+      return new GenericResponse<>().fillFailed(th.getMessage());
+    } finally {
+      logger.info("[getSlotTableStatus] end");
+    }
   }
 
   public static class SlotTableSyncTaskStatus {

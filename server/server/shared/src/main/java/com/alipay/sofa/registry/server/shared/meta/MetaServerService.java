@@ -20,6 +20,7 @@ import com.alipay.sofa.registry.common.model.ProcessId;
 import com.alipay.sofa.registry.common.model.metaserver.FetchSystemPropertyResult;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.common.model.metaserver.SlotTableChangeEvent;
+import com.alipay.sofa.registry.common.model.slot.SlotTableStatusResponse;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -96,4 +97,6 @@ public interface MetaServerService {
   Set<String> getDataCenters();
 
   FetchSystemPropertyResult fetchSystemProperty(String dataInfoId, long currentVersion);
+
+  SlotTableStatusResponse getSlotTableStatus();
 }

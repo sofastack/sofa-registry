@@ -78,6 +78,7 @@ public class MetaNodeExchange extends ClientSideExchanger {
   public Response sendRequest(Object requestBody) throws RequestException {
     final String newLeader = metaLeaderService.getLeader();
     if (StringUtil.isBlank(newLeader)) {
+      LOGGER.error("[sendRequest] meta leader is empty.");
       return () -> ResultStatus.FAILED;
     }
 
