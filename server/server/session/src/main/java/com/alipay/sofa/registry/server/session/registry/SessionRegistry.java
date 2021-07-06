@@ -181,10 +181,8 @@ public class SessionRegistry implements Registry {
       case PUBLISHER:
         Publisher publisher = (Publisher) storeData;
         publisher.setSessionProcessId(ServerEnv.PROCESS_ID);
-
-        if (!sessionDataStore.deleteById(storeData.getId(), publisher.getDataInfoId())) {
-          break;
-        }
+        // no need to check whether the pub exist, make sure the unpub send to data
+        sessionDataStore.deleteById(storeData.getId(), publisher.getDataInfoId());
         // All write operations to DataServer (pub/unPub/clientoff/renew/snapshot)
         // are handed over to WriteDataAcceptor
         writeDataAcceptor.accept(
@@ -350,8 +348,15 @@ public class SessionRegistry implements Registry {
   private void scanVersions(long round) {
     // TODO not support multi cluster
     final String dataCenter = sessionServerConfig.getSessionServerDataCenter();
+    final long start = System.currentTimeMillis();
     Map<String, DatumVersion> interestVersions =
         sessionInterests.getInterestVersions(sessionServerConfig.getSessionServerDataCenter());
+    SCAN_VER_LOGGER.info(
+        "scan interestVersions, round={}, size={}, span={}",
+        round,
+        interestVersions.size(),
+        System.currentTimeMillis() - start);
+
     Map<Integer, Map<String, DatumVersion>> interestVersionsGroup = groupBySlot(interestVersions);
 
     Map<Integer, FetchVersionResult> resultMap =
@@ -366,7 +371,11 @@ public class SessionRegistry implements Registry {
         }
       } catch (Throwable e) {
         SCAN_VER_LOGGER.error(
-            "failed to fetch versions slotId={}, size={}", slotId, group.getValue().size(), e);
+            "round={}, failed to fetch versions slotId={}, size={}",
+            round,
+            slotId,
+            group.getValue().size(),
+            e);
       }
     }
     final int timeoutMillis = sessionServerConfig.getDataNodeExchangeTimeoutMillis();
@@ -382,7 +391,8 @@ public class SessionRegistry implements Registry {
       ConcurrentUtils.sleepUninterruptibly(50, TimeUnit.MILLISECONDS);
     }
     if (!resultMap.isEmpty()) {
-      SCAN_VER_LOGGER.error("[fetchSlotVerTimeout]callbacks={},{}", resultMap.size(), resultMap);
+      SCAN_VER_LOGGER.error(
+          "[fetchSlotVerTimeout]round={},callbacks={},{}", round, resultMap.size(), resultMap);
     }
   }
 
@@ -453,7 +463,7 @@ public class SessionRegistry implements Registry {
       final String dataInfoId = interestVersion.getKey();
       Map<String, DatumVersion> map =
           ret.computeIfAbsent(
-              slotTableCache.slotOf(dataInfoId), k -> Maps.newHashMapWithExpectedSize(128));
+              slotTableCache.slotOf(dataInfoId), k -> Maps.newHashMapWithExpectedSize(256));
       map.put(dataInfoId, interestVersion.getValue());
     }
     return ret;
@@ -546,7 +556,10 @@ public class SessionRegistry implements Registry {
     connectIndexes.addAll(sessionWatchers.getConnectIds());
 
     Server sessionServer = boltExchange.getServer(sessionServerConfig.getServerPort());
-
+    if (sessionServer == null) {
+      LOGGER.warn("server not init when clean connect: {}", sessionServerConfig.getServerPort());
+      return;
+    }
     List<ConnectId> connectIds = new ArrayList<>();
     for (ConnectId connectId : connectIndexes) {
       Channel channel =
