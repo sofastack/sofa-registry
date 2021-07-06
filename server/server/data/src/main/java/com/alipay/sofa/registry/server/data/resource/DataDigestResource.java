@@ -18,6 +18,7 @@ package com.alipay.sofa.registry.server.data.resource;
 
 import com.alipay.remoting.Connection;
 import com.alipay.sofa.registry.common.model.ConnectId;
+import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.common.model.store.Publisher;
@@ -71,8 +72,12 @@ public class DataDigestResource {
 
     ParaCheckUtil.checkNotBlank(dataId, "dataId");
     ParaCheckUtil.checkNotBlank(group, "group");
-    ParaCheckUtil.checkNotBlank(instanceId, "instanceId");
-    ParaCheckUtil.checkNotBlank(dataCenter, "dataCenter");
+    if (StringUtils.isBlank(instanceId)) {
+      instanceId = ValueConstants.DEFAULT_INSTANCE_ID;
+    }
+    if (StringUtils.isBlank(dataCenter)) {
+      dataCenter = dataServerConfig.getLocalDataCenter();
+    }
     String dataInfoId = DataInfo.toDataInfoId(dataId, instanceId, group);
     Map<String, Datum> retList = new HashMap<>();
     retList.put(dataCenter, datumCache.get(dataCenter, dataInfoId));

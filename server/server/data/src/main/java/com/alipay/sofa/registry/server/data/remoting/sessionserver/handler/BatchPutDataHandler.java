@@ -32,7 +32,8 @@ import com.alipay.sofa.registry.server.data.change.DataChangeType;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import java.util.*;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadPoolExecutor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -76,8 +77,10 @@ public class BatchPutDataHandler extends AbstractDataHandler<BatchRequest> {
         // contains publisher and unPublisher
         if (req instanceof Publisher) {
           Publisher publisher = (Publisher) req;
-          Map<String, DatumVersion> updatedVersion = doHandle(publisher);
-          changeDataInfoIds.addAll(updatedVersion.keySet());
+          DatumVersion updatedVersion = doHandle(publisher);
+          if (updatedVersion != null) {
+            changeDataInfoIds.add(publisher.getDataInfoId());
+          }
           if (publisher instanceof UnPublisher) {
             LOGGER.info(
                 "unpub,{},{},{},{},{},{}",
@@ -86,7 +89,7 @@ public class BatchPutDataHandler extends AbstractDataHandler<BatchRequest> {
                 publisher.getRegisterId(),
                 publisher.getVersion(),
                 publisher.getRegisterTimestamp(),
-                updatedVersion.get(publisher.getDataInfoId()));
+                updatedVersion);
           } else {
             LOGGER.info(
                 "pub,{},{},{},{},{},{}",
@@ -95,7 +98,7 @@ public class BatchPutDataHandler extends AbstractDataHandler<BatchRequest> {
                 publisher.getRegisterId(),
                 publisher.getVersion(),
                 publisher.getRegisterTimestamp(),
-                updatedVersion.get(publisher.getDataInfoId()));
+                updatedVersion);
           }
         } else if (req instanceof ClientOffPublisher) {
           ClientOffPublisher clientOff = (ClientOffPublisher) req;
@@ -131,7 +134,7 @@ public class BatchPutDataHandler extends AbstractDataHandler<BatchRequest> {
     return SlotAccessGenericResponse.successResponse(slotAccess, null);
   }
 
-  private Map<String, DatumVersion> doHandle(Publisher publisher) {
+  private DatumVersion doHandle(Publisher publisher) {
     publisher = Publisher.internPublisher(publisher);
     if (publisher.getPublishType() == PublishType.TEMPORARY) {
       // create datum for the temp publisher, we need the datum.version for check ver
@@ -139,13 +142,9 @@ public class BatchPutDataHandler extends AbstractDataHandler<BatchRequest> {
           publisher.getDataInfoId(), dataServerConfig.getLocalDataCenter());
       // temporary only notify session, not store
       dataChangeEventCenter.onTempPubChange(publisher, dataServerConfig.getLocalDataCenter());
-    } else {
-      DatumVersion version = localDatumStorage.put(publisher);
-      if (version != null) {
-        return Collections.singletonMap(publisher.getDataInfoId(), version);
-      }
+      return null;
     }
-    return Collections.emptyMap();
+    return localDatumStorage.put(publisher);
   }
 
   public Map<String, DatumVersion> doHandle(
