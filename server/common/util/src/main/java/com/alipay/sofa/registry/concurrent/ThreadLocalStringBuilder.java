@@ -32,6 +32,24 @@ public class ThreadLocalStringBuilder {
     return b;
   }
 
+  public static String join(String e1, String e2) {
+    StringBuilder sb = get();
+    sb.append(e1).append(e2);
+    return sb.toString();
+  }
+
+  public static String join(String e1, String e2, String e3) {
+    StringBuilder sb = get();
+    sb.append(e1).append(e2).append(e3);
+    return sb.toString();
+  }
+
+  public static String join(String e1, String e2, String e3, String e4) {
+    StringBuilder sb = get();
+    sb.append(e1).append(e2).append(e3).append(e4);
+    return sb.toString();
+  }
+
   public static String join(String e1, String e2, String e3, String e4, String e5) {
     StringBuilder sb = get();
     sb.append(e1).append(e2).append(e3).append(e4).append(e5);

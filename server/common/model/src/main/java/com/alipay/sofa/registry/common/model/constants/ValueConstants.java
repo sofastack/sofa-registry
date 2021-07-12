@@ -91,6 +91,12 @@ public class ValueConstants {
           SESSION_PROVIDE_DATA_INSTANCE_ID,
           SESSION_PROVIDE_DATA_GROUP);
 
+  public static final String APP_REVISION_CLEANER_ENABLED_DATA_ID =
+      DataInfo.toDataInfoId(
+          "app_revision.cleaner.enabled",
+          SESSION_PROVIDE_DATA_INSTANCE_ID,
+          SESSION_PROVIDE_DATA_GROUP);
+
   public static final String DISABLE_DATA_ID_CASE_SENSITIVE_SWITCH =
       "disable.dataId.case.sensitive";
 

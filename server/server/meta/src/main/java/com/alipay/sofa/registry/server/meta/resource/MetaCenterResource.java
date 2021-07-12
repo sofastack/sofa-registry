@@ -17,11 +17,10 @@
 package com.alipay.sofa.registry.server.meta.resource;
 
 import com.alipay.sofa.registry.core.model.Result;
+import com.alipay.sofa.registry.server.meta.cleaner.AppRevisionCleaner;
 import com.alipay.sofa.registry.server.meta.cleaner.InterfaceAppsIndexCleaner;
 import com.alipay.sofa.registry.server.meta.resource.filter.LeaderAwareRestController;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -31,6 +30,8 @@ public class MetaCenterResource {
 
   @Autowired private InterfaceAppsIndexCleaner interfaceAppsIndexCleaner;
 
+  @Autowired private AppRevisionCleaner appRevisionCleaner;
+
   @PUT
   @Path("interfaceAppsIndex/renew")
   @Produces(MediaType.APPLICATION_JSON)
@@ -38,6 +39,21 @@ public class MetaCenterResource {
     Result result = new Result();
     interfaceAppsIndexCleaner.startRenew();
     result.setSuccess(true);
+    return result;
+  }
+
+  @PUT
+  @Path("appRevisionCleaner/switch")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Result appRevisionCleanerEnable(@FormParam("enabled") boolean enabled) {
+    Result result = new Result();
+    try {
+      appRevisionCleaner.setEnabled(enabled);
+      result.setSuccess(true);
+    } catch (Exception e) {
+      result.setSuccess(false);
+      result.setMessage(e.getMessage());
+    }
     return result;
   }
 
