@@ -17,6 +17,9 @@
 package com.alipay.sofa.registry.server.meta.cleaner;
 
 import com.alipay.sofa.registry.cache.ConsecutiveSuccess;
+import com.alipay.sofa.registry.common.model.console.PersistenceData;
+import com.alipay.sofa.registry.common.model.console.PersistenceDataBuilder;
+import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.cleaner.AppRevisionSlice;
 import com.alipay.sofa.registry.common.model.metaserver.cleaner.AppRevisionSliceRequest;
 import com.alipay.sofa.registry.jdbc.config.DefaultCommonConfig;
@@ -26,8 +29,12 @@ import com.alipay.sofa.registry.jdbc.mapper.AppRevisionMapper;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.MetaLeaderService;
+import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataService;
 import com.alipay.sofa.registry.server.meta.remoting.session.DefaultSessionServerService;
+import com.alipay.sofa.registry.store.api.DBResponse;
+import com.alipay.sofa.registry.store.api.OperationStatus;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
+import com.alipay.sofa.registry.util.StringFormatter;
 import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import com.google.common.collect.Lists;
 import java.util.*;
@@ -49,6 +56,8 @@ public class AppRevisionCleaner
   final Cleaner cleaner = new Cleaner();
   private final int maxRemoved = 500;
 
+  private static final boolean DEFAULT_ENABLED = true;
+
   @Autowired AppRevisionMapper appRevisionMapper;
 
   @Autowired DefaultCommonConfig defaultCommonConfig;
@@ -58,6 +67,8 @@ public class AppRevisionCleaner
   @Autowired DefaultSessionServerService sessionServerService;
 
   @Autowired MetaLeaderService metaLeaderService;
+
+  @Autowired ProvideDataService provideDataService;
 
   ConsecutiveSuccess consecutiveSuccess;
 
@@ -71,7 +82,7 @@ public class AppRevisionCleaner
   public void init() {
     consecutiveSuccess =
         new ConsecutiveSuccess(
-            slotNum * 3, metadataConfig.getRevisionRenewIntervalMinutes() * 60 * 1000 * 5);
+            slotNum * 3, (long) metadataConfig.getRevisionRenewIntervalMinutes() * 60 * 1000 * 5);
     metaLeaderService.registerListener(this);
   }
 
@@ -153,6 +164,29 @@ public class AppRevisionCleaner
     }
   }
 
+  public void setEnabled(boolean enabled) {
+    PersistenceData persistenceData =
+        PersistenceDataBuilder.createPersistenceData(
+            ValueConstants.APP_REVISION_CLEANER_ENABLED_DATA_ID, Boolean.toString(enabled));
+    try {
+      provideDataService.saveProvideData(persistenceData);
+    } catch (Exception e) {
+      LOG.error("set app revision cleaner failed: ", e);
+      throw new RuntimeException(
+          StringFormatter.format("set app revision cleaner failed: {}", e.getMessage()));
+    }
+  }
+
+  private boolean isEnabled() {
+    DBResponse<PersistenceData> ret =
+        provideDataService.queryProvideData(ValueConstants.APP_REVISION_CLEANER_ENABLED_DATA_ID);
+    if (ret.getOperationStatus() == OperationStatus.SUCCESS) {
+      PersistenceData data = ret.getEntity();
+      return Boolean.parseBoolean(data.getData());
+    }
+    return DEFAULT_ENABLED;
+  }
+
   synchronized int nextSlotId() {
     lastSlotId = (lastSlotId + 1) % slotNum;
     return lastSlotId;
@@ -194,6 +228,9 @@ public class AppRevisionCleaner
 
     @Override
     public void runUnthrowable() {
+      if (!isEnabled()) {
+        return;
+      }
       markDeleted();
       cleanup();
     }

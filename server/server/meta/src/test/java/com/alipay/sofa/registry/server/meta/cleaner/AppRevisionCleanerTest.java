@@ -20,6 +20,8 @@ import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
 import com.alipay.sofa.registry.cache.ConsecutiveSuccess;
+import com.alipay.sofa.registry.common.model.console.PersistenceDataBuilder;
+import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.cleaner.AppRevisionSlice;
 import com.alipay.sofa.registry.jdbc.config.DefaultCommonConfig;
 import com.alipay.sofa.registry.jdbc.config.MetadataConfig;
@@ -27,7 +29,10 @@ import com.alipay.sofa.registry.jdbc.domain.AppRevisionDomain;
 import com.alipay.sofa.registry.jdbc.domain.DateNowDomain;
 import com.alipay.sofa.registry.jdbc.mapper.AppRevisionMapper;
 import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
+import com.alipay.sofa.registry.server.meta.provide.data.DefaultProvideDataService;
 import com.alipay.sofa.registry.server.meta.remoting.session.DefaultSessionServerService;
+import com.alipay.sofa.registry.store.api.DBResponse;
+import com.alipay.sofa.registry.store.api.OperationStatus;
 import java.util.Collections;
 import java.util.Date;
 import org.assertj.core.util.Lists;
@@ -49,10 +54,18 @@ public class AppRevisionCleanerTest extends AbstractMetaServerTestBase {
     appRevisionCleaner.sessionServerService = mock(DefaultSessionServerService.class);
     appRevisionCleaner.defaultCommonConfig = mock(DefaultCommonConfig.class);
     appRevisionCleaner.metadataConfig = mock(MetadataConfig.class);
+    appRevisionCleaner.provideDataService = mock(DefaultProvideDataService.class);
     appRevisionCleaner.consecutiveSuccess = new ConsecutiveSuccess(2, 1000);
     when(appRevisionCleaner.metadataConfig.getRevisionRenewIntervalMinutes()).thenReturn(10000);
     when(appRevisionCleaner.defaultCommonConfig.getClusterId())
         .thenReturn("DEFAULT_LOCALDATACENTER");
+    doReturn(
+            new DBResponse<>(
+                PersistenceDataBuilder.createPersistenceData(
+                    ValueConstants.APP_REVISION_CLEANER_ENABLED_DATA_ID, "true"),
+                OperationStatus.SUCCESS))
+        .when(appRevisionCleaner.provideDataService)
+        .queryProvideData(anyString());
     doReturn(new DateNowDomain(new Date())).when(appRevisionCleaner.appRevisionMapper).getNow();
   }
 
