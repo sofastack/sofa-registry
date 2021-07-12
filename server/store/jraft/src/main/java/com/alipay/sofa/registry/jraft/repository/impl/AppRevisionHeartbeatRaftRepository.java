@@ -16,13 +16,49 @@
  */
 package com.alipay.sofa.registry.jraft.repository.impl;
 
+import com.alipay.sofa.jraft.rhea.client.RheaKVStore;
+import com.alipay.sofa.registry.jraft.config.DefaultCommonConfig;
+import com.alipay.sofa.registry.jraft.config.MetadataConfig;
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.store.api.repository.AppRevisionHeartbeatRepository;
+import com.alipay.sofa.registry.util.SingleFlight;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import javax.annotation.PostConstruct;
 
 /**
  * @author xiaojian.xj
  * @version $Id: AppRevisionHeartbeatRaftRepository.java, v 0.1 2021年02月09日 17:15 xiaojian.xj Exp $
  */
 public class AppRevisionHeartbeatRaftRepository implements AppRevisionHeartbeatRepository {
+  private static final Logger LOG = LoggerFactory.getLogger(AppRevisionHeartbeatRaftRepository.class);
+
+  @Autowired
+  private MetadataConfig metadataConfig;
+
+  @Autowired
+  private AppRevisionRaftRepository appRevisionRaftRepository;
+
+  @Autowired
+  private DefaultCommonConfig defaultCommonConfig;
+
+  @Autowired
+  private RheaKVStore rheaKVStore;
+
+  private SingleFlight singleFlight = new SingleFlight();
+
+  private Integer REVISION_GC_LIMIT;
+
+  private static final Integer heartbeatCheckerSize = 1000;
+
+  @PostConstruct
+  public void postConstruct() {
+    REVISION_GC_LIMIT = metadataConfig.getRevisionGcLimit();
+  }
+  
+  public AppRevisionHeartbeatRaftRepository() {
+  }
 
   @Override
   public void doAppRevisionHeartbeat() {}

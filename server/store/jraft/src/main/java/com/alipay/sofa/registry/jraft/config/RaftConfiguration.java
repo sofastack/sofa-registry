@@ -16,6 +16,17 @@
  */
 package com.alipay.sofa.registry.jraft.config;
 
+import com.alipay.sofa.jraft.rhea.client.DefaultRheaKVStore;
+import com.alipay.sofa.jraft.rhea.client.RheaKVStore;
+import com.alipay.sofa.jraft.rhea.options.PlacementDriverOptions;
+import com.alipay.sofa.jraft.rhea.options.RheaKVStoreOptions;
+import com.alipay.sofa.jraft.rhea.options.StoreEngineOptions;
+import com.alipay.sofa.jraft.rhea.options.configured.PlacementDriverOptionsConfigured;
+import com.alipay.sofa.jraft.rhea.options.configured.RheaKVStoreOptionsConfigured;
+import com.alipay.sofa.jraft.rhea.options.configured.RocksDBOptionsConfigured;
+import com.alipay.sofa.jraft.rhea.options.configured.StoreEngineOptionsConfigured;
+import com.alipay.sofa.jraft.rhea.storage.StorageType;
+import com.alipay.sofa.jraft.util.Endpoint;
 import com.alipay.sofa.registry.jraft.repository.impl.AppRevisionHeartbeatRaftRepository;
 import com.alipay.sofa.registry.jraft.repository.impl.AppRevisionRaftRepository;
 import com.alipay.sofa.registry.jraft.repository.impl.InterfaceAppsRaftRepository;
@@ -23,6 +34,7 @@ import com.alipay.sofa.registry.store.api.repository.AppRevisionHeartbeatReposit
 import com.alipay.sofa.registry.store.api.repository.AppRevisionRepository;
 import com.alipay.sofa.registry.store.api.repository.InterfaceAppsRepository;
 import com.alipay.sofa.registry.store.api.spring.SpringContext;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -38,6 +50,76 @@ import org.springframework.context.annotation.Configuration;
     value = SpringContext.PERSISTENCE_PROFILE_ACTIVE,
     havingValue = SpringContext.META_STORE_API_RAFT)
 public class RaftConfiguration {
+
+  @Configuration
+  public static class MetadataBeanConfiguration{
+    @Bean
+    public DefaultCommonConfig defaultCommonConfig(){
+      return new DefaultCommonConfigBean();
+    }
+
+    @Bean
+    public MetaElectorConfig metaElectorConfig(){
+      return new MetaElectorConfigBean();
+    }
+
+    @Bean
+    public MetadataConfig metadataConfig() {
+      return new MetadataConfigBean();
+    }
+  }
+  
+
+  @Configuration
+  public static class RheaKVBeanConfiguration{
+//    @Bean
+//    public BeanManage beanManage(){
+//      SingleDispatchCenter singleDispatchCenter=new SingleDispatchCenter();
+//      return singleDispatchCenter;
+//    }
+//
+//    @Bean
+//    public SingleRheaKVDriverConfig singleRheaKVDriverConfig(BeanManage beanManage){
+//      beanManage.init();
+//      return (SingleRheaKVDriverConfig) beanManage.getRheaKVDriver();
+//    }
+//
+//    @Bean
+//    public RheaKVStore rheaKVStore(SingleRheaKVDriverConfig singleRheaKVDriverConfig){
+//      RheaKVStore rheaKVStore = new DefaultRheaKVStore();
+//      RheaKVStoreOptions rheaKVStoreOptions = singleRheaKVDriverConfig.getRheaKVStoreOptions();
+//      rheaKVStore.init(rheaKVStoreOptions);
+//      return rheaKVStore;
+//    }
+
+      @Bean()
+      @ConditionalOnMissingBean(RheaKVStore.class)
+      public RheaKVStore rheaKVStore(){
+        DefaultRheaKVStore defaultRheaKVStore = new DefaultRheaKVStore();
+        String address = DefaultConfigs.ADDRESS;
+        StoreEngineOptions storeOpts = StoreEngineOptionsConfigured.newConfigured()
+                .withStorageType(StorageType.RocksDB)
+                .withRocksDBOptions(RocksDBOptionsConfigured.newConfigured().withDbPath(DefaultConfigs.DB_PATH).config())
+                .withRaftDataPath(DefaultConfigs.RAFT_DATA_PATH)
+                .withServerAddress(new Endpoint(address, 8181))
+                .config();
+
+        PlacementDriverOptions pdOpts = PlacementDriverOptionsConfigured.newConfigured()
+                .withFake(true)
+                .config();
+
+        RheaKVStoreOptions rheaKVStoreOptions = RheaKVStoreOptionsConfigured.newConfigured()
+                .withStoreEngineOptions(storeOpts)
+                .withPlacementDriverOptions(pdOpts)
+                .withInitialServerList(address+":"+"8181")
+                .config();
+
+        defaultRheaKVStore.init(rheaKVStoreOptions);
+        //rheaKVDriverConfigBean.setRheaKVStoreOptions(rheaKVStoreOptions);
+        return defaultRheaKVStore;
+      }
+
+  }
 
   @Configuration
   public static class RepositoryBeanConfiguration {
@@ -56,4 +138,5 @@ public class RaftConfiguration {
       return new AppRevisionHeartbeatRaftRepository();
     }
   }
+  
 }

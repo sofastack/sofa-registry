@@ -16,12 +16,15 @@
  */
 package com.alipay.sofa.registry.jraft.repository.impl;
 
+import com.alipay.sofa.jraft.rhea.client.RheaKVStore;
 import com.alipay.sofa.registry.common.model.appmeta.InterfaceMapping;
 import com.alipay.sofa.registry.common.model.store.AppRevision;
 import com.alipay.sofa.registry.core.model.AppRevisionInterface;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.store.api.repository.InterfaceAppsRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -31,6 +34,11 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class InterfaceAppsRaftRepository implements InterfaceAppsRepository {
   protected static final Logger LOG = LoggerFactory.getLogger(InterfaceAppsRaftRepository.class);
+
+  private volatile long maxId = 0L;
+
+  @Autowired
+  private RheaKVStore rheaKVStore;
 
   /** map: <interface, appNames> */
   protected final Map<String, InterfaceMapping> interfaceApps = new ConcurrentHashMap<>();
