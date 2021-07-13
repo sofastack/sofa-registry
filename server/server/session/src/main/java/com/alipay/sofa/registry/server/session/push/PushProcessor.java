@@ -334,7 +334,8 @@ public class PushProcessor {
           task.taskID,
           task.getMaxPushedVersion(),
           task.getPushDataCount());
-      LOGGER.error(
+      // channel closed, just warn
+      LOGGER.warn(
           "[PushChanClosed]taskId={}, {}, {}", task.taskID, task.pushingTaskKey, e.getMessage());
       return;
     }
@@ -473,8 +474,8 @@ public class PushProcessor {
               pushTask.taskID,
               pushTask.getMaxPushedVersion(),
               pushTask.getPushDataCount());
-          // TODO no need to error?
-          LOGGER.error("[PushChanClosed]taskId={}, {}", pushTask.taskID, pushTask.pushingTaskKey);
+          // channel closed, just warn
+          LOGGER.warn("[PushChanClosed]taskId={}, {}", pushTask.taskID, pushTask.pushingTaskKey);
         }
       }
 

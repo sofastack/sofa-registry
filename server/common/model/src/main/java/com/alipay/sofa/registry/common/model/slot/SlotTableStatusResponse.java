@@ -80,14 +80,21 @@ public class SlotTableStatusResponse implements Serializable {
 
   @Override
   public String toString() {
-    return "SlotTableStatusResponse{" +
-            "slotTableEpoch=" + slotTableEpoch +
-            ", isSlotTableLeaderBalanced=" + isSlotTableLeaderBalanced +
-            ", isSlotTableFollowerBalanced=" + isSlotTableFollowerBalanced +
-            ", isSlotTableStable=" + isSlotTableStable +
-            ", protectionMode=" + protectionMode +
-            ", leaderCount=" + leaderCount +
-            ", followerCount=" + followerCount +
-            '}';
+    return "SlotTableStatusResponse{"
+        + "slotTableEpoch="
+        + slotTableEpoch
+        + ", isSlotTableLeaderBalanced="
+        + isSlotTableLeaderBalanced
+        + ", isSlotTableFollowerBalanced="
+        + isSlotTableFollowerBalanced
+        + ", isSlotTableStable="
+        + isSlotTableStable
+        + ", protectionMode="
+        + protectionMode
+        + ", leaderCount="
+        + leaderCount
+        + ", followerCount="
+        + followerCount
+        + '}';
   }
 }

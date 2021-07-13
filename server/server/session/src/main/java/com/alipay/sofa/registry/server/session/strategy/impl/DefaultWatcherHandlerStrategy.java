@@ -94,7 +94,7 @@ public class DefaultWatcherHandlerStrategy implements WatcherHandlerStrategy {
     // [Y|N],[R|U|N],app,zone,dataInfoId,registerId,clientVersion,clientIp,clientPort
     Metrics.Access.watCount(success);
     WATCH_LOGGER.info(
-        "{},{},{},{},{},{},{},{},{},{},{}",
+        "{},{},{},{},{},{},{},{},{},{},{},attrs={}",
         success ? 'Y' : 'N',
         EventTypeConstants.getEventTypeFlag(register.getEventType()),
         register.getAppName(),
@@ -105,7 +105,8 @@ public class DefaultWatcherHandlerStrategy implements WatcherHandlerStrategy {
         register.getRegistId(),
         watcher == null ? "" : watcher.getClientVersion(),
         register.getIp(),
-        register.getPort());
+        register.getPort(),
+        watcher == null ? "0" : watcher.attributesSize());
   }
 
   protected void handleError(

@@ -426,7 +426,12 @@ public abstract class BaseInfo implements Serializable, StoreData<String> {
         getTargetAddress().getPort());
   }
 
-  private Map<String, String> internAttributes(Map<String, String> attributes) {
+  public int attributesSize() {
+    final Map<String, String> map = this.attributes;
+    return map == null ? 0 : map.size();
+  }
+
+  protected Map<String, String> internAttributes(Map<String, String> attributes) {
     if (CollectionUtils.isEmpty(attributes)) {
       return Collections.emptyMap();
     }

@@ -76,12 +76,18 @@ public class SlotTableResourceTest extends AbstractMetaServerTestBase {
                 metaServerConfig));
 
     slotTableStatusService = new SlotTableStatusService();
-    slotTableStatusService.setSlotArranger(slotArranger)
-            .setDataServerManager(dataServerManager)
-            .setSlotTableMonitor(slotTableMonitor)
-            .setSlotManager(slotManager);
+    slotTableStatusService
+        .setSlotArranger(slotArranger)
+        .setDataServerManager(dataServerManager)
+        .setSlotTableMonitor(slotTableMonitor)
+        .setSlotManager(slotManager);
     resource =
-        new SlotTableResource(slotManager, dataServerManager, slotArranger, metaLeaderService, slotTableStatusService);
+        new SlotTableResource(
+            slotManager,
+            dataServerManager,
+            slotArranger,
+            metaLeaderService,
+            slotTableStatusService);
   }
 
   @Test

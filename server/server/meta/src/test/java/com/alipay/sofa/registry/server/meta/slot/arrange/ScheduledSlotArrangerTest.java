@@ -24,11 +24,10 @@ import com.alipay.sofa.registry.server.meta.lease.data.DefaultDataServerManager;
 import com.alipay.sofa.registry.server.meta.monitor.SlotTableMonitor;
 import com.alipay.sofa.registry.server.meta.resource.SlotTableResource;
 import com.alipay.sofa.registry.server.meta.slot.SlotManager;
+import com.alipay.sofa.registry.server.meta.slot.status.SlotTableStatusService;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import com.alipay.sofa.registry.server.meta.slot.status.SlotTableStatusService;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -64,11 +63,11 @@ public class ScheduledSlotArrangerTest extends AbstractMetaServerTestBase {
                 metaServerConfig));
 
     slotTableStatusService = new SlotTableStatusService();
-    slotTableStatusService.setSlotArranger(slotArranger)
-            .setDataServerManager(dataServerManager)
-            .setSlotTableMonitor(slotTableMonitor)
-            .setSlotManager(slotManager);
-
+    slotTableStatusService
+        .setSlotArranger(slotArranger)
+        .setDataServerManager(dataServerManager)
+        .setSlotTableMonitor(slotTableMonitor)
+        .setSlotManager(slotManager);
   }
 
   @Test
@@ -106,7 +105,12 @@ public class ScheduledSlotArrangerTest extends AbstractMetaServerTestBase {
   @Test
   public void testStopStartReconcile() throws Exception {
     slotTableResource =
-        new SlotTableResource(slotManager, dataServerManager, slotArranger, metaLeaderService, slotTableStatusService);
+        new SlotTableResource(
+            slotManager,
+            dataServerManager,
+            slotArranger,
+            metaLeaderService,
+            slotTableStatusService);
     slotArranger.postConstruct();
     Assert.assertEquals("running", slotTableResource.getReconcileStatus().getMessage());
 
