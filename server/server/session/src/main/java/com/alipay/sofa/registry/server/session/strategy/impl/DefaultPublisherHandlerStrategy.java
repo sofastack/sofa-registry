@@ -103,7 +103,7 @@ public class DefaultPublisherHandlerStrategy implements PublisherHandlerStrategy
     Metrics.Access.pubCount(success);
     Metrics.Access.pubSize("registry", publisherRegister.getGroup(), size);
     PUB_LOGGER.info(
-        "{},{},{},{},{},G={},I={},{},{},{},{},{},{},size={},pb={}",
+        "{},{},{},{},{},G={},I={},{},{},{},{},{},{},size={},pb={},attrs={}",
         success ? 'Y' : 'N',
         EventTypeConstants.getEventTypeFlag(publisherRegister.getEventType()),
         publisherRegister.getAppName(),
@@ -118,7 +118,8 @@ public class DefaultPublisherHandlerStrategy implements PublisherHandlerStrategy
         publisherRegister.getIp(),
         publisherRegister.getPort(),
         size,
-        pb ? 'Y' : 'N');
+        pb ? 'Y' : 'N',
+        publisher == null ? "0" : publisher.attributesSize());
   }
 
   protected void handleError(

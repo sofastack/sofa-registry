@@ -64,8 +64,6 @@ public class ExecutorManager {
 
   private static final String DATA_SLOT_SYNC_REQUEST_EXECUTOR = "SlotSyncExecutor";
 
-  private static final String CONNECT_CLIENT_EXECUTOR = "ConnectClientExecutor";
-
   private static final String ACCESS_METADATA_EXECUTOR = "AccessMetadataExecutor";
 
   private static final String CONSOLE_EXECUTOR = "ConsoleExecutor";

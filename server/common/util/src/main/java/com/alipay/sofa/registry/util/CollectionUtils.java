@@ -48,7 +48,7 @@ public final class CollectionUtils {
     if (m.size() != 1) {
       return m;
     }
-    Map.Entry<K, V> one = m.entrySet().stream().findFirst().get();
+    Map.Entry<K, V> one = m.entrySet().iterator().next();
     return Collections.singletonMap(one.getKey(), one.getValue());
   }
 }

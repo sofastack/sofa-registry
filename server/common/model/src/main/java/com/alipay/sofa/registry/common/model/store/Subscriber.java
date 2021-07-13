@@ -230,6 +230,11 @@ public class Subscriber extends BaseInfo {
     return subscriber;
   }
 
+  protected Map<String, String> internAttributes(Map<String, String> attributes) {
+    Map<String, String> intern = super.internAttributes(attributes);
+    return com.alipay.sofa.registry.collections.Maps.trimMap(intern);
+  }
+
   private static class PushContext {
     long pushedVersion;
     long lastMaxPushVersion = -1;

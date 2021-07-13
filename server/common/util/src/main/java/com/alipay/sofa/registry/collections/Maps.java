@@ -14,15 +14,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.common.model.slot;
+package com.alipay.sofa.registry.collections;
 
-import java.io.Serializable;
+import java.util.*;
 
-/**
- * @author xiaojian.xj
- * @version $Id: GetSlotTableStatusRequest.java, v 0.1 2021年07月02日 8:07 PM xiaojian.xj Exp $
- */
-public class GetSlotTableStatusRequest implements Serializable {
+public final class Maps {
+    private Maps() {
+    }
 
-  private static final long serialVersionUID = 3343855660232710818L;
+    public static <K, V> Map<K, V> trimMap(Map<K, V> map) {
+        if (map == null) {
+            return Collections.emptyMap();
+        }
+        final int size = map.size();
+        if (size == 0) {
+            return Collections.emptyMap();
+        }
+        if (size == 1) {
+            final Map.Entry<K, V> e = map.entrySet().iterator().next();
+            return Collections.singletonMap(e.getKey(), e.getValue());
+        }
+        if (size <= 4) {
+            ImmutableMap4<K, V> ret = ImmutableMap4.newMap(map);
+            if (ret != null) {
+                return ret;
+            }
+        }
+        return map;
+    }
 }

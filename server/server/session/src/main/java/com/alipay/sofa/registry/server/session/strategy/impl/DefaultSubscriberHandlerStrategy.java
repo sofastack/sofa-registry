@@ -104,7 +104,7 @@ public class DefaultSubscriberHandlerStrategy implements SubscriberHandlerStrate
     // [Y|N],[R|U|N],app,zone,dataInfoId,registerId,scope,elementType,clientVersion,clientIp,clientPort
     Metrics.Access.subCount(success);
     SUB_LOGGER.info(
-        "{},{},{},{},{},G={},I={},{},{},{},{},{},{},{},{},pb={}",
+        "{},{},{},{},{},G={},I={},{},{},{},{},{},{},{},{},pb={},attrs={}",
         success ? 'Y' : 'N',
         EventTypeConstants.getEventTypeFlag(subscriberRegister.getEventType()),
         subscriberRegister.getAppName(),
@@ -120,7 +120,8 @@ public class DefaultSubscriberHandlerStrategy implements SubscriberHandlerStrate
         subscriber == null ? "" : subscriber.getVersion(),
         subscriberRegister.getIp(),
         subscriberRegister.getPort(),
-        pb ? 'Y' : 'N');
+        pb ? 'Y' : 'N',
+        subscriber == null ? "0" : subscriber.attributesSize());
   }
 
   protected void handleError(

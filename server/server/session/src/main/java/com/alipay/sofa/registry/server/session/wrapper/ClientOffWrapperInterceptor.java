@@ -54,7 +54,12 @@ public class ClientOffWrapperInterceptor implements WrapperInterceptor<StoreData
           url.getIpAddress());
       if (DataType.PUBLISHER == storeData.getDataType()) {
         // match client off pub, do unpub to data, make sure the publisher remove
-        sessionRegistry.unRegister(storeData);
+        try {
+          sessionRegistry.unRegister(storeData);
+        } catch (Throwable e) {
+          LOGGER.error(
+              "failed to unRegister publisher {}, source={}", storeData.getDataInfoId(), url, e);
+        }
         return true;
       }
 
