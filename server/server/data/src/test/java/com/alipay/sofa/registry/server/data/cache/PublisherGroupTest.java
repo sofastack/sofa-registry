@@ -119,7 +119,7 @@ public class PublisherGroupTest {
             ServerEnv.PROCESS_ID,
             Collections.singletonMap(
                 newer.getRegisterId(),
-                new RegisterVersion(newer.getVersion() + 1, newer.getRegisterTimestamp())));
+                new RegisterVersion(newer.getVersion() - 1, newer.getRegisterTimestamp())));
     Assert.assertNull(v);
     Assert.assertFalse(group.getPublishers().isEmpty());
 
@@ -128,9 +128,42 @@ public class PublisherGroupTest {
             ServerEnv.PROCESS_ID,
             Collections.singletonMap(
                 newer.getRegisterId(),
-                new RegisterVersion(newer.getVersion(), newer.getRegisterTimestamp() + 1)));
+                new RegisterVersion(newer.getVersion(), newer.getRegisterTimestamp() - 1)));
     Assert.assertNull(v);
     Assert.assertFalse(group.getPublishers().isEmpty());
+
+    v =
+        group.remove(
+            ServerEnv.PROCESS_ID,
+            Collections.singletonMap(
+                newer.getRegisterId(),
+                new RegisterVersion(newer.getVersion() - 1, newer.getRegisterTimestamp() - 1)));
+    Assert.assertNull(v);
+    Assert.assertFalse(group.getPublishers().isEmpty());
+
+    v =
+        group.remove(
+            ServerEnv.PROCESS_ID,
+            Collections.singletonMap(
+                newer.getRegisterId(),
+                new RegisterVersion(newer.getVersion() + 1, newer.getRegisterTimestamp())));
+    Assert.assertNotNull(v);
+    Assert.assertTrue(group.getPublishers().isEmpty());
+
+    group.compact(Long.MAX_VALUE);
+    group.addPublisher(newer);
+
+    v =
+        group.remove(
+            ServerEnv.PROCESS_ID,
+            Collections.singletonMap(
+                newer.getRegisterId(),
+                new RegisterVersion(newer.getVersion(), newer.getRegisterTimestamp() + 1)));
+    Assert.assertNotNull(v);
+    Assert.assertTrue(group.getPublishers().isEmpty());
+
+    group.compact(Long.MAX_VALUE);
+    group.addPublisher(newer);
 
     v =
         group.remove(

@@ -260,7 +260,9 @@ public final class PublisherGroup {
           // the removedPublishers is from pubMap, but now notExist/unpub/pubByOtherSession
           continue;
         }
-        if (existing.registerVersion.equals(removedVer)) {
+        // remove the existing <= removedVer
+        if (existing.registerVersion.equals(removedVer)
+            || existing.registerVersion.orderThan(removedVer)) {
           // sync from leader
           if (sessionProcessId == null) {
             pubMap.remove(registerId);

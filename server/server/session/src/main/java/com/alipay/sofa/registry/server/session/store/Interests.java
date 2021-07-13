@@ -16,9 +16,11 @@
  */
 package com.alipay.sofa.registry.server.session.store;
 
+import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -41,7 +43,7 @@ public interface Interests extends DataManager<Subscriber, String, String> {
 
   Collection<Subscriber> getInterests(String datumDataInfoId);
 
-  Map<String, DatumVersion> getInterestVersions(String dataCenter);
+  Tuple<Map<String, DatumVersion>, List<Subscriber>> selectSubscribers(String dataCenter);
 
   enum InterestVersionCheck {
     NoSub(false),

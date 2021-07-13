@@ -48,7 +48,7 @@ public class SessionInterestsTest extends AbstractSessionServerTestBase {
 
   @Test
   public void testCheckInterestVersion() {
-    Map<String, DatumVersion> map = interests.getInterestVersions(getDc());
+    Map<String, DatumVersion> map = interests.selectSubscribers(getDc()).o1;
     Assert.assertEquals(0, map.size());
 
     Assert.assertSame(
@@ -88,12 +88,12 @@ public class SessionInterestsTest extends AbstractSessionServerTestBase {
     subscriber2.checkAndUpdateCtx(getDc(), 80, 20);
 
     // get sub2.dc1
-    map = interests.getInterestVersions(getDc() + "1");
+    map = interests.selectSubscribers(getDc() + "1").o1;
     Assert.assertEquals(map.size(), 1);
     Assert.assertEquals(map.get(subscriber.getDataInfoId()).getValue(), 0);
 
     // get sub2
-    map = interests.getInterestVersions(getDc());
+    map = interests.selectSubscribers(getDc()).o1;
     Assert.assertEquals(map.size(), 1);
     Assert.assertEquals(map.get(subscriber.getDataInfoId()).getValue(), 80);
   }

@@ -22,7 +22,6 @@ import com.alipay.sofa.registry.common.model.store.BaseInfo;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -35,14 +34,14 @@ public final class StoreHelpers {
   private StoreHelpers() {}
 
   public static <T extends BaseInfo> Set<ConnectId> collectConnectId(Map<String, T> map) {
-    Set<ConnectId> sets = Sets.newHashSet();
+    Set<ConnectId> sets = Sets.newHashSetWithExpectedSize(256);
     map.values().forEach(r -> sets.add(r.connectId()));
     return sets;
   }
 
   public static <T extends BaseInfo> Set<ConnectId> collectConnectIds(
       Map<String, Map<String, T>> maps) {
-    Set<ConnectId> sets = Sets.newHashSet();
+    Set<ConnectId> sets = Sets.newHashSetWithExpectedSize(1024 * 8);
     maps.values().forEach(m -> sets.addAll(collectConnectId(m)));
     return sets;
   }
@@ -62,7 +61,7 @@ public final class StoreHelpers {
 
   public static <T extends BaseInfo> Map<String, T> getByConnectId(
       ConnectId connectId, Map<String, Map<String, T>> maps) {
-    Map<String, T> retMap = Maps.newHashMap();
+    Map<String, T> retMap = Maps.newHashMapWithExpectedSize(128);
     for (Map<String, T> m : maps.values()) {
       for (T r : m.values()) {
         if (connectId.equals(r.connectId())) {
@@ -73,21 +72,8 @@ public final class StoreHelpers {
     return retMap;
   }
 
-  public static <T extends BaseInfo> Set<String> collectProcessIds(
-      Map<String, Map<String, T>> maps) {
-    HashSet<String> processIds = Sets.newHashSet();
-    for (Map<String, T> map : maps.values()) {
-      for (T t : map.values()) {
-        if (t.getProcessId() != null) {
-          processIds.add(t.getProcessId());
-        }
-      }
-    }
-    return processIds;
-  }
-
   public static Map<Object, Map> copyMap(Map<Object, Map> m) {
-    Map<Object, Map> ret = new HashMap<>(m.size());
+    Map<Object, Map> ret = Maps.newHashMapWithExpectedSize(m.size());
     for (Map.Entry<Object, Map> e : m.entrySet()) {
       if (!e.getValue().isEmpty()) {
         ret.put(e.getKey(), new HashMap<>(e.getValue()));

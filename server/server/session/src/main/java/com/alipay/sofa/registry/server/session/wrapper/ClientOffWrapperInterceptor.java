@@ -16,11 +16,8 @@
  */
 package com.alipay.sofa.registry.server.session.wrapper;
 
-import com.alipay.sofa.registry.common.model.store.BaseInfo;
-import com.alipay.sofa.registry.common.model.store.StoreData;
+import com.alipay.sofa.registry.common.model.store.*;
 import com.alipay.sofa.registry.common.model.store.StoreData.DataType;
-import com.alipay.sofa.registry.common.model.store.Subscriber;
-import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.server.session.loggers.Loggers;
 import com.alipay.sofa.registry.server.session.providedata.FetchClientOffAddressService;
@@ -56,7 +53,8 @@ public class ClientOffWrapperInterceptor implements WrapperInterceptor<StoreData
           storeData.getDataInfoId(),
           url.getIpAddress());
       if (DataType.PUBLISHER == storeData.getDataType()) {
-        // match client off pub.
+        // match client off pub, do unpub to data, make sure the publisher remove
+        sessionRegistry.unRegister(storeData);
         return true;
       }
 

@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.server.data.cache;
 
 import com.alipay.sofa.registry.common.model.ProcessId;
+import com.alipay.sofa.registry.common.model.RegisterVersion;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
@@ -207,6 +208,40 @@ public class LocalDatumStorageTest {
 
     v = storage.put(publisher3);
     Assert.assertNotNull(v);
+    map = storage.getAllPublisher();
+    Assert.assertTrue(map.get(publisher3.getDataInfoId()).contains(publisher3));
+
+    v =
+        storage.remove(
+            publisher3.getDataInfoId(),
+            publisher3.getSessionProcessId(),
+            Collections.singletonMap(
+                publisher3.getRegisterId(),
+                RegisterVersion.of(
+                    publisher3.getVersion(), publisher3.getRegisterTimestamp() - 1)));
+    Assert.assertNull(v);
+
+    v =
+        storage.remove(
+            publisher3.getDataInfoId(),
+            publisher3.getSessionProcessId(),
+            Collections.singletonMap(
+                publisher3.getRegisterId(),
+                RegisterVersion.of(
+                    publisher3.getVersion() - 1, publisher3.getRegisterTimestamp())));
+    Assert.assertNull(v);
+
+    v =
+        storage.remove(
+            publisher3.getDataInfoId(),
+            publisher3.getSessionProcessId(),
+            Collections.singletonMap(
+                publisher3.getRegisterId(),
+                RegisterVersion.of(
+                    publisher3.getVersion() + 1, publisher3.getRegisterTimestamp())));
+    Assert.assertNotNull(v);
+    map = storage.getAllPublisher();
+    Assert.assertFalse(map.get(publisher3.getDataInfoId()).contains(publisher3));
   }
 
   @Test

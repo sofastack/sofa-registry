@@ -24,9 +24,10 @@ import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
+import java.util.function.BiConsumer;
 import org.apache.commons.collections.MapUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
@@ -101,13 +102,11 @@ public abstract class AbstractDataManager<T extends BaseInfo>
 
   @Override
   public Map<String, T> deleteByConnectId(ConnectId connectId) {
-
     Map<ConnectId, Map<String, T>> ret = deleteByConnectIds(Collections.singleton(connectId));
     Map<String, T> data = ret.get(connectId);
     if (CollectionUtils.isEmpty(data)) {
-      return Maps.newHashMap();
+      return Collections.emptyMap();
     }
-
     return data;
   }
 
@@ -124,12 +123,22 @@ public abstract class AbstractDataManager<T extends BaseInfo>
         }
         // may be the value has removed by anther thread
         if (map.remove(e.getKey(), data)) {
-          Map<String, T> remove = ret.computeIfAbsent(data.connectId(), k -> Maps.newHashMap());
+          Map<String, T> remove =
+              ret.computeIfAbsent(data.connectId(), k -> Maps.newHashMapWithExpectedSize(128));
           remove.put(e.getKey(), data);
         }
       }
     }
     return ret;
+  }
+
+  @Override
+  public void forEach(BiConsumer<String, Map<String, T>> consumer) {
+    for (Map.Entry<String, Map<String, T>> e : stores.entrySet()) {
+      if (!e.getValue().isEmpty()) {
+        consumer.accept(e.getKey(), Collections.unmodifiableMap(e.getValue()));
+      }
+    }
   }
 
   @Override
@@ -149,7 +158,7 @@ public abstract class AbstractDataManager<T extends BaseInfo>
 
   @Override
   public List<T> getDataList() {
-    List<T> ret = new ArrayList<>(512);
+    List<T> ret = new ArrayList<>(1024);
     for (Map<String, T> store : stores.values()) {
       ret.addAll(store.values());
     }
@@ -189,16 +198,14 @@ public abstract class AbstractDataManager<T extends BaseInfo>
   }
 
   @Override
-  public Set<String> collectProcessIds() {
-    return StoreHelpers.collectProcessIds(stores);
-  }
-
-  @Override
   public Collection<String> getDataInfoIds() {
-    return stores.entrySet().stream()
-        .filter(e -> !(e.getValue().isEmpty()))
-        .map(e -> e.getKey())
-        .collect(Collectors.toSet());
+    Set<String> ret = Sets.newHashSetWithExpectedSize(stores.values().size());
+    for (Map.Entry<String, Map<String, T>> e : stores.entrySet()) {
+      if (!e.getValue().isEmpty()) {
+        ret.add(e.getKey());
+      }
+    }
+    return ret;
   }
 
   public SessionServerConfig getSessionServerConfig() {

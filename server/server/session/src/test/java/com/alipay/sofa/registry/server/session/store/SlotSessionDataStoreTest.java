@@ -79,11 +79,6 @@ public class SlotSessionDataStoreTest {
     Assert.assertTrue(connectIds.contains(publisher0.connectId()));
     Assert.assertTrue(connectIds.contains(publisher1.connectId()));
 
-    Set<String> processIds = store.collectProcessIds();
-    Assert.assertTrue(processIds.size() <= 2);
-    Assert.assertTrue(processIds.contains(publisher0.getProcessId()));
-    Assert.assertTrue(processIds.contains(publisher1.getProcessId()));
-
     Publisher query = store.queryById("1", "2");
     Assert.assertNull(query);
 

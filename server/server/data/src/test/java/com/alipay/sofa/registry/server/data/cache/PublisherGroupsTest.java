@@ -303,17 +303,6 @@ public class PublisherGroupsTest {
         groups.remove(
             publisher2.getDataInfoId(),
             publisher1.getSessionProcessId(),
-            Collections.singletonMap(publisher1.getRegisterId(), publisher2.registerVersion()));
-    Assert.assertNull(v);
-    publishers = groups.getAllPublisher();
-    Assert.assertEquals(publishers.size(), 2);
-    Assert.assertEquals(publishers.get(publisher2.getDataInfoId()).size(), 2);
-    Assert.assertEquals(publishers.get(publisher3.getDataInfoId()).size(), 0);
-
-    v =
-        groups.remove(
-            publisher2.getDataInfoId(),
-            publisher1.getSessionProcessId(),
             Collections.singletonMap(publisher1.getRegisterId(), publisher1.registerVersion()));
     Assert.assertNotNull(v);
     publishers = groups.getAllPublisher();
