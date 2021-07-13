@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiConsumer;
 
 /**
  * Session Data store manager,according base data function
@@ -94,7 +95,7 @@ public interface DataManager<DATA, ID, DATAINFOID> {
 
   Map<DATAINFOID, Map<ID, DATA>> getDatas();
 
-  Set<String> collectProcessIds();
-
   Collection<DATAINFOID> getDataInfoIds();
+
+  void forEach(BiConsumer<DATAINFOID, Map<ID, DATA>> consumer);
 }

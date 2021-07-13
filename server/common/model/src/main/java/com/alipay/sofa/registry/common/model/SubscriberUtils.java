@@ -43,7 +43,7 @@ public final class SubscriberUtils {
     if (subscribers.isEmpty()) {
       return Collections.emptyMap();
     }
-    Map<InetSocketAddress, Map<String, Subscriber>> ret = Maps.newHashMap();
+    Map<InetSocketAddress, Map<String, Subscriber>> ret = Maps.newHashMapWithExpectedSize(128);
     subscribers.forEach(
         s -> {
           InetSocketAddress address =

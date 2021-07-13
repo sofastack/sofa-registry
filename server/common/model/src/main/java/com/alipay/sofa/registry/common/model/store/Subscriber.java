@@ -21,6 +21,9 @@ import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.springframework.util.CollectionUtils;
+
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -39,7 +42,7 @@ public class Subscriber extends BaseInfo {
   /** */
 
   /** last push context */
-  private final Map<String /*dataCenter*/, PushContext> lastPushContexts = new HashMap<>(4);
+  private Map<String /*dataCenter*/, PushContext> lastPushContexts;
 
   /**
    * Getter method for property <tt>scope</tt>.
@@ -63,15 +66,33 @@ public class Subscriber extends BaseInfo {
     return elementType;
   }
 
+  private PushContext getPushContext(String dataCenter) {
+    PushContext ctx = null;
+    if (lastPushContexts == null) {
+      ctx = new PushContext();
+      this.lastPushContexts = Collections.singletonMap(dataCenter, ctx);
+    } else {
+      ctx = lastPushContexts.get(dataCenter);
+      if (ctx == null) {
+        // multi dataCenter, replace the singletonMap
+        if (!(lastPushContexts instanceof HashMap)) {
+          this.lastPushContexts = new HashMap<>(lastPushContexts);
+        }
+        ctx = new PushContext();
+        this.lastPushContexts.put(dataCenter, ctx);
+      }
+    }
+    return ctx;
+  }
   // check the version
   public synchronized boolean checkVersion(String dataCenter, long version) {
-    final PushContext ctx = lastPushContexts.computeIfAbsent(dataCenter, k -> new PushContext());
+    final PushContext ctx = getPushContext(dataCenter);
     // emptyVersion != 0, means not care any version update
     return ctx.pushedVersion < version && ctx.emptyVersion == 0;
   }
 
   public synchronized boolean checkAndUpdateCtx(String dataCenter, long pushVersion, int num) {
-    final PushContext ctx = lastPushContexts.computeIfAbsent(dataCenter, k -> new PushContext());
+    final PushContext ctx = getPushContext(dataCenter);
 
     if (ctx.pushedVersion < pushVersion) {
       ctx.pushedVersion = pushVersion;
@@ -84,7 +105,7 @@ public class Subscriber extends BaseInfo {
   }
 
   public synchronized boolean onPushFail(String dataCenter, long pushVersion) {
-    final PushContext ctx = lastPushContexts.computeIfAbsent(dataCenter, k -> new PushContext());
+    final PushContext ctx = getPushContext(dataCenter);
 
     if (ctx.pushedVersion < pushVersion) {
       ctx.pushedFailCount += 1;
@@ -95,7 +116,7 @@ public class Subscriber extends BaseInfo {
   }
 
   public synchronized boolean checkSkipPushEmpty(String dataCenter, long pushVersion, int num) {
-    final PushContext ctx = lastPushContexts.computeIfAbsent(dataCenter, k -> new PushContext());
+    final PushContext ctx = getPushContext(dataCenter);
     long lastPushMaxVersion = ctx.lastMaxPushVersion;
     long lastPushVersion = ctx.lastPushVersion;
     ctx.lastMaxPushVersion = Math.max(lastPushMaxVersion, pushVersion);
@@ -112,7 +133,7 @@ public class Subscriber extends BaseInfo {
   }
 
   public synchronized boolean needPushEmpty(String dataCenter) {
-    final PushContext ctx = lastPushContexts.computeIfAbsent(dataCenter, k -> new PushContext());
+    final PushContext ctx = getPushContext(dataCenter);
     if (ctx.emptyVersion == 0) {
       return false;
     }
@@ -126,7 +147,7 @@ public class Subscriber extends BaseInfo {
 
   public synchronized boolean hasPushed() {
     // TODO now not care multi-datacenter
-    if (lastPushContexts.isEmpty()) {
+    if (CollectionUtils.isEmpty(lastPushContexts)) {
       return false;
     }
     for (PushContext ctx : lastPushContexts.values()) {
@@ -162,37 +183,28 @@ public class Subscriber extends BaseInfo {
   }
 
   @Override
-  protected String getOtherInfo() {
-    final StringBuilder sb = new StringBuilder("scope=");
-    sb.append(scope).append(",");
-    sb.append("elementType=").append(elementType).append(",");
-    sb.append("ctx=").append(lastPushContexts);
-    return sb.toString();
+  protected synchronized String getOtherInfo() {
+    return StringFormatter.format(
+        "scope={},elementType={},ctx={}", scope, elementType, lastPushContexts);
   }
 
-  public String printPushContext() {
-    final StringBuilder sb = new StringBuilder(128);
-    return sb.append(lastPushContexts).toString();
+  public synchronized String printPushContext() {
+    return lastPushContexts == null ? "{}" : lastPushContexts.toString();
   }
 
   public synchronized long getPushedVersion(String dataCenter) {
-    final PushContext ctx = lastPushContexts.computeIfAbsent(dataCenter, k -> new PushContext());
+    final PushContext ctx = getPushContext(dataCenter);
     return ctx.pushedVersion;
   }
 
   public synchronized void markPushEmpty(String dataCenter, long emptyVersion) {
-    final PushContext ctx = lastPushContexts.computeIfAbsent(dataCenter, k -> new PushContext());
+    final PushContext ctx = getPushContext(dataCenter);
     ctx.emptyVersion = emptyVersion;
-  }
-
-  public synchronized boolean isMarkPushEmpty(String dataCenter) {
-    final PushContext ctx = lastPushContexts.computeIfAbsent(dataCenter, k -> new PushContext());
-    return ctx.emptyVersion != 0;
   }
 
   /** @return */
   public synchronized CircuitBreakerStatistic getStatistic(String dataCenter) {
-    final PushContext ctx = lastPushContexts.computeIfAbsent(dataCenter, k -> new PushContext());
+    final PushContext ctx = getPushContext(dataCenter);
     return new CircuitBreakerStatistic(
         getGroup(), ctx.pushedFailCount, ctx.lastPushedFailTimeStamp);
   }

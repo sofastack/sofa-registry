@@ -23,8 +23,10 @@ import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import org.springframework.util.CollectionUtils;
 
@@ -72,13 +74,14 @@ public class SessionInterests extends AbstractDataManager<Subscriber> implements
   }
 
   @Override
-  public Map<String, DatumVersion> getInterestVersions(String dataCenter) {
-    final Map<String, DatumVersion> ret = Maps.newHashMapWithExpectedSize(stores.size());
+  public Tuple<Map<String, DatumVersion>, List<Subscriber>> selectSubscribers(String dataCenter) {
     final String localDataCenter = sessionServerConfig.getSessionServerDataCenter();
     final boolean isLocalDataCenter = localDataCenter.equals(dataCenter);
+    final Map<String, DatumVersion> versions = Maps.newHashMapWithExpectedSize(stores.size());
+    final List<Subscriber> toPushEmptySubscribers = Lists.newArrayListWithCapacity(256);
     for (Map.Entry<String, Map<String, Subscriber>> e : stores.entrySet()) {
       Map<String, Subscriber> subs = e.getValue();
-      if (subs.isEmpty()) {
+      if (CollectionUtils.isEmpty(subs)) {
         continue;
       }
       final String dataInfoId = e.getKey();
@@ -88,7 +91,8 @@ public class SessionInterests extends AbstractDataManager<Subscriber> implements
         if (sub.getScope() != ScopeEnum.global && !isLocalDataCenter) {
           continue;
         }
-        if (sub.isMarkPushEmpty(dataCenter)) {
+        if (sub.needPushEmpty(dataCenter)) {
+          toPushEmptySubscribers.add(sub);
           continue;
         }
         final long pushVersion = sub.getPushedVersion(dataCenter);
@@ -96,10 +100,10 @@ public class SessionInterests extends AbstractDataManager<Subscriber> implements
           maxVersion = pushVersion;
         }
       }
-      ret.put(dataInfoId, new DatumVersion(maxVersion));
+      versions.put(dataInfoId, new DatumVersion(maxVersion));
     }
 
-    return ret;
+    return Tuple.of(versions, toPushEmptySubscribers);
   }
 
   @Override

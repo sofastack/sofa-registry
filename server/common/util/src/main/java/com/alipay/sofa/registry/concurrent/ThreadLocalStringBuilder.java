@@ -16,10 +16,12 @@
  */
 package com.alipay.sofa.registry.concurrent;
 
-public class ThreadLocalStringBuilder {
+public final class ThreadLocalStringBuilder {
   private static final int maxBufferSize = 8192;
   private static final transient ThreadLocal<StringBuilder> builder =
       ThreadLocal.withInitial(() -> new StringBuilder(maxBufferSize));
+
+  private ThreadLocalStringBuilder() {}
 
   public static StringBuilder get() {
     StringBuilder b = builder.get();

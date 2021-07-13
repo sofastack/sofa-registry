@@ -24,6 +24,7 @@ import com.google.common.collect.Maps;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiConsumer;
 import org.glassfish.jersey.internal.guava.Sets;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
@@ -36,7 +37,7 @@ public class SlotSessionDataStore implements DataStore {
 
   @Autowired SlotTableCache slotTableCache;
 
-  private final Map<Integer, DataStore> slot2DataStores = new ConcurrentHashMap<>();
+  private final Map<Integer, DataStore> slot2DataStores = new ConcurrentHashMap<>(512);
 
   private DataStore getOrCreateDataStore(String dataInfoId) {
     int slotId = slotTableCache.slotOf(dataInfoId);
@@ -74,27 +75,27 @@ public class SlotSessionDataStore implements DataStore {
   }
 
   @Override
+  public void forEach(BiConsumer<String, Map<String, Publisher>> consumer) {
+    for (DataStore ds : slot2DataStores.values()) {
+      ds.forEach(consumer);
+    }
+  }
+
+  @Override
   public Set<ConnectId> getConnectIds() {
-    Set<ConnectId> ret = Sets.newHashSet();
+    Set<ConnectId> ret = Sets.newHashSetWithExpectedSize(1024 * 8);
     slot2DataStores.values().forEach(d -> ret.addAll(d.getConnectIds()));
     return ret;
   }
 
   @Override
-  public Set<String> collectProcessIds() {
-    Set<String> ret = Sets.newHashSet();
-    slot2DataStores.values().forEach(d -> ret.addAll(d.collectProcessIds()));
-    return ret;
-  }
-
-  @Override
   public Map<String, Map<String, Publisher>> getDatas() {
-    Map<String, Map<String, Publisher>> ret = new HashMap<>(512);
+    Map<String, Map<String, Publisher>> ret = Maps.newHashMapWithExpectedSize(1024 * 4);
     for (DataStore ds : slot2DataStores.values()) {
       Map<String, Map<String, Publisher>> m = ds.getDatas();
       for (Map.Entry<String, Map<String, Publisher>> e : m.entrySet()) {
         Map<String, Publisher> publisherMap =
-            ret.computeIfAbsent(e.getKey(), k -> new HashMap<>(128));
+            ret.computeIfAbsent(e.getKey(), k -> Maps.newHashMapWithExpectedSize(128));
         publisherMap.putAll(e.getValue());
       }
     }

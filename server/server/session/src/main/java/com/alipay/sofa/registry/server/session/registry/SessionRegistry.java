@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.server.session.registry;
 
 import com.alipay.sofa.registry.common.model.ConnectId;
+import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.store.*;
 import com.alipay.sofa.registry.log.Logger;
@@ -183,7 +184,7 @@ public class SessionRegistry implements Registry {
         publisher.setSessionProcessId(ServerEnv.PROCESS_ID);
         // no need to check whether the pub exist, make sure the unpub send to data
         sessionDataStore.deleteById(storeData.getId(), publisher.getDataInfoId());
-        // All write operations to DataServer (pub/unPub/clientoff/renew/snapshot)
+        // All write operations to DataServer (pub/unPub/clientoff)
         // are handed over to WriteDataAcceptor
         writeDataAcceptor.accept(
             new PublisherWriteDataRequest(
@@ -233,6 +234,13 @@ public class SessionRegistry implements Registry {
     if (CollectionUtils.isEmpty(connectIds)) {
       return;
     }
+    Loggers.CLIENT_DISABLE_LOG.info(
+        "disable connectId={}, removeSubAndWat={}, checkSub={}, {}",
+        connectIds.size(),
+        removeSubAndWat,
+        checkSub,
+        connectIds);
+
     Set<ConnectId> connectIdSet = Collections.unmodifiableSet(Sets.newHashSet(connectIds));
     final String dataCenter = getDataCenterWhenPushEmpty();
 
@@ -245,18 +253,19 @@ public class SessionRegistry implements Registry {
           if (isPushEmpty(sub)) {
             subEmptyCount++;
             firePushService.fireOnPushEmpty(sub, dataCenter);
-            Loggers.CLIENT_OFF_LOG.info(
+            Loggers.CLIENT_DISABLE_LOG.info(
                 "subEmpty,{},{},{}", sub.getDataInfoId(), dataCenter, subEntry.getKey());
           }
         }
-        Loggers.CLIENT_OFF_LOG.info("connectId={}, subEmpty={}", subEntry.getKey(), subEmptyCount);
+        Loggers.CLIENT_DISABLE_LOG.info(
+            "connectId={}, subEmpty={}", subEntry.getKey(), subEmptyCount);
       }
     }
 
     Map<ConnectId, List<Publisher>> pubMap = removeFromSession(connectIdSet, removeSubAndWat);
     for (Entry<ConnectId, List<Publisher>> pubEntry : pubMap.entrySet()) {
       clientOffToDataNode(pubEntry.getKey(), pubEntry.getValue());
-      Loggers.CLIENT_OFF_LOG.info(
+      Loggers.CLIENT_DISABLE_LOG.info(
           "connectId={}, pubRemove={}", pubEntry.getKey(), pubEntry.getValue().size());
     }
   }
@@ -326,8 +335,7 @@ public class SessionRegistry implements Registry {
           // abs avoid the clock attack
           if (Math.abs(now - lastScanTimestamp) >= intervalMillis || prevStopPushSwitch) {
             try {
-              scanVersions(scanRound++);
-              scanSubscribers();
+              scanSubscribers(scanRound++);
             } finally {
               lastScanTimestamp = System.currentTimeMillis();
             }
@@ -345,18 +353,36 @@ public class SessionRegistry implements Registry {
     }
   }
 
-  private void scanVersions(long round) {
-    // TODO not support multi cluster
-    final String dataCenter = sessionServerConfig.getSessionServerDataCenter();
+  private Tuple<Map<String, DatumVersion>, List<Subscriber>> selectSubscribers(
+      long round, String dataCenter) {
     final long start = System.currentTimeMillis();
-    Map<String, DatumVersion> interestVersions =
-        sessionInterests.getInterestVersions(sessionServerConfig.getSessionServerDataCenter());
+    Tuple<Map<String, DatumVersion>, List<Subscriber>> tuple =
+        sessionInterests.selectSubscribers(dataCenter);
     SCAN_VER_LOGGER.info(
-        "scan interestVersions, round={}, size={}, span={}",
+        "[select]round={}, interestSize={}, pushEmptySize={}, span={}",
         round,
-        interestVersions.size(),
+        tuple.o1.size(),
+        tuple.o2.size(),
         System.currentTimeMillis() - start);
+    return tuple;
+  }
 
+  private void scanSubscribers(long round) {
+    final String dataCenter = sessionServerConfig.getSessionServerDataCenter();
+    final Tuple<Map<String, DatumVersion>, List<Subscriber>> tuple =
+        selectSubscribers(round, dataCenter);
+    final Map<String, DatumVersion> interestVersions = tuple.o1;
+    final List<Subscriber> toPushEmptySubscribers = tuple.o2;
+    try {
+      scanVersions(round, dataCenter, interestVersions);
+    } catch (Throwable e) {
+      SCAN_VER_LOGGER.error("failed to scan version", e);
+    }
+    handlePushEmptySubscribers(toPushEmptySubscribers);
+  }
+
+  private void scanVersions(
+      long round, String dataCenter, Map<String, DatumVersion> interestVersions) {
     Map<Integer, Map<String, DatumVersion>> interestVersionsGroup = groupBySlot(interestVersions);
 
     Map<Integer, FetchVersionResult> resultMap =
@@ -436,21 +462,17 @@ public class SessionRegistry implements Registry {
     return sessionServerConfig.getSessionServerDataCenter();
   }
 
-  private void scanSubscribers() {
-    List<Subscriber> subscribers = sessionInterests.getDataList();
-    int emptyCount = 0;
+  private void handlePushEmptySubscribers(List<Subscriber> pushEmptySubscribers) {
     final String dataCenter = getDataCenterWhenPushEmpty();
-    for (Subscriber subscriber : subscribers) {
+    for (Subscriber subscriber : pushEmptySubscribers) {
       try {
         if (subscriber.needPushEmpty(dataCenter)) {
           firePushService.fireOnPushEmpty(subscriber, dataCenter);
-          emptyCount++;
         }
       } catch (Throwable e) {
-        SCAN_VER_LOGGER.error("failed to scan subscribers, {}", subscriber, e);
+        SCAN_VER_LOGGER.error("failed to scan subscribers, {}", subscriber.shortDesc(), e);
       }
     }
-    SCAN_VER_LOGGER.info("scan subscribers, total={}, empty={}", subscribers.size(), emptyCount);
   }
 
   private Map<Integer, Map<String, DatumVersion>> groupBySlot(
@@ -550,17 +572,18 @@ public class SessionRegistry implements Registry {
   }
 
   public void cleanClientConnect() {
-    Set<ConnectId> connectIndexes = Sets.newHashSetWithExpectedSize(1024);
-    connectIndexes.addAll(sessionDataStore.getConnectIds());
-    connectIndexes.addAll(sessionInterests.getConnectIds());
-    connectIndexes.addAll(sessionWatchers.getConnectIds());
-
     Server sessionServer = boltExchange.getServer(sessionServerConfig.getServerPort());
     if (sessionServer == null) {
       LOGGER.warn("server not init when clean connect: {}", sessionServerConfig.getServerPort());
       return;
     }
-    List<ConnectId> connectIds = new ArrayList<>();
+
+    Set<ConnectId> connectIndexes = Sets.newHashSetWithExpectedSize(1024 * 8);
+    connectIndexes.addAll(sessionDataStore.getConnectIds());
+    connectIndexes.addAll(sessionInterests.getConnectIds());
+    connectIndexes.addAll(sessionWatchers.getConnectIds());
+
+    List<ConnectId> connectIds = new ArrayList<>(64);
     for (ConnectId connectId : connectIndexes) {
       Channel channel =
           sessionServer.getChannel(
