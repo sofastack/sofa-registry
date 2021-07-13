@@ -32,7 +32,7 @@
 
     <insert id="save" parameterType="com.alipay.sofa.registry.jdbc.domain.ProvideDataDomain">
         <![CDATA[
-       INSERT INTO provide_data
+       INSERT /*+ QUERY_TIMEOUT(3000000) */ INTO provide_data
        (
            data_center,
            data_key,
@@ -55,28 +55,28 @@
 
     <update id="update">
         <![CDATA[
-       update provide_data set data_value = #{data.dataValue}, data_version = #{data.dataVersion}, gmt_modified = CURRENT_TIMESTAMP
+       update /*+ QUERY_TIMEOUT(3000000) */ provide_data set data_value = #{data.dataValue}, data_version = #{data.dataVersion}, gmt_modified = CURRENT_TIMESTAMP
        where data_center = #{data.dataCenter} and data_key = #{data.dataKey} and data_version = #{exceptVersion}
        ]]>
     </update>
 
     <select id="query" resultMap="provideDataResultMap">
-        <![CDATA[ select * from provide_data
+        <![CDATA[ select /*+ QUERY_TIMEOUT(3000000) */ * from provide_data
                   where data_center = #{dataCenter} and data_key = #{dataKey}
         ]]>
     </select>
 
     <delete id="remove">
-        delete from provide_data where data_center = #{dataCenter} and data_key = #{dataKey}
+        delete /*+ QUERY_TIMEOUT(3000000) */ from provide_data where data_center = #{dataCenter} and data_key = #{dataKey}
         and data_version = #{dataVersion}
     </delete>
 
     <select id="selectTotalCount" resultType="java.lang.Integer">
-        select count(1) from provide_data where data_center = #{dataCenter}
+        select /*+ QUERY_TIMEOUT(3000000) */ count(1) from provide_data where data_center = #{dataCenter}
     </select>
 
     <select id="queryByPage" resultMap="provideDataResultMap">
-        <![CDATA[ select * from provide_data
+        <![CDATA[ select /*+ QUERY_TIMEOUT(3000000) */ * from provide_data
                   where data_center = #{dataCenter} limit #{start}, #{limit}
         ]]>
     </select>

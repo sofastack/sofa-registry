@@ -25,6 +25,7 @@ import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.remoting.exchange.RequestException;
 import com.alipay.sofa.registry.remoting.exchange.message.Request;
 import com.alipay.sofa.registry.remoting.exchange.message.Response;
+import com.alipay.sofa.registry.remoting.exchange.message.Response.ResultStatus;
 import com.alipay.sofa.registry.server.meta.MetaLeaderService;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.shared.remoting.ClientSideExchanger;
@@ -76,6 +77,10 @@ public class MetaNodeExchange extends ClientSideExchanger {
 
   public Response sendRequest(Object requestBody) throws RequestException {
     final String newLeader = metaLeaderService.getLeader();
+    if (StringUtil.isBlank(newLeader)) {
+      return () -> ResultStatus.FAILED;
+    }
+
     if (!StringUtil.equals(metaLeader, newLeader) || boltExchange.getClient(serverType) == null) {
       setLeaderAndConnect(newLeader);
     }

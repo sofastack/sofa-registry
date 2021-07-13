@@ -33,7 +33,7 @@
 
     <insert id="competeLockOnInsert" parameterType="com.alipay.sofa.registry.jdbc.domain.DistributeLockDomain">
         <![CDATA[
-       INSERT INTO distribute_lock
+       INSERT /*+ QUERY_TIMEOUT(2000000) */ INTO distribute_lock
        (
            data_center,
            lock_name,
@@ -58,26 +58,26 @@
     <update id="competeLockOnUpdate">
         <!-- update cas with dataCenter,lockName,owner,gmtModified  -->
         <![CDATA[
-       update distribute_lock set owner = #{newOwner}, gmt_modified =  NOW(3)
+       update /*+ QUERY_TIMEOUT(2000000) */ distribute_lock set owner = #{newOwner}, gmt_modified =  NOW(3)
        where data_center = #{dataCenter} and lock_name = #{lockName} and owner = #{owner} and gmt_modified = #{gmtModified}
        ]]>
     </update>
 
     <update id="ownerHeartbeat" parameterType="com.alipay.sofa.registry.jdbc.domain.DistributeLockDomain">
         <![CDATA[
-          update distribute_lock set owner = #{owner}, gmt_modified =  NOW(3)
+          update /*+ QUERY_TIMEOUT(2000000) */ distribute_lock set owner = #{owner}, gmt_modified =  NOW(3)
           where data_center = #{dataCenter} and lock_name = #{lockName} and owner = #{owner}
         ]]>
     </update>
 
     <select id="queryDistLock" resultMap="distributeLockResultMap">
-        select *, NOW(3) as gmt_db_server_time from distribute_lock
+        select /*+ QUERY_TIMEOUT(2000000) */ *, NOW(3) as gmt_db_server_time from distribute_lock
         where data_center = #{dataCenter} and lock_name = #{lockName}
     </select>
 
     <update id="forceRefresh" parameterType="com.alipay.sofa.registry.jdbc.domain.DistributeLockDomain">
         <![CDATA[
-          update distribute_lock set duration = #{duration}, gmt_modified = NOW(3)
+          update /*+ QUERY_TIMEOUT(2000000) */ distribute_lock set duration = #{duration}, gmt_modified = NOW(3)
           where data_center = #{dataCenter} and lock_name = #{lockName} and owner = #{owner}
         ]]>
     </update>

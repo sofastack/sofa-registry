@@ -19,7 +19,7 @@
     <update id="update" parameterType="com.alipay.sofa.registry.jdbc.domain.ClientManagerAddressDomain">
         <![CDATA[
 
-              update client_manager_address set gmt_modified = CURRENT_TIMESTAMP
+              update /*+ QUERY_TIMEOUT(3000000) */ client_manager_address set gmt_modified = CURRENT_TIMESTAMP
               WHERE data_center = #{dataCenter} AND address = #{address} AND operation = #{operation}
 
         ]]>
@@ -27,23 +27,23 @@
 
     <insert id="insertOnReplace" parameterType="com.alipay.sofa.registry.jdbc.domain.ClientManagerAddressDomain">
             <![CDATA[
-            replace into client_manager_address(data_center, address, operation, gmt_create, gmt_modified)
+            replace /*+ QUERY_TIMEOUT(3000000) */ into client_manager_address(data_center, address, operation, gmt_create, gmt_modified)
             values (#{dataCenter},#{address},#{operation},CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)
         ]]>
     </insert>
 
     <select id="queryAfterThanByLimit" resultMap="clientManagerAddressResultMap">
-        select * from client_manager_address where data_center = #{dataCenter} and id > #{maxId}
+        select /*+ QUERY_TIMEOUT(3000000) */ * from client_manager_address where data_center = #{dataCenter} and id > #{maxId}
         order by id limit #{limit}
     </select>
 
     <select id="getNow" resultMap="dateNowResult">
-        select NOW(6) as now;
+        select /*+ QUERY_TIMEOUT(3000000) */ NOW(6) as now;
     </select>
 
     <select id="getExpireAddress" resultType="java.lang.String">
         <![CDATA[
-            select address from client_manager_address where data_center=#{dataCenter} and gmt_modified < #{expireDate}
+            select /*+ QUERY_TIMEOUT(3000000) */ address from client_manager_address where data_center=#{dataCenter} and gmt_modified < #{expireDate}
             and operation in ('clientOpen','reduce')
             limit #{limit}
         ]]>
@@ -51,13 +51,13 @@
 
     <select id="getClientOffSizeBefore" resultType="java.lang.Integer">
         <![CDATA[
-            select count(1) from client_manager_address where data_center=#{dataCenter} and gmt_modified < #{expireDate} and operation='clientOff'
+            select /*+ QUERY_TIMEOUT(3000000) */ count(1) from client_manager_address where data_center=#{dataCenter} and gmt_modified < #{expireDate} and operation='clientOff'
         ]]>
     </select>
 
     <delete id="cleanExpired">
         <if test="expireAddress != null and expireAddress.size() > 0">
-            delete from client_manager_address where data_center=#{dataCenter} and address in
+            delete /*+ QUERY_TIMEOUT(5000000) */ from client_manager_address where data_center=#{dataCenter} and address in
             <foreach collection="expireAddress" index="index" item="item" open="(" separator="," close=")">
                 #{item}
             </foreach>
