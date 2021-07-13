@@ -140,10 +140,13 @@ public abstract class AbstractLeaderElector implements LeaderElector {
   }
 
   protected boolean amILeader(String leader) {
-    long current = System.currentTimeMillis();
-    return StringUtil.equals(myself(), leader) && current < leaderInfo.expireTimestamp;
+    return StringUtil.equals(myself(), leader) && leaderNotExpired();
   }
 
+  private boolean leaderNotExpired() {
+    long current = System.currentTimeMillis();
+    return current < leaderInfo.expireTimestamp;
+  }
   /**
    * Gets get elector.
    *
@@ -151,7 +154,12 @@ public abstract class AbstractLeaderElector implements LeaderElector {
    */
   @Override
   public String getLeader() {
-    return leaderInfo.leader;
+
+    if (leaderNotExpired()) {
+      return leaderInfo.leader;
+    }
+
+    return LeaderInfo.HAS_NO_LEADER.leader;
   }
 
   /**

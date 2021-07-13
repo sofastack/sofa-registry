@@ -16,21 +16,21 @@
 
     <update id="update" parameterType="com.alipay.sofa.registry.jdbc.domain.InterfaceAppsIndexDomain">
         <![CDATA[
-              update interface_apps_index set gmt_modified = NOW(6)
+              update /*+ QUERY_TIMEOUT(3000000) */ interface_apps_index set gmt_modified = NOW(6)
               WHERE data_center = #{dataCenter} AND app_name = #{appName} AND hashcode = #{hashcode} AND reference = true
         ]]>
     </update>
 
     <insert id="replace" parameterType="com.alipay.sofa.registry.jdbc.domain.InterfaceAppsIndexDomain">
         <![CDATA[
-            replace into interface_apps_index(data_center, interface_name, app_name, reference, hashcode, gmt_create,
+            replace /*+ QUERY_TIMEOUT(3000000) */ into interface_apps_index(data_center, interface_name, app_name, reference, hashcode, gmt_create,
             gmt_modified)
             values (#{dataCenter},#{interfaceName},#{appName}, #{reference} , #{hashcode}, NOW(6), NOW(6))
         ]]>
     </insert>
 
     <select id="batchQueryByInterface" resultMap="interfaceAppsResultMap">
-        select * from interface_apps_index where data_center = #{dataCenter}
+        select /*+ QUERY_TIMEOUT(5000000) */ * from interface_apps_index where data_center = #{dataCenter}
         <if test="interfaceNames != null and interfaceNames.size() > 0">
             and interface_name in
             <foreach collection="interfaceNames" index="index" item="item" open="(" separator="," close=")">
@@ -42,13 +42,13 @@
 
     <select id="queryLargeThan" resultMap="interfaceAppsResultMap">
     <![CDATA[
-        select * from interface_apps_index where data_center = #{dataCenter} and id > #{maxId} order by id limit #{limitCount}
+        select /*+ QUERY_TIMEOUT(3000000) */ * from interface_apps_index where data_center = #{dataCenter} and id > #{maxId} order by id limit #{limitCount}
     ]]>
     </select>
 
     <select id="getExpired" resultMap="interfaceAppsResultMap">
 <![CDATA[
-        select * from interface_apps_index where data_center = #{dataCenter} and gmt_modified < #{beforeTime}
+        select /*+ QUERY_TIMEOUT(3000000) */ * from interface_apps_index where data_center = #{dataCenter} and gmt_modified < #{beforeTime}
         and reference=true limit #{limit}
 ]]>
     </select>
