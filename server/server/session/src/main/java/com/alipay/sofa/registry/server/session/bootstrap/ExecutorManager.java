@@ -45,7 +45,6 @@ public class ExecutorManager {
   private final ThreadPoolExecutor accessSubExecutor;
   private final ThreadPoolExecutor dataChangeRequestExecutor;
   private final ThreadPoolExecutor dataSlotSyncRequestExecutor;
-  private final ThreadPoolExecutor connectClientExecutor;
   private final ThreadPoolExecutor accessMetadataExecutor;
   private final ThreadPoolExecutor consoleExecutor;
 
@@ -154,19 +153,6 @@ public class ExecutorManager {
                     TimeUnit.SECONDS,
                     new ArrayBlockingQueue<>(sessionServerConfig.getAccessMetadataMaxBufferSize()),
                     new NamedThreadFactory(ACCESS_METADATA_EXECUTOR, true)));
-    connectClientExecutor =
-        reportExecutors.computeIfAbsent(
-            CONNECT_CLIENT_EXECUTOR,
-            k ->
-                new MetricsableThreadPoolExecutor(
-                    CONNECT_CLIENT_EXECUTOR,
-                    sessionServerConfig.getConnectClientExecutorPoolSize(),
-                    sessionServerConfig.getConnectClientExecutorPoolSize(),
-                    60L,
-                    TimeUnit.SECONDS,
-                    new LinkedBlockingQueue(
-                        sessionServerConfig.getConnectClientExecutorQueueSize()),
-                    new NamedThreadFactory(CONNECT_CLIENT_EXECUTOR, true)));
 
     consoleExecutor =
         reportExecutors.computeIfAbsent(
@@ -192,8 +178,6 @@ public class ExecutorManager {
     dataChangeRequestExecutor.shutdown();
 
     dataSlotSyncRequestExecutor.shutdown();
-
-    connectClientExecutor.shutdown();
   }
 
   public Map<String, ThreadPoolExecutor> getReportExecutors() {
@@ -214,10 +198,6 @@ public class ExecutorManager {
 
   public ThreadPoolExecutor getDataSlotSyncRequestExecutor() {
     return dataSlotSyncRequestExecutor;
-  }
-
-  public ThreadPoolExecutor getConnectClientExecutor() {
-    return connectClientExecutor;
   }
 
   public ThreadPoolExecutor getAccessMetadataExecutor() {

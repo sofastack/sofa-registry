@@ -64,7 +64,7 @@ public abstract class BaseInfo implements Serializable, StoreData<String> {
 
   private long clientRegisterTimestamp;
 
-  private Map<String, String> attributes;
+  private volatile Map<String, String> attributes;
 
   /** ClientVersion Enum */
   public enum ClientVersion {
@@ -202,11 +202,20 @@ public abstract class BaseInfo implements Serializable, StoreData<String> {
    *
    * @return property value of attributes
    */
-  public synchronized Map<String, String> getAttributes() {
-    if (attributes == null) {
+  public Map<String, String> getAttributes() {
+    Map<String, String> attrs = this.attributes;
+    if (attrs == null) {
       return Collections.emptyMap();
     }
-    return new HashMap<>(attributes);
+    return new HashMap<>(attrs);
+  }
+
+  public String attributeOf(String key) {
+    Map<String, String> attrs = this.attributes;
+    if (attrs == null) {
+      return null;
+    }
+    return attrs.get(key);
   }
 
   /**

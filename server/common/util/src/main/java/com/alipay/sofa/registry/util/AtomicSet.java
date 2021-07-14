@@ -16,20 +16,33 @@
  */
 package com.alipay.sofa.registry.util;
 
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.TimeUnit;
+import com.google.common.collect.Sets;
+import java.util.Set;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-public abstract class WakeUpLoopRunnable extends LoopRunnable {
-  private final ArrayBlockingQueue<Object> bell = new ArrayBlockingQueue<>(1);
+public class AtomicSet<T> {
+  private Set<T> data = Sets.newConcurrentHashSet();
+  private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+  private final ReentrantReadWriteLock.ReadLock rlock = lock.readLock();
+  private final ReentrantReadWriteLock.WriteLock wlock = lock.writeLock();
 
-  @Override
-  public void waitingUnthrowable() {
-    ConcurrentUtils.pollUninterruptibly(bell, getWaitingMillis(), TimeUnit.MILLISECONDS);
+  public void add(T t) {
+    rlock.lock();
+    try {
+      data.add(t);
+    } finally {
+      rlock.unlock();
+    }
   }
 
-  public abstract int getWaitingMillis();
-
-  public void wakeup() {
-    bell.offer(this);
+  public Set<T> getAndReset() {
+    wlock.lock();
+    try {
+      Set<T> ret = data;
+      data = Sets.newConcurrentHashSet();
+      return ret;
+    } finally {
+      wlock.unlock();
+    }
   }
 }

@@ -76,10 +76,6 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
   private int dataChangeExecutorQueueSize = 20000;
 
-  private int connectClientExecutorPoolSize = OsUtils.getCpuCount();
-
-  private int connectClientExecutorQueueSize = 2000;
-
   private int dataChangeFetchTaskWorkerSize = OsUtils.getCpuCount() * 6;
 
   private int subscriberRegisterTaskWorkerSize = OsUtils.getCpuCount() * 4;
@@ -622,44 +618,6 @@ public class SessionServerConfigBean implements SessionServerConfig {
    */
   public void setPushTaskExecutorQueueSize(int pushTaskExecutorQueueSize) {
     this.pushTaskExecutorQueueSize = pushTaskExecutorQueueSize;
-  }
-
-  /**
-   * Getter method for property <tt>connectClientExecutorPoolSize</tt>.
-   *
-   * @return property value of connectClientExecutorPoolSize
-   */
-  public int getConnectClientExecutorPoolSize() {
-    return connectClientExecutorPoolSize;
-  }
-
-  /**
-   * Setter method for property <tt>connectClientExecutorPoolSize</tt>.
-   *
-   * @param connectClientExecutorPoolSize value to be assigned to property
-   *     connectClientExecutorMinPoolSize
-   */
-  public void setConnectClientExecutorPoolSize(int connectClientExecutorPoolSize) {
-    this.connectClientExecutorPoolSize = connectClientExecutorPoolSize;
-  }
-
-  /**
-   * Getter method for property <tt>connectClientExecutorQueueSize</tt>.
-   *
-   * @return property value of connectClientExecutorQueueSize
-   */
-  public int getConnectClientExecutorQueueSize() {
-    return connectClientExecutorQueueSize;
-  }
-
-  /**
-   * Setter method for property <tt>connectClientExecutorQueueSize</tt>.
-   *
-   * @param connectClientExecutorQueueSize value to be assigned to property
-   *     connectClientExecutorQueueSize
-   */
-  public void setConnectClientExecutorQueueSize(int connectClientExecutorQueueSize) {
-    this.connectClientExecutorQueueSize = connectClientExecutorQueueSize;
   }
 
   /**
