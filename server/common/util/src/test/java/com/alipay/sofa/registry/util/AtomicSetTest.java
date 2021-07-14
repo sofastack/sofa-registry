@@ -16,20 +16,17 @@
  */
 package com.alipay.sofa.registry.util;
 
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.TimeUnit;
+import org.junit.Assert;
+import org.junit.Test;
 
-public abstract class WakeUpLoopRunnable extends LoopRunnable {
-  private final ArrayBlockingQueue<Object> bell = new ArrayBlockingQueue<>(1);
+public class AtomicSetTest {
 
-  @Override
-  public void waitingUnthrowable() {
-    ConcurrentUtils.pollUninterruptibly(bell, getWaitingMillis(), TimeUnit.MILLISECONDS);
-  }
-
-  public abstract int getWaitingMillis();
-
-  public void wakeup() {
-    bell.offer(this);
+  @Test
+  public void test() {
+    AtomicSet<String> set = new AtomicSet<>();
+    set.add("1234");
+    set.add("1234");
+    Assert.assertEquals(1, set.getAndReset().size());
+    Assert.assertEquals(0, set.getAndReset().size());
   }
 }

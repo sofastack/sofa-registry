@@ -24,19 +24,39 @@ import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.session.bootstrap.ExecutorManager;
 import com.alipay.sofa.registry.server.session.registry.Registry;
 import com.alipay.sofa.registry.server.shared.remoting.ListenServerChannelHandler;
-import java.util.Collections;
+import com.alipay.sofa.registry.util.AtomicSet;
+import com.alipay.sofa.registry.util.ConcurrentUtils;
+import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
+import com.google.common.collect.Lists;
+import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.util.CollectionUtils;
 
 /**
  * @author shangyu.wh
  * @version $Id: ServerConnectionLisener.java, v 0.1 2017-11-30 15:04 shangyu.wh Exp $
  */
-public class ClientNodeConnectionHandler extends ListenServerChannelHandler {
+public class ClientNodeConnectionHandler extends ListenServerChannelHandler
+    implements ApplicationListener<ContextRefreshedEvent> {
   private final Logger LOG = LoggerFactory.getLogger("SRV-CONNECT");
 
   @Autowired Registry sessionRegistry;
 
   @Autowired ExecutorManager executorManager;
+
+  private final AtomicSet<ConnectId> pendingClientOff = new AtomicSet<>();
+  private final ClientOffWorker worker = new ClientOffWorker();
+
+  @Override
+  public void onApplicationEvent(ContextRefreshedEvent contextRefreshedEvent) {
+    start();
+  }
+
+  public void start() {
+    ConcurrentUtils.createDaemonThread("ClientOff-Worker", worker).start();
+  }
 
   @Override
   public void disconnected(Channel channel) {
@@ -49,17 +69,24 @@ public class ClientNodeConnectionHandler extends ListenServerChannelHandler {
     return Node.NodeType.CLIENT;
   }
 
-  void clean(Channel channel) {
-    try {
-      ConnectId connectId = ConnectId.of(channel.getRemoteAddress(), channel.getLocalAddress());
-      sessionRegistry.clean(Collections.singletonList(connectId));
-    } catch (Throwable e) {
-      LOG.safeError("clean connection failed:", e);
-    }
+  void fireCancelClient(Channel channel) {
+    pendingClientOff.add(ConnectId.of(channel.getRemoteAddress(), channel.getLocalAddress()));
+    worker.wakeup();
   }
 
-  private void fireCancelClient(Channel channel) {
-    // avoid block connect ConnectionEventExecutor thread pool
-    executorManager.getConnectClientExecutor().execute(() -> clean(channel));
+  private class ClientOffWorker extends WakeUpLoopRunnable {
+    @Override
+    public void runUnthrowable() {
+      Set<ConnectId> connectIds = pendingClientOff.getAndReset();
+      if (!CollectionUtils.isEmpty(connectIds)) {
+        LOG.info("disconnect count={}", connectIds.size());
+        sessionRegistry.clean(Lists.newArrayList(connectIds));
+      }
+    }
+
+    @Override
+    public int getWaitingMillis() {
+      return 5000;
+    }
   }
 }

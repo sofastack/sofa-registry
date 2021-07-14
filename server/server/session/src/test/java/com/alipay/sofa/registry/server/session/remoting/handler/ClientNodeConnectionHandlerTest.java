@@ -25,6 +25,8 @@ import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.server.session.TestUtils;
 import com.alipay.sofa.registry.server.session.bootstrap.ExecutorManager;
 import com.alipay.sofa.registry.server.session.registry.Registry;
+import com.alipay.sofa.registry.util.ConcurrentUtils;
+import java.util.concurrent.TimeUnit;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -46,7 +48,9 @@ public class ClientNodeConnectionHandlerTest {
     handler.sessionRegistry = mock(Registry.class);
     handler.executorManager = new ExecutorManager(TestUtils.newSessionConfig("testDc"));
     Channel channel = TestUtils.newChannel(9600, "127.0.0.1", 9888);
-    handler.clean(channel);
+    handler.start();
+    handler.fireCancelClient(channel);
+    ConcurrentUtils.sleepUninterruptibly(50, TimeUnit.MILLISECONDS);
     verify(handler.sessionRegistry, times(1)).clean(anyList());
     handler.disconnected(channel);
   }

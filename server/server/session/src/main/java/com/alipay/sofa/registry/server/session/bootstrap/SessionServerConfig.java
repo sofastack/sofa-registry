@@ -103,10 +103,6 @@ public interface SessionServerConfig extends ServerShareConfig {
 
   int getPushDataTaskDebouncingMillis();
 
-  int getConnectClientExecutorPoolSize();
-
-  int getConnectClientExecutorQueueSize();
-
   int getDataChangeFetchTaskWorkerSize();
 
   int getSubscriberRegisterTaskWorkerSize();

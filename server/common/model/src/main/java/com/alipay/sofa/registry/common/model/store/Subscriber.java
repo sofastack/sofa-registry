@@ -21,11 +21,10 @@ import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.springframework.util.CollectionUtils;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import org.springframework.util.CollectionUtils;
 
 /**
  * @author shangyu.wh
