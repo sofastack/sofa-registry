@@ -16,7 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.store;
 
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.SubscriberUtils;
@@ -29,6 +29,7 @@ import com.alipay.sofa.registry.server.session.bootstrap.CommonConfig;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfigBean;
 import com.alipay.sofa.registry.server.session.providedata.FetchStopPushService;
+import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.net.InetSocketAddress;
@@ -39,7 +40,6 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 import org.junit.Assert;
 import org.junit.Test;
-import org.mockito.Mockito;
 
 /**
  * @author shangyu.wh
@@ -135,6 +135,8 @@ public class DataCacheTest extends BaseTest {
   @Test
   public void testGetPub() {
     SessionDataStore sessionDataStore = new SessionDataStore();
+    sessionDataStore.slotTableCache = mock(SlotTableCache.class);
+    doReturn(0).when(sessionDataStore.slotTableCache).slotOf(anyString());
 
     String dataId = "dataid";
     String connectId = "192.168.1.2:9000_127.0.0.1:34567";
@@ -151,6 +153,8 @@ public class DataCacheTest extends BaseTest {
   @Test
   public void testGetPubRefresh() {
     SessionDataStore sessionDataStore = new SessionDataStore();
+    sessionDataStore.slotTableCache = mock(SlotTableCache.class);
+    doReturn(0).when(sessionDataStore.slotTableCache).slotOf(anyString());
 
     String dataId = "dataid";
     String connectId = "192.168.1.2:9000";
@@ -178,6 +182,8 @@ public class DataCacheTest extends BaseTest {
   @Test
   public void testDelPubById() {
     SessionDataStore sessionDataStore = new SessionDataStore();
+    sessionDataStore.slotTableCache = mock(SlotTableCache.class);
+    doReturn(0).when(sessionDataStore.slotTableCache).slotOf(anyString());
     String dataId = "dataid";
     String connectId = "192.168.1.2:9000_127.0.0.1:34567";
     for (int i = 0; i < 10; i++) {
@@ -268,6 +274,8 @@ public class DataCacheTest extends BaseTest {
   public void testOverwriteSameConnectIdPublisher() {
 
     SessionDataStore sessionDataStore = new SessionDataStore();
+    sessionDataStore.slotTableCache = mock(SlotTableCache.class);
+    doReturn(0).when(sessionDataStore.slotTableCache).slotOf(anyString());
 
     Publisher publisher1 = new Publisher();
     publisher1.setDataInfoId("dataInfoId1");
@@ -338,7 +346,7 @@ public class DataCacheTest extends BaseTest {
   @Test
   public void testOverwriteSameConnectIdSubscriber() {
 
-    FetchStopPushService fetchStopPushService = Mockito.mock(FetchStopPushService.class);
+    FetchStopPushService fetchStopPushService = mock(FetchStopPushService.class);
     when(fetchStopPushService.isStopPushSwitch()).thenReturn(false);
 
     SessionInterests sessionInterests = new SessionInterests();

@@ -82,7 +82,7 @@ public interface DataManager<DATA, ID, DATAINFOID> {
    * @param dataInfoId
    * @return
    */
-  boolean deleteById(ID registerId, DATAINFOID dataInfoId);
+  DATA deleteById(ID registerId, DATAINFOID dataInfoId);
 
   /** dataInfoId.size and data.size */
   Tuple<Long, Long> count();

@@ -42,13 +42,14 @@ public class SessionInterests extends AbstractDataManager<Subscriber> implements
     super(LOGGER);
   }
 
+  private final Store<Subscriber> store = new SimpleStore<>(1024 * 16, 256);
+
   @Override
   public boolean add(Subscriber subscriber) {
     ParaCheckUtil.checkNotNull(subscriber.getScope(), "subscriber.scope");
     ParaCheckUtil.checkNotNull(subscriber.getClientVersion(), "subscriber.clientVersion");
 
     Subscriber.internSubscriber(subscriber);
-
     Tuple<Subscriber, Boolean> ret = addData(subscriber);
     return ret.o2;
   }
@@ -77,39 +78,40 @@ public class SessionInterests extends AbstractDataManager<Subscriber> implements
   public Tuple<Map<String, DatumVersion>, List<Subscriber>> selectSubscribers(String dataCenter) {
     final String localDataCenter = sessionServerConfig.getSessionServerDataCenter();
     final boolean isLocalDataCenter = localDataCenter.equals(dataCenter);
-    final Map<String, DatumVersion> versions = Maps.newHashMapWithExpectedSize(stores.size());
+    Store<Subscriber> store = getStore();
+    final Map<String, DatumVersion> versions =
+        Maps.newHashMapWithExpectedSize(store.getDataInfoIds().size());
     final List<Subscriber> toPushEmptySubscribers = Lists.newArrayListWithCapacity(256);
-    for (Map.Entry<String, Map<String, Subscriber>> e : stores.entrySet()) {
-      Map<String, Subscriber> subs = e.getValue();
-      if (CollectionUtils.isEmpty(subs)) {
-        continue;
-      }
-      final String dataInfoId = e.getKey();
-      long maxVersion = 0;
-      for (Subscriber sub : subs.values()) {
-        // not global sub and not local dataCenter, not interest the other dataCenter's pub
-        if (sub.getScope() != ScopeEnum.global && !isLocalDataCenter) {
-          continue;
-        }
-        if (sub.isMarkedPushEmpty(dataCenter)) {
-          if (sub.needPushEmpty(dataCenter)) {
-            toPushEmptySubscribers.add(sub);
-          }
-          continue;
-        }
-        final long pushVersion = sub.getPushedVersion(dataCenter);
-        if (maxVersion < pushVersion) {
-          maxVersion = pushVersion;
-        }
-      }
-      versions.put(dataInfoId, new DatumVersion(maxVersion));
-    }
 
+    store.forEach(
+        (String dataInfoId, Map<String, Subscriber> subs) -> {
+          if (CollectionUtils.isEmpty(subs)) {
+            return;
+          }
+          long maxVersion = 0;
+          for (Subscriber sub : subs.values()) {
+            // not global sub and not local dataCenter, not interest the other dataCenter's pub
+            if (sub.getScope() != ScopeEnum.global && !isLocalDataCenter) {
+              continue;
+            }
+            if (sub.isMarkedPushEmpty(dataCenter)) {
+              if (sub.needPushEmpty(dataCenter)) {
+                toPushEmptySubscribers.add(sub);
+              }
+              continue;
+            }
+            final long pushVersion = sub.getPushedVersion(dataCenter);
+            if (maxVersion < pushVersion) {
+              maxVersion = pushVersion;
+            }
+          }
+          versions.put(dataInfoId, new DatumVersion(maxVersion));
+        });
     return Tuple.of(versions, toPushEmptySubscribers);
   }
 
   @Override
-  protected int getInitMapSize() {
-    return 256;
+  protected Store<Subscriber> getStore() {
+    return store;
   }
 }

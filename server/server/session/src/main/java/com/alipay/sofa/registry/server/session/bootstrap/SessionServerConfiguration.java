@@ -443,7 +443,7 @@ public class SessionServerConfiguration {
     @Bean
     @ConditionalOnMissingBean
     public DataStore sessionDataStore() {
-      return new SlotSessionDataStore();
+      return new SessionDataStore();
     }
   }
 
