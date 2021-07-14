@@ -33,6 +33,7 @@ public final class ConnectId implements Serializable {
   private final int clientPort;
   private final String sessionHostAddress;
   private final int sessionPort;
+  private int hash;
 
   @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
   public ConnectId(
@@ -129,7 +130,10 @@ public final class ConnectId implements Serializable {
 
   @Override
   public int hashCode() {
-    return Objects.hash(clientHostAddress, clientPort, sessionHostAddress, sessionPort);
+    if (hash == 0) {
+      hash = Objects.hash(clientHostAddress, clientPort, sessionHostAddress, sessionPort);
+    }
+    return hash;
   }
 
   @Override

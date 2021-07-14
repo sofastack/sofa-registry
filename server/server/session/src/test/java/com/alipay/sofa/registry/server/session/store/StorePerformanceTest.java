@@ -19,6 +19,7 @@ package com.alipay.sofa.registry.server.session.store;
 import com.alipay.sofa.registry.common.model.store.BaseInfo;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
+import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.server.session.TestUtils;
 import com.alipay.sofa.registry.server.session.slot.SlotTableCacheImpl;
@@ -51,6 +52,8 @@ public class StorePerformanceTest {
         sub.setDataInfoId(p.getDataInfoId());
         sub.setClientVersion(BaseInfo.ClientVersion.StoreData);
         sub.setScope(ScopeEnum.zone);
+        sub.setSourceAddress(new URL("192.168.0.1", 54321));
+        sub.setTargetAddress(new URL("192.168.0.2", 9600));
         sub.needPushEmpty("testdc");
         store.add(sub);
       }
@@ -200,7 +203,7 @@ public class StorePerformanceTest {
   }
 
   public static void testData() {
-    SlotSessionDataStore store = new SlotSessionDataStore();
+    SessionDataStore store = new SessionDataStore();
     store.slotTableCache = new SlotTableCacheImpl();
 
     for (int i = 0; i < DATA_ID_NUM; i++) {

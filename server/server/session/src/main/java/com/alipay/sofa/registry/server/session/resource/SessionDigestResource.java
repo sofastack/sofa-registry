@@ -165,24 +165,20 @@ public class SessionDigestResource {
 
     Map<String, Collection<? extends StoreData>> serverList = new HashMap<>();
 
-    if (connectIds != null) {
-      connectIds.forEach(
-          connectId -> {
-            Map pubMap = sessionDataStore.queryByConnectId(connectId);
-            Map subMap = sessionInterests.queryByConnectId(connectId);
-            Map watcherMap = sessionWatchers.queryByConnectId(connectId);
+    connectIds.forEach(
+        connectId -> {
+          Map pubMap = sessionDataStore.queryByConnectId(connectId);
+          Map subMap = sessionInterests.queryByConnectId(connectId);
+          Map watcherMap = sessionWatchers.queryByConnectId(connectId);
 
-            Collection<Publisher> publishers =
-                pubMap != null && !pubMap.isEmpty() ? pubMap.values() : new ArrayList<>();
-            Collection<Subscriber> subscribers =
-                subMap != null && !subMap.isEmpty() ? subMap.values() : new ArrayList<>();
-            Collection<Watcher> watchers =
-                watcherMap != null && !watcherMap.isEmpty()
-                    ? watcherMap.values()
-                    : new ArrayList<>();
-            fillServerList(type, serverList, publishers, subscribers, watchers);
-          });
-    }
+          Collection<Publisher> publishers =
+              pubMap != null && !pubMap.isEmpty() ? pubMap.values() : new ArrayList<>();
+          Collection<Subscriber> subscribers =
+              subMap != null && !subMap.isEmpty() ? subMap.values() : new ArrayList<>();
+          Collection<Watcher> watchers =
+              watcherMap != null && !watcherMap.isEmpty() ? watcherMap.values() : new ArrayList<>();
+          fillServerList(type, serverList, publishers, subscribers, watchers);
+        });
 
     return serverList;
   }

@@ -531,6 +531,8 @@ public class AbstractSessionServerTestBase extends AbstractTestBase {
     initBaseInfo(subscriber);
     subscriber.setScope(ScopeEnum.dataCenter);
     subscriber.setElementType(ElementType.SUBSCRIBER);
+    subscriber.setSourceAddress(new URL("192.168.0.1", new Random().nextInt(50000)));
+    subscriber.setTargetAddress(new URL("192.168.0.2", new Random().nextInt(50000)));
     return subscriber;
   }
 

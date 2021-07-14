@@ -21,8 +21,10 @@ import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import java.util.Map;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author shangyu.wh
@@ -31,6 +33,10 @@ import java.util.Map;
 public class SessionDataStore extends AbstractDataManager<Publisher> implements DataStore {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(SessionDataStore.class);
+
+  @Autowired SlotTableCache slotTableCache;
+
+  private final SlotStore<Publisher> store = new SlotStore<>(this::slotOf);
 
   public SessionDataStore() {
     super(LOGGER);
@@ -48,11 +54,15 @@ public class SessionDataStore extends AbstractDataManager<Publisher> implements 
 
   @Override
   public Map<String, Map<String, Publisher>> getDataInfoIdPublishers(int slotId) {
-    throw new UnsupportedOperationException();
+    return store.copyMap(slotId);
   }
 
   @Override
-  protected int getInitMapSize() {
-    return 256;
+  protected Store<Publisher> getStore() {
+    return store;
+  }
+
+  private int slotOf(String dataInfoId) {
+    return slotTableCache.slotOf(dataInfoId);
   }
 }

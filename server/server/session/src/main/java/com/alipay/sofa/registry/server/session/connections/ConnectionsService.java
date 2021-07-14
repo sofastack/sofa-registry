@@ -53,29 +53,13 @@ public class ConnectionsService {
 
   public List<String> getConnections() {
     Server server = boltExchange.getServer(sessionServerConfig.getServerPort());
-    Set<String> boltConnectIds =
-        server.getChannels().stream()
-            .map(
-                channel ->
-                    channel.getRemoteAddress().getAddress().getHostAddress()
-                        + ":"
-                        + channel.getRemoteAddress().getPort())
-            .collect(Collectors.toSet());
-    Set<String> connectIds = new HashSet<>();
-    connectIds.addAll(
-        sessionDataStore.getConnectIds().stream()
-            .map(connectId -> connectId.clientAddress())
-            .collect(Collectors.toList()));
-    connectIds.addAll(
-        sessionInterests.getConnectIds().stream()
-            .map(connectId -> connectId.clientAddress())
-            .collect(Collectors.toList()));
-    connectIds.addAll(
-        sessionWatchers.getConnectIds().stream()
-            .map(connectId -> connectId.clientAddress())
-            .collect(Collectors.toList()));
-    connectIds.retainAll(boltConnectIds);
-    return new ArrayList<>(connectIds);
+    return server.getChannels().stream()
+        .map(
+            channel ->
+                channel.getRemoteAddress().getAddress().getHostAddress()
+                    + ":"
+                    + channel.getRemoteAddress().getPort())
+        .collect(Collectors.toList());
   }
   /**
    * get connectIds by ip set

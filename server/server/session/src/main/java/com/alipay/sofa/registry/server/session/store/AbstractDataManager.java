@@ -24,9 +24,7 @@ import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import org.apache.commons.collections.MapUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,9 +37,9 @@ import org.springframework.util.CollectionUtils;
 public abstract class AbstractDataManager<T extends BaseInfo>
     implements DataManager<T, String, String> {
 
-  protected final ConcurrentHashMap<String /*dataInfoId*/, Map<String /*registerId*/, T>> stores =
-      new ConcurrentHashMap<>(1024 * 16);
   protected final Logger logger;
+
+  final ConnectDataIndexer connectDataIndexer = new ConnectDataIndexer(getClass().getName());
 
   @Autowired protected SessionServerConfig sessionServerConfig;
 
@@ -49,17 +47,13 @@ public abstract class AbstractDataManager<T extends BaseInfo>
     this.logger = logger;
   }
 
-  protected Tuple<T, Boolean> addData(T data) {
-    Map<String, T> dataMap =
-        stores.computeIfAbsent(
-            data.getDataInfoId(), k -> new ConcurrentHashMap<>(getInitMapSize()));
+  private Tuple<T, Boolean> addDataToStore(T data) {
+    Map<String, T> dataMap = getStore().getOrCreate(data.getDataInfoId());
     final String registerId = data.getRegisterId();
-
     // quick path
     if (dataMap.putIfAbsent(registerId, data) == null) {
       return new Tuple<>(null, true);
     }
-
     for (; ; ) {
       final T existing = dataMap.get(registerId);
       if (existing == null) {
@@ -85,48 +79,52 @@ public abstract class AbstractDataManager<T extends BaseInfo>
     }
   }
 
+  protected Tuple<T, Boolean> addData(T data) {
+    return connectDataIndexer.add(data.connectId(), DataPos.of(data), () -> addDataToStore(data));
+  }
+
   @Override
-  public boolean deleteById(String registerId, String dataInfoId) {
-    Map<String, T> dataMap = stores.get(dataInfoId);
+  public T deleteById(String registerId, String dataInfoId) {
+    Map<String, T> dataMap = getStore().get(dataInfoId);
     if (CollectionUtils.isEmpty(dataMap)) {
       logger.warn("Delete but not registered, {}", dataInfoId);
-      return false;
+      return null;
     }
     T dataToDelete = dataMap.remove(registerId);
 
     if (dataToDelete == null) {
       logger.warn("Delete but not registered, {}, {}", dataInfoId, registerId);
     }
-    return dataToDelete != null;
+    return dataToDelete;
   }
 
   @Override
   public Map<String, T> deleteByConnectId(ConnectId connectId) {
-    Map<ConnectId, Map<String, T>> ret = deleteByConnectIds(Collections.singleton(connectId));
-    Map<String, T> data = ret.get(connectId);
-    if (CollectionUtils.isEmpty(data)) {
-      return Collections.emptyMap();
+    Store<T> store = getStore();
+    Map<String, T> ret = Maps.newHashMapWithExpectedSize(128);
+    for (DataPos pos : connectDataIndexer.queryByKey(connectId)) {
+      Map<String, T> dataMap = store.get(pos.getDataInfoId());
+      if (CollectionUtils.isEmpty(dataMap)) {
+        continue;
+      }
+      T data = dataMap.get(pos.getRegisterId());
+      if (data == null || !data.connectId().equals(connectId)) {
+        continue;
+      }
+      if (dataMap.remove(pos.getRegisterId(), data)) {
+        ret.put(data.getRegisterId(), data);
+      }
     }
-    return data;
+    return ret;
   }
 
   @Override
   public Map<ConnectId, Map<String, T>> deleteByConnectIds(Set<ConnectId> connectIds) {
-    Map<ConnectId, Map<String, T>> ret = Maps.newHashMap();
-
-    for (Map<String, T> map : stores.values()) {
-      // copy a map for iterate
-      for (Map.Entry<String, T> e : map.entrySet()) {
-        final T data = e.getValue();
-        if (!connectIds.contains(data.connectId())) {
-          continue;
-        }
-        // may be the value has removed by anther thread
-        if (map.remove(e.getKey(), data)) {
-          Map<String, T> remove =
-              ret.computeIfAbsent(data.connectId(), k -> Maps.newHashMapWithExpectedSize(128));
-          remove.put(e.getKey(), data);
-        }
+    Map<ConnectId, Map<String, T>> ret = Maps.newHashMapWithExpectedSize(connectIds.size());
+    for (ConnectId connectId : connectIds) {
+      Map<String, T> m = deleteByConnectId(connectId);
+      if (!CollectionUtils.isEmpty(m)) {
+        ret.put(connectId, m);
       }
     }
     return ret;
@@ -134,17 +132,19 @@ public abstract class AbstractDataManager<T extends BaseInfo>
 
   @Override
   public void forEach(BiConsumer<String, Map<String, T>> consumer) {
-    for (Map.Entry<String, Map<String, T>> e : stores.entrySet()) {
-      if (!e.getValue().isEmpty()) {
-        consumer.accept(e.getKey(), Collections.unmodifiableMap(e.getValue()));
-      }
-    }
+    getStore()
+        .forEach(
+            (String dataInfoId, Map<String, T> datas) -> {
+              if (!CollectionUtils.isEmpty(datas)) {
+                consumer.accept(dataInfoId, Collections.unmodifiableMap(datas));
+              }
+            });
   }
 
   @Override
   public Collection<T> getDatas(String dataInfoId) {
     ParaCheckUtil.checkNotBlank(dataInfoId, "dataInfoId");
-    Map<String, T> dataMap = stores.get(dataInfoId);
+    Map<String, T> dataMap = getStore().get(dataInfoId);
     if (MapUtils.isEmpty(dataMap)) {
       return Collections.emptyList();
     }
@@ -153,21 +153,30 @@ public abstract class AbstractDataManager<T extends BaseInfo>
 
   @Override
   public Map<String, Map<String, T>> getDatas() {
-    return StoreHelpers.copyMap((Map) stores);
+    return getStore().copyMap();
   }
 
   @Override
   public List<T> getDataList() {
     List<T> ret = new ArrayList<>(1024);
-    for (Map<String, T> store : stores.values()) {
-      ret.addAll(store.values());
-    }
+    getStore()
+        .forEach(
+            (String dataInfoId, Map<String, T> datas) -> {
+              ret.addAll(datas.values());
+            });
     return ret;
   }
 
   @Override
   public Map<String, T> queryByConnectId(ConnectId connectId) {
-    return StoreHelpers.getByConnectId(connectId, stores);
+    Map<String, T> ret = Maps.newHashMapWithExpectedSize(128);
+    for (DataPos pos : connectDataIndexer.queryByKey(connectId)) {
+      T data = queryById(pos.getRegisterId(), pos.getDataInfoId());
+      if (data != null && data.connectId().equals(connectId)) {
+        ret.put(data.getRegisterId(), data);
+      }
+    }
+    return ret;
   }
 
   /**
@@ -178,34 +187,35 @@ public abstract class AbstractDataManager<T extends BaseInfo>
    */
   @Override
   public Map<ConnectId, Map<String, T>> queryByConnectIds(Set<ConnectId> connectIds) {
-    return StoreHelpers.getByConnectIds(connectIds, stores);
+    Map<ConnectId, Map<String, T>> ret = Maps.newHashMapWithExpectedSize(connectIds.size());
+    for (ConnectId connectId : connectIds) {
+      Map<String, T> m = queryByConnectId(connectId);
+      if (!CollectionUtils.isEmpty(m)) {
+        ret.put(connectId, m);
+      }
+    }
+    return ret;
   }
 
   @Override
   public T queryById(String registerId, String dataInfoId) {
-    final Map<String, T> datas = stores.get(dataInfoId);
+    final Map<String, T> datas = getStore().get(dataInfoId);
     return datas == null ? null : datas.get(registerId);
   }
 
   @Override
   public Tuple<Long, Long> count() {
-    return StoreHelpers.count(stores);
+    return getStore().count();
   }
 
   @Override
   public Set<ConnectId> getConnectIds() {
-    return StoreHelpers.collectConnectIds(stores);
+    return connectDataIndexer.getKeys();
   }
 
   @Override
   public Collection<String> getDataInfoIds() {
-    Set<String> ret = Sets.newHashSetWithExpectedSize(stores.values().size());
-    for (Map.Entry<String, Map<String, T>> e : stores.entrySet()) {
-      if (!e.getValue().isEmpty()) {
-        ret.add(e.getKey());
-      }
-    }
-    return ret;
+    return getStore().getDataInfoIds();
   }
 
   public SessionServerConfig getSessionServerConfig() {
@@ -221,5 +231,26 @@ public abstract class AbstractDataManager<T extends BaseInfo>
     this.sessionServerConfig = sessionServerConfig;
   }
 
-  protected abstract int getInitMapSize();
+  protected abstract Store<T> getStore();
+
+  class ConnectDataIndexer extends DataIndexer<ConnectId, DataPos> {
+
+    public ConnectDataIndexer(String name) {
+      super(name);
+    }
+
+    @Override
+    protected void dataStoreForEach(BiConsumer<ConnectId, DataPos> consumer) {
+      Store<T> store = getStore();
+      if (store == null) {
+        return;
+      }
+      store.forEach(
+          (dataInfoId, datum) -> {
+            for (T data : datum.values()) {
+              consumer.accept(data.connectId(), DataPos.of(data));
+            }
+          });
+    }
+  }
 }

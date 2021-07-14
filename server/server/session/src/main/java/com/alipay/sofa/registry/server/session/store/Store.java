@@ -17,32 +17,20 @@
 package com.alipay.sofa.registry.server.session.store;
 
 import com.alipay.sofa.registry.common.model.Tuple;
-import com.alipay.sofa.registry.common.model.store.Watcher;
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
+import java.util.Collection;
+import java.util.Map;
+import java.util.function.BiConsumer;
 
-/**
- * @author shangyu.wh
- * @version $Id: SessionWatchers.java, v 0.1 2018-04-17 19:00 shangyu.wh Exp $
- */
-public class SessionWatchers extends AbstractDataManager<Watcher> implements Watchers {
-  private static final Logger LOGGER = LoggerFactory.getLogger(SessionWatchers.class);
+public interface Store<T> {
+  Map<String, T> get(String dataInfoId);
 
-  private final Store<Watcher> store = new SimpleStore<>(1024 * 16, 32);
+  Map<String, T> getOrCreate(String dataInfoId);
 
-  public SessionWatchers() {
-    super(LOGGER);
-  }
+  void forEach(BiConsumer<String, Map<String, T>> consumer);
 
-  @Override
-  public boolean add(Watcher watcher) {
-    Watcher.internWatcher(watcher);
-    Tuple<Watcher, Boolean> ret = addData(watcher);
-    return ret.o2;
-  }
+  Map<String, Map<String, T>> copyMap();
 
-  @Override
-  protected Store<Watcher> getStore() {
-    return store;
-  }
+  Tuple<Long, Long> count();
+
+  Collection<String> getDataInfoIds();
 }

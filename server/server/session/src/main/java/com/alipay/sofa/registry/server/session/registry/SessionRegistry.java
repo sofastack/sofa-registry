@@ -196,7 +196,7 @@ public class SessionRegistry implements Registry {
 
       case SUBSCRIBER:
         Subscriber subscriber = (Subscriber) storeData;
-        if (!sessionInterests.deleteById(storeData.getId(), subscriber.getDataInfoId())) {
+        if (sessionInterests.deleteById(storeData.getId(), subscriber.getDataInfoId()) == null) {
           break;
         }
         sessionRegistryStrategy.afterSubscriberUnRegister(subscriber);
@@ -205,7 +205,7 @@ public class SessionRegistry implements Registry {
       case WATCHER:
         Watcher watcher = (Watcher) storeData;
 
-        if (!sessionWatchers.deleteById(watcher.getId(), watcher.getDataInfoId())) {
+        if (sessionWatchers.deleteById(watcher.getId(), watcher.getDataInfoId()) == null) {
           break;
         }
         sessionRegistryStrategy.afterWatcherUnRegister(watcher);
@@ -240,7 +240,7 @@ public class SessionRegistry implements Registry {
   private void disableConnect(
       List<ConnectId> connectIds, boolean removeSubAndWat, boolean checkSub) {
     Set<ConnectId> connectIdSet = Collections.unmodifiableSet(Sets.newHashSet(connectIds));
-    disableConnect(connectIdSet, removeSubAndWat, checkSub, Collections.EMPTY_MAP);
+    disableConnect(connectIdSet, removeSubAndWat, checkSub, Collections.emptyMap());
   }
 
   private void disableConnect(
@@ -618,7 +618,6 @@ public class SessionRegistry implements Registry {
               new URL(connectId.getClientHostAddress(), connectId.getClientPort()));
       if (channel == null) {
         connectIds.add(connectId);
-        LOGGER.warn("Client connect has not existed! connectId:{}", connectId);
       }
     }
     clean(connectIds);
