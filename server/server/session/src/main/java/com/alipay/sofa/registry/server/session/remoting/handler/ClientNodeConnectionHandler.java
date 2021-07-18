@@ -79,8 +79,10 @@ public class ClientNodeConnectionHandler extends ListenServerChannelHandler
     public void runUnthrowable() {
       Set<ConnectId> connectIds = pendingClientOff.getAndReset();
       if (!CollectionUtils.isEmpty(connectIds)) {
-        LOG.info("disconnect count={}", connectIds.size());
+        long start = System.currentTimeMillis();
         sessionRegistry.clean(Lists.newArrayList(connectIds));
+        long span = System.currentTimeMillis() - start;
+        LOG.info("disconnect size={},span={}", connectIds.size(), span);
       }
     }
 

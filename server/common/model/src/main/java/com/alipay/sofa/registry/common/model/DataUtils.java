@@ -39,7 +39,8 @@ public final class DataUtils {
       Map<String, Map<String, List<T>>> groupCount =
           groupBys.computeIfAbsent(info.getInstanceId(), k -> Maps.newHashMap());
       Map<String, List<T>> appCount =
-          groupCount.computeIfAbsent(info.getGroup(), k -> Maps.newHashMap());
+          groupCount.computeIfAbsent(
+              InterestGroup.normalizeGroup(info.getGroup()), k -> Maps.newHashMap());
       String appName = info.getAppName();
       if (StringUtils.isBlank(appName)) {
         appName = "";
@@ -80,7 +81,9 @@ public final class DataUtils {
     for (T info : infos) {
       Map<String, List<T>> groupCount =
           groupBys.computeIfAbsent(info.getInstanceId(), k -> Maps.newHashMap());
-      List<T> infoList = groupCount.computeIfAbsent(info.getGroup(), k -> Lists.newLinkedList());
+      List<T> infoList =
+          groupCount.computeIfAbsent(
+              InterestGroup.normalizeGroup(info.getGroup()), k -> Lists.newLinkedList());
       infoList.add(info);
     }
     Map<String, Map<String, Tuple<Integer, Integer>>> ret = Maps.newHashMap();

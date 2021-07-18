@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.util;
 
 import com.google.common.collect.Sets;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -44,5 +45,9 @@ public class AtomicSet<T> {
     } finally {
       wlock.unlock();
     }
+  }
+
+  public Set<T> get() {
+    return new HashSet<>(data);
   }
 }

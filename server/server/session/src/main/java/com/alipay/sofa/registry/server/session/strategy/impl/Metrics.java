@@ -16,7 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.strategy.impl;
 
-import com.alipay.sofa.registry.server.shared.metrics.InterestGroup;
+import com.alipay.sofa.registry.common.model.InterestGroup;
 import io.prometheus.client.Counter;
 import io.prometheus.client.Histogram;
 
