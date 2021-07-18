@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.server.session.scheduler.timertask;
 
 import com.alipay.sofa.registry.common.model.DataUtils;
+import com.alipay.sofa.registry.common.model.InterestGroup;
 import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
@@ -27,7 +28,6 @@ import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.store.DataStore;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.session.store.Watchers;
-import com.alipay.sofa.registry.server.shared.metrics.InterestGroup;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
 import io.prometheus.client.Gauge;

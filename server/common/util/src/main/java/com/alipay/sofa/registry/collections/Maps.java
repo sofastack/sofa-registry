@@ -19,27 +19,26 @@ package com.alipay.sofa.registry.collections;
 import java.util.*;
 
 public final class Maps {
-    private Maps() {
-    }
+  private Maps() {}
 
-    public static <K, V> Map<K, V> trimMap(Map<K, V> map) {
-        if (map == null) {
-            return Collections.emptyMap();
-        }
-        final int size = map.size();
-        if (size == 0) {
-            return Collections.emptyMap();
-        }
-        if (size == 1) {
-            final Map.Entry<K, V> e = map.entrySet().iterator().next();
-            return Collections.singletonMap(e.getKey(), e.getValue());
-        }
-        if (size <= 4) {
-            ImmutableMap4<K, V> ret = ImmutableMap4.newMap(map);
-            if (ret != null) {
-                return ret;
-            }
-        }
-        return map;
+  public static <K, V> Map<K, V> trimMap(Map<K, V> map) {
+    if (map == null) {
+      return Collections.emptyMap();
     }
+    final int size = map.size();
+    if (size == 0) {
+      return Collections.emptyMap();
+    }
+    if (size == 1) {
+      final Map.Entry<K, V> e = map.entrySet().iterator().next();
+      return Collections.singletonMap(e.getKey(), e.getValue());
+    }
+    if (size <= 4) {
+      ImmutableMap4<K, V> ret = ImmutableMap4.newMap(map);
+      if (ret != null) {
+        return ret;
+      }
+    }
+    return map;
+  }
 }
