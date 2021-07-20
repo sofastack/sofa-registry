@@ -134,7 +134,7 @@ public class SessionServerBootstrap {
                   return !input;
                 }
               })
-          .withWaitStrategy(WaitStrategies.exponentialWait(1000, 10000, TimeUnit.MILLISECONDS))
+          .withWaitStrategy(WaitStrategies.exponentialWait(1000, 3000, TimeUnit.MILLISECONDS))
           .withStopStrategy(StopStrategies.stopAfterAttempt(10))
           .build();
 
