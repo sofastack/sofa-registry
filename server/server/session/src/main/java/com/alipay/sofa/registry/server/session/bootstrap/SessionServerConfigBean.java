@@ -48,7 +48,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
   private int syncSessionIOLowWaterMark = 1024 * 288;
 
-  private int syncSessionIOHighWaterMark = 1024 * 320;
+  private int syncSessionIOHighWaterMark = 1024 * 512;
 
   private int clientIOLowWaterMark = 1024 * 288;
 
