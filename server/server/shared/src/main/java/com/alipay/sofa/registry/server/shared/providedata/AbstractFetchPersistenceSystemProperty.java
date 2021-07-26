@@ -16,27 +16,23 @@
  */
 package com.alipay.sofa.registry.server.shared.providedata;
 
-import com.alipay.sofa.registry.common.model.metaserver.FetchSystemPropertyResult;
-import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
-import com.google.common.annotations.VisibleForTesting;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import org.apache.commons.lang.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.util.Assert;
 
 /**
  * @author xiaojian.xj
- * @version $Id: AbstractFetchSystemPropertyService.java, v 0.1 2021年05月16日 13:32 xiaojian.xj Exp $
+ * @version : AbstractFetchPersistenceSystemPropertyService.java, v 0.1 2021年07月22日 22:02
+ *     xiaojian.xj Exp $
  */
-public abstract class AbstractFetchSystemPropertyService<T extends SystemDataStorage>
+public abstract class AbstractFetchPersistenceSystemProperty<
+        T extends SystemDataStorage, E extends SystemDataStorage>
     implements FetchSystemPropertyService {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FetchSystemPropertyService.class);
@@ -51,9 +47,7 @@ public abstract class AbstractFetchSystemPropertyService<T extends SystemDataSto
 
   protected final WatchDog watchDog = new WatchDog();
 
-  @Autowired protected MetaServerService metaNodeService;
-
-  protected AbstractFetchSystemPropertyService(String dataInfoId, T t) {
+  public AbstractFetchPersistenceSystemProperty(String dataInfoId, T t) {
     ParaCheckUtil.checkNotNull(t, "storage is null");
     this.dataInfoId = dataInfoId;
     storage.set(t);
@@ -76,24 +70,34 @@ public abstract class AbstractFetchSystemPropertyService<T extends SystemDataSto
 
   protected boolean doFetchData() {
     T expect = storage.get();
-    FetchSystemPropertyResult response =
-        metaNodeService.fetchSystemProperty(dataInfoId, expect.version);
+    E fetchData = fetchFromPersistence();
 
-    ParaCheckUtil.checkNotNull(response, "fetchSystemPropertyResult");
+    if (fetchData == null) {
+      LOGGER.error(
+          "Fetch persistence system data={}, currentVersion={}, updateVersion={}",
+          dataInfoId,
+          expect,
+          fetchData.getVersion());
+      return false;
+    }
 
-    if (!response.isVersionUpgrade()) {
+    if (fetchData.getVersion() < expect.getVersion()) {
+      LOGGER.warn(
+          "Fetch persistence system data={}, currentVersion={}, updateVersion={}",
+          dataInfoId,
+          expect,
+          fetchData.getVersion());
+      return false;
+    } else if (fetchData.getVersion() == expect.getVersion()) {
       return true;
     }
 
-    if (LOGGER.isInfoEnabled()) {
-      LOGGER.info(
-          "[FetchSystemProperty]dataInfoId:{}, version:{}, response:{}",
-          dataInfoId,
-          expect,
-          response);
-    }
-    // do process
-    return processorData(response.getProvideData(), expect);
+    return doProcess(expect, fetchData);
+  }
+
+  @Override
+  public boolean support(String dataInfoId) {
+    return StringUtils.equals(this.dataInfoId, dataInfoId);
   }
 
   @Override
@@ -107,57 +111,18 @@ public abstract class AbstractFetchSystemPropertyService<T extends SystemDataSto
     doFetchData();
     if (watcherInited.compareAndSet(false, true)) {
       ConcurrentUtils.createDaemonThread(
-              StringFormatter.format("FetchSystemProperty-{}", dataInfoId), watchDog)
+              StringFormatter.format("FetchPersistenceSystemProperty-{}", dataInfoId), watchDog)
           .start();
     }
 
     return watcherInited.get();
   }
 
-  private boolean processorData(ProvideData data, T expect) {
-    Assert.isTrue(
-        data != null,
-        StringFormatter.format(
-            "[FetchSystemProperty]dataInfoId:{}, versionUpgrade:{}, but provideData is null.",
-            dataInfoId,
-            true));
-
-    try {
-      if (data.getVersion() <= expect.version) {
-        LOGGER.warn(
-            "Fetch system data={}, currentVersion={}, updateVersion={}",
-            dataInfoId,
-            expect,
-            data.getVersion());
-        return false;
-      }
-    } catch (Throwable e) {
-      LOGGER.error("Fetch session stopPushSwitch error.", e);
-      return false;
-    }
-
-    // do process
-    return doProcess(expect, data);
-  }
-
-  @Override
-  public boolean support(String dataInfoId) {
-    return StringUtils.equals(this.dataInfoId, dataInfoId);
-  }
-
   protected boolean compareAndSet(T expect, T update) {
     return storage.compareAndSet(expect, update);
   }
 
-  protected abstract boolean doProcess(T expect, ProvideData data);
+  protected abstract E fetchFromPersistence();
 
-  /**
-   * Setter method for property <tt>metaNodeService</tt>.
-   *
-   * @param metaNodeService value to be assigned to property metaNodeService
-   */
-  @VisibleForTesting
-  public void setMetaNodeService(MetaServerService metaNodeService) {
-    this.metaNodeService = metaNodeService;
-  }
+  protected abstract boolean doProcess(T expect, E data);
 }

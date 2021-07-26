@@ -23,6 +23,7 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.providedata.FetchStopPushService.StopPushStorage;
 import com.alipay.sofa.registry.server.shared.providedata.AbstractFetchSystemPropertyService;
+import com.alipay.sofa.registry.server.shared.providedata.SystemDataStorage;
 import com.google.common.annotations.VisibleForTesting;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -84,8 +85,7 @@ public class FetchStopPushService extends AbstractFetchSystemPropertyService<Sto
     return storage.get().stopPushSwitch;
   }
 
-  protected static class StopPushStorage
-      extends AbstractFetchSystemPropertyService.SystemDataStorage {
+  protected static class StopPushStorage extends SystemDataStorage {
     protected final boolean stopPushSwitch;
 
     public StopPushStorage(long version, boolean stopPushSwitch) {

@@ -18,25 +18,30 @@ package com.alipay.sofa.registry.server.session.providedata;
 
 import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
-import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
+import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress;
+import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress.AddressVersion;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.metrics.GaugeFunc;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.connections.ConnectionsService;
+import com.alipay.sofa.registry.server.session.providedata.FetchClientOffAddressService.ClientOffAddressResp;
 import com.alipay.sofa.registry.server.session.providedata.FetchClientOffAddressService.ClientOffAddressStorage;
 import com.alipay.sofa.registry.server.session.registry.Registry;
-import com.alipay.sofa.registry.server.shared.providedata.AbstractFetchSystemPropertyService;
+import com.alipay.sofa.registry.server.shared.providedata.AbstractFetchPersistenceSystemProperty;
+import com.alipay.sofa.registry.server.shared.providedata.SystemDataStorage;
+import com.alipay.sofa.registry.store.api.meta.ClientManagerAddressRepository;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.LoopRunnable;
+import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.google.common.collect.Sets.SetView;
-import io.prometheus.client.Gauge;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.PostConstruct;
@@ -48,7 +53,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @version $Id: FetchClientOffAddressService.java, v 0.1 2021年05月16日 18:01 xiaojian.xj Exp $
  */
 public class FetchClientOffAddressService
-    extends AbstractFetchSystemPropertyService<ClientOffAddressStorage> {
+    extends AbstractFetchPersistenceSystemProperty<ClientOffAddressStorage, ClientOffAddressResp> {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FetchClientOffAddressService.class);
 
@@ -60,8 +65,10 @@ public class FetchClientOffAddressService
 
   @Autowired private Registry sessionRegistry;
 
-  private static final Gauge CLIENT_OFF_GAUGE =
-      Gauge.build()
+  @Autowired private ClientManagerAddressRepository clientManagerAddressRepository;
+
+  private static final GaugeFunc CLIENT_OFF_GAUGE =
+      GaugeFunc.build()
           .namespace("session")
           .subsystem("client_off")
           .name("address_total")
@@ -71,21 +78,12 @@ public class FetchClientOffAddressService
   public FetchClientOffAddressService() {
     super(
         ValueConstants.CLIENT_OFF_ADDRESS_DATA_ID,
-        new ClientOffAddressStorage(INIT_VERSION, Sets.newHashSet(), null));
+        new ClientOffAddressStorage(INIT_VERSION, Collections.emptyMap(), null));
   }
 
   @PostConstruct
   public void postConstruct() {
-    Timer timer = new Timer("ClientOffAddressDigest", true);
-    timer.scheduleAtFixedRate(
-        new TimerTask() {
-          @Override
-          public void run() {
-            CLIENT_OFF_GAUGE.set(getClientOffAddress().size());
-          }
-        },
-        60 * 1000,
-        60 * 1000);
+    CLIENT_OFF_GAUGE.func(() -> storage.get().clientOffAddress.size());
     ConcurrentUtils.createDaemonThread("ClientManagerProcessor", clientManagerProcessor).start();
   }
 
@@ -95,22 +93,39 @@ public class FetchClientOffAddressService
   }
 
   @Override
-  public boolean doProcess(ClientOffAddressStorage expect, ProvideData data) {
+  protected ClientOffAddressResp fetchFromPersistence() {
+    ClientManagerAddress clientManagerAddress = clientManagerAddressRepository.queryClientOffData();
+    return new ClientOffAddressResp(
+        clientManagerAddress.getVersion(), clientManagerAddress.getClientOffAddress());
+  }
+
+  @Override
+  protected boolean doProcess(ClientOffAddressStorage expect, ClientOffAddressResp data) {
     if (expect.updating.get() != null) {
       return false;
     }
-    Set<String> news = (Set<String>) data.getProvideData().getObject();
-    Set<String> olds = expect.clientOffAddress;
+    Set<String> news = data.clientOffAddress.keySet();
+    Set<String> olds = expect.clientOffAddress.keySet();
+    long oldVersion = expect.getVersion();
 
-    SetView toBeRemove = Sets.difference(olds, news);
-    SetView toBeAdd = Sets.difference(news, olds);
+    Set<String> toBeRemove = Sets.difference(olds, news);
+    Set<String> toBeAdd = Sets.difference(news, olds);
 
+    Map<String, AddressVersion> adds = Maps.newHashMapWithExpectedSize(toBeAdd.size());
+    for (String addAddress : toBeAdd) {
+      AddressVersion add = data.clientOffAddress.get(addAddress);
+      adds.put(addAddress, add);
+    }
+    ParaCheckUtil.checkEquals(toBeAdd.size(), adds.size(), "toBeAdd");
     try {
 
       ClientOffAddressStorage update =
           new ClientOffAddressStorage(
-              data.getVersion(), news, new ClientOffTable(toBeAdd, toBeRemove));
+              data.getVersion(),
+              data.clientOffAddress,
+              new ClientOffTable(toBeAdd, adds, toBeRemove));
       if (!compareAndSet(expect, update)) {
+        LOGGER.error("update clientOffAddress:{} fail.", update.getVersion());
         return false;
       }
     } catch (Throwable t) {
@@ -118,34 +133,48 @@ public class FetchClientOffAddressService
     }
 
     LOGGER.info(
-        "olds clientOffAddress:{}, toBeAdd:{}, toBeRemove:{}, current clientOffAddress:{}",
+        "olds clientOffAddress:{}, oldVersion:{}, toBeAdd:{}, toBeRemove:{}, current clientOffAddress:{}, newVersion:{}",
         olds,
+        oldVersion,
         toBeAdd,
         toBeRemove,
-        news);
+        storage.get().clientOffAddress.keySet(),
+        storage.get().getVersion());
     return true;
   }
 
-  protected static class ClientOffAddressStorage
-      extends AbstractFetchSystemPropertyService.SystemDataStorage {
-    final Set<String> clientOffAddress;
+  protected static class ClientOffAddressStorage extends SystemDataStorage {
+    final Map<String, AddressVersion> clientOffAddress;
 
     final AtomicReference<ClientOffTable> updating;
 
     public ClientOffAddressStorage(
-        long version, Set<String> clientOffAddress, ClientOffTable updating) {
+        long version, Map<String, AddressVersion> clientOffAddress, ClientOffTable updating) {
       super(version);
       this.clientOffAddress = clientOffAddress;
       this.updating = new AtomicReference<>(updating);
     }
   }
 
+  protected static class ClientOffAddressResp extends SystemDataStorage {
+    final Map<String, AddressVersion> clientOffAddress;
+
+    public ClientOffAddressResp(long version, Map<String, AddressVersion> clientOffAddress) {
+      super(version);
+      this.clientOffAddress = clientOffAddress;
+    }
+  }
+
   static final class ClientOffTable {
-    final Set<String> adds;
+    final Set<String> addAddress;
+
+    final Map<String, AddressVersion> adds;
 
     final Set<String> removes;
 
-    public ClientOffTable(Set<String> adds, Set<String> removes) {
+    public ClientOffTable(
+        Set<String> addAddress, Map<String, AddressVersion> adds, Set<String> removes) {
+      this.addAddress = addAddress;
       this.adds = adds;
       this.removes = removes;
     }
@@ -171,15 +200,16 @@ public class FetchClientOffAddressService
       return true;
     }
 
-    Set<String> adds = table.adds;
+    Set<String> addAddress = table.addAddress;
+    Map<String, AddressVersion> adds = table.adds;
     Set<String> removes = table.removes;
 
-    if (CollectionUtils.isEmpty(adds) && CollectionUtils.isEmpty(removes)) {
+    if (CollectionUtils.isEmpty(addAddress) && CollectionUtils.isEmpty(removes)) {
       return true;
     }
 
-    if (CollectionUtils.isNotEmpty(adds)) {
-      doTrafficOff(adds);
+    if (CollectionUtils.isNotEmpty(addAddress)) {
+      doTrafficOff(addAddress, adds);
     }
 
     if (CollectionUtils.isNotEmpty(removes)) {
@@ -188,13 +218,22 @@ public class FetchClientOffAddressService
     return true;
   }
 
-  private void doTrafficOff(Set<String> ipSet) {
+  private void doTrafficOff(Set<String> ipSet, Map<String, AddressVersion> adds) {
     List<ConnectId> conIds = connectionsService.getIpConnects(ipSet);
 
-    if (CollectionUtils.isNotEmpty(conIds)) {
-      LOGGER.info("clientOff conIds: {}", conIds.toString());
+    if (CollectionUtils.isEmpty(conIds)) {
+      return;
     }
-    sessionRegistry.clientOff(conIds);
+    LOGGER.info("clientOff conIds: {}", conIds.toString());
+
+    Map<ConnectId, Long> connectIds = Maps.newHashMapWithExpectedSize(conIds.size());
+    for (ConnectId conId : conIds) {
+      AddressVersion addressVersion = adds.get(conId.getClientHostAddress());
+      ParaCheckUtil.checkNotNull(addressVersion, "addressVersion");
+      connectIds.put(conId, addressVersion.getVersion());
+    }
+    ParaCheckUtil.checkEquals(conIds.size(), connectIds.size(), "connectIds");
+    sessionRegistry.clientOffWithTimestampCheck(connectIds);
   }
 
   private void doTrafficOn(Set<String> ipSet) {
@@ -210,7 +249,12 @@ public class FetchClientOffAddressService
    * @return property value of clientOffAddress
    */
   public Set<String> getClientOffAddress() {
-    return storage.get().clientOffAddress;
+    return storage.get().clientOffAddress.keySet();
+  }
+
+
+  public boolean contains(String address) {
+    return storage.get().clientOffAddress.containsKey(address);
   }
 
   /**

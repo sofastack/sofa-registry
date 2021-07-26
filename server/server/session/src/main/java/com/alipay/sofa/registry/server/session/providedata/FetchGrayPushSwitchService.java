@@ -24,6 +24,7 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.providedata.FetchGrayPushSwitchService.GrayPushSwitchStorage;
 import com.alipay.sofa.registry.server.shared.providedata.AbstractFetchSystemPropertyService;
+import com.alipay.sofa.registry.server.shared.providedata.SystemDataStorage;
 import com.alipay.sofa.registry.util.JsonUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
@@ -80,8 +81,7 @@ public class FetchGrayPushSwitchService
     return true;
   }
 
-  protected static class GrayPushSwitchStorage
-      extends AbstractFetchSystemPropertyService.SystemDataStorage {
+  protected static class GrayPushSwitchStorage extends SystemDataStorage {
     final Set<String> openIps;
 
     public GrayPushSwitchStorage(long version, Collection<String> openIps) {

@@ -40,6 +40,7 @@ import com.alipay.sofa.registry.server.session.strategy.SessionRegistryStrategy;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
+import com.alipay.sofa.registry.store.api.meta.ClientManagerAddressRepository;
 import com.github.rholder.retry.Retryer;
 import com.github.rholder.retry.RetryerBuilder;
 import com.github.rholder.retry.StopStrategies;
@@ -94,6 +95,8 @@ public class SessionServerBootstrap {
   @Autowired private ConfigProvideDataWatcher configProvideDataWatcher;
 
   @Autowired private SessionRegistryStrategy sessionRegistryStrategy;
+
+  @Autowired private ClientManagerAddressRepository clientManagerAddressRepository;
   private Server server;
 
   private Server dataSyncServer;
@@ -160,6 +163,7 @@ public class SessionServerBootstrap {
           () -> slotTableCache.getCurrentSlotTable().getEpoch() != SlotTable.INIT.getEpoch());
 
       appRevisionCacheRegistry.waitSynced();
+      clientManagerAddressRepository.waitSynced();
 
       startScheduler();
 

@@ -19,6 +19,7 @@ package com.alipay.sofa.registry.server.meta.provide.data;
 import com.alipay.sofa.registry.common.model.ServerDataBox;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress;
+import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress.AddressVersion;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -34,6 +35,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
@@ -91,12 +93,25 @@ public class DefaultClientManagerService
       return DBResponse.notfound().build();
     }
 
+    Set<String> ipSet =
+        address.getClientOffAddress().values().stream()
+            .map(AddressVersion::getAddress)
+            .collect(Collectors.toSet());
     ProvideData provideData =
         new ProvideData(
-            new ServerDataBox(address.getClientOffAddress()),
+            new ServerDataBox(ipSet),
             ValueConstants.CLIENT_OFF_ADDRESS_DATA_ID,
             address.getVersion());
     return DBResponse.ok(provideData).build();
+  }
+
+  @Override
+  public DBResponse<ClientManagerAddress> queryClientOffAddress() {
+    ClientManagerAddress address = clientManagerAddressRepository.queryClientOffData();
+    if (address.getVersion() == 0) {
+      return DBResponse.notfound().build();
+    }
+    return DBResponse.ok(address).build();
   }
 
   @Override

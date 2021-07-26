@@ -24,6 +24,8 @@ import com.alipay.sofa.registry.common.model.ServerDataBox;
 import com.alipay.sofa.registry.common.model.console.PersistenceData;
 import com.alipay.sofa.registry.common.model.console.PersistenceDataBuilder;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
+import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress;
+import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress.AddressVersion;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.Slot;
@@ -707,6 +709,20 @@ public class AbstractMetaServerTestBase extends AbstractTestBase {
               ValueConstants.CLIENT_OFF_ADDRESS_DATA_ID,
               version.get());
       return DBResponse.ok(provideData).build();
+    }
+
+    @Override
+    public DBResponse<ClientManagerAddress> queryClientOffAddress() {
+      Map<String, AddressVersion> clientOffAddress =
+          Maps.newHashMapWithExpectedSize(cache.get().size());
+      for (Object address : cache.get()) {
+        clientOffAddress.put(
+            (String) address, new AddressVersion(System.currentTimeMillis(), (String) address));
+      }
+
+      ClientManagerAddress resp =
+          new ClientManagerAddress(version.get(), clientOffAddress);
+      return DBResponse.ok(resp).build();
     }
 
     @Override

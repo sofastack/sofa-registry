@@ -16,19 +16,20 @@
  */
 package com.alipay.sofa.registry.server.session.providedata;
 
-import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.anyMap;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.alipay.sofa.registry.common.model.CollectionSdks;
-import com.alipay.sofa.registry.common.model.ServerDataBox;
-import com.alipay.sofa.registry.common.model.constants.ValueConstants;
-import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
+import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress.AddressVersion;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.connections.ConnectionsService;
+import com.alipay.sofa.registry.server.session.providedata.FetchClientOffAddressService.ClientOffAddressResp;
 import com.alipay.sofa.registry.server.session.registry.Registry;
+import com.google.common.collect.Maps;
+import java.util.Map;
 import java.util.Set;
 import org.junit.Assert;
 import org.junit.Before;
@@ -72,14 +73,18 @@ public class FetchClientOffServiceTest {
 
     Set<String> openIps = CollectionSdks.toIpSet("1.1.1.1;2.2.2.2;3.3.3.3");
 
+    Map<String, AddressVersion> addressVersionMap = Maps.newHashMapWithExpectedSize(openIps.size());
+    for (String openIp : openIps) {
+      addressVersionMap.put(openIp, new AddressVersion(System.currentTimeMillis(), openIp));
+    }
+
     Assert.assertTrue(
         fetchClientOffAddressService.doProcess(
             fetchClientOffAddressService.getStorage(),
-            new ProvideData(
-                new ServerDataBox(openIps), ValueConstants.PUSH_SWITCH_GRAY_OPEN_DATA_ID, 1L)));
+            new ClientOffAddressResp(1L, addressVersionMap)));
     Assert.assertEquals(openIps.size(), fetchClientOffAddressService.getClientOffAddress().size());
 
     Thread.sleep(2000);
-    verify(sessionRegistry, times(1)).clientOff(anyList());
+    verify(sessionRegistry, times(1)).clientOffWithTimestampCheck(anyMap());
   }
 }

@@ -70,7 +70,7 @@ public class ClientManagerAddressJdbcRepositoryTest extends AbstractH2DbTestBase
 
     ClientManagerAddress query = clientManagerAddressJdbcRepository.queryClientOffData();
     SetView<String> difference = Sets.difference(clientOffSet, clientOpenSet);
-    Assert.assertEquals(query.getClientOffAddress(), difference);
+    Assert.assertEquals(query.getClientOffAddress().keySet(), difference);
 
     List<ClientManagerAddressDomain> clientManagerAddress =
         clientManagerAddressMapper.queryAfterThanByLimit(

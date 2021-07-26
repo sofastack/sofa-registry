@@ -35,6 +35,8 @@ public class ClientOffWrapperInterceptor implements WrapperInterceptor<StoreData
 
   private static final Logger LOGGER = Loggers.CLIENT_OFF_LOG;
 
+  private static final long REGISTER_PUSH_EMPTY_VERSION = 1;
+
   @Autowired private FirePushService firePushService;
 
   @Resource private FetchClientOffAddressService fetchClientOffAddressService;
@@ -47,7 +49,7 @@ public class ClientOffWrapperInterceptor implements WrapperInterceptor<StoreData
 
     URL url = storeData.getSourceAddress();
 
-    if (fetchClientOffAddressService.getClientOffAddress().contains(url.getIpAddress())) {
+    if (fetchClientOffAddressService.contains(url.getIpAddress())) {
       LOGGER.info(
           "dataInfoId:{} ,url:{} match clientOff ips.",
           storeData.getDataInfoId(),
@@ -68,7 +70,9 @@ public class ClientOffWrapperInterceptor implements WrapperInterceptor<StoreData
         // else, filter not stop sub
         if (sessionRegistry.isPushEmpty((Subscriber) storeData)) {
           firePushService.fireOnPushEmpty(
-              (Subscriber) storeData, sessionRegistry.getDataCenterWhenPushEmpty());
+              (Subscriber) storeData,
+              sessionRegistry.getDataCenterWhenPushEmpty(),
+              REGISTER_PUSH_EMPTY_VERSION);
           LOGGER.info(
               "[sub],{},{}",
               storeData.getDataInfoId(),

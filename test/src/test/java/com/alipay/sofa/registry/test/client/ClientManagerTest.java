@@ -25,8 +25,8 @@ import com.alipay.sofa.registry.client.api.registration.PublisherRegistration;
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
+import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
-import com.alipay.sofa.registry.server.meta.resource.model.ClientOffAddressModel;
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.google.common.collect.Sets;
@@ -81,6 +81,25 @@ public class ClientManagerTest extends BaseIntegrationTest {
     // check session client off list
     waitConditionUntilTimeOut(
         () -> fetchClientOffAddressService.getClientOffAddress().equals(CLIENT_OFF_SET), 5000);
+    waitConditionUntilTimeOut(
+        () -> {
+          GenericResponse<ClientManagerAddress> query = clientManagerResource.query();
+          return query.isSuccess()
+              && query
+                  .getData()
+                  .getClientOffAddress()
+                  .keySet()
+                  .equals(fetchClientOffAddressService.getClientOffAddress());
+        },
+        5000);
+
+    Thread.sleep(3000L);
+
+    // check session local cache
+    Assert.assertFalse(isExist(sessionDataStore.getDatas(dataInfo.getDataInfoId()), localAddress));
+    // check data publisher
+    Assert.assertFalse(
+        isExist(localDatumStorage.getAllPublisher().get(dataInfo.getDataInfoId()), localAddress));
 
     register.republish(value);
     Thread.sleep(2000L);
@@ -99,12 +118,18 @@ public class ClientManagerTest extends BaseIntegrationTest {
     waitConditionUntilTimeOut(
         () -> fetchClientOffAddressService.getClientOffAddress().equals(difference), 5000);
 
-    GenericResponse<ClientOffAddressModel> query = clientManagerResource.query();
-    Assert.assertTrue(query.isSuccess());
-    Assert.assertEquals(
-        query.getData().getIps(), fetchClientOffAddressService.getClientOffAddress());
-
-    Thread.sleep(3000);
+    waitConditionUntilTimeOut(
+        () -> {
+          GenericResponse<ClientManagerAddress> query = clientManagerResource.query();
+          return query.isSuccess()
+              && query
+                  .getData()
+                  .getClientOffAddress()
+                  .keySet()
+                  .equals(fetchClientOffAddressService.getClientOffAddress());
+        },
+        5000);
+    Thread.sleep(5000);
 
     // check session local cache
     Assert.assertTrue(isExist(sessionDataStore.getDatas(dataInfo.getDataInfoId()), localAddress));
