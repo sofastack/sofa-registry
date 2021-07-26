@@ -29,6 +29,7 @@ import com.alipay.sofa.registry.server.session.filter.blacklist.MatchType;
 import com.alipay.sofa.registry.server.session.providedata.FetchBlackListService.BlacklistStorage;
 import com.alipay.sofa.registry.server.session.registry.Registry;
 import com.alipay.sofa.registry.server.shared.providedata.AbstractFetchSystemPropertyService;
+import com.alipay.sofa.registry.server.shared.providedata.SystemDataStorage;
 import com.alipay.sofa.registry.util.JsonUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -169,8 +170,7 @@ public class FetchBlackListService extends AbstractFetchSystemPropertyService<Bl
     return false;
   }
 
-  protected static class BlacklistStorage
-      extends AbstractFetchSystemPropertyService.SystemDataStorage {
+  protected static class BlacklistStorage extends SystemDataStorage {
     final List<BlacklistConfig> blacklistConfigList;
 
     public BlacklistStorage(long version, List<BlacklistConfig> blacklistConfigList) {

@@ -168,6 +168,8 @@ public abstract class BaseInformer<T extends DbEntry, C extends DbEntryContainer
     long version = System.currentTimeMillis();
     while (true) {
       if (syncStartVersion > version && syncEndVersion > syncStartVersion && allSynced) {
+        long end = System.currentTimeMillis();
+        logger.info("{}-waitSynced, start:{}, end:{}, cost:{}", name, version, end, end - version);
         return;
       }
       ConcurrentUtils.sleepUninterruptibly(50, TimeUnit.MILLISECONDS);

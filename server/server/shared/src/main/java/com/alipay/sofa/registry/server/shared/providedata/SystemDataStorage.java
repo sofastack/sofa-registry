@@ -14,23 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.meta.resource.model;
+package com.alipay.sofa.registry.server.shared.providedata;
 
-import java.util.Set;
+public abstract class SystemDataStorage {
+  final long version;
 
-/**
- * @author xiaojian.xj
- * @version $Id: ClientOffAddressModel.java, v 0.1 2021年06月02日 15:43 xiaojian.xj Exp $
- */
-public class ClientOffAddressModel {
-
-  private final long version;
-
-  private final Set<String> ips;
-
-  public ClientOffAddressModel(long version, Set<String> ips) {
+  public SystemDataStorage(long version) {
     this.version = version;
-    this.ips = ips;
   }
 
   /**
@@ -40,14 +30,5 @@ public class ClientOffAddressModel {
    */
   public long getVersion() {
     return version;
-  }
-
-  /**
-   * Getter method for property <tt>ips</tt>.
-   *
-   * @return property value of ips
-   */
-  public Set<String> getIps() {
-    return ips;
   }
 }

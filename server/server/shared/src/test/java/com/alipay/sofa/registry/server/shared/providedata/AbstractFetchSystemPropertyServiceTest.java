@@ -67,8 +67,7 @@ public class AbstractFetchSystemPropertyServiceTest
     return true;
   }
 
-  protected static class MyTestStorage
-      extends AbstractFetchSystemPropertyService.SystemDataStorage {
+  protected static class MyTestStorage extends SystemDataStorage {
     protected final boolean stopPushSwitch;
 
     public MyTestStorage(long version, boolean stopPushSwitch) {

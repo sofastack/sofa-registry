@@ -19,16 +19,13 @@ package com.alipay.sofa.registry.server.meta.resource;
 import com.alipay.sofa.registry.common.model.CollectionSdks;
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.GenericResponse;
-import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
+import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.provide.data.ClientManagerService;
-import com.alipay.sofa.registry.server.meta.resource.model.ClientOffAddressModel;
 import com.alipay.sofa.registry.store.api.DBResponse;
 import com.alipay.sofa.registry.store.api.OperationStatus;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Maps;
-import java.util.Map;
 import java.util.Set;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
@@ -111,21 +108,14 @@ public class ClientManagerResource {
   /** Client Open */
   @GET
   @Path("/query")
-  public GenericResponse<ClientOffAddressModel> query() {
-    DBResponse<ProvideData> ret = clientManagerService.queryClientOffSet();
-    DB_LOGGER.info("client open result:{}", ret);
+  public GenericResponse<ClientManagerAddress> query() {
+    DBResponse<ClientManagerAddress> ret = clientManagerService.queryClientOffAddress();
+    DB_LOGGER.info("client off result:{}", ret.getOperationStatus(), ret.getEntity());
 
-    Map<String, Object> response = Maps.newHashMap();
-    response.put("status", ret.getOperationStatus());
     if (ret.getOperationStatus() != OperationStatus.SUCCESS) {
-      return new GenericResponse<ClientOffAddressModel>().fillFailed("data not found");
+      return new GenericResponse<ClientManagerAddress>().fillFailed("data not found");
     }
-    ProvideData entity = ret.getEntity();
-    ClientOffAddressModel data =
-        new ClientOffAddressModel(
-            entity.getVersion(), (Set<String>) entity.getProvideData().getObject());
-
-    return new GenericResponse<ClientOffAddressModel>().fillSucceed(data);
+    return new GenericResponse<ClientManagerAddress>().fillSucceed(ret.getEntity());
   }
 
   /**

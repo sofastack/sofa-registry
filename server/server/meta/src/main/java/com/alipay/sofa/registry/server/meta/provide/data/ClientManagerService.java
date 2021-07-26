@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.meta.provide.data;
 
+import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.store.api.DBResponse;
 import java.util.Set;
@@ -49,6 +50,12 @@ public interface ClientManagerService {
    */
   DBResponse<ProvideData> queryClientOffSet();
 
+  /**
+   * query client off ips
+   *
+   * @return
+   */
+  DBResponse<ClientManagerAddress> queryClientOffAddress();
   /**
    * reduce
    *

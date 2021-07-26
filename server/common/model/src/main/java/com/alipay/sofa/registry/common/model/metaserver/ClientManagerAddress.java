@@ -16,7 +16,8 @@
  */
 package com.alipay.sofa.registry.common.model.metaserver;
 
-import java.util.Set;
+import com.google.common.base.Objects;
+import java.util.Map;
 
 /**
  * @author xiaojian.xj
@@ -26,9 +27,9 @@ public class ClientManagerAddress {
 
   private final long version;
 
-  private final Set<String> clientOffAddress;
+  private final Map<String, AddressVersion> clientOffAddress;
 
-  public ClientManagerAddress(long version, Set<String> clientOffAddress) {
+  public ClientManagerAddress(long version, Map<String, AddressVersion> clientOffAddress) {
     this.version = version;
     this.clientOffAddress = clientOffAddress;
   }
@@ -47,7 +48,69 @@ public class ClientManagerAddress {
    *
    * @return property value of clientOffAddress
    */
-  public Set<String> getClientOffAddress() {
+  public Map<String, AddressVersion> getClientOffAddress() {
     return clientOffAddress;
+  }
+
+  @Override
+  public String toString() {
+    return "ClientManagerAddress{" +
+            "version=" + version +
+            ", clientOffAddress=" + clientOffAddress +
+            '}';
+  }
+
+  public static class AddressVersion {
+    private final long version;
+
+    private final String address;
+
+    public AddressVersion(long version, String address) {
+      this.version = version;
+      this.address = address;
+    }
+
+    /**
+     * Getter method for property <tt>version</tt>.
+     *
+     * @return property value of version
+     */
+    public long getVersion() {
+      return version;
+    }
+
+    /**
+     * Getter method for property <tt>address</tt>.
+     *
+     * @return property value of address
+     */
+    public String getAddress() {
+      return address;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+      AddressVersion that = (AddressVersion) o;
+      return version == that.version && Objects.equal(address, that.address);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hashCode(version, address);
+    }
+
+    @Override
+    public String toString() {
+      return "AddressVersion{" +
+              "version=" + version +
+              ", address='" + address + '\'' +
+              '}';
+    }
   }
 }

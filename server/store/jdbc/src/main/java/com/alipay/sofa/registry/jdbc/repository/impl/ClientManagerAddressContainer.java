@@ -17,12 +17,13 @@
 package com.alipay.sofa.registry.jdbc.repository.impl;
 
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
+import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress.AddressVersion;
 import com.alipay.sofa.registry.jdbc.domain.ClientManagerAddressDomain;
 import com.alipay.sofa.registry.jdbc.informer.DbEntryContainer;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.google.common.collect.Sets;
-import java.util.Set;
+import com.google.common.collect.Maps;
+import java.util.Map;
 
 /**
  * @author xiaojian.xj
@@ -32,13 +33,16 @@ public class ClientManagerAddressContainer implements DbEntryContainer<ClientMan
 
   private static final Logger LOGGER = LoggerFactory.getLogger(ClientManagerAddressContainer.class);
 
-  private final Set<String> clientOffData = Sets.newConcurrentHashSet();
+  private final Map<String, AddressVersion> clientOffData = Maps.newConcurrentMap();
 
   @Override
   public void onEntry(ClientManagerAddressDomain clientManagerAddress) {
     switch (clientManagerAddress.getOperation()) {
       case ValueConstants.CLIENT_OFF:
-        clientOffData.add(clientManagerAddress.getAddress());
+        clientOffData.put(
+            clientManagerAddress.getAddress(),
+            new AddressVersion(
+                clientManagerAddress.getGmtCreate().getTime(), clientManagerAddress.getAddress()));
         break;
       case ValueConstants.CLIENT_OPEN:
       case ValueConstants.REDUCE:
@@ -50,7 +54,7 @@ public class ClientManagerAddressContainer implements DbEntryContainer<ClientMan
     }
   }
 
-  public Set<String> queryClientOffData() {
-    return clientOffData;
+  public Map<String, AddressVersion> queryClientOffData() {
+    return Maps.newHashMap(clientOffData);
   }
 }

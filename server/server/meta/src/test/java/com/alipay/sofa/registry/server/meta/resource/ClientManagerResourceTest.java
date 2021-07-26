@@ -19,9 +19,9 @@ package com.alipay.sofa.registry.server.meta.resource;
 import static org.mockito.Mockito.spy;
 
 import com.alipay.sofa.registry.common.model.GenericResponse;
+import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress;
 import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
 import com.alipay.sofa.registry.server.meta.provide.data.ClientManagerService;
-import com.alipay.sofa.registry.server.meta.resource.model.ClientOffAddressModel;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -52,10 +52,10 @@ public class ClientManagerResourceTest extends AbstractMetaServerTestBase {
 
     clientManagerResource.clientOpen(CLIENT_OPEN_STR);
 
-    GenericResponse<ClientOffAddressModel> query = clientManagerResource.query();
+    GenericResponse<ClientManagerAddress> query = clientManagerResource.query();
 
     Assert.assertTrue(query.isSuccess());
     Assert.assertEquals(query.getData().getVersion(), 2L);
-    Assert.assertEquals(query.getData().getIps().size(), 1);
+    Assert.assertEquals(query.getData().getClientOffAddress().size(), 1);
   }
 }
