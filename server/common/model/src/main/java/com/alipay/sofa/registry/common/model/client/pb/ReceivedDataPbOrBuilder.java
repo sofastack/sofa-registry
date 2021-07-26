@@ -80,4 +80,15 @@ public interface ReceivedDataPbOrBuilder
   java.lang.String getLocalZone();
   /** <code>string localZone = 9;</code> */
   com.google.protobuf.ByteString getLocalZoneBytes();
+
+  /** <code>string encoding = 10;</code> */
+  java.lang.String getEncoding();
+  /** <code>string encoding = 10;</code> */
+  com.google.protobuf.ByteString getEncodingBytes();
+
+  /** <code>bytes body = 11;</code> */
+  com.google.protobuf.ByteString getBody();
+
+  /** <code>int32 originBodySize = 12;</code> */
+  int getOriginBodySize();
 }

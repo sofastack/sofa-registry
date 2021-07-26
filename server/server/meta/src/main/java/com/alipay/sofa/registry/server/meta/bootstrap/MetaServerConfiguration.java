@@ -317,6 +317,11 @@ public class MetaServerConfiguration {
     }
 
     @Bean
+    public CompressResource compressedResource() {
+      return new CompressResource();
+    }
+
+    @Bean
     @ConditionalOnMissingBean
     public MetaCenterResource cleanerResource() {
       return new MetaCenterResource();

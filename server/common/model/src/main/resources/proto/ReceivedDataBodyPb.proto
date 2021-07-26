@@ -3,11 +3,9 @@ option java_package = "com.alipay.sofa.registry.common.model.client.pb";
 option java_multiple_files = true;
 option go_package = "proto";
 
-import "BaseRegisterPb.proto";
+import "DataBoxesPb.proto";
 
-message SubscriberRegisterPb {
-    string scope = 1;
-    BaseRegisterPb baseRegister = 2;
-    string acceptEncoding =  3;
+message ReceivedDataBodyPb{
+  map<string, DataBoxesPb> data = 7;
+
 }
-

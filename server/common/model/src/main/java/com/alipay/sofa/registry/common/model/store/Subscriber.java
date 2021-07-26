@@ -39,6 +39,7 @@ public class Subscriber extends BaseInfo {
   /** */
   private ElementType elementType;
   /** */
+  private String acceptEncoding;
 
   /** last push context */
   private Map<String /*dataCenter*/, PushContext> lastPushContexts;
@@ -167,7 +168,8 @@ public class Subscriber extends BaseInfo {
     sb.append("dataInfoId=").append(getDataInfoId()).append(", ");
     sb.append("registerId=").append(getRegisterId()).append(", ");
     sb.append("scope=").append(getScope()).append(", ");
-    sb.append("sourceAddress=").append(getSourceAddress().buildAddressString());
+    sb.append("sourceAddress=").append(getSourceAddress().buildAddressString()).append(", ");
+    sb.append("acceptEncoding=").append(getAcceptEncoding());
     return sb.toString();
   }
 
@@ -248,6 +250,14 @@ public class Subscriber extends BaseInfo {
   protected Map<String, String> internAttributes(Map<String, String> attributes) {
     Map<String, String> intern = super.internAttributes(attributes);
     return com.alipay.sofa.registry.collections.Maps.trimMap(intern);
+  }
+
+  public String getAcceptEncoding() {
+    return acceptEncoding;
+  }
+
+  public void setAcceptEncoding(String acceptEncoding) {
+    this.acceptEncoding = WordCache.getWordCache(acceptEncoding);
   }
 
   private static class PushContext {

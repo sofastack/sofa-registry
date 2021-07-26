@@ -14,34 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.common.model.store;
+package com.alipay.sofa.registry.compress;
 
-import org.apache.commons.lang.StringUtils;
-
-public class PushData<T> {
-  private final T payload;
-  private final int dataCount;
-  private final String encode;
-
-  public PushData(T payload, int dataCount) {
-    this(payload, dataCount, StringUtils.EMPTY);
-  }
-
-  public PushData(T payload, int dataCount, String encode) {
-    this.payload = payload;
-    this.dataCount = dataCount;
-    this.encode = encode;
-  }
-
-  public T getPayload() {
-    return payload;
-  }
-
-  public int getDataCount() {
-    return dataCount;
-  }
-
-  public String getEncode() {
-    return encode;
-  }
+public class CompressConstants {
+  public static final String encodingGzip = "gzip";
+  public static final String encodingZstd = "zstd";
+  public static final int defaultCompressMinSize = 1024 * 4; // 4KB
 }

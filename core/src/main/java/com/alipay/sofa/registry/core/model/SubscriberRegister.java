@@ -25,6 +25,8 @@ public class SubscriberRegister extends BaseRegister {
 
   private String scope;
 
+  private String acceptEncoding;
+
   /**
    * Getter method for property <tt>scope</tt>.
    *
@@ -51,5 +53,13 @@ public class SubscriberRegister extends BaseRegister {
   @Override
   public String toString() {
     return "SubscriberRegister{" + "scope='" + scope + '\'' + '}' + super.toString();
+  }
+
+  public String getAcceptEncoding() {
+    return acceptEncoding;
+  }
+
+  public void setAcceptEncoding(String acceptEncoding) {
+    this.acceptEncoding = acceptEncoding;
   }
 }

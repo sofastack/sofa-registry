@@ -387,6 +387,11 @@ public class SessionServerConfiguration {
     }
 
     @Bean
+    public CompressResource compressResource() {
+      return new CompressResource();
+    }
+
+    @Bean
     public ClientsOpenResource clientsOpenResource() {
       return new ClientsOpenResource();
     }
@@ -738,6 +743,14 @@ public class SessionServerConfiguration {
       systemPropertyProcessorManager.addSystemDataProcessor(fetchGrayPushSwitchService);
 
       return fetchGrayPushSwitchService;
+    }
+
+    @Bean
+    public FetchSystemPropertyService compressPushService(
+        SystemPropertyProcessorManager systemPropertyProcessorManager) {
+      CompressPushService compressPushService = new CompressPushService();
+      systemPropertyProcessorManager.addSystemDataProcessor(compressPushService);
+      return compressPushService;
     }
 
     @Bean
