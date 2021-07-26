@@ -14,34 +14,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.common.model.store;
+package com.alipay.sofa.registry.server.session.resource;
 
-import org.apache.commons.lang.StringUtils;
+import com.alipay.sofa.registry.common.model.metaserver.CompressPushSwitch;
+import com.alipay.sofa.registry.server.session.providedata.CompressPushService;
+import javax.annotation.Resource;
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
 
-public class PushData<T> {
-  private final T payload;
-  private final int dataCount;
-  private final String encode;
+/*
+temp set current session push compress switch
+*/
+@Path("compress")
+public class CompressResource {
+  @Resource CompressPushService compressPushService;
 
-  public PushData(T payload, int dataCount) {
-    this(payload, dataCount, StringUtils.EMPTY);
-  }
-
-  public PushData(T payload, int dataCount, String encode) {
-    this.payload = payload;
-    this.dataCount = dataCount;
-    this.encode = encode;
-  }
-
-  public T getPayload() {
-    return payload;
-  }
-
-  public int getDataCount() {
-    return dataCount;
-  }
-
-  public String getEncode() {
-    return encode;
+  @GET
+  @Path("push/switch")
+  @Produces(MediaType.APPLICATION_JSON)
+  public CompressPushSwitch getCurrentSwitch() {
+    return compressPushService.getCompressSwitch();
   }
 }

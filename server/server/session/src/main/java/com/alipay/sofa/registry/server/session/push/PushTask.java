@@ -27,6 +27,7 @@ import com.alipay.sofa.registry.util.StringFormatter;
 import java.net.InetSocketAddress;
 import java.util.Map;
 import java.util.Objects;
+import org.apache.commons.lang.StringUtils;
 
 public abstract class PushTask {
   protected final TraceID taskID;
@@ -41,6 +42,7 @@ public abstract class PushTask {
 
   protected int retryCount;
   private int pushDataCount = -1;
+  private String pushEncode = StringUtils.EMPTY;
 
   protected PushTask(
       PushCause pushCause,
@@ -133,6 +135,14 @@ public abstract class PushTask {
 
   public void setPushDataCount(int pushDataCount) {
     this.pushDataCount = pushDataCount;
+  }
+
+  public void setPushEncode(String pushEncode) {
+    this.pushEncode = pushEncode;
+  }
+
+  public String getPushEncode() {
+    return pushEncode;
   }
 
   protected static final class PushingTaskKey {

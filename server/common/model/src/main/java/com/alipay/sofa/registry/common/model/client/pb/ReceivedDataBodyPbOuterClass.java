@@ -16,8 +16,8 @@
  */
 package com.alipay.sofa.registry.common.model.client.pb;
 
-public final class SubscriberRegisterPbOuterClass {
-  private SubscriberRegisterPbOuterClass() {}
+public final class ReceivedDataBodyPbOuterClass {
+  private ReceivedDataBodyPbOuterClass() {}
 
   public static void registerAllExtensions(com.google.protobuf.ExtensionRegistryLite registry) {}
 
@@ -26,9 +26,13 @@ public final class SubscriberRegisterPbOuterClass {
   }
 
   static final com.google.protobuf.Descriptors.Descriptor
-      internal_static_SubscriberRegisterPb_descriptor;
+      internal_static_ReceivedDataBodyPb_descriptor;
   static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_SubscriberRegisterPb_fieldAccessorTable;
+      internal_static_ReceivedDataBodyPb_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors.Descriptor
+      internal_static_ReceivedDataBodyPb_DataEntry_descriptor;
+  static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_ReceivedDataBodyPb_DataEntry_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor getDescriptor() {
     return descriptor;
@@ -38,12 +42,12 @@ public final class SubscriberRegisterPbOuterClass {
 
   static {
     java.lang.String[] descriptorData = {
-      "\n\032SubscriberRegisterPb.proto\032\024BaseRegist"
-          + "erPb.proto\"d\n\024SubscriberRegisterPb\022\r\n\005sc"
-          + "ope\030\001 \001(\t\022%\n\014baseRegister\030\002 \001(\0132\017.BaseRe"
-          + "gisterPb\022\026\n\016acceptEncoding\030\003 \001(\tB:\n/com."
-          + "alipay.sofa.registry.common.model.client"
-          + ".pbP\001Z\005protob\006proto3"
+      "\n\030ReceivedDataBodyPb.proto\032\021DataBoxesPb."
+          + "proto\"|\n\022ReceivedDataBodyPb\022+\n\004data\030\007 \003("
+          + "\0132\035.ReceivedDataBodyPb.DataEntry\0329\n\tData"
+          + "Entry\022\013\n\003key\030\001 \001(\t\022\033\n\005value\030\002 \001(\0132\014.Data"
+          + "BoxesPb:\0028\001B:\n/com.alipay.sofa.registry."
+          + "common.model.client.pbP\001Z\005protob\006proto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -56,17 +60,25 @@ public final class SubscriberRegisterPbOuterClass {
     com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
         descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
-          com.alipay.sofa.registry.common.model.client.pb.BaseRegisterPbOuterClass.getDescriptor(),
+          com.alipay.sofa.registry.common.model.client.pb.DataBoxesPbOuterClass.getDescriptor(),
         },
         assigner);
-    internal_static_SubscriberRegisterPb_descriptor = getDescriptor().getMessageTypes().get(0);
-    internal_static_SubscriberRegisterPb_fieldAccessorTable =
+    internal_static_ReceivedDataBodyPb_descriptor = getDescriptor().getMessageTypes().get(0);
+    internal_static_ReceivedDataBodyPb_fieldAccessorTable =
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-            internal_static_SubscriberRegisterPb_descriptor,
+            internal_static_ReceivedDataBodyPb_descriptor,
             new java.lang.String[] {
-              "Scope", "BaseRegister", "AcceptEncoding",
+              "Data",
             });
-    com.alipay.sofa.registry.common.model.client.pb.BaseRegisterPbOuterClass.getDescriptor();
+    internal_static_ReceivedDataBodyPb_DataEntry_descriptor =
+        internal_static_ReceivedDataBodyPb_descriptor.getNestedTypes().get(0);
+    internal_static_ReceivedDataBodyPb_DataEntry_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_ReceivedDataBodyPb_DataEntry_descriptor,
+            new java.lang.String[] {
+              "Key", "Value",
+            });
+    com.alipay.sofa.registry.common.model.client.pb.DataBoxesPbOuterClass.getDescriptor();
   }
 
   // @@protoc_insertion_point(outer_class_scope)

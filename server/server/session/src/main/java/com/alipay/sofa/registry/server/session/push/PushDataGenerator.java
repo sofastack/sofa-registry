@@ -18,24 +18,30 @@ package com.alipay.sofa.registry.server.session.push;
 
 import com.alipay.sofa.registry.common.model.SubscriberUtils;
 import com.alipay.sofa.registry.common.model.store.*;
+import com.alipay.sofa.registry.compress.Compressor;
 import com.alipay.sofa.registry.core.model.ReceivedConfigData;
 import com.alipay.sofa.registry.core.model.ReceivedData;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.converter.ReceivedDataConverter;
 import com.alipay.sofa.registry.server.session.converter.pb.ReceivedDataConvertor;
 import com.alipay.sofa.registry.server.session.predicate.ZonePredicate;
+import com.alipay.sofa.registry.server.session.providedata.CompressPushService;
 import com.google.common.collect.Lists;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Predicate;
+import javax.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class PushDataGenerator {
 
   @Autowired protected SessionServerConfig sessionServerConfig;
 
+  @Resource protected CompressPushService compressPushService;
+
   public PushData createPushData(SubDatum datum, Map<String, Subscriber> subscriberMap) {
     if (subscriberMap.size() > 1) {
       SubscriberUtils.getAndAssertHasSameScope(subscriberMap.values());
+      SubscriberUtils.getAndAssertAcceptedEncoding(subscriberMap.values());
     }
     // only supported 4.x
     SubscriberUtils.assertClientVersion(subscriberMap.values(), BaseInfo.ClientVersion.StoreData);
@@ -43,6 +49,7 @@ public class PushDataGenerator {
     final Subscriber subscriber = subscriberMap.values().iterator().next();
     String dataId = datum.getDataId();
     String clientCell = sessionServerConfig.getClientCell(subscriber.getCell());
+
     Predicate<String> zonePredicate =
         ZonePredicate.zonePredicate(dataId, clientCell, subscriber.getScope(), sessionServerConfig);
 
@@ -55,11 +62,23 @@ public class PushDataGenerator {
             zonePredicate);
     pushData.getPayload().setVersion(datum.getVersion());
     final Byte serializerIndex = subscriber.getSourceAddress().getSerializerIndex();
-    if (serializerIndex != null && URL.PROTOBUF == serializerIndex) {
+    if (serializerIndex == null || URL.PROTOBUF != serializerIndex) {
+      return pushData;
+    }
+    Compressor compressor =
+        compressPushService.getCompressor(
+            pushData.getPayload(),
+            subscriber.getAcceptEncoding(),
+            subscriber.getSourceAddress().getIpAddress());
+    if (compressor == null) {
       return new PushData<>(
           ReceivedDataConvertor.convert2Pb(pushData.getPayload()), pushData.getDataCount());
+    } else {
+      return new PushData<>(
+          ReceivedDataConvertor.convert2CompressedPb(pushData.getPayload(), compressor),
+          pushData.getDataCount(),
+          compressor.getEncoding());
     }
-    return pushData;
   }
 
   public PushData createPushData(Watcher watcher, ReceivedConfigData data) {
