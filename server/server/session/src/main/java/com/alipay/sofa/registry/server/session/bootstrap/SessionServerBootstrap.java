@@ -165,6 +165,8 @@ public class SessionServerBootstrap {
       appRevisionCacheRegistry.waitSynced();
       clientManagerAddressRepository.waitSynced();
 
+      retryer.call(() -> systemPropertyProcessorManager.startFetchPersistenceSystemProperty());
+
       startScheduler();
 
       openHttpServer();
@@ -319,7 +321,7 @@ public class SessionServerBootstrap {
       metaNodeService.startRenewer();
 
       // start fetch system property data
-      retryer.call(() -> systemPropertyProcessorManager.start());
+      retryer.call(() -> systemPropertyProcessorManager.startFetchMetaSystemProperty());
 
       metaStart.set(true);
 
