@@ -84,7 +84,5 @@ public class FetchClientOffServiceTest {
             new ClientOffAddressResp(1L, addressVersionMap)));
     Assert.assertEquals(openIps.size(), fetchClientOffAddressService.getClientOffAddress().size());
 
-    Thread.sleep(2000);
-    verify(sessionRegistry, times(1)).clientOffWithTimestampCheck(anyMap());
   }
 }

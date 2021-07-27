@@ -21,10 +21,10 @@ import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress;
 import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress.AddressVersion;
 import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.metrics.GaugeFunc;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.connections.ConnectionsService;
+import com.alipay.sofa.registry.server.session.loggers.Loggers;
 import com.alipay.sofa.registry.server.session.providedata.FetchClientOffAddressService.ClientOffAddressResp;
 import com.alipay.sofa.registry.server.session.providedata.FetchClientOffAddressService.ClientOffAddressStorage;
 import com.alipay.sofa.registry.server.session.registry.Registry;
@@ -45,6 +45,8 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.PostConstruct;
+
+import io.prometheus.client.Histogram;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -55,7 +57,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class FetchClientOffAddressService
     extends AbstractFetchPersistenceSystemProperty<ClientOffAddressStorage, ClientOffAddressResp> {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(FetchClientOffAddressService.class);
+  private static final Logger LOGGER = Loggers.CLIENT_OFF_LOG;
 
   protected final ClientManagerProcessor clientManagerProcessor = new ClientManagerProcessor();
 
@@ -74,6 +76,15 @@ public class FetchClientOffAddressService
           .name("address_total")
           .help("client off address total")
           .register();
+
+  private static final Histogram ADDRESS_LOAD_DELAY_HISTOGRAM =
+          Histogram.build()
+                  .linearBuckets(0, 500, 30)
+                  .namespace("session")
+                  .subsystem("client_off")
+                  .name("load_delay")
+                  .help("address load delay")
+                  .register();
 
   public FetchClientOffAddressService() {
     super(
@@ -132,6 +143,7 @@ public class FetchClientOffAddressService
       LOGGER.error("update clientOffAddress:{} error.", data, t);
     }
 
+    afterPropertySet(oldVersion, adds);
     LOGGER.info(
         "olds clientOffAddress:{}, oldVersion:{}, toBeAdd:{}, toBeRemove:{}, current clientOffAddress:{}, newVersion:{}",
         olds,
@@ -141,6 +153,23 @@ public class FetchClientOffAddressService
         storage.get().clientOffAddress.keySet(),
         storage.get().getVersion());
     return true;
+  }
+
+  private void afterPropertySet(long oldVersion, Map<String, AddressVersion> adds) {
+    if (oldVersion == INIT_VERSION) {
+      return;
+    }
+    long load = System.currentTimeMillis();
+    for (AddressVersion value : adds.values()) {
+      long cost = load - value.getVersion();
+      ADDRESS_LOAD_DELAY_HISTOGRAM.observe(cost);
+      LOGGER.info(
+          "[LoadDelay]address:{}, version:{}, loaded:{}, cost:{}",
+          value.getAddress(),
+          value.getVersion(),
+          load,
+          cost);
+    }
   }
 
   protected static class ClientOffAddressStorage extends SystemDataStorage {

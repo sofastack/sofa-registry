@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.server.session.providedata;
 
+import com.alipay.sofa.registry.server.shared.providedata.AbstractFetchPersistenceSystemProperty;
+import com.alipay.sofa.registry.server.shared.providedata.AbstractFetchSystemPropertyService;
 import com.alipay.sofa.registry.server.shared.providedata.FetchSystemPropertyService;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -26,10 +28,16 @@ import java.util.Collection;
  */
 public class SystemPropertyProcessorManager {
 
-  private Collection<FetchSystemPropertyService> systemDataProcessors = new ArrayList<>();
+  private Collection<AbstractFetchSystemPropertyService> systemDataProcessors = new ArrayList<>();
 
-  public void addSystemDataProcessor(FetchSystemPropertyService systemDataProcessor) {
+  private Collection<AbstractFetchPersistenceSystemProperty> systemDataPersistenceProcessors = new ArrayList<>();
+
+  public void addSystemDataProcessor(AbstractFetchSystemPropertyService systemDataProcessor) {
     systemDataProcessors.add(systemDataProcessor);
+  }
+
+  public void addSystemDataPersistenceProcessor(AbstractFetchPersistenceSystemProperty systemDataProcessor) {
+    systemDataPersistenceProcessors.add(systemDataProcessor);
   }
 
   public boolean doFetch(String dataInfoId) {
@@ -38,13 +46,30 @@ public class SystemPropertyProcessorManager {
         return systemDataProcessor.doFetch();
       }
     }
+    for (FetchSystemPropertyService systemDataProcessor : systemDataPersistenceProcessors) {
+      if (systemDataProcessor.support(dataInfoId)) {
+        return systemDataProcessor.doFetch();
+      }
+    }
+
     return false;
   }
 
-  public boolean start() {
+  public boolean startFetchMetaSystemProperty() {
     boolean success = true;
 
-    for (FetchSystemPropertyService systemDataProcessor : systemDataProcessors) {
+    for (AbstractFetchSystemPropertyService systemDataProcessor : systemDataProcessors) {
+      if (!systemDataProcessor.start()) {
+        success = false;
+      }
+    }
+    return success;
+  }
+
+  public boolean startFetchPersistenceSystemProperty() {
+    boolean success = true;
+
+    for (AbstractFetchPersistenceSystemProperty systemDataProcessor : systemDataPersistenceProcessors) {
       if (!systemDataProcessor.start()) {
         success = false;
       }
