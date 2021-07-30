@@ -2,40 +2,65 @@ package com.alipay.sofa.registry.jraft.domain;
 
 import com.alipay.sofa.registry.store.api.elector.AbstractLeaderElector;
 
+import java.io.Serializable;
 import java.util.Date;
 
 /**
  * @author : xingpeng
  * @date : 2021-07-12 08:54
  **/
-public class LeaderLockDomain {
+public class LeaderLockDomain implements Serializable {
+    private long epoch;
+
+    private String leader;
+
+    private long expireTimestamp;
+
     private String lockName;
 
     private String dataCenter;
 
     private String owner;
 
-    private AbstractLeaderElector.LeaderInfo leaderInfo;
-
     private Date gmtModified;
 
     private long duration;
 
-    public LeaderLockDomain(String lockName, AbstractLeaderElector.LeaderInfo leaderInfo, Date gmtModified, String dataCenter, String owner, long duration){
+    public LeaderLockDomain(String lockName,
+                            long epoch,
+                            String leader,
+                            long expireTimestamp,
+                            Date gmtModified,
+                            String dataCenter,
+                            String owner,
+                            long duration){
         this.lockName=lockName;
-        this.leaderInfo=leaderInfo;
         this.gmtModified=gmtModified;
         this.dataCenter=dataCenter;
         this.owner=owner;
         this.duration=duration;
+        this.epoch=epoch;
+        this.leader=leader;
+        this.expireTimestamp=expireTimestamp;
+    }
+
+    public LeaderLockDomain() {
+    }
+
+    public long getEpoch() {
+        return epoch;
+    }
+
+    public void setEpoch(long epoch) {
+        this.epoch = epoch;
+    }
+
+    public String getLeader() {
+        return leader;
     }
 
     public String getLockName() {
         return lockName;
-    }
-
-    public AbstractLeaderElector.LeaderInfo getLeaderInfo() {
-        return leaderInfo;
     }
 
     public Date getGmtModified() {
@@ -58,14 +83,9 @@ public class LeaderLockDomain {
         this.lockName = lockName;
     }
 
-    public void setLeaderInfo(AbstractLeaderElector.LeaderInfo leaderInfo) {
-        this.leaderInfo = leaderInfo;
-    }
-
     public void setGmtModified(Date gmtModified) {
         this.gmtModified = gmtModified;
     }
-
 
     public void setDataCenter(String dataCenter) {
         this.dataCenter = dataCenter;
@@ -79,13 +99,27 @@ public class LeaderLockDomain {
         this.duration = duration;
     }
 
+    public void setLeader(String leader) {
+        this.leader = leader;
+    }
+
+    public long getExpireTimestamp() {
+        return expireTimestamp;
+    }
+
+    public void setExpireTimestamp(long expireTimestamp) {
+        this.expireTimestamp = expireTimestamp;
+    }
+
     @Override
     public String toString() {
-        return "LeaderLockInfo{" +
-                "lockName='" + lockName + '\'' +
+        return "LeaderLockDomain{" +
+                "epoch=" + epoch +
+                ", leader='" + leader + '\'' +
+                ", expireTimestamp=" + expireTimestamp +
+                ", lockName='" + lockName + '\'' +
                 ", dataCenter='" + dataCenter + '\'' +
                 ", owner='" + owner + '\'' +
-                ", leaderInfo=" + leaderInfo +
                 ", gmtModified=" + gmtModified +
                 ", duration=" + duration +
                 '}';
