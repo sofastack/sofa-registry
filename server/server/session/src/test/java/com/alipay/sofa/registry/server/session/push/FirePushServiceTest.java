@@ -35,6 +35,10 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import static org.mockito.Matchers.anyObject;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.when;
+
 public class FirePushServiceTest {
   private String zone = "testZone";
   private String dataId = "testDataId";
@@ -92,6 +96,29 @@ public class FirePushServiceTest {
   }
 
   @Test
+  public void testPushEmpty() {
+    FirePushService svc = new FirePushService();
+    SessionServerConfigBean config = TestUtils.newSessionConfig("testDc");
+    svc.sessionServerConfig = config;
+    svc.pushSwitchService = Mockito.mock(PushSwitchService.class);
+    svc.sessionInterests = Mockito.mock(Interests.class);
+    svc.circuitBreakerService = Mockito.mock(CircuitBreakerService.class);
+    svc.changeProcessor = Mockito.mock(ChangeProcessor.class);
+    svc.pushProcessor = Mockito.mock(PushProcessor.class);
+    svc.pushProcessor.pushSwitchService = Mockito.mock(PushSwitchService.class);
+
+    Subscriber subscriber = TestUtils.newZoneSubscriber(dataId, zone);
+    when(svc.pushSwitchService.canIpPush(anyString())).thenReturn(true);
+    when(svc.pushProcessor.pushSwitchService.canIpPush(anyString())).thenReturn(true);
+    Assert.assertTrue(svc.fireOnPushEmpty(subscriber, "testDc", 1L));
+
+
+    svc.fireOnPushEmpty(subscriber, "testDc", System.currentTimeMillis());
+    Assert.assertEquals(subscriber.markPushEmpty("testDc", System.currentTimeMillis()), 1L);
+
+  }
+
+  @Test
   public void testHandleFireOnWatchException() {
     Watcher watcher = TestUtils.newWatcher(dataId);
     FirePushService.handleFireOnWatchException(watcher, new Exception());
@@ -123,8 +150,8 @@ public class FirePushServiceTest {
     // get the datum
     Subscriber subscriber = TestUtils.newZoneSubscriber(dataId, zone);
     Value v = new Value((Sizer) datum);
-    Mockito.when(svc.sessionCacheService.getValueIfPresent(Mockito.anyObject())).thenReturn(v);
-    Mockito.when(svc.sessionInterests.getDatas(Mockito.anyObject()))
+    when(svc.sessionCacheService.getValueIfPresent(Mockito.anyObject())).thenReturn(v);
+    when(svc.sessionInterests.getDatas(Mockito.anyObject()))
         .thenReturn(Collections.singletonList(subscriber));
     svc.pushSwitchService = new PushSwitchService();
     svc.pushSwitchService.setFetchStopPushService(new FetchStopPushService());
@@ -139,8 +166,8 @@ public class FirePushServiceTest {
     // get datum is old
     datum = TestUtils.newSubDatum("testDataId", 80, Collections.emptyList());
     v = new Value((Sizer) datum);
-    Mockito.when(svc.sessionCacheService.getValueIfPresent(Mockito.anyObject())).thenReturn(v);
-    Mockito.when(svc.sessionCacheService.getValue(Mockito.anyObject())).thenReturn(v);
+    when(svc.sessionCacheService.getValueIfPresent(Mockito.anyObject())).thenReturn(v);
+    when(svc.sessionCacheService.getValue(Mockito.anyObject())).thenReturn(v);
     Assert.assertFalse(svc.doExecuteOnChange("testDataId", ctx));
   }
 
@@ -149,12 +176,12 @@ public class FirePushServiceTest {
     final long now = System.currentTimeMillis();
     TriggerPushContext ctx = new TriggerPushContext("testDc", 100, "testDataNode", now);
     FirePushService svc = mockFirePushService();
-    Mockito.when(svc.sessionCacheService.getValue(Mockito.anyObject()))
+    when(svc.sessionCacheService.getValue(Mockito.anyObject()))
         .thenThrow(new RuntimeException());
     Assert.assertFalse(svc.changeHandler.onChange("testDataId", ctx));
     SubDatum datum = TestUtils.newSubDatum("testDataId", 200, Collections.emptyList());
     Value v = new Value((Sizer) datum);
-    Mockito.when(svc.sessionCacheService.getValueIfPresent(Mockito.anyObject())).thenReturn(v);
+    when(svc.sessionCacheService.getValueIfPresent(Mockito.anyObject())).thenReturn(v);
     Assert.assertTrue(svc.changeHandler.onChange("testDataId", ctx));
   }
 

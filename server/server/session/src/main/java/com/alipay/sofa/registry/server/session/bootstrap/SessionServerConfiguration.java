@@ -51,6 +51,7 @@ import com.alipay.sofa.registry.server.session.remoting.DataNodeNotifyExchanger;
 import com.alipay.sofa.registry.server.session.remoting.console.SessionConsoleExchanger;
 import com.alipay.sofa.registry.server.session.remoting.console.handler.ClientOffRequestHandler;
 import com.alipay.sofa.registry.server.session.remoting.console.handler.ClientOnRequestHandler;
+import com.alipay.sofa.registry.server.session.remoting.console.handler.GetClientManagerRequestHandler;
 import com.alipay.sofa.registry.server.session.remoting.console.handler.QuerySubscriberRequestHandler;
 import com.alipay.sofa.registry.server.session.remoting.handler.*;
 import com.alipay.sofa.registry.server.session.resource.*;
@@ -206,6 +207,7 @@ public class SessionServerConfiguration {
       list.add(querySubscriberRequestHandler());
       list.add(clientOffRequestHandler());
       list.add(clientOnRequestHandler());
+      list.add(getClientManagerRequestHandler());
       return list;
     }
 
@@ -247,6 +249,11 @@ public class SessionServerConfiguration {
     @Bean
     public AbstractServerHandler clientOnRequestHandler() {
       return new ClientOnRequestHandler();
+    }
+
+    @Bean
+    public AbstractServerHandler getClientManagerRequestHandler() {
+      return new GetClientManagerRequestHandler();
     }
 
     @Bean

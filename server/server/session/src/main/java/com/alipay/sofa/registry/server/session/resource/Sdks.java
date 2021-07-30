@@ -25,13 +25,21 @@ import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.google.common.collect.Lists;
+
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import com.google.common.collect.Sets.SetView;
 import org.apache.commons.lang.StringUtils;
+import org.springframework.util.CollectionUtils;
 
 public final class Sdks {
   private static final Logger LOGGER = LoggerFactory.getLogger(Sdks.class);
@@ -55,31 +63,44 @@ public final class Sdks {
     return others;
   }
 
-  public static List<CommonResponse> concurrentSdkSend(
+  public static Map<URL, CommonResponse> concurrentSdkSend(
       ExecutorService pool, List<URL> servers, SdkExecutor executor, int timeoutMs) {
-    List<CommonResponse> responses =
-        Collections.synchronizedList(Lists.newArrayListWithCapacity(servers.size() + 1));
+    Map<URL, CommonResponse> responses = Collections.synchronizedMap(Maps.newHashMapWithExpectedSize(servers.size() + 1));
+
     final CountDownLatch latch = new CountDownLatch(servers.size());
     for (URL url : servers) {
       pool.submit(
           () -> {
             try {
               CommonResponse resp = exec(executor, url);
-              responses.add(resp);
+              responses.put(url, resp);
             } finally {
               latch.countDown();
             }
           });
     }
     try {
-      latch.await(timeoutMs, TimeUnit.MILLISECONDS);
+      boolean success = latch.await(timeoutMs, TimeUnit.MILLISECONDS);
+      if (!success) {
+        LOGGER.error("[ConcurrentSendError]concurrent send timeout.");
+      }
+
     } catch (InterruptedException e) {
-      responses.add(CommonResponse.buildFailedResponse("execute timeout"));
+      LOGGER.error("[ConcurrentSendError]concurrent send error.", e);
+    } finally {
+      SetView<URL> difference = Sets.difference(Sets.newHashSet(servers), responses.keySet());
+      for (URL url : difference) {
+        responses.put(url, CommonResponse.buildFailedResponse("execute fail"));
+      }
     }
     return responses;
   }
 
-  public static CommonResponse getFailedResponseIfAbsent(List<CommonResponse> responses) {
+  public static CommonResponse getFailedResponseIfAbsent(Collection<CommonResponse> responses) {
+    if (CollectionUtils.isEmpty(responses)) {
+      return CommonResponse.buildFailedResponse("response is empty");
+    }
+
     Optional<CommonResponse> failedResponses =
         responses.stream().filter(r -> !r.isSuccess()).findFirst();
     return failedResponses.orElseGet(CommonResponse::buildSuccessResponse);

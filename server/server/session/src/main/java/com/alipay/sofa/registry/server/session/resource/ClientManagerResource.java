@@ -19,6 +19,9 @@ package com.alipay.sofa.registry.server.session.resource;
 import com.alipay.sofa.registry.common.model.CollectionSdks;
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.ConnectId;
+import com.alipay.sofa.registry.common.model.GenericResponse;
+import com.alipay.sofa.registry.common.model.sessionserver.ClientManagerQueryRequest;
+import com.alipay.sofa.registry.common.model.sessionserver.ClientManagerResp;
 import com.alipay.sofa.registry.common.model.sessionserver.ClientOffRequest;
 import com.alipay.sofa.registry.common.model.sessionserver.ClientOnRequest;
 import com.alipay.sofa.registry.common.model.store.URL;
@@ -29,16 +32,22 @@ import com.alipay.sofa.registry.remoting.exchange.message.SimpleRequest;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.connections.ConnectionsService;
 import com.alipay.sofa.registry.server.session.mapper.ConnectionMapper;
+import com.alipay.sofa.registry.server.session.providedata.FetchClientOffAddressService;
 import com.alipay.sofa.registry.server.session.registry.SessionRegistry;
+import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.task.MetricsableThreadPoolExecutor;
 import com.alipay.sofa.registry.util.OsUtils;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ThreadPoolExecutor;
+import javax.annotation.Resource;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+
+import com.google.common.collect.Maps;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -63,6 +72,9 @@ public class ClientManagerResource {
   @Autowired private ConnectionMapper connectionMapper;
 
   @Autowired private NodeExchanger sessionConsoleExchanger;
+
+  @Resource
+  private FetchClientOffAddressService fetchClientOffAddressService;
 
   private final ThreadPoolExecutor zoneSdkExecutor =
       MetricsableThreadPoolExecutor.newExecutor(
@@ -115,7 +127,7 @@ public class ClientManagerResource {
     List<URL> servers = getOtherConsoleServersCurrentZone();
     LOGGER.info("clientOffInZone, others={}", servers);
     if (servers.size() > 0) {
-      List<CommonResponse> list =
+      Map<URL, CommonResponse> map =
           Sdks.concurrentSdkSend(
               zoneSdkExecutor,
               servers,
@@ -125,7 +137,7 @@ public class ClientManagerResource {
                     sessionConsoleExchanger.request(new SimpleRequest(req, url)).getResult();
               },
               3000);
-      return Sdks.getFailedResponseIfAbsent(list);
+      return Sdks.getFailedResponseIfAbsent(map.values());
     }
     return CommonResponse.buildSuccessResponse();
   }
@@ -145,7 +157,7 @@ public class ClientManagerResource {
     List<URL> servers = getOtherConsoleServersCurrentZone();
     LOGGER.info("clientOnInZone, others={}", servers);
     if (servers.size() > 0) {
-      List<CommonResponse> list =
+      Map<URL, CommonResponse> map =
           Sdks.concurrentSdkSend(
               zoneSdkExecutor,
               servers,
@@ -155,9 +167,45 @@ public class ClientManagerResource {
                     sessionConsoleExchanger.request(new SimpleRequest(req, url)).getResult();
               },
               3000);
-      return Sdks.getFailedResponseIfAbsent(list);
+      return Sdks.getFailedResponseIfAbsent(map.values());
     }
     return CommonResponse.buildSuccessResponse();
+  }
+
+  /** Client on */
+  @POST
+  @Path("/zone/queryClientOff")
+  public GenericResponse<Map<String, ClientManagerResp>> queryClientOff() {
+    Set<String> clientOffAddress = fetchClientOffAddressService.getClientOffAddress();
+    List<URL> servers = getOtherConsoleServersCurrentZone();
+
+    Map<String, ClientManagerResp> resp = Maps.newHashMapWithExpectedSize(servers.size() + 1);
+
+    resp.put(ServerEnv.IP, new ClientManagerResp(true, clientOffAddress));
+    if (servers.size() > 0) {
+      Map<URL, CommonResponse> map =
+          Sdks.concurrentSdkSend(
+              zoneSdkExecutor,
+              servers,
+              (URL url) -> {
+                final ClientManagerQueryRequest req = new ClientManagerQueryRequest();
+                return (CommonResponse) sessionConsoleExchanger.request(new SimpleRequest(req, url)).getResult();
+              },
+              3000);
+
+      for (Entry<URL, CommonResponse> entry : map.entrySet()) {
+        if (entry.getValue() instanceof GenericResponse) {
+          GenericResponse response = (GenericResponse) entry.getValue();
+          if (response.isSuccess()) {
+            resp.put(entry.getKey().getIpAddress(), (ClientManagerResp) response.getData());
+            continue;
+          }
+        }
+        LOGGER.error("url={} queryClientOff fail, msg:{}.", entry.getKey().getIpAddress(), entry.getValue());
+        resp.put(entry.getKey().getIpAddress(), new ClientManagerResp(false));
+      }
+    }
+    return new GenericResponse().fillSucceed(resp);
   }
 
   @GET

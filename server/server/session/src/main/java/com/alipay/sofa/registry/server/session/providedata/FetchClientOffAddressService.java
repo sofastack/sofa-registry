@@ -21,7 +21,6 @@ import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress;
 import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress.AddressVersion;
 import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.metrics.GaugeFunc;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.connections.ConnectionsService;
 import com.alipay.sofa.registry.server.session.loggers.Loggers;
@@ -45,10 +44,11 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.PostConstruct;
-
-import io.prometheus.client.Histogram;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import static com.alipay.sofa.registry.server.session.registry.ClientManagerMetric.ADDRESS_LOAD_DELAY_HISTOGRAM;
+import static com.alipay.sofa.registry.server.session.registry.ClientManagerMetric.CLIENT_OFF_GAUGE;
 
 /**
  * @author xiaojian.xj
@@ -69,22 +69,7 @@ public class FetchClientOffAddressService
 
   @Autowired private ClientManagerAddressRepository clientManagerAddressRepository;
 
-  private static final GaugeFunc CLIENT_OFF_GAUGE =
-      GaugeFunc.build()
-          .namespace("session")
-          .subsystem("client_off")
-          .name("address_total")
-          .help("client off address total")
-          .register();
 
-  private static final Histogram ADDRESS_LOAD_DELAY_HISTOGRAM =
-          Histogram.build()
-                  .linearBuckets(0, 500, 30)
-                  .namespace("session")
-                  .subsystem("client_off")
-                  .name("load_delay")
-                  .help("address load delay")
-                  .register();
 
   public FetchClientOffAddressService() {
     super(
