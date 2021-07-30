@@ -65,7 +65,7 @@ public class ClientManagerTest extends BaseIntegrationTest {
     PublisherRegistration registration = new PublisherRegistration(dataId);
     com.alipay.sofa.registry.client.api.Publisher register =
         registryClient1.register(registration, value);
-    Thread.sleep(2000L);
+    Thread.sleep(5000L);
 
     // check session
     Assert.assertTrue(isExist(sessionDataStore.getDatas(dataInfo.getDataInfoId()), localAddress));

@@ -99,8 +99,9 @@ public class FirePushService {
   }
 
   public boolean fireOnPushEmpty(Subscriber subscriber, String dataCenter, long version) {
-    SubDatum emptyDatum = DatumUtils.newEmptySubDatum(subscriber, dataCenter, version);
-    subscriber.markPushEmpty(dataCenter, emptyDatum.getVersion());
+    long pushVersion = subscriber.markPushEmpty(dataCenter, version);
+
+    SubDatum emptyDatum = DatumUtils.newEmptySubDatum(subscriber, dataCenter, pushVersion);
     final long now = System.currentTimeMillis();
     TriggerPushContext pushCtx =
         new TriggerPushContext(dataCenter, emptyDatum.getVersion(), null, now);

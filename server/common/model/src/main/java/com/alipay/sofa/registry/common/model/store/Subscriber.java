@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.common.model.store;
 
 import com.alipay.sofa.registry.common.model.ElementType;
+import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.util.StringFormatter;
@@ -144,6 +145,11 @@ public class Subscriber extends BaseInfo {
     return ctx.emptyVersion != ctx.pushedVersion;
   }
 
+  public synchronized boolean isMarkedPushEmpty(String dataCenter) {
+      final PushContext ctx = getPushContext(dataCenter);
+      return ctx.emptyVersion != 0;
+  }
+
   public synchronized boolean hasPushed() {
     // TODO now not care multi-datacenter
     if (CollectionUtils.isEmpty(lastPushContexts)) {
@@ -196,14 +202,14 @@ public class Subscriber extends BaseInfo {
     return ctx.pushedVersion;
   }
 
-  public synchronized void markPushEmpty(String dataCenter, long emptyVersion) {
+  public synchronized long markPushEmpty(String dataCenter, long emptyVersion) {
     final PushContext ctx = getPushContext(dataCenter);
-    ctx.emptyVersion = emptyVersion;
-  }
 
-  public synchronized boolean isMarkedPushEmpty(String dataCenter){
-    final PushContext ctx = getPushContext(dataCenter);
-    return ctx.emptyVersion != 0;
+    if (ctx.emptyVersion != 0) {
+      return ctx.emptyVersion;
+    }
+    ctx.emptyVersion = emptyVersion;
+    return emptyVersion;
   }
 
   /** @return */

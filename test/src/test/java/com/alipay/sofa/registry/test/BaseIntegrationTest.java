@@ -45,6 +45,7 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.remoting.Channel;
+import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
 import com.alipay.sofa.registry.remoting.jersey.JerseyClient;
 import com.alipay.sofa.registry.server.data.cache.DatumStorage;
 import com.alipay.sofa.registry.server.meta.resource.ClientManagerResource;
@@ -52,6 +53,7 @@ import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfigBean;
 import com.alipay.sofa.registry.server.session.providedata.FetchClientOffAddressService;
 import com.alipay.sofa.registry.server.session.registry.SessionRegistry;
+import com.alipay.sofa.registry.server.session.remoting.console.SessionConsoleExchanger;
 import com.alipay.sofa.registry.server.session.store.DataStore;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.test.TestRegistryMain;
@@ -68,6 +70,7 @@ import org.h2.tools.Server;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.logging.LoggingSystem;
@@ -105,7 +108,10 @@ public class BaseIntegrationTest extends AbstractTest {
   protected static volatile DatumStorage localDatumStorage;
 
   protected static volatile ClientManagerResource clientManagerResource;
+  protected static volatile com.alipay.sofa.registry.server.session.resource.ClientManagerResource
+      sessionClientManagerResource;
   protected static volatile FetchClientOffAddressService fetchClientOffAddressService;
+  protected static volatile SessionConsoleExchanger sessionConsoleExchanger;
 
   protected static volatile SessionServerConfigBean sessionServerConfig;
   protected static int sessionPort = 9603;
@@ -190,6 +196,13 @@ public class BaseIntegrationTest extends AbstractTest {
       fetchClientOffAddressService =
           sessionApplicationContext.getBean(
               "fetchClientOffAddressService", FetchClientOffAddressService.class);
+      sessionClientManagerResource =
+          sessionApplicationContext.getBean(
+              "clientManagerResource",
+              com.alipay.sofa.registry.server.session.resource.ClientManagerResource.class);
+      sessionConsoleExchanger = sessionApplicationContext.getBean(
+              "sessionConsoleExchanger",
+              SessionConsoleExchanger.class);
 
       sessionServerConfig =
           (SessionServerConfigBean)

@@ -26,6 +26,7 @@ import com.alipay.sofa.registry.server.session.remoting.console.SessionConsoleEx
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -104,10 +105,10 @@ public class SdksTest {
         };
     Assert.assertFalse(Sdks.exec(exec, null).isSuccess());
     ExecutorService pool = Executors.newSingleThreadExecutor();
-    List<CommonResponse> resps =
+    Map<URL, CommonResponse> map =
         Sdks.concurrentSdkSend(pool, Lists.newArrayList(new URL("192.168.1.1", 2299)), exec, 5000);
-    Assert.assertTrue(resps.size() > 0);
-    for (CommonResponse resp : resps) {
+    Assert.assertTrue(map.size() > 0);
+    for (CommonResponse resp : map.values()) {
       Assert.assertFalse(resp.isSuccess());
     }
   }
