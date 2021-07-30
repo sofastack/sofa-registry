@@ -48,31 +48,41 @@ public class MetaRaftLeaderElector extends AbstractLeaderElector {
             return LeaderInfo.HAS_NO_LEADER;
         }
 
-        return leaderInfo.getLeaderInfo();
+        return new LeaderInfo(leaderInfo.getEpoch(),leaderInfo.getLeader(),leaderInfo.getExpireTimestamp());
     }
     
     @Override
     protected LeaderInfo doElect() {
         byte[] bytes = rheaKVStore.bGet(distributeLock);
-        Map<String,LeaderLockDomain> map = CommandCodec.decodeCommand(bytes, leaderInfoMap.getClass());
-        LeaderLockDomain leaderLockInfo = map.get(defaultCommonConfig.getClusterId());
-
+        Map<String,LeaderLockDomain> map=null;
+        LeaderLockDomain leaderLockInfo=null;
+        try {
+            map = CommandCodec.decodeCommand(bytes, leaderInfoMap.getClass());
+            leaderLockInfo = map.get(defaultCommonConfig.getClusterId());
+        }catch (NullPointerException e){
+            LOG.info("rheaKVStore is empty");
+        }
+        
         if(leaderLockInfo==null){
             return competeLeader(defaultCommonConfig.getClusterId());
         }
 
-        ElectorRole role = amILeader(leaderLockInfo.getLeaderInfo().getLeader()) ? ElectorRole.LEADER : ElectorRole.FOLLOWER;
+        ElectorRole role = amILeader(leaderLockInfo.getLeader()) ? ElectorRole.LEADER : ElectorRole.FOLLOWER;
 
         if(role==ElectorRole.LEADER){
-            String leader = leaderLockInfo.getLeaderInfo().getLeader();
+            //主节点
+            //String leader = leaderLockInfo.getLeaderInfo().getLeader();
             leaderLockInfo=onLeaderWorking(leaderLockInfo,myself());
         }else{
+            //子节点
             leaderLockInfo=onFollowWorking(leaderLockInfo,myself());
         }
 
-        LeaderInfo result = leaderFrom(leaderLockInfo.getOwner(),leaderLockInfo.getLeaderInfo().getEpoch(),leaderLockInfo.getGmtModified(),leaderLockInfo.getDuration());
+        LeaderInfo result = leaderFrom(leaderLockInfo.getOwner(),leaderLockInfo.getEpoch(),leaderLockInfo.getGmtModified(),leaderLockInfo.getDuration());
         //更新leaderInfo并重新插入rheakv
-        leaderLockInfo.setLeaderInfo(result);
+        leaderLockInfo.setEpoch(result.getEpoch());
+        leaderLockInfo.setLeader(result.getLeader());
+        leaderLockInfo.setExpireTimestamp(result.getExpireTimestamp());
         leaderInfoMap.put(leaderLockInfo.getDataCenter(),leaderLockInfo);
         rheaKVStore.bPut(distributeLock,CommandCodec.encodeCommand(leaderInfoMap));
 
@@ -106,15 +116,13 @@ public class MetaRaftLeaderElector extends AbstractLeaderElector {
         long date=System.currentTimeMillis();
         byte[] bytes = rheaKVStore.bGet(distributeLock);
         Map<String, LeaderLockDomain> map = CommandCodec.decodeCommand(bytes, leaderInfoMap.getClass());
-        if(date>lock.getLeaderInfo().getExpireTimestamp()){
+        if(date>lock.getExpireTimestamp()){
             if (LOG.isInfoEnabled()) {
                 LOG.info("lock expire: {}, meta elector start: {}", lock, myself);
             }
             LeaderLockDomain leaderLockInfo = map.get(lock.getDataCenter());
             leaderLockInfo.setGmtModified(new Date());
             leaderLockInfo.setOwner(myself);
-//            leaderInfoMap.put(lock.getDataCenter(),leaderLockInfo);
-//            rheaKVStore.bPut(lock.getDataCenter(),CommandCodec.encodeCommand(leaderInfoMap));
             if (LOG.isInfoEnabled()) {
                 LOG.info("elector finish, new lock: {}", lock);
             }
@@ -141,25 +149,37 @@ public class MetaRaftLeaderElector extends AbstractLeaderElector {
     private LeaderInfo competeLeader(String dataCenter){
         Date date=new Date();
         byte[] bytes = rheaKVStore.bGet(distributeLock);
+        Map<String, LeaderLockDomain> map=null;
+        LeaderLockDomain leaderLockInfo=null;
+        LeaderInfo leaderInfo=null;
         //获取全部Lock存储
-        Map<String, LeaderLockDomain> map = CommandCodec.decodeCommand(bytes, leaderInfoMap.getClass());
-        LeaderLockDomain leaderLockInfo = map.get(dataCenter);
-
-        //遍历distribute_lock查看,是否存在"META-MASTER"
-        for(Map.Entry<String, LeaderLockDomain> entry: map.entrySet()){
-            LeaderLockDomain value = entry.getValue();
-            if(value.getLockName()==lockName){
-                if (LOG.isInfoEnabled()) {
-                    LOG.info("meta: {} compete error, leader is: {}.", myself(), value.getLeaderInfo().getLeader());
+        try {
+            map = CommandCodec.decodeCommand(bytes, leaderInfoMap.getClass());
+            leaderLockInfo = map.get(dataCenter);
+            //遍历distribute_lock查看,是否存在"META-MASTER"
+            for(Map.Entry<String, LeaderLockDomain> entry: map.entrySet()){
+                LeaderLockDomain value = entry.getValue();
+                if(value.getLockName()==lockName){
+                    if (LOG.isInfoEnabled()) {
+                        LOG.info("meta: {} compete error, leader is: {}.", myself(), value.getLeader());
+                    }
+                    return new LeaderInfo(value.getEpoch(),value.getLeader(),value.getExpireTimestamp());
                 }
-                return value.getLeaderInfo();
             }
+        }catch (NullPointerException e){
+            LOG.info("rheaKVStore is empty");
         }
 
         if(leaderLockInfo==null){
             //创建Lock
-            LeaderInfo leaderInfo = leaderFrom(myself(), System.currentTimeMillis(), date, metaElectorConfig.getLockExpireDuration());
-            leaderLockInfo=new LeaderLockDomain(lockName,leaderInfo,date,dataCenter,myself(),metaElectorConfig.getLockExpireDuration());
+            leaderInfo = leaderFrom(myself(), System.currentTimeMillis(), date, metaElectorConfig.getLockExpireDuration());
+            leaderLockInfo=new LeaderLockDomain(lockName,
+                    leaderInfo.getEpoch(),
+                    leaderInfo.getLeader(),
+                    leaderInfo.getExpireTimestamp(),
+                    date,
+                    dataCenter,myself(),
+                    metaElectorConfig.getLockExpireDuration());
 
             leaderInfoMap.put(dataCenter,leaderLockInfo);
             rheaKVStore.bPut(distributeLock ,CommandCodec.encodeCommand(leaderInfoMap));
@@ -172,10 +192,12 @@ public class MetaRaftLeaderElector extends AbstractLeaderElector {
             leaderLockInfo.setLockName(lockName);
             leaderLockInfo.setGmtModified(date);
             leaderLockInfo.setDataCenter(dataCenter);
-            leaderLockInfo.setLeaderInfo(leaderFrom(leaderLockInfo.getLeaderInfo().getLeader(),
-                    leaderLockInfo.getLeaderInfo().getEpoch(),
+            leaderInfo = leaderFrom(leaderLockInfo.getLeader(),
+                    leaderLockInfo.getEpoch(),
                     date,
-                    metaElectorConfig.getLockExpireDuration()));
+                    metaElectorConfig.getLockExpireDuration());
+
+            leaderLockInfo.setExpireTimestamp(leaderInfo.getExpireTimestamp());
 
             leaderInfoMap.put(dataCenter,leaderLockInfo);
             rheaKVStore.bPut(distributeLock,CommandCodec.encodeCommand(leaderInfoMap));
@@ -183,7 +205,7 @@ public class MetaRaftLeaderElector extends AbstractLeaderElector {
                 LOG.info("meta: {} compete success, become leader.", myself());
             }
         }
-        return leaderLockInfo.getLeaderInfo();
+        return leaderInfo;
     }
 
 

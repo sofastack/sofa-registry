@@ -147,14 +147,14 @@ public class AbstractTest {
   }
 
   protected static void waitConditionUntilTimeOut(
-          BooleanSupplier booleanSupplier, int waitTimeMilli)
+      BooleanSupplier booleanSupplier, int waitTimeMilli)
       throws TimeoutException, InterruptedException {
 
     waitConditionUntilTimeOut(booleanSupplier, waitTimeMilli, 2);
   }
 
   protected static void waitConditionUntilTimeOut(
-          BooleanSupplier booleanSupplier, int waitTimeMilli, int intervalMilli)
+      BooleanSupplier booleanSupplier, int waitTimeMilli, int intervalMilli)
       throws TimeoutException, InterruptedException {
 
     long maxTime = System.currentTimeMillis() + waitTimeMilli;

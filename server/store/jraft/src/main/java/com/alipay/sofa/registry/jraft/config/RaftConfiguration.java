@@ -27,9 +27,8 @@ import com.alipay.sofa.jraft.rhea.options.configured.RocksDBOptionsConfigured;
 import com.alipay.sofa.jraft.rhea.options.configured.StoreEngineOptionsConfigured;
 import com.alipay.sofa.jraft.rhea.storage.StorageType;
 import com.alipay.sofa.jraft.util.Endpoint;
-import com.alipay.sofa.registry.jraft.repository.impl.AppRevisionHeartbeatRaftRepository;
-import com.alipay.sofa.registry.jraft.repository.impl.AppRevisionRaftRepository;
-import com.alipay.sofa.registry.jraft.repository.impl.InterfaceAppsRaftRepository;
+import com.alipay.sofa.registry.jraft.repository.impl.*;
+import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
 import com.alipay.sofa.registry.store.api.repository.AppRevisionHeartbeatRepository;
 import com.alipay.sofa.registry.store.api.repository.AppRevisionRepository;
 import com.alipay.sofa.registry.store.api.repository.InterfaceAppsRepository;
@@ -41,9 +40,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * @author xiaojian.xj
- * @version $Id: JdbcConfiguration.java, v 0.1 2021年01月17日 16:28 xiaojian.xj Exp $
- */
+ * @author : xingpeng
+ * @date : 2021-07-06 16:16
+ **/
 @Configuration
 @EnableConfigurationProperties
 @ConditionalOnProperty(
@@ -72,25 +71,6 @@ public class RaftConfiguration {
 
   @Configuration
   public static class RheaKVBeanConfiguration{
-//    @Bean
-//    public BeanManage beanManage(){
-//      SingleDispatchCenter singleDispatchCenter=new SingleDispatchCenter();
-//      return singleDispatchCenter;
-//    }
-//
-//    @Bean
-//    public SingleRheaKVDriverConfig singleRheaKVDriverConfig(BeanManage beanManage){
-//      beanManage.init();
-//      return (SingleRheaKVDriverConfig) beanManage.getRheaKVDriver();
-//    }
-//
-//    @Bean
-//    public RheaKVStore rheaKVStore(SingleRheaKVDriverConfig singleRheaKVDriverConfig){
-//      RheaKVStore rheaKVStore = new DefaultRheaKVStore();
-//      RheaKVStoreOptions rheaKVStoreOptions = singleRheaKVDriverConfig.getRheaKVStoreOptions();
-//      rheaKVStore.init(rheaKVStoreOptions);
-//      return rheaKVStore;
-//    }
 
       @Bean()
       @ConditionalOnMissingBean(RheaKVStore.class)
@@ -115,10 +95,13 @@ public class RaftConfiguration {
                 .config();
 
         defaultRheaKVStore.init(rheaKVStoreOptions);
-        //rheaKVDriverConfigBean.setRheaKVStoreOptions(rheaKVStoreOptions);
         return defaultRheaKVStore;
       }
 
+    @Bean
+    public AppRevisionHeartbeatBatchCallable appRevisionHeartbeatBatchCallable() {
+      return new AppRevisionHeartbeatBatchCallable();
+    }
   }
 
   @Configuration
@@ -136,6 +119,11 @@ public class RaftConfiguration {
     @Bean
     public AppRevisionHeartbeatRepository appRevisionHeartbeatRaftRepository() {
       return new AppRevisionHeartbeatRaftRepository();
+    }
+
+    @Bean
+    public ProvideDataRepository provideDataRepository(){
+      return new ProvideDataRaftRepository();
     }
   }
   

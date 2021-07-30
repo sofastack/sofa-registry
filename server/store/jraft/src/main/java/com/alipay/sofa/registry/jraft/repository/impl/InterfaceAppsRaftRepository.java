@@ -18,30 +18,37 @@ package com.alipay.sofa.registry.jraft.repository.impl;
 
 import com.alipay.sofa.jraft.rhea.client.RheaKVStore;
 import com.alipay.sofa.registry.common.model.appmeta.InterfaceMapping;
-import com.alipay.sofa.registry.common.model.store.AppRevision;
-import com.alipay.sofa.registry.core.model.AppRevisionInterface;
+import com.alipay.sofa.registry.jraft.command.CommandCodec;
+import com.alipay.sofa.registry.jraft.config.DefaultCommonConfig;
+import com.alipay.sofa.registry.jraft.domain.InterfaceAppsDomain;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.store.api.repository.InterfaceAppsRepository;
+import com.alipay.sofa.registry.util.TimestampUtil;
+import com.google.common.collect.Sets;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * @author xiaojian.xj
- * @version $Id: InterfaceAppsRaftRepository.java, v 0.1 2021年01月24日 19:44 xiaojian.xj Exp $
- */
+ * @author : xingpeng
+ * @date : 2021-07-05 11:45
+ **/
 public class InterfaceAppsRaftRepository implements InterfaceAppsRepository {
   protected static final Logger LOG = LoggerFactory.getLogger(InterfaceAppsRaftRepository.class);
-
-  private volatile long maxId = 0L;
 
   @Autowired
   private RheaKVStore rheaKVStore;
 
-  /** map: <interface, appNames> */
-  protected final Map<String, InterfaceMapping> interfaceApps = new ConcurrentHashMap<>();
+  private static final String INTERFACE_APPS="InterfaceApps";
+
+  /** map: <interface, interfaceAppsDomain> */
+  protected Map<String, InterfaceAppsDomain> interfaceAppsMap = new ConcurrentHashMap<>();
+
+  @Autowired
+  private DefaultCommonConfig defaultCommonConfig;
 
   @Override
   public void loadMetadata() {
@@ -50,22 +57,100 @@ public class InterfaceAppsRaftRepository implements InterfaceAppsRepository {
 
   @Override
   public InterfaceMapping getAppNames(String dataInfoId) {
-    final InterfaceMapping ret = interfaceApps.get(dataInfoId);
-    return ret;
-  }
+    byte[] interfaceAppsBytes = rheaKVStore.bGet(INTERFACE_APPS);
+    InterfaceMapping appNames=null;
+    InterfaceAppsDomain interfaceAppsDomain=null;
+    try{
+      interfaceAppsMap = CommandCodec.decodeCommand(interfaceAppsBytes, interfaceAppsMap.getClass());
+      interfaceAppsDomain = interfaceAppsMap.get(dataInfoId);
+      appNames = new InterfaceMapping(interfaceAppsDomain.getNanosVersion(),interfaceAppsDomain.getApps());
+    }catch (NullPointerException e) {
 
-  public void onNewRevision(AppRevision rev) {
-
-    if (rev.getInterfaceMap() == null) {
-      LOG.warn("AppRevision no interface, {}", rev);
-      return;
     }
 
-    for (Map.Entry<String, AppRevisionInterface> entry : rev.getInterfaceMap().entrySet()) {
-      String serviceId = entry.getKey();
-      InterfaceMapping interfaceMapping =
-          interfaceApps.computeIfAbsent(serviceId, k -> new InterfaceMapping(-1));
-      interfaceMapping.getApps().add(rev.getAppName());
+    //存在返回app集合
+    if(appNames!=null){
+      return appNames;
+    }
+
+    //插入新interface并返回interfacemapping
+    appNames=new InterfaceMapping(-1);
+    InterfaceAppsDomain newInterface=new InterfaceAppsDomain(defaultCommonConfig.getClusterId(),dataInfoId,"",appNames.getNanosVersion(),appNames.getApps());
+    interfaceAppsMap.put(dataInfoId, newInterface);
+    rheaKVStore.bPut(INTERFACE_APPS,CommandCodec.encodeCommand(interfaceAppsMap));
+    return appNames;
+  }
+  
+  /** refresh interfaceNames index */
+  public synchronized void triggerRefreshCache(InterfaceAppsDomain domain) {
+    InterfaceAppsDomain interfaceMapping = interfaceAppsMap.get(domain.getInterfaceName());
+    if (interfaceMapping != null) {
+      InterfaceMapping map = new InterfaceMapping(interfaceMapping.getNanosVersion(),interfaceMapping.getApps());
+      final long nanosLong = TimestampUtil.getNanosLong(domain.getGmtModify());
+      if (map == null) {
+        if (domain.isReference()) {
+          map = new InterfaceMapping(nanosLong, domain.getAppName());
+        } else {
+          map = new InterfaceMapping(nanosLong);
+
+          System.out.println(map.getNanosVersion());
+        }
+        if (LOG.isInfoEnabled()) {
+          LOG.info(
+                  "refresh interface: {}, ref: {}, app: {}, mapping: {}",
+                  domain.getInterfaceName(),
+                  domain.isReference(),
+                  domain.getAppName(),
+                  map);
+        }
+        InterfaceAppsDomain interfaceAppsDomain=new InterfaceAppsDomain(
+                domain.getDataCenter(),
+                domain.getInterfaceName(),
+                domain.getAppName(),
+                map.getNanosVersion(),
+                map.getApps()
+        );
+        interfaceAppsMap.put(domain.getInterfaceName(),interfaceAppsDomain);
+        return;
+      }
+      //判断版本信息
+      if(nanosLong>map.getNanosVersion()){
+        InterfaceMapping newMapping=null;
+        //判断关联
+        if(domain.isReference()){
+          newMapping=new InterfaceMapping(nanosLong,map.getApps(),domain.getAppName());
+        }else{
+          Set<String> prev = Sets.newHashSet(map.getApps());
+          prev.remove(domain.getAppName());
+          newMapping=new InterfaceMapping(nanosLong,prev,domain.getAppName());
+        }
+        if(LOG.isInfoEnabled()){
+          LOG.info(
+                  "update interface mapping: {}, ref: {}, app: {}, newMapping: {}, oldMapping: {}",
+                  domain.getInterfaceName(),
+                  domain.isReference(),
+                  domain.getAppName(),
+                  newMapping,
+                  map);
+        }
+        InterfaceAppsDomain newInterfaceAppsDomain=new InterfaceAppsDomain(
+                domain.getDataCenter(),
+                domain.getInterfaceName(),
+                domain.getAppName(),
+                newMapping.getNanosVersion(),
+                newMapping.getApps()
+        );
+        interfaceAppsMap.put(domain.getInterfaceName(),newInterfaceAppsDomain);
+      }else{
+        LOG.error(
+                "[IgnoreUpdateCache]ignored refresh index, interfac={}, newVersion={} , current mapping={}",
+                domain.getInterfaceName(),
+                nanosLong,
+                map);
+      }
+    }else{
+      interfaceAppsMap.put(domain.getInterfaceName(),domain);
     }
   }
+
 }

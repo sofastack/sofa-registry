@@ -19,10 +19,8 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 @ActiveProfiles("test")
 @SpringBootTest(classes = AbstractRaftTestBase.RaftTestConfig.class)
 @RunWith(SpringJUnit4ClassRunner.class)
-public class AbstractRaftTestBase extends AbstractTest implements ApplicationContextAware {
+public class AbstractRaftTestBase extends AbstractTest implements ApplicationContextAware{
     protected ApplicationContext applicationContext;
-
-
 
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
