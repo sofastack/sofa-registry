@@ -91,8 +91,10 @@ public class SessionInterests extends AbstractDataManager<Subscriber> implements
         if (sub.getScope() != ScopeEnum.global && !isLocalDataCenter) {
           continue;
         }
-        if (sub.needPushEmpty(dataCenter)) {
-          toPushEmptySubscribers.add(sub);
+        if(sub.isMarkedPushEmpty(dataCenter)){
+          if (sub.needPushEmpty(dataCenter)) {
+            toPushEmptySubscribers.add(sub);
+          }
           continue;
         }
         final long pushVersion = sub.getPushedVersion(dataCenter);

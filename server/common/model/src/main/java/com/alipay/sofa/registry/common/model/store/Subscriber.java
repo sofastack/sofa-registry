@@ -201,6 +201,11 @@ public class Subscriber extends BaseInfo {
     ctx.emptyVersion = emptyVersion;
   }
 
+  public synchronized boolean isMarkedPushEmpty(String dataCenter){
+    final PushContext ctx = getPushContext(dataCenter);
+    return ctx.emptyVersion != 0;
+  }
+
   /** @return */
   public synchronized CircuitBreakerStatistic getStatistic(String dataCenter) {
     final PushContext ctx = getPushContext(dataCenter);
