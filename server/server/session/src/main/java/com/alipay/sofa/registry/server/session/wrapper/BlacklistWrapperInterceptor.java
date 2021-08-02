@@ -17,7 +17,6 @@
 package com.alipay.sofa.registry.server.session.wrapper;
 
 import com.alipay.sofa.registry.common.model.store.BaseInfo;
-import com.alipay.sofa.registry.common.model.store.StoreData;
 import com.alipay.sofa.registry.common.model.store.StoreData.DataType;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.log.Logger;
@@ -34,7 +33,8 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @author shangyu.wh
  * @version 1.0: BlacklistWrapperInterceptor.java, v 0.1 2019-06-18 22:26 shangyu.wh Exp $
  */
-public class BlacklistWrapperInterceptor implements WrapperInterceptor<StoreData, Boolean> {
+public class BlacklistWrapperInterceptor
+    implements WrapperInterceptor<RegisterInvokeData, Boolean> {
   private static final Logger LOGGER = Loggers.BLACK_LIST_LOG;
   @Autowired protected SessionRegistry sessionRegistry;
 
@@ -43,10 +43,11 @@ public class BlacklistWrapperInterceptor implements WrapperInterceptor<StoreData
   @Autowired protected ProcessFilter<BaseInfo> processFilter;
 
   @Override
-  public Boolean invokeCodeWrapper(WrapperInvocation<StoreData, Boolean> invocation)
+  public Boolean invokeCodeWrapper(WrapperInvocation<RegisterInvokeData, Boolean> invocation)
       throws Exception {
 
-    BaseInfo storeData = (BaseInfo) invocation.getParameterSupplier().get();
+    RegisterInvokeData registerInvokeData = invocation.getParameterSupplier().get();
+    BaseInfo storeData = (BaseInfo) registerInvokeData.getStoreData();
     if (processFilter.match(storeData)) {
       if (DataType.PUBLISHER == storeData.getDataType()) {
         // match blacklist stop pub.

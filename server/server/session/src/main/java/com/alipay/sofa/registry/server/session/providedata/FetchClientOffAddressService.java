@@ -16,14 +16,19 @@
  */
 package com.alipay.sofa.registry.server.session.providedata;
 
+import static com.alipay.sofa.registry.common.model.constants.ValueConstants.CLIENT_OFF;
 import static com.alipay.sofa.registry.server.session.registry.ClientManagerMetric.ADDRESS_LOAD_DELAY_HISTOGRAM;
 import static com.alipay.sofa.registry.server.session.registry.ClientManagerMetric.CLIENT_OFF_GAUGE;
 
+import com.alipay.remoting.InvokeContext;
 import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress;
 import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress.AddressVersion;
 import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.net.NetUtil;
+import com.alipay.sofa.registry.remoting.Channel;
+import com.alipay.sofa.registry.remoting.bolt.BoltChannel;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.connections.ConnectionsService;
 import com.alipay.sofa.registry.server.session.loggers.Loggers;
@@ -60,6 +65,7 @@ public class FetchClientOffAddressService
   private static final Logger LOGGER = Loggers.CLIENT_OFF_LOG;
 
   protected final ClientManagerProcessor clientManagerProcessor = new ClientManagerProcessor();
+  protected final ClientOpenFailWatchDog clientOpenFailWatchDog = new ClientOpenFailWatchDog();
 
   @Autowired private SessionServerConfig sessionServerConfig;
 
@@ -79,6 +85,7 @@ public class FetchClientOffAddressService
   public void postConstruct() {
     CLIENT_OFF_GAUGE.func(() -> storage.get().clientOffAddress.size());
     ConcurrentUtils.createDaemonThread("ClientManagerProcessor", clientManagerProcessor).start();
+    ConcurrentUtils.createDaemonThread("clientOpenFailWatchDog", clientOpenFailWatchDog).start();
   }
 
   @Override
@@ -128,10 +135,12 @@ public class FetchClientOffAddressService
 
     afterPropertySet(oldVersion, adds);
     LOGGER.info(
-        "olds clientOffAddress:{}, oldVersion:{}, toBeAdd:{}, toBeRemove:{}, current clientOffAddress:{}, newVersion:{}",
+        "olds clientOffAddress:{}, oldVersion:{}, toBeAdd.size:{}, toBeAdd:{}, toBeRemove.size:{}, toBeRemove:{}, current clientOffAddress:{}, newVersion:{}",
         olds,
         oldVersion,
+        toBeAdd.size(),
         toBeAdd,
+        toBeRemove.size(),
         toBeRemove,
         storage.get().clientOffAddress.keySet(),
         storage.get().getVersion());
@@ -231,7 +240,8 @@ public class FetchClientOffAddressService
   }
 
   private void doTrafficOff(Set<String> ipSet, Map<String, AddressVersion> adds) {
-    List<ConnectId> conIds = connectionsService.getIpConnects(ipSet);
+    List<ConnectId> conIds =
+        connectionsService.markChannelAndGetIpConnects(ipSet, CLIENT_OFF, Boolean.TRUE);
 
     if (CollectionUtils.isEmpty(conIds)) {
       return;
@@ -252,6 +262,47 @@ public class FetchClientOffAddressService
     List<String> connections = connectionsService.closeIpConnects(Lists.newArrayList(ipSet));
     if (CollectionUtils.isNotEmpty(connections)) {
       LOGGER.info("clientOpen conIds: {}", connections);
+    }
+  }
+
+  protected final class ClientOpenFailWatchDog extends LoopRunnable {
+
+    @Override
+    public void runUnthrowable() {
+      processClientOpen();
+    }
+
+    @Override
+    public void waitingUnthrowable() {
+      int clientOpenIntervalSecs = sessionServerConfig.getClientOpenIntervalSecs();
+      ConcurrentUtils.sleepUninterruptibly(clientOpenIntervalSecs, TimeUnit.SECONDS);
+    }
+  }
+
+  protected void processClientOpen() {
+    List<Channel> channels = connectionsService.getAllChannel();
+    Map<String, AddressVersion> clientOffAddress = storage.get().clientOffAddress;
+
+    Set<String> retryClientOpen = Sets.newHashSetWithExpectedSize(8);
+    for (Channel channel : channels) {
+      String key = NetUtil.toAddressString(channel.getRemoteAddress());
+      String ip = connectionsService.getIpFromConnectId(key);
+
+      Object value = null;
+      BoltChannel boltChannel = (BoltChannel) channel;
+      InvokeContext invokeContext = boltChannel.getInvokeContext();
+      if (null != invokeContext) {
+        value = invokeContext.get(CLIENT_OFF);
+      }
+      if (value != null && (Boolean) value && !clientOffAddress.containsKey(ip)) {
+        LOGGER.warn("[ClientOpenFail] ip:{} client open fail.", ip);
+        retryClientOpen.add(ip);
+      }
+    }
+
+    if (CollectionUtils.isNotEmpty(retryClientOpen)) {
+      LOGGER.info("[ClientOpenRetry] ips:{} retry client open.", retryClientOpen);
+      doTrafficOn(retryClientOpen);
     }
   }
 

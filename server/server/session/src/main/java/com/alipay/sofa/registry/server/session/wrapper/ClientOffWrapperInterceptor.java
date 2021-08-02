@@ -16,14 +16,18 @@
  */
 package com.alipay.sofa.registry.server.session.wrapper;
 
+import static com.alipay.sofa.registry.common.model.constants.ValueConstants.CLIENT_OFF;
+
 import com.alipay.sofa.registry.common.model.store.*;
 import com.alipay.sofa.registry.common.model.store.StoreData.DataType;
 import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.server.session.connections.ConnectionsService;
 import com.alipay.sofa.registry.server.session.loggers.Loggers;
 import com.alipay.sofa.registry.server.session.providedata.FetchClientOffAddressService;
 import com.alipay.sofa.registry.server.session.push.FirePushService;
 import com.alipay.sofa.registry.server.session.registry.SessionRegistry;
 import com.alipay.sofa.registry.server.shared.remoting.RemotingHelper;
+import java.util.Collections;
 import javax.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -31,7 +35,8 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @author xiaojian.xj
  * @version $Id: ClientOffWrapperInterceptor.java, v 0.1 2021年05月28日 21:18 xiaojian.xj Exp $
  */
-public class ClientOffWrapperInterceptor implements WrapperInterceptor<StoreData, Boolean> {
+public class ClientOffWrapperInterceptor
+    implements WrapperInterceptor<RegisterInvokeData, Boolean> {
 
   private static final Logger LOGGER = Loggers.CLIENT_OFF_LOG;
 
@@ -40,16 +45,22 @@ public class ClientOffWrapperInterceptor implements WrapperInterceptor<StoreData
   @Autowired private FirePushService firePushService;
 
   @Resource private FetchClientOffAddressService fetchClientOffAddressService;
+
   @Autowired protected SessionRegistry sessionRegistry;
 
+  @Autowired private ConnectionsService connectionsService;
+
   @Override
-  public Boolean invokeCodeWrapper(WrapperInvocation<StoreData, Boolean> invocation)
+  public Boolean invokeCodeWrapper(WrapperInvocation<RegisterInvokeData, Boolean> invocation)
       throws Exception {
-    BaseInfo storeData = (BaseInfo) invocation.getParameterSupplier().get();
+    RegisterInvokeData registerInvokeData = invocation.getParameterSupplier().get();
+    BaseInfo storeData = (BaseInfo) registerInvokeData.getStoreData();
 
     URL url = storeData.getSourceAddress();
 
     if (fetchClientOffAddressService.contains(url.getIpAddress())) {
+      connectionsService.markChannelAndGetIpConnects(
+          Collections.singleton(url.getIpAddress()), CLIENT_OFF, Boolean.TRUE);
       LOGGER.info(
           "dataInfoId:{} ,url:{} match clientOff ips.",
           storeData.getDataInfoId(),

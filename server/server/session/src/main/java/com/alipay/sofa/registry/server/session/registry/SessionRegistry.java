@@ -43,6 +43,7 @@ import com.alipay.sofa.registry.server.session.store.DataStore;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.session.store.Watchers;
 import com.alipay.sofa.registry.server.session.strategy.SessionRegistryStrategy;
+import com.alipay.sofa.registry.server.session.wrapper.RegisterInvokeData;
 import com.alipay.sofa.registry.server.session.wrapper.Wrapper;
 import com.alipay.sofa.registry.server.session.wrapper.WrapperInterceptorManager;
 import com.alipay.sofa.registry.server.session.wrapper.WrapperInvocation;
@@ -112,11 +113,11 @@ public class SessionRegistry implements Registry {
   }
 
   @Override
-  public void register(StoreData storeData) {
+  public void register(StoreData storeData, Channel channel) {
 
-    WrapperInvocation<StoreData, Boolean> wrapperInvocation =
+    WrapperInvocation<RegisterInvokeData, Boolean> wrapperInvocation =
         new WrapperInvocation(
-            new Wrapper<StoreData, Boolean>() {
+            new Wrapper<RegisterInvokeData, Boolean>() {
               @Override
               public Boolean call() {
 
@@ -160,8 +161,8 @@ public class SessionRegistry implements Registry {
               }
 
               @Override
-              public Supplier<StoreData> getParameterSupplier() {
-                return () -> storeData;
+              public Supplier<RegisterInvokeData> getParameterSupplier() {
+                return () -> new RegisterInvokeData(storeData, channel);
               }
             },
             wrapperInterceptorManager);

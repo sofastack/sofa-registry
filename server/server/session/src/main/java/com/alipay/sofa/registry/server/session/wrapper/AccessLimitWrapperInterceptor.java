@@ -17,7 +17,6 @@
 package com.alipay.sofa.registry.server.session.wrapper;
 
 import com.alipay.sofa.registry.common.model.store.BaseInfo;
-import com.alipay.sofa.registry.common.model.store.StoreData;
 import com.alipay.sofa.registry.server.session.limit.AccessLimitService;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -25,15 +24,17 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @author shangyu.wh
  * @version 1.0: AccessLimitWrapperInterceptor.java, v 0.1 2019-08-26 20:29 shangyu.wh Exp $
  */
-public class AccessLimitWrapperInterceptor implements WrapperInterceptor<StoreData, Boolean> {
+public class AccessLimitWrapperInterceptor
+    implements WrapperInterceptor<RegisterInvokeData, Boolean> {
 
   @Autowired private AccessLimitService accessLimitService;
 
   @Override
-  public Boolean invokeCodeWrapper(WrapperInvocation<StoreData, Boolean> invocation)
+  public Boolean invokeCodeWrapper(WrapperInvocation<RegisterInvokeData, Boolean> invocation)
       throws Exception {
 
-    BaseInfo baseInfo = (BaseInfo) invocation.getParameterSupplier().get();
+    RegisterInvokeData registerInvokeData = invocation.getParameterSupplier().get();
+    BaseInfo baseInfo = (BaseInfo) registerInvokeData.getStoreData();
 
     if (!accessLimitService.tryAcquire()) {
       throw new RuntimeException(

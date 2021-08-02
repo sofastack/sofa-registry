@@ -129,8 +129,6 @@ public class JerseyExchangeTest {
         new InetSocketAddress(NetUtil.getLocalAddress(), 9662), jerseyChannel.getRemoteAddress());
     Assert.assertEquals(NetUtil.getLocalSocketAddress(), jerseyChannel.getLocalAddress());
     Assert.assertTrue(jerseyChannel.isConnected());
-    jerseyChannel.setAttribute("key", "value");
-    Assert.assertNull(jerseyChannel.getAttribute("key"));
   }
 
   public static void assertException(Class<? extends Throwable> eclazz, Runnable runnable) {

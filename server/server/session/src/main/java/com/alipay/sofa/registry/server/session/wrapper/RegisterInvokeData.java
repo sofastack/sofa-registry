@@ -14,37 +14,41 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.remoting.bolt;
+package com.alipay.sofa.registry.server.session.wrapper;
 
+import com.alipay.sofa.registry.common.model.store.StoreData;
 import com.alipay.sofa.registry.remoting.Channel;
-import java.net.InetSocketAddress;
-import javax.ws.rs.client.WebTarget;
 
 /**
- * @author xuanbei
- * @since 2019/3/26
+ * @author xiaojian.xj
+ * @version : RegisterInvokeData.java, v 0.1 2021年08月02日 15:09 xiaojian.xj Exp $
  */
-public class MockChannel implements Channel {
-  @Override
-  public InetSocketAddress getRemoteAddress() {
-    return null;
+public class RegisterInvokeData {
+
+  private final StoreData storeData;
+
+  private final Channel channel;
+
+  public RegisterInvokeData(StoreData storeData, Channel channel) {
+    this.storeData = storeData;
+    this.channel = channel;
   }
 
-  @Override
-  public InetSocketAddress getLocalAddress() {
-    return null;
+  /**
+   * Getter method for property <tt>storeData</tt>.
+   *
+   * @return property value of storeData
+   */
+  public StoreData getStoreData() {
+    return storeData;
   }
 
-  @Override
-  public boolean isConnected() {
-    return false;
+  /**
+   * Getter method for property <tt>channel</tt>.
+   *
+   * @return property value of channel
+   */
+  public Channel getChannel() {
+    return channel;
   }
-
-  @Override
-  public WebTarget getWebTarget() {
-    return null;
-  }
-
-  @Override
-  public void close() {}
 }

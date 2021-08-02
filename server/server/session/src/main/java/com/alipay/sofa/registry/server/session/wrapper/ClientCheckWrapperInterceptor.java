@@ -17,7 +17,6 @@
 package com.alipay.sofa.registry.server.session.wrapper;
 
 import com.alipay.sofa.registry.common.model.store.BaseInfo;
-import com.alipay.sofa.registry.common.model.store.StoreData;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
@@ -31,17 +30,19 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @author shangyu.wh
  * @version 1.0: ClientCheckWrapperInterceptor.java, v 0.1 2019-06-18 13:53 shangyu.wh Exp $
  */
-public class ClientCheckWrapperInterceptor implements WrapperInterceptor<StoreData, Boolean> {
+public class ClientCheckWrapperInterceptor
+    implements WrapperInterceptor<RegisterInvokeData, Boolean> {
 
   @Autowired private SessionServerConfig sessionServerConfig;
 
   @Autowired private Exchange boltExchange;
 
   @Override
-  public Boolean invokeCodeWrapper(WrapperInvocation<StoreData, Boolean> invocation)
+  public Boolean invokeCodeWrapper(WrapperInvocation<RegisterInvokeData, Boolean> invocation)
       throws Exception {
 
-    BaseInfo baseInfo = (BaseInfo) invocation.getParameterSupplier().get();
+    RegisterInvokeData registerInvokeData = invocation.getParameterSupplier().get();
+    BaseInfo baseInfo = (BaseInfo) registerInvokeData.getStoreData();
 
     Server sessionServer = boltExchange.getServer(sessionServerConfig.getServerPort());
 
