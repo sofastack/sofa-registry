@@ -16,21 +16,36 @@
  */
 package com.alipay.sofa.registry.server.session.providedata;
 
+import static com.alipay.sofa.registry.common.model.constants.ValueConstants.CLIENT_OFF;
+import static org.mockito.Matchers.anyList;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.alipay.remoting.DefaultBizContext;
+import com.alipay.remoting.InvokeContext;
+import com.alipay.remoting.RemotingContext;
 import com.alipay.sofa.registry.common.model.CollectionSdks;
 import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress.AddressVersion;
+import com.alipay.sofa.registry.common.model.store.URL;
+import com.alipay.sofa.registry.remoting.Channel;
+import com.alipay.sofa.registry.remoting.bolt.BoltChannel;
+import com.alipay.sofa.registry.remoting.bolt.BoltClient;
+import com.alipay.sofa.registry.remoting.bolt.BoltServer;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.connections.ConnectionsService;
 import com.alipay.sofa.registry.server.session.providedata.FetchClientOffAddressService.ClientOffAddressResp;
 import com.alipay.sofa.registry.server.session.registry.Registry;
 import com.google.common.collect.Maps;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
+
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 /**
@@ -39,18 +54,24 @@ import org.mockito.MockitoAnnotations;
  */
 public class FetchClientOffServiceTest {
 
-  Registry sessionRegistry;
+  private static Registry sessionRegistry;
 
-  SessionServerConfig sessionServerConfig;
+  private static SessionServerConfig sessionServerConfig;
 
-  ConnectionsService connectionsService;
+  private static ConnectionsService connectionsService;
 
-  FetchClientOffAddressService fetchClientOffAddressService;
+  private static FetchClientOffAddressService fetchClientOffAddressService;
 
-  @Before
-  public void beforeFetchStopPushServiceTest() {
+  private static URL url = new URL("0.0.0.0", 12345);
+  private static BoltServer server = new BoltServer(url, Collections.emptyList());
 
-    MockitoAnnotations.initMocks(this);
+  private static BoltClient boltClient = new BoltClient(1);
+  private static Channel channel;
+
+  @BeforeClass
+  public static void beforeFetchStopPushServiceTest() {
+
+    //MockitoAnnotations.initMocks(this);
     sessionRegistry = mock(Registry.class);
     sessionServerConfig = mock(SessionServerConfig.class);
     connectionsService = mock(ConnectionsService.class);
@@ -61,6 +82,21 @@ public class FetchClientOffServiceTest {
         .setSessionServerConfig(sessionServerConfig)
         .setSessionRegistry(sessionRegistry)
         .setConnectionsService(connectionsService);
+
+    server.configWaterMark(1024 * 32, 1024 * 64);
+    server.initServer();
+    Assert.assertFalse(server.isOpen());
+    Assert.assertTrue(server.isClosed());
+    server.startServer();
+    Assert.assertTrue(server.isOpen());
+    Assert.assertFalse(server.isClosed());
+
+    channel = boltClient.connect(url);
+  }
+
+  @AfterClass
+  public static void after() {
+    server.close();
   }
 
   @Test
@@ -80,5 +116,23 @@ public class FetchClientOffServiceTest {
             fetchClientOffAddressService.getStorage(),
             new ClientOffAddressResp(1L, addressVersionMap)));
     Assert.assertEquals(openIps.size(), fetchClientOffAddressService.getClientOffAddress().size());
+  }
+
+  @Test
+  public void testClientOpenFailWatcher() {
+    RemotingContext remotingCtx = mock(RemotingContext.class);
+    InvokeContext invokeContext = mock(InvokeContext.class);
+
+    BoltChannel boltChannel = (BoltChannel) this.channel;
+    boltChannel.setBizContext(new DefaultBizContext(remotingCtx));
+
+    when(remotingCtx.getInvokeContext()).thenReturn(invokeContext);
+    when(invokeContext.get(CLIENT_OFF)).thenReturn(Boolean.TRUE);
+
+    when(connectionsService.getAllChannel()).thenReturn(Collections.singletonList(this.channel));
+
+    fetchClientOffAddressService.processClientOpen();
+
+    Mockito.verify(connectionsService, Mockito.times(1)).closeIpConnects(anyList());
   }
 }

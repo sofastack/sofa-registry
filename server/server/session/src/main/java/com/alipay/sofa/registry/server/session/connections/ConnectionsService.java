@@ -16,11 +16,13 @@
  */
 package com.alipay.sofa.registry.server.session.connections;
 
+import com.alipay.remoting.InvokeContext;
 import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.Server;
+import com.alipay.sofa.registry.remoting.bolt.BoltChannel;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.mapper.ConnectionMapper;
@@ -32,6 +34,7 @@ import com.google.common.collect.Sets;
 import java.util.*;
 import java.util.stream.Collectors;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class ConnectionsService {
@@ -81,6 +84,16 @@ public class ConnectionsService {
    * @return
    */
   public List<ConnectId> getIpConnects(Set<String> ipSet) {
+    return markChannelAndGetIpConnects(ipSet, null, null);
+  }
+
+  /**
+   * get connectIds by ip set
+   *
+   * @param ipSet ip set
+   * @return
+   */
+  public List<ConnectId> markChannelAndGetIpConnects(Set<String> ipSet, String key, Object value) {
     Server sessionServer = boltExchange.getServer(sessionServerConfig.getServerPort());
     if (sessionServer == null || CollectionUtils.isEmpty(ipSet)) {
       return Collections.emptyList();
@@ -90,11 +103,27 @@ public class ConnectionsService {
     for (Channel channel : channels) {
       String ip = channel.getRemoteAddress().getAddress().getHostAddress();
       if (ipSet.contains(ip)) {
+        if (StringUtils.isNotBlank(key)) {
+          BoltChannel boltChannel = (BoltChannel) channel;
+          InvokeContext invokeContext = boltChannel.getInvokeContext();
+          if (null != invokeContext) {
+            invokeContext.put(key, value);
+          }
+        }
         connections.add(ConnectId.of(channel.getRemoteAddress(), channel.getLocalAddress()));
       }
     }
 
     return connections;
+  }
+
+  public List<Channel> getAllChannel() {
+    Server sessionServer = boltExchange.getServer(sessionServerConfig.getServerPort());
+    if (sessionServer == null) {
+      return Collections.emptyList();
+    }
+
+    return sessionServer.getChannels();
   }
 
   /**
@@ -125,7 +154,7 @@ public class ConnectionsService {
     return connections;
   }
 
-  private String getIpFromConnectId(String connectId) {
+  public String getIpFromConnectId(String connectId) {
     if (connectionMapper.contains(connectId)) {
       return connectionMapper.get(connectId);
     } else {

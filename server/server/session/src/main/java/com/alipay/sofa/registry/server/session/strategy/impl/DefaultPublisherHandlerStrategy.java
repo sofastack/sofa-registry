@@ -83,7 +83,7 @@ public class DefaultPublisherHandlerStrategy implements PublisherHandlerStrategy
     publisher.setTargetAddress(new URL(channel.getLocalAddress()));
     final String eventType = publisherRegister.getEventType();
     if (EventTypeConstants.REGISTER.equals(eventType)) {
-      sessionRegistry.register(publisher);
+      sessionRegistry.register(publisher, channel);
     } else if (EventTypeConstants.UNREGISTER.equals(eventType)) {
       sessionRegistry.unRegister(publisher);
     } else {

@@ -86,7 +86,7 @@ public class DefaultSubscriberHandlerStrategy implements SubscriberHandlerStrate
 
     final String eventType = subscriberRegister.getEventType();
     if (EventTypeConstants.REGISTER.equals(eventType)) {
-      sessionRegistry.register(subscriber);
+      sessionRegistry.register(subscriber, channel);
     } else if (EventTypeConstants.UNREGISTER.equals(eventType)) {
       sessionRegistry.unRegister(subscriber);
     } else {

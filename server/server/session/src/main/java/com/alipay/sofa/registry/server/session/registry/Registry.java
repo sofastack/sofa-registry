@@ -18,6 +18,7 @@ package com.alipay.sofa.registry.server.session.registry;
 
 import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.store.StoreData;
+import com.alipay.sofa.registry.remoting.Channel;
 import java.util.List;
 import java.util.Map;
 
@@ -32,7 +33,7 @@ public interface Registry {
    *
    * @param data
    */
-  void register(StoreData<String> data);
+  void register(StoreData<String> data, Channel channel);
 
   /**
    * clean all the connectIds: 1. clean pubs/sub/wat

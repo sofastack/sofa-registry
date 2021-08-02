@@ -77,7 +77,7 @@ public class DefaultWatcherHandlerStrategy implements WatcherHandlerStrategy {
 
     final String eventType = register.getEventType();
     if (EventTypeConstants.REGISTER.equals(eventType)) {
-      sessionRegistry.register(watcher);
+      sessionRegistry.register(watcher, channel);
     } else if (EventTypeConstants.UNREGISTER.equals(eventType)) {
       sessionRegistry.unRegister(watcher);
     } else {

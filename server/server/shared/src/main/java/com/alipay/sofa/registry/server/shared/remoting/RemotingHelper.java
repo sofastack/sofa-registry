@@ -60,7 +60,7 @@ public final class RemotingHelper {
   public static void setPbSerializer(Channel channel) {
     if (channel instanceof BoltChannel) {
       BoltChannel boltChannel = (BoltChannel) channel;
-      InvokeContext invokeContext = boltChannel.getBizContext().getInvokeContext();
+      InvokeContext invokeContext = boltChannel.getInvokeContext();
 
       if (null != invokeContext) {
         // set client custom codec for request command if not null

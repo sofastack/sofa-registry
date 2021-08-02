@@ -176,6 +176,8 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
   private int clientManagerIntervalMillis = 1000;
 
+  private int clientOpenIntervalSecs = 5;
+
   // metadata config end
 
   // end config for enterprise version
@@ -1051,6 +1053,20 @@ public class SessionServerConfigBean implements SessionServerConfig {
   @Override
   public int getClientManagerIntervalMillis() {
     return clientManagerIntervalMillis;
+  }
+
+  @Override
+  public int getClientOpenIntervalSecs() {
+    return clientOpenIntervalSecs;
+  }
+
+  /**
+   * Setter method for property <tt>clientOpenIntervalSecs</tt>.
+   *
+   * @param clientOpenIntervalSecs value to be assigned to property clientOpenIntervalSecs
+   */
+  public void setClientOpenIntervalSecs(int clientOpenIntervalSecs) {
+    this.clientOpenIntervalSecs = clientOpenIntervalSecs;
   }
 
   public void setClientManagerIntervalMillis(int clientManagerIntervalMillis) {

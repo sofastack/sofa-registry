@@ -73,12 +73,6 @@ public class BoltUtilTest {
     Assert.assertNull(boltChannel.getWebTarget());
     boltChannel.close();
     Mockito.verify(conn, Mockito.times(1)).close();
-
-    Assert.assertNull(boltChannel.getAttribute("key"));
-    boltChannel.setAttribute("key", "val");
-    Assert.assertEquals(boltChannel.getAttribute("key"), "val");
-    boltChannel.setAttribute("key", null);
-    Assert.assertNull(boltChannel.getAttribute("key"));
   }
 
   @Test
