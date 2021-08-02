@@ -16,6 +16,9 @@
  */
 package com.alipay.sofa.registry.server.session.providedata;
 
+import static com.alipay.sofa.registry.server.session.registry.ClientManagerMetric.ADDRESS_LOAD_DELAY_HISTOGRAM;
+import static com.alipay.sofa.registry.server.session.registry.ClientManagerMetric.CLIENT_OFF_GAUGE;
+
 import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress;
@@ -47,9 +50,6 @@ import javax.annotation.PostConstruct;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import static com.alipay.sofa.registry.server.session.registry.ClientManagerMetric.ADDRESS_LOAD_DELAY_HISTOGRAM;
-import static com.alipay.sofa.registry.server.session.registry.ClientManagerMetric.CLIENT_OFF_GAUGE;
-
 /**
  * @author xiaojian.xj
  * @version $Id: FetchClientOffAddressService.java, v 0.1 2021年05月16日 18:01 xiaojian.xj Exp $
@@ -68,8 +68,6 @@ public class FetchClientOffAddressService
   @Autowired private Registry sessionRegistry;
 
   @Autowired private ClientManagerAddressRepository clientManagerAddressRepository;
-
-
 
   public FetchClientOffAddressService() {
     super(
@@ -265,7 +263,6 @@ public class FetchClientOffAddressService
   public Set<String> getClientOffAddress() {
     return storage.get().clientOffAddress.keySet();
   }
-
 
   public boolean contains(String address) {
     return storage.get().clientOffAddress.containsKey(address);

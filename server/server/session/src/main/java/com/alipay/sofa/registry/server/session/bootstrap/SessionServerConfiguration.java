@@ -710,7 +710,8 @@ public class SessionServerConfiguration {
         SystemPropertyProcessorManager systemPropertyProcessorManager) {
       FetchClientOffAddressService fetchClientOffAddressService =
           new FetchClientOffAddressService();
-      systemPropertyProcessorManager.addSystemDataPersistenceProcessor(fetchClientOffAddressService);
+      systemPropertyProcessorManager.addSystemDataPersistenceProcessor(
+          fetchClientOffAddressService);
 
       return fetchClientOffAddressService;
     }

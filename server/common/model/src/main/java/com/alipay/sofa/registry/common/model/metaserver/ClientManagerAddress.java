@@ -54,10 +54,12 @@ public class ClientManagerAddress {
 
   @Override
   public String toString() {
-    return "ClientManagerAddress{" +
-            "version=" + version +
-            ", clientOffAddress=" + clientOffAddress +
-            '}';
+    return "ClientManagerAddress{"
+        + "version="
+        + version
+        + ", clientOffAddress="
+        + clientOffAddress
+        + '}';
   }
 
   public static class AddressVersion {
@@ -107,10 +109,7 @@ public class ClientManagerAddress {
 
     @Override
     public String toString() {
-      return "AddressVersion{" +
-              "version=" + version +
-              ", address='" + address + '\'' +
-              '}';
+      return "AddressVersion{" + "version=" + version + ", address='" + address + '\'' + '}';
     }
   }
 }

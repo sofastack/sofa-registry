@@ -17,7 +17,6 @@
 package com.alipay.sofa.registry.common.model.store;
 
 import com.alipay.sofa.registry.common.model.ElementType;
-import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.util.StringFormatter;
@@ -146,8 +145,8 @@ public class Subscriber extends BaseInfo {
   }
 
   public synchronized boolean isMarkedPushEmpty(String dataCenter) {
-      final PushContext ctx = getPushContext(dataCenter);
-      return ctx.emptyVersion != 0;
+    final PushContext ctx = getPushContext(dataCenter);
+    return ctx.emptyVersion != 0;
   }
 
   public synchronized boolean hasPushed() {

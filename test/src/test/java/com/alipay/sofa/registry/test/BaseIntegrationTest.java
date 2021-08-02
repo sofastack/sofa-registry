@@ -45,7 +45,6 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
 import com.alipay.sofa.registry.remoting.jersey.JerseyClient;
 import com.alipay.sofa.registry.server.data.cache.DatumStorage;
 import com.alipay.sofa.registry.server.meta.resource.ClientManagerResource;
@@ -70,7 +69,6 @@ import org.h2.tools.Server;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.logging.LoggingSystem;
@@ -200,9 +198,9 @@ public class BaseIntegrationTest extends AbstractTest {
           sessionApplicationContext.getBean(
               "clientManagerResource",
               com.alipay.sofa.registry.server.session.resource.ClientManagerResource.class);
-      sessionConsoleExchanger = sessionApplicationContext.getBean(
-              "sessionConsoleExchanger",
-              SessionConsoleExchanger.class);
+      sessionConsoleExchanger =
+          sessionApplicationContext.getBean(
+              "sessionConsoleExchanger", SessionConsoleExchanger.class);
 
       sessionServerConfig =
           (SessionServerConfigBean)

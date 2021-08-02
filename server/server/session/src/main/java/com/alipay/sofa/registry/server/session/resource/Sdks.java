@@ -25,7 +25,9 @@ import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.google.common.collect.Lists;
-
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import com.google.common.collect.Sets.SetView;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -34,10 +36,6 @@ import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
-
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import com.google.common.collect.Sets.SetView;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.util.CollectionUtils;
 
@@ -65,7 +63,8 @@ public final class Sdks {
 
   public static Map<URL, CommonResponse> concurrentSdkSend(
       ExecutorService pool, List<URL> servers, SdkExecutor executor, int timeoutMs) {
-    Map<URL, CommonResponse> responses = Collections.synchronizedMap(Maps.newHashMapWithExpectedSize(servers.size() + 1));
+    Map<URL, CommonResponse> responses =
+        Collections.synchronizedMap(Maps.newHashMapWithExpectedSize(servers.size() + 1));
 
     final CountDownLatch latch = new CountDownLatch(servers.size());
     for (URL url : servers) {

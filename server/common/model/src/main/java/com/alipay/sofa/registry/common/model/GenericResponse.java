@@ -64,7 +64,6 @@ public class GenericResponse<T> extends CommonResponse {
     return this;
   }
 
-
   /**
    * Getter method for property <tt>data</tt>.
    *
