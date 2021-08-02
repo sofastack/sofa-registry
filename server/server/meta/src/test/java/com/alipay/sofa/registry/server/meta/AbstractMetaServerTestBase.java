@@ -720,8 +720,7 @@ public class AbstractMetaServerTestBase extends AbstractTestBase {
             (String) address, new AddressVersion(System.currentTimeMillis(), (String) address));
       }
 
-      ClientManagerAddress resp =
-          new ClientManagerAddress(version.get(), clientOffAddress);
+      ClientManagerAddress resp = new ClientManagerAddress(version.get(), clientOffAddress);
       return DBResponse.ok(resp).build();
     }
 

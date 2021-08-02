@@ -30,13 +30,15 @@ public class SystemPropertyProcessorManager {
 
   private Collection<AbstractFetchSystemPropertyService> systemDataProcessors = new ArrayList<>();
 
-  private Collection<AbstractFetchPersistenceSystemProperty> systemDataPersistenceProcessors = new ArrayList<>();
+  private Collection<AbstractFetchPersistenceSystemProperty> systemDataPersistenceProcessors =
+      new ArrayList<>();
 
   public void addSystemDataProcessor(AbstractFetchSystemPropertyService systemDataProcessor) {
     systemDataProcessors.add(systemDataProcessor);
   }
 
-  public void addSystemDataPersistenceProcessor(AbstractFetchPersistenceSystemProperty systemDataProcessor) {
+  public void addSystemDataPersistenceProcessor(
+      AbstractFetchPersistenceSystemProperty systemDataProcessor) {
     systemDataPersistenceProcessors.add(systemDataProcessor);
   }
 
@@ -69,7 +71,8 @@ public class SystemPropertyProcessorManager {
   public boolean startFetchPersistenceSystemProperty() {
     boolean success = true;
 
-    for (AbstractFetchPersistenceSystemProperty systemDataProcessor : systemDataPersistenceProcessors) {
+    for (AbstractFetchPersistenceSystemProperty systemDataProcessor :
+        systemDataPersistenceProcessors) {
       if (!systemDataProcessor.start()) {
         success = false;
       }

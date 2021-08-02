@@ -16,6 +16,9 @@
  */
 package com.alipay.sofa.registry.server.session.push;
 
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.when;
+
 import com.alipay.sofa.registry.common.model.store.Sizer;
 import com.alipay.sofa.registry.common.model.store.SubDatum;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
@@ -34,10 +37,6 @@ import java.util.Collections;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
-
-import static org.mockito.Matchers.anyObject;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.when;
 
 public class FirePushServiceTest {
   private String zone = "testZone";
@@ -112,10 +111,8 @@ public class FirePushServiceTest {
     when(svc.pushProcessor.pushSwitchService.canIpPush(anyString())).thenReturn(true);
     Assert.assertTrue(svc.fireOnPushEmpty(subscriber, "testDc", 1L));
 
-
     svc.fireOnPushEmpty(subscriber, "testDc", System.currentTimeMillis());
     Assert.assertEquals(subscriber.markPushEmpty("testDc", System.currentTimeMillis()), 1L);
-
   }
 
   @Test
@@ -176,8 +173,7 @@ public class FirePushServiceTest {
     final long now = System.currentTimeMillis();
     TriggerPushContext ctx = new TriggerPushContext("testDc", 100, "testDataNode", now);
     FirePushService svc = mockFirePushService();
-    when(svc.sessionCacheService.getValue(Mockito.anyObject()))
-        .thenThrow(new RuntimeException());
+    when(svc.sessionCacheService.getValue(Mockito.anyObject())).thenThrow(new RuntimeException());
     Assert.assertFalse(svc.changeHandler.onChange("testDataId", ctx));
     SubDatum datum = TestUtils.newSubDatum("testDataId", 200, Collections.emptyList());
     Value v = new Value((Sizer) datum);

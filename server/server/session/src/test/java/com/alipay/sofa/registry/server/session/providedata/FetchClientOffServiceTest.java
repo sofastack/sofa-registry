@@ -16,10 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.providedata;
 
-import static org.mockito.Matchers.anyMap;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.alipay.sofa.registry.common.model.CollectionSdks;
@@ -83,6 +80,5 @@ public class FetchClientOffServiceTest {
             fetchClientOffAddressService.getStorage(),
             new ClientOffAddressResp(1L, addressVersionMap)));
     Assert.assertEquals(openIps.size(), fetchClientOffAddressService.getClientOffAddress().size());
-
   }
 }

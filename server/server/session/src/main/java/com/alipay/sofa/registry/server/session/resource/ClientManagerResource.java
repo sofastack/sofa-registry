@@ -38,6 +38,7 @@ import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.task.MetricsableThreadPoolExecutor;
 import com.alipay.sofa.registry.util.OsUtils;
+import com.google.common.collect.Maps;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -46,8 +47,6 @@ import java.util.concurrent.ThreadPoolExecutor;
 import javax.annotation.Resource;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
-
-import com.google.common.collect.Maps;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -73,8 +72,7 @@ public class ClientManagerResource {
 
   @Autowired private NodeExchanger sessionConsoleExchanger;
 
-  @Resource
-  private FetchClientOffAddressService fetchClientOffAddressService;
+  @Resource private FetchClientOffAddressService fetchClientOffAddressService;
 
   private final ThreadPoolExecutor zoneSdkExecutor =
       MetricsableThreadPoolExecutor.newExecutor(
@@ -189,7 +187,8 @@ public class ClientManagerResource {
               servers,
               (URL url) -> {
                 final ClientManagerQueryRequest req = new ClientManagerQueryRequest();
-                return (CommonResponse) sessionConsoleExchanger.request(new SimpleRequest(req, url)).getResult();
+                return (CommonResponse)
+                    sessionConsoleExchanger.request(new SimpleRequest(req, url)).getResult();
               },
               3000);
 
@@ -201,7 +200,8 @@ public class ClientManagerResource {
             continue;
           }
         }
-        LOGGER.error("url={} queryClientOff fail, msg:{}.", entry.getKey().getIpAddress(), entry.getValue());
+        LOGGER.error(
+            "url={} queryClientOff fail, msg:{}.", entry.getKey().getIpAddress(), entry.getValue());
         resp.put(entry.getKey().getIpAddress(), new ClientManagerResp(false));
       }
     }
