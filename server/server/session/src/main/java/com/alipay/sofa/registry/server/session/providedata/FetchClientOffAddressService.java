@@ -294,7 +294,7 @@ public class FetchClientOffAddressService
       if (null != invokeContext) {
         value = invokeContext.get(CLIENT_OFF);
       }
-      if (value != null && (Boolean) value && !clientOffAddress.containsKey(ip)) {
+      if (value != null && Boolean.TRUE.equals(value) && !clientOffAddress.containsKey(ip)) {
         LOGGER.warn("[ClientOpenFail] ip:{} client open fail.", ip);
         retryClientOpen.add(ip);
       }

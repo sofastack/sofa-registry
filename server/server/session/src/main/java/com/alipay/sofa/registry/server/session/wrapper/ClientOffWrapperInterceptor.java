@@ -18,16 +18,17 @@ package com.alipay.sofa.registry.server.session.wrapper;
 
 import static com.alipay.sofa.registry.common.model.constants.ValueConstants.CLIENT_OFF;
 
+import com.alipay.remoting.InvokeContext;
 import com.alipay.sofa.registry.common.model.store.*;
 import com.alipay.sofa.registry.common.model.store.StoreData.DataType;
 import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.server.session.connections.ConnectionsService;
+import com.alipay.sofa.registry.remoting.Channel;
+import com.alipay.sofa.registry.remoting.bolt.BoltChannel;
 import com.alipay.sofa.registry.server.session.loggers.Loggers;
 import com.alipay.sofa.registry.server.session.providedata.FetchClientOffAddressService;
 import com.alipay.sofa.registry.server.session.push.FirePushService;
 import com.alipay.sofa.registry.server.session.registry.SessionRegistry;
 import com.alipay.sofa.registry.server.shared.remoting.RemotingHelper;
-import java.util.Collections;
 import javax.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -48,8 +49,6 @@ public class ClientOffWrapperInterceptor
 
   @Autowired protected SessionRegistry sessionRegistry;
 
-  @Autowired private ConnectionsService connectionsService;
-
   @Override
   public Boolean invokeCodeWrapper(WrapperInvocation<RegisterInvokeData, Boolean> invocation)
       throws Exception {
@@ -59,8 +58,7 @@ public class ClientOffWrapperInterceptor
     URL url = storeData.getSourceAddress();
 
     if (fetchClientOffAddressService.contains(url.getIpAddress())) {
-      connectionsService.markChannelAndGetIpConnects(
-          Collections.singleton(url.getIpAddress()), CLIENT_OFF, Boolean.TRUE);
+      markChannel(registerInvokeData.getChannel());
       LOGGER.info(
           "dataInfoId:{} ,url:{} match clientOff ips.",
           storeData.getDataInfoId(),
@@ -93,6 +91,20 @@ public class ClientOffWrapperInterceptor
       }
     }
     return invocation.proceed();
+  }
+
+  private void markChannel(Channel channel) {
+    if (channel == null || !(channel instanceof BoltChannel)) {
+      return;
+    }
+    BoltChannel boltChannel = (BoltChannel) channel;
+    InvokeContext invokeContext = boltChannel.getInvokeContext();
+    if (null != invokeContext) {
+      Object value = invokeContext.get(CLIENT_OFF);
+      if (value == null || !Boolean.TRUE.equals(value)) {
+        invokeContext.put(CLIENT_OFF, Boolean.TRUE);
+      }
+    }
   }
 
   @Override
