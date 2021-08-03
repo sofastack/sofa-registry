@@ -47,6 +47,22 @@ public interface Channel {
   boolean isConnected();
 
   /**
+   * get attribute.
+   *
+   * @param key key.
+   * @return value.
+   */
+  Object getAttribute(String key);
+
+  /**
+   * set attribute.
+   *
+   * @param key key.
+   * @param value value.
+   */
+  void setAttribute(String key, Object value);
+
+  /**
    * for rest api
    *
    * @return

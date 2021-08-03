@@ -39,14 +39,11 @@ import com.google.common.collect.Maps;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
-
 import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
 
 /**
  * @author xiaojian.xj
@@ -71,7 +68,7 @@ public class FetchClientOffServiceTest {
   @BeforeClass
   public static void beforeFetchStopPushServiceTest() {
 
-    //MockitoAnnotations.initMocks(this);
+    // MockitoAnnotations.initMocks(this);
     sessionRegistry = mock(Registry.class);
     sessionServerConfig = mock(SessionServerConfig.class);
     connectionsService = mock(ConnectionsService.class);

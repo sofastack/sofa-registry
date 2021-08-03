@@ -41,6 +41,14 @@ public class MockChannel implements Channel {
   }
 
   @Override
+  public Object getAttribute(String key) {
+    return null;
+  }
+
+  @Override
+  public void setAttribute(String key, Object value) {}
+
+  @Override
   public WebTarget getWebTarget() {
     return null;
   }

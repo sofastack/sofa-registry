@@ -56,6 +56,15 @@ public class JerseyChannel implements Channel {
     }
     return false;
   }
+
+  @Override
+  public Object getAttribute(String key) {
+    return null;
+  }
+
+  @Override
+  public void setAttribute(String key, Object value) {}
+
   /**
    * Getter method for property <tt>webTarget</tt>.
    *

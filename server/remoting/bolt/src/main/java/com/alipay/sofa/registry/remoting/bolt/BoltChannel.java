@@ -23,6 +23,8 @@ import com.alipay.remoting.InvokeContext;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.util.StringFormatter;
 import java.net.InetSocketAddress;
+import java.util.HashMap;
+import java.util.Map;
 import javax.ws.rs.client.WebTarget;
 
 /**
@@ -38,6 +40,7 @@ public class BoltChannel implements Channel {
 
   private BizContext bizContext;
 
+  private Map<String, Object> attributes;
 
   public BoltChannel(Connection conn) {
     this.connection = conn;
@@ -58,6 +61,23 @@ public class BoltChannel implements Channel {
   @Override
   public boolean isConnected() {
     return connection.isFine();
+  }
+
+  @Override
+  public synchronized Object getAttribute(String key) {
+    return attributes == null ? null : attributes.get(key);
+  }
+
+  @Override
+  public synchronized void setAttribute(String key, Object value) {
+    if (attributes == null) {
+      attributes = new HashMap<>();
+    }
+    if (value == null) {
+      attributes.remove(key);
+    } else {
+      attributes.put(key, value);
+    }
   }
 
   @Override
