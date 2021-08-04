@@ -380,7 +380,7 @@ public final class SlotManagerImpl implements SlotManager {
       final KeyedTask<SyncLeaderTask> syncLeaderTask = slotState.syncLeaderTask;
       if (syncLeaderTask != null && !syncLeaderTask.isFinished()) {
         // must wait the sync leader finish, avoid the sync-leader conflict with sync-session
-        LOGGER.warn("wait for sync-leader to finish, {}", slot, syncLeaderTask);
+        LOGGER.warn("wait for sync-leader to finish, {},{}", slot, syncLeaderTask);
         return false;
       }
       slotState.syncLeaderTask = null;

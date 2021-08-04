@@ -53,6 +53,7 @@ import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfigBean
 import com.alipay.sofa.registry.server.session.providedata.FetchClientOffAddressService;
 import com.alipay.sofa.registry.server.session.registry.SessionRegistry;
 import com.alipay.sofa.registry.server.session.remoting.console.SessionConsoleExchanger;
+import com.alipay.sofa.registry.server.session.resource.SessionDigestResource;
 import com.alipay.sofa.registry.server.session.store.DataStore;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.test.TestRegistryMain;
@@ -106,6 +107,7 @@ public class BaseIntegrationTest extends AbstractTest {
   protected static volatile DatumStorage localDatumStorage;
 
   protected static volatile ClientManagerResource clientManagerResource;
+  protected static volatile SessionDigestResource sessionDigestResource;
   protected static volatile com.alipay.sofa.registry.server.session.resource.ClientManagerResource
       sessionClientManagerResource;
   protected static volatile FetchClientOffAddressService fetchClientOffAddressService;
@@ -190,7 +192,8 @@ public class BaseIntegrationTest extends AbstractTest {
 
       clientManagerResource =
           metaApplicationContext.getBean("clientManagerResource", ClientManagerResource.class);
-
+      sessionDigestResource =
+              sessionApplicationContext.getBean("sessionDigestResource", SessionDigestResource.class);
       fetchClientOffAddressService =
           sessionApplicationContext.getBean(
               "fetchClientOffAddressService", FetchClientOffAddressService.class);

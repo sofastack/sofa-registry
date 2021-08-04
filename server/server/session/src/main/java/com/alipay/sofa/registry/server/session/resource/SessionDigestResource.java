@@ -18,29 +18,46 @@ package com.alipay.sofa.registry.server.session.resource;
 
 import static com.alipay.sofa.registry.common.model.constants.ValueConstants.CONNECT_ID_SPLIT;
 
+import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.ConnectId;
+import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.Tuple;
+import com.alipay.sofa.registry.common.model.sessionserver.PubSubDataInfoIdRequest;
+import com.alipay.sofa.registry.common.model.sessionserver.PubSubDataInfoIdResp;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.StoreData;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
+import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.common.model.store.Watcher;
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.metrics.ReporterUtils;
 import com.alipay.sofa.registry.net.NetUtil;
+import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
+import com.alipay.sofa.registry.remoting.exchange.message.SimpleRequest;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.providedata.FetchStopPushService;
 import com.alipay.sofa.registry.server.session.store.DataStore;
+import com.alipay.sofa.registry.server.session.store.FetchPubSubDataInfoIdService;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.session.store.Watchers;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
+import com.alipay.sofa.registry.task.MetricsableThreadPoolExecutor;
+import com.alipay.sofa.registry.util.OsUtils;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.MetricRegistry;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.concurrent.ThreadPoolExecutor;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.ws.rs.GET;
@@ -60,6 +77,8 @@ import org.springframework.util.CollectionUtils;
 @Path("digest")
 public class SessionDigestResource {
 
+  private static final Logger LOGGER = LoggerFactory.getLogger(ClientManagerResource.class);
+
   /** store subscribers */
   @Autowired private Interests sessionInterests;
 
@@ -69,9 +88,15 @@ public class SessionDigestResource {
   /** store publishers */
   @Autowired private DataStore sessionDataStore;
 
+  @Autowired private MetaServerService metaNodeService;
+
   @Autowired private SessionServerConfig sessionServerConfig;
 
   @Resource private FetchStopPushService fetchStopPushService;
+
+  @Autowired private FetchPubSubDataInfoIdService fetchPubSubDataInfoIdService;
+
+  @Autowired private NodeExchanger sessionConsoleExchanger;
 
   private static final String LOCAL_ADDRESS = NetUtil.getLocalAddress().getHostAddress();
 
@@ -88,6 +113,13 @@ public class SessionDigestResource {
   private static final String DATA = "DATA";
 
   private static final String META = "META";
+
+  private final ThreadPoolExecutor pubSubQueryZoneExecutor =
+      MetricsableThreadPoolExecutor.newExecutor(
+          "PubSubQueryZoneExecutor",
+          OsUtils.getCpuCount(),
+          100,
+          new ThreadPoolExecutor.CallerRunsPolicy());
 
   @PostConstruct
   public void init() {
@@ -153,6 +185,75 @@ public class SessionDigestResource {
     }
 
     return serverList;
+  }
+
+  @GET
+  @Path("/data/queryDetail")
+  @Produces(MediaType.APPLICATION_JSON)
+  public GenericResponse<PubSubDataInfoIdResp> queryDetail(@QueryParam("ips") String ips) {
+    HashSet<String> ipSet = Sets.newHashSet(ips.split(","));
+    if (CollectionUtils.isEmpty(ipSet)) {
+      return new GenericResponse().fillFailed("param ips is empty");
+    }
+    PubSubDataInfoIdResp localResp = fetchPubSubDataInfoIdService.queryByIps(ipSet);
+    List<URL> servers = Sdks.getOtherConsoleServers(null, sessionServerConfig, metaNodeService);
+
+    List<PubSubDataInfoIdResp> resps = Lists.newArrayListWithExpectedSize(servers.size() + 1);
+    resps.add(localResp);
+    if (servers.size() > 0) {
+      Map<URL, CommonResponse> map =
+          Sdks.concurrentSdkSend(
+              pubSubQueryZoneExecutor,
+              servers,
+              (URL url) -> {
+                final PubSubDataInfoIdRequest req = new PubSubDataInfoIdRequest(ipSet);
+                return (CommonResponse)
+                    sessionConsoleExchanger.request(new SimpleRequest(req, url)).getResult();
+              },
+              5000);
+
+      for (Entry<URL, CommonResponse> entry : map.entrySet()) {
+        if (entry.getValue() instanceof GenericResponse) {
+          GenericResponse response = (GenericResponse) entry.getValue();
+          if (response.isSuccess()) {
+            resps.add((PubSubDataInfoIdResp) response.getData());
+            continue;
+          }
+        }
+        LOGGER.error(
+            "url={} query pub and sub dataInfoIds fail, msg:{}.",
+            entry.getKey().getIpAddress(),
+            entry.getValue());
+      }
+    }
+    return new GenericResponse<PubSubDataInfoIdResp>().fillSucceed(merge(resps));
+  }
+
+  protected PubSubDataInfoIdResp merge(List<PubSubDataInfoIdResp> resps) {
+    if (resps.size() == 1) {
+      return resps.get(0);
+    }
+
+    Map<String, Set<String>> pubDataInfoIds = Maps.newHashMap();
+    Map<String, Set<String>> subDataInfoIds = Maps.newHashMap();
+    for (PubSubDataInfoIdResp resp : resps) {
+      if (!CollectionUtils.isEmpty(resp.getPubDataInfoIds())) {
+        for (Entry<String, Set<String>> pubEntry : resp.getPubDataInfoIds().entrySet()) {
+          Set<String> set =
+              pubDataInfoIds.computeIfAbsent(pubEntry.getKey(), k -> Sets.newHashSet());
+          set.addAll(pubEntry.getValue());
+        }
+      }
+
+      if (!CollectionUtils.isEmpty(resp.getSubDataInfoIds())) {
+        for (Entry<String, Set<String>> subEntry : resp.getSubDataInfoIds().entrySet()) {
+          Set<String> set =
+              subDataInfoIds.computeIfAbsent(subEntry.getKey(), k -> Sets.newHashSet());
+          set.addAll(subEntry.getValue());
+        }
+      }
+    }
+    return new PubSubDataInfoIdResp(pubDataInfoIds, subDataInfoIds);
   }
 
   @GET

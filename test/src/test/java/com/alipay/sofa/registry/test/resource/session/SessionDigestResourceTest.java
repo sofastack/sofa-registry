@@ -25,7 +25,9 @@ import static org.junit.Assert.assertTrue;
 import com.alipay.sofa.registry.client.api.model.RegistryType;
 import com.alipay.sofa.registry.client.api.registration.PublisherRegistration;
 import com.alipay.sofa.registry.client.api.registration.SubscriberRegistration;
+import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
+import com.alipay.sofa.registry.common.model.sessionserver.PubSubDataInfoIdResp;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
@@ -42,6 +44,7 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -225,5 +228,18 @@ public class SessionDigestResourceTest extends BaseIntegrationTest {
             .request(APPLICATION_JSON)
             .get(int.class);
     assertTrue(String.valueOf(result), result != 0);
+  }
+
+  @Test
+  public void testQueryPubSubDataInfoIds() {
+    String LOCAL_ADDRESS = NetUtil.getLocalAddress().getHostAddress();
+    GenericResponse<PubSubDataInfoIdResp> response = sessionDigestResource.queryDetail(LOCAL_ADDRESS);
+    Assert.assertTrue(response.isSuccess());
+    PubSubDataInfoIdResp data = response.getData();
+    String dataInfoId = DataInfo.toDataInfoId(dataId, DEFAULT_INSTANCE_ID, DEFAULT_GROUP);
+    Set<String> pubs = data.getPubDataInfoIds().get(LOCAL_ADDRESS);
+    Set<String> subs = data.getSubDataInfoIds().get(LOCAL_ADDRESS);
+    Assert.assertTrue(pubs.contains(dataInfoId));
+    Assert.assertTrue(subs.contains(dataInfoId));
   }
 }
