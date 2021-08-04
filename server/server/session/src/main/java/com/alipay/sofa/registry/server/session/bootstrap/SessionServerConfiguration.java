@@ -52,6 +52,7 @@ import com.alipay.sofa.registry.server.session.remoting.console.SessionConsoleEx
 import com.alipay.sofa.registry.server.session.remoting.console.handler.ClientOffRequestHandler;
 import com.alipay.sofa.registry.server.session.remoting.console.handler.ClientOnRequestHandler;
 import com.alipay.sofa.registry.server.session.remoting.console.handler.GetClientManagerRequestHandler;
+import com.alipay.sofa.registry.server.session.remoting.console.handler.PubSubDataInfoIdRequestHandler;
 import com.alipay.sofa.registry.server.session.remoting.console.handler.QuerySubscriberRequestHandler;
 import com.alipay.sofa.registry.server.session.remoting.handler.*;
 import com.alipay.sofa.registry.server.session.resource.*;
@@ -208,6 +209,7 @@ public class SessionServerConfiguration {
       list.add(clientOffRequestHandler());
       list.add(clientOnRequestHandler());
       list.add(getClientManagerRequestHandler());
+      list.add(pubSubDataInfoIdRequestHandler());
       return list;
     }
 
@@ -254,6 +256,11 @@ public class SessionServerConfiguration {
     @Bean
     public AbstractServerHandler getClientManagerRequestHandler() {
       return new GetClientManagerRequestHandler();
+    }
+
+    @Bean
+    public AbstractServerHandler pubSubDataInfoIdRequestHandler() {
+      return new PubSubDataInfoIdRequestHandler();
     }
 
     @Bean
@@ -494,6 +501,12 @@ public class SessionServerConfiguration {
     @Bean
     public PushSwitchService pushSwitchService() {
       return new PushSwitchService();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public FetchPubSubDataInfoIdService fetchPubSubDataInfoIdService() {
+      return new FetchPubSubDataInfoIdService();
     }
   }
 
