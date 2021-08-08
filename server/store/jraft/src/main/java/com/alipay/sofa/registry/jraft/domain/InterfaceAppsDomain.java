@@ -30,6 +30,7 @@ public class InterfaceAppsDomain implements Serializable {
     /** last update time */
     private Timestamp gmtModify;
 
+    /** interfaceMapping */
     private long nanosVersion;
 
     private Set<String> apps;
@@ -43,13 +44,39 @@ public class InterfaceAppsDomain implements Serializable {
         this.hashcode = MessageDigests.getMd5String(interfaceName);
     }
 
-    public InterfaceAppsDomain(String dataCenter, String interfaceName, String appName, long nanosVersion ,Set<String> apps) {
+    public InterfaceAppsDomain(String dataCenter, String interfaceName, String appName, Timestamp gmtModify) {
+        this.dataCenter = dataCenter;
+        this.interfaceName = interfaceName;
+        this.appName = appName;
+        this.gmtModify = gmtModify;
+        this.hashcode = MessageDigests.getMd5String(interfaceName);
+    }
+
+    public InterfaceAppsDomain(String dataCenter, String interfaceName, String appName, long nanosVersion , Set<String> apps) {
         this.dataCenter = dataCenter;
         this.interfaceName = interfaceName;
         this.appName = appName;
         this.hashcode = MessageDigests.getMd5String(interfaceName);
         this.nanosVersion=nanosVersion;
         this.apps=apps;
+    }
+
+    public InterfaceAppsDomain(String dataCenter, String interfaceName, String appName, boolean reference, String hashcode, Timestamp gmtModify, long nanosVersion, Set<String> apps) {
+        this.dataCenter = dataCenter;
+        this.interfaceName = interfaceName;
+        this.appName = appName;
+        this.reference = reference;
+        this.hashcode = hashcode;
+        this.gmtModify = gmtModify;
+        this.nanosVersion = nanosVersion;
+        this.apps = apps;
+    }
+
+    public InterfaceAppsDomain(String dataCenter, String interfaceName, long nanosVersion, Set<String> apps) {
+        this.dataCenter = dataCenter;
+        this.interfaceName = interfaceName;
+        this.nanosVersion = nanosVersion;
+        this.apps = apps;
     }
 
     /**
@@ -169,5 +196,19 @@ public class InterfaceAppsDomain implements Serializable {
 
     public void setApps(Set<String> apps) {
         this.apps = apps;
+    }
+
+    @Override
+    public String toString() {
+        return "InterfaceAppsDomain{" +
+                "dataCenter='" + dataCenter + '\'' +
+                ", interfaceName='" + interfaceName + '\'' +
+                ", appName='" + appName + '\'' +
+                ", reference=" + reference +
+                ", hashcode='" + hashcode + '\'' +
+                ", gmtModify=" + gmtModify +
+                ", nanosVersion=" + nanosVersion +
+                ", apps=" + apps +
+                '}';
     }
 }

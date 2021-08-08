@@ -31,6 +31,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.Assert;
 
 import javax.annotation.Resource;
+import java.sql.Timestamp;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -59,65 +60,84 @@ public class AppRevisionRaftRepository implements AppRevisionRepository {
           new AtomicReference<>();
   
   /** map: <interface, interfaceAppsDomain> */
-  protected final Map<String, InterfaceAppsDomain> interfaceAppsMap = new ConcurrentHashMap<>();
+  protected Map<String,InterfaceAppsDomain> interfaceAppsMap = new ConcurrentHashMap<>();
   
   @Autowired private DefaultCommonConfig defaultCommonConfig;
 
   @Resource
   private InterfaceAppsRaftRepository interfaceAppsRaftRepository;
 
+  public AppRevisionRaftRepository() {
+    heartbeatSet.set(new ConcurrentHashMap<>().newKeySet());
+  }
+
   @Override
   public void register(AppRevision appRevision) {
-    //Assert.isNull(appRevision,"RheaKV register app revision error, appRevision is null.");
-    System.out.println(appRevision);
+    if (appRevision == null) {
+      throw new RuntimeException("raft register app revision error, appRevision is null.");
+    }
     AppRevision appRevisionInfo=null;
     byte[] appRevisionMapBytes = rheaKVStore.bGet(APP_REVISION);
-    System.out.println(appRevisionMapBytes==null);
-
+    byte[] interfaceAppsBytes = rheaKVStore.bGet(INTERFACE_APPS);
     //查询集群appRevision
     try {
       appRevisionMap = CommandCodec.decodeCommand(appRevisionMapBytes, appRevisionMap.getClass());
+      interfaceAppsMap=CommandCodec.decodeCommand(interfaceAppsBytes,interfaceAppsMap.getClass());
       appRevisionInfo = appRevisionMap.get(defaultCommonConfig.getClusterId());
     }catch (NullPointerException e){
-      LOG.info("RheaKV is empty");
+      LOG.info("APP_REVISION RheaKV is empty");
     }
-
-
-    if(appRevisionInfo!=null){
-      for(Map.Entry<String, AppRevision> app : appRevisionMap.entrySet())  {
-        System.out.println(app.getValue());
-        System.out.println("================");
-      }
-//      System.out.println(appRevisionInfo.getDataCenter());
+    if(appRevisionInfo!=null && appRevisionInfo.getRevision().equals(appRevision.getRevision()) ){
       return;
     }
+    //注册接口
+    //System.out.println(appRevision.getInterfaceMap().keySet().size());
+    for(String interfaceName:appRevision.getInterfaceMap().keySet()){
+      //System.out.println(appRevision.getAppName());
+      InterfaceAppsDomain interfaceAppsDomain = new InterfaceAppsDomain(defaultCommonConfig.getClusterId(),
+              interfaceName,
+              appRevision.getAppName(),
+              new Timestamp(System.currentTimeMillis())
+      );
+      //判断是否存在
+//      System.out.println("在for中执行");
+//      System.out.println("创建interfaceAppsDomain: "+interfaceAppsDomain);
+      interfaceAppsMap.put(interfaceName,interfaceAppsDomain);
+    }
+    
+//    System.out.println(interfaceAppsMap.size());
+//    for(Map.Entry<String,InterfaceAppsDomain> i:interfaceAppsMap.entrySet()){
+//      System.out.println(i.getKey()+"------"+i.getValue());
+//    }
     
     //插入新AppRevision
-    //设置新的dataCenter
+    //设置新的dataCenter与LastHeartbeat
     appRevision.setDataCenter(defaultCommonConfig.getClusterId());
+    appRevision.setLastHeartbeat(new Date());
     appRevisionMap.put(defaultCommonConfig.getClusterId(),appRevision);
-
-
-    
+    rheaKVStore.bPut(INTERFACE_APPS,CommandCodec.encodeCommand(interfaceAppsMap));
     rheaKVStore.bPut(APP_REVISION,CommandCodec.encodeCommand(appRevisionMap));
   }
 
-  //有问题
   @Override
   public void refresh() {
     byte[] interfaceAppsBytes = rheaKVStore.bGet(INTERFACE_APPS);
-    Map<String, InterfaceAppsDomain> interfaceAppsInfoMap = CommandCodec.decodeCommand(interfaceAppsBytes, interfaceAppsMap.getClass());
-    //获取全部interfaceApps
-    List<InterfaceAppsDomain> interfaceAppsList = (List<InterfaceAppsDomain>)interfaceAppsInfoMap.values();
-
-    List<InterfaceAppsDomain> collects = interfaceAppsList
-            .stream()
-            .filter(e -> e.getDataCenter() == defaultCommonConfig.getClusterId())
-            .collect(Collectors.toList());
-
+    List<InterfaceAppsDomain> collects = new ArrayList<>();
+    try{
+      interfaceAppsMap = CommandCodec.decodeCommand(interfaceAppsBytes, interfaceAppsMap.getClass());
+    }catch (NullPointerException e){
+      LOG.info("INTERFACE_APPS RheaKV is empty");
+    }
+    for(Map.Entry<String,InterfaceAppsDomain> interfaceApps:interfaceAppsMap.entrySet()){
+      InterfaceAppsDomain value = interfaceApps.getValue();
+      if(value.getDataCenter().equals(defaultCommonConfig.getClusterId())){
+        collects.add(value);
+      }
+    }
     //更新interface和app
     //更新rheakv
     for(InterfaceAppsDomain collect : collects){
+      //System.out.println(collect);
       interfaceAppsRaftRepository.triggerRefreshCache(collect);
       rheaKVStore.bPut(INTERFACE_APPS,CommandCodec.encodeCommand(interfaceAppsRaftRepository.interfaceAppsMap));
     }
@@ -125,36 +145,20 @@ public class AppRevisionRaftRepository implements AppRevisionRepository {
 
   @Override
   public AppRevision queryRevision(String revision) {
-    List<AppRevision> collect = null;
-    AppRevision appRevision=null;
     byte[] appRevisionMapBytes = rheaKVStore.bGet(APP_REVISION);
     try{
       appRevisionMap = CommandCodec.decodeCommand(appRevisionMapBytes, appRevisionMap.getClass());
-      appRevision = appRevisionMap.get(defaultCommonConfig.getClusterId());
     }catch(NullPointerException e){
-
+      LOG.info("APP_REVISION RheaKV is empty");
     }
-    for(Map.Entry<String, AppRevision> app : appRevisionMap.entrySet())  {
-      System.out.println(app.getValue());
+    for(Map.Entry<String, AppRevision> values : appRevisionMap.entrySet()){
+      AppRevision value = values.getValue();
+      if(value.getRevision().equals(revision)) {
+        return value;
+      }
     }
-    System.out.println(appRevision);
-    return appRevision;
-
-//    System.out.println(appRevisionMap.get(defaultCommonConfig.getClusterId()).getRevision());
-//    System.out.println(revision);
-//
-//    for(Map.Entry<String, AppRevision> values : appRevisionMap.entrySet()){
-//      AppRevision value = values.getValue();
-//      if(value.getRevision()==revision) {
-//        collect.add(value);
-//      }
-//    };
-//
-//    if(collect==null){
-//      LOG.info("RheaKV query revision failed, revision: {} not exist in db", revision);
-//      return null;
-//    }
-//    return collect.get(0);
+    LOG.info("RheaKV query revision failed, revision: {} not exist in db", revision);
+    return null;
   }
 
   @Override
@@ -166,7 +170,7 @@ public class AppRevisionRaftRepository implements AppRevisionRepository {
     Map<String, AppRevision> appRevisionInfoMap = CommandCodec.decodeCommand(bytes, appRevisionMap.getClass());
     AppRevision appRevision = appRevisionInfoMap.get(defaultCommonConfig.getClusterId());
 
-    if(appRevision!=null && appRevision.getRevision()==revision){
+    if(appRevision!=null && appRevision.getRevision().equals(revision)){
       heartbeatSet.get().add(revision);
       return true;
     }

@@ -1,3 +1,4 @@
+
 package com.alipay.sofa.registry.jraft.config;
 
 import java.io.File;
@@ -13,7 +14,7 @@ public final class DefaultConfigs {
     public static String RAFT_DATA_PATH     = "raft_data" + File.separator;
 
     //127.0.0.1:8182,127.0.0.1:8183
-    public static String ADDRESS ="localhost";
+    public static String ADDRESS            = "localhost";
 
     public static String CLUSTER_NAME       = "rhea_example";
 }

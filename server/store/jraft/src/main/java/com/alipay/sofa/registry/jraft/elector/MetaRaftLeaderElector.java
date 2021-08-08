@@ -60,7 +60,7 @@ public class MetaRaftLeaderElector extends AbstractLeaderElector {
             map = CommandCodec.decodeCommand(bytes, leaderInfoMap.getClass());
             leaderLockInfo = map.get(defaultCommonConfig.getClusterId());
         }catch (NullPointerException e){
-            LOG.info("rheaKVStore is empty");
+            LOG.info("DISTRIBUTE_LOCk RheaKV is empty");
         }
         
         if(leaderLockInfo==null){

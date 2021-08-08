@@ -2,12 +2,17 @@ package com.alipay.sofa.registry.jraft.repository;
 
 import com.alipay.sofa.registry.common.model.console.PersistenceData;
 import com.alipay.sofa.registry.common.model.console.PersistenceDataBuilder;
+import com.alipay.sofa.registry.common.model.store.AppRevision;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.jraft.AbstractRaftTestBase;
 import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.Collection;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author : xingpeng
@@ -49,5 +54,22 @@ public class ProvideDataRaftRepositoryTest extends AbstractRaftTestBase {
 
         Assert.assertTrue(remove);
         Assert.assertTrue(provideDataRaftRepository.get(dataInfoId) == null);
+    }
+
+    @Test
+    public void testGetAll() {
+        long version = System.currentTimeMillis();
+
+        String dataInfoId = DataInfo.toDataInfoId("testGetAll" + version, "DEFAULT", "DEFAULT");
+        PersistenceData persistenceData =
+                PersistenceDataBuilder.createPersistenceData(dataInfoId, "val");
+        boolean success = provideDataRaftRepository.put(persistenceData, persistenceData.getVersion());
+        Assert.assertTrue(success);
+        Assert.assertEquals("val", provideDataRaftRepository.get(dataInfoId).getData());
+        Assert.assertEquals(
+                persistenceData.getVersion(), provideDataRaftRepository.get(dataInfoId).getVersion());
+
+        Collection<PersistenceData> all = provideDataRaftRepository.getAll();
+        Assert.assertTrue(all.contains(persistenceData));
     }
 }

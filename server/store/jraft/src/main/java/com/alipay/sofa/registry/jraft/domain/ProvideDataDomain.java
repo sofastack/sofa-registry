@@ -20,13 +20,10 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * @author xiaojian.xj
- * @version $Id: ProvideDataDomain.java, v 0.1 2021年03月13日 19:29 xiaojian.xj Exp $
- */
+ * @author : xingpeng
+ * @date : 2021-07-15 08:35
+ **/
 public class ProvideDataDomain implements Serializable {
-
-  /** primary dataKey */
-  private long id;
 
   /** local data center */
   private String dataCenter;
@@ -36,9 +33,6 @@ public class ProvideDataDomain implements Serializable {
 
   /** data dataValue */
   private String dataValue;
-
-  /** create time */
-  private Date gmtCreate;
 
   /** last update time */
   private Date gmtModified;
@@ -55,22 +49,12 @@ public class ProvideDataDomain implements Serializable {
     this.dataVersion = dataVersion;
   }
 
-  /**
-   * Getter method for property <tt>id</tt>.
-   *
-   * @return property dataValue of id
-   */
-  public long getId() {
-    return id;
-  }
-
-  /**
-   * Setter method for property <tt>id</tt>.
-   *
-   * @param id dataValue to be assigned to property id
-   */
-  public void setId(long id) {
-    this.id = id;
+  public ProvideDataDomain(String dataCenter, String dataKey, String dataValue, Date gmtModified, long dataVersion) {
+    this.dataCenter = dataCenter;
+    this.dataKey = dataKey;
+    this.dataValue = dataValue;
+    this.gmtModified = gmtModified;
+    this.dataVersion = dataVersion;
   }
 
   /**
@@ -128,24 +112,6 @@ public class ProvideDataDomain implements Serializable {
   }
 
   /**
-   * Getter method for property <tt>gmtCreate</tt>.
-   *
-   * @return property dataValue of gmtCreate
-   */
-  public Date getGmtCreate() {
-    return gmtCreate;
-  }
-
-  /**
-   * Setter method for property <tt>gmtCreate</tt>.
-   *
-   * @param gmtCreate dataValue to be assigned to property gmtCreate
-   */
-  public void setGmtCreate(Date gmtCreate) {
-    this.gmtCreate = gmtCreate;
-  }
-
-  /**
    * Getter method for property <tt>gmtModified</tt>.
    *
    * @return property dataValue of gmtModified
@@ -183,22 +149,12 @@ public class ProvideDataDomain implements Serializable {
 
   @Override
   public String toString() {
-    return "ProvideDataDomain{"
-        + "dataCenter='"
-        + dataCenter
-        + '\''
-        + ", dataKey='"
-        + dataKey
-        + '\''
-        + ", dataValue='"
-        + dataValue
-        + '\''
-        + ", gmtCreate="
-        + gmtCreate
-        + ", gmtModified="
-        + gmtModified
-        + ", dataVersion="
-        + dataVersion
-        + '}';
+    return "ProvideDataDomain{" +
+            "dataCenter='" + dataCenter + '\'' +
+            ", dataKey='" + dataKey + '\'' +
+            ", dataValue='" + dataValue + '\'' +
+            ", gmtModified=" + gmtModified +
+            ", dataVersion=" + dataVersion +
+            '}';
   }
 }

@@ -60,8 +60,9 @@ public class AppRevisionHeartbeatBatchCallable extends BatchCallableRunnable<Str
     }
     List<String> revisions =
         tasks.stream().map(task -> task.getData()).collect(Collectors.toList());
-
+    //更新appRevision
     appRevisionMapper.batchHeartbeat(defaultCommonConfig.getClusterId(), revisions);
+    //放回并通知等待线程
     tasks.forEach(
         taskEvent -> {
           InvokeFuture<String> future = taskEvent.getFuture();

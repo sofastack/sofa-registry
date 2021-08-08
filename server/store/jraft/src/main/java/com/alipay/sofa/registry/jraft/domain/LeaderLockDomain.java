@@ -26,11 +26,7 @@ public class LeaderLockDomain implements Serializable {
 
     private long duration;
 
-    public LeaderLockDomain(String lockName,
-                            long epoch,
-                            String leader,
-                            long expireTimestamp,
-                            Date gmtModified,
+    public LeaderLockDomain(String lockName, long epoch, String leader, long expireTimestamp, Date gmtModified,
                             String dataCenter,
                             String owner,
                             long duration){

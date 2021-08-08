@@ -51,8 +51,8 @@ public class AppRevisionHeartbeatRaftRepository implements AppRevisionHeartbeatR
   @Autowired
   private RheaKVStore rheaKVStore;
 
-  @Autowired
-  private AppRevisionHeartbeatBatchCallable appRevisionHeartbeatBatchCallable;
+//  @Autowired
+//  private AppRevisionHeartbeatBatchCallable appRevisionHeartbeatBatchCallable;
 
   private SingleFlight singleFlight = new SingleFlight();
 
@@ -69,28 +69,23 @@ public class AppRevisionHeartbeatRaftRepository implements AppRevisionHeartbeatR
       singleFlight.execute(
               "app_revision_heartbeat",
               () -> {
-                Map<String, BatchCallableRunnable.InvokeFuture> futureMap = new HashMap<>();
+                //查询数据库
+                byte[] appRevisionBytes = rheaKVStore.bGet(APP_REVISION);
+                Map<String, AppRevision> appRevisionInfoMap = CommandCodec.decodeCommand(appRevisionBytes, appRevisionMap.getClass());
 
+                //获取appRevision列表
                 Set<String> heartbeatSet =
                         appRevisionRaftRepository
                                 .getHeartbeatSet()
                                 .getAndSet(new ConcurrentHashMap<>().newKeySet());
+
+                //更新lastTime
                 for (String revision : heartbeatSet) {
-                  //批处理
-                  BatchCallableRunnable.TaskEvent taskEvent = appRevisionHeartbeatBatchCallable.new TaskEvent(revision);
-                  //提交任务/判断队列是否已满/
-                  BatchCallableRunnable.InvokeFuture future = appRevisionHeartbeatBatchCallable.commit(taskEvent);
-                  futureMap.put(revision, future);
-                }
-
-                for (Map.Entry<String, BatchCallableRunnable.InvokeFuture> entry : futureMap.entrySet()) {
-
-                  BatchCallableRunnable.InvokeFuture future = entry.getValue();
-                  try {
-                    future.getResponse();
-                  } catch (InterruptedException e) {
-                    LOG.error("app_revision: {} heartbeat error.", entry.getKey(), e);
-                  }
+                    AppRevision appRevision = appRevisionInfoMap.get(defaultCommonConfig.getClusterId());
+                    if(appRevision.getRevision().equals(revision)){
+                        appRevision.setLastHeartbeat(new Date());
+                        appRevisionInfoMap.put(defaultCommonConfig.getClusterId(),appRevision);
+                    }
                 }
                 return null;
               });
@@ -117,9 +112,11 @@ public class AppRevisionHeartbeatRaftRepository implements AppRevisionHeartbeatR
                 start + heartbeatCheckerSize < revisions.size()
                         ? start + heartbeatCheckerSize
                         : revisions.size();
+        String revision=null ;
         List<String> subRevisions = revisions.subList(start, end);
-        String revision = appRevisionInfoMap.get(defaultCommonConfig.getClusterId()).getRevision();
-
+        if(appRevisionInfoMap.get(defaultCommonConfig.getClusterId())!=null){
+            revision = appRevisionInfoMap.get(defaultCommonConfig.getClusterId()).getRevision();
+        }
         if(subRevisions!=null && subRevisions.size()>0){
           if(subRevisions.contains(revision)){
             exists.add(revision);
@@ -143,20 +140,31 @@ public class AppRevisionHeartbeatRaftRepository implements AppRevisionHeartbeatR
               "app_revision_gc",
               () -> {
                 Date date = DateUtils.addHours(new Date(), -silenceHour);
+                AppRevision appRevision=null;
                 //获取数据库数据
                 byte[] appRevisionBytes = rheaKVStore.bGet(APP_REVISION);
-                appRevisionMap = CommandCodec.decodeCommand(appRevisionBytes, appRevisionMap.getClass());
+                try{
+                  appRevisionMap = CommandCodec.decodeCommand(appRevisionBytes, appRevisionMap.getClass());
+                }catch (NullPointerException e){
 
-                AppRevision appRevision = appRevisionMap.get(defaultCommonConfig.getClusterId());
+                }
+                try{
+                    appRevision = appRevisionMap.get(defaultCommonConfig.getClusterId());
+                    //System.out.println(appRevision);
+                }catch (NullPointerException e){
+                    LOG.info("dataCenter : {} , without AppRevision",defaultCommonConfig.getClusterId());
+                }
+
                 if(appRevision.getLastHeartbeat().before(date)){
                   if (LOG.isInfoEnabled()) {
                     LOG.info("app_revision tobe gc dataCenter: {}, revision: {}", defaultCommonConfig.getClusterId(),appRevision.getRevision());
                   }
                   appRevisionMap.remove(defaultCommonConfig.getClusterId());
+
                 }
                 return null;
               });
-      rheaKVStore.bPut(APP_REVISION,CommandCodec.encodeCommand(appRevisionMap));
+        rheaKVStore.bPut(APP_REVISION,CommandCodec.encodeCommand(appRevisionMap));
     } catch (Exception e) {
       LOG.error("app_revision gc error.", e);
     }

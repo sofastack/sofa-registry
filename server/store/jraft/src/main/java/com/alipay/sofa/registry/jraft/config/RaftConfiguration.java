@@ -98,10 +98,10 @@ public class RaftConfiguration {
         return defaultRheaKVStore;
       }
 
-    @Bean
-    public AppRevisionHeartbeatBatchCallable appRevisionHeartbeatBatchCallable() {
-      return new AppRevisionHeartbeatBatchCallable();
-    }
+//    @Bean
+//    public AppRevisionHeartbeatBatchCallable appRevisionHeartbeatBatchCallable() {
+//      return new AppRevisionHeartbeatBatchCallable();
+//    }
   }
 
   @Configuration

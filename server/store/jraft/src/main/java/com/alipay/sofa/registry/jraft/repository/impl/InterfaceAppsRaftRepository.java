@@ -25,9 +25,11 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.store.api.repository.InterfaceAppsRepository;
 import com.alipay.sofa.registry.util.TimestampUtil;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.sql.Timestamp;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -58,14 +60,20 @@ public class InterfaceAppsRaftRepository implements InterfaceAppsRepository {
   @Override
   public InterfaceMapping getAppNames(String dataInfoId) {
     byte[] interfaceAppsBytes = rheaKVStore.bGet(INTERFACE_APPS);
-    InterfaceMapping appNames=null;
-    InterfaceAppsDomain interfaceAppsDomain=null;
+    InterfaceMapping appNames = null;
+    InterfaceAppsDomain interfaceAppsDomain = null;
+    InterfaceAppsDomain newInterface = null;
+    
     try{
       interfaceAppsMap = CommandCodec.decodeCommand(interfaceAppsBytes, interfaceAppsMap.getClass());
       interfaceAppsDomain = interfaceAppsMap.get(dataInfoId);
-      appNames = new InterfaceMapping(interfaceAppsDomain.getNanosVersion(),interfaceAppsDomain.getApps());
     }catch (NullPointerException e) {
-
+      LOG.info("INTERFACE_APPS RheaKV is empty");
+    }
+    try{
+      appNames = new InterfaceMapping(interfaceAppsDomain.getNanosVersion(),interfaceAppsDomain.getApps());
+    }catch (NullPointerException e){
+      //LOG.info("NanosVersion :{} ,Apps is null",interfaceAppsDomain.getNanosVersion());
     }
 
     //存在返回app集合
@@ -75,7 +83,26 @@ public class InterfaceAppsRaftRepository implements InterfaceAppsRepository {
 
     //插入新interface并返回interfacemapping
     appNames=new InterfaceMapping(-1);
-    InterfaceAppsDomain newInterface=new InterfaceAppsDomain(defaultCommonConfig.getClusterId(),dataInfoId,"",appNames.getNanosVersion(),appNames.getApps());
+    if(interfaceAppsDomain!=null){
+      interfaceAppsDomain.setGmtModify(new Timestamp(System.currentTimeMillis()));
+      newInterface = new InterfaceAppsDomain(defaultCommonConfig.getClusterId(),
+              dataInfoId,
+              interfaceAppsDomain.getAppName(),
+              interfaceAppsDomain.isReference(),
+              interfaceAppsDomain.getHashcode(),
+              interfaceAppsDomain.getGmtModify(),
+              appNames.getNanosVersion(),
+              appNames.getApps()
+      );
+      LOG.info("update interfaceMapping {}, {}", dataInfoId, appNames);
+    }else{
+      newInterface = new InterfaceAppsDomain(defaultCommonConfig.getClusterId(),
+              dataInfoId,
+              appNames.getNanosVersion(),
+              appNames.getApps()
+      );
+    }
+
     interfaceAppsMap.put(dataInfoId, newInterface);
     rheaKVStore.bPut(INTERFACE_APPS,CommandCodec.encodeCommand(interfaceAppsMap));
     return appNames;
@@ -84,6 +111,7 @@ public class InterfaceAppsRaftRepository implements InterfaceAppsRepository {
   /** refresh interfaceNames index */
   public synchronized void triggerRefreshCache(InterfaceAppsDomain domain) {
     InterfaceAppsDomain interfaceMapping = interfaceAppsMap.get(domain.getInterfaceName());
+    //System.out.println(interfaceMapping);
     if (interfaceMapping != null) {
       InterfaceMapping map = new InterfaceMapping(interfaceMapping.getNanosVersion(),interfaceMapping.getApps());
       final long nanosLong = TimestampUtil.getNanosLong(domain.getGmtModify());
@@ -92,8 +120,6 @@ public class InterfaceAppsRaftRepository implements InterfaceAppsRepository {
           map = new InterfaceMapping(nanosLong, domain.getAppName());
         } else {
           map = new InterfaceMapping(nanosLong);
-
-          System.out.println(map.getNanosVersion());
         }
         if (LOG.isInfoEnabled()) {
           LOG.info(
@@ -103,10 +129,14 @@ public class InterfaceAppsRaftRepository implements InterfaceAppsRepository {
                   domain.getAppName(),
                   map);
         }
+        domain.setGmtModify(new Timestamp(System.currentTimeMillis()));
         InterfaceAppsDomain interfaceAppsDomain=new InterfaceAppsDomain(
                 domain.getDataCenter(),
                 domain.getInterfaceName(),
                 domain.getAppName(),
+                domain.isReference(),
+                domain.getHashcode(),
+                domain.getGmtModify(),
                 map.getNanosVersion(),
                 map.getApps()
         );
@@ -133,10 +163,14 @@ public class InterfaceAppsRaftRepository implements InterfaceAppsRepository {
                   newMapping,
                   map);
         }
+        domain.setGmtModify(new Timestamp(System.currentTimeMillis()));
         InterfaceAppsDomain newInterfaceAppsDomain=new InterfaceAppsDomain(
                 domain.getDataCenter(),
                 domain.getInterfaceName(),
                 domain.getAppName(),
+                domain.isReference(),
+                domain.getHashcode(),
+                domain.getGmtModify(),
                 newMapping.getNanosVersion(),
                 newMapping.getApps()
         );
