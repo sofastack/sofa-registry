@@ -46,7 +46,6 @@ import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 
 /**
@@ -198,19 +197,20 @@ public final class PublisherGroup {
 
     if (exist.publisher == null) {
       // publisher is null after client_off
-      LOGGER.debug(
+      LOGGER.info(
           "[ReplaceEmptyPub] {}, {}, exist={}, add={}",
           publisher.getDataInfoId(),
           publisher.getRegisterId(),
           exist.registerVersion,
           publisher.registerVersion());
-      return publisher != null;
+      return true;
     }
     try {
-      boolean dataChange =
-          !CollectionUtils.isEqualCollection(
-              exist.publisher.getDataList(), publisher.getDataList());
-      if (!dataChange) {
+      boolean same =
+          exist.publisher.getDataList() == null
+              ? publisher.getDataList() == null
+              : exist.publisher.getDataList().equals(publisher.getDataList());
+      if (same) {
         SKIP_SAME_VALUE_COUNTER.inc();
         LOGGER.info(
             "[SkipUpVer] {}, {}, exist={}, add={}",
@@ -219,7 +219,7 @@ public final class PublisherGroup {
             exist.registerVersion,
             publisher.registerVersion());
       }
-      return dataChange;
+      return !same;
     } catch (Throwable t) {
       // unexpect run into here, if it happens,
       // return true to update version because pubMap has been put a newer version publish
