@@ -35,6 +35,9 @@ public final class ChangeMetrics {
   static final Counter.Child CHANGE_RETRY_COUNTER = CHANGE_COUNTER_.labels("retry");
   // skip change
   static final Counter.Child CHANGE_SKIP_COUNTER = CHANGE_COUNTER_.labels("skip");
+  // skip same pub value
+  public static final Counter.Child SKIP_SAME_VALUE_COUNTER =
+      CHANGE_COUNTER_.labels("skipSameValue");
 
   static final Counter.Child CHANGE_FAIL_COUNTER = CHANGE_COUNTER_.labels("fail");
   static final Counter.Child CHANGE_SUCCESS_COUNTER = CHANGE_COUNTER_.labels("success");

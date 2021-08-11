@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.util.Arrays;
 
 /**
  * @author zhuoyu.sjw
@@ -211,5 +212,17 @@ public class ServerDataBox implements Serializable {
    */
   public void setSerialization(int serial) {
     this.serialization = serial;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    ServerDataBox that = (ServerDataBox) o;
+    return Arrays.equals(bytes, that.bytes);
   }
 }

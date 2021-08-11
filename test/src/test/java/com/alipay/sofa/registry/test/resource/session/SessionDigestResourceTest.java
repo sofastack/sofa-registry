@@ -233,7 +233,8 @@ public class SessionDigestResourceTest extends BaseIntegrationTest {
   @Test
   public void testQueryPubSubDataInfoIds() {
     String LOCAL_ADDRESS = NetUtil.getLocalAddress().getHostAddress();
-    GenericResponse<PubSubDataInfoIdResp> response = sessionDigestResource.queryDetail(LOCAL_ADDRESS);
+    GenericResponse<PubSubDataInfoIdResp> response =
+        sessionDigestResource.queryDetail(LOCAL_ADDRESS);
     Assert.assertTrue(response.isSuccess());
     PubSubDataInfoIdResp data = response.getData();
     String dataInfoId = DataInfo.toDataInfoId(dataId, DEFAULT_INSTANCE_ID, DEFAULT_GROUP);

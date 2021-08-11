@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.util;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.util.*;
 import org.junit.Assert;
@@ -70,5 +71,53 @@ public class CollectionUtilsTest {
       Assert.fail();
     } catch (UnsupportedOperationException exception) {
     }
+  }
+
+  @Test
+  public void testEquals() {
+    // false
+    List<String> a = null;
+    List<String> b = Lists.newArrayList();
+    Assert.assertFalse(CollectionUtils.equals(a, b));
+
+    // false
+    a = Lists.newArrayList();
+    b = null;
+    Assert.assertFalse(CollectionUtils.equals(a, b));
+
+    // true
+    a = null;
+    b = null;
+    Assert.assertTrue(CollectionUtils.equals(a, b));
+
+    // true
+    a = Lists.newArrayList();
+    b = Lists.newArrayList();
+    Assert.assertTrue(CollectionUtils.equals(a, b));
+
+    // false
+    a = Lists.newArrayList("a", "b", "c", null, "a");
+    b = Lists.newArrayList("a", "b", "c", null);
+    Assert.assertFalse(CollectionUtils.equals(a, b));
+
+    // true
+    a = Lists.newArrayList(null, "a", "b", "c");
+    b = Lists.newArrayList("a", "b", "c", null);
+    Assert.assertTrue(CollectionUtils.equals(a, b));
+
+    // false
+    a = Lists.newArrayList(null, "a", "b", "c", null);
+    b = Lists.newArrayList("a", "b", "c", null);
+    Assert.assertFalse(CollectionUtils.equals(a, b));
+
+    // false
+    a = Lists.newArrayList("a", "b", "c", "a");
+    b = Lists.newArrayList("a", "b", "c");
+    Assert.assertFalse(CollectionUtils.equals(a, b));
+
+    // true
+    a = Lists.newArrayList("b", null, "a", "c");
+    b = Lists.newArrayList("a", "b", "c", null);
+    Assert.assertTrue(CollectionUtils.equals(a, b));
   }
 }
