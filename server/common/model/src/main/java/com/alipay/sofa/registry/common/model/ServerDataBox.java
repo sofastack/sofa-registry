@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.common.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.base.Objects;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -223,6 +224,6 @@ public class ServerDataBox implements Serializable {
       return false;
     }
     ServerDataBox that = (ServerDataBox) o;
-    return Arrays.equals(bytes, that.bytes);
+    return Arrays.equals(bytes, that.bytes) && Objects.equal(object, that.object);
   }
 }
