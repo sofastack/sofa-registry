@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.server.data.cache;
 
+import static com.alipay.sofa.registry.server.data.change.ChangeMetrics.SKIP_SAME_VALUE_COUNTER;
+
 import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.ProcessId;
 import com.alipay.sofa.registry.common.model.RegisterVersion;
@@ -33,11 +35,18 @@ import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 
 /**
@@ -160,30 +169,69 @@ public final class PublisherGroup {
   private boolean tryAddPublisher(Publisher publisher) {
     PublisherEnvelope exist = pubMap.get(publisher.getRegisterId());
     final RegisterVersion registerVersion = publisher.registerVersion();
-    if (exist != null) {
-      if (exist.registerVersion.equals(registerVersion)) {
-        if (LOGGER.isDebugEnabled()) {
-          LOGGER.debug(
-              "[AddSameVer] {}, {}, exist={}, add={}",
-              publisher.getDataInfoId(),
-              publisher.getRegisterId(),
-              exist.registerVersion,
-              publisher.registerVersion());
-        }
-        return false;
-      }
-      if (!exist.registerVersion.orderThan(registerVersion)) {
-        LOGGER.warn(
-            "[AddOlderVer] {}, {}, exist={}, add={}",
+    if (exist == null) {
+      pubMap.put(publisher.getRegisterId(), PublisherEnvelope.of(publisher));
+      return true;
+    }
+
+    if (exist.registerVersion.equals(registerVersion)) {
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug(
+            "[AddSameVer] {}, {}, exist={}, add={}",
             publisher.getDataInfoId(),
             publisher.getRegisterId(),
             exist.registerVersion,
             publisher.registerVersion());
-        return false;
       }
+      return false;
+    }
+    if (!exist.registerVersion.orderThan(registerVersion)) {
+      LOGGER.warn(
+          "[AddOlderVer] {}, {}, exist={}, add={}",
+          publisher.getDataInfoId(),
+          publisher.getRegisterId(),
+          exist.registerVersion,
+          publisher.registerVersion());
+      return false;
     }
     pubMap.put(publisher.getRegisterId(), PublisherEnvelope.of(publisher));
-    return true;
+
+    if (exist.publisher == null) {
+      // publisher is null after client_off
+      LOGGER.debug(
+          "[ReplaceEmptyPub] {}, {}, exist={}, add={}",
+          publisher.getDataInfoId(),
+          publisher.getRegisterId(),
+          exist.registerVersion,
+          publisher.registerVersion());
+      return publisher != null;
+    }
+    try {
+      boolean dataChange =
+          !CollectionUtils.isEqualCollection(
+              exist.publisher.getDataList(), publisher.getDataList());
+      if (!dataChange) {
+        SKIP_SAME_VALUE_COUNTER.inc();
+        LOGGER.info(
+            "[SkipUpVer] {}, {}, exist={}, add={}",
+            publisher.getDataInfoId(),
+            publisher.getRegisterId(),
+            exist.registerVersion,
+            publisher.registerVersion());
+      }
+      return dataChange;
+    } catch (Throwable t) {
+      // unexpect run into here, if it happens,
+      // return true to update version because pubMap has been put a newer version publish
+      LOGGER.error(
+          "[PubChangeJudgement]judge {}, {} change error, exist={}, add={}.",
+          publisher.getDataInfoId(),
+          publisher.getRegisterId(),
+          exist.registerVersion,
+          publisher.registerVersion(),
+          t);
+      return true;
+    }
   }
 
   DatumVersion addPublisher(Publisher publisher) {

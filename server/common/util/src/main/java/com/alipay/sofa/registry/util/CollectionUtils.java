@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.util;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -50,5 +52,28 @@ public final class CollectionUtils {
     }
     Map.Entry<K, V> one = m.entrySet().iterator().next();
     return Collections.singletonMap(one.getKey(), one.getValue());
+  }
+
+  /**
+   * compare each item in two List
+   *
+   * @return
+   */
+  public static <T> boolean equals(List<T> coll1, List<T> coll2) {
+    if (coll1 == null) {
+      return coll2 == null;
+    }
+
+    if (coll2 == null || (coll1.size() != coll2.size())) {
+      return false;
+    }
+
+    Collection<T> source = new ArrayList<>(coll1);
+    Collection<T> destination = new ArrayList<>(coll2);
+
+    source.removeAll(coll2);
+    destination.removeAll(coll1);
+
+    return source.isEmpty() && destination.isEmpty();
   }
 }

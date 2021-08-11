@@ -193,7 +193,7 @@ public class BaseIntegrationTest extends AbstractTest {
       clientManagerResource =
           metaApplicationContext.getBean("clientManagerResource", ClientManagerResource.class);
       sessionDigestResource =
-              sessionApplicationContext.getBean("sessionDigestResource", SessionDigestResource.class);
+          sessionApplicationContext.getBean("sessionDigestResource", SessionDigestResource.class);
       fetchClientOffAddressService =
           sessionApplicationContext.getBean(
               "fetchClientOffAddressService", FetchClientOffAddressService.class);
