@@ -66,7 +66,6 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -141,11 +140,6 @@ public class MetaServerConfiguration {
 
   @Configuration
   public static class MetaServerRemotingConfiguration {
-    @Autowired private HeartbeatRequestHandler heartbeatRequestHandler;
-    @Autowired private FetchProvideDataRequestHandler fetchProvideDataRequestHandler;
-    @Autowired private FetchSystemPropertyRequestHandler fetchSystemPropertyRequestHandler;
-    @Autowired private RegistryForbiddenServerHandler registryForbiddenServerHandler;
-    @Autowired private GetSlotTableStatusRequestHandler getSlotTableStatusRequestHandler;
 
     @Bean
     public Exchange boltExchange() {
@@ -160,28 +154,28 @@ public class MetaServerConfiguration {
     @Bean(name = "sessionServerHandlers")
     public Collection<AbstractServerHandler> sessionServerHandlers() {
       Collection<AbstractServerHandler> list = new ArrayList<>();
-      list.add(heartbeatRequestHandler);
-      list.add(fetchProvideDataRequestHandler);
-      list.add(fetchSystemPropertyRequestHandler);
-      list.add(registryForbiddenServerHandler);
-      list.add(getSlotTableStatusRequestHandler);
+      list.add(heartbeatRequestHandler());
+      list.add(fetchProvideDataRequestHandler());
+      list.add(fetchSystemPropertyRequestHandler());
+      list.add(registryForbiddenServerHandler());
+      list.add(getSlotTableStatusRequestHandler());
       return list;
     }
 
     @Bean(name = "dataServerHandlers")
     public Collection<AbstractServerHandler> dataServerHandlers() {
       Collection<AbstractServerHandler> list = new ArrayList<>();
-      list.add(heartbeatRequestHandler);
-      list.add(fetchProvideDataRequestHandler);
-      list.add(registryForbiddenServerHandler);
-      list.add(getSlotTableStatusRequestHandler);
+      list.add(heartbeatRequestHandler());
+      list.add(fetchProvideDataRequestHandler());
+      list.add(registryForbiddenServerHandler());
+      list.add(getSlotTableStatusRequestHandler());
       return list;
     }
 
     @Bean(name = "metaServerHandlers")
     public Collection<AbstractServerHandler> metaServerHandlers() {
       Collection<AbstractServerHandler> list = new ArrayList<>();
-      list.add(heartbeatRequestHandler);
+      list.add(heartbeatRequestHandler());
       return list;
     }
 

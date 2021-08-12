@@ -227,11 +227,11 @@ public class PublisherGroupsTest {
     publisher4.setVersion(publisher4.getVersion() - 1);
 
     v = groups.put(publisher3.getDataInfoId(), Lists.newArrayList(publisher3));
-    Assert.assertNotNull(v);
+    Assert.assertNull(v);
     v =
         groups.put(
             publisher1.getDataInfoId(), Lists.newArrayList(publisher1, publisher2, publisher4));
-    Assert.assertNotNull(v);
+    Assert.assertNull(v);
 
     Map<String, List<Publisher>> publishers = groups.getAllPublisher();
     Assert.assertEquals(publishers.size(), 2);

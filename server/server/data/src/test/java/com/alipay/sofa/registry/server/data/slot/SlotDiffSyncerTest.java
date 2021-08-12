@@ -188,7 +188,7 @@ public class SlotDiffSyncerTest {
     Datum datum1_1 = storage.get(publisher1.getDataInfoId());
     Assert.assertTrue(datum1_1.publisherSize() == 1);
     Assert.assertEquals(datum1_1.getPubMap().get(publisher1.getRegisterId()), publisher1);
-    Assert.assertTrue(datum1_1.getVersion() > datum1.getVersion());
+    Assert.assertTrue(datum1_1.getVersion() == datum1.getVersion());
 
     Datum datum3_3 = storage.get(publisher3.getDataInfoId());
     Assert.assertTrue(datum3_3.publisherSize() == 0);
