@@ -31,6 +31,7 @@ import com.google.common.annotations.VisibleForTesting;
 import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
 
 /**
  * @author xiaojian.xj
@@ -69,6 +70,11 @@ public class SlotTableStatusService {
 
   public boolean isSlotTableLeaderBalanced(
       Map<String, Integer> leaderCounter, List<DataNode> dataNodes) {
+
+    if (CollectionUtils.isEmpty(dataNodes)) {
+      return false;
+    }
+
     BalancePolicy balancePolicy = new NaiveBalancePolicy();
     int expectedLeaderTotal = slotManager.getSlotNums();
     if (leaderCounter.values().stream().mapToInt(Integer::intValue).sum() < expectedLeaderTotal) {
@@ -92,6 +98,10 @@ public class SlotTableStatusService {
 
   public boolean isSlotTableFollowerBalanced(
       Map<String, Integer> followerCounter, List<DataNode> dataNodes) {
+
+    if (CollectionUtils.isEmpty(dataNodes)) {
+      return false;
+    }
     BalancePolicy balancePolicy = new NaiveBalancePolicy();
     int expectedFollowerTotal = slotManager.getSlotNums() * (slotManager.getSlotReplicaNums() - 1);
     if (slotManager.getSlotReplicaNums() < dataNodes.size()) {

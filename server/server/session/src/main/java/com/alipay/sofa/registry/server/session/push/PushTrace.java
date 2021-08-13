@@ -115,7 +115,7 @@ public final class PushTrace {
   public void finishPush(
       PushStatus status, TraceID taskID, long subscriberPushedVersion, int pushNum) {
     final long pushFinishTimestamp = System.currentTimeMillis();
-    // push.finish- first.newly.publisher.registryTs
+    // push.finish- first.newly.datumTimestamp(after subscriberPushedVersion)
     long datumModifyPushSpanMillis;
     // push.finish - datum.versionTs
     long datumVersionPushSpanMillis;
@@ -133,10 +133,6 @@ public final class PushTrace {
 
     // pub after last push
     int newPublisherNum;
-    // push.finish - firstPub.registerTimestamp
-    long firstPubPushDelayMillis;
-    // push.finish - lastPub.registerTimestamp
-    long lastPubPushDelayMillis;
 
     // try find the earliest and the latest publisher after the subPushedVersion
     // that means the modify after last push, but this could not handle the publisher.remove
@@ -171,28 +167,24 @@ public final class PushTrace {
             : DatumVersionUtil.getRealTimestamp(subscriberPushedVersion);
     final List<SubPublisher> news =
         findNewPublishers(publishers, lastPushTimestamp + MAX_NTP_TIME_PRECISION_MILLIS);
-    final SubPublisher first = news.isEmpty() ? null : news.get(0);
-    final SubPublisher last = news.isEmpty() ? null : news.get(news.size() - 1);
     newPublisherNum = news.size();
-    firstPubPushDelayMillis =
-        first == null ? 0 : Math.max(pushFinishTimestamp - first.getRegisterTimestamp(), 0);
-    lastPubPushDelayMillis =
-        last == null ? 0 : Math.max(pushFinishTimestamp - last.getRegisterTimestamp(), 0);
 
-    datumModifyPushSpanMillis = datumVersionPushSpanMillis;
-    if (pushCause.pushType == PushType.Sub && first != null) {
-      // if sub, use first.publisher.registerTs as modifyTs
-      datumModifyPushSpanMillis = firstPubPushDelayMillis;
+    List<Long> datumPushedDelayList = datumPushedDelayList(pushFinishTimestamp, lastPushTimestamp);
+    long newlyDatumPushDelay = 0;
+    if (CollectionUtils.isNotEmpty(datumPushedDelayList)) {
+      newlyDatumPushDelay = datumPushedDelayList.get(0);
     }
+    datumModifyPushSpanMillis = Math.max(newlyDatumPushDelay, datumVersionPushSpanMillis);
+
     PushMetrics.Push.observePushDelayHistogram(
         pushCause.pushType,
-        Math.max(datumModifyPushSpanMillis, datumVersionPushSpanMillis),
+        datumModifyPushSpanMillis,
         status);
     if (LOGGER.isInfoEnabled() || SLOW_LOGGER.isInfoEnabled()) {
       final String msg =
           StringFormatter.format(
               "{},{},{},{},{},cause={},pubNum={},pubBytes={},pubNew={},delay={},{},{},{},{},"
-                  + "session={},cliIO={},firstPubDelay={},lastPubDelay={},"
+                  + "session={},cliIO={},"
                   + "subNum={},addr={},expectVer={},dataNode={},taskID={},pushedVer={},regTs={},"
                   + "{},recentDelay={},pushNum={}",
               status,
@@ -211,8 +203,6 @@ public final class PushTrace {
               pushTaskQueueSpanMillis,
               pushTaskSessionSpanMillis,
               pushTaskClientIOSpanMillis,
-              firstPubPushDelayMillis,
-              lastPubPushDelayMillis,
               subNum,
               subAddress,
               pushCause.triggerPushCtx.getExpectDatumVersion(),
