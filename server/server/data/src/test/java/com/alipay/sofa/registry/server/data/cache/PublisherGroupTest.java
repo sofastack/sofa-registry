@@ -19,6 +19,7 @@ package com.alipay.sofa.registry.server.data.cache;
 import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.ProcessId;
 import com.alipay.sofa.registry.common.model.RegisterVersion;
+import com.alipay.sofa.registry.common.model.ServerDataBox;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
@@ -30,6 +31,7 @@ import com.alipay.sofa.registry.util.DatumVersionUtil;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import org.junit.Assert;
 import org.junit.Test;
@@ -89,6 +91,22 @@ public class PublisherGroupTest {
     // add newer version
     Publisher newer = TestBaseUtils.createTestPublisher(dataId);
     newer.setRegisterId(publisher.getRegisterId());
+    v = group.addPublisher(newer);
+    Assert.assertNull(v);
+    Assert.assertEquals(group.getPublishers().size(), 1);
+    Assert.assertTrue(group.getPublishers().get(0) == newer);
+
+    v = group.addPublisher(newer);
+    Assert.assertNull(v);
+    Assert.assertEquals(group.getPublishers().size(), 1);
+    Assert.assertTrue(group.getPublishers().get(0) == newer);
+
+    newer = TestBaseUtils.cloneBase(newer);
+    List<ServerDataBox> dataList = Lists.newArrayList();
+    dataList.add(new ServerDataBox("testDataBox1"));
+    newer.setDataList(dataList);
+    newer.setVersion(newer.getVersion() + 1);
+
     v = group.addPublisher(newer);
     Assert.assertNotNull(v);
     Assert.assertEquals(group.getPublishers().size(), 1);
@@ -236,6 +254,18 @@ public class PublisherGroupTest {
 
     Publisher newer = TestBaseUtils.cloneBase(publisher);
     newer.setVersion(publisher.getVersion() + 1);
+    v = group.put(Lists.newArrayList(older, newer));
+
+    Assert.assertNull(v);
+    Assert.assertEquals(group.getPublishers().size(), 1);
+    Assert.assertEquals(group.getPublishers().get(0), newer);
+
+    newer = TestBaseUtils.cloneBase(newer);
+    List<ServerDataBox> dataList = Lists.newArrayList();
+    dataList.add(new ServerDataBox("testDataBox"));
+    newer.setDataList(dataList);
+
+    newer.setVersion(newer.getVersion() + 1);
     v = group.put(Lists.newArrayList(older, newer));
 
     Assert.assertNotNull(v);
