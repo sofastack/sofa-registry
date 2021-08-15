@@ -40,8 +40,14 @@ public class MetaRaftLeaderElector extends AbstractLeaderElector {
 
     @Override
     protected LeaderInfo doQuery() {
+        Map<String, LeaderLockDomain> map = null;
         byte[] bytes = rheaKVStore.bGet(distributeLock);
-        Map<String, LeaderLockDomain> map = CommandCodec.decodeCommand(bytes, leaderInfoMap.getClass());
+        try{
+            map = CommandCodec.decodeCommand(bytes, leaderInfoMap.getClass());
+        }catch (NullPointerException e){
+            LOG.info("DISTRIBUTE-LOCk RheaKV is empty");
+        }
+
         LeaderLockDomain leaderInfo = map.get(defaultCommonConfig.getClusterId());
 
         if(leaderInfo==null){
@@ -96,8 +102,13 @@ public class MetaRaftLeaderElector extends AbstractLeaderElector {
     private LeaderLockDomain onLeaderWorking(LeaderLockDomain lock, String myself) {
         Date date=new Date();
         byte[] bytes = rheaKVStore.bGet(distributeLock);
+        Map<String, LeaderLockDomain> map = null;
         //获取全部Lock存储
-        Map<String, LeaderLockDomain> map = CommandCodec.decodeCommand(bytes, leaderInfoMap.getClass());
+        try{
+            map = CommandCodec.decodeCommand(bytes, leaderInfoMap.getClass());
+        }catch (NullPointerException e){
+            LOG.info("DISTRIBUTE_LOCk RheaKV is empty");
+        }
         LeaderLockDomain leaderLockInfo = map.get(lock.getDataCenter());
         if(leaderLockInfo==null){
             LOG.error("leader:{} heartbeat error.", myself);
@@ -115,7 +126,13 @@ public class MetaRaftLeaderElector extends AbstractLeaderElector {
     public LeaderLockDomain onFollowWorking(LeaderLockDomain lock, String myself) {
         long date=System.currentTimeMillis();
         byte[] bytes = rheaKVStore.bGet(distributeLock);
-        Map<String, LeaderLockDomain> map = CommandCodec.decodeCommand(bytes, leaderInfoMap.getClass());
+        Map<String, LeaderLockDomain> map = null;
+        try {
+           map = CommandCodec.decodeCommand(bytes, leaderInfoMap.getClass());
+        }catch (NullPointerException e){
+            LOG.info("DISTRIBUTE_LOCk RheaKV is empty");
+        }
+
         if(date>lock.getExpireTimestamp()){
             if (LOG.isInfoEnabled()) {
                 LOG.info("lock expire: {}, meta elector start: {}", lock, myself);
@@ -167,7 +184,7 @@ public class MetaRaftLeaderElector extends AbstractLeaderElector {
                 }
             }
         }catch (NullPointerException e){
-            LOG.info("rheaKVStore is empty");
+            LOG.info("DISTRIBUTE_LOCk RheaKV is empty");
         }
 
         if(leaderLockInfo==null){

@@ -146,7 +146,7 @@ public class AppRevisionHeartbeatRaftRepository implements AppRevisionHeartbeatR
                 try{
                   appRevisionMap = CommandCodec.decodeCommand(appRevisionBytes, appRevisionMap.getClass());
                 }catch (NullPointerException e){
-
+                    LOG.info("APP_REVISION RheaKV is empty");
                 }
                 try{
                     appRevision = appRevisionMap.get(defaultCommonConfig.getClusterId());
