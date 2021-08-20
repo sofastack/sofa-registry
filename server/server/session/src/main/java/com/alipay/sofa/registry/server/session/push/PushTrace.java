@@ -16,9 +16,11 @@
  */
 package com.alipay.sofa.registry.server.session.push;
 
+import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.store.SubDatum;
 import com.alipay.sofa.registry.common.model.store.SubPublisher;
+import com.alipay.sofa.registry.concurrent.ThreadLocalStringBuilder;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.trace.TraceID;
@@ -30,7 +32,6 @@ import java.net.InetSocketAddress;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.logging.log4j.core.async.Hack;
 
@@ -78,34 +79,27 @@ public final class PushTrace {
     return new PushTrace(datum, address, subApp, pushCause, subNum, subRegTimestamp);
   }
 
-  private List<Long> datumModifyTsAfter(long pushedTs) {
-    List<Long> ret = Lists.newArrayListWithCapacity(12);
+  private Tuple<List<Long>, String> datumPushedDelayList(long finishedTs, long lastPushTs) {
     List<Long> recentVersions = datum.getRecentVersions();
+    List<Long> timestamps =
+        Lists.newArrayListWithCapacity(recentVersions == null ? 1 : recentVersions.size() + 1);
+    StringBuilder builder = ThreadLocalStringBuilder.get();
     if (!CollectionUtils.isEmpty(recentVersions)) {
       for (long v : recentVersions) {
         long ts = DatumVersionUtil.getRealTimestamp(v);
-        if (ts > pushedTs) {
-          ret.add(ts);
+        if (ts > lastPushTs) {
+          long delay = finishedTs - ts;
+          timestamps.add(delay);
+          builder.append(delay).append(',');
         }
       }
     }
-    ret.add(DatumVersionUtil.getRealTimestamp(datum.getVersion()));
-    return ret;
-  }
 
-  private List<Long> datumPushedDelayList(long finishedTs, long lastPushTs) {
-    List<Long> timestamps = datumModifyTsAfter(lastPushTs);
-    List<Long> ret = Lists.newArrayListWithCapacity(timestamps.size());
-    for (long ts : timestamps) {
-      ret.add(finishedTs - ts);
-    }
-    return ret;
-  }
-
-  private String formatDatumPushedDelayList(long finishedTs, long lastPushTs) {
-    return datumPushedDelayList(finishedTs, lastPushTs).stream()
-        .map(String::valueOf)
-        .collect(Collectors.joining(","));
+    long datumChangeTs = DatumVersionUtil.getRealTimestamp(datum.getVersion());
+    long delay = finishedTs - Math.max(lastPushTs, datumChangeTs);
+    timestamps.add(delay);
+    builder.append(delay);
+    return new Tuple<>(timestamps, builder.toString());
   }
 
   public void startPush() {
@@ -114,6 +108,14 @@ public final class PushTrace {
 
   public void finishPush(
       PushStatus status, TraceID taskID, long subscriberPushedVersion, int pushNum) {
+    try {
+      finsh(status, taskID, subscriberPushedVersion, pushNum);
+    } catch (Throwable t) {
+      LOGGER.error("finish push error, {},{},{},{}", datum.getDataInfoId(), datum.getVersion(), subAddress, taskID, t);
+    }
+  }
+
+  private void finsh(PushStatus status, TraceID taskID, long subscriberPushedVersion, int pushNum) {
     final long pushFinishTimestamp = System.currentTimeMillis();
     // push.finish- first.newly.datumTimestamp(after subscriberPushedVersion)
     long datumModifyPushSpanMillis;
@@ -169,17 +171,19 @@ public final class PushTrace {
         findNewPublishers(publishers, lastPushTimestamp + MAX_NTP_TIME_PRECISION_MILLIS);
     newPublisherNum = news.size();
 
-    List<Long> datumPushedDelayList = datumPushedDelayList(pushFinishTimestamp, lastPushTimestamp);
-    long newlyDatumPushDelay = 0;
-    if (CollectionUtils.isNotEmpty(datumPushedDelayList)) {
-      newlyDatumPushDelay = datumPushedDelayList.get(0);
+    Tuple<List<Long>, String> datumPushedDelay =
+        datumPushedDelayList(pushFinishTimestamp, lastPushTimestamp);
+    List<Long> datumPushedDelayList = datumPushedDelay.o1;
+    String pushDatumDelayStr = datumPushedDelay.o2;
+
+    datumModifyPushSpanMillis = datumVersionPushSpanMillis;
+
+    if (pushCause.pushType == PushType.Sub) {
+      datumModifyPushSpanMillis = Math.max(datumPushedDelayList.get(0), datumVersionPushSpanMillis);
     }
-    datumModifyPushSpanMillis = Math.max(newlyDatumPushDelay, datumVersionPushSpanMillis);
 
     PushMetrics.Push.observePushDelayHistogram(
-        pushCause.pushType,
-        datumModifyPushSpanMillis,
-        status);
+        pushCause.pushType, datumModifyPushSpanMillis, status);
     if (LOGGER.isInfoEnabled() || SLOW_LOGGER.isInfoEnabled()) {
       final String msg =
           StringFormatter.format(
@@ -211,7 +215,7 @@ public final class PushTrace {
               subscriberPushedVersion,
               subRegTimestamp,
               pushCause.triggerPushCtx.formatTraceTimes(pushFinishTimestamp),
-              formatDatumPushedDelayList(pushFinishTimestamp, lastPushTimestamp),
+              pushDatumDelayStr,
               pushNum);
       LOGGER.info(msg);
       if (datumModifyPushSpanMillis > 6000) {

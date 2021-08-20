@@ -30,7 +30,7 @@ import org.junit.Test;
 public class PushTraceTest {
 
   @Test
-  public void test() throws Exception {
+  public void testSub() throws Exception {
     List<SubPublisher> list = Lists.newArrayList();
     list.add(TestUtils.newSubPublisher(0, System.currentTimeMillis()));
     Thread.sleep(5);
@@ -49,6 +49,36 @@ public class PushTraceTest {
             NetUtil.getLocalSocketAddress(),
             "subApp",
             new PushCause(ctx, PushType.Sub, now1),
+            1,
+            System.currentTimeMillis() - 100);
+    long now2 = System.currentTimeMillis();
+
+    // new.sub=2
+    trace.startPush();
+    long finish = now2 + 100;
+    trace.finishPush(PushTrace.PushStatus.OK, null, finish, 1);
+  }
+
+  @Test
+  public void testReg() throws Exception {
+    List<SubPublisher> list = Lists.newArrayList();
+    list.add(TestUtils.newSubPublisher(0, System.currentTimeMillis()));
+    Thread.sleep(5);
+    final long middle = DatumVersionUtil.nextId();
+    Thread.sleep(5);
+    list.add(TestUtils.newSubPublisher(0, System.currentTimeMillis()));
+    Thread.sleep(5);
+    list.add(TestUtils.newSubPublisher(0, System.currentTimeMillis()));
+
+    SubDatum subDatum = TestUtils.newSubDatum("testDataId", DatumVersionUtil.nextId(), list);
+    long now1 = System.currentTimeMillis();
+    TriggerPushContext ctx = new TriggerPushContext("testDc", 100, null, now1);
+    PushTrace trace =
+        PushTrace.trace(
+            subDatum,
+            NetUtil.getLocalSocketAddress(),
+            "subApp",
+            new PushCause(ctx, PushType.Reg, now1),
             1,
             System.currentTimeMillis() - 100);
     long now2 = System.currentTimeMillis();

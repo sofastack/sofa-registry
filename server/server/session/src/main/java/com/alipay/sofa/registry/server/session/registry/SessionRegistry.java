@@ -217,7 +217,6 @@ public class SessionRegistry implements Registry {
 
   @Override
   public void clean(List<ConnectId> connectIds) {
-    ClientManagerMetric.CLIENT_OPEN_COUNTER.inc(connectIds.size());
     disableConnect(connectIds, true, false);
   }
 
