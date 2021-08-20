@@ -34,6 +34,7 @@ import com.alipay.sofa.registry.server.session.connections.ConnectionsService;
 import com.alipay.sofa.registry.server.session.loggers.Loggers;
 import com.alipay.sofa.registry.server.session.providedata.FetchClientOffAddressService.ClientOffAddressResp;
 import com.alipay.sofa.registry.server.session.providedata.FetchClientOffAddressService.ClientOffAddressStorage;
+import com.alipay.sofa.registry.server.session.registry.ClientManagerMetric;
 import com.alipay.sofa.registry.server.session.registry.Registry;
 import com.alipay.sofa.registry.server.shared.providedata.AbstractFetchPersistenceSystemProperty;
 import com.alipay.sofa.registry.server.shared.providedata.SystemDataStorage;
@@ -261,6 +262,7 @@ public class FetchClientOffAddressService
   private void doTrafficOn(Set<String> ipSet) {
     List<String> connections = connectionsService.closeIpConnects(Lists.newArrayList(ipSet));
     if (CollectionUtils.isNotEmpty(connections)) {
+      ClientManagerMetric.CLIENT_OPEN_COUNTER.inc(connections.size());
       LOGGER.info("clientOpen conIds: {}", connections);
     }
   }
