@@ -111,7 +111,13 @@ public final class PushTrace {
     try {
       finsh(status, taskID, subscriberPushedVersion, pushNum);
     } catch (Throwable t) {
-      LOGGER.error("finish push error, {},{},{},{}", datum.getDataInfoId(), datum.getVersion(), subAddress, taskID, t);
+      LOGGER.error(
+          "finish push error, {},{},{},{}",
+          datum.getDataInfoId(),
+          datum.getVersion(),
+          subAddress,
+          taskID,
+          t);
     }
   }
 
