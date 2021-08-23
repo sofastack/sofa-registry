@@ -56,7 +56,7 @@ public class PushTraceTest {
     // new.sub=2
     trace.startPush();
     long finish = now2 + 100;
-    trace.finishPush(PushTrace.PushStatus.OK, null, finish, 1);
+    trace.finishPush(PushTrace.PushStatus.OK, null, finish, 1, 0);
   }
 
   @Test
@@ -86,7 +86,7 @@ public class PushTraceTest {
     // new.sub=2
     trace.startPush();
     long finish = now2 + 100;
-    trace.finishPush(PushTrace.PushStatus.OK, null, finish, 1);
+    trace.finishPush(PushTrace.PushStatus.OK, null, finish, 1, 0);
   }
 
   @Test

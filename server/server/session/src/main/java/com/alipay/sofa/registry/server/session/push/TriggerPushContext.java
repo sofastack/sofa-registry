@@ -49,9 +49,8 @@ public final class TriggerPushContext {
     return this.firstTraceTimes;
   }
 
-  public void setTimes(TraceTimes times) {
-    this.firstTraceTimes = times;
-    this.lastTraceTimes = times;
+  public TraceTimes getLastTimes() {
+    return this.lastTraceTimes;
   }
 
   public void addTraceTime(TraceTimes times) {

@@ -107,9 +107,9 @@ public final class PushTrace {
   }
 
   public void finishPush(
-      PushStatus status, TraceID taskID, long subscriberPushedVersion, int pushNum) {
+      PushStatus status, TraceID taskID, long subscriberPushedVersion, int pushNum, int retry) {
     try {
-      finsh(status, taskID, subscriberPushedVersion, pushNum);
+      finish(status, taskID, subscriberPushedVersion, pushNum, retry);
     } catch (Throwable t) {
       LOGGER.error(
           "finish push error, {},{},{},{}",
@@ -121,7 +121,8 @@ public final class PushTrace {
     }
   }
 
-  private void finsh(PushStatus status, TraceID taskID, long subscriberPushedVersion, int pushNum) {
+  private void finish(
+      PushStatus status, TraceID taskID, long subscriberPushedVersion, int pushNum, int retry) {
     final long pushFinishTimestamp = System.currentTimeMillis();
     // push.finish- first.newly.datumTimestamp(after subscriberPushedVersion)
     long datumModifyPushSpanMillis;
@@ -144,21 +145,21 @@ public final class PushTrace {
 
     // try find the earliest and the latest publisher after the subPushedVersion
     // that means the modify after last push, but this could not handle the publisher.remove
+    final long lastTriggerSession = pushCause.triggerPushCtx.getLastTimes().getTriggerSession();
     if (pushCause.pushType == PushType.Reg) {
       datumVersionPushSpanMillis = pushFinishTimestamp - subRegTimestamp;
+      datumVersionTriggerSpanMillis = Math.max(lastTriggerSession - subRegTimestamp, 0);
     } else {
       datumVersionPushSpanMillis = Math.max(pushFinishTimestamp - pushCause.datumTimestamp, 0);
+      datumVersionTriggerSpanMillis = Math.max(lastTriggerSession - pushCause.datumTimestamp, 0);
       if (pushCause.pushType == PushType.Sub) {
         if (subRegTimestamp >= pushCause.datumTimestamp) {
           // case: datum.change trigger the sub.sub, but the sub.reg not finish
           datumVersionPushSpanMillis = pushFinishTimestamp - subRegTimestamp;
+          datumVersionTriggerSpanMillis = Math.max(lastTriggerSession - subRegTimestamp, 0);
         }
       }
     }
-    datumVersionTriggerSpanMillis =
-        Math.max(
-            pushCause.triggerPushCtx.getFirstTimes().getTriggerSession() - pushCause.datumTimestamp,
-            0);
 
     // calc the task span millis
     pushTaskPrepareSpanMillis =
@@ -193,10 +194,10 @@ public final class PushTrace {
     if (LOGGER.isInfoEnabled() || SLOW_LOGGER.isInfoEnabled()) {
       final String msg =
           StringFormatter.format(
-              "{},{},{},{},{},cause={},pubNum={},pubBytes={},pubNew={},delay={},{},{},{},{},"
+              "{},{},{},ver={},app={},cause={},pubNum={},pubBytes={},pubNew={},delay={},{},{},{},{},"
                   + "session={},cliIO={},"
                   + "subNum={},addr={},expectVer={},dataNode={},taskID={},pushedVer={},regTs={},"
-                  + "{},recentDelay={},pushNum={}",
+                  + "{},recentDelay={},pushNum={},retry={}",
               status,
               datum.getDataInfoId(),
               datum.getVersion(),
@@ -222,7 +223,8 @@ public final class PushTrace {
               subRegTimestamp,
               pushCause.triggerPushCtx.formatTraceTimes(pushFinishTimestamp),
               pushDatumDelayStr,
-              pushNum);
+              pushNum,
+              retry);
       LOGGER.info(msg);
       if (datumModifyPushSpanMillis > 6000) {
         SLOW_LOGGER.info(msg);
