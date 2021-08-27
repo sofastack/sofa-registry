@@ -16,11 +16,8 @@
  */
 package com.alipay.sofa.registry.server.meta.provide.data;
 
-import com.alipay.sofa.registry.common.model.ServerDataBox;
-import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress;
 import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress.AddressVersion;
-import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.MetaLeaderService;
@@ -30,16 +27,17 @@ import com.alipay.sofa.registry.store.api.meta.ClientManagerAddressRepository;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.LoopRunnable;
 import com.google.common.annotations.VisibleForTesting;
+import org.apache.commons.collections.CollectionUtils;
+import org.glassfish.jersey.internal.guava.Sets;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.event.ContextRefreshedEvent;
+
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-import org.apache.commons.collections.CollectionUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationListener;
-import org.springframework.context.event.ContextRefreshedEvent;
 
 /**
  * @author xiaojian.xj
@@ -66,7 +64,11 @@ public class DefaultClientManagerService
    */
   @Override
   public boolean clientOpen(Set<String> ipSet) {
-    return clientManagerAddressRepository.clientOpen(ipSet);
+    Set<AddressVersion> addressSet = buildDefaultAddressVersions(ipSet);
+    if (addressSet == null) {
+      return false;
+    }
+    return clientManagerAddressRepository.clientOpen(addressSet);
   }
 
   /**
@@ -77,32 +79,27 @@ public class DefaultClientManagerService
    */
   @Override
   public boolean clientOff(Set<String> ipSet) {
-    return clientManagerAddressRepository.clientOff(ipSet);
+    Set<AddressVersion> addressSet = buildDefaultAddressVersions(ipSet);
+    if (addressSet == null) {
+      return false;
+    }
+    return clientManagerAddressRepository.clientOff(addressSet);
   }
 
-  /**
-   * query client off ips
-   *
-   * @return
-   */
-  @Override
-  public DBResponse<ProvideData> queryClientOffSet() {
-
-    ClientManagerAddress address = clientManagerAddressRepository.queryClientOffData();
-    if (address.getVersion() == 0) {
-      return DBResponse.notfound().build();
+  private Set<AddressVersion> buildDefaultAddressVersions(Set<String> ipSet) {
+    if (CollectionUtils.isEmpty(ipSet)) {
+      return null;
     }
+    Set<AddressVersion> addressSet = Sets.newHashSetWithExpectedSize(ipSet.size());
+    for (String ip : ipSet) {
+      addressSet.add(new AddressVersion(ip,  true));
+    }
+    return addressSet;
+  }
 
-    Set<String> ipSet =
-        address.getClientOffAddress().values().stream()
-            .map(AddressVersion::getAddress)
-            .collect(Collectors.toSet());
-    ProvideData provideData =
-        new ProvideData(
-            new ServerDataBox(ipSet),
-            ValueConstants.CLIENT_OFF_ADDRESS_DATA_ID,
-            address.getVersion());
-    return DBResponse.ok(provideData).build();
+  @Override
+  public boolean clientOffNew(Set<AddressVersion> address) {
+    return clientManagerAddressRepository.clientOff(address);
   }
 
   @Override
@@ -116,7 +113,11 @@ public class DefaultClientManagerService
 
   @Override
   public boolean reduce(Set<String> ipSet) {
-    return clientManagerAddressRepository.reduce(ipSet);
+    Set<AddressVersion> addressSet = buildDefaultAddressVersions(ipSet);
+    if (addressSet == null) {
+      return false;
+    }
+    return clientManagerAddressRepository.reduce(addressSet);
   }
 
   @Override

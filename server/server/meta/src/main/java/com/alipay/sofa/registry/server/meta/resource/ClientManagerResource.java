@@ -20,12 +20,18 @@ import com.alipay.sofa.registry.common.model.CollectionSdks;
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress;
+import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress.AddressVersion;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.provide.data.ClientManagerService;
 import com.alipay.sofa.registry.store.api.DBResponse;
 import com.alipay.sofa.registry.store.api.OperationStatus;
+import com.alipay.sofa.registry.util.JsonUtils;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.annotations.VisibleForTesting;
+
+import java.util.HashMap;
+import java.util.List;
 import java.util.Set;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
@@ -35,6 +41,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
 
 /**
  * The type Clients open resource.
@@ -49,7 +56,10 @@ public class ClientManagerResource {
   private static final Logger DB_LOGGER =
       LoggerFactory.getLogger(ClientManagerResource.class, "[DBService]");
 
-  @Autowired private ClientManagerService clientManagerService;
+  public static final TypeReference<Set<AddressVersion>> FORMAT =
+          new TypeReference<Set<AddressVersion>>() {};
+
+  @Autowired private    ClientManagerService                         clientManagerService;
 
   /** Client off */
   @POST
@@ -67,6 +77,41 @@ public class ClientManagerResource {
     CommonResponse response = CommonResponse.buildSuccessResponse();
     response.setSuccess(ret);
     return response;
+  }
+
+  /** Client off */
+  @POST
+  @Path("/clientOffNew")
+  public CommonResponse clientOffNew(@FormParam("ips") String ips) {
+    if (StringUtils.isBlank(ips)) {
+      return CommonResponse.buildFailedResponse("ips is empty");
+    }
+
+    Set<AddressVersion> read = JsonUtils.read(ips, FORMAT);
+    if (!validate(read)) {
+      DB_LOGGER.error("client off new error, ips:{}", read);
+      return CommonResponse.buildFailedResponse("ips is invalidate");
+    }
+
+    boolean ret = clientManagerService.clientOffNew(read);
+
+    DB_LOGGER.info("client off result:{}, ips:{}", ret, ips);
+
+    CommonResponse response = CommonResponse.buildSuccessResponse();
+    response.setSuccess(ret);
+    return response;
+  }
+
+  private boolean validate(Set<AddressVersion> list) {
+    if (CollectionUtils.isEmpty(list)) {
+      return false;
+    }
+    for (AddressVersion address : list) {
+      if (!address.isPub() && !address.isSub()) {
+        return false;
+      }
+    }
+    return true;
   }
 
   /** Client Open */

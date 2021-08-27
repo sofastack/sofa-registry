@@ -17,6 +17,8 @@
 package com.alipay.sofa.registry.store.api.meta;
 
 import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress;
+import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress.AddressVersion;
+
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -33,7 +35,7 @@ public interface ClientManagerAddressRepository {
    * @param ipSet
    * @return
    */
-  boolean clientOpen(Set<String> ipSet);
+  boolean clientOpen(Set<AddressVersion> ipSet);
 
   /**
    * client off
@@ -41,7 +43,7 @@ public interface ClientManagerAddressRepository {
    * @param ipSet
    * @return
    */
-  boolean clientOff(Set<String> ipSet);
+  boolean clientOff(Set<AddressVersion> ipSet);
 
   /**
    * reduce
@@ -49,7 +51,7 @@ public interface ClientManagerAddressRepository {
    * @param ipSet
    * @return
    */
-  boolean reduce(Set<String> ipSet);
+  boolean reduce(Set<AddressVersion> ipSet);
 
   ClientManagerAddress queryClientOffData();
 

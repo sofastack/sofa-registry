@@ -19,6 +19,7 @@ package com.alipay.sofa.registry.server.session.wrapper;
 import static com.alipay.sofa.registry.common.model.constants.ValueConstants.CLIENT_OFF;
 
 import com.alipay.remoting.InvokeContext;
+import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress.AddressVersion;
 import com.alipay.sofa.registry.common.model.store.*;
 import com.alipay.sofa.registry.common.model.store.StoreData.DataType;
 import com.alipay.sofa.registry.log.Logger;
@@ -57,7 +58,8 @@ public class ClientOffWrapperInterceptor
 
     URL url = storeData.getSourceAddress();
 
-    if (fetchClientOffAddressService.contains(url.getIpAddress())) {
+    AddressVersion address = fetchClientOffAddressService.getAddress(url.getIpAddress());
+    if (address != null) {
       markChannel(registerInvokeData.getChannel());
       LOGGER.info(
           "dataInfoId:{} ,url:{} match clientOff ips.",
@@ -77,7 +79,7 @@ public class ClientOffWrapperInterceptor
       if (DataType.SUBSCRIBER == storeData.getDataType()) {
         // in some case, need to push empty to new subscriber, and stop sub
         // else, filter not stop sub
-        if (sessionRegistry.isPushEmpty((Subscriber) storeData)) {
+        if (sessionRegistry.isPushEmpty((Subscriber) storeData) && address.isSub()) {
           firePushService.fireOnPushEmpty(
               (Subscriber) storeData,
               sessionRegistry.getDataCenterWhenPushEmpty(),

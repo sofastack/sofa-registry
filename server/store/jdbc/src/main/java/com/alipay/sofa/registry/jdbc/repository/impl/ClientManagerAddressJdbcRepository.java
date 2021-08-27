@@ -20,6 +20,7 @@ import static com.alipay.sofa.registry.jdbc.repository.impl.MetadataMetrics.Prov
 
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress;
+import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress.AddressVersion;
 import com.alipay.sofa.registry.jdbc.config.DefaultCommonConfig;
 import com.alipay.sofa.registry.jdbc.domain.ClientManagerAddressDomain;
 import com.alipay.sofa.registry.jdbc.informer.BaseInformer;
@@ -60,7 +61,7 @@ public class ClientManagerAddressJdbcRepository implements ClientManagerAddressR
   }
 
   @Override
-  public boolean clientOpen(Set<String> ipSet) {
+  public boolean clientOpen(Set<AddressVersion> ipSet) {
 
     try {
       doStorage(ipSet, ValueConstants.CLIENT_OPEN);
@@ -73,7 +74,7 @@ public class ClientManagerAddressJdbcRepository implements ClientManagerAddressR
   }
 
   @Override
-  public boolean clientOff(Set<String> ipSet) {
+  public boolean clientOff(Set<AddressVersion> ipSet) {
     try {
       doStorage(ipSet, ValueConstants.CLIENT_OFF);
       CLIENT_MANAGER_UPDATE_COUNTER.inc(ipSet.size());
@@ -85,7 +86,7 @@ public class ClientManagerAddressJdbcRepository implements ClientManagerAddressR
   }
 
   @Override
-  public boolean reduce(Set<String> ipSet) {
+  public boolean reduce(Set<AddressVersion> ipSet) {
     try {
 
       doStorage(ipSet, ValueConstants.REDUCE);
@@ -135,10 +136,10 @@ public class ClientManagerAddressJdbcRepository implements ClientManagerAddressR
         defaultCommonConfig.getClusterId(), date);
   }
 
-  private void doStorage(Set<String> ipSet, String operation) {
-    for (String address : ipSet) {
+  private void doStorage(Set<AddressVersion> ipSet, String operation) {
+    for (AddressVersion address : ipSet) {
       ClientManagerAddressDomain update =
-          new ClientManagerAddressDomain(defaultCommonConfig.getClusterId(), address, operation);
+          new ClientManagerAddressDomain(defaultCommonConfig.getClusterId(), address.getAddress(), operation, address.isPub(), address.isSub());
       int effectRows = clientManagerAddressMapper.update(update);
 
       if (effectRows == 0) {

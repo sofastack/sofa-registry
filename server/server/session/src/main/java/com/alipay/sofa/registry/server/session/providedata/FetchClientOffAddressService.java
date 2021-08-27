@@ -317,10 +317,9 @@ public class FetchClientOffAddressService
     return storage.get().clientOffAddress.keySet();
   }
 
-  public boolean contains(String address) {
-    return storage.get().clientOffAddress.containsKey(address);
+  public AddressVersion getAddress(String address) {
+    return storage.get().clientOffAddress.get(address);
   }
-
   /**
    * Setter method for property <tt>sessionServerConfig</tt>.
    *
