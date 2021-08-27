@@ -16,8 +16,6 @@
  */
 package com.alipay.sofa.registry.server.meta.remoting.handler;
 
-import static com.alipay.sofa.registry.common.model.constants.ValueConstants.CLIENT_OFF_ADDRESS_DATA_ID;
-
 import com.alipay.sofa.registry.common.model.ServerDataBox;
 import com.alipay.sofa.registry.common.model.console.PersistenceData;
 import com.alipay.sofa.registry.common.model.metaserver.FetchSystemPropertyRequest;
@@ -26,7 +24,6 @@ import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.server.meta.provide.data.ClientManagerService;
 import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataService;
 import com.alipay.sofa.registry.store.api.DBResponse;
 import com.alipay.sofa.registry.store.api.OperationStatus;
@@ -48,8 +45,6 @@ public class FetchSystemPropertyRequestHandler
 
   @Autowired private ProvideDataService provideDataService;
 
-  @Autowired private ClientManagerService clientManagerService;
-
   @Override
   public void checkParam(FetchSystemPropertyRequest request) {
     ParaCheckUtil.checkNotNull(request, "fetchSystemPropertyRequest");
@@ -61,11 +56,7 @@ public class FetchSystemPropertyRequestHandler
     try {
       DB_LOGGER.info("get system data {}", request);
 
-      if (CLIENT_OFF_ADDRESS_DATA_ID.equals(request.getDataInfoId())) {
-        return fetchClientOffSet(request);
-      } else {
-        return fetchSystemData(request);
-      }
+      return fetchSystemData(request);
     } catch (Exception e) {
       DB_LOGGER.error("get system data {} from db error!", request.getDataInfoId(), e);
       throw new RuntimeException("Get system data from db error!", e);
@@ -87,20 +78,6 @@ public class FetchSystemPropertyRequestHandler
             new ServerDataBox(persistenceData.getData()),
             request.getDataInfoId(),
             persistenceData.getVersion());
-
-    return processResult(request, status, data);
-  }
-
-  private Object fetchClientOffSet(FetchSystemPropertyRequest request) {
-    DBResponse<ProvideData> ret = clientManagerService.queryClientOffSet();
-    OperationStatus status = ret.getOperationStatus();
-
-    if (status == OperationStatus.NOTFOUND) {
-      FetchSystemPropertyResult result = new FetchSystemPropertyResult(false);
-      DB_LOGGER.warn("has not found system data from DB dataInfoId:{}", request.getDataInfoId());
-      return result;
-    }
-    ProvideData data = ret.getEntity();
 
     return processResult(request, status, data);
   }
@@ -141,18 +118,6 @@ public class FetchSystemPropertyRequestHandler
   public FetchSystemPropertyRequestHandler setProvideDataService(
       ProvideDataService provideDataService) {
     this.provideDataService = provideDataService;
-    return this;
-  }
-
-  /**
-   * Setter method for property <tt>clientManagerService</tt>.
-   *
-   * @param clientManagerService value to be assigned to property clientManagerService
-   */
-  @VisibleForTesting
-  public FetchSystemPropertyRequestHandler setClientManagerService(
-      ClientManagerService clientManagerService) {
-    this.clientManagerService = clientManagerService;
     return this;
   }
 }

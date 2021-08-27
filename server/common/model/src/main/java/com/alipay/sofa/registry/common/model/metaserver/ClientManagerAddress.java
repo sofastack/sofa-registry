@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.common.model.metaserver;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.base.Objects;
 import java.util.Map;
 
@@ -63,13 +65,23 @@ public class ClientManagerAddress {
   }
 
   public static class AddressVersion {
-    private final long version;
+    private long version;
 
     private final String address;
 
-    public AddressVersion(long version, String address) {
+    private final boolean pub = true;
+
+    private final boolean sub;
+
+    public AddressVersion(String address, boolean sub) {
+      this.address = address;
+      this.sub = sub;
+    }
+
+    public AddressVersion(long version, String address, boolean sub) {
       this.version = version;
       this.address = address;
+      this.sub = sub;
     }
 
     /**
@@ -90,26 +102,22 @@ public class ClientManagerAddress {
       return address;
     }
 
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      AddressVersion that = (AddressVersion) o;
-      return version == that.version && Objects.equal(address, that.address);
+    public boolean isPub() {
+      return pub;
     }
 
-    @Override
-    public int hashCode() {
-      return Objects.hashCode(version, address);
+    public boolean isSub() {
+      return sub;
     }
 
     @Override
     public String toString() {
-      return "AddressVersion{" + "version=" + version + ", address='" + address + '\'' + '}';
+      return "AddressVersion{" +
+              "version=" + version +
+              ", address='" + address + '\'' +
+              ", pub=" + pub +
+              ", sub=" + sub +
+              '}';
     }
   }
 }

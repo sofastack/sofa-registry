@@ -43,12 +43,20 @@ public class ClientManagerAddressDomain implements DbEntry {
   /** last update time */
   private Date gmtModify;
 
+  /** client_off pub */
+  private boolean pub;
+
+  /** client_off sub */
+  private boolean sub;
+
   public ClientManagerAddressDomain() {}
 
-  public ClientManagerAddressDomain(String dataCenter, String address, String operation) {
+  public ClientManagerAddressDomain(String dataCenter, String address, String operation, boolean pub, boolean sub) {
     this.dataCenter = dataCenter;
     this.address = address;
     this.operation = operation;
+    this.pub = pub;
+    this.sub = sub;
   }
 
   /**
@@ -157,6 +165,31 @@ public class ClientManagerAddressDomain implements DbEntry {
    */
   public void setGmtModify(Date gmtModify) {
     this.gmtModify = gmtModify;
+  }
+
+  /**
+   * Setter method for property <tt>pub</tt>.
+   *
+   * @param pub value to be assigned to property pub
+   */
+  public void setPub(boolean pub) {
+    this.pub = pub;
+  }
+
+  public boolean isPub() {
+    return pub;
+  }
+  /**
+   * Setter method for property <tt>sub</tt>.
+   *
+   * @param sub value to be assigned to property sub
+   */
+  public void setSub(boolean sub) {
+    this.sub = sub;
+  }
+
+  public boolean isSub() {
+    return sub;
   }
 
   @Override

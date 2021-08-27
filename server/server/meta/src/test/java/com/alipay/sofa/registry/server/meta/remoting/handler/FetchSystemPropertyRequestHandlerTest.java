@@ -51,16 +51,9 @@ public class FetchSystemPropertyRequestHandlerTest extends AbstractMetaServerTes
 
   @Mock private ProvideDataService provideDataService;
 
-  @Mock private ClientManagerService clientManagerService;
-
   private BlacklistDataResource resource;
 
-  private ClientManagerResource clientManagerResource;
-
   private DefaultProvideDataNotifier dataNotifier = mock(DefaultProvideDataNotifier.class);
-
-  private static final String CLIENT_OFF_STR = "1.1.1.1;2.2.2.2";
-  private static final String CLIENT_OPEN_STR = "2.2.2.2;3.3.3.3";
 
   private FetchSystemPropertyRequest newBlacklistRequest() {
     return new FetchSystemPropertyRequest(ValueConstants.BLACK_LIST_DATA_ID, anyLong());
@@ -73,7 +66,6 @@ public class FetchSystemPropertyRequestHandlerTest extends AbstractMetaServerTes
   @Before
   public void beforeFetchSystemPropertyRequestHandlerTest() {
     MockitoAnnotations.initMocks(this);
-    handler.setProvideDataService(provideDataService).setClientManagerService(clientManagerService);
   }
 
   @Test
@@ -104,37 +96,5 @@ public class FetchSystemPropertyRequestHandlerTest extends AbstractMetaServerTes
         (FetchSystemPropertyResult) handler.doHandle(null, blacklistRequest);
     Assert.assertEquals(resultAfterPut.isVersionUpgrade(), true);
     Assert.assertTrue(resultAfterPut.getProvideData().getVersion() > 0);
-  }
-
-  @Test
-  public void testClientOffHandler() {
-    FetchSystemPropertyRequest clientOffRequest = newClientOffRequest();
-
-    handler.checkParam(clientOffRequest);
-    TestUtils.assertException(
-        RuntimeException.class, () -> handler.doHandle(null, clientOffRequest));
-
-    clientManagerService = spy(new InMemoryClientManagerServiceRepo());
-
-    handler.setClientManagerService(clientManagerService);
-    FetchSystemPropertyResult result =
-        (FetchSystemPropertyResult) handler.doHandle(null, clientOffRequest);
-    Assert.assertEquals(result.isVersionUpgrade(), false);
-    Assert.assertNull(result.getProvideData());
-
-    clientManagerResource =
-        new ClientManagerResource().setClientManagerService(clientManagerService);
-    clientManagerResource.clientOff(CLIENT_OFF_STR);
-    clientManagerResource.clientOpen(CLIENT_OPEN_STR);
-    FetchSystemPropertyResult resultAfterPut =
-        (FetchSystemPropertyResult) handler.doHandle(null, clientOffRequest);
-    Assert.assertEquals(resultAfterPut.isVersionUpgrade(), true);
-    Assert.assertEquals(
-        resultAfterPut.getProvideData().getDataInfoId(), clientOffRequest.getDataInfoId());
-    Assert.assertTrue(resultAfterPut.getProvideData().getVersion() > 0);
-    Set<String> clientOffAddress =
-        (Set<String>) resultAfterPut.getProvideData().getProvideData().getObject();
-    Assert.assertTrue(clientOffAddress.contains("1.1.1.1"));
-    Assert.assertEquals(1, clientOffAddress.size());
   }
 }
