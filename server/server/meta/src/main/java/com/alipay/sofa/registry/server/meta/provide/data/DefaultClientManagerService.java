@@ -27,17 +27,17 @@ import com.alipay.sofa.registry.store.api.meta.ClientManagerAddressRepository;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.LoopRunnable;
 import com.google.common.annotations.VisibleForTesting;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import org.apache.commons.collections.CollectionUtils;
 import org.glassfish.jersey.internal.guava.Sets;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
-
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author xiaojian.xj
@@ -65,7 +65,7 @@ public class DefaultClientManagerService
   @Override
   public boolean clientOpen(Set<String> ipSet) {
     Set<AddressVersion> addressSet = buildDefaultAddressVersions(ipSet);
-    if (addressSet == null) {
+    if (CollectionUtils.isEmpty(addressSet)) {
       return false;
     }
     return clientManagerAddressRepository.clientOpen(addressSet);
@@ -80,7 +80,7 @@ public class DefaultClientManagerService
   @Override
   public boolean clientOff(Set<String> ipSet) {
     Set<AddressVersion> addressSet = buildDefaultAddressVersions(ipSet);
-    if (addressSet == null) {
+    if (CollectionUtils.isEmpty(addressSet)) {
       return false;
     }
     return clientManagerAddressRepository.clientOff(addressSet);
@@ -88,17 +88,17 @@ public class DefaultClientManagerService
 
   private Set<AddressVersion> buildDefaultAddressVersions(Set<String> ipSet) {
     if (CollectionUtils.isEmpty(ipSet)) {
-      return null;
+      return Collections.EMPTY_SET;
     }
     Set<AddressVersion> addressSet = Sets.newHashSetWithExpectedSize(ipSet.size());
     for (String ip : ipSet) {
-      addressSet.add(new AddressVersion(ip,  true));
+      addressSet.add(new AddressVersion(ip, true));
     }
     return addressSet;
   }
 
   @Override
-  public boolean clientOffNew(Set<AddressVersion> address) {
+  public boolean clientOffWithSub(Set<AddressVersion> address) {
     return clientManagerAddressRepository.clientOff(address);
   }
 
@@ -114,7 +114,7 @@ public class DefaultClientManagerService
   @Override
   public boolean reduce(Set<String> ipSet) {
     Set<AddressVersion> addressSet = buildDefaultAddressVersions(ipSet);
-    if (addressSet == null) {
+    if (CollectionUtils.isEmpty(addressSet)) {
       return false;
     }
     return clientManagerAddressRepository.reduce(addressSet);

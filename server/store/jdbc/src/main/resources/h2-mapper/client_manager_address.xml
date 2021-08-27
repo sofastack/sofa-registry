@@ -10,6 +10,8 @@
         <result property="operation" column="operation" javaType="java.lang.String" jdbcType="VARCHAR"/>
         <result property="gmtCreate" column="gmt_create" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
         <result property="gmtModify" column="gmt_modified" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
+        <result property="pub" column="pub" javaType="boolean" jdbcType="TINYINT"/>
+        <result property="sub" column="sub" javaType="boolean" jdbcType="TINYINT"/>
     </resultMap>
 
     <resultMap type="com.alipay.sofa.registry.jdbc.domain.DateNowDomain" id="dateNowResult">
@@ -30,8 +32,8 @@
                 delete from client_manager_address where data_center=#{dataCenter} and address = #{address};
             ]]>
             <![CDATA[
-            insert into client_manager_address(data_center, address, operation, gmt_create, gmt_modified)
-            values (#{dataCenter},#{address},#{operation},CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) on duplicate key update gmt_modified=CURRENT_TIMESTAMP;
+            insert into client_manager_address(data_center, address, operation, gmt_create, gmt_modified, pub, sub)
+            values (#{dataCenter},#{address},#{operation},CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,#{pub},#{sub}) on duplicate key update gmt_modified=CURRENT_TIMESTAMP;
             ]]>
     </insert>
 

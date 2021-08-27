@@ -22,15 +22,16 @@ import static org.mockito.Mockito.when;
 
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress;
+import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress.AddressVersion;
 import com.alipay.sofa.registry.jdbc.AbstractH2DbTestBase;
 import com.alipay.sofa.registry.jdbc.config.DefaultCommonConfig;
 import com.alipay.sofa.registry.jdbc.domain.ClientManagerAddressDomain;
 import com.alipay.sofa.registry.jdbc.mapper.ClientManagerAddressMapper;
 import com.google.common.collect.Sets;
-import com.google.common.collect.Sets.SetView;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.annotation.Resource;
 import org.junit.Assert;
 import org.junit.Test;
@@ -49,8 +50,13 @@ public class ClientManagerAddressJdbcRepositoryTest extends AbstractH2DbTestBase
 
   @Autowired private DefaultCommonConfig defaultCommonConfig;
 
-  public static final Set<String> clientOffSet = Sets.newHashSet("1.1.1.1", "2.2.2.2");
-  public static final Set<String> clientOpenSet = Sets.newHashSet("2.2.2.2", "3.3.3.3");
+  public static final Set<AddressVersion> clientOffSet =
+      Sets.newHashSet(new AddressVersion("1.1.1.1", true), new AddressVersion("2.2.2.2", false));
+  public static final Set<AddressVersion> clientOpenSet =
+      Sets.newHashSet(new AddressVersion("2.2.2.2", true), new AddressVersion("3.3.3.3", true));
+
+  public static final Set<AddressVersion> difference =
+      Sets.newHashSet(new AddressVersion("1.1.1.1", true));
 
   private ClientManagerAddressMapper mapper = mock(ClientManagerAddressMapper.class);
 
@@ -69,15 +75,18 @@ public class ClientManagerAddressJdbcRepositoryTest extends AbstractH2DbTestBase
     clientManagerAddressJdbcRepository.waitSynced();
 
     ClientManagerAddress query = clientManagerAddressJdbcRepository.queryClientOffData();
-    SetView<String> difference = Sets.difference(clientOffSet, clientOpenSet);
-    Assert.assertEquals(query.getClientOffAddress().keySet(), difference);
+    Assert.assertEquals(
+        query.getClientOffAddress().keySet(),
+        difference.stream().map(AddressVersion::getAddress).collect(Collectors.toSet()));
 
     List<ClientManagerAddressDomain> clientManagerAddress =
         clientManagerAddressMapper.queryAfterThanByLimit(
             defaultCommonConfig.getClusterId(), -1L, 100);
 
+    Set<String> open =
+        clientOpenSet.stream().map(AddressVersion::getAddress).collect(Collectors.toSet());
     for (ClientManagerAddressDomain address : clientManagerAddress) {
-      if (clientOpenSet.contains(address.getAddress())) {
+      if (open.contains(address.getAddress())) {
         Assert.assertEquals(ValueConstants.CLIENT_OPEN, address.getOperation());
       } else {
         Assert.assertEquals(ValueConstants.CLIENT_OFF, address.getOperation());
@@ -105,14 +114,15 @@ public class ClientManagerAddressJdbcRepositoryTest extends AbstractH2DbTestBase
     testClientManager();
     List<String> expireAddress =
         clientManagerAddressJdbcRepository.getExpireAddress(new Date(), 100);
-    Assert.assertEquals(Sets.newHashSet(expireAddress), clientOpenSet);
+    Assert.assertEquals(
+        Sets.newHashSet(expireAddress),
+        clientOpenSet.stream().map(AddressVersion::getAddress).collect(Collectors.toSet()));
 
     int count = clientManagerAddressJdbcRepository.cleanExpired(expireAddress);
     Assert.assertEquals(count, expireAddress.size());
     expireAddress = clientManagerAddressJdbcRepository.getExpireAddress(new Date(), 100);
     Assert.assertEquals(0, expireAddress.size());
 
-    SetView<String> difference = Sets.difference(clientOffSet, clientOpenSet);
     int expireClientOffSize = clientManagerAddressJdbcRepository.getClientOffSizeBefore(new Date());
     Assert.assertEquals(expireClientOffSize, difference.size());
   }

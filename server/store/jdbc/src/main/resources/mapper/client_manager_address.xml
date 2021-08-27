@@ -10,8 +10,8 @@
         <result property="operation" column="operation" javaType="java.lang.String" jdbcType="VARCHAR"/>
         <result property="gmtCreate" column="gmt_create" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
         <result property="gmtModify" column="gmt_modified" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
-        <result property="pub" column="pub" javaType="boolean" jdbcType="tinyint"/>
-        <result property="sub" column="sub" javaType="boolean" jdbcType="tinyint"/>
+        <result property="pub" column="pub" javaType="boolean" jdbcType="TINYINT"/>
+        <result property="sub" column="sub" javaType="boolean" jdbcType="TINYINT"/>
     </resultMap>
 
     <resultMap type="com.alipay.sofa.registry.jdbc.domain.DateNowDomain" id="dateNowResult">

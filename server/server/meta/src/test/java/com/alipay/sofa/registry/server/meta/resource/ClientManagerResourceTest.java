@@ -39,6 +39,8 @@ public class ClientManagerResourceTest extends AbstractMetaServerTestBase {
 
   private static final String CLIENT_OFF_STR = "1.1.1.1;2.2.2.2";
   private static final String CLIENT_OPEN_STR = "2.2.2.2;3.3.3.3";
+  private static final String CLIENT_OFF_NEW_STR =
+      "[{\"address\":\"1.1.1.1\",\"pub\":true,\"sub\":false},{\"address\":\"2.2.2.2\",\"pub\":true,\"sub\":false}]";
 
   @Before
   public void beforeClientManagerResourceTest() {
@@ -56,6 +58,22 @@ public class ClientManagerResourceTest extends AbstractMetaServerTestBase {
 
     Assert.assertTrue(query.isSuccess());
     Assert.assertEquals(query.getData().getVersion(), 2L);
+    Assert.assertEquals(query.getData().getClientOffAddress().size(), 1);
+  }
+
+  @Test
+  public void testClientManagerNew() {
+
+    clientManagerResource.clientOffWithSub(CLIENT_OFF_NEW_STR);
+
+    clientManagerResource.clientOff(CLIENT_OFF_STR);
+
+    clientManagerResource.clientOpen(CLIENT_OPEN_STR);
+
+    GenericResponse<ClientManagerAddress> query = clientManagerResource.query();
+
+    Assert.assertTrue(query.isSuccess());
+    Assert.assertEquals(query.getData().getVersion(), 3L);
     Assert.assertEquals(query.getData().getClientOffAddress().size(), 1);
   }
 }

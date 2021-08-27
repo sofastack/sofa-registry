@@ -61,6 +61,8 @@ CREATE TABLE `client_manager_address` (
   `gmt_create` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `gmt_modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
   `operation` varchar(128) NOT NULL COMMENT '操作类型',
+  `pub` tinyint(1) NOT NULL DEFAULT 1 COMMENT '是否持久化关流pub',
+  `sub` tinyint(1) NOT NULL DEFAULT 1 COMMENT '是否持久化关流sub',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_data_center_address` (`data_center`, `address`)
 );

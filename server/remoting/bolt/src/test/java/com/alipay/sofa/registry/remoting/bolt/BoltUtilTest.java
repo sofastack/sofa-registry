@@ -22,9 +22,10 @@ import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.remoting.exchange.RequestChannelClosedException;
 import com.alipay.sofa.registry.remoting.exchange.RequestException;
 import com.google.common.collect.Lists;
+import io.netty.util.Attribute;
+import io.netty.util.AttributeKey;
 import java.net.InetSocketAddress;
 import java.util.Collections;
-import java.util.concurrent.ConcurrentHashMap;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -37,23 +38,17 @@ public class BoltUtilTest {
   @Test
   public void testGetBoltCustomSerializer() {
     Assert.assertNull(BoltUtil.getBoltCustomSerializer(new MockChannel()));
-    BoltChannel boltChannel = new BoltChannel(null);
-    InvokeContext invokeContext = new InvokeContext();
-    invokeContext.put(InvokeContext.BOLT_CUSTOM_SERIALIZER, new Object());
-    RemotingContext remotingContext =
-        new RemotingContext(
-            new MockChannelHandlerContext(), invokeContext, false, new ConcurrentHashMap<>());
-    BizContext bizContext = new DefaultBizContext(remotingContext);
-    boltChannel.setBizContext(bizContext);
-    boolean isException = false;
-    try {
-      BoltUtil.getBoltCustomSerializer(boltChannel);
-    } catch (Throwable r) {
-      isException = true;
-    }
-    Assert.assertTrue(isException);
-    invokeContext.put(InvokeContext.BOLT_CUSTOM_SERIALIZER, new Byte("3"));
+    BoltChannel boltChannel = new BoltChannel(new Connection(createChn()));
+
+    boltChannel.setAttribute(InvokeContext.BOLT_CUSTOM_SERIALIZER, new Byte("3"));
     Assert.assertEquals(new Byte("3"), BoltUtil.getBoltCustomSerializer(boltChannel));
+  }
+
+  private static io.netty.channel.Channel createChn() {
+    io.netty.channel.Channel chn = Mockito.mock(io.netty.channel.Channel.class);
+    Mockito.when(chn.attr(Mockito.any(AttributeKey.class)))
+        .thenReturn(Mockito.mock(Attribute.class));
+    return chn;
   }
 
   @Test
@@ -64,11 +59,6 @@ public class BoltUtilTest {
     AsyncContext asyncContext = Mockito.mock(AsyncContext.class);
     boltChannel.setAsyncContext(asyncContext);
     Assert.assertTrue(asyncContext == boltChannel.getAsyncContext());
-
-    BizContext bizContext = Mockito.mock(BizContext.class);
-    boltChannel.setBizContext(bizContext);
-
-    Assert.assertTrue(bizContext == boltChannel.getBizContext());
 
     Assert.assertNull(boltChannel.getWebTarget());
     boltChannel.close();

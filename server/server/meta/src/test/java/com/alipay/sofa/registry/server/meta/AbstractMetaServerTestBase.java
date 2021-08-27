@@ -20,13 +20,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.alipay.sofa.registry.common.model.Node;
-import com.alipay.sofa.registry.common.model.ServerDataBox;
 import com.alipay.sofa.registry.common.model.console.PersistenceData;
 import com.alipay.sofa.registry.common.model.console.PersistenceDataBuilder;
-import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress;
 import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress.AddressVersion;
-import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.common.model.slot.SlotConfig;
@@ -70,6 +67,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BooleanSupplier;
+import java.util.stream.Collectors;
 import org.assertj.core.util.Lists;
 import org.junit.Assert;
 import org.junit.Before;
@@ -701,14 +699,12 @@ public class AbstractMetaServerTestBase extends AbstractTestBase {
     }
 
     @Override
-    public DBResponse<ProvideData> queryClientOffSet() {
+    public boolean clientOffWithSub(Set<AddressVersion> address) {
+      version.incrementAndGet();
 
-      ProvideData provideData =
-          new ProvideData(
-              new ServerDataBox(cache.get()),
-              ValueConstants.CLIENT_OFF_ADDRESS_DATA_ID,
-              version.get());
-      return DBResponse.ok(provideData).build();
+      return cache
+          .get()
+          .addAll(address.stream().map(AddressVersion::getAddress).collect(Collectors.toSet()));
     }
 
     @Override
@@ -717,7 +713,8 @@ public class AbstractMetaServerTestBase extends AbstractTestBase {
           Maps.newHashMapWithExpectedSize(cache.get().size());
       for (Object address : cache.get()) {
         clientOffAddress.put(
-            (String) address, new AddressVersion(System.currentTimeMillis(), (String) address));
+            (String) address,
+            new AddressVersion(System.currentTimeMillis(), (String) address, true));
       }
 
       ClientManagerAddress resp = new ClientManagerAddress(version.get(), clientOffAddress);

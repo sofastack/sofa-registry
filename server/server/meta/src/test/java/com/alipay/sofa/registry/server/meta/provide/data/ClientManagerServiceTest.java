@@ -18,7 +18,8 @@ package com.alipay.sofa.registry.server.meta.provide.data;
 
 import static org.mockito.Mockito.when;
 
-import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
+import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress;
+import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress.AddressVersion;
 import com.alipay.sofa.registry.server.meta.AbstractH2DbTestBase;
 import com.alipay.sofa.registry.server.meta.MetaLeaderService;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
@@ -27,8 +28,10 @@ import com.alipay.sofa.registry.store.api.OperationStatus;
 import com.alipay.sofa.registry.store.api.meta.ClientManagerAddressRepository;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Set;
 import javax.annotation.Resource;
 import org.junit.Assert;
@@ -64,23 +67,78 @@ public class ClientManagerServiceTest extends AbstractH2DbTestBase {
     clientManagerService.clientOff(clientOffSet);
 
     Thread.sleep(2000);
-    DBResponse<ProvideData> clientOffResponse = clientManagerService.queryClientOffSet();
+    DBResponse<ClientManagerAddress> clientOffResponse =
+        clientManagerService.queryClientOffAddress();
     Assert.assertEquals(clientOffResponse.getOperationStatus(), OperationStatus.SUCCESS);
-    ProvideData clientOffData = clientOffResponse.getEntity();
+    ClientManagerAddress clientOffData = clientOffResponse.getEntity();
     Long v1 = clientOffData.getVersion();
-    Set<String> set1 = (Set<String>) clientOffData.getProvideData().getObject();
+
     Assert.assertTrue(v1 > -1L);
-    Assert.assertEquals(clientOffSet, set1);
+    Assert.assertEquals(clientOffSet, clientOffData.getClientOffAddress().keySet());
+    for (Entry<String, AddressVersion> entry : clientOffData.getClientOffAddress().entrySet()) {
+      Assert.assertTrue(entry.getValue().isPub());
+      Assert.assertTrue(entry.getValue().isSub());
+    }
+
+    Set<AddressVersion> address = Sets.newHashSet();
+    for (String s : clientOffSet) {
+      address.add(new AddressVersion(s, false));
+    }
+    clientManagerService.clientOffWithSub(address);
+
+    Thread.sleep(2000);
+    clientOffResponse = clientManagerService.queryClientOffAddress();
+    Assert.assertEquals(clientOffResponse.getOperationStatus(), OperationStatus.SUCCESS);
+    clientOffData = clientOffResponse.getEntity();
+    v1 = clientOffData.getVersion();
+
+    Assert.assertTrue(v1 > -1L);
+    Assert.assertEquals(clientOffSet, clientOffData.getClientOffAddress().keySet());
+    for (Entry<String, AddressVersion> entry : clientOffData.getClientOffAddress().entrySet()) {
+      Assert.assertTrue(entry.getValue().isPub());
+      Assert.assertTrue(entry.getValue().isSub());
+    }
+
+    address = Sets.newHashSet(new AddressVersion("4.4.4.4", false));
+    clientOffSet.add("4.4.4.4");
+    clientManagerService.clientOffWithSub(address);
+
+    Thread.sleep(2000);
+    clientOffResponse = clientManagerService.queryClientOffAddress();
+    Assert.assertEquals(clientOffResponse.getOperationStatus(), OperationStatus.SUCCESS);
+    clientOffData = clientOffResponse.getEntity();
+    v1 = clientOffData.getVersion();
+
+    Assert.assertTrue(v1 > -1L);
+    AddressVersion addressVersion = clientOffData.getClientOffAddress().get("4.4.4.4");
+    Assert.assertTrue(addressVersion.isPub());
+    Assert.assertFalse(addressVersion.isSub());
+
+    clientManagerService.clientOff(Collections.singleton("4.4.4.4"));
+    Thread.sleep(2000);
+    clientOffResponse = clientManagerService.queryClientOffAddress();
+    Assert.assertEquals(clientOffResponse.getOperationStatus(), OperationStatus.SUCCESS);
+    clientOffData = clientOffResponse.getEntity();
+    long pre = v1;
+    v1 = clientOffData.getVersion();
+
+    Assert.assertEquals(pre, v1.longValue());
+    Assert.assertTrue(v1 > -1L);
+    addressVersion = clientOffData.getClientOffAddress().get("4.4.4.4");
+    Assert.assertTrue(addressVersion.isPub());
+    Assert.assertFalse(addressVersion.isSub());
 
     clientManagerService.clientOpen(clientOpenSet);
     Thread.sleep(2000);
-    DBResponse<ProvideData> clientOpenResponse = clientManagerService.queryClientOffSet();
+    DBResponse<ClientManagerAddress> clientOpenResponse =
+        clientManagerService.queryClientOffAddress();
     Assert.assertEquals(clientOpenResponse.getOperationStatus(), OperationStatus.SUCCESS);
-    ProvideData clientOpenData = clientOpenResponse.getEntity();
+    ClientManagerAddress clientOpenData = clientOpenResponse.getEntity();
     Long v2 = clientOpenData.getVersion();
-    Set<String> set2 = (Set<String>) clientOpenData.getProvideData().getObject();
     Assert.assertTrue(v2 > v1);
-    Assert.assertEquals(Sets.difference(clientOffSet, clientOpenSet), set2);
+    Assert.assertEquals(
+        Sets.difference(clientOffSet, clientOpenSet),
+        clientOpenData.getClientOffAddress().keySet());
 
     /** check expire before clean */
     List<String> expireAddress = clientManagerAddressRepository.getExpireAddress(new Date(), 100);

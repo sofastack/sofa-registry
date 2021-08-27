@@ -29,9 +29,6 @@ import com.alipay.sofa.registry.store.api.OperationStatus;
 import com.alipay.sofa.registry.util.JsonUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.annotations.VisibleForTesting;
-
-import java.util.HashMap;
-import java.util.List;
 import java.util.Set;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
@@ -57,9 +54,9 @@ public class ClientManagerResource {
       LoggerFactory.getLogger(ClientManagerResource.class, "[DBService]");
 
   public static final TypeReference<Set<AddressVersion>> FORMAT =
-          new TypeReference<Set<AddressVersion>>() {};
+      new TypeReference<Set<AddressVersion>>() {};
 
-  @Autowired private    ClientManagerService                         clientManagerService;
+  @Autowired private ClientManagerService clientManagerService;
 
   /** Client off */
   @POST
@@ -81,8 +78,8 @@ public class ClientManagerResource {
 
   /** Client off */
   @POST
-  @Path("/clientOffNew")
-  public CommonResponse clientOffNew(@FormParam("ips") String ips) {
+  @Path("/clientOffWithSub")
+  public CommonResponse clientOffWithSub(@FormParam("ips") String ips) {
     if (StringUtils.isBlank(ips)) {
       return CommonResponse.buildFailedResponse("ips is empty");
     }
@@ -93,7 +90,7 @@ public class ClientManagerResource {
       return CommonResponse.buildFailedResponse("ips is invalidate");
     }
 
-    boolean ret = clientManagerService.clientOffNew(read);
+    boolean ret = clientManagerService.clientOffWithSub(read);
 
     DB_LOGGER.info("client off result:{}, ips:{}", ret, ips);
 

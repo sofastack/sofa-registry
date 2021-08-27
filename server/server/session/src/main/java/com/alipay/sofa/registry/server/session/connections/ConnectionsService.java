@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.registry.server.session.connections;
 
-import com.alipay.remoting.InvokeContext;
 import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.net.NetUtil;
@@ -89,10 +88,7 @@ public class ConnectionsService {
       if (ipSet.contains(ip)) {
         if (StringUtils.isNotBlank(key)) {
           BoltChannel boltChannel = (BoltChannel) channel;
-          InvokeContext invokeContext = boltChannel.getInvokeContext();
-          if (null != invokeContext) {
-            invokeContext.put(key, value);
-          }
+          boltChannel.setAttribute(key, value);
         }
         connections.add(ConnectId.of(channel.getRemoteAddress(), channel.getLocalAddress()));
       }

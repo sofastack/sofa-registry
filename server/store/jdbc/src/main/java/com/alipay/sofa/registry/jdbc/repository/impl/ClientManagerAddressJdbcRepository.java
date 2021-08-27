@@ -139,7 +139,12 @@ public class ClientManagerAddressJdbcRepository implements ClientManagerAddressR
   private void doStorage(Set<AddressVersion> ipSet, String operation) {
     for (AddressVersion address : ipSet) {
       ClientManagerAddressDomain update =
-          new ClientManagerAddressDomain(defaultCommonConfig.getClusterId(), address.getAddress(), operation, address.isPub(), address.isSub());
+          new ClientManagerAddressDomain(
+              defaultCommonConfig.getClusterId(),
+              address.getAddress(),
+              operation,
+              address.isPub(),
+              address.isSub());
       int effectRows = clientManagerAddressMapper.update(update);
 
       if (effectRows == 0) {
