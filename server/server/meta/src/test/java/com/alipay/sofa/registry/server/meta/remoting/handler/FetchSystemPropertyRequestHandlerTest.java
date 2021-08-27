@@ -17,7 +17,6 @@
 package com.alipay.sofa.registry.server.meta.remoting.handler;
 
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyLong;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -27,13 +26,10 @@ import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.FetchSystemPropertyRequest;
 import com.alipay.sofa.registry.common.model.metaserver.FetchSystemPropertyResult;
 import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
-import com.alipay.sofa.registry.server.meta.provide.data.ClientManagerService;
 import com.alipay.sofa.registry.server.meta.provide.data.DefaultProvideDataNotifier;
 import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataService;
 import com.alipay.sofa.registry.server.meta.resource.BlacklistDataResource;
-import com.alipay.sofa.registry.server.meta.resource.ClientManagerResource;
 import com.alipay.sofa.registry.test.TestUtils;
-import java.util.Set;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -56,11 +52,7 @@ public class FetchSystemPropertyRequestHandlerTest extends AbstractMetaServerTes
   private DefaultProvideDataNotifier dataNotifier = mock(DefaultProvideDataNotifier.class);
 
   private FetchSystemPropertyRequest newBlacklistRequest() {
-    return new FetchSystemPropertyRequest(ValueConstants.BLACK_LIST_DATA_ID, anyLong());
-  }
-
-  private FetchSystemPropertyRequest newClientOffRequest() {
-    return new FetchSystemPropertyRequest(ValueConstants.CLIENT_OFF_ADDRESS_DATA_ID, anyLong());
+    return new FetchSystemPropertyRequest(ValueConstants.BLACK_LIST_DATA_ID, 1L);
   }
 
   @Before

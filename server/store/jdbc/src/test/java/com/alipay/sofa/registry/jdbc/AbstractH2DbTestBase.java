@@ -30,6 +30,7 @@ import org.h2.tools.Server;
 import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.springframework.beans.BeansException;
+import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationContext;
@@ -125,5 +126,9 @@ public class AbstractH2DbTestBase extends AbstractTest implements ApplicationCon
   }
 
   @SpringBootApplication
-  public static class JdbcTestConfig {}
+  public static class JdbcTestConfig {
+    public static void main(String[] args) {
+      SpringApplication.run(JdbcTestConfig.class);
+    }
+  }
 }

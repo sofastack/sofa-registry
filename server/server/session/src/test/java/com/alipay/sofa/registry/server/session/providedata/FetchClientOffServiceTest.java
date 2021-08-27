@@ -18,12 +18,10 @@ package com.alipay.sofa.registry.server.session.providedata;
 
 import static com.alipay.sofa.registry.common.model.constants.ValueConstants.CLIENT_OFF;
 import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.alipay.remoting.DefaultBizContext;
-import com.alipay.remoting.InvokeContext;
-import com.alipay.remoting.RemotingContext;
 import com.alipay.sofa.registry.common.model.CollectionSdks;
 import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress.AddressVersion;
 import com.alipay.sofa.registry.common.model.store.URL;
@@ -105,7 +103,7 @@ public class FetchClientOffServiceTest {
 
     Map<String, AddressVersion> addressVersionMap = Maps.newHashMapWithExpectedSize(openIps.size());
     for (String openIp : openIps) {
-      addressVersionMap.put(openIp, new AddressVersion(System.currentTimeMillis(), openIp));
+      addressVersionMap.put(openIp, new AddressVersion(System.currentTimeMillis(), openIp, true));
     }
 
     Assert.assertTrue(
@@ -116,18 +114,18 @@ public class FetchClientOffServiceTest {
   }
 
   @Test
-  public void testClientOpenFailWatcher() {
-    RemotingContext remotingCtx = mock(RemotingContext.class);
-    InvokeContext invokeContext = mock(InvokeContext.class);
+  public void testClientOpenFailWatcher() throws InterruptedException {
 
     BoltChannel boltChannel = (BoltChannel) this.channel;
-    boltChannel.setBizContext(new DefaultBizContext(remotingCtx));
 
-    when(remotingCtx.getInvokeContext()).thenReturn(invokeContext);
-    when(invokeContext.get(CLIENT_OFF)).thenReturn(Boolean.TRUE);
+    boltChannel.setAttribute(CLIENT_OFF, Boolean.TRUE);
 
     when(connectionsService.getAllChannel()).thenReturn(Collections.singletonList(this.channel));
+    when(connectionsService.getIpFromConnectId(anyString())).thenReturn(url.getIpAddress());
 
+    fetchClientOffAddressService.processClientOpen();
+    Thread.sleep(2000);
+    boltChannel.setAttribute(CLIENT_OFF, null);
     fetchClientOffAddressService.processClientOpen();
 
     Mockito.verify(connectionsService, Mockito.times(1)).closeIpConnects(anyList());

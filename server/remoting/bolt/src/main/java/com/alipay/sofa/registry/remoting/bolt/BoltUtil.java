@@ -38,22 +38,19 @@ public final class BoltUtil {
   public static Byte getBoltCustomSerializer(Channel channel) {
     if (channel instanceof BoltChannel) {
       BoltChannel boltChannel = (BoltChannel) channel;
-      InvokeContext invokeContext = boltChannel.getBizContext().getInvokeContext();
 
-      if (null != invokeContext) {
-        // set client custom codec for request command if not null
-        Object clientCustomCodec = invokeContext.get(InvokeContext.BOLT_CUSTOM_SERIALIZER);
-        if (null != clientCustomCodec) {
-          try {
-            return (Byte) clientCustomCodec;
-          } catch (ClassCastException e) {
-            throw new IllegalArgumentException(
-                "Illegal custom codec ["
-                    + clientCustomCodec
-                    + "], the type of value should be [byte], but now is ["
-                    + clientCustomCodec.getClass().getName()
-                    + "].");
-          }
+      // set client custom codec for request command if not null
+      Object clientCustomCodec = boltChannel.getAttribute(InvokeContext.BOLT_CUSTOM_SERIALIZER);
+      if (null != clientCustomCodec) {
+        try {
+          return (Byte) clientCustomCodec;
+        } catch (ClassCastException e) {
+          throw new IllegalArgumentException(
+              "Illegal custom codec ["
+                  + clientCustomCodec
+                  + "], the type of value should be [byte], but now is ["
+                  + clientCustomCodec.getClass().getName()
+                  + "].");
         }
       }
     }

@@ -18,7 +18,6 @@ package com.alipay.sofa.registry.server.session.wrapper;
 
 import static com.alipay.sofa.registry.common.model.constants.ValueConstants.CLIENT_OFF;
 
-import com.alipay.remoting.InvokeContext;
 import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress.AddressVersion;
 import com.alipay.sofa.registry.common.model.store.*;
 import com.alipay.sofa.registry.common.model.store.StoreData.DataType;
@@ -85,10 +84,9 @@ public class ClientOffWrapperInterceptor
               sessionRegistry.getDataCenterWhenPushEmpty(),
               REGISTER_PUSH_EMPTY_VERSION);
           LOGGER.info(
-              "[sub],{},{}",
+              "[clientOffSub],{},{}",
               storeData.getDataInfoId(),
               RemotingHelper.getAddressString(storeData.getSourceAddress()));
-          return true;
         }
       }
     }
@@ -96,16 +94,13 @@ public class ClientOffWrapperInterceptor
   }
 
   private void markChannel(Channel channel) {
-    if (channel == null || !(channel instanceof BoltChannel)) {
+    if (!(channel instanceof BoltChannel)) {
       return;
     }
     BoltChannel boltChannel = (BoltChannel) channel;
-    InvokeContext invokeContext = boltChannel.getInvokeContext();
-    if (null != invokeContext) {
-      Object value = invokeContext.get(CLIENT_OFF);
-      if (value == null || !Boolean.TRUE.equals(value)) {
-        invokeContext.put(CLIENT_OFF, Boolean.TRUE);
-      }
+    Object value = boltChannel.getAttribute(CLIENT_OFF);
+    if (!Boolean.TRUE.equals(value)) {
+      boltChannel.setAttribute(CLIENT_OFF, Boolean.TRUE);
     }
   }
 

@@ -43,15 +43,16 @@ public class ClientManagerAddressDomain implements DbEntry {
   /** last update time */
   private Date gmtModify;
 
-  /** client_off pub */
+  /** client_off pub true:持久化关流pub false:临时关流pub */
   private boolean pub;
 
-  /** client_off sub */
+  /** client_off sub true:持久化关流sub false:临时关流sub */
   private boolean sub;
 
   public ClientManagerAddressDomain() {}
 
-  public ClientManagerAddressDomain(String dataCenter, String address, String operation, boolean pub, boolean sub) {
+  public ClientManagerAddressDomain(
+      String dataCenter, String address, String operation, boolean pub, boolean sub) {
     this.dataCenter = dataCenter;
     this.address = address;
     this.operation = operation;

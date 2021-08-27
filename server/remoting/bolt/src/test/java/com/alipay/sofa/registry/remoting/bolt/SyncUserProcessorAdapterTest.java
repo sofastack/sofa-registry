@@ -17,9 +17,17 @@
 package com.alipay.sofa.registry.remoting.bolt;
 
 import com.alipay.remoting.BizContext;
+import com.alipay.remoting.Connection;
+import com.alipay.remoting.DefaultBizContext;
+import com.alipay.remoting.RemotingContext;
+import com.alipay.sofa.registry.exception.SofaRegistryRuntimeException;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+
+import io.netty.channel.Channel;
+import io.netty.util.Attribute;
+import io.netty.util.AttributeKey;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -40,9 +48,7 @@ public class SyncUserProcessorAdapterTest {
     Mockito.when(exceptionContext.getConnection()).thenThrow(new RuntimeException());
     TestUtils.assertRunException(
         RuntimeException.class, () -> adapter.handleRequest(exceptionContext, "test"));
-
-    BizContext context = Mockito.mock(BizContext.class);
-    adapter.handleRequest(context, "test");
-    Mockito.verify(handler, Mockito.times(1)).reply(Mockito.anyObject(), Mockito.anyObject());
   }
 }
+
+

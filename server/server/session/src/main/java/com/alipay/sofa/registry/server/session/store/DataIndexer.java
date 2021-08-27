@@ -84,9 +84,7 @@ public abstract class DataIndexer<K, V> {
       boolean timeout = !prevTerm.waitAllDone();
       long waitTime = System.currentTimeMillis();
       if (timeout) {
-        LOG.error(
-            "[IndexBuildTimeout]index refresh timeout span={}ms",
-            waitTime - startTime);
+        LOG.error("[IndexBuildTimeout]index refresh timeout span={}ms", waitTime - startTime);
       }
       dataStoreForEach(
           (key, val) -> {

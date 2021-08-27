@@ -16,9 +16,6 @@
  */
 package com.alipay.sofa.registry.common.model.metaserver;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.google.common.base.Objects;
 import java.util.Map;
 
 /**
@@ -67,11 +64,15 @@ public class ClientManagerAddress {
   public static class AddressVersion {
     private long version;
 
-    private final String address;
+    private String address;
 
-    private final boolean pub = true;
+    /** true:持久化关流pub false:临时关流pub */
+    private boolean pub = true;
 
-    private final boolean sub;
+    /** true:持久化关流sub false:临时关流sub */
+    private boolean sub;
+
+    public AddressVersion() {}
 
     public AddressVersion(String address, boolean sub) {
       this.address = address;
@@ -112,12 +113,17 @@ public class ClientManagerAddress {
 
     @Override
     public String toString() {
-      return "AddressVersion{" +
-              "version=" + version +
-              ", address='" + address + '\'' +
-              ", pub=" + pub +
-              ", sub=" + sub +
-              '}';
+      return "AddressVersion{"
+          + "version="
+          + version
+          + ", address='"
+          + address
+          + '\''
+          + ", pub="
+          + pub
+          + ", sub="
+          + sub
+          + '}';
     }
   }
 }

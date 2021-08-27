@@ -41,8 +41,5 @@ public class AsyncUserProcessorAdapterTest {
     TestUtils.assertException(
         RuntimeException.class, () -> adapter.handleRequest(exceptionContext, null, "test"));
 
-    BizContext context = Mockito.mock(BizContext.class);
-    adapter.handleRequest(context, null, "test");
-    Mockito.verify(handler, Mockito.times(1)).received(Mockito.anyObject(), Mockito.anyObject());
   }
 }

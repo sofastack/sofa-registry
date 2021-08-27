@@ -20,7 +20,6 @@ import static com.alipay.sofa.registry.common.model.constants.ValueConstants.CLI
 import static com.alipay.sofa.registry.server.session.registry.ClientManagerMetric.ADDRESS_LOAD_DELAY_HISTOGRAM;
 import static com.alipay.sofa.registry.server.session.registry.ClientManagerMetric.CLIENT_OFF_GAUGE;
 
-import com.alipay.remoting.InvokeContext;
 import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress;
@@ -290,14 +289,11 @@ public class FetchClientOffAddressService
       String key = NetUtil.toAddressString(channel.getRemoteAddress());
       String ip = connectionsService.getIpFromConnectId(key);
 
-      Object value = null;
       BoltChannel boltChannel = (BoltChannel) channel;
-      InvokeContext invokeContext = boltChannel.getInvokeContext();
-      if (null != invokeContext) {
-        value = invokeContext.get(CLIENT_OFF);
-      }
-      if (value != null && Boolean.TRUE.equals(value) && !clientOffAddress.containsKey(ip)) {
+      Object value = boltChannel.getAttribute(CLIENT_OFF);
+      if (Boolean.TRUE.equals(value) && !clientOffAddress.containsKey(ip)) {
         LOGGER.warn("[ClientOpenFail] ip:{} client open fail.", ip);
+        // boltChannel.removeAttribute(CLIENT_OFF);
         retryClientOpen.add(ip);
       }
     }

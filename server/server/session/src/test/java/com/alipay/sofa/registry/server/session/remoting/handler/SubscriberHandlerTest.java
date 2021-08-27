@@ -18,10 +18,7 @@ package com.alipay.sofa.registry.server.session.remoting.handler;
 
 import static org.mockito.Mockito.*;
 
-import com.alipay.remoting.BizContext;
-import com.alipay.remoting.DefaultBizContext;
 import com.alipay.remoting.InvokeContext;
-import com.alipay.remoting.RemotingContext;
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.client.pb.RegisterResponsePb;
 import com.alipay.sofa.registry.common.model.client.pb.SubscriberRegisterPb;
@@ -32,7 +29,6 @@ import com.alipay.sofa.registry.remoting.bolt.serializer.ProtobufSerializer;
 import com.alipay.sofa.registry.server.session.TestUtils;
 import com.alipay.sofa.registry.server.session.bootstrap.ExecutorManager;
 import com.alipay.sofa.registry.server.session.strategy.SubscriberHandlerStrategy;
-import java.util.concurrent.ConcurrentHashMap;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -71,17 +67,14 @@ public class SubscriberHandlerTest {
     Assert.assertEquals(pbHandler.getInvokeType(), ChannelHandler.InvokeType.SYNC);
     SubscriberRegisterPb pb = SubscriberRegisterPb.newBuilder().build();
     TestUtils.MockBlotChannel channel = TestUtils.newChannel(9600, "127.0.0.1", 9888);
-    RemotingContext ctx =
-        new RemotingContext(null, new InvokeContext(), true, new ConcurrentHashMap<>());
-    BizContext context = new DefaultBizContext(ctx);
-    channel.setBizContext(context);
+
     // not RegisterResponse
     RegisterResponsePb responsePb = (RegisterResponsePb) pbHandler.doHandle(channel, pb);
     Assert.assertFalse(responsePb.getSuccess());
     verify(pbHandler.subscriberHandler.subscriberHandlerStrategy, times(1))
         .handleSubscriberRegister(anyObject(), anyObject(), any());
     Assert.assertEquals(
-        ctx.getInvokeContext().get(InvokeContext.BOLT_CUSTOM_SERIALIZER),
+        channel.getConnection().getAttribute(InvokeContext.BOLT_CUSTOM_SERIALIZER),
         new Byte(ProtobufSerializer.PROTOCOL_PROTOBUF));
   }
 
