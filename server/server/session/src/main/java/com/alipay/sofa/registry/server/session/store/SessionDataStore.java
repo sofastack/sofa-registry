@@ -23,6 +23,7 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
+import com.google.common.annotations.VisibleForTesting;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -62,7 +63,12 @@ public class SessionDataStore extends AbstractDataManager<Publisher> implements 
     return store;
   }
 
-  private int slotOf(String dataInfoId) {
+  @VisibleForTesting
+  public void setSlotTableCache(SlotTableCache slotTableCache) {
+    this.slotTableCache = slotTableCache;
+  }
+
+  protected int slotOf(String dataInfoId) {
     return slotTableCache.slotOf(dataInfoId);
   }
 }

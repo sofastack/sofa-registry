@@ -178,11 +178,10 @@ public class SessionDataStoreTest {
 
     CountDownLatch latch = new CountDownLatch(pubs.size() + unpubs.size() + clientOffs.size());
     ThreadPoolExecutor pubExecutor =
-        new ThreadPoolExecutor(
-            20, 20, 0, TimeUnit.SECONDS, new LinkedBlockingQueue<>(pubs.size()));
+        new ThreadPoolExecutor(20, 20, 0, TimeUnit.SECONDS, new LinkedBlockingQueue<>(pubs.size()));
     ThreadPoolExecutor unpubExecutor =
         new ThreadPoolExecutor(
-            20,20, 0, TimeUnit.SECONDS, new LinkedBlockingQueue<>(unpubs.size()));
+            20, 20, 0, TimeUnit.SECONDS, new LinkedBlockingQueue<>(unpubs.size()));
     ThreadPoolExecutor clientOffExecutor =
         new ThreadPoolExecutor(
             clientOffs.size(),
