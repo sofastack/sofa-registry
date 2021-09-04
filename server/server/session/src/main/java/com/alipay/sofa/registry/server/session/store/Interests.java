@@ -45,6 +45,8 @@ public interface Interests extends DataManager<Subscriber, String, String> {
 
   Tuple<Map<String, DatumVersion>, List<Subscriber>> selectSubscribers(String dataCenter);
 
+  Map<String, List<String>> filterIPs(String group, int limit);
+
   enum InterestVersionCheck {
     NoSub(false),
     Obsolete(false),

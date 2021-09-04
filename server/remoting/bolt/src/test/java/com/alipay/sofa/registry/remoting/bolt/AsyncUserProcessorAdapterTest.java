@@ -40,6 +40,5 @@ public class AsyncUserProcessorAdapterTest {
     Mockito.when(exceptionContext.getConnection()).thenThrow(new RuntimeException());
     TestUtils.assertException(
         RuntimeException.class, () -> adapter.handleRequest(exceptionContext, null, "test"));
-
   }
 }

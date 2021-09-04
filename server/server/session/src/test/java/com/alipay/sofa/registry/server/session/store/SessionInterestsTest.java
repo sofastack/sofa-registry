@@ -97,4 +97,21 @@ public class SessionInterestsTest extends AbstractSessionServerTestBase {
     Assert.assertEquals(map.size(), 1);
     Assert.assertEquals(map.get(subscriber.getDataInfoId()).getValue(), 80);
   }
+
+  @Test
+  public void testFilterIPs() {
+    Assert.assertEquals(0, interests.filterIPs("", 0).size());
+    Subscriber subscriber = randomSubscriber();
+    interests.add(subscriber);
+    Assert.assertEquals(0, interests.filterIPs("", 0).size());
+    Assert.assertEquals(1, interests.filterIPs(subscriber.getGroup(), 0).size());
+    Assert.assertEquals(
+        0, interests.filterIPs(subscriber.getGroup(), 0).get(subscriber.getDataInfoId()).size());
+    Assert.assertEquals(
+        1, interests.filterIPs(subscriber.getGroup(), 1).get(subscriber.getDataInfoId()).size());
+    Assert.assertEquals(
+        0, interests.filterIPs(subscriber.getGroup(), -1).get(subscriber.getDataInfoId()).size());
+    Assert.assertEquals(
+        1, interests.filterIPs(subscriber.getGroup(), 100).get(subscriber.getDataInfoId()).size());
+  }
 }

@@ -80,13 +80,17 @@ public class DataInfo implements Serializable {
    * @return
    */
   public static DataInfo valueOf(String dataInfoId) {
+    String[] parts = parse(dataInfoId);
+    return new DataInfo(parts[1], parts[0], parts[2]);
+  }
+
+  public static String[] parse(String dataInfoId) {
     ParaCheckUtil.checkNotBlank(dataInfoId, "dataInfoId");
     String[] str = dataInfoId.split(DELIMITER);
     if (str.length != DATAID_LENTH) {
       throw new IllegalArgumentException("dataInfoId input error!");
     }
-
-    return new DataInfo(str[1], str[0], str[2]);
+    return str;
   }
 
   /**

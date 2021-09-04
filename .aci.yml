@@ -31,7 +31,7 @@ STC扫描:
     COVERAGE_EXCLUSIONS: '**/bootstrap/**,**/integration/**,**/client/pb/**,**/MetaApplication,**/registry/jraft/**,**/DataApplication,**/SessionApplication' # 覆盖率排除
   pluginConfig:
     markdown: admin/result.md # 向页面输出一些自定义内容
-    aciTags: 8G
+    aciTags: 16G
 
 #see https://code.alipay.com/common_release/avatarpoc/blob/master/.aci.test.yml
 集成测试:

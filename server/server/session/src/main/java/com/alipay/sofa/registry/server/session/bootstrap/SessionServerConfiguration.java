@@ -49,11 +49,7 @@ import com.alipay.sofa.registry.server.session.remoting.ClientNodeExchanger;
 import com.alipay.sofa.registry.server.session.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.server.session.remoting.DataNodeNotifyExchanger;
 import com.alipay.sofa.registry.server.session.remoting.console.SessionConsoleExchanger;
-import com.alipay.sofa.registry.server.session.remoting.console.handler.ClientOffRequestHandler;
-import com.alipay.sofa.registry.server.session.remoting.console.handler.ClientOnRequestHandler;
-import com.alipay.sofa.registry.server.session.remoting.console.handler.GetClientManagerRequestHandler;
-import com.alipay.sofa.registry.server.session.remoting.console.handler.PubSubDataInfoIdRequestHandler;
-import com.alipay.sofa.registry.server.session.remoting.console.handler.QuerySubscriberRequestHandler;
+import com.alipay.sofa.registry.server.session.remoting.console.handler.*;
 import com.alipay.sofa.registry.server.session.remoting.handler.*;
 import com.alipay.sofa.registry.server.session.resource.*;
 import com.alipay.sofa.registry.server.session.scheduler.timertask.CacheCountTask;
@@ -210,6 +206,7 @@ public class SessionServerConfiguration {
       list.add(clientOnRequestHandler());
       list.add(getClientManagerRequestHandler());
       list.add(pubSubDataInfoIdRequestHandler());
+      list.add(filterSubscriberIPsHandler());
       return list;
     }
 
@@ -241,6 +238,11 @@ public class SessionServerConfiguration {
     @Bean
     public AbstractServerHandler querySubscriberRequestHandler() {
       return new QuerySubscriberRequestHandler();
+    }
+
+    @Bean
+    public AbstractServerHandler filterSubscriberIPsHandler() {
+      return new FilterSubscriberIPsHandler();
     }
 
     @Bean
