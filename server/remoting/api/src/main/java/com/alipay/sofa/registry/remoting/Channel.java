@@ -47,7 +47,7 @@ public interface Channel {
   boolean isConnected();
 
   /**
-   * get attribute.
+   * get attribute in context.
    *
    * @param key key.
    * @return value.
@@ -55,12 +55,28 @@ public interface Channel {
   Object getAttribute(String key);
 
   /**
-   * set attribute.
+   * set attribute in context.
    *
    * @param key key.
    * @param value value.
    */
   void setAttribute(String key, Object value);
+
+  /**
+   * get attribute in connection.
+   *
+   * @param key key.
+   * @return value.
+   */
+  Object getConnAttribute(String key);
+
+  /**
+   * set attribute in connection.
+   *
+   * @param key key.
+   * @param value value.
+   */
+  void setConnAttribute(String key, Object value);
 
   /**
    * for rest api

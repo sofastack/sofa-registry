@@ -98,9 +98,9 @@ public class ClientOffWrapperInterceptor
       return;
     }
     BoltChannel boltChannel = (BoltChannel) channel;
-    Object value = boltChannel.getAttribute(CLIENT_OFF);
+    Object value = boltChannel.getConnAttribute(CLIENT_OFF);
     if (!Boolean.TRUE.equals(value)) {
-      boltChannel.setAttribute(CLIENT_OFF, Boolean.TRUE);
+      boltChannel.setConnAttribute(CLIENT_OFF, Boolean.TRUE);
     }
   }
 

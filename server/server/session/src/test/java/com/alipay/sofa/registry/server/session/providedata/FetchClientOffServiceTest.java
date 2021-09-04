@@ -118,14 +118,14 @@ public class FetchClientOffServiceTest {
 
     BoltChannel boltChannel = (BoltChannel) this.channel;
 
-    boltChannel.setAttribute(CLIENT_OFF, Boolean.TRUE);
+    boltChannel.setConnAttribute(CLIENT_OFF, Boolean.TRUE);
 
     when(connectionsService.getAllChannel()).thenReturn(Collections.singletonList(this.channel));
     when(connectionsService.getIpFromConnectId(anyString())).thenReturn(url.getIpAddress());
 
     fetchClientOffAddressService.processClientOpen();
     Thread.sleep(2000);
-    boltChannel.setAttribute(CLIENT_OFF, null);
+    boltChannel.setConnAttribute(CLIENT_OFF, null);
     fetchClientOffAddressService.processClientOpen();
 
     Mockito.verify(connectionsService, Mockito.times(1)).closeIpConnects(anyList());

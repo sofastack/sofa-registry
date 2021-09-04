@@ -88,7 +88,7 @@ public class ConnectionsService {
       if (ipSet.contains(ip)) {
         if (StringUtils.isNotBlank(key)) {
           BoltChannel boltChannel = (BoltChannel) channel;
-          boltChannel.setAttribute(key, value);
+          boltChannel.setConnAttribute(key, value);
         }
         connections.add(ConnectId.of(channel.getRemoteAddress(), channel.getLocalAddress()));
       }

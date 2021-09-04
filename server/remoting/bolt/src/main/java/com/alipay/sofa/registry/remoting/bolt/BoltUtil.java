@@ -40,7 +40,7 @@ public final class BoltUtil {
       BoltChannel boltChannel = (BoltChannel) channel;
 
       // set client custom codec for request command if not null
-      Object clientCustomCodec = boltChannel.getAttribute(InvokeContext.BOLT_CUSTOM_SERIALIZER);
+      Object clientCustomCodec = boltChannel.getConnAttribute(InvokeContext.BOLT_CUSTOM_SERIALIZER);
       if (null != clientCustomCodec) {
         try {
           return (Byte) clientCustomCodec;
