@@ -35,7 +35,7 @@ public class StorePerformanceTest {
   @Test
   public void test() {
     // too slow
-    warm();
+//    warm();
     //    testSub0();
     //    testSub1();
   }

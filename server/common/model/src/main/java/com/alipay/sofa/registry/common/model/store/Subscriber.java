@@ -201,7 +201,7 @@ public class Subscriber extends BaseInfo {
     return ctx.pushedVersion;
   }
 
-  public synchronized long getPushedNum(String dataCenter) {
+  public synchronized int getPushedNum(String dataCenter) {
     final PushContext ctx = getPushContext(dataCenter);
     return ctx.pushedNum;
   }
