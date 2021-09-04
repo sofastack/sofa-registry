@@ -22,6 +22,8 @@ import com.alipay.sofa.registry.exception.SofaRegistryRuntimeException;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.util.StringFormatter;
 import java.net.InetSocketAddress;
+import java.util.HashMap;
+import java.util.Map;
 import javax.ws.rs.client.WebTarget;
 
 /**
@@ -34,6 +36,8 @@ public class BoltChannel implements Channel {
   private final Connection connection;
 
   private AsyncContext asyncContext;
+
+  private Map<String, Object> attributes;
 
   public BoltChannel(Connection conn) {
     if (conn == null) {
@@ -60,17 +64,35 @@ public class BoltChannel implements Channel {
   }
 
   @Override
-  public synchronized Object getAttribute(String key) {
-    return connection == null ? null : connection.getAttribute(key);
-  }
-
-  @Override
-  public synchronized void setAttribute(String key, Object value) {
+  public void setConnAttribute(String key, Object value) {
 
     if (value == null) {
       connection.removeAttribute(key);
     } else {
       connection.setAttribute(key, value);
+    }
+  }
+
+  @Override
+  public Object getConnAttribute(String key) {
+    return connection.getAttribute(key);
+  }
+
+  @Override
+  public synchronized Object getAttribute(String key) {
+    return attributes == null ? null : attributes.get(key);
+  }
+
+  @Override
+  public synchronized void setAttribute(String key, Object value) {
+
+    if (attributes == null) {
+      attributes = new HashMap<>();
+    }
+    if (value == null) {
+      attributes.remove(key);
+    } else {
+      attributes.put(key, value);
     }
   }
 

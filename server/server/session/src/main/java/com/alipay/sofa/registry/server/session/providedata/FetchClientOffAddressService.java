@@ -290,7 +290,7 @@ public class FetchClientOffAddressService
       String ip = connectionsService.getIpFromConnectId(key);
 
       BoltChannel boltChannel = (BoltChannel) channel;
-      Object value = boltChannel.getAttribute(CLIENT_OFF);
+      Object value = boltChannel.getConnAttribute(CLIENT_OFF);
       if (Boolean.TRUE.equals(value) && !clientOffAddress.containsKey(ip)) {
         LOGGER.warn("[ClientOpenFail] ip:{} client open fail.", ip);
         // boltChannel.removeAttribute(CLIENT_OFF);

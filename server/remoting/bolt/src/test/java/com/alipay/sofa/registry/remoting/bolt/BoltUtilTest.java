@@ -40,7 +40,7 @@ public class BoltUtilTest {
     Assert.assertNull(BoltUtil.getBoltCustomSerializer(new MockChannel()));
     BoltChannel boltChannel = new BoltChannel(new Connection(createChn()));
 
-    boltChannel.setAttribute(InvokeContext.BOLT_CUSTOM_SERIALIZER, new Byte("3"));
+    boltChannel.setConnAttribute(InvokeContext.BOLT_CUSTOM_SERIALIZER, new Byte("3"));
     Assert.assertEquals(new Byte("3"), BoltUtil.getBoltCustomSerializer(boltChannel));
   }
 
