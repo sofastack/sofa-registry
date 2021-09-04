@@ -28,6 +28,8 @@ import com.google.common.collect.Maps;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.util.CollectionUtils;
 
 /**
@@ -113,5 +115,27 @@ public class SessionInterests extends AbstractDataManager<Subscriber> implements
   @Override
   protected Store<Subscriber> getStore() {
     return store;
+  }
+
+  @Override
+  public Map<String, List<String>> filterIPs(String group, int limit) {
+    Map<String, List<String>> ret = Maps.newHashMapWithExpectedSize(1024);
+    forEach(
+        (String dataInfoId, Map<String, Subscriber> subs) -> {
+          if (CollectionUtils.isEmpty(subs)) {
+            return;
+          }
+          String g = subs.values().stream().findAny().get().getGroup();
+          if (!StringUtils.equals(g, group)) {
+            return;
+          }
+          ret.put(
+              dataInfoId,
+              subs.values().stream()
+                  .map(s -> s.getSourceAddress().getIpAddress())
+                  .limit(Math.max(limit, 0))
+                  .collect(Collectors.toList()));
+        });
+    return ret;
   }
 }
