@@ -141,7 +141,7 @@ public class SessionDataStoreTest {
     for (int i = 0; i < urlCount; i++) {
       candUrls.add(i, new URL("192.168.0.1", 50000 + i));
     }
-    int dataIdCount = 200;
+    int dataIdCount = 20;
     int ipPerDataId = 100;
     Random random = new Random();
     random.setSeed(System.currentTimeMillis());
@@ -179,10 +179,10 @@ public class SessionDataStoreTest {
     CountDownLatch latch = new CountDownLatch(pubs.size() + unpubs.size() + clientOffs.size());
     ThreadPoolExecutor pubExecutor =
         new ThreadPoolExecutor(
-            100, 100, 0, TimeUnit.SECONDS, new LinkedBlockingQueue<>(pubs.size()));
+            20, 20, 0, TimeUnit.SECONDS, new LinkedBlockingQueue<>(pubs.size()));
     ThreadPoolExecutor unpubExecutor =
         new ThreadPoolExecutor(
-            100, 100, 0, TimeUnit.SECONDS, new LinkedBlockingQueue<>(unpubs.size()));
+            20,20, 0, TimeUnit.SECONDS, new LinkedBlockingQueue<>(unpubs.size()));
     ThreadPoolExecutor clientOffExecutor =
         new ThreadPoolExecutor(
             clientOffs.size(),
