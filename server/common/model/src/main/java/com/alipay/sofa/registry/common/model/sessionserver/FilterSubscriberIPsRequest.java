@@ -16,7 +16,9 @@
  */
 package com.alipay.sofa.registry.common.model.sessionserver;
 
-public class FilterSubscriberIPsRequest {
+import java.io.Serializable;
+
+public class FilterSubscriberIPsRequest implements Serializable {
   private final String group;
   private final int ipLimit;
 
