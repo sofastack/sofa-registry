@@ -27,7 +27,7 @@ import org.junit.Test;
 public class FilterSubscriberIPsHandlerTest {
   private FilterSubscriberIPsHandler newHandler() {
     FilterSubscriberIPsHandler handler = new FilterSubscriberIPsHandler();
-    Assert.assertEquals(FilterSubscriberIPsHandler.class, handler.interest());
+    Assert.assertEquals(FilterSubscriberIPsRequest.class, handler.interest());
     return handler;
   }
 

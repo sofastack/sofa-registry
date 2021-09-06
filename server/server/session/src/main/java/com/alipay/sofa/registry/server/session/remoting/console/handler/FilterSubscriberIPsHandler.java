@@ -27,7 +27,7 @@ public class FilterSubscriberIPsHandler extends AbstractConsoleHandler<FilterSub
 
   @Override
   public Class interest() {
-    return FilterSubscriberIPsHandler.class;
+    return FilterSubscriberIPsRequest.class;
   }
 
   @Override
