@@ -22,6 +22,7 @@ import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.URL;
+import com.alipay.sofa.registry.common.model.store.UnPublisher;
 import com.alipay.sofa.registry.server.data.TestBaseUtils;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -185,6 +186,18 @@ public class PublisherGroupsTest {
     Assert.assertEquals(processIds.size(), 1);
     Assert.assertTrue(processIds.contains(publisher.getSessionProcessId()));
     Assert.assertTrue(processIds.contains(publisher2.getSessionProcessId()));
+  }
+
+  @Test
+  public void testUnpub() {
+    PublisherGroups groups = new PublisherGroups(testDc);
+    PublisherGroup group = groups.createGroupIfAbsent(testDataInfoId);
+    Assert.assertNotNull(group);
+    Publisher publisher = TestBaseUtils.createTestPublisher(testDataId);
+    UnPublisher unPublisher = UnPublisher.of(publisher);
+
+    DatumVersion v = groups.put(publisher.getDataInfoId(), Collections.singletonList(unPublisher));
+    Assert.assertNull(v);
   }
 
   @Test

@@ -169,8 +169,9 @@ public final class PublisherGroup {
     PublisherEnvelope exist = pubMap.get(publisher.getRegisterId());
     final RegisterVersion registerVersion = publisher.registerVersion();
     if (exist == null) {
-      pubMap.put(publisher.getRegisterId(), PublisherEnvelope.of(publisher));
-      return true;
+      PublisherEnvelope envelope = PublisherEnvelope.of(publisher);
+      pubMap.put(publisher.getRegisterId(), envelope);
+      return envelope.isPub();
     }
 
     if (exist.registerVersion.equals(registerVersion)) {

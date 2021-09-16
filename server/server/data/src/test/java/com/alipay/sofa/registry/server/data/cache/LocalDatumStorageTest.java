@@ -25,6 +25,7 @@ import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.common.model.slot.SlotConfig;
 import com.alipay.sofa.registry.common.model.slot.func.SlotFunctionRegistry;
 import com.alipay.sofa.registry.common.model.store.Publisher;
+import com.alipay.sofa.registry.common.model.store.UnPublisher;
 import com.alipay.sofa.registry.server.data.TestBaseUtils;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -242,6 +243,29 @@ public class LocalDatumStorageTest {
     Assert.assertNotNull(v);
     map = storage.getAllPublisher();
     Assert.assertFalse(map.get(publisher3.getDataInfoId()).contains(publisher3));
+  }
+
+  @Test
+  public void testUnpubAfterRemove() {
+    LocalDatumStorage storage = TestBaseUtils.newLocalStorage(testDc, true);
+    Publisher publisher = TestBaseUtils.createTestPublisher(testDataId);
+    DatumVersion v = storage.put(publisher);
+    Assert.assertNotNull(v);
+
+    v =
+        storage.remove(
+                publisher.getDataInfoId(),
+                publisher.getSessionProcessId(),
+            Collections.singletonMap(
+                    publisher.getRegisterId(),
+                RegisterVersion.of(
+                        publisher.getVersion() + 1, publisher.getRegisterTimestamp())));
+    Assert.assertNotNull(v);
+
+    UnPublisher unpub = UnPublisher.of(publisher);
+    v = storage.put(unpub);
+    Assert.assertNull(v);
+
   }
 
   @Test
