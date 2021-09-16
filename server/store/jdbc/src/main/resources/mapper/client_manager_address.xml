@@ -22,7 +22,7 @@
         <![CDATA[
 
               update /*+ QUERY_TIMEOUT(3000000) */ client_manager_address set gmt_modified = CURRENT_TIMESTAMP
-              WHERE data_center = #{dataCenter} AND address = #{address} AND operation = #{operation}
+              WHERE data_center = #{dataCenter} AND address = #{address} AND operation = #{operation} AND sub = #{sub}
 
         ]]>
     </update>

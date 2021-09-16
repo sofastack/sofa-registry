@@ -30,7 +30,9 @@ import com.alipay.sofa.registry.jdbc.mapper.ClientManagerAddressMapper;
 import com.google.common.collect.Sets;
 import java.util.Date;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.annotation.Resource;
 import org.junit.Assert;
@@ -52,6 +54,10 @@ public class ClientManagerAddressJdbcRepositoryTest extends AbstractH2DbTestBase
 
   public static final Set<AddressVersion> clientOffSet =
       Sets.newHashSet(new AddressVersion("1.1.1.1", true), new AddressVersion("2.2.2.2", false));
+
+  public static final Set<AddressVersion> clientOffWithSubSet =
+          Sets.newHashSet(new AddressVersion("1.1.1.1", true), new AddressVersion("2.2.2.2", true));
+
   public static final Set<AddressVersion> clientOpenSet =
       Sets.newHashSet(new AddressVersion("2.2.2.2", true), new AddressVersion("3.3.3.3", true));
 
@@ -60,6 +66,48 @@ public class ClientManagerAddressJdbcRepositoryTest extends AbstractH2DbTestBase
 
   private ClientManagerAddressMapper mapper = mock(ClientManagerAddressMapper.class);
 
+
+  @Test
+  public void testClientManagerWithSub() throws InterruptedException {
+    boolean clientOff =
+            clientManagerAddressJdbcRepository.clientOff(
+                    ClientManagerAddressJdbcRepositoryTest.clientOffSet);
+    Assert.assertTrue(clientOff);
+    TimeUnit.SECONDS.sleep(3);
+
+    ClientManagerAddress query = clientManagerAddressJdbcRepository.queryClientOffData();
+    for (AddressVersion addressVersion : clientOffSet) {
+      AddressVersion queryVersion = query.getClientOffAddress().get(addressVersion.getAddress());
+      Assert.assertEquals(addressVersion.isPub(), queryVersion.isPub());
+      Assert.assertEquals(addressVersion.isSub(), queryVersion.isSub());
+    }
+
+    clientOff =
+            clientManagerAddressJdbcRepository.clientOff(
+                    ClientManagerAddressJdbcRepositoryTest.clientOffWithSubSet);
+    Assert.assertTrue(clientOff);
+    TimeUnit.SECONDS.sleep(3);
+
+    query = clientManagerAddressJdbcRepository.queryClientOffData();
+    for (AddressVersion addressVersion : clientOffWithSubSet) {
+      AddressVersion queryVersion = query.getClientOffAddress().get(addressVersion.getAddress());
+      Assert.assertEquals(addressVersion.isPub(), queryVersion.isPub());
+      Assert.assertEquals(addressVersion.isSub(), queryVersion.isSub());
+    }
+
+    clientOff =
+            clientManagerAddressJdbcRepository.clientOff(
+                    ClientManagerAddressJdbcRepositoryTest.clientOffSet);
+    Assert.assertTrue(clientOff);
+    TimeUnit.SECONDS.sleep(3);
+
+    query = clientManagerAddressJdbcRepository.queryClientOffData();
+    for (AddressVersion addressVersion : clientOffSet) {
+      AddressVersion queryVersion = query.getClientOffAddress().get(addressVersion.getAddress());
+      Assert.assertEquals(addressVersion.isPub(), queryVersion.isPub());
+      Assert.assertEquals(addressVersion.isSub(), queryVersion.isSub());
+    }
+  }
   @Test
   public void testClientManager() {
     boolean clientOff =
