@@ -171,12 +171,6 @@ public final class PublisherGroup {
     if (exist == null) {
       // publisher is null after client_off
       PublisherEnvelope envelope = PublisherEnvelope.of(publisher);
-      LOGGER.info(
-              "[ReplaceEmptyPub] {}, {}, add={}, regIsPub={}",
-              publisher.getDataInfoId(),
-              publisher.getRegisterId(),
-              publisher.registerVersion(),
-              envelope.isPub());
       pubMap.put(publisher.getRegisterId(), envelope);
       return envelope.isPub();
     }
