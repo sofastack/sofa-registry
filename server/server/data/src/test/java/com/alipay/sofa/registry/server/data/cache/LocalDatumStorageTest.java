@@ -33,6 +33,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
+
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -246,7 +248,7 @@ public class LocalDatumStorageTest {
   }
 
   @Test
-  public void testUnpubAfterRemove() {
+  public void testUnpubAfterRemove() throws InterruptedException {
     LocalDatumStorage storage = TestBaseUtils.newLocalStorage(testDc, true);
     Publisher publisher = TestBaseUtils.createTestPublisher(testDataId);
     DatumVersion v = storage.put(publisher);
@@ -261,12 +263,14 @@ public class LocalDatumStorageTest {
                 RegisterVersion.of(publisher.getVersion() + 1, publisher.getRegisterTimestamp())));
     Assert.assertNotNull(v);
 
+    TimeUnit.SECONDS.sleep(60);
     UnPublisher unpub = UnPublisher.of(publisher);
+    unpub.setVersion(unpub.getVersion() + 2);
     v = storage.put(unpub);
     Assert.assertNull(v);
 
     UnPublisher unpub1 = UnPublisher.of(unpub);
-    unpub1.setVersion(unpub1.getVersion() + 100);
+    unpub1.setVersion(unpub1.getVersion() + 3);
     v = storage.put(unpub1);
     Assert.assertNull(v);
   }
