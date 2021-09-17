@@ -169,7 +169,14 @@ public final class PublisherGroup {
     PublisherEnvelope exist = pubMap.get(publisher.getRegisterId());
     final RegisterVersion registerVersion = publisher.registerVersion();
     if (exist == null) {
+      // publisher is null after client_off
       PublisherEnvelope envelope = PublisherEnvelope.of(publisher);
+      LOGGER.info(
+              "[ReplaceEmptyPub] {}, {}, add={}, regIsPub={}",
+              publisher.getDataInfoId(),
+              publisher.getRegisterId(),
+              publisher.registerVersion(),
+              envelope.isPub());
       pubMap.put(publisher.getRegisterId(), envelope);
       return envelope.isPub();
     }
@@ -194,17 +201,19 @@ public final class PublisherGroup {
           publisher.registerVersion());
       return false;
     }
-    pubMap.put(publisher.getRegisterId(), PublisherEnvelope.of(publisher));
+    PublisherEnvelope envelope = PublisherEnvelope.of(publisher);
+    pubMap.put(publisher.getRegisterId(), envelope);
 
     if (exist.publisher == null) {
       // publisher is null after client_off
       LOGGER.info(
-          "[ReplaceEmptyPub] {}, {}, exist={}, add={}",
-          publisher.getDataInfoId(),
-          publisher.getRegisterId(),
-          exist.registerVersion,
-          publisher.registerVersion());
-      return true;
+              "[ReplaceEmptyPub] {}, {}, exist={}, add={}, regIsPub={}",
+              publisher.getDataInfoId(),
+              publisher.getRegisterId(),
+              exist.registerVersion,
+              publisher.registerVersion(),
+              envelope.isPub());
+      return envelope.isPub();
     }
     try {
       boolean same =
