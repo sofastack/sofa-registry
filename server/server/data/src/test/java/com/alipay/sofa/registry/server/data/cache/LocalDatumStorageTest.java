@@ -254,18 +254,21 @@ public class LocalDatumStorageTest {
 
     v =
         storage.remove(
-                publisher.getDataInfoId(),
-                publisher.getSessionProcessId(),
+            publisher.getDataInfoId(),
+            publisher.getSessionProcessId(),
             Collections.singletonMap(
-                    publisher.getRegisterId(),
-                RegisterVersion.of(
-                        publisher.getVersion() + 1, publisher.getRegisterTimestamp())));
+                publisher.getRegisterId(),
+                RegisterVersion.of(publisher.getVersion() + 1, publisher.getRegisterTimestamp())));
     Assert.assertNotNull(v);
 
     UnPublisher unpub = UnPublisher.of(publisher);
     v = storage.put(unpub);
     Assert.assertNull(v);
 
+    UnPublisher unpub1 = UnPublisher.of(unpub);
+    unpub1.setVersion(unpub1.getVersion() + 100);
+    v = storage.put(unpub1);
+    Assert.assertNull(v);
   }
 
   @Test
