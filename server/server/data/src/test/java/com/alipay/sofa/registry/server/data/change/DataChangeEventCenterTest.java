@@ -322,18 +322,18 @@ public class DataChangeEventCenterTest {
 
     center.onChange(Lists.newArrayList(pub.getDataInfoId()), DataChangeType.PUT, DC);
     center.onTempPubChange(pub, DC);
-    Thread.sleep(2000);
+    Thread.sleep(3000);
 
     channel.setActive(true);
     Assert.assertTrue(channel.isConnected());
 
     center.onChange(Lists.newArrayList(pub.getDataInfoId()), DataChangeType.PUT, DC);
     center.onTempPubChange(pub, DC);
-    Thread.sleep(2000);
+    Thread.sleep(3000);
 
     center.onChange(Lists.newArrayList(pub.getDataInfoId()), DataChangeType.PUT, DC);
     center.onTempPubChange(pub, DC);
-    Thread.sleep(2000);
+    Thread.sleep(3000);
     Mockito.verify(server, Mockito.times(6))
         .sendSync(Mockito.anyObject(), Mockito.anyObject(), Mockito.anyInt());
   }
