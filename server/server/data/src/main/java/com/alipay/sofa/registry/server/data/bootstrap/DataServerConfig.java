@@ -51,7 +51,7 @@ public class DataServerConfig {
 
   private int notifyMaxItems = 400;
 
-  private int notifyIntervalMillis = 1000;
+  private int notifyIntervalMillis = 2000;
 
   private int notifyRetryTimes = 3;
 
