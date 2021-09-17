@@ -94,7 +94,7 @@ public class DataServerConfig {
 
   private int slotFollowerSyncLeaderExecutorThreadSize = OsUtils.getCpuCount();
   private int slotFollowerSyncLeaderExecutorQueueSize = 10000;
-  private volatile int slotFollowerSyncLeaderIntervalSecs = 60;
+  private volatile int slotFollowerSyncLeaderIntervalSecs = 180;
 
   // the publisher.digest if len(registerId/uuid+long+long), 50bytes
   private volatile int slotSyncPublisherDigestMaxNum = 4000;
