@@ -16,14 +16,19 @@
  */
 package com.alipay.sofa.registry.server.shared.util;
 
+import com.alipay.remoting.serialization.HessianSerializer;
 import com.alipay.sofa.registry.common.model.ServerDataBox;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.store.*;
+import com.alipay.sofa.registry.compress.CompressCachedExecutor;
+import com.alipay.sofa.registry.compress.CompressUtils;
+import com.alipay.sofa.registry.compress.CompressedItem;
+import com.alipay.sofa.registry.compress.Compressor;
 import com.alipay.sofa.registry.core.model.DataBox;
+import com.alipay.sofa.registry.util.SystemUtils;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.collections.CollectionUtils;
@@ -33,6 +38,25 @@ import org.apache.commons.collections.CollectionUtils;
  * @since 2019/2/12
  */
 public final class DatumUtils {
+  private static final String KEY_COMPRESS_DATUM_CACHE_CAPACITY =
+      "registry.compress.datum.capacity";
+  private static final String KEY_DECOMPRESS_DATUM_CACHE_CAPACITY =
+      "registry.decompress.datum.capacity";
+
+  public static final CompressCachedExecutor<CompressedItem> compressCachedExecutor =
+      CompressUtils.newCachedExecutor(
+          "datum_compress",
+          30 * 1000,
+          SystemUtils.getSystemInteger(KEY_COMPRESS_DATUM_CACHE_CAPACITY, 1024 * 1024 * 128));
+
+  public static final CompressCachedExecutor<SubPublisherList> decompressCachedExecutor =
+      CompressUtils.newCachedExecutor(
+          "datum_decompress",
+          30 * 1000,
+          SystemUtils.getSystemInteger(KEY_DECOMPRESS_DATUM_CACHE_CAPACITY, 1024 * 1024 * 256));
+
+  public static final HessianSerializer serializer = new HessianSerializer();
+
   private DatumUtils() {}
 
   public static Map<String, DatumVersion> intern(Map<String, DatumVersion> versionMap) {
@@ -48,16 +72,13 @@ public final class DatumUtils {
   }
 
   public static SubDatum newEmptySubDatum(Subscriber subscriber, String datacenter, long version) {
-    SubDatum datum =
-        new SubDatum(
-            subscriber.getDataInfoId(),
-            datacenter,
-            version,
-            Collections.emptyList(),
-            subscriber.getDataId(),
-            subscriber.getInstanceId(),
-            subscriber.getGroup());
-    return datum;
+    return SubDatum.emptyOf(
+        subscriber.getDataInfoId(),
+        datacenter,
+        version,
+        subscriber.getDataId(),
+        subscriber.getInstanceId(),
+        subscriber.getGroup());
   }
 
   public static SubDatum of(Datum datum) {
@@ -77,7 +98,7 @@ public final class DatumUtils {
               publisher.getRegisterTimestamp(),
               publisher.getPublishSource()));
     }
-    return new SubDatum(
+    return SubDatum.normalOf(
         datum.getDataInfoId(),
         datum.getDataCenter(),
         datum.getVersion(),
@@ -115,5 +136,67 @@ public final class DatumUtils {
       sum += box.byteSize();
     }
     return sum;
+  }
+
+  public static SubDatum compressSubDatum(SubDatum datum, Compressor compressor) {
+    if (compressor == null || datum == null) {
+      return datum;
+    }
+    CompressedItem compressedItem;
+    try {
+      compressedItem =
+          compressCachedExecutor.execute(
+              datum.compressKey(compressor.getEncoding()),
+              () -> {
+                List<SubPublisher> pubs = datum.mustGetPublishers();
+                byte[] data = serializer.serialize(new SubPublisherList(pubs));
+                byte[] compressed = compressor.compress(data);
+                return new CompressedItem(compressed, data.length, compressor.getEncoding());
+              });
+    } catch (Throwable e) {
+      throw new RuntimeException("compress publishers failed", e);
+    }
+    return SubDatum.zipOf(
+        datum.getDataInfoId(),
+        datum.getDataCenter(),
+        datum.getVersion(),
+        datum.getDataId(),
+        datum.getInstanceId(),
+        datum.getGroup(),
+        datum.getRecentVersions(),
+        new ZipSubPublisherList(
+            compressedItem.getCompressedData(),
+            compressedItem.getOriginSize(),
+            compressedItem.getEncoding(),
+            datum.getPubNum()));
+  }
+
+  public static SubDatum decompressSubDatum(SubDatum datum) {
+    ZipSubPublisherList zip = datum.getZipPublishers();
+    if (zip == null) {
+      return datum;
+    }
+    Compressor compressor = CompressUtils.mustGet(zip.getEncoding());
+    SubPublisherList subPublisherList;
+    try {
+      subPublisherList =
+          decompressCachedExecutor.execute(
+              datum.compressKey(compressor.getEncoding()),
+              () -> {
+                byte[] data = compressor.decompress(zip.getCompressedData(), zip.getOriginSize());
+                return serializer.deserialize(data, SubPublisherList.className);
+              });
+    } catch (Throwable e) {
+      throw new RuntimeException("decompress publishers failed", e);
+    }
+    return SubDatum.normalOf(
+        datum.getDataInfoId(),
+        datum.getDataCenter(),
+        datum.getVersion(),
+        subPublisherList.getPubs(),
+        datum.getDataId(),
+        datum.getInstanceId(),
+        datum.getGroup(),
+        datum.getRecentVersions());
   }
 }

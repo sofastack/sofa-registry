@@ -14,13 +14,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.compress;
+package com.alipay.sofa.registry.common.model.store;
 
-public class CompressConstants {
-  public static final String encodingGzip = "gzip";
-  public static final String encodingZstd = "zstd";
-  public static final int defaultCompressPushMinSize = 1024 * 4; // 4KB
-  public static final int defaultCompressDatumMinSize = 1024 * 12; // 12KB
+import com.alipay.sofa.registry.common.model.PublishSource;
+import com.alipay.sofa.registry.common.model.ServerDataBox;
+import com.google.common.collect.Lists;
+import org.junit.Assert;
+import org.junit.Test;
 
-  public static final String[] defaultCompressEncodes = new String[] {encodingZstd};
+public class SubPublisherListTest {
+
+  @Test
+  public void test() {
+    SubPublisher pub =
+        new SubPublisher(
+            "registerId",
+            "cell",
+            Lists.newArrayList(new ServerDataBox(new byte[] {1, 2, 3})),
+            "clientId",
+            1,
+            "srcAddr",
+            1234,
+            PublishSource.CLIENT);
+    SubPublisherList l = new SubPublisherList(Lists.newArrayList(pub));
+    Assert.assertEquals(105, l.size());
+  }
 }

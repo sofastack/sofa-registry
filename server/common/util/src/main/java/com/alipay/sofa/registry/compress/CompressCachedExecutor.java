@@ -14,8 +14,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.common.model.store;
+package com.alipay.sofa.registry.compress;
 
-public interface Sizer {
-  int size();
+import com.alipay.sofa.registry.cache.Sizer;
+import com.alipay.sofa.registry.concurrent.CachedExecutor;
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
+
+public class CompressCachedExecutor<V extends Sizer> extends CachedExecutor<CompressKey, V> {
+  private static final Logger LOG = LoggerFactory.getLogger("COMPRESS");
+  private final String name;
+
+  public CompressCachedExecutor(String name, long silentMs, long maxWeight) {
+    super(silentMs, maxWeight, (CompressKey k, V v) -> k.size() + v.size());
+    this.name = name;
+  }
+
+  @Override
+  protected void onMiss(CompressKey key) {
+    LOG.info("[CompressCacheMiss] executor {} on miss: {}", name, key);
+  }
 }

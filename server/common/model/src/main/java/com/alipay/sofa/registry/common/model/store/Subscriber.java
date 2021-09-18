@@ -24,6 +24,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.util.CollectionUtils;
 
 /**
@@ -39,7 +41,7 @@ public class Subscriber extends BaseInfo {
   /** */
   private ElementType elementType;
   /** */
-  private String acceptEncoding;
+  private String[] acceptEncodes;
 
   /** last push context */
   private Map<String /*dataCenter*/, PushContext> lastPushContexts;
@@ -169,7 +171,10 @@ public class Subscriber extends BaseInfo {
     sb.append("registerId=").append(getRegisterId()).append(", ");
     sb.append("scope=").append(getScope()).append(", ");
     sb.append("sourceAddress=").append(getSourceAddress().buildAddressString()).append(", ");
-    sb.append("acceptEncoding=").append(getAcceptEncoding());
+    sb.append("acceptEncodes=");
+    for (String encode : getAcceptEncodes()) {
+      sb.append(encode).append(",");
+    }
     return sb.toString();
   }
 
@@ -252,12 +257,23 @@ public class Subscriber extends BaseInfo {
     return com.alipay.sofa.registry.collections.Maps.trimMap(intern);
   }
 
-  public String getAcceptEncoding() {
-    return acceptEncoding;
+  public String[] getAcceptEncodes() {
+    if (acceptEncodes == null) {
+      return ArrayUtils.EMPTY_STRING_ARRAY;
+    }
+    return acceptEncodes;
   }
 
-  public void setAcceptEncoding(String acceptEncoding) {
-    this.acceptEncoding = WordCache.getWordCache(acceptEncoding);
+  public void internAcceptEncoding(String acceptEncoding) {
+    if (StringUtils.isBlank(acceptEncoding)) {
+      this.acceptEncodes = ArrayUtils.EMPTY_STRING_ARRAY;
+      return;
+    }
+    String[] encodes = StringUtils.split(acceptEncoding, ',');
+    for (int i = 0; i < encodes.length; i++) {
+      encodes[i] = WordCache.getWordCache(encodes[i]);
+    }
+    this.acceptEncodes = encodes;
   }
 
   private static class PushContext {

@@ -14,13 +14,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.compress;
+package com.alipay.sofa.registry.common.model.store;
 
-public class CompressConstants {
-  public static final String encodingGzip = "gzip";
-  public static final String encodingZstd = "zstd";
-  public static final int defaultCompressPushMinSize = 1024 * 4; // 4KB
-  public static final int defaultCompressDatumMinSize = 1024 * 12; // 12KB
+import com.alipay.sofa.registry.compress.CompressedItem;
+import java.io.Serializable;
 
-  public static final String[] defaultCompressEncodes = new String[] {encodingZstd};
+public class ZipSubPublisherList extends CompressedItem implements Serializable {
+  private static final long serialVersionUID = 7412542391154672610L;
+  private final int pubNum;
+
+  public ZipSubPublisherList(byte[] compressedData, int originSize, String encoding, int pubNum) {
+    super(compressedData, originSize, encoding);
+    this.pubNum = pubNum;
+  }
+
+  public int getPubNum() {
+    return pubNum;
+  }
+
+  @Override
+  public int size() {
+    return super.size() + 4;
+  }
 }

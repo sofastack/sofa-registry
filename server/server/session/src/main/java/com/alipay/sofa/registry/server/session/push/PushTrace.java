@@ -20,6 +20,7 @@ import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.store.SubDatum;
 import com.alipay.sofa.registry.common.model.store.SubPublisher;
+import com.alipay.sofa.registry.compress.CompressUtils;
 import com.alipay.sofa.registry.concurrent.ThreadLocalStringBuilder;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -150,9 +151,6 @@ public final class PushTrace {
     // task.start - session.triggerTs
     long pushTaskSessionSpanMillis;
 
-    // pub after last push
-    int newPublisherNum;
-
     // try find the earliest and the latest publisher after the subPushedVersion
     // that means the modify after last push, but this could not handle the publisher.remove
     final long lastTriggerSession = pushCause.triggerPushCtx.getLastTimes().getTriggerSession();
@@ -179,14 +177,10 @@ public final class PushTrace {
     pushTaskSessionSpanMillis =
         pushStartTimestamp - pushCause.triggerPushCtx.getFirstTimes().getTriggerSession();
 
-    final List<SubPublisher> publishers = datum.getPublishers();
     final long lastPushTimestamp =
         subscriberPushedVersion <= ValueConstants.DEFAULT_NO_DATUM_VERSION
             ? subRegTimestamp
             : DatumVersionUtil.getRealTimestamp(subscriberPushedVersion);
-    final List<SubPublisher> news =
-        findNewPublishers(publishers, lastPushTimestamp + MAX_NTP_TIME_PRECISION_MILLIS);
-    newPublisherNum = news.size();
 
     Tuple<List<Long>, String> datumPushedDelay =
         datumPushedDelayList(pushFinishTimestamp, lastPushTimestamp);
@@ -204,19 +198,18 @@ public final class PushTrace {
     if (LOGGER.isInfoEnabled() || SLOW_LOGGER.isInfoEnabled()) {
       final String msg =
           StringFormatter.format(
-              "{},{},{},ver={},app={},cause={},pubNum={},pubBytes={},pubNew={},delay={},{},{},{},{},"
+              "{},{},{},ver={},app={},cause={},pubNum={},pubBytes={},delay={},{},{},{},{},"
                   + "session={},cliIO={},"
                   + "subNum={},addr={},expectVer={},dataNode={},taskID={},pushedVer={},regTs={},"
                   + "{},recentDelay={},pushNum={},retry={},encode={}",
               status,
               datum.getDataInfoId(),
+              datum.getDataCenter(),
               datum.getVersion(),
               subApp,
-              datum.getDataCenter(),
               pushCause.pushType,
-              datum.getPublishers().size(),
+              datum.getPubNum(),
               datum.getDataBoxBytes(),
-              newPublisherNum,
               datumModifyPushSpanMillis,
               datumVersionPushSpanMillis,
               datumVersionTriggerSpanMillis,
@@ -235,7 +228,7 @@ public final class PushTrace {
               pushDatumDelayStr,
               pushNum,
               retry,
-              pushEncode);
+              CompressUtils.normalizeEncode(pushEncode));
       LOGGER.info(msg);
       if (datumModifyPushSpanMillis > 6000) {
         SLOW_LOGGER.info(msg);

@@ -14,44 +14,39 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.cache;
+package com.alipay.sofa.registry.common.model.store;
 
 import com.alipay.sofa.registry.cache.Sizer;
+import java.io.Serializable;
+import java.util.Collections;
+import java.util.List;
 
-/**
- * cache return result
- *
- * @author shangyu.wh
- * @version $Id: Value.java, v 0.1 2017-12-06 15:52 shangyu.wh Exp $
- */
-public class Value implements Sizer {
+public class SubPublisherList implements Serializable, Sizer {
+  private static final long serialVersionUID = 5778574892539780708L;
+  public static final String className = SubPublisherList.class.getName();
 
-  private final Sizer payload;
+  private final List<SubPublisher> pubs;
+  private final int byteSize;
 
-  /**
-   * constructor
-   *
-   * @param payload
-   */
-  public Value(Sizer payload) {
-    this.payload = payload;
+  public SubPublisherList(List<SubPublisher> pubs) {
+    this.pubs = Collections.unmodifiableList(pubs);
+    this.byteSize = calcSize();
   }
 
-  /**
-   * Getter method for property <tt>payload</tt>.
-   *
-   * @return property value of payload
-   */
-  public Sizer getPayload() {
-    return payload;
+  public List<SubPublisher> getPubs() {
+    return pubs;
+  }
+
+  private int calcSize() {
+    int bytes = 20;
+    for (SubPublisher pub : pubs) {
+      bytes += pub.size();
+    }
+    return bytes;
   }
 
   @Override
   public int size() {
-    if (payload == null) {
-      // default size for java header
-      return 20;
-    }
-    return payload.size();
+    return byteSize;
   }
 }

@@ -22,11 +22,12 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.Weigher;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.LongAdder;
 
 public class CachedExecutor<K, V> {
   private final Cache<K, V> cache;
-  private long hitCount = 0;
-  private long missingCount = 0;
+  private final LongAdder hitCount = new LongAdder();
+  private final LongAdder missingCount = new LongAdder();
 
   public CachedExecutor(long silentMs) {
     cache = CacheBuilder.newBuilder().expireAfterWrite(silentMs, TimeUnit.MILLISECONDS).build();
@@ -46,26 +47,29 @@ public class CachedExecutor<K, V> {
   public V execute(K key, Callable<V> callable) throws Exception {
     V v = cache.getIfPresent(key);
     if (v != null) {
-      hitCount++;
+      hitCount.increment();
       return v;
     }
     return cache.get(
         key,
         () -> {
-          missingCount++;
+          missingCount.increment();
+          onMiss(key);
           return callable.call();
         });
   }
+
+  protected void onMiss(K key) {}
 
   public void clean() {
     cache.invalidateAll();
   }
 
   public long getHitCount() {
-    return hitCount;
+    return hitCount.longValue();
   }
 
   public long getMissingCount() {
-    return missingCount;
+    return missingCount.longValue();
   }
 }

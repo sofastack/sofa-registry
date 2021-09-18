@@ -16,7 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.cache;
 
-import com.alipay.sofa.registry.common.model.store.Sizer;
+import com.alipay.sofa.registry.cache.Sizer;
 import com.alipay.sofa.registry.util.StringFormatter;
 
 /**

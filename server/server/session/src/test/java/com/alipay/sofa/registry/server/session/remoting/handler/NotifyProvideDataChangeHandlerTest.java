@@ -21,7 +21,7 @@ import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideDataChangeEvent;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.server.session.providedata.FetchBlackListService;
-import com.alipay.sofa.registry.server.session.providedata.SystemPropertyProcessorManager;
+import com.alipay.sofa.registry.server.shared.providedata.SystemPropertyProcessorManager;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;

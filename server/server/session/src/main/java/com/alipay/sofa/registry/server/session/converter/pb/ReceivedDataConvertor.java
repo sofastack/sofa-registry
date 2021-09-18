@@ -17,11 +17,10 @@
 package com.alipay.sofa.registry.server.session.converter.pb;
 
 import com.alipay.sofa.registry.common.model.client.pb.*;
-import com.alipay.sofa.registry.compress.CompressUtils;
-import com.alipay.sofa.registry.compress.Compressor;
-import com.alipay.sofa.registry.core.model.DataBox;
+import com.alipay.sofa.registry.compress.*;
 import com.alipay.sofa.registry.core.model.ReceivedConfigData;
 import com.alipay.sofa.registry.core.model.ReceivedData;
+import com.alipay.sofa.registry.util.SystemUtils;
 import com.google.protobuf.UnsafeByteOperations;
 import java.util.*;
 
@@ -30,6 +29,12 @@ import java.util.*;
  * @version $Id: ReceivedDataConvertor.java, v 0.1 2018年03月21日 2:07 PM bystander Exp $
  */
 public final class ReceivedDataConvertor {
+  private static final String KEY_COMPRESS_PUSH_CACHE_CAPACITY = "registry.compress.push.capacity";
+  public static final CompressCachedExecutor<CompressedItem> pushCompressExecutor =
+      CompressUtils.newCachedExecutor(
+          "compress_push",
+          30 * 1000,
+          SystemUtils.getSystemInteger(KEY_COMPRESS_PUSH_CACHE_CAPACITY, 1024 * 1024 * 256));
 
   private ReceivedDataConvertor() {}
 
@@ -61,8 +66,6 @@ public final class ReceivedDataConvertor {
       return null;
     }
     try {
-      String key = createReceivedDataCompressKey(receivedDataJava, compressor.getEncoding());
-
       ReceivedDataPb.Builder builder = ReceivedDataPb.newBuilder();
       builder
           .setDataId(receivedDataJava.getDataId())
@@ -74,9 +77,9 @@ public final class ReceivedDataConvertor {
           .setVersion(receivedDataJava.getVersion())
           .addAllSubscriberRegistIds(receivedDataJava.getSubscriberRegistIds());
 
-      CompressUtils.CompressedItem compressedItem =
-          CompressUtils.cachedExecutor.execute(
-              key,
+      CompressedItem compressedItem =
+          pushCompressExecutor.execute(
+              CompressPushKey.of(receivedDataJava, compressor.getEncoding()),
               () -> {
                 Map<String, DataBoxesPb> dataBoxesPbMap =
                     DataBoxConvertor.convert2PbMaps(receivedDataJava.getData());
@@ -84,10 +87,10 @@ public final class ReceivedDataConvertor {
                     ReceivedDataBodyPb.newBuilder().putAllData(dataBoxesPbMap).build();
                 byte[] bodyData = bodyPb.toByteArray();
                 byte[] compressed = compressor.compress(bodyData);
-                return new CompressUtils.CompressedItem(compressed, bodyData.length);
+                return new CompressedItem(compressed, bodyData.length, compressor.getEncoding());
               });
       builder
-          .setEncoding(compressor.getEncoding())
+          .setEncoding(compressedItem.getEncoding())
           .setBody(
               UnsafeByteOperations.unsafeWrap(
                   compressedItem
@@ -122,24 +125,6 @@ public final class ReceivedDataConvertor {
     } catch (Throwable e) {
       throw new IllegalStateException(e);
     }
-  }
-
-  private static String createReceivedDataCompressKey(ReceivedData receivedData, String encoding) {
-    StringBuilder sb = new StringBuilder(256);
-    sb.append(encoding)
-        .append(receivedData.getDataId())
-        .append(receivedData.getInstanceId())
-        .append(receivedData.getGroup())
-        .append(receivedData.getSegment())
-        .append(receivedData.getVersion());
-    List<Map.Entry<String, List<DataBox>>> zoneData =
-        new ArrayList<>(receivedData.getData().entrySet());
-    zoneData.sort(Map.Entry.comparingByKey());
-    for (Map.Entry<String, List<DataBox>> entry : zoneData) {
-      sb.append(entry.getKey());
-      sb.append(entry.getValue().size());
-    }
-    return sb.toString();
   }
 
   public static ReceivedConfigDataPb convert2Pb(ReceivedConfigData receivedConfigData) {

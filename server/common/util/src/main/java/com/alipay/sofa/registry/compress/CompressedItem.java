@@ -16,11 +16,33 @@
  */
 package com.alipay.sofa.registry.compress;
 
-public class CompressConstants {
-  public static final String encodingGzip = "gzip";
-  public static final String encodingZstd = "zstd";
-  public static final int defaultCompressPushMinSize = 1024 * 4; // 4KB
-  public static final int defaultCompressDatumMinSize = 1024 * 12; // 12KB
+import com.alipay.sofa.registry.cache.Sizer;
 
-  public static final String[] defaultCompressEncodes = new String[] {encodingZstd};
+public class CompressedItem implements Sizer {
+  private final byte[] compressedData;
+  private final int originSize;
+  private final String encoding;
+
+  public CompressedItem(byte[] compressedData, int originSize, String encoding) {
+    this.compressedData = compressedData;
+    this.originSize = originSize;
+    this.encoding = encoding;
+  }
+
+  @Override
+  public int size() {
+    return compressedData.length + 16 + encoding.length();
+  }
+
+  public int getOriginSize() {
+    return originSize;
+  }
+
+  public byte[] getCompressedData() {
+    return compressedData;
+  }
+
+  public String getEncoding() {
+    return encoding;
+  }
 }

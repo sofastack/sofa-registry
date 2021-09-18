@@ -14,13 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.compress;
+package com.alipay.sofa.registry.cache;
 
-public class CompressConstants {
-  public static final String encodingGzip = "gzip";
-  public static final String encodingZstd = "zstd";
-  public static final int defaultCompressPushMinSize = 1024 * 4; // 4KB
-  public static final int defaultCompressDatumMinSize = 1024 * 12; // 12KB
-
-  public static final String[] defaultCompressEncodes = new String[] {encodingZstd};
+public interface Sizer {
+  int size();
 }

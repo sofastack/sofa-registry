@@ -20,6 +20,7 @@ import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.console.PersistenceData;
 import com.alipay.sofa.registry.common.model.console.PersistenceDataBuilder;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
+import com.alipay.sofa.registry.common.model.metaserver.CompressDatumSwitch;
 import com.alipay.sofa.registry.common.model.metaserver.CompressPushSwitch;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideDataChangeEvent;
 import com.alipay.sofa.registry.core.model.Result;
@@ -51,7 +52,7 @@ public class CompressResource {
   @Path("push/switch")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  public Result setSwitch(CompressPushSwitch compressPushSwitch) {
+  public Result setPushSwitch(CompressPushSwitch compressPushSwitch) {
     PersistenceData persistenceData =
         PersistenceDataBuilder.createPersistenceData(
             ValueConstants.COMPRESS_PUSH_SWITCH_DATA_ID,
@@ -82,7 +83,7 @@ public class CompressResource {
   @GET
   @Path("push/state")
   @Produces(MediaType.APPLICATION_JSON)
-  public CompressPushSwitch getCurrentSwitch() {
+  public CompressPushSwitch getPushSwitch() {
     DBResponse<PersistenceData> response =
         provideDataService.queryProvideData(ValueConstants.COMPRESS_PUSH_SWITCH_DATA_ID);
     if (response.getOperationStatus() == OperationStatus.NOTFOUND
@@ -90,5 +91,50 @@ public class CompressResource {
       return CompressPushSwitch.defaultSwitch();
     }
     return JsonUtils.read(response.getEntity().getData(), CompressPushSwitch.class);
+  }
+
+  @POST
+  @Path("datum/switch")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  public Result setDatumSwitch(CompressDatumSwitch compressDatumSwitch) {
+    PersistenceData persistenceData =
+        PersistenceDataBuilder.createPersistenceData(
+            ValueConstants.COMPRESS_DATUM_SWITCH_DATA_ID,
+            JsonUtils.writeValueAsString(compressDatumSwitch));
+    Result result = new Result();
+    boolean ret;
+    try {
+      ret = provideDataService.saveProvideData(persistenceData);
+      DB_LOGGER.info("datum compressed {} to DB result {}", compressDatumSwitch, ret);
+    } catch (Throwable e) {
+      DB_LOGGER.error("datum compressed {} to DB result error", compressDatumSwitch, e);
+      result.setSuccess(false);
+      result.setMessage(e.getMessage());
+      return result;
+    }
+    if (ret) {
+      ProvideDataChangeEvent provideDataChangeEvent =
+          new ProvideDataChangeEvent(
+              ValueConstants.COMPRESS_DATUM_SWITCH_DATA_ID,
+              persistenceData.getVersion(),
+              Sets.newHashSet(Node.NodeType.DATA));
+      provideDataNotifier.notifyProvideDataChange(provideDataChangeEvent);
+    }
+    result.setSuccess(ret);
+    return result;
+  }
+
+  @GET
+  @Path("datum/state")
+  @Produces(MediaType.APPLICATION_JSON)
+  public CompressDatumSwitch getDatumSwitch() {
+    DBResponse<PersistenceData> response =
+        provideDataService.queryProvideData(ValueConstants.COMPRESS_DATUM_SWITCH_DATA_ID);
+    if (response.getOperationStatus() == OperationStatus.NOTFOUND
+        || StringUtils.isBlank(response.getEntity().getData())) {
+      return CompressDatumSwitch.defaultSwitch();
+    }
+    return JsonUtils.read(response.getEntity().getData(), CompressDatumSwitch.class);
   }
 }

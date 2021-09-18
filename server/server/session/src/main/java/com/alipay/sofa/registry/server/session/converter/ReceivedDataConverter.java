@@ -46,39 +46,39 @@ public final class ReceivedDataConverter {
   /**
    * Standard RunEnv
    *
-   * @param datum the datum
+   * @param unzipDatum the datum
    * @param scope the scope
    * @param subscriberRegisterIdList the subscriber register id list
    * @param regionLocal the region local
    * @return received data multi
    */
   public static PushData<ReceivedData> getReceivedDataMulti(
-      SubDatum datum,
+      SubDatum unzipDatum,
       ScopeEnum scope,
       List<String> subscriberRegisterIdList,
       String regionLocal,
       Predicate<String> zonePredicate) {
 
-    if (null == datum) {
+    if (null == unzipDatum) {
       return new PushData<>(null, 0);
     }
-
+    unzipDatum.mustUnzipped();
     // todo judge server mode to decide local region
     ReceivedData receivedData = new ReceivedData();
-    receivedData.setDataId(datum.getDataId());
-    receivedData.setGroup(datum.getGroup());
-    receivedData.setInstanceId(datum.getInstanceId());
+    receivedData.setDataId(unzipDatum.getDataId());
+    receivedData.setGroup(unzipDatum.getGroup());
+    receivedData.setInstanceId(unzipDatum.getInstanceId());
     receivedData.setSubscriberRegistIds(subscriberRegisterIdList);
-    receivedData.setSegment(datum.getDataCenter());
+    receivedData.setSegment(unzipDatum.getDataCenter());
     receivedData.setScope(scope.name());
 
-    receivedData.setVersion(datum.getVersion());
+    receivedData.setVersion(unzipDatum.getVersion());
 
     receivedData.setLocalZone(regionLocal);
 
     Map<String /*zone*/, List<DataBox>> swizzMap = new HashMap<>();
 
-    List<SubPublisher> publishers = datum.getPublishers();
+    List<SubPublisher> publishers = unzipDatum.mustGetPublishers();
     if (publishers.isEmpty()) {
       receivedData.setData(swizzMap);
       return new PushData<>(receivedData, 0);

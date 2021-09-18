@@ -38,16 +38,17 @@ public class PushDataGenerator {
 
   @Resource protected CompressPushService compressPushService;
 
-  public PushData createPushData(SubDatum datum, Map<String, Subscriber> subscriberMap) {
+  public PushData createPushData(SubDatum unzipDatum, Map<String, Subscriber> subscriberMap) {
+    unzipDatum.mustUnzipped();
     if (subscriberMap.size() > 1) {
       SubscriberUtils.getAndAssertHasSameScope(subscriberMap.values());
-      SubscriberUtils.getAndAssertAcceptedEncoding(subscriberMap.values());
+      SubscriberUtils.getAndAssertAcceptedEncodes(subscriberMap.values());
     }
     // only supported 4.x
     SubscriberUtils.assertClientVersion(subscriberMap.values(), BaseInfo.ClientVersion.StoreData);
 
     final Subscriber subscriber = subscriberMap.values().iterator().next();
-    String dataId = datum.getDataId();
+    String dataId = subscriber.getDataId();
     String clientCell = sessionServerConfig.getClientCell(subscriber.getCell());
 
     Predicate<String> zonePredicate =
@@ -55,12 +56,12 @@ public class PushDataGenerator {
 
     PushData<ReceivedData> pushData =
         ReceivedDataConverter.getReceivedDataMulti(
-            datum,
+            unzipDatum,
             subscriber.getScope(),
             Lists.newArrayList(subscriberMap.keySet()),
             clientCell,
             zonePredicate);
-    pushData.getPayload().setVersion(datum.getVersion());
+    pushData.getPayload().setVersion(unzipDatum.getVersion());
     final Byte serializerIndex = subscriber.getSourceAddress().getSerializerIndex();
     if (serializerIndex == null || URL.PROTOBUF != serializerIndex) {
       return pushData;
@@ -68,7 +69,7 @@ public class PushDataGenerator {
     Compressor compressor =
         compressPushService.getCompressor(
             pushData.getPayload(),
-            subscriber.getAcceptEncoding(),
+            subscriber.getAcceptEncodes(),
             subscriber.getSourceAddress().getIpAddress());
     if (compressor == null) {
       return new PushData<>(
