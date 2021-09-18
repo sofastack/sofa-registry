@@ -16,8 +16,10 @@
  */
 package com.alipay.sofa.registry.compress;
 
+import com.alipay.sofa.registry.TestUtils;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import com.google.common.collect.Sets;
 import com.google.common.io.CharStreams;
 import java.io.IOException;
 import java.io.InputStream;
@@ -44,13 +46,13 @@ public class CompressorTest {
     byte[] zdata;
     Compressor c;
 
-    c = CompressUtils.get(CompressConstants.encodingGzip);
+    c = CompressUtils.find(new String[] {CompressConstants.encodingGzip});
     Assert.assertNotNull(c);
     zdata = c.compress(src);
     Assert.assertArrayEquals(src, c.decompress(zdata, src.length));
     LOG.info("gzip src: {} dst: {}", src.length, zdata.length);
 
-    c = CompressUtils.get(CompressConstants.encodingZstd);
+    c = CompressUtils.find(new String[] {CompressConstants.encodingZstd});
     Assert.assertNotNull(c);
     zdata = c.compress(src);
     Assert.assertArrayEquals(src, c.decompress(zdata, src.length));
@@ -63,9 +65,10 @@ public class CompressorTest {
     new Random().nextBytes(src);
     Compressor c;
 
-    c = CompressUtils.get(CompressConstants.encodingGzip);
+    c = CompressUtils.find(new String[] {CompressConstants.encodingGzip});
     Assert.assertNotNull(c);
-    for (int i = 0; i < 2; i++) {
+    byte[] dst = c.compress(src);
+    for (int i = 0; i < 20; i++) {
       // warmup
       c.compress(src);
     }
@@ -76,7 +79,14 @@ public class CompressorTest {
       c.compress(src);
     }
     double duration = System.currentTimeMillis() - start;
-    LOG.info("gzip  total: {}, per: {}", duration, duration / times);
+    LOG.info("gzip compress total: {}, per: {}", duration, duration / times);
+
+    start = System.currentTimeMillis();
+    for (int i = 0; i < times; i++) {
+      c.decompress(dst, src.length);
+    }
+    duration = System.currentTimeMillis() - start;
+    LOG.info("gzip decompress total: {}, per: {}", duration, duration / times);
   }
 
   @Test
@@ -85,9 +95,10 @@ public class CompressorTest {
     new Random().nextBytes(src);
     Compressor c;
 
-    c = CompressUtils.get(CompressConstants.encodingZstd);
+    c = CompressUtils.find(new String[] {CompressConstants.encodingZstd});
     Assert.assertNotNull(c);
-    for (int i = 0; i < 2; i++) {
+    byte[] dst = c.compress(src);
+    for (int i = 0; i < 100; i++) {
       // warmup
       c.compress(src);
     }
@@ -98,6 +109,37 @@ public class CompressorTest {
       c.compress(src);
     }
     double duration = System.currentTimeMillis() - start;
-    LOG.info("zstd total: {}, per: {}", duration, duration / times);
+    LOG.info("zstd compress total: {}, per: {}", duration, duration / times);
+
+    start = System.currentTimeMillis();
+    for (int i = 0; i < times; i++) {
+      c.decompress(dst, src.length);
+    }
+    duration = System.currentTimeMillis() - start;
+    LOG.info("zstd decompress total: {}, per: {}", duration, duration / times);
+  }
+
+  @Test
+  public void testGet() {
+    TestUtils.assertException(
+        IllegalArgumentException.class,
+        () -> {
+          CompressUtils.mustGet("asd");
+        });
+    CompressUtils.mustGet("zstd");
+
+    Assert.assertNull(CompressUtils.find(new String[] {"asd"}));
+    Assert.assertNull(CompressUtils.find(null));
+    Assert.assertNull(CompressUtils.find(new String[0]));
+    Assert.assertNotNull(CompressUtils.find(new String[] {"zstd"}));
+    Assert.assertNull(CompressUtils.find(new String[] {"zstd"}, Sets.newHashSet("zstd")));
+    Assert.assertEquals("plain", CompressUtils.normalizeEncode(""));
+    Assert.assertEquals("zstd", CompressUtils.normalizeEncode("zstd"));
+  }
+
+  @Test
+  public void testNewExec() {
+    Random r = new Random();
+    CompressUtils.newCachedExecutor(Long.toString(System.currentTimeMillis()), 30, 100);
   }
 }

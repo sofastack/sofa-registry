@@ -25,6 +25,7 @@ import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.SubDatum;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.common.model.store.UnPublisher;
+import com.alipay.sofa.registry.compress.CompressConstants;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.CallbackHandler;
@@ -211,6 +212,7 @@ public class DataNodeServiceImpl implements DataNodeService {
       slotId = slot.getId();
       GetDataRequest getDataRequest =
           new GetDataRequest(ServerEnv.PROCESS_ID, dataInfoId, dataCenter, slot.getId());
+      getDataRequest.setAcceptEncodes(CompressConstants.defaultCompressEncodes);
       getDataRequest.setSlotTableEpoch(slotTableCache.getEpoch());
       getDataRequest.setSlotLeaderEpoch(slot.getLeaderEpoch());
       Request<GetDataRequest> getDataRequestStringRequest =
@@ -238,6 +240,9 @@ public class DataNodeServiceImpl implements DataNodeService {
           (SlotAccessGenericResponse<SubDatum>) result;
       if (genericResponse.isSuccess()) {
         final SubDatum datum = genericResponse.getData();
+        if (datum == null) {
+          return null;
+        }
         return SubDatum.intern(datum);
       } else {
         throw new RuntimeException(

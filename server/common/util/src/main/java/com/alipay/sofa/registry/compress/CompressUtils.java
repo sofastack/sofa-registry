@@ -16,35 +16,23 @@
  */
 package com.alipay.sofa.registry.compress;
 
-import com.alipay.sofa.registry.concurrent.CachedExecutor;
+import com.alipay.sofa.registry.cache.Sizer;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.metrics.CounterFunc;
+import com.alipay.sofa.registry.util.StringFormatter;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
+import org.springframework.util.Assert;
 
-public class CompressUtils {
+public final class CompressUtils {
+  private CompressUtils() {}
+
   private static final Logger LOG = LoggerFactory.getLogger("COMPRESS");
-  public static final CachedExecutor<String, CompressedItem> cachedExecutor =
-      // 30s expire duration, 500MB total cache size
-      new CachedExecutor<>(
-          1000 * 30, 1024 * 1024 * 500, (String k, CompressedItem v) -> k.length() + v.size());
-  private static final CounterFunc cacheCounter =
-      CounterFunc.build()
-          .namespace("compress")
-          .name("cache")
-          .labelNames("type")
-          .help("compress cache hit or missing")
-          .create()
-          .register();
-
-  static {
-    cacheCounter.labels("hit").func(cachedExecutor::getHitCount);
-    cacheCounter.labels("missing").func(cachedExecutor::getMissingCount);
-  }
 
   private static final Map<String, Compressor> compressorMap =
       new HashMap<String, Compressor>() {
@@ -57,19 +45,21 @@ public class CompressUtils {
         }
       };
 
-  public static Compressor get(String acceptEncoding) {
-    return get(acceptEncoding, Collections.emptySet());
+  public static Compressor mustGet(String encode) {
+    Compressor compressor = compressorMap.get(encode);
+    Assert.notNull(compressor, StringFormatter.format("compress {} not found", encode));
+    return compressor;
   }
 
-  public static Compressor get(String acceptEncoding, Set<String> forbidEncodes) {
-    if (StringUtils.isBlank(acceptEncoding)) {
+  public static Compressor find(String[] acceptEncodes) {
+    return find(acceptEncodes, Collections.emptySet());
+  }
+
+  public static Compressor find(String[] acceptEncodes, Set<String> forbidEncodes) {
+    if (ArrayUtils.isEmpty(acceptEncodes)) {
       return null;
     }
-    String[] encodings = StringUtils.split(acceptEncoding, ",");
-    if (encodings.length == 0) {
-      return null;
-    }
-    for (String encoding : encodings) {
+    for (String encoding : acceptEncodes) {
       if (forbidEncodes.contains(encoding)) {
         continue;
       }
@@ -78,29 +68,33 @@ public class CompressUtils {
         return compressor;
       }
     }
-    LOG.warn("accept encoding {} not in available compressors");
+    LOG.warn(
+        "accept encoding {} not in available compressors", StringUtils.join(acceptEncodes, ","));
     return null;
   }
 
-  public static class CompressedItem {
-    private final byte[] compressedData;
-    private final int originSize;
+  public static <V extends Sizer> CompressCachedExecutor<V> newCachedExecutor(
+      String name, long silentMs, long maxWeight) {
+    CompressCachedExecutor<V> cachedExecutor =
+        new CompressCachedExecutor<>(name, silentMs, maxWeight);
+    CounterFunc cacheCounter =
+        CounterFunc.build()
+            .namespace("compress")
+            .subsystem("cache")
+            .name(name)
+            .labelNames("type")
+            .help(StringFormatter.format("compress cache {} hit or missing", name))
+            .create()
+            .register();
+    cacheCounter.labels("hit").func(cachedExecutor::getHitCount);
+    cacheCounter.labels("missing").func(cachedExecutor::getMissingCount);
+    return cachedExecutor;
+  }
 
-    public CompressedItem(byte[] compressedData, int originSize) {
-      this.compressedData = compressedData;
-      this.originSize = originSize;
+  public static String normalizeEncode(String encode) {
+    if (StringUtils.isBlank(encode)) {
+      return "plain";
     }
-
-    public int size() {
-      return compressedData.length + 16;
-    }
-
-    public int getOriginSize() {
-      return originSize;
-    }
-
-    public byte[] getCompressedData() {
-      return compressedData;
-    }
+    return encode;
   }
 }

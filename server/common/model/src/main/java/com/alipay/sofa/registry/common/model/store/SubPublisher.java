@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.common.model.store;
 
+import com.alipay.sofa.registry.cache.Sizer;
 import com.alipay.sofa.registry.common.model.PublishSource;
 import com.alipay.sofa.registry.common.model.RegisterVersion;
 import com.alipay.sofa.registry.common.model.ServerDataBox;
@@ -25,6 +26,7 @@ import com.google.common.collect.Lists;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
+import org.springframework.util.CollectionUtils;
 
 public final class SubPublisher implements Serializable, Sizer {
   private final String registerId;
@@ -79,6 +81,9 @@ public final class SubPublisher implements Serializable, Sizer {
   }
 
   public int getDataBoxBytes() {
+    if (CollectionUtils.isEmpty(dataList)) {
+      return 0;
+    }
     int bytes = 0;
     for (ServerDataBox box : dataList) {
       bytes += box.byteSize();
@@ -121,11 +126,7 @@ public final class SubPublisher implements Serializable, Sizer {
             + StringUtils.sizeof(cell)
             + StringUtils.sizeof(srcAddressString)
             + 40;
-    if (dataList != null) {
-      for (ServerDataBox box : dataList) {
-        s += box.byteSize();
-      }
-    }
+    s += getDataBoxBytes();
     return s;
   }
 }

@@ -31,6 +31,7 @@ import com.alipay.sofa.registry.remoting.ChannelOverflowException;
 import com.alipay.sofa.registry.remoting.exchange.RequestChannelClosedException;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.node.service.ClientNodeService;
+import com.alipay.sofa.registry.server.shared.util.DatumUtils;
 import com.alipay.sofa.registry.task.KeyedThreadPoolExecutor;
 import com.alipay.sofa.registry.task.MetricsableThreadPoolExecutor;
 import com.alipay.sofa.registry.task.RejectedDiscardHandler;
@@ -398,7 +399,7 @@ public class PushProcessor {
     }
 
     protected PushData createPushData() {
-      return pushDataGenerator.createPushData(datum, subscriberMap);
+      return pushDataGenerator.createPushData(DatumUtils.decompressSubDatum(datum), subscriberMap);
     }
 
     @Override

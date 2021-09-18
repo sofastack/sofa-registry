@@ -81,7 +81,7 @@ public class DataPushRequestHandlerTest {
 
   private static DataPushRequest request() {
     SubDatum subDatum =
-        new SubDatum(
+        SubDatum.normalOf(
             "dataInfoId",
             "dataCenter",
             100,

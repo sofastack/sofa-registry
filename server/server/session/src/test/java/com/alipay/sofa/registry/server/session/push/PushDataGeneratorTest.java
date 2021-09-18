@@ -30,6 +30,7 @@ import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.server.session.TestUtils;
 import com.alipay.sofa.registry.server.session.converter.ReceivedDataConverter;
 import com.alipay.sofa.registry.server.session.providedata.CompressPushService;
+import com.alipay.sofa.registry.server.shared.util.DatumUtils;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -53,13 +54,14 @@ public class PushDataGeneratorTest {
     subscriberMap.put(sub1.getRegisterId(), sub1);
     subscriberMap.put(sub2.getRegisterId(), sub2);
 
+    SubDatum emptyDatum = DatumUtils.newEmptySubDatum(sub1, "testDc", 1);
     TestUtils.assertRunException(
-        RuntimeException.class, () -> generator.createPushData(null, subscriberMap));
+        RuntimeException.class, () -> generator.createPushData(emptyDatum, subscriberMap));
 
     sub2.setScope(ScopeEnum.zone);
     sub2.setClientVersion(BaseInfo.ClientVersion.MProtocolpackage);
     TestUtils.assertRunException(
-        IllegalArgumentException.class, () -> generator.createPushData(null, subscriberMap));
+        IllegalArgumentException.class, () -> generator.createPushData(emptyDatum, subscriberMap));
 
     sub2.setClientVersion(BaseInfo.ClientVersion.StoreData);
     TestUtils.assertRunException(
@@ -137,8 +139,8 @@ public class PushDataGeneratorTest {
     when(generator.compressPushService.getCompressSwitch()).thenReturn(compressPushSwitch);
     Subscriber sub1 = TestUtils.newZonePbSubscriber(zone);
     Subscriber sub2 = TestUtils.newZonePbSubscriber(zone);
-    sub1.setAcceptEncoding("zstd");
-    sub2.setAcceptEncoding("zstd");
+    sub1.internAcceptEncoding("zstd");
+    sub2.internAcceptEncoding("zstd");
     subscriberMap.put(sub1.getRegisterId(), sub1);
     subscriberMap.put(sub2.getRegisterId(), sub2);
     List<SubPublisher> list = Lists.newArrayListWithExpectedSize(10000);

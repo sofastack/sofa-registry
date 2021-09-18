@@ -21,11 +21,13 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.*;
 
 import com.alipay.sofa.registry.common.model.console.PersistenceData;
+import com.alipay.sofa.registry.common.model.metaserver.CompressDatumSwitch;
 import com.alipay.sofa.registry.common.model.metaserver.CompressPushSwitch;
 import com.alipay.sofa.registry.server.meta.provide.data.DefaultProvideDataNotifier;
 import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataService;
 import com.alipay.sofa.registry.store.api.DBResponse;
 import com.alipay.sofa.registry.store.api.OperationStatus;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -49,8 +51,28 @@ public class CompressResourceTest {
   }
 
   @Test
-  public void testSetSwitch() {
-    compressResource.setSwitch(new CompressPushSwitch());
+  public void testSetPushSwitch() {
+    compressResource.setPushSwitch(new CompressPushSwitch());
     verify(provideDataNotifier, times(1)).notifyProvideDataChange(any());
+    when(provideDataService.saveProvideData(any())).thenThrow(new RuntimeException());
+    Assert.assertFalse(compressResource.setPushSwitch(new CompressPushSwitch()).isSuccess());
+  }
+
+  @Test
+  public void testGetPushSwitch() {
+    compressResource.getPushSwitch();
+  }
+
+  @Test
+  public void testSetDatumSwitch() {
+    compressResource.setDatumSwitch(new CompressDatumSwitch());
+    verify(provideDataNotifier, times(1)).notifyProvideDataChange(any());
+    when(provideDataService.saveProvideData(any())).thenThrow(new RuntimeException());
+    Assert.assertFalse(compressResource.setDatumSwitch(new CompressDatumSwitch()).isSuccess());
+  }
+
+  @Test
+  public void testGetDatumSwitch() {
+    compressResource.getDatumSwitch();
   }
 }

@@ -117,7 +117,7 @@ public final class PublisherGroup {
       lock.readLock().unlock();
     }
     datum.setVersion(ver);
-    list.forEach(p -> datum.addPublisher(p));
+    list.forEach(datum::addPublisher);
     return datum;
   }
 
@@ -200,12 +200,12 @@ public final class PublisherGroup {
     if (exist.publisher == null) {
       // publisher is null after client_off
       LOGGER.info(
-              "[ReplaceEmptyPub] {}, {}, exist={}, add={}, regIsPub={}",
-              publisher.getDataInfoId(),
-              publisher.getRegisterId(),
-              exist.registerVersion,
-              publisher.registerVersion(),
-              envelope.isPub());
+          "[ReplaceEmptyPub] {}, {}, exist={}, add={}, regIsPub={}",
+          publisher.getDataInfoId(),
+          publisher.getRegisterId(),
+          exist.registerVersion,
+          publisher.registerVersion(),
+          envelope.isPub());
       return envelope.isPub();
     }
     try {

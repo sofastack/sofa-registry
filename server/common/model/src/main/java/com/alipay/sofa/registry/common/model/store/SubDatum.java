@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.common.model.store;
 
+import com.alipay.sofa.registry.cache.Sizer;
+import com.alipay.sofa.registry.compress.CompressDatumKey;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.alipay.sofa.registry.util.StringUtils;
 import com.google.common.collect.Lists;
@@ -23,6 +25,8 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import org.springframework.util.Assert;
+import org.springframework.util.CollectionUtils;
 
 public final class SubDatum implements Serializable, Sizer {
   private static final long serialVersionUID = 5307489721610438103L;
@@ -43,26 +47,31 @@ public final class SubDatum implements Serializable, Sizer {
 
   private final List<Long> recentVersions;
 
-  public SubDatum(
+  private final ZipSubPublisherList zipPublishers;
+
+  private final int byteSize;
+  private final int dataBoxSizeCache;
+
+  public static SubDatum emptyOf(
       String dataInfoId,
       String dataCenter,
       long version,
-      Collection<SubPublisher> publishers,
       String dataId,
       String instanceId,
       String group) {
-    this(
+    return new SubDatum(
         dataInfoId,
         dataCenter,
         version,
-        publishers,
+        Collections.emptyList(),
         dataId,
         instanceId,
         group,
-        Lists.newArrayList());
+        Collections.emptyList(),
+        null);
   }
 
-  public SubDatum(
+  public static SubDatum normalOf(
       String dataInfoId,
       String dataCenter,
       long version,
@@ -71,14 +80,68 @@ public final class SubDatum implements Serializable, Sizer {
       String instanceId,
       String group,
       List<Long> recentVersions) {
+    return new SubDatum(
+        dataInfoId,
+        dataCenter,
+        version,
+        publishers,
+        dataId,
+        instanceId,
+        group,
+        recentVersions,
+        null);
+  }
+
+  public static SubDatum zipOf(
+      String dataInfoId,
+      String dataCenter,
+      long version,
+      String dataId,
+      String instanceId,
+      String group,
+      List<Long> recentVersions,
+      ZipSubPublisherList zipPublishers) {
+    return new SubDatum(
+        dataInfoId,
+        dataCenter,
+        version,
+        null,
+        dataId,
+        instanceId,
+        group,
+        recentVersions,
+        zipPublishers);
+  }
+
+  private SubDatum(
+      String dataInfoId,
+      String dataCenter,
+      long version,
+      Collection<SubPublisher> publishers,
+      String dataId,
+      String instanceId,
+      String group,
+      List<Long> recentVersions,
+      ZipSubPublisherList zipPublishers) {
+    Assert.isTrue(
+        Boolean.logicalXor(publishers == null, zipPublishers == null),
+        "only one must be not null between publishers and zipPublishers");
     this.dataInfoId = dataInfoId;
     this.dataCenter = dataCenter;
     this.version = version;
-    this.publishers = Collections.unmodifiableList(Lists.newArrayList(publishers));
+    if (publishers != null) {
+      this.publishers = Collections.unmodifiableList(Lists.newArrayList(publishers));
+    } else {
+      this.publishers = null;
+    }
     this.dataId = dataId;
     this.instanceId = instanceId;
     this.group = group;
     this.recentVersions = recentVersions;
+    this.zipPublishers = zipPublishers;
+
+    this.byteSize = calcSize();
+    this.dataBoxSizeCache = calcDataBoxBytes();
   }
 
   public String getDataInfoId() {
@@ -101,7 +164,15 @@ public final class SubDatum implements Serializable, Sizer {
     return group;
   }
 
-  public List<SubPublisher> getPublishers() {
+  public int getPubNum() {
+    if (zipPublishers != null) {
+      return zipPublishers.getPubNum();
+    }
+    return publishers.size();
+  }
+
+  public List<SubPublisher> mustGetPublishers() {
+    mustUnzipped();
     return publishers;
   }
 
@@ -109,16 +180,19 @@ public final class SubDatum implements Serializable, Sizer {
     return version;
   }
 
-  public boolean isEmpty() {
-    return publishers.isEmpty();
-  }
-
-  public int getDataBoxBytes() {
+  private int calcDataBoxBytes() {
+    if (zipPublishers != null) {
+      return zipPublishers.getOriginSize();
+    }
     int bytes = 0;
     for (SubPublisher p : publishers) {
       bytes += p.getDataBoxBytes();
     }
     return bytes;
+  }
+
+  public int getDataBoxBytes() {
+    return dataBoxSizeCache;
   }
 
   @Override
@@ -128,14 +202,11 @@ public final class SubDatum implements Serializable, Sizer {
         dataInfoId,
         dataCenter,
         version,
-        publishers.size(),
+        getPubNum(),
         getDataBoxBytes());
   }
 
   public static SubDatum intern(SubDatum datum) {
-    if (datum == null) {
-      return null;
-    }
     final String dataInfoId = WordCache.getWordCache(datum.dataInfoId);
     final String dataCenter = WordCache.getWordCache(datum.dataCenter);
 
@@ -143,19 +214,22 @@ public final class SubDatum implements Serializable, Sizer {
     final String instanceId = WordCache.getWordCache(datum.instanceId);
     final String group = WordCache.getWordCache(datum.group);
 
-    List<SubPublisher> publishers = Lists.newArrayListWithCapacity(datum.publishers.size());
-    for (SubPublisher publisher : datum.publishers) {
-      final String cell = WordCache.getWordCache(publisher.getCell());
-      publishers.add(
-          new SubPublisher(
-              publisher.getRegisterId(),
-              cell,
-              publisher.getDataList(),
-              publisher.getClientId(),
-              publisher.getVersion(),
-              publisher.getSrcAddressString(),
-              publisher.getRegisterTimestamp(),
-              publisher.getPublishSource()));
+    List<SubPublisher> publishers = null;
+    if (datum.publishers != null) {
+      publishers = Lists.newArrayListWithCapacity(datum.mustGetPublishers().size());
+      for (SubPublisher publisher : datum.mustGetPublishers()) {
+        final String cell = WordCache.getWordCache(publisher.getCell());
+        publishers.add(
+            new SubPublisher(
+                publisher.getRegisterId(),
+                cell,
+                publisher.getDataList(),
+                publisher.getClientId(),
+                publisher.getVersion(),
+                publisher.getSrcAddressString(),
+                publisher.getRegisterTimestamp(),
+                publisher.getPublishSource()));
+      }
     }
     return new SubDatum(
         dataInfoId,
@@ -165,25 +239,46 @@ public final class SubDatum implements Serializable, Sizer {
         dataId,
         instanceId,
         group,
-        datum.recentVersions);
+        datum.recentVersions,
+        datum.zipPublishers);
   }
 
   public List<Long> getRecentVersions() {
     return recentVersions;
   }
 
-  public int size() {
-    int size =
+  private int calcSize() {
+    int size = 50;
+    size +=
         StringUtils.sizeof(dataInfoId)
             + StringUtils.sizeof(dataCenter)
             + StringUtils.sizeof(dataId)
-            + StringUtils.sizeof(instanceId)
-            + 20;
-    if (publishers != null) {
+            + StringUtils.sizeof(instanceId);
+    if (!CollectionUtils.isEmpty(publishers)) {
       for (SubPublisher pub : publishers) {
         size += pub.size();
       }
     }
+    if (zipPublishers != null) {
+      size += zipPublishers.size();
+    }
     return size;
+  }
+
+  @Override
+  public int size() {
+    return byteSize;
+  }
+
+  public CompressDatumKey compressKey(String encoding) {
+    return new CompressDatumKey(encoding, dataInfoId, dataCenter, version, getPubNum());
+  }
+
+  public ZipSubPublisherList getZipPublishers() {
+    return zipPublishers;
+  }
+
+  public void mustUnzipped() {
+    Assert.notNull(publishers, "publishers must be not null");
   }
 }

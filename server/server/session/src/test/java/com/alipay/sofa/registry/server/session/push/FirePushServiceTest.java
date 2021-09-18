@@ -19,7 +19,7 @@ package com.alipay.sofa.registry.server.session.push;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
-import com.alipay.sofa.registry.common.model.store.Sizer;
+import com.alipay.sofa.registry.cache.Sizer;
 import com.alipay.sofa.registry.common.model.store.SubDatum;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.common.model.store.Watcher;

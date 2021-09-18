@@ -48,7 +48,7 @@ public class DataPushRequest implements Serializable {
         datum.getDataInfoId(),
         datum.getDataCenter(),
         datum.getVersion(),
-        datum.getPublishers().size(),
+        datum.getPubNum(),
         datum.getDataBoxBytes());
   }
 }

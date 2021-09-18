@@ -168,6 +168,7 @@ public class MetaServerConfiguration {
       list.add(heartbeatRequestHandler());
       list.add(fetchProvideDataRequestHandler());
       list.add(registryForbiddenServerHandler());
+      list.add(fetchSystemPropertyRequestHandler());
       list.add(getSlotTableStatusRequestHandler());
       return list;
     }

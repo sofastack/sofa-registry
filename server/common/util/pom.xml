@@ -98,6 +98,10 @@
             <groupId>com.github.luben</groupId>
             <artifactId>zstd-jni</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.alipay.sofa</groupId>
+            <artifactId>hessian</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

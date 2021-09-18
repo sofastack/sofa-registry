@@ -37,7 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 public class CompressPushService
     extends AbstractFetchSystemPropertyService<CompressPushService.CompressStorage> {
-  private static final Logger LOGGER = LoggerFactory.getLogger(FetchStopPushService.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(CompressPushSwitch.class);
 
   @Autowired private SessionServerConfig sessionServerConfig;
 
@@ -81,7 +81,8 @@ public class CompressPushService
     return storage.get().compressPushSwitch;
   }
 
-  public Compressor getCompressor(ReceivedData receivedData, String encoding, String clientIp) {
+  public Compressor getCompressor(
+      ReceivedData receivedData, String[] acceptEncodes, String clientIp) {
     CompressPushSwitch compressPushSwitch = getCompressSwitch();
     if (!compressEnabled(compressPushSwitch, clientIp)) {
       return null;
@@ -89,7 +90,7 @@ public class CompressPushService
     if (dataBoxesMapSize(receivedData.getData()) < compressPushSwitch.getCompressMinSize()) {
       return null;
     }
-    return CompressUtils.get(encoding, compressPushSwitch.getForbidEncodes());
+    return CompressUtils.find(acceptEncodes, compressPushSwitch.getForbidEncodes());
   }
 
   private static boolean compressEnabled(CompressPushSwitch compressPushSwitch, String clientIp) {

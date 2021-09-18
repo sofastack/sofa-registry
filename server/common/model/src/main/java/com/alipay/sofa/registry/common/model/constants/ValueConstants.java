@@ -99,6 +99,9 @@ public class ValueConstants {
   public static final String COMPRESS_PUSH_SWITCH_DATA_ID =
       DataInfo.toDataInfoId(
           "compress.push.switch", SESSION_PROVIDE_DATA_INSTANCE_ID, SESSION_PROVIDE_DATA_GROUP);
+  public static final String COMPRESS_DATUM_SWITCH_DATA_ID =
+      DataInfo.toDataInfoId(
+          "compress.datum.switch", SESSION_PROVIDE_DATA_INSTANCE_ID, SESSION_PROVIDE_DATA_GROUP);
 
   public static final String DISABLE_DATA_ID_CASE_SENSITIVE_SWITCH =
       "disable.dataId.case.sensitive";

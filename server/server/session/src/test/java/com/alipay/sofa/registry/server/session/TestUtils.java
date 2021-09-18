@@ -232,7 +232,7 @@ public class TestUtils {
   public static SubDatum newSubDatum(String dataId, long version, List<SubPublisher> publishers) {
     String dataInfo = DataInfo.toDataInfoId(dataId, INSTANCE, GROUP);
     SubDatum subDatum =
-        new SubDatum(
+        SubDatum.normalOf(
             dataInfo,
             "dataCenter",
             version,

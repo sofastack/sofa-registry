@@ -70,7 +70,7 @@ public final class SubscriberUtils {
   }
 
   public static ScopeEnum getAndAssertHasSameScope(Collection<Subscriber> subscribers) {
-    Iterator<Subscriber> iterator = subscribers.stream().iterator();
+    Iterator<Subscriber> iterator = subscribers.iterator();
     Subscriber first = iterator.next();
     ScopeEnum scope = first.getScope();
     while (iterator.hasNext()) {
@@ -86,21 +86,21 @@ public final class SubscriberUtils {
     return scope;
   }
 
-  public static String getAndAssertAcceptedEncoding(Collection<Subscriber> subscribers) {
-    Iterator<Subscriber> iterator = subscribers.stream().iterator();
+  public static String[] getAndAssertAcceptedEncodes(Collection<Subscriber> subscribers) {
+    Iterator<Subscriber> iterator = subscribers.iterator();
     Subscriber first = iterator.next();
-    String acceptEncoding = first.getAcceptEncoding();
+    String[] acceptEncodes = first.getAcceptEncodes();
     while (iterator.hasNext()) {
       Subscriber subscriber = iterator.next();
-      if (!Objects.equals(acceptEncoding, subscriber.getAcceptEncoding())) {
+      if (!Arrays.equals(acceptEncodes, subscriber.getAcceptEncodes())) {
         throw new RuntimeException(
             StringFormatter.format(
-                "conflict scope, one is {}, anther is {}",
+                "conflict encoding, one is {}, anther is {}",
                 first.shortDesc(),
                 subscriber.shortDesc()));
       }
     }
-    return acceptEncoding;
+    return acceptEncodes;
   }
 
   public static void assertClientVersion(

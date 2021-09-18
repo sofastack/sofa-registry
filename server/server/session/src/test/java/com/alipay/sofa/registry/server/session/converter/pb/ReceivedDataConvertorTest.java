@@ -18,6 +18,7 @@ package com.alipay.sofa.registry.server.session.converter.pb;
 
 import com.alipay.sofa.registry.common.model.client.pb.ReceivedConfigDataPb;
 import com.alipay.sofa.registry.common.model.client.pb.ReceivedDataPb;
+import com.alipay.sofa.registry.compress.CompressConstants;
 import com.alipay.sofa.registry.compress.CompressUtils;
 import com.alipay.sofa.registry.core.model.DataBox;
 import com.alipay.sofa.registry.core.model.ReceivedConfigData;
@@ -109,7 +110,8 @@ public class ReceivedDataConvertorTest {
     registerJava.setData(
         Collections.singletonMap("testZone", Lists.newArrayList(new DataBox("testDataBox"))));
     ReceivedDataPb dataPb =
-        ReceivedDataConvertor.convert2CompressedPb(registerJava, CompressUtils.get("zstd"));
+        ReceivedDataConvertor.convert2CompressedPb(
+            registerJava, CompressUtils.find(new String[] {CompressConstants.encodingZstd}));
     Assert.assertEquals(0, dataPb.getDataMap().size());
     Assert.assertNotEquals(0, dataPb.getOriginBodySize());
     Assert.assertNotEquals(0, dataPb.getBody().size());

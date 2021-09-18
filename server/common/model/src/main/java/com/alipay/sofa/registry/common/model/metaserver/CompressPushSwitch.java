@@ -18,22 +18,25 @@ package com.alipay.sofa.registry.common.model.metaserver;
 
 import com.alipay.sofa.registry.compress.CompressConstants;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import java.util.Collections;
-import java.util.Set;
-
 import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.annotation.Nulls;
+import java.util.Collections;
+import java.util.Set;
 import org.springframework.util.CollectionUtils;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CompressPushSwitch {
   private boolean enabled = false;
+
   @JsonSetter(nulls = Nulls.SKIP)
-  private int compressMinSize = CompressConstants.defaultCompressMinSize;
+  private int compressMinSize = CompressConstants.defaultCompressPushMinSize;
+
   @JsonSetter(nulls = Nulls.SKIP)
   private Set<String> forbidEncodes = Collections.emptySet();
+
   @JsonSetter(nulls = Nulls.SKIP)
   private Set<String> enabledSessions = Collections.emptySet();
+
   @JsonSetter(nulls = Nulls.SKIP)
   private Set<String> enabledClients = Collections.emptySet();
 
@@ -93,5 +96,21 @@ public class CompressPushSwitch {
     } else {
       enabledClients = clients;
     }
+  }
+
+  @Override
+  public String toString() {
+    return "CompressPushSwitch{"
+        + "enabled="
+        + enabled
+        + ", compressMinSize="
+        + compressMinSize
+        + ", forbidEncodes="
+        + forbidEncodes
+        + ", enabledSessions="
+        + enabledSessions
+        + ", enabledClients="
+        + enabledClients
+        + '}';
   }
 }

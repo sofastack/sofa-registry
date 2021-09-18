@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.compress;
 
+import com.alipay.sofa.registry.concurrent.ThreadLocalByteArrayOutputStream;
 import com.github.luben.zstd.*;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -28,8 +29,8 @@ public abstract class Compressor {
 
   public abstract byte[] decompress(byte[] data, int decompressedSize) throws Exception;
 
-  private static final ThreadLocal<ByteArrayOutputStream> bosRepo =
-      ThreadLocal.withInitial(() -> new ByteArrayOutputStream(1024 * 64));
+  private static final ThreadLocal<byte[]> BUF_REPO =
+      ThreadLocal.withInitial(() -> new byte[1024 * 32]);
 
   public static class GzipCompressor extends Compressor {
 
@@ -40,26 +41,29 @@ public abstract class Compressor {
 
     @Override
     public byte[] compress(byte[] data) throws Exception {
-      ByteArrayOutputStream bos = bosRepo.get();
-      bos.reset();
+      ByteArrayOutputStream bos = ThreadLocalByteArrayOutputStream.get();
       try (GZIPOutputStream gzipOs = new GZIPOutputStream(bos)) {
         gzipOs.write(data);
         gzipOs.close();
         return bos.toByteArray();
+      } finally {
+        bos.reset();
       }
     }
 
     @Override
     public byte[] decompress(byte[] data, int decompressedSize) throws Exception {
-      ByteArrayOutputStream bos = bosRepo.get();
-      bos.reset();
+      ByteArrayOutputStream bos = ThreadLocalByteArrayOutputStream.get();
       try (GZIPInputStream gis = new GZIPInputStream(new ByteArrayInputStream(data))) {
-        final byte[] buffer = new byte[4096];
+        final byte[] buffer = BUF_REPO.get();
         int len;
         while ((len = gis.read(buffer)) > 0) {
           bos.write(buffer, 0, len);
         }
+        gis.close();
         return bos.toByteArray();
+      } finally {
+        bos.reset();
       }
     }
   }

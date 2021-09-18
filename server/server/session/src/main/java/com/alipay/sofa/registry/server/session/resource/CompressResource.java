@@ -30,7 +30,7 @@ public class CompressResource {
   @Resource CompressPushService compressPushService;
 
   @GET
-  @Path("push/switch")
+  @Path("push/state")
   @Produces(MediaType.APPLICATION_JSON)
   public CompressPushSwitch getCurrentSwitch() {
     return compressPushService.getCompressSwitch();

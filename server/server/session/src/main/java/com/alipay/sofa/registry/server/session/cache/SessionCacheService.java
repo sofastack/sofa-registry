@@ -54,7 +54,7 @@ public class SessionCacheService implements CacheService {
                     return generatePayload(key);
                   }
                 });
-    CacheCleaner.autoClean(readWriteCacheMap, 30000);
+    CacheCleaner.autoClean(readWriteCacheMap, 10);
   }
 
   static final class RemoveListener implements RemovalListener<Key, Value> {
