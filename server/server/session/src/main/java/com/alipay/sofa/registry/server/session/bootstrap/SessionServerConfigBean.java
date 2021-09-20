@@ -192,7 +192,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
   private int pushTaskBufferBucketSize = 4;
 
-  private int pushCircuitBreakerThreshold = 20;
+  private int pushCircuitBreakerThreshold = 10;
 
   private int pushCircuitBreakerSleepMillis = 60 * 1000;
 
