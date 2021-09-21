@@ -33,6 +33,8 @@ import com.alipay.sofa.registry.server.shared.providedata.SystemDataStorage;
 import com.alipay.sofa.registry.util.JsonUtils;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class CompressPushService
@@ -113,7 +115,9 @@ public class CompressPushService
     for (Map.Entry<String, List<DataBox>> boxesEntry : dataBoxesMap.entrySet()) {
       size += boxesEntry.getKey().length();
       for (DataBox box : boxesEntry.getValue()) {
-        size += box.getData().length();
+        if(!StringUtils.isBlank(box.getData())){
+          size += box.getData().length();
+        }
       }
     }
     return size;
