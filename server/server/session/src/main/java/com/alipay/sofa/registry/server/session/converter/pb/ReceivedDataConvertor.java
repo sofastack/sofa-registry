@@ -33,8 +33,8 @@ public final class ReceivedDataConvertor {
   public static final CompressCachedExecutor<CompressedItem> pushCompressExecutor =
       CompressUtils.newCachedExecutor(
           "compress_push",
-          30 * 1000,
-          SystemUtils.getSystemInteger(KEY_COMPRESS_PUSH_CACHE_CAPACITY, 1024 * 1024 * 256));
+          60 * 1000,
+          SystemUtils.getSystemInteger(KEY_COMPRESS_PUSH_CACHE_CAPACITY, 1024 * 1024 * 384));
 
   private ReceivedDataConvertor() {}
 

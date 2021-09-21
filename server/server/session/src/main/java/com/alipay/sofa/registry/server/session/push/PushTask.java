@@ -43,6 +43,7 @@ public abstract class PushTask {
   protected int retryCount;
   private int pushDataCount = -1;
   private String pushEncode = StringUtils.EMPTY;
+  private int encodeSize = 0;
 
   protected PushTask(
       PushCause pushCause,
@@ -141,8 +142,16 @@ public abstract class PushTask {
     this.pushEncode = pushEncode;
   }
 
+  public void setEncodeSize(int encodeSize) {
+    this.encodeSize = encodeSize;
+  }
+
   public String getPushEncode() {
     return pushEncode;
+  }
+
+  public int getEncodeSize() {
+    return encodeSize;
   }
 
   protected static final class PushingTaskKey {

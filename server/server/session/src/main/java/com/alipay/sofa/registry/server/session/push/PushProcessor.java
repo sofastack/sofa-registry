@@ -166,7 +166,8 @@ public class PushProcessor {
             task.getMaxPushedVersion(),
             task.getPushDataCount(),
             task.retryCount,
-            task.getPushEncode());
+            task.getPushEncode(),
+            task.getEncodeSize());
       }
       return span;
     }
@@ -305,6 +306,7 @@ public class PushProcessor {
       final PushData pushData = task.createPushData();
       task.setPushDataCount(pushData.getDataCount());
       task.setPushEncode(pushData.getEncode());
+      task.setEncodeSize(pushData.getEncodeSize());
 
       if (interruptOnPushEmpty(
           task.datum, pushData, task.trace.pushCause, task.subscriber, task.pushingTaskKey.addr)) {
@@ -347,7 +349,8 @@ public class PushProcessor {
           task.getMaxPushedVersion(),
           task.getPushDataCount(),
           task.retryCount,
-          task.getPushEncode());
+          task.getPushEncode(),
+          task.getEncodeSize());
       // channel closed, just warn
       LOGGER.warn(
           "[PushChanClosed]taskId={}, {}, {}", task.taskID, task.pushingTaskKey, e.getMessage());
@@ -370,7 +373,8 @@ public class PushProcessor {
           task.getMaxPushedVersion(),
           task.getPushDataCount(),
           task.retryCount,
-          task.getPushEncode());
+          task.getPushEncode(),
+          task.getEncodeSize());
       LOGGER.error(
           "[PushChanOverflow]taskId={}, {}, {}", task.taskID, task.pushingTaskKey, e.getMessage());
       return;
@@ -381,7 +385,8 @@ public class PushProcessor {
         task.getMaxPushedVersion(),
         task.getPushDataCount(),
         task.retryCount,
-        task.getPushEncode());
+        task.getPushEncode(),
+        task.getEncodeSize());
     LOGGER.error("[PushFail]taskId={}, {}", task.taskID, task.pushingTaskKey, e);
   }
 
@@ -458,7 +463,8 @@ public class PushProcessor {
           subscriberPushedVersion,
           this.pushTask.getPushDataCount(),
           pushTask.retryCount,
-          pushTask.getPushEncode());
+          pushTask.getPushEncode(),
+          pushTask.getEncodeSize());
     }
 
     @Override
@@ -478,7 +484,8 @@ public class PushProcessor {
             pushTask.getMaxPushedVersion(),
             pushTask.getPushDataCount(),
             pushTask.retryCount,
-            pushTask.getPushEncode());
+            pushTask.getPushEncode(),
+            pushTask.getEncodeSize());
         LOGGER.error("[PushTimeout]taskId={}, {}", pushTask.taskID, pushTask.pushingTaskKey);
       } else {
         if (channelConnected) {
@@ -488,7 +495,8 @@ public class PushProcessor {
               pushTask.getMaxPushedVersion(),
               pushTask.getPushDataCount(),
               pushTask.retryCount,
-              pushTask.getPushEncode());
+              pushTask.getPushEncode(),
+              pushTask.getEncodeSize());
           LOGGER.error(
               "[PushFailed]taskId={}, {}", pushTask.taskID, pushTask.pushingTaskKey, exception);
         } else {
@@ -499,7 +507,8 @@ public class PushProcessor {
               pushTask.getMaxPushedVersion(),
               pushTask.getPushDataCount(),
               pushTask.retryCount,
-              pushTask.getPushEncode());
+              pushTask.getPushEncode(),
+              pushTask.getEncodeSize());
           // channel closed, just warn
           LOGGER.warn("[PushChanClosed]taskId={}, {}", pushTask.taskID, pushTask.pushingTaskKey);
         }

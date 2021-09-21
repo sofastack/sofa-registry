@@ -18,6 +18,7 @@ package com.alipay.sofa.registry.common.model.store;
 
 import com.alipay.sofa.registry.cache.Sizer;
 import com.alipay.sofa.registry.compress.CompressDatumKey;
+import com.alipay.sofa.registry.util.CollectionUtils;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.alipay.sofa.registry.util.StringUtils;
 import com.google.common.collect.Lists;
@@ -26,7 +27,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import org.springframework.util.Assert;
-import org.springframework.util.CollectionUtils;
 
 public final class SubDatum implements Serializable, Sizer {
   private static final long serialVersionUID = 5307489721610438103L;
@@ -185,9 +185,7 @@ public final class SubDatum implements Serializable, Sizer {
       return zipPublishers.getOriginSize();
     }
     int bytes = 0;
-    for (SubPublisher p : publishers) {
-      bytes += p.getDataBoxBytes();
-    }
+    bytes += CollectionUtils.fuzzyTotalSize(publishers, SubPublisher::getDataBoxBytes);
     return bytes;
   }
 
@@ -254,11 +252,7 @@ public final class SubDatum implements Serializable, Sizer {
             + StringUtils.sizeof(dataCenter)
             + StringUtils.sizeof(dataId)
             + StringUtils.sizeof(instanceId);
-    if (!CollectionUtils.isEmpty(publishers)) {
-      for (SubPublisher pub : publishers) {
-        size += pub.size();
-      }
-    }
+    size += CollectionUtils.fuzzyTotalSize(publishers, SubPublisher::size);
     if (zipPublishers != null) {
       size += zipPublishers.size();
     }

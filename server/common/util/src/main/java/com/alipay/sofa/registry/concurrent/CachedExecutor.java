@@ -29,18 +29,30 @@ public class CachedExecutor<K, V> {
   private final LongAdder hitCount = new LongAdder();
   private final LongAdder missingCount = new LongAdder();
 
-  public CachedExecutor(long silentMs) {
-    cache = CacheBuilder.newBuilder().expireAfterWrite(silentMs, TimeUnit.MILLISECONDS).build();
+  public CachedExecutor(long silentMs){
+    this(silentMs, false);
+  }
+
+  public CachedExecutor(long silentMs, boolean expireAfterAccess) {
+    CacheBuilder builder = CacheBuilder.newBuilder();
+    if (expireAfterAccess) {
+      builder = builder.expireAfterAccess(silentMs, TimeUnit.MILLISECONDS);
+    } else {
+      builder = builder.expireAfterWrite(silentMs, TimeUnit.MILLISECONDS);
+    }
+    cache = builder.build();
     CacheCleaner.autoClean(cache, silentMs);
   }
 
-  public CachedExecutor(long silentMs, long maxWeight, Weigher<K, V> weigher) {
-    cache =
-        CacheBuilder.newBuilder()
-            .maximumWeight(maxWeight)
-            .weigher(weigher)
-            .expireAfterWrite(silentMs, TimeUnit.MILLISECONDS)
-            .build();
+  public CachedExecutor(
+      long silentMs, long maxWeight, Weigher<K, V> weigher, boolean expireAfterAccess) {
+    CacheBuilder builder = CacheBuilder.newBuilder().maximumWeight(maxWeight).weigher(weigher);
+    if (expireAfterAccess) {
+      builder = builder.expireAfterAccess(silentMs, TimeUnit.MILLISECONDS);
+    } else {
+      builder = builder.expireAfterWrite(silentMs, TimeUnit.MILLISECONDS);
+    }
+    cache = builder.build();
     CacheCleaner.autoClean(cache, silentMs);
   }
 
