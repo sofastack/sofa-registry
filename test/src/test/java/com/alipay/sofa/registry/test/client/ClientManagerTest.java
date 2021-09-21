@@ -193,6 +193,16 @@ public class ClientManagerTest extends BaseIntegrationTest {
       Assert.assertTrue(query.isSub());
     }
 
+    /** client off */
+    response = clientManagerResource.clientOpen(CLIENT_OPEN_STR);
+    Assert.assertTrue(response.isSuccess());
+
+    // check session client off list
+    TimeUnit.SECONDS.sleep(5);
+    for (String address : CLIENT_OPEN_SET) {
+      AddressVersion query = fetchClientOffAddressService.getAddress(address);
+      Assert.assertNull(query);
+    }
   }
 
   @Test

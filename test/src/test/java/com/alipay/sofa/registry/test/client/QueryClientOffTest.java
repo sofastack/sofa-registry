@@ -67,5 +67,9 @@ public class QueryClientOffTest extends BaseIntegrationTest {
     GenericResponse resp = (GenericResponse) result;
     ClientManagerResp data = (ClientManagerResp) resp.getData();
     Assert.assertEquals(data.getIps(), CLIENT_OFF_SET);
+
+    /** client open */
+    response = clientManagerResource.clientOpen(CLIENT_OFF_STR);
+    Assert.assertTrue(response.isSuccess());
   }
 }
