@@ -46,14 +46,14 @@ public final class DatumUtils {
   public static final CompressCachedExecutor<CompressedItem> compressCachedExecutor =
       CompressUtils.newCachedExecutor(
           "datum_compress",
-          30 * 1000,
+          60 * 1000,
           SystemUtils.getSystemInteger(KEY_COMPRESS_DATUM_CACHE_CAPACITY, 1024 * 1024 * 128));
 
   public static final CompressCachedExecutor<SubPublisherList> decompressCachedExecutor =
       CompressUtils.newCachedExecutor(
           "datum_decompress",
-          30 * 1000,
-          SystemUtils.getSystemInteger(KEY_DECOMPRESS_DATUM_CACHE_CAPACITY, 1024 * 1024 * 256));
+          60 * 1000,
+          SystemUtils.getSystemInteger(KEY_DECOMPRESS_DATUM_CACHE_CAPACITY, 1024 * 1024 * 384));
 
   public static final HessianSerializer serializer = new HessianSerializer();
 

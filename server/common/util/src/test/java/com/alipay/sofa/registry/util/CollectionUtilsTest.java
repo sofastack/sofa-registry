@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.util;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.util.*;
 import org.junit.Assert;
@@ -70,5 +71,18 @@ public class CollectionUtilsTest {
       Assert.fail();
     } catch (UnsupportedOperationException exception) {
     }
+  }
+
+  @Test
+  public void testFuzzyTotalSize() {
+    List<String> items = Lists.newArrayList();
+    for (int i = 0; i < 2000; i++) {
+      items.add("1234567890");
+    }
+    Assert.assertEquals(20000, CollectionUtils.fuzzyTotalSize(items, String::length));
+    List<String> items2 = Lists.newArrayList("12345");
+    Assert.assertEquals(5, CollectionUtils.fuzzyTotalSize(items2, String::length));
+    Assert.assertEquals(0, CollectionUtils.fuzzyTotalSize(items2, s -> 0));
+    Assert.assertEquals(0, CollectionUtils.fuzzyTotalSize(Lists.newArrayList(), s -> 100));
   }
 }

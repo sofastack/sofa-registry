@@ -22,15 +22,17 @@ public class PushData<T> {
   private final T payload;
   private final int dataCount;
   private final String encode;
+  private final int encodeSize;
 
   public PushData(T payload, int dataCount) {
-    this(payload, dataCount, StringUtils.EMPTY);
+    this(payload, dataCount, StringUtils.EMPTY, 0);
   }
 
-  public PushData(T payload, int dataCount, String encode) {
+  public PushData(T payload, int dataCount, String encode, int encodeSize) {
     this.payload = payload;
     this.dataCount = dataCount;
     this.encode = encode;
+    this.encodeSize = encodeSize;
   }
 
   public T getPayload() {
@@ -43,5 +45,9 @@ public class PushData<T> {
 
   public String getEncode() {
     return encode;
+  }
+
+  public int getEncodeSize() {
+    return encodeSize;
   }
 }

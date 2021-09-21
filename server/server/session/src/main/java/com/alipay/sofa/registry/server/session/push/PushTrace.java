@@ -113,9 +113,10 @@ public final class PushTrace {
       long subscriberPushedVersion,
       int pushNum,
       int retry,
-      String pushEncode) {
+      String pushEncode,
+      int encodeSize) {
     try {
-      finish(status, taskID, subscriberPushedVersion, pushNum, retry, pushEncode);
+      finish(status, taskID, subscriberPushedVersion, pushNum, retry, pushEncode, encodeSize);
     } catch (Throwable t) {
       LOGGER.error(
           "finish push error, {},{},{},{}",
@@ -133,7 +134,8 @@ public final class PushTrace {
       long subscriberPushedVersion,
       int pushNum,
       int retry,
-      String pushEncode) {
+      String pushEncode,
+      int encodeSize) {
     final long pushFinishTimestamp = System.currentTimeMillis();
     // push.finish- first.newly.datumTimestamp(after subscriberPushedVersion)
     long datumModifyPushSpanMillis;
@@ -201,7 +203,7 @@ public final class PushTrace {
               "{},{},{},ver={},app={},cause={},pubNum={},pubBytes={},delay={},{},{},{},{},"
                   + "session={},cliIO={},"
                   + "subNum={},addr={},expectVer={},dataNode={},taskID={},pushedVer={},regTs={},"
-                  + "{},recentDelay={},pushNum={},retry={},encode={}",
+                  + "{},recentDelay={},pushNum={},retry={},encode={},encSize={}",
               status,
               datum.getDataInfoId(),
               datum.getDataCenter(),
@@ -228,7 +230,8 @@ public final class PushTrace {
               pushDatumDelayStr,
               pushNum,
               retry,
-              CompressUtils.normalizeEncode(pushEncode));
+              CompressUtils.normalizeEncode(pushEncode),
+              encodeSize);
       LOGGER.info(msg);
       if (datumModifyPushSpanMillis > 6000) {
         SLOW_LOGGER.info(msg);

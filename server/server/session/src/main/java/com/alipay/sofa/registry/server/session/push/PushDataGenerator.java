@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.server.session.push;
 
 import com.alipay.sofa.registry.common.model.SubscriberUtils;
+import com.alipay.sofa.registry.common.model.client.pb.ReceivedDataPb;
 import com.alipay.sofa.registry.common.model.store.*;
 import com.alipay.sofa.registry.compress.Compressor;
 import com.alipay.sofa.registry.core.model.ReceivedConfigData;
@@ -72,13 +73,16 @@ public class PushDataGenerator {
             subscriber.getAcceptEncodes(),
             subscriber.getSourceAddress().getIpAddress());
     if (compressor == null) {
-      return new PushData<>(
-          ReceivedDataConvertor.convert2Pb(pushData.getPayload()), pushData.getDataCount());
+      ReceivedDataPb receivedDataPb = ReceivedDataConvertor.convert2Pb(pushData.getPayload());
+      return new PushData<>(receivedDataPb, pushData.getDataCount());
     } else {
+      ReceivedDataPb receivedDataPb =
+          ReceivedDataConvertor.convert2CompressedPb(pushData.getPayload(), compressor);
       return new PushData<>(
-          ReceivedDataConvertor.convert2CompressedPb(pushData.getPayload(), compressor),
+          receivedDataPb,
           pushData.getDataCount(),
-          compressor.getEncoding());
+          compressor.getEncoding(),
+          receivedDataPb.getBody().size());
     }
   }
 

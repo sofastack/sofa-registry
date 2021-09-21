@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.common.model.store;
 
 import com.alipay.sofa.registry.cache.Sizer;
+import com.alipay.sofa.registry.util.CollectionUtils;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
@@ -39,9 +40,7 @@ public class SubPublisherList implements Serializable, Sizer {
 
   private int calcSize() {
     int bytes = 20;
-    for (SubPublisher pub : pubs) {
-      bytes += pub.size();
-    }
+    bytes += CollectionUtils.fuzzyTotalSize(pubs, SubPublisher::size);
     return bytes;
   }
 

@@ -30,7 +30,6 @@ import com.alipay.sofa.registry.jdbc.mapper.ClientManagerAddressMapper;
 import com.google.common.collect.Sets;
 import java.util.Date;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -56,7 +55,7 @@ public class ClientManagerAddressJdbcRepositoryTest extends AbstractH2DbTestBase
       Sets.newHashSet(new AddressVersion("1.1.1.1", true), new AddressVersion("2.2.2.2", false));
 
   public static final Set<AddressVersion> clientOffWithSubSet =
-          Sets.newHashSet(new AddressVersion("1.1.1.1", true), new AddressVersion("2.2.2.2", true));
+      Sets.newHashSet(new AddressVersion("1.1.1.1", true), new AddressVersion("2.2.2.2", true));
 
   public static final Set<AddressVersion> clientOpenSet =
       Sets.newHashSet(new AddressVersion("2.2.2.2", true), new AddressVersion("3.3.3.3", true));
@@ -66,12 +65,11 @@ public class ClientManagerAddressJdbcRepositoryTest extends AbstractH2DbTestBase
 
   private ClientManagerAddressMapper mapper = mock(ClientManagerAddressMapper.class);
 
-
   @Test
   public void testClientManagerWithSub() throws InterruptedException {
     boolean clientOff =
-            clientManagerAddressJdbcRepository.clientOff(
-                    ClientManagerAddressJdbcRepositoryTest.clientOffSet);
+        clientManagerAddressJdbcRepository.clientOff(
+            ClientManagerAddressJdbcRepositoryTest.clientOffSet);
     Assert.assertTrue(clientOff);
     TimeUnit.SECONDS.sleep(3);
 
@@ -83,8 +81,8 @@ public class ClientManagerAddressJdbcRepositoryTest extends AbstractH2DbTestBase
     }
 
     clientOff =
-            clientManagerAddressJdbcRepository.clientOff(
-                    ClientManagerAddressJdbcRepositoryTest.clientOffWithSubSet);
+        clientManagerAddressJdbcRepository.clientOff(
+            ClientManagerAddressJdbcRepositoryTest.clientOffWithSubSet);
     Assert.assertTrue(clientOff);
     TimeUnit.SECONDS.sleep(3);
 
@@ -96,8 +94,8 @@ public class ClientManagerAddressJdbcRepositoryTest extends AbstractH2DbTestBase
     }
 
     clientOff =
-            clientManagerAddressJdbcRepository.clientOff(
-                    ClientManagerAddressJdbcRepositoryTest.clientOffSet);
+        clientManagerAddressJdbcRepository.clientOff(
+            ClientManagerAddressJdbcRepositoryTest.clientOffSet);
     Assert.assertTrue(clientOff);
     TimeUnit.SECONDS.sleep(3);
 
@@ -108,6 +106,7 @@ public class ClientManagerAddressJdbcRepositoryTest extends AbstractH2DbTestBase
       Assert.assertEquals(addressVersion.isSub(), queryVersion.isSub());
     }
   }
+
   @Test
   public void testClientManager() {
     boolean clientOff =

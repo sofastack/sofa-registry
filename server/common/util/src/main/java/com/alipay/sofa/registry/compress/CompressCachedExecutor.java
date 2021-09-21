@@ -26,7 +26,7 @@ public class CompressCachedExecutor<V extends Sizer> extends CachedExecutor<Comp
   private final String name;
 
   public CompressCachedExecutor(String name, long silentMs, long maxWeight) {
-    super(silentMs, maxWeight, (CompressKey k, V v) -> k.size() + v.size());
+    super(silentMs, maxWeight, (CompressKey k, V v) -> k.size() + v.size(), true);
     this.name = name;
   }
 
