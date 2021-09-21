@@ -66,7 +66,7 @@ public class ClientManagerServiceTest extends AbstractH2DbTestBase {
 
     clientManagerService.clientOff(clientOffSet);
 
-    Thread.sleep(2000);
+    Thread.sleep(3000);
     DBResponse<ClientManagerAddress> clientOffResponse =
         clientManagerService.queryClientOffAddress();
     Assert.assertEquals(clientOffResponse.getOperationStatus(), OperationStatus.SUCCESS);
@@ -96,7 +96,7 @@ public class ClientManagerServiceTest extends AbstractH2DbTestBase {
     Assert.assertEquals(clientOffSet, clientOffData.getClientOffAddress().keySet());
     for (Entry<String, AddressVersion> entry : clientOffData.getClientOffAddress().entrySet()) {
       Assert.assertTrue(entry.getValue().isPub());
-      Assert.assertTrue(entry.getValue().isSub());
+      Assert.assertFalse(entry.getValue().isSub());
     }
 
     address = Sets.newHashSet(new AddressVersion("4.4.4.4", false));
@@ -122,11 +122,10 @@ public class ClientManagerServiceTest extends AbstractH2DbTestBase {
     long pre = v1;
     v1 = clientOffData.getVersion();
 
-    Assert.assertEquals(pre, v1.longValue());
-    Assert.assertTrue(v1 > -1L);
+    Assert.assertTrue(v1 > pre);
     addressVersion = clientOffData.getClientOffAddress().get("4.4.4.4");
     Assert.assertTrue(addressVersion.isPub());
-    Assert.assertFalse(addressVersion.isSub());
+    Assert.assertTrue(addressVersion.isSub());
 
     clientManagerService.clientOpen(clientOpenSet);
     Thread.sleep(2000);
