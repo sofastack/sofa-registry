@@ -123,9 +123,8 @@ public final class SubDatum implements Serializable, Sizer {
       String group,
       List<Long> recentVersions,
       ZipSubPublisherList zipPublishers) {
-    Assert.isTrue(
-        Boolean.logicalXor(publishers == null, zipPublishers == null),
-        "only one must be not null between publishers and zipPublishers");
+
+    //        only one must be not null between publishers and zipPublishers
     this.dataInfoId = dataInfoId;
     this.dataCenter = dataCenter;
     this.version = version;

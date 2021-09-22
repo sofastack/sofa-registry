@@ -34,7 +34,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class PushTaskBuffer {
   private static final Logger LOGGER = LoggerFactory.getLogger(PushTaskBuffer.class);
   private static final String KEY_MAX_BUFFERED_SIZE = "registry.session.push_task.max_buffered";
-  private static final int MAX_BUFFERED_SIZE = SystemUtils.getSystemInteger(KEY_MAX_BUFFERED_SIZE, 10000);
+  private static final int MAX_BUFFERED_SIZE =
+      SystemUtils.getSystemInteger(KEY_MAX_BUFFERED_SIZE, 10000);
 
   final BufferWorker[] workers;
 
@@ -50,7 +51,7 @@ public final class PushTaskBuffer {
   boolean buffer(PushTask pushTask) {
     final BufferTaskKey key = bufferTaskKey(pushTask);
     final BufferWorker worker = workerOf(key);
-    if(worker.bufferMap.size() >= MAX_BUFFERED_SIZE){
+    if (worker.bufferMap.size() >= MAX_BUFFERED_SIZE) {
       return false;
     }
     if (worker.bufferMap.putIfAbsent(key, pushTask) == null) {
@@ -139,8 +140,8 @@ public final class PushTaskBuffer {
   }
 
   int watchBuffer(BufferWorker worker) {
-    int bufferedSize  = worker.bufferMap.size();
-    if(bufferedSize >= MAX_BUFFERED_SIZE){
+    int bufferedSize = worker.bufferMap.size();
+    if (bufferedSize >= MAX_BUFFERED_SIZE) {
       LOGGER.warn("arrived max buffered size: buffered={}", bufferedSize);
     }
 

@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.io.Serializable;
 import java.util.*;
+import org.springframework.util.CollectionUtils;
 
 /**
  * @author yuzhi.lyz
@@ -45,7 +46,11 @@ public final class Slot implements Serializable, Cloneable {
     this.id = id;
     this.leader = leader;
     this.leaderEpoch = leaderEpoch;
-    this.followers = new HashSet<>(followers);
+    if (!CollectionUtils.isEmpty(followers)) {
+      this.followers = new HashSet<>(followers);
+    } else {
+      this.followers = new HashSet<>();
+    }
   }
 
   @Override
