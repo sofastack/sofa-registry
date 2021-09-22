@@ -63,8 +63,7 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository {
   private final Cache<String, Boolean> localRevisions =
       CacheBuilder.newBuilder().expireAfterWrite(2, TimeUnit.MINUTES).build();
 
-  private final CachedExecutor<String, Boolean> cachedExecutor =
-      new CachedExecutor<>(1000 * 10);
+  private final CachedExecutor<String, Boolean> cachedExecutor = new CachedExecutor<>(1000 * 10);
 
   @Autowired private AppRevisionMapper appRevisionMapper;
 
