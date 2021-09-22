@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.common.model.metaserver.cluster;
 
+import com.google.common.collect.Lists;
+
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
@@ -26,7 +28,7 @@ import java.util.List;
  */
 public class VersionedList<T> implements Cluster<T>, Serializable {
 
-  public static final VersionedList EMPTY = new VersionedList(-1L, Collections.EMPTY_LIST);
+  public static final VersionedList EMPTY = new VersionedList(-1L, Collections.emptyList());
 
   private final long epoch;
 

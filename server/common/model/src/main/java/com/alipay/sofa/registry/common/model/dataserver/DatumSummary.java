@@ -22,6 +22,7 @@ import com.google.common.collect.Maps;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -35,12 +36,12 @@ public class DatumSummary implements Serializable {
   public DatumSummary(
       String dataInfoId, Map<String /*registerId*/, RegisterVersion> publisherVersions) {
     this.dataInfoId = dataInfoId;
-    this.publisherVersions = Collections.unmodifiableMap(publisherVersions);
+    this.publisherVersions = publisherVersions;
   }
 
   public DatumSummary(String dataInfoId) {
     this.dataInfoId = dataInfoId;
-    this.publisherVersions = Collections.emptyMap();
+    this.publisherVersions = new HashMap<>();
   }
 
   public static DatumSummary of(String dataInfoId, Map<String, Publisher> publisherMap) {

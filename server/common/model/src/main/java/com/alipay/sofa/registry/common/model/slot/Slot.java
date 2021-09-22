@@ -45,7 +45,7 @@ public final class Slot implements Serializable, Cloneable {
     this.id = id;
     this.leader = leader;
     this.leaderEpoch = leaderEpoch;
-    this.followers = Collections.unmodifiableSet(new HashSet<>(followers));
+    this.followers = new HashSet<>(followers);
   }
 
   @Override

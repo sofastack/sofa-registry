@@ -39,8 +39,8 @@ public class DataSlotDiffPublisherRequest implements Serializable {
     this.slotId = slotId;
     this.datumSummaries =
         datumSummaries == null
-            ? Collections.emptyList()
-            : Collections.unmodifiableList(Lists.newArrayList(datumSummaries));
+            ? Lists.newArrayListWithCapacity(0)
+            : Lists.newArrayList(datumSummaries);
   }
 
   /**
