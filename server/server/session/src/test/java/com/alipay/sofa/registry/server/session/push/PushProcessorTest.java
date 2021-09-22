@@ -230,7 +230,7 @@ public class PushProcessorTest {
     // clientNodeService is null
     processor.clientNodeService = null;
     Assert.assertFalse(processor.doPush(task));
-    Assert.assertEquals(processor.pushingTasks.size(), 0);
+    Assert.assertEquals(processor.pushingRecords.size(), 0);
 
     processor.clientNodeService = Mockito.mock(ClientNodeService.class);
     // push success
@@ -238,11 +238,9 @@ public class PushProcessorTest {
 
     Mockito.verify(processor.clientNodeService, Mockito.times(1))
         .pushWithCallback(Mockito.anyObject(), Mockito.anyObject(), Mockito.anyObject());
-    Assert.assertEquals(processor.pushingTasks.size(), 1);
+    Assert.assertEquals(processor.pushingRecords.size(), 1);
 
-    PushTask pushing = processor.pushingTasks.values().iterator().next();
-    Assert.assertEquals(pushing, task);
-    PushTask.PushingTaskKey pushingKey = processor.pushingTasks.keySet().iterator().next();
+    PushTask.PushingTaskKey pushingKey = processor.pushingRecords.keySet().iterator().next();
     Assert.assertTrue(pushingKey.toString(), pushingKey.toString().contains(dataId));
     PushTask.PushingTaskKey otherPushingKey =
         new PushTask.PushingTaskKey(
@@ -278,31 +276,31 @@ public class PushProcessorTest {
 
     // expire has update
     Assert.assertNotEquals(task.expireTimestamp, expire);
-    Assert.assertEquals(processor.pushingTasks.size(), 1);
+    Assert.assertEquals(processor.pushingRecords.size(), 1);
     // push too long, trigger force push
     config.setClientNodeExchangeTimeoutMillis(0);
     Thread.sleep(1);
     Assert.assertTrue(processor.checkPushRunning(task));
-    Assert.assertEquals(processor.pushingTasks.size(), 0);
+    Assert.assertEquals(processor.pushingRecords.size(), 0);
 
     Assert.assertTrue(processor.doPush(task));
-    Assert.assertEquals(processor.pushingTasks.size(), 1);
+    Assert.assertEquals(processor.pushingRecords.size(), 1);
     // task has clean
     processor.handleDoPushException(task, new RequestChannelClosedException("test"));
-    Assert.assertEquals(processor.pushingTasks.size(), 0);
+    Assert.assertEquals(processor.pushingRecords.size(), 0);
 
     Assert.assertTrue(processor.doPush(task));
-    Assert.assertEquals(processor.pushingTasks.size(), 1);
+    Assert.assertEquals(processor.pushingRecords.size(), 1);
     // task has clean
     processor.handleDoPushException(task, new Throwable("test"));
-    Assert.assertEquals(processor.pushingTasks.size(), 0);
+    Assert.assertEquals(processor.pushingRecords.size(), 0);
 
     Assert.assertTrue(processor.doPush(task));
-    Assert.assertEquals(processor.pushingTasks.size(), 1);
+    Assert.assertEquals(processor.pushingRecords.size(), 1);
     // task has clean
     processor.handleDoPushException(
         task, new ChannelOverflowException("test", new RuntimeException()));
-    Assert.assertEquals(processor.pushingTasks.size(), 0);
+    Assert.assertEquals(processor.pushingRecords.size(), 0);
   }
 
   @Test
@@ -370,13 +368,13 @@ public class PushProcessorTest {
     PushTask task = worker.bufferMap.values().iterator().next();
     processor.doPush(task);
     Thread.sleep(1);
-    Assert.assertEquals(processor.pushingTasks.size(), 1);
+    Assert.assertEquals(processor.pushingRecords.size(), 1);
     PushProcessor.PushClientCallback callback = processor.new PushClientCallback(task);
     Assert.assertNotNull(callback.getExecutor());
     Assert.assertEquals(0, subscriber.getPushedVersion(datum.getDataCenter()));
     callback.onCallback(null, null);
     // pushing task cleaned
-    Assert.assertEquals(processor.pushingTasks.size(), 0);
+    Assert.assertEquals(processor.pushingRecords.size(), 0);
     Assert.assertEquals(100, subscriber.getPushedVersion(datum.getDataCenter()));
   }
 
@@ -418,17 +416,17 @@ public class PushProcessorTest {
     PushTask task = worker.bufferMap.values().iterator().next();
     processor.doPush(task);
     Thread.sleep(1);
-    Assert.assertEquals(processor.pushingTasks.size(), 1);
+    Assert.assertEquals(processor.pushingRecords.size(), 1);
     PushProcessor.PushClientCallback callback = processor.new PushClientCallback(task);
     Assert.assertNotNull(callback.getExecutor());
     Assert.assertEquals(0, subscriber.getPushedVersion(datum.getDataCenter()));
     TestUtils.MockBlotChannel channel = TestUtils.newChannel(9600, "192.168.1.1", 1234);
     callback.onException(channel, new InvokeTimeoutException());
-    Assert.assertEquals(processor.pushingTasks.size(), 0);
+    Assert.assertEquals(processor.pushingRecords.size(), 0);
     Assert.assertEquals(0, subscriber.getPushedVersion(datum.getDataCenter()));
 
     callback.onException(channel, new Exception());
-    Assert.assertEquals(processor.pushingTasks.size(), 0);
+    Assert.assertEquals(processor.pushingRecords.size(), 0);
     Assert.assertEquals(0, subscriber.getPushedVersion(datum.getDataCenter()));
   }
 

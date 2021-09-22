@@ -35,8 +35,8 @@ import com.alipay.sofa.registry.server.shared.util.DatumUtils;
 import com.alipay.sofa.registry.task.KeyedThreadPoolExecutor;
 import com.alipay.sofa.registry.task.MetricsableThreadPoolExecutor;
 import com.alipay.sofa.registry.task.RejectedDiscardHandler;
+import com.alipay.sofa.registry.trace.TraceID;
 import com.alipay.sofa.registry.util.*;
-import com.google.common.collect.Lists;
 import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.Collections;
@@ -55,7 +55,8 @@ public class PushProcessor {
   private KeyedThreadPoolExecutor pushExecutor;
   PushTaskBuffer taskBuffer;
 
-  final Map<PushTask.PushingTaskKey, PushTask> pushingTasks = new ConcurrentHashMap<>(1024 * 16);
+  final Map<PushTask.PushingTaskKey, PushRecord> pushingRecords =
+      new ConcurrentHashMap<>(1024 * 16);
 
   @Autowired protected SessionServerConfig sessionServerConfig;
 
@@ -125,7 +126,7 @@ public class PushProcessor {
           cleans,
           discardHandler.getDiscardCountThenReset(),
           taskBuffer.size(),
-          pushingTasks.size());
+          pushingRecords.size());
     }
 
     @Override
@@ -139,35 +140,37 @@ public class PushProcessor {
   }
 
   int cleanPushingTaskRunTooLong() {
-    List<PushTask> pushes = Lists.newArrayList(pushingTasks.values());
     final long now = System.currentTimeMillis();
     final int maxSpanMillis = getPushingMaxSpanMillis();
     int count = 0;
-    for (PushTask push : pushes) {
-      long span = cleanPushingTaskIfRunTooLong(now, push, maxSpanMillis);
+    for (Map.Entry<PushTask.PushingTaskKey, PushRecord> e : pushingRecords.entrySet()) {
+      final PushTask.PushingTaskKey key = e.getKey();
+      final PushRecord record = e.getValue();
+      long span = cleanPushingTaskIfRunTooLong(now, key, record, maxSpanMillis);
       if (span > 0) {
         count++;
-        LOGGER.warn("[pushTooLong]{},span={},{}", push.taskID, span, push.pushingTaskKey);
+        LOGGER.warn("[pushTooLong]{},span={},{}", record.taskID, span, key);
       }
     }
     return count;
   }
 
-  long cleanPushingTaskIfRunTooLong(long now, PushTask task, int maxSpanMillis) {
+  long cleanPushingTaskIfRunTooLong(
+      long now, PushTask.PushingTaskKey pushingTaskKey, PushRecord task, int maxSpanMillis) {
     final long span = now - task.trace.getPushStartTimestamp();
     if (span > maxSpanMillis) {
       // this happens when the callbackExecutor is too busy and the callback task is discarded
       // force to remove the prev task
-      final boolean cleaned = pushingTasks.remove(task.pushingTaskKey, task);
+      final boolean cleaned = pushingRecords.remove(pushingTaskKey, task);
       if (cleaned) {
         task.trace.finishPush(
             PushTrace.PushStatus.Busy,
             task.taskID,
-            task.getMaxPushedVersion(),
-            task.getPushDataCount(),
+            0,
+            task.pushDataCount,
             task.retryCount,
-            task.getPushEncode(),
-            task.getEncodeSize());
+            task.pushEncode,
+            task.encodeSize);
       }
       return span;
     }
@@ -189,13 +192,13 @@ public class PushProcessor {
   boolean checkPushRunning(PushTask task) {
     final PushTask.PushingTaskKey pushingTaskKey = task.pushingTaskKey;
     // check the pushing task
-    final PushTask prev = pushingTasks.get(pushingTaskKey);
+    final PushRecord prev = pushingRecords.get(pushingTaskKey);
     if (prev == null) {
       return true;
     }
     final long now = System.currentTimeMillis();
     final int maxSpanMillis = getPushingMaxSpanMillis();
-    final long span = cleanPushingTaskIfRunTooLong(now, prev, maxSpanMillis);
+    final long span = cleanPushingTaskIfRunTooLong(now, pushingTaskKey, prev, maxSpanMillis);
     if (span > 0) {
       LOGGER.warn(
           "[pushTooLong]{},span={},{},now={}", prev.taskID, span, task.pushingTaskKey, task.taskID);
@@ -322,7 +325,15 @@ public class PushProcessor {
         return false;
       }
 
-      pushingTasks.put(task.pushingTaskKey, task);
+      pushingRecords.put(
+          task.pushingTaskKey,
+          new PushRecord(
+              task.trace,
+              task.taskID,
+              task.retryCount,
+              pushData.getEncode(),
+              pushData.getDataCount(),
+              pushData.getEncodeSize()));
       clientNodeService.pushWithCallback(
           pushData.getPayload(), task.subscriber.getSourceAddress(), new PushClientCallback(task));
       PUSH_CLIENT_ING_COUNTER.inc();
@@ -341,7 +352,7 @@ public class PushProcessor {
 
   void handleDoPushException(PushTask task, Throwable e) {
     // try to delete self
-    pushingTasks.remove(task.pushingTaskKey);
+    pushingRecords.remove(task.pushingTaskKey);
     if (e instanceof RequestChannelClosedException) {
       task.trace.finishPush(
           PushTrace.PushStatus.ChanClosed,
@@ -441,7 +452,7 @@ public class PushProcessor {
 
     @Override
     public void onCallback(Channel channel, Object message) {
-      pushingTasks.remove(pushTask.pushingTaskKey, pushTask);
+      pushingRecords.remove(pushTask.pushingTaskKey);
       // get max pushedVersion before checkAndUpdate
       final long subscriberPushedVersion =
           SubscriberUtils.getMaxPushedVersion(
@@ -469,7 +480,7 @@ public class PushProcessor {
 
     @Override
     public void onException(Channel channel, Throwable exception) {
-      pushingTasks.remove(pushTask.pushingTaskKey, pushTask);
+      pushingRecords.remove(pushTask.pushingTaskKey);
 
       boolean needRecord = true;
       final boolean channelConnected = channel.isConnected();
@@ -536,5 +547,29 @@ public class PushProcessor {
         retry,
         sessionServerConfig.getPushDataTaskRetryFirstDelayMillis(),
         sessionServerConfig.getPushDataTaskRetryIncrementDelayMillis());
+  }
+
+  private static final class PushRecord {
+    final PushTrace trace;
+    final TraceID taskID;
+    final int retryCount;
+    final int pushDataCount;
+    final String pushEncode;
+    final int encodeSize;
+
+    PushRecord(
+        PushTrace pushTrace,
+        TraceID taskID,
+        int retryCount,
+        String pushEncode,
+        int pushDataCount,
+        int encodeSize) {
+      this.trace = pushTrace;
+      this.taskID = taskID;
+      this.retryCount = retryCount;
+      this.pushDataCount = pushDataCount;
+      this.pushEncode = pushEncode;
+      this.encodeSize = encodeSize;
+    }
   }
 }

@@ -29,7 +29,7 @@ public class CachedExecutor<K, V> {
   private final LongAdder hitCount = new LongAdder();
   private final LongAdder missingCount = new LongAdder();
 
-  public CachedExecutor(long silentMs){
+  public CachedExecutor(long silentMs) {
     this(silentMs, false);
   }
 
