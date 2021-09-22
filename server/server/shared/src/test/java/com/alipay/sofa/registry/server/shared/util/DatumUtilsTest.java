@@ -29,7 +29,6 @@ import com.alipay.sofa.registry.core.model.DataBox;
 import com.google.common.collect.Lists;
 import java.util.Collections;
 import java.util.Map;
-
 import org.junit.Assert;
 import org.junit.Test;
 

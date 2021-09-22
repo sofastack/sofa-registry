@@ -24,7 +24,6 @@ import com.alipay.sofa.registry.util.StringFormatter;
 import com.alipay.sofa.registry.util.StringUtils;
 import com.google.common.collect.Lists;
 import java.io.Serializable;
-import java.util.Collections;
 import java.util.List;
 import org.springframework.util.CollectionUtils;
 
@@ -53,9 +52,7 @@ public final class SubPublisher implements Serializable, Sizer {
     this.version = version;
     this.srcAddressString = srcAddressString;
     this.dataList =
-        dataList == null
-            ? Lists.newArrayListWithCapacity(0)
-            : Lists.newArrayList(dataList);
+        dataList == null ? Lists.newArrayListWithCapacity(0) : Lists.newArrayList(dataList);
     this.registerTimestamp = registerTimestamp;
     this.publishSource = publishSource;
   }

@@ -24,6 +24,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.io.Serializable;
 import java.util.*;
+import org.springframework.util.CollectionUtils;
 
 /**
  * @author yuzhi.lyz
@@ -36,21 +37,27 @@ public final class SlotTable implements Serializable {
 
   private SlotTable(long epoch, Map<Integer, Slot> slots) {
     this.epoch = epoch;
-    this.slots = Collections.unmodifiableSortedMap(new TreeMap<>(slots));
+    if (!CollectionUtils.isEmpty(slots)) {
+      this.slots = new TreeMap<>(slots);
+    } else {
+      this.slots = new TreeMap<>();
+    }
   }
 
   public SlotTable(long epoch, final Collection<Slot> slots) {
     this.epoch = epoch;
     SortedMap<Integer, Slot> slotMap = Maps.newTreeMap();
-    slots.forEach(
-        slot -> {
-          Slot exist = slotMap.putIfAbsent(slot.getId(), slot);
-          if (exist != null) {
-            throw new SofaRegistrySlotTableException(
-                "dup slot when construct slot table: " + JsonUtils.writeValueAsString(slots));
-          }
-        });
-    this.slots = Collections.unmodifiableSortedMap(slotMap);
+    if (!CollectionUtils.isEmpty(slots)) {
+      slots.forEach(
+          slot -> {
+            Slot exist = slotMap.putIfAbsent(slot.getId(), slot);
+            if (exist != null) {
+              throw new SofaRegistrySlotTableException(
+                  "dup slot when construct slot table: " + JsonUtils.writeValueAsString(slots));
+            }
+          });
+    }
+    this.slots = slotMap;
   }
 
   public List<Slot> getSlots() {

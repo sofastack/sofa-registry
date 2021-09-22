@@ -16,8 +16,6 @@
  */
 package com.alipay.sofa.registry.common.model.metaserver.cluster;
 
-import com.google.common.collect.Lists;
-
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
