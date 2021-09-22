@@ -20,6 +20,8 @@ import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.slot.BaseSlotStatus;
 import com.alipay.sofa.registry.common.model.slot.SlotConfig;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
+import com.google.common.collect.Lists;
+
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
@@ -63,7 +65,7 @@ public class HeartbeatRequest<T extends Node> implements Serializable {
     this.dataCenter = dataCenter;
     this.timestamp = timestamp;
     this.slotBasicInfo = slotBasicInfo;
-    this.slotStatuses = Collections.EMPTY_LIST;
+    this.slotStatuses = Collections.emptyList();
   }
 
   /**

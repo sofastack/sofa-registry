@@ -130,7 +130,7 @@ public final class SubDatum implements Serializable, Sizer {
     this.dataCenter = dataCenter;
     this.version = version;
     if (publishers != null) {
-      this.publishers = Collections.unmodifiableList(Lists.newArrayList(publishers));
+      this.publishers = Lists.newArrayList(publishers);
     } else {
       this.publishers = null;
     }

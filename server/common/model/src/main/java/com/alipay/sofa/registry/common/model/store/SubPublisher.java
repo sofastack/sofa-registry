@@ -54,8 +54,8 @@ public final class SubPublisher implements Serializable, Sizer {
     this.srcAddressString = srcAddressString;
     this.dataList =
         dataList == null
-            ? Collections.emptyList()
-            : Collections.unmodifiableList(Lists.newArrayList(dataList));
+            ? Lists.newArrayListWithCapacity(0)
+            : Lists.newArrayList(dataList);
     this.registerTimestamp = registerTimestamp;
     this.publishSource = publishSource;
   }
