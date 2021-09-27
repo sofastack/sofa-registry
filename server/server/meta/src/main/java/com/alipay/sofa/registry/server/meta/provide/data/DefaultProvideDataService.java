@@ -25,8 +25,6 @@ import com.alipay.sofa.registry.store.api.DBResponse;
 import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -75,17 +73,15 @@ public class DefaultProvideDataService implements ProvideDataService {
     if (!metaLeaderService.amILeader()) {
       return;
     }
-    Collection<PersistenceData> provideDatas = provideDataRepository.getAll();
-    Map<String, PersistenceData> newCache = new HashMap<>();
-    provideDatas.forEach(data -> newCache.put(PersistenceDataBuilder.getDataInfoId(data), data));
+    Map<String, PersistenceData> provideDatas = provideDataRepository.getAll();
 
+    LOGGER.info(
+        "refresh provide data, old size: {}, new size: {}",
+        provideDataCache.size(),
+        provideDatas.size());
     lock.writeLock().lock();
     try {
-      LOGGER.info(
-          "refresh provide data, old size: {}, new size: {}",
-          provideDataCache.size(),
-          newCache.size());
-      provideDataCache = newCache;
+      provideDataCache = provideDatas;
     } catch (Throwable t) {
       LOGGER.error("refresh provide data error.", t);
     } finally {

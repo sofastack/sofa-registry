@@ -20,6 +20,8 @@ import com.alipay.sofa.registry.common.model.store.AppRevision;
 import com.alipay.sofa.registry.store.api.repository.AppRevisionRepository;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -53,7 +55,25 @@ public class AppRevisionRaftRepository implements AppRevisionRepository {
   public void waitSynced() {}
 
   @Override
+  public List<AppRevision> getExpired(Date beforeTime, int limit) {
+    return null;
+  }
+
+  @Override
+  public void replace(AppRevision appRevision) {}
+
+  @Override
+  public int cleanDeleted(Date beforeTime, int limit) {
+    return 0;
+  }
+
+  @Override
   public Collection<String> availableRevisions() {
     return Collections.EMPTY_LIST;
+  }
+
+  @Override
+  public List<AppRevision> listFromStorage(long start, int limit) {
+    return null;
   }
 }

@@ -17,7 +17,6 @@
 package com.alipay.sofa.registry.jdbc.mapper;
 
 import com.alipay.sofa.registry.jdbc.domain.AppRevisionDomain;
-import com.alipay.sofa.registry.jdbc.domain.DateNowDomain;
 import java.util.Date;
 import java.util.List;
 import org.apache.ibatis.annotations.Param;
@@ -74,6 +73,4 @@ public interface AppRevisionMapper {
       @Param("dataCenter") String dataCenter,
       @Param("beforeTime") Date beforeTime,
       @Param("limit") int limit);
-
-  DateNowDomain getNow();
 }

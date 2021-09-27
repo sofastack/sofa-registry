@@ -16,8 +16,15 @@
  */
 package com.alipay.sofa.registry.jdbc.config;
 
-import com.alipay.sofa.common.profile.StringUtil;
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.store.api.meta.RecoverConfigRepository;
 import com.alipay.sofa.registry.util.SystemUtils;
+import java.util.Set;
+import javax.annotation.PostConstruct;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
 
 /**
  * @author xiaojian.xj
@@ -25,16 +32,64 @@ import com.alipay.sofa.registry.util.SystemUtils;
  */
 public class DefaultCommonConfigBean implements DefaultCommonConfig {
 
-  private String dataCenter = SystemUtils.getSystem("nodes.localDataCenter", "DefaultDataCenter");
+  private static final Logger LOG = LoggerFactory.getLogger(DefaultCommonConfigBean.class);
 
   private String clusterId = SystemUtils.getSystem("nodes.clusterId", "");
 
-  @Override
-  public String getClusterId() {
-    if (StringUtil.isNotEmpty(clusterId)) {
-      return clusterId;
+  private String recoverClusterId = SystemUtils.getSystem("nodes.recoverClusterId", "");
+
+  private static final String ALL_KEY = "ALL";
+
+  @Autowired private RecoverConfigRepository recoverConfigRepository;
+
+  @PostConstruct
+  public void init() throws InterruptedException {
+    if (StringUtils.isEmpty(clusterId) || StringUtils.isEmpty(recoverClusterId)) {
+      throw new InterruptedException("clusterId or recoverClusterId is empty.");
     }
-    return dataCenter;
+  }
+
+  @Override
+  public String getClusterId(String table) {
+    Set<String> keys = recoverConfigRepository.queryKey(table);
+    if (!CollectionUtils.isEmpty(keys) && keys.contains(ALL_KEY)) {
+      LOG.info("[GetClusterId]propertyTable:{}, clusterId:{}", table, recoverClusterId);
+      return recoverClusterId;
+    }
+
+    return clusterId;
+  }
+
+  @Override
+  public String getClusterId(String table, String key) {
+    if (StringUtils.isEmpty(table)) {
+      throw new IllegalArgumentException("tableName is empty.");
+    }
+    if (StringUtils.isEmpty(key)) {
+      return getClusterId(table);
+    }
+
+    Set<String> keys = recoverConfigRepository.queryKey(table);
+    if (!CollectionUtils.isEmpty(keys) && keys.contains(key)) {
+      LOG.info(
+          "[GetClusterId]propertyTable:{}, propertyKey:{}, clusterId:{}",
+          table,
+          key,
+          recoverClusterId);
+      return recoverClusterId;
+    }
+
+    return clusterId;
+  }
+
+  @Override
+  public boolean isRecoverCluster() {
+    return !StringUtils.equals(clusterId, recoverClusterId);
+  }
+
+  @Override
+  public String getRecoverClusterId() {
+    return recoverClusterId;
   }
 
   /**

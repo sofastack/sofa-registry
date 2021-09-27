@@ -24,6 +24,7 @@ import com.alipay.sofa.registry.core.model.AppRevisionInterface;
 import com.alipay.sofa.registry.jdbc.AbstractH2DbTestBase;
 import com.alipay.sofa.registry.jdbc.TestUtils;
 import com.alipay.sofa.registry.jdbc.config.DefaultCommonConfig;
+import com.alipay.sofa.registry.jdbc.constant.TableEnum;
 import com.alipay.sofa.registry.jdbc.convertor.AppRevisionDomainConvertor;
 import com.alipay.sofa.registry.jdbc.domain.AppRevisionDomain;
 import com.alipay.sofa.registry.jdbc.mapper.AppRevisionMapper;
@@ -206,14 +207,15 @@ public class AppRevisionRepositoryTest extends AbstractH2DbTestBase {
       Assert.assertTrue(before);
       AppRevisionDomain query =
           appRevisionMapper.queryRevision(
-              defaultCommonConfig.getClusterId(), appRevision.getRevision());
+              defaultCommonConfig.getClusterId(TableEnum.APP_REVISION.getTableName()),
+              appRevision.getRevision());
       Assert.assertTrue(query != null);
     }
 
     for (AppRevision appRevision : appRevisionList) {
       AppRevisionDomain domain =
           AppRevisionDomainConvertor.convert2Domain(
-              defaultCommonConfig.getClusterId(), appRevision);
+              defaultCommonConfig.getClusterId(TableEnum.APP_REVISION.getTableName()), appRevision);
       domain.setDeleted(true);
       appRevisionMapper.replace(domain);
     }
@@ -233,7 +235,7 @@ public class AppRevisionRepositoryTest extends AbstractH2DbTestBase {
       Assert.assertTrue(success);
       AppRevisionDomain domain =
           AppRevisionDomainConvertor.convert2Domain(
-              defaultCommonConfig.getClusterId(), appRevision);
+              defaultCommonConfig.getClusterId(TableEnum.APP_REVISION.getTableName()), appRevision);
       domain.setDeleted(true);
       appRevisionMapper.replace(domain);
     }

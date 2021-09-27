@@ -339,6 +339,11 @@ public class MetaServerConfiguration {
     }
 
     @Bean
+    public RecoverConfigResource recoverConfigResource() {
+      return new RecoverConfigResource();
+    }
+
+    @Bean
     public SlotSyncResource renewSwitchResource() {
       return new SlotSyncResource();
     }

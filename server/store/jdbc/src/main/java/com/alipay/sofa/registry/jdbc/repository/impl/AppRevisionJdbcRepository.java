@@ -24,13 +24,16 @@ import com.alipay.sofa.registry.cache.CacheCleaner;
 import com.alipay.sofa.registry.common.model.store.AppRevision;
 import com.alipay.sofa.registry.concurrent.CachedExecutor;
 import com.alipay.sofa.registry.jdbc.config.DefaultCommonConfig;
+import com.alipay.sofa.registry.jdbc.constant.TableEnum;
 import com.alipay.sofa.registry.jdbc.convertor.AppRevisionDomainConvertor;
 import com.alipay.sofa.registry.jdbc.domain.AppRevisionDomain;
 import com.alipay.sofa.registry.jdbc.exception.RevisionNotExistException;
 import com.alipay.sofa.registry.jdbc.informer.BaseInformer;
 import com.alipay.sofa.registry.jdbc.mapper.AppRevisionMapper;
+import com.alipay.sofa.registry.jdbc.recover.RecoverConfig;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.store.api.date.DateNowRepository;
 import com.alipay.sofa.registry.store.api.repository.AppRevisionRepository;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.google.common.annotations.VisibleForTesting;
@@ -53,7 +56,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @author xiaojian.xj
  * @version $Id: AppRevisionJdbcRepository.java, v 0.1 2021年01月17日 15:45 xiaojian.xj Exp $
  */
-public class AppRevisionJdbcRepository implements AppRevisionRepository {
+public class AppRevisionJdbcRepository implements AppRevisionRepository, RecoverConfig {
 
   private static final Logger LOG = LoggerFactory.getLogger("METADATA-EXCHANGE", "[AppRevision]");
 
@@ -68,6 +71,8 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository {
   @Autowired private AppRevisionMapper appRevisionMapper;
 
   @Resource private InterfaceAppsJdbcRepository interfaceAppsJdbcRepository;
+
+  @Autowired private DateNowRepository dateNowRepository;
 
   @Autowired private DefaultCommonConfig defaultCommonConfig;
 
@@ -85,7 +90,7 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository {
                     REVISION_CACHE_MISS_COUNTER.inc();
                     AppRevisionDomain revisionDomain =
                         appRevisionMapper.queryRevision(
-                            defaultCommonConfig.getClusterId(), revision);
+                            defaultCommonConfig.getClusterId(tableName()), revision);
                     if (revisionDomain == null || revisionDomain.isDeleted()) {
                       throw new RevisionNotExistException(revision);
                     }
@@ -130,7 +135,8 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository {
       return;
     }
     AppRevisionDomain domain =
-        AppRevisionDomainConvertor.convert2Domain(defaultCommonConfig.getClusterId(), appRevision);
+        AppRevisionDomainConvertor.convert2Domain(
+            defaultCommonConfig.getClusterId(tableName()), appRevision);
     // new revision, save into database
     REVISION_REGISTER_COUNTER.inc();
     refreshEntryToStorage(domain);
@@ -197,8 +203,42 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository {
   }
 
   @Override
+  public List<AppRevision> listFromStorage(long start, int limit) {
+    List<AppRevisionDomain> domains =
+        appRevisionMapper.listRevisions(
+            defaultCommonConfig.getClusterId(tableName()), start, limit);
+    return AppRevisionDomainConvertor.convert2Revisions(domains);
+  }
+
+  @Override
   public void waitSynced() {
     informer.waitSynced();
+  }
+
+  @Override
+  public List<AppRevision> getExpired(Date beforeTime, int limit) {
+    List<AppRevisionDomain> expired =
+        appRevisionMapper.getExpired(
+            defaultCommonConfig.getClusterId(tableName()), beforeTime, limit);
+    return AppRevisionDomainConvertor.convert2Revisions(expired);
+  }
+
+  @Override
+  public void replace(AppRevision appRevision) {
+    appRevisionMapper.replace(
+        AppRevisionDomainConvertor.convert2Domain(
+            defaultCommonConfig.getClusterId(tableName()), appRevision));
+  }
+
+  @Override
+  public int cleanDeleted(Date beforeTime, int limit) {
+    return appRevisionMapper.cleanDeleted(
+        defaultCommonConfig.getClusterId(tableName()), beforeTime, limit);
+  }
+
+  @Override
+  public String tableName() {
+    return TableEnum.APP_REVISION.getTableName();
   }
 
   class Informer extends BaseInformer<AppRevisionDomain, AppRevisionContainer> {
@@ -214,12 +254,13 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository {
 
     @Override
     protected List<AppRevisionDomain> listFromStorage(long start, int limit) {
-      return appRevisionMapper.listRevisions(defaultCommonConfig.getClusterId(), start, limit);
+      return appRevisionMapper.listRevisions(
+          defaultCommonConfig.getClusterId(tableName()), start, limit);
     }
 
     @Override
     protected Date getNow() {
-      return appRevisionMapper.getNow().getNow();
+      return dateNowRepository.getNow();
     }
   }
 }

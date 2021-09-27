@@ -22,11 +22,14 @@ import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress;
 import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress.AddressVersion;
 import com.alipay.sofa.registry.jdbc.config.DefaultCommonConfig;
+import com.alipay.sofa.registry.jdbc.constant.TableEnum;
 import com.alipay.sofa.registry.jdbc.domain.ClientManagerAddressDomain;
 import com.alipay.sofa.registry.jdbc.informer.BaseInformer;
 import com.alipay.sofa.registry.jdbc.mapper.ClientManagerAddressMapper;
+import com.alipay.sofa.registry.jdbc.recover.RecoverConfig;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.store.api.date.DateNowRepository;
 import com.alipay.sofa.registry.store.api.meta.ClientManagerAddressRepository;
 import com.google.common.annotations.VisibleForTesting;
 import java.util.Date;
@@ -40,13 +43,16 @@ import org.springframework.util.CollectionUtils;
  * @author xiaojian.xj
  * @version $Id: ClientManagerAddressJdbcRepository.java, v 0.1 2021年05月12日 19:27 xiaojian.xj Exp $
  */
-public class ClientManagerAddressJdbcRepository implements ClientManagerAddressRepository {
+public class ClientManagerAddressJdbcRepository
+    implements ClientManagerAddressRepository, RecoverConfig {
 
   private static final Logger LOG = LoggerFactory.getLogger("META-PROVIDEDATA", "[ClientManager]");
 
   @Autowired private DefaultCommonConfig defaultCommonConfig;
 
   @Autowired private ClientManagerAddressMapper clientManagerAddressMapper;
+
+  @Autowired private DateNowRepository dateNowRepository;
 
   final Informer informer;
 
@@ -110,14 +116,9 @@ public class ClientManagerAddressJdbcRepository implements ClientManagerAddressR
   }
 
   @Override
-  public Date getNow() {
-    return clientManagerAddressMapper.getNow().getNow();
-  }
-
-  @Override
   public List<String> getExpireAddress(Date date, int limit) {
     return clientManagerAddressMapper.getExpireAddress(
-        defaultCommonConfig.getClusterId(), date, limit);
+        defaultCommonConfig.getClusterId(tableName()), date, limit);
   }
 
   @Override
@@ -127,20 +128,20 @@ public class ClientManagerAddressJdbcRepository implements ClientManagerAddressR
     }
 
     return clientManagerAddressMapper.cleanExpired(
-        defaultCommonConfig.getClusterId(), expireAddress);
+        defaultCommonConfig.getClusterId(tableName()), expireAddress);
   }
 
   @Override
   public int getClientOffSizeBefore(Date date) {
     return clientManagerAddressMapper.getClientOffSizeBefore(
-        defaultCommonConfig.getClusterId(), date);
+        defaultCommonConfig.getClusterId(tableName()), date);
   }
 
   private void doStorage(Set<AddressVersion> ipSet, String operation) {
     for (AddressVersion address : ipSet) {
       ClientManagerAddressDomain update =
           new ClientManagerAddressDomain(
-              defaultCommonConfig.getClusterId(),
+              defaultCommonConfig.getClusterId(tableName()),
               address.getAddress(),
               operation,
               address.isPub(),
@@ -151,6 +152,11 @@ public class ClientManagerAddressJdbcRepository implements ClientManagerAddressR
         clientManagerAddressMapper.insertOnReplace(update);
       }
     }
+  }
+
+  @Override
+  public String tableName() {
+    return TableEnum.CLIENT_MANAGER_ADDRESS.getTableName();
   }
 
   class Informer extends BaseInformer<ClientManagerAddressDomain, ClientManagerAddressContainer> {
@@ -167,12 +173,12 @@ public class ClientManagerAddressJdbcRepository implements ClientManagerAddressR
     @Override
     protected List<ClientManagerAddressDomain> listFromStorage(long start, int limit) {
       return clientManagerAddressMapper.queryAfterThanByLimit(
-          defaultCommonConfig.getClusterId(), start, limit);
+          defaultCommonConfig.getClusterId(tableName()), start, limit);
     }
 
     @Override
     protected Date getNow() {
-      return clientManagerAddressMapper.getNow().getNow();
+      return dateNowRepository.getNow();
     }
   }
 
