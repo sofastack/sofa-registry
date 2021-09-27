@@ -20,12 +20,14 @@ import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.appmeta.InterfaceMapping;
 import com.alipay.sofa.registry.concurrent.CachedExecutor;
 import com.alipay.sofa.registry.jdbc.config.DefaultCommonConfig;
+import com.alipay.sofa.registry.jdbc.constant.TableEnum;
 import com.alipay.sofa.registry.jdbc.domain.InterfaceAppsIndexDomain;
 import com.alipay.sofa.registry.jdbc.informer.BaseInformer;
-import com.alipay.sofa.registry.jdbc.mapper.AppRevisionMapper;
 import com.alipay.sofa.registry.jdbc.mapper.InterfaceAppsIndexMapper;
+import com.alipay.sofa.registry.jdbc.recover.RecoverConfig;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.store.api.date.DateNowRepository;
 import com.alipay.sofa.registry.store.api.repository.InterfaceAppsRepository;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.google.common.annotations.VisibleForTesting;
@@ -37,14 +39,15 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @author xiaojian.xj
  * @version $Id: InterfaceAppsJdbcRepository.java, v 0.1 2021年01月24日 19:57 xiaojian.xj Exp $
  */
-public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository {
+public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository, RecoverConfig {
 
   private static final Logger LOG = LoggerFactory.getLogger("METADATA-EXCHANGE", "[InterfaceApps]");
 
   @Autowired private InterfaceAppsIndexMapper interfaceAppsIndexMapper;
-  @Autowired private AppRevisionMapper appRevisionMapper;
 
   @Autowired private DefaultCommonConfig defaultCommonConfig;
+
+  @Autowired private DateNowRepository dateNowRepository;
 
   private final CachedExecutor<Tuple<String, String>, Boolean> cachedExecutor =
       new CachedExecutor<>(1000 * 10);
@@ -78,7 +81,15 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository {
       return;
     }
     refreshEntryToStorage(
-        new InterfaceAppsIndexDomain(defaultCommonConfig.getClusterId(), interfaceName, appName));
+        new InterfaceAppsIndexDomain(
+            defaultCommonConfig.getClusterId(tableName()), interfaceName, appName));
+  }
+
+  @Override
+  public void renew(String interfaceName, String appName) {
+    refreshEntryToStorage(
+        new InterfaceAppsIndexDomain(
+            defaultCommonConfig.getClusterId(tableName()), interfaceName, appName));
   }
 
   @Override
@@ -116,6 +127,11 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository {
     return informer.getLastLoadId();
   }
 
+  @Override
+  public String tableName() {
+    return TableEnum.INTERFACE_APP_INDEX.getTableName();
+  }
+
   class Informer extends BaseInformer<InterfaceAppsIndexDomain, InterfaceAppsIndexContainer> {
     private ConflictCallback conflictCallback;
 
@@ -131,12 +147,12 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository {
     @Override
     protected List<InterfaceAppsIndexDomain> listFromStorage(long start, int limit) {
       return interfaceAppsIndexMapper.queryLargeThan(
-          defaultCommonConfig.getClusterId(), start, limit);
+          defaultCommonConfig.getClusterId(tableName()), start, limit);
     }
 
     @Override
     protected Date getNow() {
-      return appRevisionMapper.getNow().getNow();
+      return dateNowRepository.getNow();
     }
 
     @VisibleForTesting

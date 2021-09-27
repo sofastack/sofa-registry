@@ -18,9 +18,11 @@ package com.alipay.sofa.registry.jdbc.elector;
 
 import com.alipay.sofa.registry.jdbc.config.DefaultCommonConfig;
 import com.alipay.sofa.registry.jdbc.config.MetaElectorConfig;
+import com.alipay.sofa.registry.jdbc.constant.TableEnum;
 import com.alipay.sofa.registry.jdbc.domain.DistributeLockDomain;
 import com.alipay.sofa.registry.jdbc.domain.FollowCompeteLockDomain;
 import com.alipay.sofa.registry.jdbc.mapper.DistributeLockMapper;
+import com.alipay.sofa.registry.jdbc.recover.RecoverConfig;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.store.api.elector.AbstractLeaderElector;
@@ -30,7 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @author xiaojian.xj
  * @version $Id: MetaJdbcLeaderElector.java, v 0.1 2021年03月12日 10:18 xiaojian.xj Exp $
  */
-public class MetaJdbcLeaderElector extends AbstractLeaderElector {
+public class MetaJdbcLeaderElector extends AbstractLeaderElector implements RecoverConfig {
 
   private static final Logger LOG =
       LoggerFactory.getLogger("META-ELECTOR", "[MetaJdbcLeaderElector]");
@@ -51,11 +53,11 @@ public class MetaJdbcLeaderElector extends AbstractLeaderElector {
   @Override
   protected LeaderInfo doElect() {
     DistributeLockDomain lock =
-        distributeLockMapper.queryDistLock(defaultCommonConfig.getClusterId(), lockName);
+        distributeLockMapper.queryDistLock(defaultCommonConfig.getClusterId(tableName()), lockName);
 
     /** compete and return leader */
     if (lock == null) {
-      return competeLeader(defaultCommonConfig.getClusterId());
+      return competeLeader(defaultCommonConfig.getClusterId(tableName()));
     }
 
     ElectorRole role = amILeader(lock.getOwner()) ? ElectorRole.LEADER : ElectorRole.FOLLOWER;
@@ -115,7 +117,7 @@ public class MetaJdbcLeaderElector extends AbstractLeaderElector {
   @Override
   protected LeaderInfo doQuery() {
     DistributeLockDomain lock =
-        distributeLockMapper.queryDistLock(defaultCommonConfig.getClusterId(), lockName);
+        distributeLockMapper.queryDistLock(defaultCommonConfig.getClusterId(tableName()), lockName);
     if (lock == null) {
       return LeaderInfo.HAS_NO_LEADER;
     }
@@ -159,5 +161,10 @@ public class MetaJdbcLeaderElector extends AbstractLeaderElector {
       return newLock;
     }
     return lock;
+  }
+
+  @Override
+  public String tableName() {
+    return TableEnum.DISTRIBUTE_LOCK.getTableName();
   }
 }

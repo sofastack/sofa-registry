@@ -34,6 +34,8 @@ public interface InterfaceAppsRepository {
 
   void register(String interfaceName, String appName);
 
+  void renew(String interfaceName, String appName);
+
   void waitSynced();
 
   long getDataVersion();

@@ -18,6 +18,8 @@ package com.alipay.sofa.registry.store.api.repository;
 
 import com.alipay.sofa.registry.common.model.store.AppRevision;
 import java.util.Collection;
+import java.util.Date;
+import java.util.List;
 
 /**
  * @author xiaojian.xj
@@ -43,5 +45,13 @@ public interface AppRevisionRepository {
 
   Collection<String> availableRevisions();
 
+  List<AppRevision> listFromStorage(long start, int limit);
+
   void waitSynced();
+
+  List<AppRevision> getExpired(Date beforeTime, int limit);
+
+  void replace(AppRevision appRevision);
+
+  int cleanDeleted(Date beforeTime, int limit);
 }

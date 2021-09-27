@@ -25,6 +25,7 @@ import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress;
 import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress.AddressVersion;
 import com.alipay.sofa.registry.jdbc.AbstractH2DbTestBase;
 import com.alipay.sofa.registry.jdbc.config.DefaultCommonConfig;
+import com.alipay.sofa.registry.jdbc.constant.TableEnum;
 import com.alipay.sofa.registry.jdbc.domain.ClientManagerAddressDomain;
 import com.alipay.sofa.registry.jdbc.mapper.ClientManagerAddressMapper;
 import com.google.common.collect.Sets;
@@ -128,7 +129,9 @@ public class ClientManagerAddressJdbcRepositoryTest extends AbstractH2DbTestBase
 
     List<ClientManagerAddressDomain> clientManagerAddress =
         clientManagerAddressMapper.queryAfterThanByLimit(
-            defaultCommonConfig.getClusterId(), -1L, 100);
+            defaultCommonConfig.getClusterId(TableEnum.CLIENT_MANAGER_ADDRESS.getTableName()),
+            -1L,
+            100);
 
     Set<String> open =
         clientOpenSet.stream().map(AddressVersion::getAddress).collect(Collectors.toSet());

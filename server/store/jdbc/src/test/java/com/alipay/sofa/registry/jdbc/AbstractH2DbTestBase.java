@@ -26,6 +26,7 @@ import java.util.Arrays;
 import javax.sql.DataSource;
 import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.util.Strings;
+import org.h2.tools.Console;
 import org.h2.tools.Server;
 import org.junit.Before;
 import org.junit.runner.RunWith;
@@ -50,12 +51,20 @@ public class AbstractH2DbTestBase extends AbstractTest implements ApplicationCon
   public static final String TABLE_STRUCTURE = "sql/h2/create_table.sql";
   public static final String TABLE_DATA = "sql/h2/base_info.sql";
 
+  public static final String CLUSTER_ID = "DEFAULT_SEGMENT";
+  public static final String RECOVER_CLUSTER_ID = "RECOVER_DEFAULT_SEGMENT";
+
   protected final String KEY_H2_PORT = "h2Port";
   private Server h2Server;
 
   protected DataSource dataSource;
 
   protected ApplicationContext applicationContext;
+
+  public AbstractH2DbTestBase() {
+    System.setProperty("nodes.clusterId", CLUSTER_ID);
+    System.setProperty("nodes.recoverClusterId", RECOVER_CLUSTER_ID);
+  }
 
   @Before
   public void setUpTestDataSource() throws SQLException, IOException {
@@ -67,7 +76,7 @@ public class AbstractH2DbTestBase extends AbstractTest implements ApplicationCon
     int h2Port = Integer.parseInt(System.getProperty(KEY_H2_PORT, "9123"));
     h2Server = Server.createTcpServer("-tcpPort", String.valueOf(h2Port), "-tcpAllowOthers");
     h2Server.start();
-    //		new Console().runTool();
+    new Console().runTool();
   }
 
   protected String prepareDatas() {

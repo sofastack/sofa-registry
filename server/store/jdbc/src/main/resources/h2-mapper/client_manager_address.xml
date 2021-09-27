@@ -14,10 +14,6 @@
         <result property="sub" column="sub" javaType="boolean" jdbcType="TINYINT"/>
     </resultMap>
 
-    <resultMap type="com.alipay.sofa.registry.jdbc.domain.DateNowDomain" id="dateNowResult">
-        <result property="now" column="now" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
-    </resultMap>
-
     <update id="update" parameterType="com.alipay.sofa.registry.jdbc.domain.ClientManagerAddressDomain">
         <![CDATA[
 
@@ -40,10 +36,6 @@
     <select id="queryAfterThanByLimit" resultMap="clientManagerAddressResultMap">
         select * from client_manager_address where data_center = #{dataCenter} and id > #{maxId}
         order by id limit #{limit}
-    </select>
-
-    <select id="getNow" resultMap="dateNowResult">
-        select NOW(6) as now;
     </select>
 
     <select id="getExpireAddress" resultType="java.lang.String">

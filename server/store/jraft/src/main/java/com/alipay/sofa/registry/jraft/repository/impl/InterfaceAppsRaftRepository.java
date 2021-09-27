@@ -47,6 +47,9 @@ public class InterfaceAppsRaftRepository implements InterfaceAppsRepository {
   }
 
   @Override
+  public void renew(String interfaceName, String appName) {}
+
+  @Override
   public void waitSynced() {}
 
   @Override
