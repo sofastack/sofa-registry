@@ -26,7 +26,7 @@ import java.util.List;
  */
 public class VersionedList<T> implements Cluster<T>, Serializable {
 
-  public static final VersionedList EMPTY = new VersionedList(-1L, Collections.EMPTY_LIST);
+  public static final VersionedList EMPTY = new VersionedList(-1L, Collections.emptyList());
 
   private final long epoch;
 

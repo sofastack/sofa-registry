@@ -22,6 +22,7 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.StringFormatter;
+import com.alipay.sofa.registry.util.SystemUtils;
 import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -32,6 +33,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public final class PushTaskBuffer {
   private static final Logger LOGGER = LoggerFactory.getLogger(PushTaskBuffer.class);
+  private static final String KEY_MAX_BUFFERED_SIZE = "registry.session.push_task.max_buffered";
+  private static final int MAX_BUFFERED_SIZE =
+      SystemUtils.getSystemInteger(KEY_MAX_BUFFERED_SIZE, 10000);
 
   final BufferWorker[] workers;
 
@@ -47,6 +51,9 @@ public final class PushTaskBuffer {
   boolean buffer(PushTask pushTask) {
     final BufferTaskKey key = bufferTaskKey(pushTask);
     final BufferWorker worker = workerOf(key);
+    if (worker.bufferMap.size() >= MAX_BUFFERED_SIZE) {
+      return false;
+    }
     if (worker.bufferMap.putIfAbsent(key, pushTask) == null) {
       // fast path
       wakeup(worker, pushTask);
@@ -133,6 +140,11 @@ public final class PushTaskBuffer {
   }
 
   int watchBuffer(BufferWorker worker) {
+    int bufferedSize = worker.bufferMap.size();
+    if (bufferedSize >= MAX_BUFFERED_SIZE) {
+      LOGGER.warn("arrived max buffered size: buffered={}", bufferedSize);
+    }
+
     List<PushTask> pending = worker.transferAndMerge();
     int count = 0;
     for (PushTask task : pending) {

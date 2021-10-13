@@ -27,10 +27,7 @@ import com.alipay.sofa.registry.util.StringFormatter;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.net.InetSocketAddress;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import org.apache.commons.collections.CollectionUtils;
 
 public final class SubscriberUtils {
@@ -73,9 +70,11 @@ public final class SubscriberUtils {
   }
 
   public static ScopeEnum getAndAssertHasSameScope(Collection<Subscriber> subscribers) {
-    Subscriber first = subscribers.stream().findFirst().get();
+    Iterator<Subscriber> iterator = subscribers.iterator();
+    Subscriber first = iterator.next();
     ScopeEnum scope = first.getScope();
-    for (Subscriber subscriber : subscribers) {
+    while (iterator.hasNext()) {
+      Subscriber subscriber = iterator.next();
       if (scope != subscriber.getScope()) {
         throw new RuntimeException(
             StringFormatter.format(
@@ -85,6 +84,23 @@ public final class SubscriberUtils {
       }
     }
     return scope;
+  }
+
+  public static String[] getAndAssertAcceptedEncodes(Collection<Subscriber> subscribers) {
+    Iterator<Subscriber> iterator = subscribers.iterator();
+    Subscriber first = iterator.next();
+    String[] acceptEncodes = first.getAcceptEncodes();
+    while (iterator.hasNext()) {
+      Subscriber subscriber = iterator.next();
+      if (!Arrays.equals(acceptEncodes, subscriber.getAcceptEncodes())) {
+        throw new RuntimeException(
+            StringFormatter.format(
+                "conflict encoding, one is {}, anther is {}",
+                first.shortDesc(),
+                subscriber.shortDesc()));
+      }
+    }
+    return acceptEncodes;
   }
 
   public static void assertClientVersion(

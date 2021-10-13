@@ -27,6 +27,7 @@ import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.data.change.DataChangeEventCenter;
 import com.alipay.sofa.registry.server.data.slot.SlotManager;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
+import com.alipay.sofa.registry.server.shared.providedata.SystemPropertyProcessorManager;
 import com.google.common.collect.Lists;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -68,6 +69,7 @@ public class DataServerBootstrapTest {
   public void beforeDataServerBootstrapTest() {
     MockitoAnnotations.initMocks(this);
     bootstrap.setServerHandlers(Lists.newArrayList()).setServerSyncHandlers(Lists.newArrayList());
+    bootstrap.setSystemPropertyProcessorManager(mock(SystemPropertyProcessorManager.class));
   }
 
   @Test

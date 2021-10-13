@@ -63,7 +63,7 @@ public class HeartbeatRequest<T extends Node> implements Serializable {
     this.dataCenter = dataCenter;
     this.timestamp = timestamp;
     this.slotBasicInfo = slotBasicInfo;
-    this.slotStatuses = Collections.EMPTY_LIST;
+    this.slotStatuses = Collections.emptyList();
   }
 
   /**

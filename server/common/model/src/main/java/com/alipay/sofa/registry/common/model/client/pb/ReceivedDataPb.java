@@ -36,6 +36,9 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
     subscriberRegistIds_ = com.google.protobuf.LazyStringArrayList.EMPTY;
     version_ = 0L;
     localZone_ = "";
+    encoding_ = "";
+    body_ = com.google.protobuf.ByteString.EMPTY;
+    originBodySize_ = 0;
   }
 
   @java.lang.Override
@@ -140,6 +143,23 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
               java.lang.String s = input.readStringRequireUtf8();
 
               localZone_ = s;
+              break;
+            }
+          case 82:
+            {
+              java.lang.String s = input.readStringRequireUtf8();
+
+              encoding_ = s;
+              break;
+            }
+          case 90:
+            {
+              body_ = input.readBytes();
+              break;
+            }
+          case 96:
+            {
+              originBodySize_ = input.readInt32();
               break;
             }
         }
@@ -449,6 +469,47 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
     }
   }
 
+  public static final int ENCODING_FIELD_NUMBER = 10;
+  private volatile java.lang.Object encoding_;
+  /** <code>string encoding = 10;</code> */
+  public java.lang.String getEncoding() {
+    java.lang.Object ref = encoding_;
+    if (ref instanceof java.lang.String) {
+      return (java.lang.String) ref;
+    } else {
+      com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+      java.lang.String s = bs.toStringUtf8();
+      encoding_ = s;
+      return s;
+    }
+  }
+  /** <code>string encoding = 10;</code> */
+  public com.google.protobuf.ByteString getEncodingBytes() {
+    java.lang.Object ref = encoding_;
+    if (ref instanceof java.lang.String) {
+      com.google.protobuf.ByteString b =
+          com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+      encoding_ = b;
+      return b;
+    } else {
+      return (com.google.protobuf.ByteString) ref;
+    }
+  }
+
+  public static final int BODY_FIELD_NUMBER = 11;
+  private com.google.protobuf.ByteString body_;
+  /** <code>bytes body = 11;</code> */
+  public com.google.protobuf.ByteString getBody() {
+    return body_;
+  }
+
+  public static final int ORIGINBODYSIZE_FIELD_NUMBER = 12;
+  private int originBodySize_;
+  /** <code>int32 originBodySize = 12;</code> */
+  public int getOriginBodySize() {
+    return originBodySize_;
+  }
+
   private byte memoizedIsInitialized = -1;
 
   public final boolean isInitialized() {
@@ -486,6 +547,15 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
     }
     if (!getLocalZoneBytes().isEmpty()) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 9, localZone_);
+    }
+    if (!getEncodingBytes().isEmpty()) {
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 10, encoding_);
+    }
+    if (!body_.isEmpty()) {
+      output.writeBytes(11, body_);
+    }
+    if (originBodySize_ != 0) {
+      output.writeInt32(12, originBodySize_);
     }
     unknownFields.writeTo(output);
   }
@@ -537,6 +607,15 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
     if (!getLocalZoneBytes().isEmpty()) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(9, localZone_);
     }
+    if (!getEncodingBytes().isEmpty()) {
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(10, encoding_);
+    }
+    if (!body_.isEmpty()) {
+      size += com.google.protobuf.CodedOutputStream.computeBytesSize(11, body_);
+    }
+    if (originBodySize_ != 0) {
+      size += com.google.protobuf.CodedOutputStream.computeInt32Size(12, originBodySize_);
+    }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
     return size;
@@ -563,6 +642,9 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
     result = result && internalGetData().equals(other.internalGetData());
     result = result && (getVersion() == other.getVersion());
     result = result && getLocalZone().equals(other.getLocalZone());
+    result = result && getEncoding().equals(other.getEncoding());
+    result = result && getBody().equals(other.getBody());
+    result = result && (getOriginBodySize() == other.getOriginBodySize());
     result = result && unknownFields.equals(other.unknownFields);
     return result;
   }
@@ -596,6 +678,12 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
     hash = (53 * hash) + com.google.protobuf.Internal.hashLong(getVersion());
     hash = (37 * hash) + LOCALZONE_FIELD_NUMBER;
     hash = (53 * hash) + getLocalZone().hashCode();
+    hash = (37 * hash) + ENCODING_FIELD_NUMBER;
+    hash = (53 * hash) + getEncoding().hashCode();
+    hash = (37 * hash) + BODY_FIELD_NUMBER;
+    hash = (53 * hash) + getBody().hashCode();
+    hash = (37 * hash) + ORIGINBODYSIZE_FIELD_NUMBER;
+    hash = (53 * hash) + getOriginBodySize();
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -767,6 +855,12 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
 
       localZone_ = "";
 
+      encoding_ = "";
+
+      body_ = com.google.protobuf.ByteString.EMPTY;
+
+      originBodySize_ = 0;
+
       return this;
     }
 
@@ -807,6 +901,9 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
       result.data_.makeImmutable();
       result.version_ = version_;
       result.localZone_ = localZone_;
+      result.encoding_ = encoding_;
+      result.body_ = body_;
+      result.originBodySize_ = originBodySize_;
       result.bitField0_ = to_bitField0_;
       onBuilt();
       return result;
@@ -889,6 +986,16 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
       if (!other.getLocalZone().isEmpty()) {
         localZone_ = other.localZone_;
         onChanged();
+      }
+      if (!other.getEncoding().isEmpty()) {
+        encoding_ = other.encoding_;
+        onChanged();
+      }
+      if (other.getBody() != com.google.protobuf.ByteString.EMPTY) {
+        setBody(other.getBody());
+      }
+      if (other.getOriginBodySize() != 0) {
+        setOriginBodySize(other.getOriginBodySize());
       }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
@@ -1446,6 +1553,103 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
       checkByteStringIsUtf8(value);
 
       localZone_ = value;
+      onChanged();
+      return this;
+    }
+
+    private java.lang.Object encoding_ = "";
+    /** <code>string encoding = 10;</code> */
+    public java.lang.String getEncoding() {
+      java.lang.Object ref = encoding_;
+      if (!(ref instanceof java.lang.String)) {
+        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        encoding_ = s;
+        return s;
+      } else {
+        return (java.lang.String) ref;
+      }
+    }
+    /** <code>string encoding = 10;</code> */
+    public com.google.protobuf.ByteString getEncodingBytes() {
+      java.lang.Object ref = encoding_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b =
+            com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+        encoding_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    /** <code>string encoding = 10;</code> */
+    public Builder setEncoding(java.lang.String value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+
+      encoding_ = value;
+      onChanged();
+      return this;
+    }
+    /** <code>string encoding = 10;</code> */
+    public Builder clearEncoding() {
+
+      encoding_ = getDefaultInstance().getEncoding();
+      onChanged();
+      return this;
+    }
+    /** <code>string encoding = 10;</code> */
+    public Builder setEncodingBytes(com.google.protobuf.ByteString value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+      checkByteStringIsUtf8(value);
+
+      encoding_ = value;
+      onChanged();
+      return this;
+    }
+
+    private com.google.protobuf.ByteString body_ = com.google.protobuf.ByteString.EMPTY;
+    /** <code>bytes body = 11;</code> */
+    public com.google.protobuf.ByteString getBody() {
+      return body_;
+    }
+    /** <code>bytes body = 11;</code> */
+    public Builder setBody(com.google.protobuf.ByteString value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+
+      body_ = value;
+      onChanged();
+      return this;
+    }
+    /** <code>bytes body = 11;</code> */
+    public Builder clearBody() {
+
+      body_ = getDefaultInstance().getBody();
+      onChanged();
+      return this;
+    }
+
+    private int originBodySize_;
+    /** <code>int32 originBodySize = 12;</code> */
+    public int getOriginBodySize() {
+      return originBodySize_;
+    }
+    /** <code>int32 originBodySize = 12;</code> */
+    public Builder setOriginBodySize(int value) {
+
+      originBodySize_ = value;
+      onChanged();
+      return this;
+    }
+    /** <code>int32 originBodySize = 12;</code> */
+    public Builder clearOriginBodySize() {
+
+      originBodySize_ = 0;
       onChanged();
       return this;
     }

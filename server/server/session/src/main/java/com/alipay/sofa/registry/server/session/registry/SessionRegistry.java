@@ -433,7 +433,7 @@ public class SessionRegistry implements Registry {
       }
     }
     final int timeoutMillis = sessionServerConfig.getDataNodeExchangeTimeoutMillis();
-    final long waitDeadline = System.currentTimeMillis() + timeoutMillis + 1000;
+    final long waitDeadline = System.currentTimeMillis() + timeoutMillis + 2000;
     // wait async finish
     ConcurrentUtils.sleepUninterruptibly(100, TimeUnit.MILLISECONDS);
     // check callback result, use for.count to avoid the clock skew
@@ -444,6 +444,7 @@ public class SessionRegistry implements Registry {
       }
       ConcurrentUtils.sleepUninterruptibly(50, TimeUnit.MILLISECONDS);
     }
+    handleFetchResult(round, dataCenter, resultMap);
     if (!resultMap.isEmpty()) {
       SCAN_VER_LOGGER.error(
           "[fetchSlotVerTimeout]round={},callbacks={},{}", round, resultMap.size(), resultMap);

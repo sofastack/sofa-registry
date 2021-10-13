@@ -20,7 +20,6 @@ import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
 import com.google.common.collect.Lists;
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -39,8 +38,8 @@ public class DataSlotDiffPublisherRequest implements Serializable {
     this.slotId = slotId;
     this.datumSummaries =
         datumSummaries == null
-            ? Collections.emptyList()
-            : Collections.unmodifiableList(Lists.newArrayList(datumSummaries));
+            ? Lists.newArrayListWithCapacity(0)
+            : Lists.newArrayList(datumSummaries);
   }
 
   /**

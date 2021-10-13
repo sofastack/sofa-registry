@@ -25,6 +25,7 @@ import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.common.model.slot.SlotConfig;
 import com.alipay.sofa.registry.common.model.slot.func.SlotFunctionRegistry;
 import com.alipay.sofa.registry.common.model.store.Publisher;
+import com.alipay.sofa.registry.common.model.store.UnPublisher;
 import com.alipay.sofa.registry.server.data.TestBaseUtils;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -32,6 +33,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -242,6 +244,34 @@ public class LocalDatumStorageTest {
     Assert.assertNotNull(v);
     map = storage.getAllPublisher();
     Assert.assertFalse(map.get(publisher3.getDataInfoId()).contains(publisher3));
+  }
+
+  @Test
+  public void testUnpubAfterRemove() throws InterruptedException {
+    LocalDatumStorage storage = TestBaseUtils.newLocalStorage(testDc, true);
+    Publisher publisher = TestBaseUtils.createTestPublisher(testDataId);
+    DatumVersion v = storage.put(publisher);
+    Assert.assertNotNull(v);
+
+    v =
+        storage.remove(
+            publisher.getDataInfoId(),
+            publisher.getSessionProcessId(),
+            Collections.singletonMap(
+                publisher.getRegisterId(),
+                RegisterVersion.of(publisher.getVersion() + 1, publisher.getRegisterTimestamp())));
+    Assert.assertNotNull(v);
+
+    TimeUnit.SECONDS.sleep(60);
+    UnPublisher unpub = UnPublisher.of(publisher);
+    unpub.setVersion(unpub.getVersion() + 2);
+    v = storage.put(unpub);
+    Assert.assertNull(v);
+
+    UnPublisher unpub1 = UnPublisher.of(unpub);
+    unpub1.setVersion(unpub1.getVersion() + 3);
+    v = storage.put(unpub1);
+    Assert.assertNull(v);
   }
 
   @Test

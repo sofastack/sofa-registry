@@ -26,14 +26,17 @@ import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress;
+import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress.AddressVersion;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
+import com.alipay.sofa.registry.util.JsonUtils;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -52,6 +55,12 @@ public class ClientManagerTest extends BaseIntegrationTest {
 
   private final Set<String> CLIENT_OFF_SET = Sets.newHashSet(CLIENT_OFF_STR.split(";"));
   private final Set<String> CLIENT_OPEN_SET = Sets.newHashSet(CLIENT_OPEN_STR.split(";"));
+
+  public static final Set<AddressVersion> CLIENT_OFF_WITH_SUB_SET =
+      Sets.newHashSet(
+          new AddressVersion("1.1.1.1", true),
+          new AddressVersion("2.2.2.2", false),
+          new AddressVersion("3.3.3.3", true));
 
   @Test
   public void testClientOff() throws InterruptedException, TimeoutException {
@@ -135,6 +144,69 @@ public class ClientManagerTest extends BaseIntegrationTest {
     Assert.assertTrue(isExist(sessionDataStore.getDatas(dataInfo.getDataInfoId()), localAddress));
     Assert.assertTrue(
         isExist(localDatumStorage.getAllPublisher().get(dataInfo.getDataInfoId()), localAddress));
+  }
+
+  @Test
+  public void testClientOffWithSub() throws InterruptedException, TimeoutException {
+    /** client off */
+    CommonResponse response = clientManagerResource.clientOff(CLIENT_OFF_STR);
+    Assert.assertTrue(response.isSuccess());
+
+    // check session client off list
+    waitConditionUntilTimeOut(
+        () -> fetchClientOffAddressService.getClientOffAddress().equals(CLIENT_OFF_SET), 5000);
+
+    for (String address : CLIENT_OFF_SET) {
+      AddressVersion query = fetchClientOffAddressService.getAddress(address);
+      Assert.assertTrue(query.isPub());
+      Assert.assertTrue(query.isSub());
+    }
+
+    /** client off with sub */
+    response =
+        clientManagerResource.clientOffWithSub(
+            JsonUtils.writeValueAsString(CLIENT_OFF_WITH_SUB_SET));
+    Assert.assertTrue(response.isSuccess());
+
+    Set<String> merge = Sets.newHashSet(CLIENT_OFF_SET);
+    merge.addAll(
+        CLIENT_OFF_WITH_SUB_SET.stream()
+            .map(AddressVersion::getAddress)
+            .collect(Collectors.toSet()));
+
+    // check session client off list
+    waitConditionUntilTimeOut(
+        () -> fetchClientOffAddressService.getClientOffAddress().equals(merge), 5000);
+
+    for (AddressVersion addressVersion : CLIENT_OFF_WITH_SUB_SET) {
+      AddressVersion query = fetchClientOffAddressService.getAddress(addressVersion.getAddress());
+      Assert.assertEquals(addressVersion.isPub(), query.isPub());
+      Assert.assertEquals(addressVersion.isSub(), query.isSub());
+    }
+
+    /** client off */
+    response = clientManagerResource.clientOff(CLIENT_OFF_STR);
+    Assert.assertTrue(response.isSuccess());
+
+    // check session client off list
+    TimeUnit.SECONDS.sleep(5);
+
+    for (String address : CLIENT_OFF_SET) {
+      AddressVersion query = fetchClientOffAddressService.getAddress(address);
+      Assert.assertTrue(query.isPub());
+      Assert.assertTrue(query.isSub());
+    }
+
+    /** client off */
+    response = clientManagerResource.clientOpen(CLIENT_OPEN_STR);
+    Assert.assertTrue(response.isSuccess());
+
+    // check session client off list
+    TimeUnit.SECONDS.sleep(5);
+    for (String address : CLIENT_OPEN_SET) {
+      AddressVersion query = fetchClientOffAddressService.getAddress(address);
+      Assert.assertNull(query);
+    }
   }
 
   @Test

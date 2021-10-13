@@ -32,10 +32,12 @@ public class SubscriberConverterTest {
     TestUtils.setField(register);
     register.setScope(ScopeEnum.dataCenter.name());
     long now1 = System.currentTimeMillis();
+    register.setAcceptEncoding("zstd,gzip");
     Subscriber subscriber = SubscriberConverter.convert(register);
     long now2 = System.currentTimeMillis();
     TestUtils.assertBetween(subscriber.getRegisterTimestamp(), now1, now2);
     TestUtils.assertEquals(register, subscriber);
+    Assert.assertEquals(2, subscriber.getAcceptEncodes().length);
     Assert.assertEquals(ScopeEnum.dataCenter, subscriber.getScope());
   }
 

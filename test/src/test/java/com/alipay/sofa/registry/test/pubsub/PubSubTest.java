@@ -122,7 +122,7 @@ public class PubSubTest extends BaseIntegrationTest {
 
     PublisherRegistration registration = new PublisherRegistration(dataId);
     registryClient1.register(registration, value);
-    Thread.sleep(2000L);
+    Thread.sleep(4000L);
 
     MySubscriberDataObserver observer = new MySubscriberDataObserver();
     SubscriberRegistration subReg = new SubscriberRegistration(dataId, observer);
@@ -130,7 +130,7 @@ public class PubSubTest extends BaseIntegrationTest {
 
     registryClient2.register(subReg);
 
-    Thread.sleep(2000L);
+    Thread.sleep(4000L);
     assertEquals(dataId, observer.dataId);
     assertEquals(LOCAL_REGION, observer.userData.getLocalZone());
     assertEquals(1, observer.userData.getZoneData().size());
@@ -150,11 +150,11 @@ public class PubSubTest extends BaseIntegrationTest {
     subReg = new SubscriberRegistration(dataId, observer);
     subReg.setScopeEnum(ScopeEnum.global);
     registryClient1.register(subReg);
-    Thread.sleep(2000L);
+    Thread.sleep(4000L);
 
     registration = new PublisherRegistration(dataId);
     registryClient2.register(registration, value);
-    Thread.sleep(3000L);
+    Thread.sleep(4000L);
 
     assertEquals(dataId, observer.dataId);
     assertEquals(LOCAL_REGION, observer.userData.getLocalZone());
@@ -175,12 +175,12 @@ public class PubSubTest extends BaseIntegrationTest {
     subReg = new SubscriberRegistration(dataId, observer);
     subReg.setScopeEnum(ScopeEnum.zone);
     registryClient1.register(subReg);
-    Thread.sleep(2000L);
+    Thread.sleep(4000L);
 
     registration = new PublisherRegistration(dataId);
     registryClient1.register(registration, value);
     registryClient2.register(registration, value);
-    Thread.sleep(3000L);
+    Thread.sleep(4000L);
 
     assertEquals(dataId, observer.dataId);
     assertEquals(LOCAL_REGION, observer.userData.getLocalZone());

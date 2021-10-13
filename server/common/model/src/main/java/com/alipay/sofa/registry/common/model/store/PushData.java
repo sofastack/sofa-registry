@@ -16,13 +16,23 @@
  */
 package com.alipay.sofa.registry.common.model.store;
 
+import org.apache.commons.lang.StringUtils;
+
 public class PushData<T> {
   private final T payload;
   private final int dataCount;
+  private final String encode;
+  private final int encodeSize;
 
   public PushData(T payload, int dataCount) {
+    this(payload, dataCount, StringUtils.EMPTY, 0);
+  }
+
+  public PushData(T payload, int dataCount, String encode, int encodeSize) {
     this.payload = payload;
     this.dataCount = dataCount;
+    this.encode = encode;
+    this.encodeSize = encodeSize;
   }
 
   public T getPayload() {
@@ -31,5 +41,13 @@ public class PushData<T> {
 
   public int getDataCount() {
     return dataCount;
+  }
+
+  public String getEncode() {
+    return encode;
+  }
+
+  public int getEncodeSize() {
+    return encodeSize;
   }
 }

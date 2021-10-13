@@ -42,15 +42,16 @@ public final class ReceivedDataPbOuterClass {
   static {
     java.lang.String[] descriptorData = {
       "\n\024ReceivedDataPb.proto\032\021DataBoxesPb.prot"
-          + "o\"\210\002\n\016ReceivedDataPb\022\016\n\006dataId\030\001 \001(\t\022\r\n\005"
+          + "o\"\300\002\n\016ReceivedDataPb\022\016\n\006dataId\030\001 \001(\t\022\r\n\005"
           + "group\030\002 \001(\t\022\022\n\ninstanceId\030\003 \001(\t\022\017\n\007segme"
           + "nt\030\004 \001(\t\022\r\n\005scope\030\005 \001(\t\022\033\n\023subscriberReg"
           + "istIds\030\006 \003(\t\022\'\n\004data\030\007 \003(\0132\031.ReceivedDat"
           + "aPb.DataEntry\022\017\n\007version\030\010 \001(\003\022\021\n\tlocalZ"
-          + "one\030\t \001(\t\0329\n\tDataEntry\022\013\n\003key\030\001 \001(\t\022\033\n\005v"
-          + "alue\030\002 \001(\0132\014.DataBoxesPb:\0028\001B7\n/com.alip"
-          + "ay.sofa.registry.common.model.client.pbP"
-          + "\001Z\002pbb\006proto3"
+          + "one\030\t \001(\t\022\020\n\010encoding\030\n \001(\t\022\014\n\004body\030\013 \001("
+          + "\014\022\026\n\016originBodySize\030\014 \001(\005\0329\n\tDataEntry\022\013"
+          + "\n\003key\030\001 \001(\t\022\033\n\005value\030\002 \001(\0132\014.DataBoxesPb"
+          + ":\0028\001B:\n/com.alipay.sofa.registry.common."
+          + "model.client.pbP\001Z\005protob\006proto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -80,6 +81,9 @@ public final class ReceivedDataPbOuterClass {
               "Data",
               "Version",
               "LocalZone",
+              "Encoding",
+              "Body",
+              "OriginBodySize",
             });
     internal_static_ReceivedDataPb_DataEntry_descriptor =
         internal_static_ReceivedDataPb_descriptor.getNestedTypes().get(0);

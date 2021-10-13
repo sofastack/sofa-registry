@@ -117,7 +117,7 @@ public final class PublisherGroup {
       lock.readLock().unlock();
     }
     datum.setVersion(ver);
-    list.forEach(p -> datum.addPublisher(p));
+    list.forEach(datum::addPublisher);
     return datum;
   }
 
@@ -169,8 +169,9 @@ public final class PublisherGroup {
     PublisherEnvelope exist = pubMap.get(publisher.getRegisterId());
     final RegisterVersion registerVersion = publisher.registerVersion();
     if (exist == null) {
-      pubMap.put(publisher.getRegisterId(), PublisherEnvelope.of(publisher));
-      return true;
+      PublisherEnvelope envelope = PublisherEnvelope.of(publisher);
+      pubMap.put(publisher.getRegisterId(), envelope);
+      return envelope.isPub();
     }
 
     if (exist.registerVersion.equals(registerVersion)) {
@@ -193,17 +194,19 @@ public final class PublisherGroup {
           publisher.registerVersion());
       return false;
     }
-    pubMap.put(publisher.getRegisterId(), PublisherEnvelope.of(publisher));
+    PublisherEnvelope envelope = PublisherEnvelope.of(publisher);
+    pubMap.put(publisher.getRegisterId(), envelope);
 
     if (exist.publisher == null) {
       // publisher is null after client_off
       LOGGER.info(
-          "[ReplaceEmptyPub] {}, {}, exist={}, add={}",
+          "[ReplaceEmptyPub] {}, {}, exist={}, add={}, regIsPub={}",
           publisher.getDataInfoId(),
           publisher.getRegisterId(),
           exist.registerVersion,
-          publisher.registerVersion());
-      return true;
+          publisher.registerVersion(),
+          envelope.isPub());
+      return envelope.isPub();
     }
     try {
       boolean same =

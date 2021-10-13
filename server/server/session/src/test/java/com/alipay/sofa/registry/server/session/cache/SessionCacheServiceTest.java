@@ -54,7 +54,7 @@ public class SessionCacheServiceTest {
     Assert.assertNull(value.getPayload());
 
     SubDatum subDatum =
-        new SubDatum(
+        SubDatum.normalOf(
             dataInfoId,
             dataCenter,
             100,

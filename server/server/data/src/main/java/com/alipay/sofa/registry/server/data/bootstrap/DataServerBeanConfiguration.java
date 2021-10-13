@@ -23,6 +23,7 @@ import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.data.cache.DatumStorage;
 import com.alipay.sofa.registry.server.data.cache.LocalDatumStorage;
 import com.alipay.sofa.registry.server.data.change.DataChangeEventCenter;
+import com.alipay.sofa.registry.server.data.compress.CompressDatumService;
 import com.alipay.sofa.registry.server.data.lease.SessionLeaseManager;
 import com.alipay.sofa.registry.server.data.remoting.DataMetaServerManager;
 import com.alipay.sofa.registry.server.data.remoting.DataNodeExchanger;
@@ -43,7 +44,9 @@ import com.alipay.sofa.registry.server.data.slot.SlotManagerImpl;
 import com.alipay.sofa.registry.server.data.timer.CacheCountTask;
 import com.alipay.sofa.registry.server.data.timer.CacheDigestTask;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerManager;
+import com.alipay.sofa.registry.server.shared.providedata.FetchSystemPropertyService;
 import com.alipay.sofa.registry.server.shared.providedata.ProvideDataProcessor;
+import com.alipay.sofa.registry.server.shared.providedata.SystemPropertyProcessorManager;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractClientHandler;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.alipay.sofa.registry.server.shared.remoting.SlotTableChangeEventHandler;
@@ -371,6 +374,19 @@ public class DataServerBeanConfiguration {
       ((ProvideDataProcessorManager) provideDataProcessorManager)
           .addProvideDataProcessor(sessionLeaseProvideDataProcessor);
       return sessionLeaseProvideDataProcessor;
+    }
+
+    @Bean
+    public SystemPropertyProcessorManager systemPropertyProcessorManager() {
+      return new SystemPropertyProcessorManager();
+    }
+
+    @Bean
+    public FetchSystemPropertyService compressDatumService(
+        SystemPropertyProcessorManager systemPropertyProcessorManager) {
+      CompressDatumService compressDatumService = new CompressDatumService();
+      systemPropertyProcessorManager.addSystemDataProcessor(compressDatumService);
+      return compressDatumService;
     }
   }
 }

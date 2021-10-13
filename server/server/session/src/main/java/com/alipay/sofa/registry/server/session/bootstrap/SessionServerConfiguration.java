@@ -65,6 +65,7 @@ import com.alipay.sofa.registry.server.shared.meta.MetaServerManager;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.server.shared.providedata.FetchSystemPropertyService;
 import com.alipay.sofa.registry.server.shared.providedata.ProvideDataProcessor;
+import com.alipay.sofa.registry.server.shared.providedata.SystemPropertyProcessorManager;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractClientHandler;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.alipay.sofa.registry.server.shared.remoting.SlotTableChangeEventHandler;
@@ -384,6 +385,11 @@ public class SessionServerConfiguration {
     @ConditionalOnMissingBean(name = "healthResource")
     public HealthResource healthResource() {
       return new HealthResource();
+    }
+
+    @Bean
+    public CompressResource compressResource() {
+      return new CompressResource();
     }
 
     @Bean
@@ -738,6 +744,14 @@ public class SessionServerConfiguration {
       systemPropertyProcessorManager.addSystemDataProcessor(fetchGrayPushSwitchService);
 
       return fetchGrayPushSwitchService;
+    }
+
+    @Bean
+    public FetchSystemPropertyService compressPushService(
+        SystemPropertyProcessorManager systemPropertyProcessorManager) {
+      CompressPushService compressPushService = new CompressPushService();
+      systemPropertyProcessorManager.addSystemDataProcessor(compressPushService);
+      return compressPushService;
     }
 
     @Bean

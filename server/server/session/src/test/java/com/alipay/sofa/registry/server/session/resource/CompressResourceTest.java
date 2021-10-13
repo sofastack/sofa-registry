@@ -14,8 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.common.model.store;
+package com.alipay.sofa.registry.server.session.resource;
 
-public interface Sizer {
-  int size();
+import com.alipay.sofa.registry.server.session.providedata.CompressPushService;
+import org.junit.Test;
+
+public class CompressResourceTest {
+
+  @Test
+  public void test() {
+    CompressResource resource = new CompressResource();
+    resource.compressPushService = new CompressPushService();
+  }
 }

@@ -160,9 +160,9 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
   private int cacheCountIntervalSecs = 30;
 
-  private int cacheDatumMaxWeight = 1000 * 1000 * 1000;
+  private int cacheDatumMaxWeight = 1024 * 1024 * 256;
 
-  private int cacheDatumExpireSecs = 3;
+  private int cacheDatumExpireSecs = 5;
 
   // metadata config start
 
@@ -192,7 +192,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
   private int pushTaskBufferBucketSize = 4;
 
-  private int pushCircuitBreakerThreshold = 20;
+  private int pushCircuitBreakerThreshold = 10;
 
   private int pushCircuitBreakerSleepMillis = 60 * 1000;
 

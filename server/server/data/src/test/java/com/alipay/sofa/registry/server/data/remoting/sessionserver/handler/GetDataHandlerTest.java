@@ -30,6 +30,7 @@ import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.server.data.TestBaseUtils;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.data.change.DataChangeEventCenter;
+import com.alipay.sofa.registry.server.data.compress.CompressDatumService;
 import com.alipay.sofa.registry.server.data.lease.SessionLeaseManager;
 import com.alipay.sofa.registry.server.data.slot.SlotManager;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
@@ -70,7 +71,9 @@ public class GetDataHandlerTest {
     SlotManager slotManager = mock(SlotManager.class);
     handler.slotManager = slotManager;
     DatumCache datumCache = TestBaseUtils.newLocalDatumCache("testDc", true);
+    CompressDatumService compressDatumService = new CompressDatumService();
     handler.setDatumCache(datumCache);
+    handler.setCompressDatumService(compressDatumService);
     handler.localDatumStorage = datumCache.getLocalDatumStorage();
     handler.dataChangeEventCenter = new DataChangeEventCenter();
     handler.dataServerConfig = TestBaseUtils.newDataConfig("testDc");
@@ -110,11 +113,11 @@ public class GetDataHandlerTest {
     Assert.assertTrue(resp.isSuccess());
     Assert.assertEquals(resp.getSlotAccess().getStatus(), TestBaseUtils.accept().getStatus());
     SubDatum subDatum = (SubDatum) resp.getData();
-    Assert.assertEquals(subDatum.getPublishers().size(), 1);
-    Assert.assertEquals(subDatum.getPublishers().get(0).getRegisterId(), pub.getRegisterId());
+    Assert.assertEquals(subDatum.mustGetPublishers().size(), 1);
+    Assert.assertEquals(subDatum.mustGetPublishers().get(0).getRegisterId(), pub.getRegisterId());
     Assert.assertEquals(
-        subDatum.getPublishers().get(0).getRegisterTimestamp(), pub.getRegisterTimestamp());
-    Assert.assertEquals(subDatum.getPublishers().get(0).getVersion(), pub.getVersion());
+        subDatum.mustGetPublishers().get(0).getRegisterTimestamp(), pub.getRegisterTimestamp());
+    Assert.assertEquals(subDatum.mustGetPublishers().get(0).getVersion(), pub.getVersion());
   }
 
   @Test

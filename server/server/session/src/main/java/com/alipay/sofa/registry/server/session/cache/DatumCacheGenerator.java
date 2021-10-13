@@ -52,7 +52,7 @@ public class DatumCacheGenerator implements CacheGenerator {
             "loadD,{},{},{},{},{},span={}",
             dataInfoId,
             dataCenter,
-            datum.getPublishers().size(),
+            datum.getPubNum(),
             datum.getDataBoxBytes(),
             datum.getVersion(),
             span);

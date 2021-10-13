@@ -24,6 +24,7 @@ import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.SubDatum;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
+import com.alipay.sofa.registry.compress.CompressUtils;
 import com.alipay.sofa.registry.core.model.DataBox;
 import com.google.common.collect.Lists;
 import java.util.Collections;
@@ -51,7 +52,7 @@ public class DatumUtilsTest {
     Assert.assertEquals(subDatum.getInstanceId(), subscriber.getInstanceId());
     Assert.assertEquals(subDatum.getGroup(), subscriber.getGroup());
     Assert.assertEquals(subDatum.getVersion(), ValueConstants.DEFAULT_NO_DATUM_VERSION);
-    Assert.assertTrue(subDatum.getPublishers().isEmpty());
+    Assert.assertTrue(subDatum.mustGetPublishers().isEmpty());
   }
 
   @Test
@@ -109,5 +110,31 @@ public class DatumUtilsTest {
     ServerDataBox box = new ServerDataBox("111111111111111111111111111111111");
     Assert.assertEquals(40, DatumUtils.ServerDataBoxListSize(Lists.newArrayList(box)));
     Assert.assertEquals(0, DatumUtils.ServerDataBoxListSize(null));
+  }
+
+  @Test
+  public void testCompress() {
+    Datum datum = new Datum();
+    Publisher publisher = new Publisher();
+    publisher.setRegisterId("testRegisterId");
+    publisher.setCell("testCell");
+    publisher.setDataList(Collections.emptyList());
+    publisher.setVersion(100);
+    publisher.setRegisterTimestamp(System.currentTimeMillis());
+    publisher.setPublishSource(PublishSource.CLIENT);
+    datum.addPublisher(publisher);
+    datum.setDataCenter("testDc");
+    datum.setDataId("testDataId");
+    datum.setVersion(200);
+    datum.setInstanceId("testInstanceId");
+    datum.setGroup("testGroup");
+    datum.setDataInfoId("testDataInfoId");
+    SubDatum subDatum = DatumUtils.of(datum);
+
+    SubDatum zip = DatumUtils.compressSubDatum(subDatum, CompressUtils.mustGet("zstd"));
+    SubDatum unzip = DatumUtils.decompressSubDatum(zip);
+    Assert.assertEquals(1, zip.getPubNum());
+    Assert.assertEquals(1, unzip.getPubNum());
+    Assert.assertEquals("testRegisterId", unzip.mustGetPublishers().get(0).getRegisterId());
   }
 }

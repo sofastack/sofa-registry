@@ -33,4 +33,9 @@ public interface SubscriberRegisterPbOrBuilder
   /** <code>.BaseRegisterPb baseRegister = 2;</code> */
   com.alipay.sofa.registry.common.model.client.pb.BaseRegisterPbOrBuilder
       getBaseRegisterOrBuilder();
+
+  /** <code>string acceptEncoding = 3;</code> */
+  java.lang.String getAcceptEncoding();
+  /** <code>string acceptEncoding = 3;</code> */
+  com.google.protobuf.ByteString getAcceptEncodingBytes();
 }

@@ -23,14 +23,18 @@ import com.alipay.sofa.registry.common.model.dataserver.GetDataRequest;
 import com.alipay.sofa.registry.common.model.slot.SlotAccess;
 import com.alipay.sofa.registry.common.model.slot.SlotAccessGenericResponse;
 import com.alipay.sofa.registry.common.model.store.SubDatum;
+import com.alipay.sofa.registry.compress.CompressUtils;
+import com.alipay.sofa.registry.compress.Compressor;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
+import com.alipay.sofa.registry.server.data.compress.CompressDatumService;
 import com.alipay.sofa.registry.server.shared.util.DatumUtils;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.google.common.annotations.VisibleForTesting;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadPoolExecutor;
+import javax.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -44,6 +48,8 @@ public class GetDataHandler extends AbstractDataHandler<GetDataRequest> {
   @Autowired private DatumCache datumCache;
 
   @Autowired private ThreadPoolExecutor getDataProcessorExecutor;
+
+  @Resource private CompressDatumService compressDatumService;
 
   @Override
   public Executor getExecutor() {
@@ -87,21 +93,30 @@ public class GetDataHandler extends AbstractDataHandler<GetDataRequest> {
           slotAccessAfter, "slotLeaderEpoch has change, prev=" + slotAccessBefore);
     }
     // return SubDatum, it's serdeSize and memoryOverhead much smaller than Datum
-    final SubDatum subDatum = datum != null ? DatumUtils.of(datum) : null;
+    SubDatum subDatum = datum != null ? DatumUtils.of(datum) : null;
+    String encode = "";
+    Compressor compressor =
+        compressDatumService.getCompressor(subDatum, request.getAcceptEncodes());
+    if (compressor != null) {
+      encode = compressor.getEncoding();
+    }
+    SubDatum zipDatum = DatumUtils.compressSubDatum(subDatum, compressor);
     GET_DATUM_Y_COUNTER.inc();
     if (subDatum != null) {
       LOGGER.info(
-          "getD,{},{},{},{}",
+          "getD,{},{},{},{},encode={},dataBoxSize={},encodeSize={}",
           dataInfoId,
           dataCenter,
-          subDatum.getPublishers().size(),
-          subDatum.getVersion());
-      GET_PUBLISHER_COUNTER.inc(subDatum.getPublishers().size());
+          subDatum.mustGetPublishers().size(),
+          subDatum.getVersion(),
+          CompressUtils.normalizeEncode(encode),
+          zipDatum.getDataBoxBytes(),
+          zipDatum.size());
+      GET_PUBLISHER_COUNTER.inc(subDatum.mustGetPublishers().size());
     } else {
       LOGGER.info("getNilD,{},{}", dataInfoId, dataCenter);
     }
-
-    return SlotAccessGenericResponse.successResponse(slotAccessAfter, subDatum);
+    return SlotAccessGenericResponse.successResponse(slotAccessAfter, zipDatum);
   }
 
   @Override
@@ -112,5 +127,10 @@ public class GetDataHandler extends AbstractDataHandler<GetDataRequest> {
   @VisibleForTesting
   void setDatumCache(DatumCache datumCache) {
     this.datumCache = datumCache;
+  }
+
+  @VisibleForTesting
+  void setCompressDatumService(CompressDatumService service) {
+    this.compressDatumService = service;
   }
 }

@@ -39,10 +39,11 @@ public final class SubscriberRegisterPbOuterClass {
   static {
     java.lang.String[] descriptorData = {
       "\n\032SubscriberRegisterPb.proto\032\024BaseRegist"
-          + "erPb.proto\"L\n\024SubscriberRegisterPb\022\r\n\005sc"
+          + "erPb.proto\"d\n\024SubscriberRegisterPb\022\r\n\005sc"
           + "ope\030\001 \001(\t\022%\n\014baseRegister\030\002 \001(\0132\017.BaseRe"
-          + "gisterPbB7\n/com.alipay.sofa.registry.com"
-          + "mon.model.client.pbP\001Z\002pbb\006proto3"
+          + "gisterPb\022\026\n\016acceptEncoding\030\003 \001(\tB:\n/com."
+          + "alipay.sofa.registry.common.model.client"
+          + ".pbP\001Z\005protob\006proto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -63,7 +64,7 @@ public final class SubscriberRegisterPbOuterClass {
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_SubscriberRegisterPb_descriptor,
             new java.lang.String[] {
-              "Scope", "BaseRegister",
+              "Scope", "BaseRegister", "AcceptEncoding",
             });
     com.alipay.sofa.registry.common.model.client.pb.BaseRegisterPbOuterClass.getDescriptor();
   }
