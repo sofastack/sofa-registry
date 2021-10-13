@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.util;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +30,7 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 public final class CollectionUtils {
   private CollectionUtils() {}
+
   /**
    * Gets random.
    *
@@ -50,5 +52,25 @@ public final class CollectionUtils {
     }
     Map.Entry<K, V> one = m.entrySet().iterator().next();
     return Collections.singletonMap(one.getKey(), one.getValue());
+  }
+
+  public static <T> int fuzzyTotalSize(Collection<T> items, SizeGetter<T> sizeGetter) {
+    if (org.springframework.util.CollectionUtils.isEmpty(items)) {
+      return 0;
+    }
+    int maxPerSize = 0;
+    int samples = 3;
+    for (T item : items) {
+      maxPerSize = Math.max(sizeGetter.getSize(item), maxPerSize);
+      samples--;
+      if (samples <= 0) {
+        break;
+      }
+    }
+    return maxPerSize * items.size();
+  }
+
+  public interface SizeGetter<T> {
+    int getSize(T t);
   }
 }

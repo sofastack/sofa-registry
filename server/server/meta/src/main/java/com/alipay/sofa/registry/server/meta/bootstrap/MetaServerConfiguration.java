@@ -168,6 +168,7 @@ public class MetaServerConfiguration {
       list.add(heartbeatRequestHandler());
       list.add(fetchProvideDataRequestHandler());
       list.add(registryForbiddenServerHandler());
+      list.add(fetchSystemPropertyRequestHandler());
       list.add(getSlotTableStatusRequestHandler());
       return list;
     }
@@ -314,6 +315,11 @@ public class MetaServerConfiguration {
     @ConditionalOnMissingBean
     public StopPushDataResource stopPushDataResource() {
       return new StopPushDataResource();
+    }
+
+    @Bean
+    public CompressResource compressedResource() {
+      return new CompressResource();
     }
 
     @Bean

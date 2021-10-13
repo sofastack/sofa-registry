@@ -16,8 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import com.alipay.remoting.Connection;
 import com.alipay.sofa.registry.common.model.ConnectId;
@@ -233,7 +232,7 @@ public class TestUtils {
   public static SubDatum newSubDatum(String dataId, long version, List<SubPublisher> publishers) {
     String dataInfo = DataInfo.toDataInfoId(dataId, INSTANCE, GROUP);
     SubDatum subDatum =
-        new SubDatum(
+        SubDatum.normalOf(
             dataInfo,
             "dataCenter",
             version,
@@ -243,6 +242,12 @@ public class TestUtils {
             "testGroup",
             Lists.newArrayList(System.currentTimeMillis()));
     return subDatum;
+  }
+
+  public static Subscriber newZonePbSubscriber(String cell) {
+    Subscriber subscriber = newZoneSubscriber(cell);
+    subscriber.setSourceAddress(new URL(URL.ProtocolType.BOLT, "192.168.1.1", 8888, URL.PROTOBUF));
+    return subscriber;
   }
 
   public static Subscriber newZoneSubscriber(String cell) {

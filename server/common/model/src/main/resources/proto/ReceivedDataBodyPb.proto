@@ -1,0 +1,11 @@
+syntax = "proto3";
+option java_package = "com.alipay.sofa.registry.common.model.client.pb";
+option java_multiple_files = true;
+option go_package = "proto";
+
+import "DataBoxesPb.proto";
+
+message ReceivedDataBodyPb{
+  map<string, DataBoxesPb> data = 7;
+
+}

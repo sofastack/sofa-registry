@@ -32,6 +32,7 @@ import com.alipay.sofa.registry.server.data.change.DataChangeEventCenter;
 import com.alipay.sofa.registry.server.data.lease.SessionLeaseManager;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
+import com.alipay.sofa.registry.server.shared.providedata.SystemPropertyProcessorManager;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.google.common.annotations.VisibleForTesting;
 import java.lang.annotation.Annotation;
@@ -77,6 +78,8 @@ public class DataServerBootstrap {
   @Resource(name = "serverSyncHandlers")
   private Collection<AbstractServerHandler> serverSyncHandlers;
 
+  @Autowired private SystemPropertyProcessorManager systemPropertyProcessorManager;
+
   private Server server;
 
   private Server notifyServer;
@@ -110,6 +113,8 @@ public class DataServerBootstrap {
 
       renewNode();
       fetchProviderData();
+
+      systemPropertyProcessorManager.startFetchMetaSystemProperty();
 
       startScheduler();
 
@@ -338,6 +343,12 @@ public class DataServerBootstrap {
   @VisibleForTesting
   DataServerBootstrap setServerSyncHandlers(Collection<AbstractServerHandler> serverSyncHandlers) {
     this.serverSyncHandlers = serverSyncHandlers;
+    return this;
+  }
+
+  @VisibleForTesting
+  DataServerBootstrap setSystemPropertyProcessorManager(SystemPropertyProcessorManager manager) {
+    this.systemPropertyProcessorManager = manager;
     return this;
   }
 }

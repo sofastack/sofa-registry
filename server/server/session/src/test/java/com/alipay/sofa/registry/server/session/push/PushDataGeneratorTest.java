@@ -16,7 +16,11 @@
  */
 package com.alipay.sofa.registry.server.session.push;
 
+import static org.mockito.Mockito.*;
+
 import com.alipay.sofa.registry.common.model.client.pb.ReceivedConfigDataPb;
+import com.alipay.sofa.registry.common.model.client.pb.ReceivedDataPb;
+import com.alipay.sofa.registry.common.model.metaserver.CompressPushSwitch;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.common.model.store.*;
 import com.alipay.sofa.registry.core.model.DataBox;
@@ -25,6 +29,8 @@ import com.alipay.sofa.registry.core.model.ReceivedData;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.server.session.TestUtils;
 import com.alipay.sofa.registry.server.session.converter.ReceivedDataConverter;
+import com.alipay.sofa.registry.server.session.providedata.CompressPushService;
+import com.alipay.sofa.registry.server.shared.util.DatumUtils;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -48,13 +54,14 @@ public class PushDataGeneratorTest {
     subscriberMap.put(sub1.getRegisterId(), sub1);
     subscriberMap.put(sub2.getRegisterId(), sub2);
 
+    SubDatum emptyDatum = DatumUtils.newEmptySubDatum(sub1, "testDc", 1);
     TestUtils.assertRunException(
-        RuntimeException.class, () -> generator.createPushData(null, subscriberMap));
+        RuntimeException.class, () -> generator.createPushData(emptyDatum, subscriberMap));
 
     sub2.setScope(ScopeEnum.zone);
     sub2.setClientVersion(BaseInfo.ClientVersion.MProtocolpackage);
     TestUtils.assertRunException(
-        IllegalArgumentException.class, () -> generator.createPushData(null, subscriberMap));
+        IllegalArgumentException.class, () -> generator.createPushData(emptyDatum, subscriberMap));
 
     sub2.setClientVersion(BaseInfo.ClientVersion.StoreData);
     TestUtils.assertRunException(
@@ -119,5 +126,32 @@ public class PushDataGeneratorTest {
     Assert.assertEquals(w.getGroup(), pb.getGroup());
     Assert.assertEquals(w.getInstanceId(), pb.getInstanceId());
     Assert.assertTrue(pb.getDataBox().getData().length() == 0);
+  }
+
+  @Test
+  public void testCompress() {
+    PushDataGenerator generator = new PushDataGenerator();
+    generator.sessionServerConfig = TestUtils.newSessionConfig("testDc", zone);
+    Map<String, Subscriber> subscriberMap = Maps.newHashMap();
+    generator.compressPushService = spy(new CompressPushService());
+    CompressPushSwitch compressPushSwitch = new CompressPushSwitch();
+    compressPushSwitch.setEnabled(true);
+    when(generator.compressPushService.getCompressSwitch()).thenReturn(compressPushSwitch);
+    Subscriber sub1 = TestUtils.newZonePbSubscriber(zone);
+    Subscriber sub2 = TestUtils.newZonePbSubscriber(zone);
+    sub1.internAcceptEncoding("zstd");
+    sub2.internAcceptEncoding("zstd");
+    subscriberMap.put(sub1.getRegisterId(), sub1);
+    subscriberMap.put(sub2.getRegisterId(), sub2);
+    List<SubPublisher> list = Lists.newArrayListWithExpectedSize(10000);
+    for (int i = 0; i < 10000; i++) {
+      SubPublisher pub = TestUtils.newSubPublisher(10, 20, "TESTZONE");
+      list.add(pub);
+    }
+    SubDatum subDatum = TestUtils.newSubDatum("testDataId", 200, list);
+    PushData<ReceivedDataPb> pushData = generator.createPushData(subDatum, subscriberMap);
+    Assert.assertEquals(0, pushData.getPayload().getDataMap().size());
+    Assert.assertNotEquals(0, pushData.getPayload().getBody().size());
+    Assert.assertNotEquals(0, pushData.getPayload().getOriginBodySize());
   }
 }

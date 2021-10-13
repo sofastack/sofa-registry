@@ -60,6 +60,7 @@ public final class SubscriberConverter {
           subscriber.setSourceAddress(new URL(source.getIp(), source.getPort()));
           subscriber.setAttributes(source.getAttributes());
           subscriber.setClientVersion(ClientVersion.StoreData);
+          subscriber.internAcceptEncoding(source.getAcceptEncoding());
 
           DataInfo dataInfo =
               new DataInfo(source.getInstanceId(), source.getDataId(), source.getGroup());

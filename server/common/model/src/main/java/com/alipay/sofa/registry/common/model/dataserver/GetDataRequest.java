@@ -34,6 +34,8 @@ public class GetDataRequest extends AbstractSlotRequest {
   /** if datacenter is null, means all datacenters */
   private final String dataCenter;
 
+  private String[] acceptEncodes;
+
   public GetDataRequest(
       ProcessId sessionProcessId, String dataInfoId, String dataCenter, int slotId) {
     super(slotId, sessionProcessId);
@@ -68,5 +70,13 @@ public class GetDataRequest extends AbstractSlotRequest {
         getSlotId(),
         getSlotLeaderEpoch(),
         getSlotTableEpoch());
+  }
+
+  public String[] getAcceptEncodes() {
+    return acceptEncodes;
+  }
+
+  public void setAcceptEncodes(String[] encodes) {
+    acceptEncodes = encodes;
   }
 }

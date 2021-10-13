@@ -51,7 +51,7 @@ public final class SubscriberRegisterConvertor {
     subscriberRegister.setVersion(subscriberRegisterPb.getBaseRegister().getVersion());
 
     subscriberRegister.setAttributes(subscriberRegisterPb.getBaseRegister().getAttributesMap());
-
+    subscriberRegister.setAcceptEncoding(subscriberRegisterPb.getAcceptEncoding());
     subscriberRegister.setScope(subscriberRegisterPb.getScope());
     return subscriberRegister;
   }
@@ -85,8 +85,11 @@ public final class SubscriberRegisterConvertor {
 
     builder
         .setScope(subscriberRegisterJava.getScope())
-        .setBaseRegister(baseRegisterBuilder.build());
-
+        .setBaseRegister(baseRegisterBuilder.build())
+        .setAcceptEncoding(
+            subscriberRegisterJava.getAcceptEncoding() == null
+                ? ""
+                : subscriberRegisterJava.getAcceptEncoding());
     return builder.build();
   }
 }

@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.data.bootstrap;
 
+import com.alipay.sofa.registry.server.shared.config.ServerShareConfig;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.util.OsUtils;
 import java.util.Collection;
@@ -28,7 +29,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @version $Id: DataServerBootstrapConfig.java, v 0.1 2017-12-06 20:50 qian.lqlq Exp $
  */
 @ConfigurationProperties(prefix = DataServerConfig.PRE_FIX)
-public class DataServerConfig {
+public class DataServerConfig implements ServerShareConfig {
 
   public static final String PRE_FIX = "data.server";
 
@@ -51,7 +52,7 @@ public class DataServerConfig {
 
   private int notifyMaxItems = 400;
 
-  private int notifyIntervalMillis = 1000;
+  private int notifyIntervalMillis = 2000;
 
   private int notifyRetryTimes = 3;
 
@@ -94,7 +95,7 @@ public class DataServerConfig {
 
   private int slotFollowerSyncLeaderExecutorThreadSize = OsUtils.getCpuCount();
   private int slotFollowerSyncLeaderExecutorQueueSize = 10000;
-  private volatile int slotFollowerSyncLeaderIntervalSecs = 60;
+  private volatile int slotFollowerSyncLeaderIntervalSecs = 180;
 
   // the publisher.digest if len(registerId/uuid+long+long), 50bytes
   private volatile int slotSyncPublisherDigestMaxNum = 4000;
@@ -125,6 +126,8 @@ public class DataServerConfig {
   private int migratingMaxSecs = 40;
   private int migratingMaxRetry = 15;
   private int migratingMaxUnavailable = 1;
+
+  private int systemPropertyIntervalMillis = 3000;
 
   /**
    * constructor
@@ -883,5 +886,10 @@ public class DataServerConfig {
   @Override
   public String toString() {
     return ToStringBuilder.reflectionToString(this, ToStringStyle.MULTI_LINE_STYLE);
+  }
+
+  @Override
+  public int getSystemPropertyIntervalMillis() {
+    return systemPropertyIntervalMillis;
   }
 }

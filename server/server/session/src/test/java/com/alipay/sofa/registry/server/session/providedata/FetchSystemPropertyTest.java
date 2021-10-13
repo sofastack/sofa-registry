@@ -22,6 +22,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
+import com.alipay.sofa.registry.server.shared.providedata.SystemPropertyProcessorManager;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;

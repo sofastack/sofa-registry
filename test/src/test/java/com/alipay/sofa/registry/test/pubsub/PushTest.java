@@ -52,11 +52,11 @@ public class PushTest extends BaseIntegrationTest {
 
     PublisherRegistration registration = new PublisherRegistration(dataId);
     Publisher publisher = registryClient1.register(registration, value);
-    Thread.sleep(3000L);
+    Thread.sleep(4000L);
 
     value = "value111";
     publisher.republish(value);
-    Thread.sleep(3000L);
+    Thread.sleep(4000L);
 
     MySubscriberDataObserver observer = new MySubscriberDataObserver();
     SubscriberRegistration subReg = new SubscriberRegistration(dataId, observer);
