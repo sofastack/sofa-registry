@@ -54,7 +54,7 @@ public class DateNowJdbcRepository implements DateNowRepository {
       return dateNow;
     }
     dateNow = dateNowMapper.getNow().getNow();
-    LOG.info("[Load]dateNow: {}", dateNow);
+    LOG.info("[Load]getNow dateNow: {}", dateNow);
     return dateNow;
   }
 
@@ -63,12 +63,12 @@ public class DateNowJdbcRepository implements DateNowRepository {
     @Override
     public void runUnthrowable() {
       dateNow = dateNowMapper.getNow().getNow();
-      LOG.info("[Load]dateNow: {}", dateNow);
+      LOG.info("[Load]watcher dateNow: {}", dateNow);
     }
 
     @Override
     public void waitingUnthrowable() {
-      ConcurrentUtils.sleepUninterruptibly(50, TimeUnit.MILLISECONDS);
+      ConcurrentUtils.sleepUninterruptibly(500, TimeUnit.MILLISECONDS);
     }
   }
 

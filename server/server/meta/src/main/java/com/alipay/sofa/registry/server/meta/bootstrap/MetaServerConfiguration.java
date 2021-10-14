@@ -318,6 +318,11 @@ public class MetaServerConfiguration {
     }
 
     @Bean
+    public StopServerSwitchResource stopServerSwitchResource() {
+      return new StopServerSwitchResource();
+    }
+
+    @Bean
     public CompressResource compressedResource() {
       return new CompressResource();
     }
