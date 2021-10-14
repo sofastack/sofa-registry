@@ -34,8 +34,6 @@ import com.alipay.sofa.registry.store.api.DBResponse;
 import com.alipay.sofa.registry.store.api.OperationStatus;
 import java.util.Collections;
 import java.util.Date;
-
-import com.alipay.sofa.registry.store.api.date.DateNowRepository;
 import org.assertj.core.util.Lists;
 import org.assertj.core.util.Maps;
 import org.assertj.core.util.Sets;

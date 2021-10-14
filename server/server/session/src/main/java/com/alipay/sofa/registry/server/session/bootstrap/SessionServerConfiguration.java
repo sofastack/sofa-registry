@@ -755,6 +755,15 @@ public class SessionServerConfiguration {
     }
 
     @Bean
+    public FetchSystemPropertyService fetchStopServiceService(
+        SystemPropertyProcessorManager systemPropertyProcessorManager) {
+      FetchStopServerService fetchStopServerService = new FetchStopServerService();
+      systemPropertyProcessorManager.addSystemDataProcessor(fetchStopServerService);
+
+      return fetchStopServerService;
+    }
+
+    @Bean
     public ConfigProvideDataWatcher configProvideDataWatcher() {
       return new ConfigProvideDataWatcher();
     }
