@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.common.model.metaserver;
 
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author xiaojian.xj
@@ -28,9 +29,13 @@ public class ClientManagerAddress {
 
   private final Map<String, AddressVersion> clientOffAddress;
 
-  public ClientManagerAddress(long version, Map<String, AddressVersion> clientOffAddress) {
+  private final Set<String> reduces;
+
+  public ClientManagerAddress(
+      long version, Map<String, AddressVersion> clientOffAddress, Set<String> reduces) {
     this.version = version;
     this.clientOffAddress = clientOffAddress;
+    this.reduces = reduces;
   }
 
   /**
@@ -49,6 +54,15 @@ public class ClientManagerAddress {
    */
   public Map<String, AddressVersion> getClientOffAddress() {
     return clientOffAddress;
+  }
+
+  /**
+   * Getter method for property <tt>reduces</tt>.
+   *
+   * @return property value of reduces
+   */
+  public Set<String> getReduces() {
+    return reduces;
   }
 
   @Override

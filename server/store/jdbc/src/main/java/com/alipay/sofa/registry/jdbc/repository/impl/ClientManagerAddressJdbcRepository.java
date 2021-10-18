@@ -107,7 +107,9 @@ public class ClientManagerAddressJdbcRepository
   @Override
   public ClientManagerAddress queryClientOffData() {
     long version = informer.getLastLoadId();
-    return new ClientManagerAddress(version, informer.getContainer().queryClientOffData());
+    ClientManagerAddressContainer.ClientManagerAddress query =
+        informer.getContainer().queryClientManagerAddress();
+    return new ClientManagerAddress(version, query.getClientOffData(), query.getReduces());
   }
 
   @Override
