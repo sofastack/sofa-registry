@@ -70,7 +70,7 @@ public class MetaServerConfigBean implements MetaServerConfig {
 
   private int clientManagerCleanSecs = 300;
 
-  private int clientManagerExpireDays = 5;
+  private int clientManagerExpireDays = 1;
 
   private long metaLeaderWarmupMillis =
       SystemUtils.getSystemLong(

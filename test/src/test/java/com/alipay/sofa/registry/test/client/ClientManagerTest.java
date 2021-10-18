@@ -210,6 +210,90 @@ public class ClientManagerTest extends BaseIntegrationTest {
   }
 
   @Test
+  public void testReduce() throws InterruptedException, TimeoutException {
+    String dataId = "test-meta-client-off-reduce-dataId-" + System.currentTimeMillis();
+    String value = "test meta client off";
+
+    DataInfo dataInfo =
+        new DataInfo(ValueConstants.DEFAULT_INSTANCE_ID, dataId, ValueConstants.DEFAULT_GROUP);
+
+    /** register */
+    PublisherRegistration registration = new PublisherRegistration(dataId);
+    com.alipay.sofa.registry.client.api.Publisher register =
+        registryClient1.register(registration, value);
+    Thread.sleep(5000L);
+
+    // check session
+    Assert.assertTrue(isExist(sessionDataStore.getDatas(dataInfo.getDataInfoId()), localAddress));
+
+    // check data
+    Assert.assertTrue(
+        isExist(localDatumStorage.getAllPublisher().get(dataInfo.getDataInfoId()), localAddress));
+
+    /** client off */
+    CommonResponse response = clientManagerResource.clientOff(CLIENT_OFF_STR);
+    Assert.assertTrue(response.isSuccess());
+
+    // check session client off list
+    waitConditionUntilTimeOut(
+        () -> fetchClientOffAddressService.getClientOffAddress().equals(CLIENT_OFF_SET), 5000);
+    waitConditionUntilTimeOut(
+        () -> {
+          GenericResponse<ClientManagerAddress> query = clientManagerResource.query();
+          return query.isSuccess()
+              && query
+                  .getData()
+                  .getClientOffAddress()
+                  .keySet()
+                  .equals(fetchClientOffAddressService.getClientOffAddress());
+        },
+        5000);
+
+    Thread.sleep(3000L);
+
+    // check session local cache
+    Assert.assertFalse(isExist(sessionDataStore.getDatas(dataInfo.getDataInfoId()), localAddress));
+    // check data publisher
+    Assert.assertFalse(
+        isExist(localDatumStorage.getAllPublisher().get(dataInfo.getDataInfoId()), localAddress));
+
+    register.republish(value);
+    Thread.sleep(2000L);
+
+    // check session local cache
+    Assert.assertFalse(isExist(sessionDataStore.getDatas(dataInfo.getDataInfoId()), localAddress));
+    // check data publisher
+    Assert.assertFalse(
+        isExist(localDatumStorage.getAllPublisher().get(dataInfo.getDataInfoId()), localAddress));
+
+    /** reduce */
+    response = clientManagerResource.reduce(CLIENT_OPEN_STR);
+    Assert.assertTrue(response.isSuccess());
+
+    SetView<String> difference = Sets.difference(CLIENT_OFF_SET, CLIENT_OPEN_SET);
+    waitConditionUntilTimeOut(
+        () -> fetchClientOffAddressService.getClientOffAddress().equals(difference), 5000);
+
+    waitConditionUntilTimeOut(
+        () -> {
+          GenericResponse<ClientManagerAddress> query = clientManagerResource.query();
+          return query.isSuccess()
+              && query
+                  .getData()
+                  .getClientOffAddress()
+                  .keySet()
+                  .equals(fetchClientOffAddressService.getClientOffAddress());
+        },
+        5000);
+    Thread.sleep(5000);
+
+    // check session local cache
+    Assert.assertFalse(isExist(sessionDataStore.getDatas(dataInfo.getDataInfoId()), localAddress));
+    Assert.assertFalse(
+        isExist(localDatumStorage.getAllPublisher().get(dataInfo.getDataInfoId()), localAddress));
+  }
+
+  @Test
   public void testConfig() {
     String dataId = "testDataId";
     MyConfigDataObserver dataObserver = new MyConfigDataObserver();

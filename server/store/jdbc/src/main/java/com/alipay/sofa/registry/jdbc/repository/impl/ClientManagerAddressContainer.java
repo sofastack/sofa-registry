@@ -23,7 +23,10 @@ import com.alipay.sofa.registry.jdbc.informer.DbEntryContainer;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.google.common.collect.Maps;
+import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
+import org.glassfish.jersey.internal.guava.Sets;
 
 /**
  * @author xiaojian.xj
@@ -35,6 +38,8 @@ public class ClientManagerAddressContainer implements DbEntryContainer<ClientMan
 
   private final Map<String, AddressVersion> clientOffData = Maps.newConcurrentMap();
 
+  private volatile Set<String> reduces = Sets.newHashSet();
+
   @Override
   public void onEntry(ClientManagerAddressDomain clientManagerAddress) {
     switch (clientManagerAddress.getOperation()) {
@@ -45,10 +50,15 @@ public class ClientManagerAddressContainer implements DbEntryContainer<ClientMan
                 clientManagerAddress.getGmtCreate().getTime(),
                 clientManagerAddress.getAddress(),
                 clientManagerAddress.isSub()));
+        reduces.remove(clientManagerAddress.getAddress());
         break;
       case ValueConstants.CLIENT_OPEN:
+        clientOffData.remove(clientManagerAddress.getAddress());
+        reduces.remove(clientManagerAddress.getAddress());
+        break;
       case ValueConstants.REDUCE:
         clientOffData.remove(clientManagerAddress.getAddress());
+        reduces.add(clientManagerAddress.getAddress());
         break;
       default:
         LOGGER.error("error operation type: {}", clientManagerAddress);
@@ -56,7 +66,37 @@ public class ClientManagerAddressContainer implements DbEntryContainer<ClientMan
     }
   }
 
-  public Map<String, AddressVersion> queryClientOffData() {
-    return Maps.newHashMap(clientOffData);
+  public ClientManagerAddress queryClientManagerAddress() {
+    return new ClientManagerAddress(
+        Maps.newHashMap(clientOffData), Collections.unmodifiableSet(reduces));
+  }
+
+  public class ClientManagerAddress {
+    private final Map<String, AddressVersion> clientOffData;
+
+    private final Set<String> reduces;
+
+    public ClientManagerAddress(Map<String, AddressVersion> clientOffData, Set<String> reduces) {
+      this.clientOffData = clientOffData;
+      this.reduces = reduces;
+    }
+
+    /**
+     * Getter method for property <tt>clientOffData</tt>.
+     *
+     * @return property value of clientOffData
+     */
+    public Map<String, AddressVersion> getClientOffData() {
+      return clientOffData;
+    }
+
+    /**
+     * Getter method for property <tt>reduces</tt>.
+     *
+     * @return property value of reduces
+     */
+    public Set<String> getReduces() {
+      return reduces;
+    }
   }
 }
