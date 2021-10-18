@@ -60,10 +60,15 @@ public class StopServerSwitchResource {
   @POST
   @Path("update")
   @Produces(MediaType.APPLICATION_JSON)
-  public Result stop(@FormParam("stop") String stop) {
+  public Result stop(@FormParam("stop") String stop, @FormParam("token") String token) {
+
+    if (!AuthChecker.authCheck(token)) {
+      DB_LOGGER.error("update stopServerSwitch, stop={} auth check={} fail!", stop, token);
+      return Result.failed("auth check fail");
+    }
     StopServerSwitch stopServerSwitch;
     if (StringUtils.equalsIgnoreCase(stop, "true")) {
-      stopServerSwitch = new StopServerSwitch(true, CauseEnum.FORCE);
+      stopServerSwitch = new StopServerSwitch(true, CauseEnum.FORCE.getCause());
     } else {
       stopServerSwitch = new StopServerSwitch(false);
     }

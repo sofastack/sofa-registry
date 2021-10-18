@@ -201,7 +201,7 @@ public class SessionServerBootstrap {
   /** Destroy. */
   public void destroy() {
     doStop();
-    System.exit(0);
+    Runtime.getRuntime().halt(0);
   }
 
   private void doStop() {
