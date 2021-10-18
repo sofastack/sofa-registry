@@ -30,7 +30,7 @@ public class StopServerSwitch {
   private boolean stopServer = false;
 
   @JsonSetter(nulls = Nulls.SKIP)
-  private CauseEnum causeEnum;
+  private String cause;
 
   public StopServerSwitch() {}
 
@@ -38,9 +38,9 @@ public class StopServerSwitch {
     this.stopServer = stopServer;
   }
 
-  public StopServerSwitch(boolean stopServer, CauseEnum causeEnum) {
+  public StopServerSwitch(boolean stopServer, String cause) {
     this.stopServer = stopServer;
-    this.causeEnum = causeEnum;
+    this.cause = cause;
   }
 
   public static StopServerSwitch defaultSwitch() {
@@ -54,27 +54,28 @@ public class StopServerSwitch {
   public void setStopServer(boolean stopServer) {
     this.stopServer = stopServer;
   }
+
   /**
-   * Getter method for property <tt>causeEnum</tt>.
+   * Getter method for property <tt>cause</tt>.
    *
-   * @return property value of causeEnum
+   * @return property value of cause
    */
-  public CauseEnum getCauseEnum() {
-    return causeEnum;
+  public String getCause() {
+    return cause;
   }
 
   /**
-   * Setter method for property <tt>causeEnum</tt>.
+   * Setter method for property <tt>cause</tt>.
    *
-   * @param causeEnum value to be assigned to property causeEnum
+   * @param cause value to be assigned to property cause
    */
-  public void setCauseEnum(CauseEnum causeEnum) {
-    this.causeEnum = causeEnum;
+  public void setCause(String cause) {
+    this.cause = cause;
   }
 
   @Override
   public String toString() {
-    return "StopServerSwitch{" + "stopServer=" + stopServer + ", causeEnum=" + causeEnum + '}';
+    return "StopServerSwitch{" + "stopServer=" + stopServer + ", cause=" + cause + '}';
   }
 
   public enum CauseEnum {

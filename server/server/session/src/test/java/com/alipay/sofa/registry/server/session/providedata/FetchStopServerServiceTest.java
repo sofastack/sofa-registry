@@ -60,7 +60,7 @@ public class FetchStopServerServiceTest extends FetchStopServerService {
   public void test() {
     Assert.assertFalse(isStopServer());
 
-    StopServerSwitch stopServerSwitch = new StopServerSwitch(true, CauseEnum.FORCE);
+    StopServerSwitch stopServerSwitch = new StopServerSwitch(true, CauseEnum.FORCE.getCause());
 
     when(fetchStopPushService.isStopPushSwitch()).thenReturn(false);
     Assert.assertFalse(

@@ -56,15 +56,16 @@ public class StopServerSwitchResourceTest {
   @Test
   public void testStopServer() {
 
-    StopServerSwitch stopServerSwitch = new StopServerSwitch(true, CauseEnum.FORCE);
-    Result ret = stopPushDataResource.stop("true");
+    String token = "6c62lk8dmQoE5B8X";
+    StopServerSwitch stopServerSwitch = new StopServerSwitch(true, CauseEnum.FORCE.getCause());
+    Result ret = stopPushDataResource.stop("true", token);
     Assert.assertTrue(ret.isSuccess());
 
     Map<String, String> query = stopPushDataResource.query();
 
     Assert.assertEquals(query.get("switch"), JsonUtils.writeValueAsString(stopServerSwitch));
 
-    ret = stopPushDataResource.stop("false");
+    ret = stopPushDataResource.stop("false", token);
     Assert.assertTrue(ret.isSuccess());
 
     stopServerSwitch = new StopServerSwitch(false);
