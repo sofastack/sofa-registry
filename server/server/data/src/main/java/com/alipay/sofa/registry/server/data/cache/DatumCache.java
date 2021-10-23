@@ -23,6 +23,8 @@ import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.google.common.annotations.VisibleForTesting;
 import java.util.*;
+
+import com.google.common.collect.Maps;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -84,6 +86,12 @@ public class DatumCache {
     Map<String, Map<String, List<Publisher>>> datumMap = new HashMap<>();
     datumMap.put(dataServerConfig.getLocalDataCenter(), localDatumStorage.getAllPublisher());
     return datumMap;
+  }
+
+  public Map<String, Map<String, Integer>> getPubCount() {
+    Map<String, Map<String, Integer>> map = Maps.newHashMap();
+    map.put(dataServerConfig.getLocalDataCenter(), localDatumStorage.getPubCount());
+    return map;
   }
 
   public Map<String, Publisher> getByConnectId(ConnectId connectId) {

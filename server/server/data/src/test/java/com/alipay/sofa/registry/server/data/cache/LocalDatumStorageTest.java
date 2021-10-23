@@ -104,6 +104,10 @@ public class LocalDatumStorageTest {
     Assert.assertEquals(publisherMaps.get(publisher.getDataInfoId()).size(), 1);
     Assert.assertTrue(publisherMaps.get(publisher.getDataInfoId()).contains(publisher));
 
+    Map<String, Integer> summary = storage.getPubCount();
+    Assert.assertEquals(summary.size(), 1);
+    Assert.assertEquals(1, summary.get(publisher.getDataInfoId()).intValue());
+
     Map<String, Datum> datumMap = storage.getAll();
     Assert.assertEquals(datumMap.size(), 1);
     TestBaseUtils.assertEquals(datumMap.get(publisher.getDataInfoId()), publisher);
