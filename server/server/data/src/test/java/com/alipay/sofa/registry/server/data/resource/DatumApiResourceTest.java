@@ -105,6 +105,9 @@ public class DatumApiResourceTest {
     Assert.assertTrue(response.isSuccess());
     Assert.assertTrue(response.getMessage(), response.getMessage().contains("size=1"));
 
+    Map<String, Integer> summary = resource.summary("");
+    Assert.assertEquals(1, summary.get(pub.getDataInfoId()).intValue());
+
     resource.dataServerConfig.setEnableTestApi(true);
     // batchHandler is mock, put the pub directly
     resource.localDatumStorage.put(pubAdd);
@@ -159,6 +162,9 @@ public class DatumApiResourceTest {
     response = resource.deletePub(param);
     Assert.assertTrue(response.getMessage(), response.isSuccess());
     Assert.assertTrue(response.getMessage(), response.getMessage().contains("size=0"));
+
+    summary = resource.summary("");
+    Assert.assertEquals(0, summary.get(pub.getDataInfoId()).intValue());
   }
 
   @Test

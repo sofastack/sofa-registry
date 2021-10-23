@@ -100,6 +100,13 @@ public final class LocalDatumStorage implements DatumStorage {
   }
 
   @Override
+  public Map<String, Integer> getPubCount() {
+    Map<String, Integer> map = Maps.newHashMapWithExpectedSize(128);
+    publisherGroupsMap.values().forEach(g -> map.putAll(g.getPubCount()));
+    return map;
+  }
+
+  @Override
   public Map<String, Publisher> getByConnectId(ConnectId connectId) {
     Map<String, Publisher> m = Maps.newHashMapWithExpectedSize(64);
     publisherGroupsMap.values().forEach(g -> m.putAll(g.getByConnectId(connectId)));
