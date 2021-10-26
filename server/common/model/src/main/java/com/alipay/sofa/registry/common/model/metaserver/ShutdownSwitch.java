@@ -22,37 +22,37 @@ import com.fasterxml.jackson.annotation.Nulls;
 
 /**
  * @author xiaojian.xj
- * @version : StopServerSwitch.java, v 0.1 2021年10月14日 17:19 xiaojian.xj Exp $
+ * @version : ShutdownSwitch.java, v 0.1 2021年10月14日 17:19 xiaojian.xj Exp $
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class StopServerSwitch {
+public class ShutdownSwitch {
 
-  private boolean stopServer = false;
+  private boolean shutdown = false;
 
   @JsonSetter(nulls = Nulls.SKIP)
   private String cause;
 
-  public StopServerSwitch() {}
+  public ShutdownSwitch() {}
 
-  public StopServerSwitch(boolean stopServer) {
-    this.stopServer = stopServer;
+  public ShutdownSwitch(boolean shutdown) {
+    this.shutdown = shutdown;
   }
 
-  public StopServerSwitch(boolean stopServer, String cause) {
-    this.stopServer = stopServer;
+  public ShutdownSwitch(boolean shutdown, String cause) {
+    this.shutdown = shutdown;
     this.cause = cause;
   }
 
-  public static StopServerSwitch defaultSwitch() {
-    return new StopServerSwitch();
+  public static ShutdownSwitch defaultSwitch() {
+    return new ShutdownSwitch();
   }
 
-  public boolean isStopServer() {
-    return stopServer;
+  public boolean isShutdown() {
+    return shutdown;
   }
 
-  public void setStopServer(boolean stopServer) {
-    this.stopServer = stopServer;
+  public void setShutdown(boolean shutdown) {
+    this.shutdown = shutdown;
   }
 
   /**
@@ -75,7 +75,7 @@ public class StopServerSwitch {
 
   @Override
   public String toString() {
-    return "StopServerSwitch{" + "stopServer=" + stopServer + ", cause=" + cause + '}';
+    return "ShutdownSwitch{" + "shutdown=" + shutdown + ", cause=" + cause + '}';
   }
 
   public enum CauseEnum {

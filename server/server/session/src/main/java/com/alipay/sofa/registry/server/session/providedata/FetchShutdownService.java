@@ -16,28 +16,29 @@
  */
 package com.alipay.sofa.registry.server.session.providedata;
 
-import com.alipay.sofa.common.profile.StringUtil;
+import com.alipay.sofa.registry.common.model.console.PersistenceData;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
-import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
-import com.alipay.sofa.registry.common.model.metaserver.StopServerSwitch;
+import com.alipay.sofa.registry.common.model.metaserver.ShutdownSwitch;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerBootstrap;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import com.alipay.sofa.registry.server.session.providedata.FetchStopServerService.StopServerStorage;
-import com.alipay.sofa.registry.server.shared.providedata.AbstractFetchSystemPropertyService;
+import com.alipay.sofa.registry.server.session.providedata.FetchShutdownService.ShutdownStorage;
+import com.alipay.sofa.registry.server.shared.providedata.AbstractFetchPersistenceSystemProperty;
 import com.alipay.sofa.registry.server.shared.providedata.SystemDataStorage;
+import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
 import com.alipay.sofa.registry.util.JsonUtils;
 import com.google.common.annotations.VisibleForTesting;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author xiaojian.xj
- * @version : FetchStopServerService.java, v 0.1 2021年10月14日 17:11 xiaojian.xj Exp $
+ * @version : FetchShutdownService.java, v 0.1 2021年10月14日 17:11 xiaojian.xj Exp $
  */
-public class FetchStopServerService extends AbstractFetchSystemPropertyService<StopServerStorage> {
+public class FetchShutdownService
+    extends AbstractFetchPersistenceSystemProperty<ShutdownStorage, ShutdownStorage> {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(FetchStopServerService.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(FetchShutdownService.class);
 
   @Autowired private SessionServerConfig sessionServerConfig;
 
@@ -45,10 +46,13 @@ public class FetchStopServerService extends AbstractFetchSystemPropertyService<S
 
   @Autowired private SessionServerBootstrap sessionServerBootstrap;
 
-  public FetchStopServerService() {
-    super(
-        ValueConstants.STOP_SERVER_SWITCH_DATA_ID,
-        new StopServerStorage(INIT_VERSION, StopServerSwitch.defaultSwitch()));
+  @Autowired private ProvideDataRepository provideDataRepository;
+
+  private static final ShutdownStorage INIT =
+      new ShutdownStorage(INIT_VERSION, ShutdownSwitch.defaultSwitch());
+
+  public FetchShutdownService() {
+    super(ValueConstants.SHUTDOWN_SWITCH_DATA_ID, INIT);
   }
 
   @Override
@@ -57,25 +61,31 @@ public class FetchStopServerService extends AbstractFetchSystemPropertyService<S
   }
 
   @Override
-  protected boolean doProcess(StopServerStorage expect, ProvideData data) {
-    final String value = ProvideData.toString(data);
-    if (StringUtil.isBlank(value)) {
-      LOGGER.info("Fetch stop server switch content empty");
-      return true;
+  protected ShutdownStorage fetchFromPersistence() {
+    PersistenceData persistenceData =
+        provideDataRepository.get(ValueConstants.SHUTDOWN_SWITCH_DATA_ID);
+    if (persistenceData == null) {
+      return INIT;
     }
-    try {
-      StopServerSwitch stopServerSwitch = JsonUtils.read(value, StopServerSwitch.class);
-      StopServerStorage update = new StopServerStorage(data.getVersion(), stopServerSwitch);
+    ShutdownSwitch shutdownSwitch =
+        JsonUtils.read(persistenceData.getData(), ShutdownSwitch.class);
+    ShutdownStorage update =
+        new ShutdownStorage(persistenceData.getVersion(), shutdownSwitch);
+    return update;
+  }
 
-      if (running2stop(expect.stopServerSwitch, update.stopServerSwitch)) {
+  @Override
+  protected boolean doProcess(ShutdownStorage expect, ShutdownStorage update) {
+    try {
+      if (running2stop(expect.shutdownSwitch, update.shutdownSwitch)) {
         if (!fetchStopPushService.isStopPushSwitch()) {
           LOGGER.error("forbid stop server when pushSwitch is open.");
           return false;
         }
         LOGGER.info(
             "stop server when pushSwitch is close, prev={}, current={}",
-            expect.stopServerSwitch,
-            value);
+            expect.shutdownSwitch,
+            update.shutdownSwitch);
         sessionServerBootstrap.destroy();
       }
       return true;
@@ -85,21 +95,21 @@ public class FetchStopServerService extends AbstractFetchSystemPropertyService<S
     return false;
   }
 
-  private boolean running2stop(StopServerSwitch current, StopServerSwitch update) {
-    return !current.isStopServer() && update.isStopServer();
+  private boolean running2stop(ShutdownSwitch current, ShutdownSwitch update) {
+    return !current.isShutdown() && update.isShutdown();
   }
 
-  public boolean isStopServer() {
-    return storage.get().stopServerSwitch.isStopServer();
+  public boolean isShutdown() {
+    return storage.get().shutdownSwitch.isShutdown();
   }
 
-  protected static class StopServerStorage extends SystemDataStorage {
+  protected static class ShutdownStorage extends SystemDataStorage {
 
-    private StopServerSwitch stopServerSwitch;
+    private ShutdownSwitch shutdownSwitch;
 
-    public StopServerStorage(long version, StopServerSwitch stopServerSwitch) {
+    public ShutdownStorage(long version, ShutdownSwitch shutdownSwitch) {
       super(version);
-      this.stopServerSwitch = stopServerSwitch;
+      this.shutdownSwitch = shutdownSwitch;
     }
   }
 
@@ -109,7 +119,7 @@ public class FetchStopServerService extends AbstractFetchSystemPropertyService<S
    * @param sessionServerConfig value to be assigned to property sessionServerConfig
    */
   @VisibleForTesting
-  public FetchStopServerService setSessionServerConfig(SessionServerConfig sessionServerConfig) {
+  public FetchShutdownService setSessionServerConfig(SessionServerConfig sessionServerConfig) {
     this.sessionServerConfig = sessionServerConfig;
     return this;
   }
@@ -120,7 +130,7 @@ public class FetchStopServerService extends AbstractFetchSystemPropertyService<S
    * @param sessionServerBootstrap value to be assigned to property sessionServerBootstrap
    */
   @VisibleForTesting
-  public FetchStopServerService setSessionServerBootstrap(
+  public FetchShutdownService setSessionServerBootstrap(
       SessionServerBootstrap sessionServerBootstrap) {
     this.sessionServerBootstrap = sessionServerBootstrap;
     return this;
@@ -132,7 +142,7 @@ public class FetchStopServerService extends AbstractFetchSystemPropertyService<S
    * @param fetchStopPushService value to be assigned to property fetchStopPushService
    */
   @VisibleForTesting
-  public FetchStopServerService setFetchStopPushService(FetchStopPushService fetchStopPushService) {
+  public FetchShutdownService setFetchStopPushService(FetchStopPushService fetchStopPushService) {
     this.fetchStopPushService = fetchStopPushService;
     return this;
   }

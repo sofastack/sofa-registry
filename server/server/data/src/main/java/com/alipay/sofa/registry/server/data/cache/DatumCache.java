@@ -22,9 +22,8 @@ import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.google.common.annotations.VisibleForTesting;
-import java.util.*;
-
 import com.google.common.collect.Maps;
+import java.util.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**

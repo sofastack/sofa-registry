@@ -20,14 +20,16 @@ import com.alipay.sofa.registry.common.model.console.PersistenceData;
 import com.alipay.sofa.registry.common.model.console.PersistenceDataBuilder;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideDataChangeEvent;
-import com.alipay.sofa.registry.common.model.metaserver.StopServerSwitch;
-import com.alipay.sofa.registry.common.model.metaserver.StopServerSwitch.CauseEnum;
+import com.alipay.sofa.registry.common.model.metaserver.ShutdownSwitch;
+import com.alipay.sofa.registry.common.model.metaserver.ShutdownSwitch.CauseEnum;
 import com.alipay.sofa.registry.core.model.Result;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.provide.data.DefaultProvideDataNotifier;
 import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataService;
 import com.alipay.sofa.registry.server.meta.resource.filter.LeaderAwareRestController;
+import com.alipay.sofa.registry.server.shared.resource.AuthChecker;
+import com.alipay.sofa.registry.server.shared.util.PersistenceDataParser;
 import com.alipay.sofa.registry.store.api.DBResponse;
 import com.alipay.sofa.registry.store.api.OperationStatus;
 import com.alipay.sofa.registry.util.JsonUtils;
@@ -43,15 +45,15 @@ import javax.ws.rs.core.MediaType;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
-@Path("stopServer")
+@Path("shutdown")
 @LeaderAwareRestController
-public class StopServerSwitchResource {
+public class ShutdownSwitchResource {
 
   private static final Logger DB_LOGGER =
-      LoggerFactory.getLogger(StopServerSwitchResource.class, "[DBService]");
+      LoggerFactory.getLogger(ShutdownSwitchResource.class, "[DBService]");
 
   private static final Logger TASK_LOGGER =
-      LoggerFactory.getLogger(StopServerSwitchResource.class, "[Task]");
+      LoggerFactory.getLogger(ShutdownSwitchResource.class, "[Task]");
 
   @Autowired private ProvideDataService provideDataService;
 
@@ -60,32 +62,38 @@ public class StopServerSwitchResource {
   @POST
   @Path("update")
   @Produces(MediaType.APPLICATION_JSON)
-  public Result stop(@FormParam("stop") String stop, @FormParam("token") String token) {
+  public Result shutdown(@FormParam("shutdown") String shutdown, @FormParam("token") String token) {
 
     if (!AuthChecker.authCheck(token)) {
-      DB_LOGGER.error("update stopServerSwitch, stop={} auth check={} fail!", stop, token);
+      DB_LOGGER.error("update shutdownSwitch, shutdown={} auth check={} fail!", shutdown, token);
       return Result.failed("auth check fail");
     }
-    StopServerSwitch stopServerSwitch;
-    if (StringUtils.equalsIgnoreCase(stop, "true")) {
-      stopServerSwitch = new StopServerSwitch(true, CauseEnum.FORCE.getCause());
-    } else {
-      stopServerSwitch = new StopServerSwitch(false);
+
+    if (!isStopPush()) {
+      DB_LOGGER.error("push switch is open");
+      return Result.failed("push switch is open");
     }
 
-    String value = JsonUtils.writeValueAsString(stopServerSwitch);
+    ShutdownSwitch shutdownSwitch;
+    if (StringUtils.equalsIgnoreCase(shutdown, "true")) {
+      shutdownSwitch = new ShutdownSwitch(true, CauseEnum.FORCE.getCause());
+    } else {
+      shutdownSwitch = new ShutdownSwitch(false);
+    }
+
+    String value = JsonUtils.writeValueAsString(shutdownSwitch);
     PersistenceData persistenceData =
         PersistenceDataBuilder.createPersistenceData(
-            ValueConstants.STOP_SERVER_SWITCH_DATA_ID, value);
+            ValueConstants.SHUTDOWN_SWITCH_DATA_ID, value);
     try {
       boolean ret = provideDataService.saveProvideData(persistenceData);
-      DB_LOGGER.info("Success update stopServerSwitch:{} to DB result {}!", value, ret);
+      DB_LOGGER.info("Success update shutdownSwitch:{} to DB result {}!", value, ret);
     } catch (Throwable e) {
-      DB_LOGGER.error("Error update stopServerSwitch:{} to DB!", value, e);
-      throw new RuntimeException("Update stopServerSwitch to error!", e);
+      DB_LOGGER.error("Error update shutdownSwitch:{} to DB!", value, e);
+      throw new RuntimeException("Update shutdownSwitch to error!", e);
     }
 
-    fireDataChangeNotify(persistenceData.getVersion(), ValueConstants.STOP_SERVER_SWITCH_DATA_ID);
+    fireDataChangeNotify(persistenceData.getVersion(), ValueConstants.SHUTDOWN_SWITCH_DATA_ID);
 
     Result result = new Result();
     result.setSuccess(true);
@@ -97,7 +105,7 @@ public class StopServerSwitchResource {
   @Produces(MediaType.APPLICATION_JSON)
   public Map<String, String> query() {
     DBResponse<PersistenceData> response =
-        provideDataService.queryProvideData(ValueConstants.STOP_SERVER_SWITCH_DATA_ID);
+        provideDataService.queryProvideData(ValueConstants.SHUTDOWN_SWITCH_DATA_ID);
     if (response.getOperationStatus() == OperationStatus.NOTFOUND) {
       return Collections.singletonMap("switch", "empty value.");
     }
@@ -116,14 +124,20 @@ public class StopServerSwitchResource {
     provideDataNotifier.notifyProvideDataChange(provideDataChangeEvent);
   }
 
+  private boolean isStopPush() {
+    DBResponse<PersistenceData> stopPushResp =
+        provideDataService.queryProvideData(ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID);
+    return PersistenceDataParser.parse2BoolIgnoreCase(stopPushResp, false);
+  }
+
   @VisibleForTesting
-  public StopServerSwitchResource setProvideDataService(ProvideDataService provideDataService) {
+  public ShutdownSwitchResource setProvideDataService(ProvideDataService provideDataService) {
     this.provideDataService = provideDataService;
     return this;
   }
 
   @VisibleForTesting
-  public StopServerSwitchResource setProvideDataNotifier(
+  public ShutdownSwitchResource setProvideDataNotifier(
       DefaultProvideDataNotifier provideDataNotifier) {
     this.provideDataNotifier = provideDataNotifier;
     return this;

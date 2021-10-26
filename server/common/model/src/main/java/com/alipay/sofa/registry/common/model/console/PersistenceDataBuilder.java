@@ -35,6 +35,10 @@ public class PersistenceDataBuilder {
     return persistenceData;
   }
 
+  public static PersistenceData createPersistenceDataForBool(String dataInfoId, boolean data) {
+    return createPersistenceData(dataInfoId, data ? "true" : "false");
+  }
+
   public static String getDataInfoId(PersistenceData persistenceData) {
     return DataInfo.toDataInfoId(
         persistenceData.getDataId(), persistenceData.getInstanceId(), persistenceData.getGroup());

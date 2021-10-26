@@ -29,6 +29,7 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
 import com.alipay.sofa.registry.remoting.exchange.message.SimpleRequest;
+import com.alipay.sofa.registry.server.session.bootstrap.ExecutorManager;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.connections.ConnectionsService;
 import com.alipay.sofa.registry.server.session.mapper.ConnectionMapper;
@@ -36,16 +37,17 @@ import com.alipay.sofa.registry.server.session.providedata.FetchClientOffAddress
 import com.alipay.sofa.registry.server.session.registry.SessionRegistry;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
-import com.alipay.sofa.registry.task.MetricsableThreadPoolExecutor;
-import com.alipay.sofa.registry.util.OsUtils;
 import com.google.common.collect.Maps;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.concurrent.ThreadPoolExecutor;
 import javax.annotation.Resource;
-import javax.ws.rs.*;
+import javax.ws.rs.FormParam;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -65,7 +67,7 @@ public class ClientManagerResource {
   @Autowired private SessionRegistry sessionRegistry;
 
   @Autowired private SessionServerConfig sessionServerConfig;
-  @Autowired private MetaServerService metaNodeService;
+  @Autowired private MetaServerService metaServerService;
   @Autowired private ConnectionsService connectionsService;
 
   @Autowired private ConnectionMapper connectionMapper;
@@ -74,12 +76,7 @@ public class ClientManagerResource {
 
   @Resource private FetchClientOffAddressService fetchClientOffAddressService;
 
-  private final ThreadPoolExecutor zoneSdkExecutor =
-      MetricsableThreadPoolExecutor.newExecutor(
-          "ZoneSdkExecutor",
-          OsUtils.getCpuCount() * 5,
-          100,
-          new ThreadPoolExecutor.CallerRunsPolicy());
+  @Autowired protected ExecutorManager executorManager;
 
   /** Client off */
   @POST
@@ -127,7 +124,7 @@ public class ClientManagerResource {
     if (servers.size() > 0) {
       Map<URL, CommonResponse> map =
           Sdks.concurrentSdkSend(
-              zoneSdkExecutor,
+              executorManager.getZoneSdkExecutor(),
               servers,
               (URL url) -> {
                 final ClientOffRequest req = new ClientOffRequest(ipList);
@@ -157,7 +154,7 @@ public class ClientManagerResource {
     if (servers.size() > 0) {
       Map<URL, CommonResponse> map =
           Sdks.concurrentSdkSend(
-              zoneSdkExecutor,
+              executorManager.getZoneSdkExecutor(),
               servers,
               (URL url) -> {
                 final ClientOnRequest req = new ClientOnRequest(ipList);
@@ -183,7 +180,7 @@ public class ClientManagerResource {
     if (servers.size() > 0) {
       Map<URL, CommonResponse> map =
           Sdks.concurrentSdkSend(
-              zoneSdkExecutor,
+              executorManager.getZoneSdkExecutor(),
               servers,
               (URL url) -> {
                 final ClientManagerQueryRequest req = new ClientManagerQueryRequest();
@@ -215,6 +212,6 @@ public class ClientManagerResource {
   }
 
   public List<URL> getOtherConsoleServersCurrentZone() {
-    return Sdks.getOtherConsoleServers(null, sessionServerConfig, metaNodeService);
+    return Sdks.getOtherConsoleServers(null, sessionServerConfig, metaServerService);
   }
 }
