@@ -67,9 +67,9 @@ public class ValueConstants {
           SESSION_PROVIDE_DATA_INSTANCE_ID,
           SESSION_PROVIDE_DATA_GROUP);
 
-  public static final String STOP_SERVER_SWITCH_DATA_ID =
+  public static final String SHUTDOWN_SWITCH_DATA_ID =
       DataInfo.toDataInfoId(
-          "session.stop.server.switch",
+          "session.shutdown.switch",
           SESSION_PROVIDE_DATA_INSTANCE_ID,
           SESSION_PROVIDE_DATA_GROUP);
 

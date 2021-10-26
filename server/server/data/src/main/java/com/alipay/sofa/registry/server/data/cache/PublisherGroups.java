@@ -92,8 +92,7 @@ public final class PublisherGroups {
 
   Map<String, Integer> getPubCount() {
     Map<String, Integer> map = Maps.newHashMapWithExpectedSize(publisherGroupMap.size());
-    publisherGroupMap.forEach(
-            (k, v) -> map.put(k, v.pubMap.size()));
+    publisherGroupMap.forEach((k, v) -> map.put(k, v.pubMap.size()));
     return map;
   }
 

@@ -318,8 +318,8 @@ public class MetaServerConfiguration {
     }
 
     @Bean
-    public StopServerSwitchResource stopServerSwitchResource() {
-      return new StopServerSwitchResource();
+    public ShutdownSwitchResource shutdownSwitchResource() {
+      return new ShutdownSwitchResource();
     }
 
     @Bean

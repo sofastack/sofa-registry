@@ -21,23 +21,19 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.alipay.sofa.registry.common.model.ServerDataBox;
-import com.alipay.sofa.registry.common.model.constants.ValueConstants;
-import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
-import com.alipay.sofa.registry.common.model.metaserver.StopServerSwitch;
-import com.alipay.sofa.registry.common.model.metaserver.StopServerSwitch.CauseEnum;
+import com.alipay.sofa.registry.common.model.metaserver.ShutdownSwitch;
+import com.alipay.sofa.registry.common.model.metaserver.ShutdownSwitch.CauseEnum;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerBootstrap;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import com.alipay.sofa.registry.util.JsonUtils;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
 /**
  * @author xiaojian.xj
- * @version : FetchStopServerServiceTest.java, v 0.1 2021年10月14日 20:32 xiaojian.xj Exp $
+ * @version : FetchShutdownServiceTest.java, v 0.1 2021年10月14日 20:32 xiaojian.xj Exp $
  */
-public class FetchStopServerServiceTest extends FetchStopServerService {
+public class FetchShutdownServiceTest extends FetchShutdownService {
 
   SessionServerConfig sessionServerConfig;
 
@@ -46,7 +42,7 @@ public class FetchStopServerServiceTest extends FetchStopServerService {
   FetchStopPushService fetchStopPushService;
 
   @Before
-  public void beforeFetchStopServerServiceTest() {
+  public void beforeFetchShutdownServiceTest() {
     sessionServerConfig = mock(SessionServerConfig.class);
     sessionServerBootstrap = mock(SessionServerBootstrap.class);
     fetchStopPushService = mock(FetchStopPushService.class);
@@ -58,29 +54,17 @@ public class FetchStopServerServiceTest extends FetchStopServerService {
 
   @Test
   public void test() {
-    Assert.assertFalse(isStopServer());
+    Assert.assertFalse(isShutdown());
 
-    StopServerSwitch stopServerSwitch = new StopServerSwitch(true, CauseEnum.FORCE.getCause());
+    ShutdownSwitch shutdownSwitch = new ShutdownSwitch(true, CauseEnum.FORCE.getCause());
 
     when(fetchStopPushService.isStopPushSwitch()).thenReturn(false);
-    Assert.assertFalse(
-        doProcess(
-            storage.get(),
-            new ProvideData(
-                new ServerDataBox(JsonUtils.writeValueAsString(stopServerSwitch)),
-                ValueConstants.STOP_SERVER_SWITCH_DATA_ID,
-                2L)));
-    Assert.assertFalse(isStopServer());
+    Assert.assertFalse(doProcess(storage.get(), new ShutdownStorage(2L, shutdownSwitch)));
+    Assert.assertFalse(isShutdown());
     verify(sessionServerBootstrap, times(0)).destroy();
 
     when(fetchStopPushService.isStopPushSwitch()).thenReturn(true);
-    Assert.assertTrue(
-        doProcess(
-            storage.get(),
-            new ProvideData(
-                new ServerDataBox(JsonUtils.writeValueAsString(stopServerSwitch)),
-                ValueConstants.STOP_SERVER_SWITCH_DATA_ID,
-                2L)));
+    Assert.assertTrue(doProcess(storage.get(), new ShutdownStorage(2L, shutdownSwitch)));
 
     verify(sessionServerBootstrap, times(1)).destroy();
   }

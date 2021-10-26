@@ -81,7 +81,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 @SpringBootTest
 public class BaseIntegrationTest extends AbstractTest {
   protected static final Logger LOGGER = LoggerFactory.getLogger(BaseIntegrationTest.class);
-  private static final AtomicBoolean STARTED = new AtomicBoolean(false);
+  protected static final AtomicBoolean STARTED = new AtomicBoolean(false);
 
   public static final String LOCAL_ADDRESS = NetUtil.getLocalAddress().getHostAddress();
   public static final String LOCAL_DATACENTER = "DefaultDataCenter";
@@ -282,6 +282,12 @@ public class BaseIntegrationTest extends AbstractTest {
   protected static void openPush() {
     Result result =
         metaChannel.getWebTarget().path("/stopPushDataSwitch/close").request().get(Result.class);
+    Assert.assertTrue(result.isSuccess());
+  }
+
+  protected static void closePush() {
+    Result result =
+        metaChannel.getWebTarget().path("/stopPushDataSwitch/open").request().get(Result.class);
     Assert.assertTrue(result.isSuccess());
   }
 

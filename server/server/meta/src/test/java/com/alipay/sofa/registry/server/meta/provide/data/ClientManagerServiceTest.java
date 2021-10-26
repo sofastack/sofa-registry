@@ -66,7 +66,7 @@ public class ClientManagerServiceTest extends AbstractH2DbTestBase {
 
     clientManagerService.clientOff(clientOffSet);
 
-    Thread.sleep(3000);
+    Thread.sleep(4000);
     DBResponse<ClientManagerAddress> clientOffResponse =
         clientManagerService.queryClientOffAddress();
     Assert.assertEquals(clientOffResponse.getOperationStatus(), OperationStatus.SUCCESS);
@@ -86,7 +86,7 @@ public class ClientManagerServiceTest extends AbstractH2DbTestBase {
     }
     clientManagerService.clientOffWithSub(address);
 
-    Thread.sleep(2000);
+    Thread.sleep(4000);
     clientOffResponse = clientManagerService.queryClientOffAddress();
     Assert.assertEquals(clientOffResponse.getOperationStatus(), OperationStatus.SUCCESS);
     clientOffData = clientOffResponse.getEntity();

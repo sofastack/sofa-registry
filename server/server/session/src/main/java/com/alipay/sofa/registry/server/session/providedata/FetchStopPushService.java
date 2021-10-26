@@ -16,14 +16,16 @@
  */
 package com.alipay.sofa.registry.server.session.providedata;
 
+import com.alipay.sofa.registry.common.model.console.PersistenceData;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
-import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.providedata.FetchStopPushService.StopPushStorage;
-import com.alipay.sofa.registry.server.shared.providedata.AbstractFetchSystemPropertyService;
+import com.alipay.sofa.registry.server.shared.providedata.AbstractFetchPersistenceSystemProperty;
 import com.alipay.sofa.registry.server.shared.providedata.SystemDataStorage;
+import com.alipay.sofa.registry.server.shared.util.PersistenceDataParser;
+import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
 import com.google.common.annotations.VisibleForTesting;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -31,15 +33,20 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @author xiaojian.xj
  * @version $Id: FetchStopPushService.java, v 0.1 2021年05月16日 17:48 xiaojian.xj Exp $
  */
-public class FetchStopPushService extends AbstractFetchSystemPropertyService<StopPushStorage> {
+public class FetchStopPushService
+    extends AbstractFetchPersistenceSystemProperty<StopPushStorage, StopPushStorage> {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FetchStopPushService.class);
 
   @Autowired private SessionServerConfig sessionServerConfig;
 
+  @Autowired private ProvideDataRepository provideDataRepository;
+
+  private static final StopPushStorage INIT = new StopPushStorage(INIT_VERSION, true);
+
   public FetchStopPushService() {
     // default value is stop.push
-    super(ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID, new StopPushStorage(INIT_VERSION, true));
+    super(ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID, INIT);
   }
 
   @Override
@@ -48,24 +55,30 @@ public class FetchStopPushService extends AbstractFetchSystemPropertyService<Sto
   }
 
   @Override
-  protected boolean doProcess(StopPushStorage expect, ProvideData data) {
+  protected StopPushStorage fetchFromPersistence() {
+    PersistenceData persistenceData =
+        provideDataRepository.get(ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID);
 
-    // push stop switch
-    final Boolean stop = ProvideData.toBool(data);
-    if (stop == null) {
-      LOGGER.info("Fetch session stopPushSwitch content null");
-      return false;
+    if (persistenceData == null) {
+      return INIT;
     }
+    return new StopPushStorage(
+        persistenceData.getVersion(), PersistenceDataParser.parse2BoolIgnoreCase(persistenceData, INIT.stopPushSwitch));
+  }
+
+  @Override
+  protected boolean doProcess(StopPushStorage expect, StopPushStorage update) {
 
     try {
-      StopPushStorage update = new StopPushStorage(data.getVersion(), stop);
 
       if (!compareAndSet(expect, update)) {
+        LOGGER.error("[FetchStopPushService]compareAndSet fail, expect={}/{}, update={}/{}",
+                expect.getVersion(), expect.stopPushSwitch, update.getVersion(), update.stopPushSwitch);
         return false;
       }
       LOGGER.info(
           "Fetch session stopPushSwitch={}, prev={}, current={}",
-          stop,
+          update,
           expect.stopPushSwitch,
           update.stopPushSwitch);
 
@@ -99,8 +112,9 @@ public class FetchStopPushService extends AbstractFetchSystemPropertyService<Sto
    *
    * @param stopPushSwitch value to be assigned to property stopPushSwitch
    */
-  @VisibleForTesting
   public void setStopPushSwitch(long version, boolean stopPushSwitch) {
+    LOGGER.info(
+        "set session stopPushSwitch, version={}, stopPushSwitch={}", version, stopPushSwitch);
     this.storage.set(new StopPushStorage(version, stopPushSwitch));
   }
 

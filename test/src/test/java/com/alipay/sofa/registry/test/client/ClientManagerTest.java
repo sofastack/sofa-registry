@@ -299,8 +299,7 @@ public class ClientManagerTest extends BaseIntegrationTest {
     Assert.assertTrue(isExist(sessionDataStore.getDatas(dataInfo.getDataInfoId()), localAddress));
     // check data publisher
     Assert.assertTrue(
-            isExist(localDatumStorage.getAllPublisher().get(dataInfo.getDataInfoId()), localAddress));
-
+        isExist(localDatumStorage.getAllPublisher().get(dataInfo.getDataInfoId()), localAddress));
   }
 
   @Test
