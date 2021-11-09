@@ -20,6 +20,7 @@ import com.alipay.sofa.registry.jdbc.domain.RecoverConfigDomain;
 import com.alipay.sofa.registry.jdbc.mapper.RecoverConfigMapper;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.store.api.meta.RecoverConfig;
 import com.alipay.sofa.registry.store.api.meta.RecoverConfigRepository;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.LoopRunnable;
@@ -29,14 +30,16 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.StringUtils;
 
 /**
  * @author xiaojian.xj
@@ -50,9 +53,14 @@ public class RecoverConfigJdbcRepository implements RecoverConfigRepository {
 
   private static final AtomicBoolean INIT_FINISH = new AtomicBoolean(false);
 
+  private static final ConcurrentMap<String, RecoverConfig> callbackHandler =
+      Maps.newConcurrentMap();
+
   private final ConfigWatcher watcher = new ConfigWatcher();
 
   @Autowired private RecoverConfigMapper recoverConfigMapper;
+
+  @Autowired private TransactionTemplate transactionTemplate;
 
   @PostConstruct
   private void init() {
@@ -77,11 +85,25 @@ public class RecoverConfigJdbcRepository implements RecoverConfigRepository {
   }
 
   @Override
-  public boolean save(String propertyTable, String propertyKey) {
+  public boolean save(String propertyTable, String propertyKey, String recoverClusterId) {
     if (StringUtils.isEmpty(propertyTable) || StringUtils.isEmpty(propertyKey)) {
       throw new IllegalArgumentException("params is empty.");
     }
-    recoverConfigMapper.save(new RecoverConfigDomain(propertyTable, propertyKey));
+
+    Set<String> keys = queryKey(propertyTable);
+    if (!CollectionUtils.isEmpty(keys) && keys.contains(propertyKey)) {
+      return true;
+    }
+    transactionTemplate.execute(
+        (status) -> {
+          recoverConfigMapper.save(new RecoverConfigDomain(propertyTable, propertyKey));
+          RecoverConfig recoverConfig = callbackHandler.get(propertyTable);
+          if (recoverConfig != null) {
+            recoverConfig.afterConfigSet(propertyKey, recoverClusterId);
+          }
+          return true;
+        });
+
     return true;
   }
 
@@ -100,6 +122,11 @@ public class RecoverConfigJdbcRepository implements RecoverConfigRepository {
       return;
     }
     doRefresh();
+  }
+
+  @Override
+  public void registerCallback(RecoverConfig config) {
+    callbackHandler.put(config.tableName(), config);
   }
 
   class ConfigWatcher extends LoopRunnable {

@@ -64,9 +64,13 @@ public class ProvideDataConfigTest extends BaseIntegrationTest {
         metaApplicationContext.getBean("provideDataMapper", ProvideDataMapper.class);
 
     recoverConfigRepository.save(
-        TableEnum.PROVIDE_DATA.getTableName(), ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID);
+        TableEnum.PROVIDE_DATA.getTableName(),
+        ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID,
+        RECOVER_CLUSTER_ID);
     recoverConfigRepository.save(
-        TableEnum.PROVIDE_DATA.getTableName(), ValueConstants.PUSH_SWITCH_GRAY_OPEN_DATA_ID);
+        TableEnum.PROVIDE_DATA.getTableName(),
+        ValueConstants.PUSH_SWITCH_GRAY_OPEN_DATA_ID,
+        RECOVER_CLUSTER_ID);
   }
 
   @Test

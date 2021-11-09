@@ -16,9 +16,6 @@
  */
 package com.alipay.sofa.registry.jdbc.repository.impl;
 
-import static com.alipay.sofa.registry.jdbc.repository.impl.MetadataMetrics.ProvideData.PROVIDE_DATA_QUERY_COUNTER;
-import static com.alipay.sofa.registry.jdbc.repository.impl.MetadataMetrics.ProvideData.PROVIDE_DATA_UPDATE_COUNTER;
-
 import com.alipay.sofa.registry.common.model.console.PersistenceData;
 import com.alipay.sofa.registry.common.model.console.PersistenceDataBuilder;
 import com.alipay.sofa.registry.jdbc.config.DefaultCommonConfig;
@@ -26,15 +23,23 @@ import com.alipay.sofa.registry.jdbc.constant.TableEnum;
 import com.alipay.sofa.registry.jdbc.convertor.ProvideDataDomainConvertor;
 import com.alipay.sofa.registry.jdbc.domain.ProvideDataDomain;
 import com.alipay.sofa.registry.jdbc.mapper.ProvideDataMapper;
-import com.alipay.sofa.registry.jdbc.recover.RecoverConfig;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
+import com.alipay.sofa.registry.store.api.meta.RecoverConfig;
+import com.alipay.sofa.registry.store.api.meta.RecoverConfigRepository;
 import com.alipay.sofa.registry.util.MathUtils;
 import com.google.common.collect.Maps;
+import org.apache.commons.collections.CollectionUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import javax.annotation.PostConstruct;
 import java.util.List;
 import java.util.Map;
-import org.springframework.beans.factory.annotation.Autowired;
+import java.util.Set;
+
+import static com.alipay.sofa.registry.jdbc.repository.impl.MetadataMetrics.ProvideData.PROVIDE_DATA_QUERY_COUNTER;
+import static com.alipay.sofa.registry.jdbc.repository.impl.MetadataMetrics.ProvideData.PROVIDE_DATA_UPDATE_COUNTER;
 
 /**
  * @author xiaojian.xj
@@ -48,7 +53,14 @@ public class ProvideDataJdbcRepository implements ProvideDataRepository, Recover
 
   @Autowired private DefaultCommonConfig defaultCommonConfig;
 
+  @Autowired private RecoverConfigRepository recoverConfigRepository;
+
   private static final Integer batchQuerySize = 1000;
+
+  @PostConstruct
+  public void init() {
+    recoverConfigRepository.registerCallback(this);
+  }
 
   @Override
   public boolean put(PersistenceData persistenceData, long expectVersion) {
@@ -131,7 +143,14 @@ public class ProvideDataJdbcRepository implements ProvideDataRepository, Recover
       Map<String, PersistenceData> recoverConfigMap = getAllByClusterId(recoverClusterId);
       LOG.info(
           "load recover config by recoverClusterId:{}, ret:{}", recoverClusterId, recoverConfigMap);
-      responses.putAll(recoverConfigMap);
+      Set<String> dataInfoIds = recoverConfigRepository.queryKey(tableName());
+
+      if (CollectionUtils.isNotEmpty(dataInfoIds)) {
+        for (String dataInfoId : dataInfoIds) {
+          // dependency config
+          responses.put(dataInfoId, recoverConfigMap.get(dataInfoId));
+        }
+      }
     }
     PROVIDE_DATA_QUERY_COUNTER.inc();
     return responses;
@@ -157,5 +176,27 @@ public class ProvideDataJdbcRepository implements ProvideDataRepository, Recover
   @Override
   public String tableName() {
     return TableEnum.PROVIDE_DATA.getTableName();
+  }
+
+  @Override
+  public boolean afterConfigSet(String key, String recoverClusterId) {
+    if (defaultCommonConfig.isRecoverCluster()) {
+      return true;
+    }
+    String clusterId = defaultCommonConfig.getClusterId(tableName());
+    ProvideDataDomain data = provideDataMapper.query(clusterId, key);
+    ProvideDataDomain recoverData = provideDataMapper.query(recoverClusterId, key);
+    if (data != null && recoverData == null) {
+      // copy config
+      recoverData =
+          new ProvideDataDomain(
+              recoverClusterId,
+              data.getDataKey(),
+              data.getDataValue(),
+              PersistenceDataBuilder.nextVersion());
+      provideDataMapper.save(recoverData);
+      LOG.info("[afterConfigSet]save recover cluster:{}, data:{}", recoverClusterId, recoverData);
+    }
+    return true;
   }
 }

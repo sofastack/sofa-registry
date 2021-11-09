@@ -22,10 +22,10 @@ import com.alipay.sofa.registry.jdbc.constant.TableEnum;
 import com.alipay.sofa.registry.jdbc.domain.DistributeLockDomain;
 import com.alipay.sofa.registry.jdbc.domain.FollowCompeteLockDomain;
 import com.alipay.sofa.registry.jdbc.mapper.DistributeLockMapper;
-import com.alipay.sofa.registry.jdbc.recover.RecoverConfig;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.store.api.elector.AbstractLeaderElector;
+import com.alipay.sofa.registry.store.api.meta.RecoverConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**

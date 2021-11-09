@@ -83,8 +83,7 @@ public class ShutdownSwitchResource {
 
     String value = JsonUtils.writeValueAsString(shutdownSwitch);
     PersistenceData persistenceData =
-        PersistenceDataBuilder.createPersistenceData(
-            ValueConstants.SHUTDOWN_SWITCH_DATA_ID, value);
+        PersistenceDataBuilder.createPersistenceData(ValueConstants.SHUTDOWN_SWITCH_DATA_ID, value);
     try {
       boolean ret = provideDataService.saveProvideData(persistenceData);
       DB_LOGGER.info("Success update shutdownSwitch:{} to DB result {}!", value, ret);

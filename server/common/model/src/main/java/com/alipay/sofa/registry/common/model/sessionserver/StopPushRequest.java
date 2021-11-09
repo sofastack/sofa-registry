@@ -36,8 +36,6 @@ public class StopPushRequest implements Serializable {
 
   @Override
   public String toString() {
-    return "StopPushRequest{" +
-            "stop=" + stop +
-            '}';
+    return "StopPushRequest{" + "stop=" + stop + '}';
   }
 }
