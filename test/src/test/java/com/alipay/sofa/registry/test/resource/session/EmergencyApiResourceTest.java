@@ -24,8 +24,8 @@ import com.alipay.sofa.registry.common.model.console.PersistenceData;
 import com.alipay.sofa.registry.common.model.console.PersistenceDataBuilder;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerBootstrap;
-import com.alipay.sofa.registry.server.session.providedata.FetchStopPushService;
 import com.alipay.sofa.registry.server.session.providedata.FetchShutdownService;
+import com.alipay.sofa.registry.server.session.providedata.FetchStopPushService;
 import com.alipay.sofa.registry.server.session.resource.EmergencyApiResource;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
@@ -106,8 +106,7 @@ public class EmergencyApiResourceTest extends BaseIntegrationTest {
     commonResponse = emergencyApiResource.shutdownByRepository(token);
     Assert.assertTrue(commonResponse.isSuccess());
 
-    PersistenceData shutdown =
-        provideDataRepository.get(ValueConstants.SHUTDOWN_SWITCH_DATA_ID);
+    PersistenceData shutdown = provideDataRepository.get(ValueConstants.SHUTDOWN_SWITCH_DATA_ID);
     Assert.assertEquals(shutdown.getData(), "true");
 
     openPush();

@@ -67,10 +67,8 @@ public class FetchShutdownService
     if (persistenceData == null) {
       return INIT;
     }
-    ShutdownSwitch shutdownSwitch =
-        JsonUtils.read(persistenceData.getData(), ShutdownSwitch.class);
-    ShutdownStorage update =
-        new ShutdownStorage(persistenceData.getVersion(), shutdownSwitch);
+    ShutdownSwitch shutdownSwitch = JsonUtils.read(persistenceData.getData(), ShutdownSwitch.class);
+    ShutdownStorage update = new ShutdownStorage(persistenceData.getVersion(), shutdownSwitch);
     return update;
   }
 

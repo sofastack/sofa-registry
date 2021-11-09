@@ -28,10 +28,12 @@ public interface RecoverConfigRepository {
   public Set<String> queryKey(String propertyTable);
 
   /** insert data */
-  public boolean save(String propertyTable, String propertyKey);
+  public boolean save(String propertyTable, String propertyKey, String recoverClusterId);
 
   /** delete data */
   public boolean remove(String propertyTable, String propertyKey);
 
   void waitSynced();
+
+  public void registerCallback(RecoverConfig config);
 }

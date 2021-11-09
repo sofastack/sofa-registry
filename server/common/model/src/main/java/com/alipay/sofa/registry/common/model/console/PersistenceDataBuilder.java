@@ -31,7 +31,7 @@ public class PersistenceDataBuilder {
     persistenceData.setGroup(dataInfo.getGroup());
     persistenceData.setInstanceId(dataInfo.getInstanceId());
     persistenceData.setData(data);
-    persistenceData.setVersion(System.currentTimeMillis());
+    persistenceData.setVersion(nextVersion());
     return persistenceData;
   }
 
@@ -42,5 +42,9 @@ public class PersistenceDataBuilder {
   public static String getDataInfoId(PersistenceData persistenceData) {
     return DataInfo.toDataInfoId(
         persistenceData.getDataId(), persistenceData.getInstanceId(), persistenceData.getGroup());
+  }
+
+  public static long nextVersion() {
+    return System.currentTimeMillis();
   }
 }

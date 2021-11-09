@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.jdbc.recover;
+package com.alipay.sofa.registry.store.api.meta;
 
 /**
  * @author xiaojian.xj
@@ -23,4 +23,8 @@ package com.alipay.sofa.registry.jdbc.recover;
 public interface RecoverConfig {
 
   String tableName();
+
+  default boolean afterConfigSet(String key, String recoverClusterId) {
+    return true;
+  }
 }

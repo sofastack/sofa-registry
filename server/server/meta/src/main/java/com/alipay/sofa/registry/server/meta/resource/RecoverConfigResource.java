@@ -43,12 +43,17 @@ public class RecoverConfigResource {
 
   @POST
   @Path("/save")
-  public CommonResponse saveConfig(@FormParam("table") String table, @FormParam("key") String key) {
-    if (StringUtils.isBlank(table) || StringUtils.isBlank(key)) {
-      return CommonResponse.buildFailedResponse("table and key is allow empty.");
+  public CommonResponse saveConfig(
+      @FormParam("table") String table,
+      @FormParam("key") String key,
+      @FormParam("recoverClusterId") String recoverClusterId) {
+    if (StringUtils.isBlank(table)
+        || StringUtils.isBlank(key)
+        || StringUtils.isBlank(recoverClusterId)) {
+      return CommonResponse.buildFailedResponse("table, key, recoverClusterId is allow empty.");
     }
 
-    boolean ret = recoverConfigRepository.save(table, key);
+    boolean ret = recoverConfigRepository.save(table, key, recoverClusterId);
 
     DB_LOGGER.info("save recover config result:{}, table:{}, key:{}", ret, table, key);
 

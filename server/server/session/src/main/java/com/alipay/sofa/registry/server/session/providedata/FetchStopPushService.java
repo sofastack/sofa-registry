@@ -63,7 +63,8 @@ public class FetchStopPushService
       return INIT;
     }
     return new StopPushStorage(
-        persistenceData.getVersion(), PersistenceDataParser.parse2BoolIgnoreCase(persistenceData, INIT.stopPushSwitch));
+        persistenceData.getVersion(),
+        PersistenceDataParser.parse2BoolIgnoreCase(persistenceData, INIT.stopPushSwitch));
   }
 
   @Override
@@ -72,8 +73,12 @@ public class FetchStopPushService
     try {
 
       if (!compareAndSet(expect, update)) {
-        LOGGER.error("[FetchStopPushService]compareAndSet fail, expect={}/{}, update={}/{}",
-                expect.getVersion(), expect.stopPushSwitch, update.getVersion(), update.stopPushSwitch);
+        LOGGER.error(
+            "[FetchStopPushService]compareAndSet fail, expect={}/{}, update={}/{}",
+            expect.getVersion(),
+            expect.stopPushSwitch,
+            update.getVersion(),
+            update.stopPushSwitch);
         return false;
       }
       LOGGER.info(

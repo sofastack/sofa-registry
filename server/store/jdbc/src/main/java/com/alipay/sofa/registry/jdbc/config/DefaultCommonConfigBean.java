@@ -20,6 +20,7 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.store.api.meta.RecoverConfigRepository;
 import com.alipay.sofa.registry.util.SystemUtils;
+import com.google.common.annotations.VisibleForTesting;
 import java.util.Set;
 import javax.annotation.PostConstruct;
 import org.apache.commons.lang.StringUtils;
@@ -97,7 +98,18 @@ public class DefaultCommonConfigBean implements DefaultCommonConfig {
    *
    * @param clusterId value to be assigned to property clusterId
    */
+  @VisibleForTesting
   public void setClusterId(String clusterId) {
     this.clusterId = clusterId;
+  }
+
+  /**
+   * Setter method for property <tt>recoverClusterId</tt>.
+   *
+   * @param recoverClusterId value to be assigned to property recoverClusterId
+   */
+  @VisibleForTesting
+  public void setRecoverClusterId(String recoverClusterId) {
+    this.recoverClusterId = recoverClusterId;
   }
 }
