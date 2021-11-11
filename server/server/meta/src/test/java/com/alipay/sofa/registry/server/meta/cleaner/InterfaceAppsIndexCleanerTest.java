@@ -24,6 +24,7 @@ import com.alipay.sofa.registry.jdbc.domain.InterfaceAppsIndexDomain;
 import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
 import com.alipay.sofa.registry.store.api.repository.AppRevisionRepository;
 import com.alipay.sofa.registry.store.api.repository.InterfaceAppsRepository;
+import com.alipay.sofa.registry.store.api.config.DefaultCommonConfig;
 import org.assertj.core.util.Lists;
 import org.junit.Before;
 import org.junit.Test;

@@ -51,6 +51,8 @@ import com.alipay.sofa.registry.server.meta.slot.status.SlotTableStatusService;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.alipay.sofa.registry.server.shared.resource.MetricsResource;
 import com.alipay.sofa.registry.server.shared.resource.SlotGenericResource;
+import com.alipay.sofa.registry.server.shared.resource.VersionResource;
+import com.alipay.sofa.registry.store.api.config.StoreApiConfiguration;
 import com.alipay.sofa.registry.task.MetricsableThreadPoolExecutor;
 import com.alipay.sofa.registry.util.DefaultExecutorFactory;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
@@ -79,6 +81,7 @@ import org.springframework.context.annotation.Import;
 @Configuration
 @Import({
   MetaServerInitializerConfiguration.class,
+  StoreApiConfiguration.class,
   JdbcConfiguration.class,
   JdbcElectorConfiguration.class,
   RaftConfiguration.class
@@ -320,6 +323,11 @@ public class MetaServerConfiguration {
     @Bean
     public ShutdownSwitchResource shutdownSwitchResource() {
       return new ShutdownSwitchResource();
+    }
+    @Bean
+    @ConditionalOnMissingBean
+    public VersionResource versionResource() {
+      return new VersionResource();
     }
 
     @Bean

@@ -23,7 +23,7 @@ import static com.alipay.sofa.registry.jdbc.repository.impl.MetadataMetrics.Regi
 import com.alipay.sofa.registry.cache.CacheCleaner;
 import com.alipay.sofa.registry.common.model.store.AppRevision;
 import com.alipay.sofa.registry.concurrent.CachedExecutor;
-import com.alipay.sofa.registry.jdbc.config.DefaultCommonConfig;
+import com.alipay.sofa.registry.store.api.config.DefaultCommonConfig;
 import com.alipay.sofa.registry.jdbc.constant.TableEnum;
 import com.alipay.sofa.registry.jdbc.convertor.AppRevisionDomainConvertor;
 import com.alipay.sofa.registry.jdbc.domain.AppRevisionDomain;
@@ -34,6 +34,7 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.store.api.date.DateNowRepository;
 import com.alipay.sofa.registry.store.api.meta.RecoverConfig;
+import com.alipay.sofa.registry.store.api.config.DefaultCommonConfig;
 import com.alipay.sofa.registry.store.api.repository.AppRevisionRepository;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.google.common.annotations.VisibleForTesting;

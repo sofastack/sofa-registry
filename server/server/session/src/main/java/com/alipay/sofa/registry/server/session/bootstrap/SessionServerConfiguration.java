@@ -72,7 +72,9 @@ import com.alipay.sofa.registry.server.shared.remoting.SlotTableChangeEventHandl
 import com.alipay.sofa.registry.server.shared.resource.MetricsResource;
 import com.alipay.sofa.registry.server.shared.resource.RegistryOpsResource;
 import com.alipay.sofa.registry.server.shared.resource.SlotGenericResource;
+import com.alipay.sofa.registry.server.shared.resource.VersionResource;
 import com.alipay.sofa.registry.server.shared.slot.DiskSlotTableRecorder;
+import com.alipay.sofa.registry.store.api.config.StoreApiConfiguration;
 import com.alipay.sofa.registry.task.MetricsableThreadPoolExecutor;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
 import com.alipay.sofa.registry.util.PropertySplitter;
@@ -94,7 +96,12 @@ import org.springframework.context.annotation.Import;
  * @version $Id: SessionServerConfiguration.java, v 0.1 2017-11-14 11:39 synex Exp $
  */
 @Configuration
-@Import({SessionServerInitializer.class, JdbcConfiguration.class, RaftConfiguration.class})
+@Import({
+  SessionServerInitializer.class,
+  StoreApiConfiguration.class,
+  JdbcConfiguration.class,
+  RaftConfiguration.class
+})
 @EnableConfigurationProperties
 public class SessionServerConfiguration {
 
@@ -416,6 +423,12 @@ public class SessionServerConfiguration {
     @Bean
     public MetricsResource metricsResource() {
       return new MetricsResource();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public VersionResource versionResource() {
+      return new VersionResource();
     }
 
     @Bean

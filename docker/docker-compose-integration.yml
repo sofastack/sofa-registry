@@ -1,0 +1,6 @@
+version: 3
+services:
+  registry:
+    image: dzdx/sofa-registry:latest
+    environment:
+      REGISTRY_APP_NAME: integration

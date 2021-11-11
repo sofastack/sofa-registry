@@ -162,7 +162,7 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
       RENEWER_LOGGER.error(
           "renewNode failed [{}] times, prepare to reset leader from rest api.",
           renewFailCounter.get());
-      metaServerManager.resetLeaderFromRestServer();
+      metaServerManager.resetLeader();
       renewFailCounter.set(0);
       return true;
     }

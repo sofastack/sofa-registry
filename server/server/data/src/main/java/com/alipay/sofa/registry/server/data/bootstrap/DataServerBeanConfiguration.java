@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.data.bootstrap;
 
+import com.alipay.sofa.registry.jdbc.config.JdbcConfiguration;
 import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.remoting.jersey.exchange.JerseyExchange;
@@ -53,7 +54,9 @@ import com.alipay.sofa.registry.server.shared.remoting.SlotTableChangeEventHandl
 import com.alipay.sofa.registry.server.shared.resource.MetricsResource;
 import com.alipay.sofa.registry.server.shared.resource.RegistryOpsResource;
 import com.alipay.sofa.registry.server.shared.resource.SlotGenericResource;
+import com.alipay.sofa.registry.server.shared.resource.VersionResource;
 import com.alipay.sofa.registry.server.shared.slot.DiskSlotTableRecorder;
+import com.alipay.sofa.registry.store.api.config.StoreApiConfiguration;
 import com.alipay.sofa.registry.task.MetricsableThreadPoolExecutor;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
 import com.alipay.sofa.registry.util.PropertySplitter;
@@ -75,7 +78,11 @@ import org.springframework.context.annotation.Import;
  * @version $Id: DataServerBeanConfiguration.java, v 0.1 2018-01-11 15:08 qian.lqlq Exp $
  */
 @Configuration
-@Import(DataServerInitializer.class)
+@Import({
+  DataServerInitializer.class,
+  StoreApiConfiguration.class,
+  JdbcConfiguration.class,
+})
 @EnableConfigurationProperties
 public class DataServerBeanConfiguration {
 
@@ -298,6 +305,12 @@ public class DataServerBeanConfiguration {
     @Bean
     public RegistryOpsResource opsResource() {
       return new RegistryOpsResource();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public VersionResource versionResource() {
+      return new VersionResource();
     }
 
     @Bean

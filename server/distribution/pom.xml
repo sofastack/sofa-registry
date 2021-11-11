@@ -22,10 +22,7 @@
     </properties>
 
     <modules>
-        <module>session</module>
-        <module>data</module>
-        <module>meta</module>
-        <module>integration</module>
+        <module>all</module>
     </modules>
 
     <build>

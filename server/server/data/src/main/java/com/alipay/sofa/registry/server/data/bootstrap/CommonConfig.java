@@ -27,7 +27,6 @@ import org.springframework.beans.factory.annotation.Value;
  * @version $Id: CommonConfig.java, v 0.1 2018-05-05 15:16 shangyu.wh Exp $
  */
 public class CommonConfig {
-
   /**
    * server local data center, get from System Property example:
    * nodes.localDataCenter=DefaultDataCenter
@@ -37,7 +36,8 @@ public class CommonConfig {
 
   public static final String LOCAL_REGION = System.getProperty("nodes.localRegion");
 
-  @Value("#{PropertySplitter.mapOfList('${nodes.metaNode}')}")
+  @Value(
+      "#{PropertySplitter.mapOfSingleList('${nodes.metaNode:DefaultDataCenter:localhost}', '${nodes.localDataCenter}')}")
   private Map<String /*dataCenterId*/, Collection<String>> metaNode;
 
   /**

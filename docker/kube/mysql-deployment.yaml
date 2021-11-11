@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mariadb-deployment
+  labels:
+    app: mariadb
+    type: database
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mariadb
+      type: database
+  template:
+    metadata:
+      labels:
+        app: mariadb
+        type: database
+    spec:
+      containers:
+        - name: mariadb
+          image: mariadb:10.7
+          ports:
+            - containerPort: 3306
+              name: db-port
+          env:
+            - name: MARIADB_ROOT_PASSWORD
+              value: root
+          volumeMounts:
+            - name: mariadb-vol
+              mountPath: /var/lib/mysql
+      volumes:
+        - name: mariadb-vol
+          emptyDir: { }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql
+spec:
+  selector:
+    app: mariadb
+    type: database
+  ports:
+    - protocol: TCP
+      port: 3306
+      targetPort: 3306

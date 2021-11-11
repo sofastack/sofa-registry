@@ -33,6 +33,7 @@ import com.alipay.sofa.registry.server.meta.provide.data.DefaultProvideDataServi
 import com.alipay.sofa.registry.server.meta.remoting.session.DefaultSessionServerService;
 import com.alipay.sofa.registry.store.api.DBResponse;
 import com.alipay.sofa.registry.store.api.OperationStatus;
+import com.alipay.sofa.registry.store.api.config.DefaultCommonConfig;
 import java.util.Collections;
 import java.util.Date;
 import org.assertj.core.util.Lists;
