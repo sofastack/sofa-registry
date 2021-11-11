@@ -54,9 +54,7 @@ public class SyncClientsHeartbeatTask {
 
   @Autowired ExecutorManager executorManager;
 
-  @Scheduled(
-      initialDelayString = "${session.server.syncHeartbeat.fixedDelay}",
-      fixedRateString = "${session.server.syncHeartbeat.fixedDelay}")
+  @Scheduled(initialDelay = 60000, fixedDelay = 60000)
   public void syncCount() {
     Tuple<Long, Long> countSub = sessionInterests.count();
     Tuple<Long, Long> countPub = sessionDataStore.count();

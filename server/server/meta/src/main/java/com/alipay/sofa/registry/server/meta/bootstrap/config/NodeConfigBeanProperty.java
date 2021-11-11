@@ -26,7 +26,8 @@ import org.springframework.beans.factory.annotation.Value;
  */
 public class NodeConfigBeanProperty extends AbstractNodeConfigBean {
 
-  @Value("#{PropertySplitter.mapOfList('${nodes.metaNode}')}")
+  @Value(
+      "#{PropertySplitter.mapOfSingleList('${nodes.metaNode:DefaultDataCenter:localhost}', '${nodes.localDataCenter:DefaultDataCenter}')}")
   private Map<String /*dataCenterId*/, Collection<String>> metaNode;
 
   @Value("${nodes.localDataCenter}")

@@ -32,7 +32,6 @@ import com.alipay.sofa.registry.server.meta.bootstrap.MetaServerBootstrap;
 import com.alipay.sofa.registry.server.session.SessionApplication;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerBootstrap;
 import com.alipay.sofa.registry.util.FileUtils;
-import com.alipay.sofa.registry.util.PropertySplitter;
 import com.alipay.sofa.registry.util.StringFormatter;
 import java.io.*;
 import java.sql.Connection;
@@ -40,6 +39,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Collection;
+import java.util.Collections;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.util.Strings;
@@ -63,6 +63,8 @@ public class RegistryApplication {
   private static final String CLUSTER_ID = "DEFAULT_SEGMENT";
   private static final String RECOVER_CLUSTER_ID = "RECOVER_DEFAULT_SEGMENT";
 
+  private static final String H2_DRIVER = "org.h2.Driver";
+
   private static ConfigurableApplicationContext metaApplicationContext;
   private static ConfigurableApplicationContext sessionApplicationContext;
   private static ConfigurableApplicationContext dataApplicationContext;
@@ -84,11 +86,10 @@ public class RegistryApplication {
     ConfigurableApplicationContext commonContext =
         new SpringApplicationBuilder(RegistryApplication.class).run(args);
 
-    // get all server address list
-    Collection<String> serverList = getServerList(commonContext);
+    Collection<String> serverList = Collections.singletonList("localhost");
 
     String driver = commonContext.getEnvironment().getProperty("jdbc.driverClassName");
-    if ("org.h2.Driver".equals(driver)) {
+    if (H2_DRIVER.equals(driver)) {
       createTables(commonContext);
       Server.createWebServer("-web", "-webAllowOthers", "-webPort", "9630").start();
     }
@@ -103,7 +104,7 @@ public class RegistryApplication {
     LOGGER.warn("waiting meta");
     // wait meta cluster start
     int metaPort =
-        Integer.parseInt(commonContext.getEnvironment().getProperty(META_HTTP_SERVER_PORT));
+        Integer.parseInt(commonContext.getEnvironment().getProperty(META_HTTP_SERVER_PORT, "9615"));
     waitClusterStart(serverList, metaPort);
 
     openPush(serverList.stream().findFirst().get(), metaPort);
@@ -117,7 +118,8 @@ public class RegistryApplication {
     // wait data cluster start
     waitClusterStart(
         serverList,
-        Integer.parseInt(commonContext.getEnvironment().getProperty(DATA_HTTP_SERVER_PORT)));
+        Integer.parseInt(
+            commonContext.getEnvironment().getProperty(DATA_HTTP_SERVER_PORT, "9622")));
 
     // start session
     LOGGER.warn("starting session");
@@ -128,7 +130,8 @@ public class RegistryApplication {
     LOGGER.warn("waiting session");
     waitClusterStart(
         serverList,
-        Integer.parseInt(commonContext.getEnvironment().getProperty(SESSION_HTTP_SERVER_PORT)));
+        Integer.parseInt(
+            commonContext.getEnvironment().getProperty(SESSION_HTTP_SERVER_PORT, "9603")));
   }
 
   public static void stop() {
@@ -145,12 +148,6 @@ public class RegistryApplication {
     if (metaApplicationContext != null) {
       metaApplicationContext.getBean("metaServerBootstrap", MetaServerBootstrap.class).destroy();
     }
-  }
-
-  private static Collection<String> getServerList(ConfigurableApplicationContext commonContext) {
-    String metaNodes = commonContext.getEnvironment().getProperty(META_NODES);
-    String localDataCenter = commonContext.getEnvironment().getProperty(NODES_LOCAL_DATA_CENTER);
-    return new PropertySplitter().mapOfList(metaNodes).get(localDataCenter);
   }
 
   private static void waitClusterStart(Collection<String> serverList, int httpPort)
@@ -215,19 +212,13 @@ public class RegistryApplication {
 
   private static void createTables(ConfigurableApplicationContext commonContext)
       throws ClassNotFoundException, SQLException, IOException {
-    String driver = commonContext.getEnvironment().getProperty("jdbc.driverClassName");
+    String driver = commonContext.getEnvironment().getProperty("jdbc.driverClassName", H2_DRIVER);
     Class.forName(driver);
     String url = commonContext.getEnvironment().getProperty("jdbc.url");
     String username = commonContext.getEnvironment().getProperty("jdbc.username");
     String password = commonContext.getEnvironment().getProperty("jdbc.password");
-    Connection connection = null;
-    try {
-      connection = DriverManager.getConnection(url, username, password);
+    try (Connection connection = DriverManager.getConnection(url, username, password)) {
       executeSqlScript(connection, readFileAsString("sql/h2/create_table.sql"));
-    } finally {
-      if (connection != null) {
-        connection.close();
-      }
     }
   }
 

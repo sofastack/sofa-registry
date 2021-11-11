@@ -27,7 +27,7 @@ import com.alipay.sofa.registry.remoting.exchange.message.Response;
  */
 public interface MetaServerManager {
 
-  LeaderInfo resetLeaderFromRestServer();
+  LeaderInfo resetLeader();
 
   String getMetaServerLeader();
 

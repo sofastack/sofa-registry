@@ -89,7 +89,7 @@ public class MetaServerManagerTest {
     Assert.assertNull(mockServerManager.metaLeaderInfo);
 
     TestUtils.assertRunException(
-        MetaLeaderQueryException.class, () -> mockServerManager.resetLeaderFromRestServer());
+        MetaLeaderQueryException.class, () -> mockServerManager.resetLeader());
     mockServerManager.domains = Lists.newArrayList("localhost");
     String leader = mockServerManager.getMetaServerLeader();
     Assert.assertEquals("test-leader", leader);
@@ -112,7 +112,7 @@ public class MetaServerManagerTest {
     // reset the rsclient
     mockServerManager.init();
     TestUtils.assertRunException(
-        MetaLeaderQueryException.class, () -> mockServerManager.resetLeaderFromRestServer());
+        MetaLeaderQueryException.class, () -> mockServerManager.resetLeader());
   }
 
   @Test

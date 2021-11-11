@@ -86,4 +86,15 @@ public class PropertySplitterTest {
                     .get(1)))
             .contains("VALUE2.2"));
   }
+
+  @Test
+  public void testMapOfSingleList() {
+    Assert.assertEquals(
+        propertySplitter.mapOfList("K1:V1,V2"), propertySplitter.mapOfSingleList("V1,V2", "K1"));
+    Assert.assertEquals(
+        propertySplitter.mapOfList("K1:V1,V2"), propertySplitter.mapOfSingleList("K2:V1,V2", "K1"));
+    Assert.assertEquals(
+        propertySplitter.mapOfList("K1:V1,V2|K3:V3,V4"),
+        propertySplitter.mapOfSingleList("K1:V1,V2,|K3:V3,V4", "K2"));
+  }
 }

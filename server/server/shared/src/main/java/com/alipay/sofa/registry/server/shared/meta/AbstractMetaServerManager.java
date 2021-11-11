@@ -21,6 +21,9 @@ import com.alipay.sofa.registry.common.model.elector.LeaderInfo;
 import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.BaseHeartBeatResponse;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.exception.MetaLeaderQueryException;
+import com.alipay.sofa.registry.jdbc.domain.DistributeLockDomain;
+import com.alipay.sofa.registry.jdbc.elector.MetaJdbcLeaderElector;
+import com.alipay.sofa.registry.jdbc.mapper.DistributeLockMapper;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
@@ -30,7 +33,9 @@ import com.alipay.sofa.registry.remoting.exchange.message.Request;
 import com.alipay.sofa.registry.remoting.exchange.message.Response;
 import com.alipay.sofa.registry.remoting.jersey.JerseyClient;
 import com.alipay.sofa.registry.server.shared.remoting.ClientSideExchanger;
+import com.alipay.sofa.registry.store.api.config.DefaultCommonConfig;
 import com.alipay.sofa.registry.util.JsonUtils;
+import com.alipay.sofa.registry.util.StringFormatter;
 import com.github.rholder.retry.Retryer;
 import com.github.rholder.retry.RetryerBuilder;
 import com.github.rholder.retry.StopStrategies;
@@ -45,6 +50,7 @@ import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.ws.rs.client.Client;
 import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author chen.zhu
@@ -57,6 +63,10 @@ public abstract class AbstractMetaServerManager extends ClientSideExchanger
 
   @Resource(name = "metaClientHandlers")
   private Collection<ChannelHandler> metaClientHandlers;
+
+  @Autowired private DefaultCommonConfig defaultCommonConfig;
+
+  @Autowired private DistributeLockMapper distributeLockMapper;
 
   protected volatile LeaderInfo metaLeaderInfo;
 
@@ -94,7 +104,7 @@ public abstract class AbstractMetaServerManager extends ClientSideExchanger
   @Override
   public String getMetaServerLeader() {
     if (metaLeaderInfo == null) {
-      resetLeaderFromRestServer();
+      resetLeader();
     }
     return metaLeaderInfo.getLeader();
   }
@@ -139,7 +149,7 @@ public abstract class AbstractMetaServerManager extends ClientSideExchanger
       return super.request(request);
     } catch (Throwable e) {
       // retry
-      resetLeaderFromRestServer();
+      resetLeader();
       URL url = new URL(getMetaServerLeader(), getServerPort());
       LOGGER.warn(
           "[request] MetaNode Exchanger request send error!It will be retry once!Request url:{}",
@@ -173,18 +183,61 @@ public abstract class AbstractMetaServerManager extends ClientSideExchanger
   }
 
   @Override
-  public LeaderInfo resetLeaderFromRestServer() {
+  public LeaderInfo resetLeader() {
     LeaderInfo leaderInfo = null;
-    Collection<String> metaDomains = getConfiguredMetaServerDomains();
-    try {
-      leaderInfo = retryer.call(() -> queryLeaderInfo(metaDomains, rsClient));
-    } catch (Throwable e) {
-      throw new MetaLeaderQueryException("query meta leader error from " + metaDomains, e);
+    if (defaultCommonConfig.isJdbc()) {
+      leaderInfo = queryLeaderFromDb();
+    } else {
+      leaderInfo = queryLeaderFromRest();
     }
     // connect to meta leader
     connect(new URL(leaderInfo.getLeader(), getServerPort()));
     setLeader(leaderInfo);
     return this.metaLeaderInfo;
+  }
+
+  private LeaderInfo queryLeaderFromRest() {
+    Collection<String> metaDomains = getConfiguredMetaServerDomains();
+    try {
+      return retryer.call(() -> queryLeaderInfo(metaDomains, rsClient));
+    } catch (Throwable e) {
+      throw new MetaLeaderQueryException(
+          StringFormatter.format("query meta leader error from {} failed", metaDomains), e);
+    }
+  }
+
+  private LeaderInfo queryLeaderFromDb() {
+    try {
+      return retryer.call(
+          () -> {
+            DistributeLockDomain lock =
+                distributeLockMapper.queryDistLock(
+                    defaultCommonConfig.getClusterId(), MetaJdbcLeaderElector.lockName);
+            if (!validateLockLeader(lock)) {
+              return null;
+            }
+            String leader = lock.getOwner();
+            long epoch = lock.getGmtModified().getTime();
+            return new LeaderInfo(epoch, leader);
+          });
+    } catch (Throwable e) {
+      throw new MetaLeaderQueryException(
+          StringFormatter.format("query meta leader error from db failed"), e);
+    }
+  }
+
+  private boolean validateLockLeader(DistributeLockDomain lock) {
+    if (lock == null) {
+      LOGGER.error("[resetLeaderFromDb] failed to query leader from db: lock null");
+      return false;
+    }
+    long expireTimestamp = lock.getGmtModified().getTime() + lock.getDuration() / 2;
+    long now = System.currentTimeMillis();
+    if (expireTimestamp < now) {
+      LOGGER.error("[resetLeaderFromDb] failed to query leader from db: lock expired {}", lock);
+      return false;
+    }
+    return true;
   }
 
   protected abstract Collection<String> getConfiguredMetaServerDomains();
@@ -219,16 +272,13 @@ public abstract class AbstractMetaServerManager extends ClientSideExchanger
           continue;
         }
         LeaderInfo query = new LeaderInfo(epoch, leader);
-        if (LOGGER.isInfoEnabled()) {
-          LOGGER.info("[resetLeaderFromRestServer] query from url: {}, meta leader:{}", url, query);
-        }
+        LOGGER.info("[resetLeaderFromRestServer] query from url: {}, meta leader:{}", url, query);
         return query;
       } catch (Throwable e) {
         LOGGER.error("[resetLeaderFromRestServer] failed to query from url: {}", url, e);
-        continue;
       }
     }
-    return null;
+    throw new RuntimeException();
   }
 
   @VisibleForTesting

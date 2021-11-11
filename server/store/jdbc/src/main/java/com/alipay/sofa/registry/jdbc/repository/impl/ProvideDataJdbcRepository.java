@@ -21,7 +21,7 @@ import static com.alipay.sofa.registry.jdbc.repository.impl.MetadataMetrics.Prov
 
 import com.alipay.sofa.registry.common.model.console.PersistenceData;
 import com.alipay.sofa.registry.common.model.console.PersistenceDataBuilder;
-import com.alipay.sofa.registry.jdbc.config.DefaultCommonConfig;
+import com.alipay.sofa.registry.store.api.config.DefaultCommonConfig;
 import com.alipay.sofa.registry.jdbc.constant.TableEnum;
 import com.alipay.sofa.registry.jdbc.convertor.ProvideDataDomainConvertor;
 import com.alipay.sofa.registry.jdbc.domain.ProvideDataDomain;

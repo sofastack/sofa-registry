@@ -43,8 +43,9 @@ public class CommonConfig {
    * metaNodeInfo, get from System Property example:
    * nodes.metaNode=DefaultDataCenter:192.168.xxx.xxx,192.168.xxx.xxx,192.168.xxx.xxx|AnotherDataCenter:192.168.xxx.xxx,192.168.xxx.xxx,192.168.xxx.xxx
    */
-  @Value("#{PropertySplitter.mapOfList('${nodes.metaNode}')}")
-  private Map<String /*dataCenterId*/, Collection<String>> metaNode;
+  @Value(
+      "#{PropertySplitter.mapOfSingleList('${nodes.metaNode:DefaultDataCenter:localhost}', '${nodes.localDataCenter}')}")
+  private Map<String, Collection<String>> metaNode;
 
   /**
    * Getter method for property <tt>metaNode</tt>.

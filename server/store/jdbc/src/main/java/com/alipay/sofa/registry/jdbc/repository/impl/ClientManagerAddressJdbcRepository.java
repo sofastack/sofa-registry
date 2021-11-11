@@ -21,7 +21,7 @@ import static com.alipay.sofa.registry.jdbc.repository.impl.MetadataMetrics.Prov
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress;
 import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress.AddressVersion;
-import com.alipay.sofa.registry.jdbc.config.DefaultCommonConfig;
+import com.alipay.sofa.registry.store.api.config.DefaultCommonConfig;
 import com.alipay.sofa.registry.jdbc.constant.TableEnum;
 import com.alipay.sofa.registry.jdbc.domain.ClientManagerAddressDomain;
 import com.alipay.sofa.registry.jdbc.informer.BaseInformer;
@@ -29,6 +29,7 @@ import com.alipay.sofa.registry.jdbc.mapper.ClientManagerAddressMapper;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.store.api.date.DateNowRepository;
+import com.alipay.sofa.registry.store.api.config.DefaultCommonConfig;
 import com.alipay.sofa.registry.store.api.meta.ClientManagerAddressRepository;
 import com.alipay.sofa.registry.store.api.meta.RecoverConfig;
 import com.google.common.annotations.VisibleForTesting;

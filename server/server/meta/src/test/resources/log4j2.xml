@@ -2,7 +2,7 @@
 <configuration status="info" shutdownHook="disable" monitorInterval="5">
 
     <Properties>
-        <Property name="META_LOG_HOME">${user.home}/logs/registry/meta</Property>
+        <Property name="META_LOG_HOME">${sys:user.home}/logs/registry/test</Property>
         <Property name="LOG_LEVEL">INFO</Property>
     </Properties>
 

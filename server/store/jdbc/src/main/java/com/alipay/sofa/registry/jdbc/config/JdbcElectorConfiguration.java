@@ -32,7 +32,8 @@ import org.springframework.context.annotation.Configuration;
 @EnableConfigurationProperties
 @ConditionalOnProperty(
     value = SpringContext.PERSISTENCE_PROFILE_ACTIVE,
-    havingValue = SpringContext.META_STORE_API_JDBC)
+    havingValue = SpringContext.META_STORE_API_JDBC,
+    matchIfMissing = true)
 public class JdbcElectorConfiguration {
 
   @Configuration

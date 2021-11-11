@@ -17,17 +17,20 @@
 package com.alipay.sofa.registry.util;
 
 import com.google.common.base.Splitter;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
+import org.apache.commons.lang.StringUtils;
 
 /**
  * @author shangyu.wh
  * @version $Id: PropertySplitter.java, v 0.1 2018-05-03 16:29 shangyu.wh Exp $
  */
 public class PropertySplitter {
+  private static final PropertySplitter instance = new PropertySplitter();
+
+  public static PropertySplitter getInstance() {
+    return instance;
+  }
 
   /** Example: one.example.property = KEY1:VALUE1,KEY2:VALUE2 */
   public Map<String, String> map(String property) {
@@ -35,6 +38,24 @@ public class PropertySplitter {
       return new HashMap<>();
     }
     return this.map(property, ",");
+  }
+
+  /**
+   * Example: property=KEY1:VALUE1.1,VALUE1.2|KEY2:VALUE2.1,VALUE2.2, key=ignored Example: property
+   * = KEY1:VALUE1.1,VALUE1.2, key=KEY2 Example: property = VALUE1.1,VALUE1.2, key=KEY2
+   */
+  public Map<String, Collection<String>> mapOfSingleList(String property, String key) {
+    if (property == null) {
+      return new HashMap<>();
+    }
+    if (StringUtils.contains(property, '|')) {
+      return mapOfList(property);
+    }
+    if (StringUtils.contains(property, ':')) {
+      Map<String, Collection<String>> singleMap = mapOfList(property);
+      return Collections.singletonMap(key, singleMap.values().stream().findFirst().get());
+    }
+    return Collections.singletonMap(key, list(property));
   }
 
   /** Example: one.example.property = KEY1:VALUE1.1,VALUE1.2|KEY2:VALUE2.1,VALUE2.2 */

@@ -75,7 +75,8 @@ import org.springframework.transaction.support.TransactionTemplate;
 @EnableConfigurationProperties
 @ConditionalOnProperty(
     value = SpringContext.PERSISTENCE_PROFILE_ACTIVE,
-    havingValue = SpringContext.META_STORE_API_JDBC)
+    havingValue = SpringContext.META_STORE_API_JDBC,
+    matchIfMissing = true)
 public class JdbcConfiguration {
 
   @Configuration
@@ -119,12 +120,21 @@ public class JdbcConfiguration {
       Properties props = new Properties();
       props.put(
           PROP_DRIVERCLASSNAME,
-          SystemUtils.getSystem(PROP_DRIVERCLASSNAME, jdbcDriverConfig.getDriverClassName()));
-      props.put(PROP_URL, SystemUtils.getSystem(PROP_URL, jdbcDriverConfig.getUrl()));
+          SystemUtils.getSystem(
+              JdbcDriverConfigBean.getEnvKey(PROP_DRIVERCLASSNAME),
+              jdbcDriverConfig.getDriverClassName()));
       props.put(
-          PROP_USERNAME, SystemUtils.getSystem(PROP_USERNAME, jdbcDriverConfig.getUsername()));
+          PROP_URL,
+          SystemUtils.getSystem(
+              JdbcDriverConfigBean.getEnvKey(PROP_URL), jdbcDriverConfig.getUrl()));
       props.put(
-          PROP_PASSWORD, SystemUtils.getSystem(PROP_PASSWORD, jdbcDriverConfig.getPassword()));
+          PROP_USERNAME,
+          SystemUtils.getSystem(
+              JdbcDriverConfigBean.getEnvKey(PROP_USERNAME), jdbcDriverConfig.getUsername()));
+      props.put(
+          PROP_PASSWORD,
+          SystemUtils.getSystem(
+              JdbcDriverConfigBean.getEnvKey(PROP_PASSWORD), jdbcDriverConfig.getPassword()));
 
       // todo connection pool config
       props.put(PROP_MINIDLE, jdbcDriverConfig.getMinIdle() + "");
@@ -198,11 +208,6 @@ public class JdbcConfiguration {
 
   @Configuration
   public static class MetadataBeanConfiguration {
-
-    @Bean
-    public DefaultCommonConfig defaultCommonConfig() {
-      return new DefaultCommonConfigBean();
-    }
 
     @Bean
     public MetadataConfig metadataConfig() {
