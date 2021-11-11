@@ -24,7 +24,7 @@ public final class SystemUtils {
     if (v == null) {
       v = System.getenv(name);
     }
-    return v == null ? def : Integer.valueOf(v);
+    return v == null ? def : Integer.parseInt(v);
   }
 
   public static long getSystemLong(String name, long def) {
@@ -32,7 +32,7 @@ public final class SystemUtils {
     if (v == null) {
       v = System.getenv(name);
     }
-    return v == null ? def : Long.valueOf(v);
+    return v == null ? def : Long.parseLong(v);
   }
 
   public static String getSystem(String name, String def) {
@@ -41,5 +41,9 @@ public final class SystemUtils {
       v = System.getenv(name);
     }
     return v == null ? def : v;
+  }
+
+  public static String getSystem(String name) {
+    return getSystem(name, null);
   }
 }

@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.common.model.constants;
 
 import com.alipay.sofa.registry.common.model.store.DataInfo;
+import com.alipay.sofa.registry.util.SystemUtils;
 
 /**
  * @author zhuoyu.sjw
@@ -115,7 +116,7 @@ public class ValueConstants {
    * case sensitive
    */
   public static final boolean DISABLE_DATA_ID_CASE_SENSITIVE =
-      Boolean.parseBoolean(System.getProperty(DISABLE_DATA_ID_CASE_SENSITIVE_SWITCH));
+      Boolean.parseBoolean(SystemUtils.getSystem(DISABLE_DATA_ID_CASE_SENSITIVE_SWITCH));
 
   // response status code
   public static final int METADATA_STATUS_PROCESS_SUCCESS = 200;

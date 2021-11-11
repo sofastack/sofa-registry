@@ -18,15 +18,20 @@ package com.alipay.sofa.registry.net;
 
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.util.StringFormatter;
+import com.alipay.sofa.registry.util.SystemUtils;
+import com.google.common.collect.Lists;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.NetworkInterface;
 import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.util.CollectionUtils;
 
 /**
  * The type Net util.
@@ -51,12 +56,14 @@ public class NetUtil {
 
   private static final Pattern IP_PATTERN = Pattern.compile("\\d{1,3}(\\.\\d{1,3}){3,5}$");
 
+  public static final List<String> NETWORK_INTERFACE_PREFERENCE =
+      Collections.unmodifiableList(Lists.newArrayList("eth0", "en0"));
   public static final String NETWORK_INTERFACE_BINDING = "network_interface_binding";
   public static final String NETWORK_INTERFACE_BINDING_VALUE =
-      System.getProperty(NETWORK_INTERFACE_BINDING);
+      SystemUtils.getSystem(NETWORK_INTERFACE_BINDING);
   public static final String NETWORK_INTERFACE_DENYLIST = "network_interface_denylist";
   public static final List<String> NETWORK_INTERFACE_DENYLIST_VALUE =
-      System.getProperty(NETWORK_INTERFACE_DENYLIST) == null
+      SystemUtils.getSystem(NETWORK_INTERFACE_DENYLIST) == null
           ? Collections.emptyList()
           : Arrays.asList(System.getProperty(NETWORK_INTERFACE_DENYLIST).split(","));
 
@@ -156,52 +163,65 @@ public class NetUtil {
   }
 
   private static InetAddress getLocalAddress0() {
-    InetAddress localAddress = null;
     try {
-      Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
-      if (interfaces != null) {
-        while (interfaces.hasMoreElements()) {
-          try {
-            NetworkInterface network = interfaces.nextElement();
-            boolean useNi;
-            if (NETWORK_INTERFACE_BINDING_VALUE != null
-                && !NETWORK_INTERFACE_BINDING_VALUE.isEmpty()) {
-              if (NETWORK_INTERFACE_BINDING_VALUE.equals(network.getDisplayName())
-                  || NETWORK_INTERFACE_BINDING_VALUE.equals(network.getName())) {
-                useNi = true;
-              } else {
-                continue;
-              }
-            } else {
-              if (NETWORK_INTERFACE_DENYLIST_VALUE.contains(network.getDisplayName())
-                  || NETWORK_INTERFACE_DENYLIST_VALUE.contains(network.getName())) {
-                continue;
-              }
-              useNi = true;
-            }
-
-            Enumeration<InetAddress> addresses = network.getInetAddresses();
-            if (addresses != null) {
-              while (addresses.hasMoreElements()) {
-                try {
-                  InetAddress address = addresses.nextElement();
-                  if (useNi && isValidAddress(address)) {
-                    return address;
-                  }
-                } catch (Throwable e) {
-                  LOGGER.warn("Failed to retriving ip address, " + e.getMessage(), e);
-                }
-              }
-            }
-          } catch (Throwable e) {
-            LOGGER.warn("Failed to retriving ip address, " + e.getMessage(), e);
+      List<NetworkInterface> interfaces = Collections.list(NetworkInterface.getNetworkInterfaces());
+      if (CollectionUtils.isEmpty(interfaces)) {
+        throw new RuntimeException("no network interfaces");
+      }
+      if (StringUtils.isNotBlank(NETWORK_INTERFACE_BINDING_VALUE)) {
+        InetAddress localAddress =
+            selectLocalAddress(
+                interfaces, Collections.singletonList(NETWORK_INTERFACE_BINDING_VALUE));
+        if (localAddress != null) {
+          return localAddress;
+        }
+        throw new RuntimeException(
+            StringFormatter.format(
+                "cannot found network interface {}", NETWORK_INTERFACE_BINDING_VALUE));
+      }
+      if (!CollectionUtils.isEmpty(NETWORK_INTERFACE_DENYLIST_VALUE)) {
+        interfaces =
+            interfaces.stream()
+                .filter(
+                    i ->
+                        NETWORK_INTERFACE_DENYLIST_VALUE.contains(i.getName())
+                            || NETWORK_INTERFACE_DENYLIST_VALUE.contains(i.getDisplayName()))
+                .collect(Collectors.toList());
+      }
+      if (!CollectionUtils.isEmpty(NETWORK_INTERFACE_PREFERENCE)) {
+        InetAddress localAddress = selectLocalAddress(interfaces, NETWORK_INTERFACE_PREFERENCE);
+        if (localAddress != null) {
+          return localAddress;
+        }
+      }
+      for (NetworkInterface ni : interfaces) {
+        List<InetAddress> addresses = Collections.list(ni.getInetAddresses());
+        for (InetAddress address : addresses) {
+          if (isValidAddress(address)) {
+            return address;
           }
         }
       }
+      throw new RuntimeException("no valid network address");
     } catch (Throwable e) {
-      LOGGER.warn("Failed to retriving ip address, " + e.getMessage(), e);
+      LOGGER.error("Failed to retriving ip address: ", e);
+      throw new RuntimeException(
+          StringFormatter.format("Failed to retriving ip address: {}", e.getMessage()));
     }
-    LOGGER.error("Could not get local host ip address, will use 127.0.0.1 instead.");
-    return localAddress;
+  }
+
+  private static InetAddress selectLocalAddress(List<NetworkInterface> nis, List<String> bindings) {
+    for (NetworkInterface ni : nis) {
+      if (!bindings.contains(ni.getDisplayName()) && !bindings.contains(ni.getName())) {
+        continue;
+      }
+      List<InetAddress> addresses = Collections.list(ni.getInetAddresses());
+      for (InetAddress address : addresses) {
+        if (isValidAddress(address)) {
+          return address;
+        }
+      }
+    }
+    return null;
   }
 }

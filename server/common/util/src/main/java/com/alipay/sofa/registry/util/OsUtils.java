@@ -25,7 +25,7 @@ public class OsUtils {
   private static final int CPU_COUNT;
 
   static {
-    String cpuCount = System.getProperty("CPU_COUNT");
+    String cpuCount = SystemUtils.getSystem("CPU_COUNT");
     if (cpuCount != null) {
       CPU_COUNT = Integer.parseInt(cpuCount);
     } else {
