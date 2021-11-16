@@ -649,7 +649,7 @@
         </logger>
 
         <!-- druid配置 -->
-        <logger name="druid.sql.statement" level="${LOG_LEVEL}" additivity="false">
+        <logger name="druid.sql.Statement" level="${LOG_LEVEL}" additivity="false">
             <appender-ref ref="DRUID-SQL-DIGEST-APPENDER"/>
             <appender-ref ref="METADATA-COMMON-ERROR-APPENDER"/>
         </logger>

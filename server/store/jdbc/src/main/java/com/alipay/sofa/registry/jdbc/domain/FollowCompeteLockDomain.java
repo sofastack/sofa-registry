@@ -39,15 +39,31 @@ public class FollowCompeteLockDomain {
   /** try to compete new owner */
   private String newOwner;
 
+  private long leaseDuration;
+
+  private long term;
+
+  private long index;
+
   public FollowCompeteLockDomain() {}
 
   public FollowCompeteLockDomain(
-      String dataCenter, String lockName, String owner, Date gmtModified, String newOwner) {
+      String dataCenter,
+      String lockName,
+      String owner,
+      Date gmtModified,
+      String newOwner,
+      long leaseDuration,
+      long term,
+      long index) {
     this.dataCenter = dataCenter;
     this.lockName = lockName;
     this.owner = owner;
     this.gmtModified = gmtModified;
     this.newOwner = newOwner;
+    this.leaseDuration = leaseDuration;
+    this.term = term;
+    this.index = index;
   }
 
   /**
@@ -138,5 +154,29 @@ public class FollowCompeteLockDomain {
    */
   public void setNewOwner(String newOwner) {
     this.newOwner = newOwner;
+  }
+
+  public long getLeaseDuration() {
+    return leaseDuration;
+  }
+
+  public void setLeaseDuration(long leaseDuration) {
+    this.leaseDuration = leaseDuration;
+  }
+
+  public long getTerm() {
+    return term;
+  }
+
+  public void setTerm(long term) {
+    this.term = term;
+  }
+
+  public long getIndex() {
+    return index;
+  }
+
+  public void setIndex(long index) {
+    this.index = index;
   }
 }

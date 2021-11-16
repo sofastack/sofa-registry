@@ -1374,7 +1374,7 @@
             <appender-ref ref="COMMON-ERROR-APPENDER"/>
         </logger>
 
-        <logger name="druid.sql.statement" level="debug" additivity="false">
+        <logger name="druid.sql.Statement" level="debug" additivity="false">
             <appender-ref ref="DRUID-SQL-DIGEST-APPENDER"/>
             <appender-ref ref="COMMON-ERROR-APPENDER"/>
         </logger>

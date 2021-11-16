@@ -90,14 +90,24 @@ public class JdbcConfiguration {
     @Bean
     public Slf4jLogFilter logFilter() {
       Slf4jLogFilter filter = new Slf4jLogFilter();
-      filter.setResultSetLogEnabled(true);
-      filter.setConnectionLogEnabled(true);
-      filter.setStatementParameterClearLogEnable(true);
-      filter.setStatementCreateAfterLogEnabled(true);
-      filter.setStatementCloseAfterLogEnabled(true);
-      filter.setStatementParameterSetLogEnabled(true);
-      filter.setStatementPrepareAfterLogEnabled(true);
+
+      filter.setStatementLogEnabled(true);
       filter.setStatementExecutableSqlLogEnable(true);
+      filter.setStatementLogErrorEnabled(true);
+
+      filter.setStatementPrepareAfterLogEnabled(false);
+      filter.setStatementParameterSetLogEnabled(false);
+      filter.setStatementExecuteQueryAfterLogEnabled(false);
+      filter.setStatementCloseAfterLogEnabled(false);
+      filter.setStatementPrepareCallAfterLogEnabled(false);
+      filter.setStatementExecuteAfterLogEnabled(false);
+      filter.setStatementExecuteUpdateAfterLogEnabled(false);
+      filter.setStatementExecuteBatchAfterLogEnabled(false);
+      filter.setStatementParameterClearLogEnable(false);
+
+      filter.setResultSetLogEnabled(false);
+      filter.setConnectionLogEnabled(false);
+
       return filter;
     }
 

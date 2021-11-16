@@ -32,6 +32,9 @@ JAVA_OPTS="$JAVA_OPTS -XX:+DisableExplicitGC -XX:+PrintGCDetails -XX:+PrintGCDat
 JAVA_OPTS="$JAVA_OPTS -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=${BASE_DIR}/logs -XX:ErrorFile=${BASE_DIR}/logs/registry-${REGISTRY_APP_NAME}-hs_err_pid%p.log"
 JAVA_OPTS="$JAVA_OPTS -XX:-OmitStackTraceInFastThrow -XX:+UseConcMarkSweepGC -XX:+UseParNewGC -XX:ParallelGCThreads=4"
 JAVA_OPTS="$JAVA_OPTS -XX:+CMSClassUnloadingEnabled -XX:+UseCMSInitiatingOccupancyOnly -XX:CMSInitiatingOccupancyFraction=70"
+if [[ -n "$DEBUG_PORT" ]]; then
+  JAVA_OPTS="$JAVA_OPTS -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=$DEBUG_PORT"
+fi
 
 # start
 echo "Command: java ${JAVA_OPTS} -jar ${APP_JAR} ${SPRINGBOOT_OPTS}"
