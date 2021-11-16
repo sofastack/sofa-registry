@@ -48,6 +48,10 @@ public class DistributeLockDomain {
   /** current timestamp in db */
   private Date gmtDbServerTime;
 
+  private long term;
+
+  private long index;
+
   public DistributeLockDomain() {}
 
   public DistributeLockDomain(String dataCenter, String lockName, String owner, long duration) {
@@ -208,8 +212,10 @@ public class DistributeLockDomain {
 
   @Override
   public String toString() {
-    return "DistributeLock{"
-        + "dataCenter='"
+    return "DistributeLockDomain{"
+        + "id="
+        + id
+        + ", dataCenter='"
         + dataCenter
         + '\''
         + ", lockName='"
@@ -226,6 +232,26 @@ public class DistributeLockDomain {
         + gmtModified
         + ", gmtDbServerTime="
         + gmtDbServerTime
+        + ", term="
+        + term
+        + ", index="
+        + index
         + '}';
+  }
+
+  public long getTerm() {
+    return term;
+  }
+
+  public void setTerm(long term) {
+    this.term = term;
+  }
+
+  public long getIndex() {
+    return index;
+  }
+
+  public void setIndex(long index) {
+    this.index = index;
   }
 }

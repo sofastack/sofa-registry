@@ -29,6 +29,8 @@
         <result property="gmtCreate" column="gmt_create" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
         <result property="gmtModified" column="gmt_modified" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
         <result property="gmtDbServerTime" column="gmt_db_server_time" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
+        <result property="term" column="term" javaType="long" jdbcType="BIGINT"/>
+        <result property="index" column="index" javaType="long" jdbcType="BIGINT"/>
     </resultMap>
 
     <insert id="competeLockOnInsert" parameterType="com.alipay.sofa.registry.jdbc.domain.DistributeLockDomain">
@@ -40,7 +42,9 @@
            owner,
            duration,
            gmt_create,
-           gmt_modified
+           gmt_modified,
+           term,
+           `index`
        )
        VALUES
        (
@@ -49,7 +53,9 @@
            #{owner},
            #{duration},
            NOW(3),
-           NOW(3)
+           NOW(3),
+           1,
+           0
        )
        ON DUPLICATE KEY UPDATE lock_name = #{lockName}
        ]]>
@@ -58,15 +64,15 @@
     <update id="competeLockOnUpdate">
         <!-- update cas with dataCenter,lockName,owner,gmtModified  -->
         <![CDATA[
-       update distribute_lock set owner = #{newOwner}, gmt_modified =  NOW(3)
-       where data_center = #{dataCenter} and lock_name = #{lockName} and owner = #{owner} and gmt_modified = #{gmtModified}
+       update distribute_lock set owner = #{newOwner}, gmt_modified =  NOW(3), term = (term + 1), `index` = (`index` + 1)
+       where data_center = #{dataCenter} and lock_name = #{lockName} and owner = #{owner} and term = #{term} and `index` = #{index}  and timestampdiff(SECOND, gmt_modified, NOW()) > #{leaseDuration}/1000
        ]]>
     </update>
 
     <update id="ownerHeartbeat" parameterType="com.alipay.sofa.registry.jdbc.domain.DistributeLockDomain">
         <![CDATA[
-          update distribute_lock set owner = #{owner}, gmt_modified =  NOW(3)
-          where data_center = #{dataCenter} and lock_name = #{lockName} and owner = #{owner}
+          update distribute_lock set owner = #{owner}, gmt_modified =  NOW(3), `index` = (`index` + 1)
+          where data_center = #{dataCenter} and lock_name = #{lockName} and owner = #{owner} and term = #{term} and `index` = #{index}  and timestampdiff(SECOND, gmt_modified, NOW()) < #{duration}/1000
         ]]>
     </update>
 

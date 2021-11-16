@@ -35,6 +35,8 @@ CREATE TABLE distribute_lock (
   lock_name varchar(1024) NOT NULL,
   owner varchar(512) NOT NULL,
   duration bigint(20) NOT NULL,
+  term     bigint(20) unsigned NOT NULL DEFAULT 0 COMMENT '任期',
+  index    bigint(20) unsigned NOT NULL DEFAULT  0,
   gmt_create timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   gmt_modified timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   UNIQUE KEY `uk_data_center_lock` (`data_center`, `lock_name`),

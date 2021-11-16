@@ -49,6 +49,8 @@ CREATE TABLE IF NOT EXISTS `distribute_lock`
     `lock_name`    varchar(512) NOT NULL COMMENT '分布式锁名称',
     `owner`        varchar(512)  NOT NULL COMMENT '锁拥有者',
     `duration`     bigint(20) NOT NULL COMMENT '持续周期',
+    `term`         bigint(20) unsigned NOT NULL DEFAULT 0 COMMENT '任期',
+    `index`        bigint(20) unsigned NOT NULL DEFAULT  0,
     `gmt_create`   timestamp(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
     `gmt_modified` timestamp(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP (3) COMMENT '修改时间',
     PRIMARY KEY (`id`),

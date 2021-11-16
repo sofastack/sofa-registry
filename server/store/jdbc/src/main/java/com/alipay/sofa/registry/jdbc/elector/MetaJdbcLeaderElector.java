@@ -67,9 +67,7 @@ public class MetaJdbcLeaderElector extends AbstractLeaderElector implements Reco
       lock = onFollowWorking(lock, myself());
     }
     LeaderInfo result = leaderFrom(lock);
-    if (LOG.isInfoEnabled()) {
-      LOG.info("meta role : {}, leaderInfo: {}", role, result);
-    }
+    LOG.info("meta role : {}, leaderInfo: {}", role, result);
     return result;
   }
 
@@ -89,15 +87,11 @@ public class MetaJdbcLeaderElector extends AbstractLeaderElector implements Reco
       // compete finish.
       lock = distributeLockMapper.queryDistLock(dataCenter, lockName);
 
-      if (LOG.isInfoEnabled()) {
-        LOG.info("meta: {} compete success, become leader.", myself());
-      }
+      LOG.info("meta: {} compete success, become leader.", myself());
     } catch (Throwable t) {
       // compete leader error, query current leader
       lock = distributeLockMapper.queryDistLock(dataCenter, lockName);
-      if (LOG.isInfoEnabled()) {
-        LOG.info("meta: {} compete error, leader is: {}.", myself(), lock.getOwner());
-      }
+      LOG.info("meta: {} compete error, leader is: {}.", myself(), lock.getOwner());
     }
     return leaderFrom(lock);
   }
@@ -130,9 +124,7 @@ public class MetaJdbcLeaderElector extends AbstractLeaderElector implements Reco
     try {
       /** as leader, do heartbeat */
       distributeLockMapper.ownerHeartbeat(lock);
-      if (LOG.isInfoEnabled()) {
-        LOG.info("leader heartbeat: {}", myself);
-      }
+      LOG.info("leader heartbeat: {}", myself);
       return distributeLockMapper.queryDistLock(lock.getDataCenter(), lock.getLockName());
     } catch (Throwable t) {
       LOG.error("leader:{} heartbeat error.", myself, t);
@@ -143,21 +135,20 @@ public class MetaJdbcLeaderElector extends AbstractLeaderElector implements Reco
   public DistributeLockDomain onFollowWorking(DistributeLockDomain lock, String myself) {
     /** as follow, do compete if lock expire */
     if (lock.expire()) {
-      if (LOG.isInfoEnabled()) {
-        LOG.info("lock expire: {}, meta elector start: {}", lock, myself);
-      }
+      LOG.info("lock expire: {}, meta elector start: {}", lock, myself);
       distributeLockMapper.competeLockOnUpdate(
           new FollowCompeteLockDomain(
               lock.getDataCenter(),
               lock.getLockName(),
               lock.getOwner(),
               lock.getGmtModified(),
-              myself));
+              myself,
+              lock.getDuration(),
+              lock.getTerm(),
+              lock.getIndex()));
       DistributeLockDomain newLock =
           distributeLockMapper.queryDistLock(lock.getDataCenter(), lock.getLockName());
-      if (LOG.isInfoEnabled()) {
-        LOG.info("elector finish, new lock: {}", lock);
-      }
+      LOG.info("elector finish, new lock: {}", lock);
       return newLock;
     }
     return lock;
