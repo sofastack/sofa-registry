@@ -64,10 +64,15 @@ public class AbstractTestBase {
 
   public static final Random random = new Random();
 
+  public static final String CLUSTER_ID = "DEFAULT_SEGMENT";
+  public static final String RECOVER_CLUSTER_ID = "RECOVER_DEFAULT_SEGMENT";
+
   @BeforeClass
   public static void beforeAbstractTestClass() {
     System.setProperty("spring.main.show_banner", "false");
     System.setProperty("spring.profiles.active", "test");
+    System.setProperty("nodes.clusterId", CLUSTER_ID);
+    System.setProperty("nodes.recoverClusterId", RECOVER_CLUSTER_ID);
     System.setProperty(SlotConfig.KEY_DATA_SLOT_NUM, "16");
   }
 

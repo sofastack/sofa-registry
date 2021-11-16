@@ -90,6 +90,18 @@ public class DatumApiResource {
     return createResponse(datum);
   }
 
+  @GET
+  @Path("/summary/query")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Map<String, Integer> summary(String dataCenter) {
+    if (StringUtils.isBlank(dataCenter)) {
+      dataCenter = dataServerConfig.getLocalDataCenter();
+    }
+
+    Map<String, Map<String, Integer>> pubCount = datumCache.getPubCount();
+    return pubCount.get(dataCenter);
+  }
+
   /**
    * curl -i -d '{"dataInfoId":"testDataId#@#DEFAULT_INSTANCE_ID#@#DEFAULT_GROUP"}' -H
    * "Content-Type: application/json" -X POST http://localhost:9622/datum/api/delete

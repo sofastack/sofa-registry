@@ -16,29 +16,36 @@
  */
 package com.alipay.sofa.registry.jdbc.repository.impl;
 
-import static com.alipay.sofa.registry.jdbc.repository.impl.MetadataMetrics.ProvideData.PROVIDE_DATA_QUERY_COUNTER;
-import static com.alipay.sofa.registry.jdbc.repository.impl.MetadataMetrics.ProvideData.PROVIDE_DATA_UPDATE_COUNTER;
-
 import com.alipay.sofa.registry.common.model.console.PersistenceData;
 import com.alipay.sofa.registry.common.model.console.PersistenceDataBuilder;
 import com.alipay.sofa.registry.jdbc.config.DefaultCommonConfig;
+import com.alipay.sofa.registry.jdbc.constant.TableEnum;
 import com.alipay.sofa.registry.jdbc.convertor.ProvideDataDomainConvertor;
 import com.alipay.sofa.registry.jdbc.domain.ProvideDataDomain;
 import com.alipay.sofa.registry.jdbc.mapper.ProvideDataMapper;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
+import com.alipay.sofa.registry.store.api.meta.RecoverConfig;
+import com.alipay.sofa.registry.store.api.meta.RecoverConfigRepository;
 import com.alipay.sofa.registry.util.MathUtils;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import com.google.common.collect.Maps;
+import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import javax.annotation.PostConstruct;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import static com.alipay.sofa.registry.jdbc.repository.impl.MetadataMetrics.ProvideData.PROVIDE_DATA_QUERY_COUNTER;
+import static com.alipay.sofa.registry.jdbc.repository.impl.MetadataMetrics.ProvideData.PROVIDE_DATA_UPDATE_COUNTER;
 
 /**
  * @author xiaojian.xj
  * @version $Id: ProvideDataJdbcRepository.java, v 0.1 2021年03月13日 19:20 xiaojian.xj Exp $
  */
-public class ProvideDataJdbcRepository implements ProvideDataRepository {
+public class ProvideDataJdbcRepository implements ProvideDataRepository, RecoverConfig {
 
   private static final Logger LOG = LoggerFactory.getLogger("META-PROVIDEDATA", "[ProvideData]");
 
@@ -46,20 +53,25 @@ public class ProvideDataJdbcRepository implements ProvideDataRepository {
 
   @Autowired private DefaultCommonConfig defaultCommonConfig;
 
+  @Autowired private RecoverConfigRepository recoverConfigRepository;
+
   private static final Integer batchQuerySize = 1000;
+
+  @PostConstruct
+  public void init() {
+    recoverConfigRepository.registerCallback(this);
+  }
 
   @Override
   public boolean put(PersistenceData persistenceData, long expectVersion) {
 
-    ProvideDataDomain exist =
-        provideDataMapper.query(
-            defaultCommonConfig.getClusterId(),
-            PersistenceDataBuilder.getDataInfoId(persistenceData));
+    String dataInfoId = PersistenceDataBuilder.getDataInfoId(persistenceData);
+    String clusterId = defaultCommonConfig.getClusterId(tableName(), dataInfoId);
+    ProvideDataDomain exist = provideDataMapper.query(clusterId, dataInfoId);
 
     PROVIDE_DATA_QUERY_COUNTER.inc();
     ProvideDataDomain domain =
-        ProvideDataDomainConvertor.convert2ProvideData(
-            persistenceData, defaultCommonConfig.getClusterId());
+        ProvideDataDomainConvertor.convert2ProvideData(persistenceData, clusterId);
     int affect;
     try {
       if (exist == null) {
@@ -99,18 +111,20 @@ public class ProvideDataJdbcRepository implements ProvideDataRepository {
   @Override
   public PersistenceData get(String key) {
     PROVIDE_DATA_QUERY_COUNTER.inc();
+    String clusterId = defaultCommonConfig.getClusterId(tableName(), key);
     return ProvideDataDomainConvertor.convert2PersistenceData(
-        provideDataMapper.query(defaultCommonConfig.getClusterId(), key));
+        provideDataMapper.query(clusterId, key));
   }
 
   @Override
   public boolean remove(String key, long version) {
     PROVIDE_DATA_UPDATE_COUNTER.inc();
-    int affect = provideDataMapper.remove(defaultCommonConfig.getClusterId(), key, version);
+    String clusterId = defaultCommonConfig.getClusterId(tableName(), key);
+    int affect = provideDataMapper.remove(clusterId, key, version);
     if (LOG.isInfoEnabled()) {
       LOG.info(
           "remove provideData, dataCenter: {}, key: {}, version: {}, affect rows: {}",
-          defaultCommonConfig.getClusterId(),
+          clusterId,
           key,
           version,
           affect);
@@ -119,18 +133,70 @@ public class ProvideDataJdbcRepository implements ProvideDataRepository {
   }
 
   @Override
-  public Collection<PersistenceData> getAll() {
+  public Map<String, PersistenceData> getAll() {
 
-    Collection<PersistenceData> responses = new ArrayList<>();
-    int total = provideDataMapper.selectTotalCount(defaultCommonConfig.getClusterId());
-    int round = MathUtils.divideCeil(total, batchQuerySize);
-    for (int i = 0; i < round; i++) {
-      int start = i * batchQuerySize;
-      List<ProvideDataDomain> provideDataDomains =
-          provideDataMapper.queryByPage(defaultCommonConfig.getClusterId(), start, batchQuerySize);
-      responses.addAll(ProvideDataDomainConvertor.convert2PersistenceDatas(provideDataDomains));
+    String clusterId = defaultCommonConfig.getClusterId(tableName());
+    Map<String, PersistenceData> responses = getAllByClusterId(clusterId);
+
+    if (defaultCommonConfig.isRecoverCluster()) {
+      String recoverClusterId = defaultCommonConfig.getRecoverClusterId();
+      Map<String, PersistenceData> recoverConfigMap = getAllByClusterId(recoverClusterId);
+      LOG.info(
+          "load recover config by recoverClusterId:{}, ret:{}", recoverClusterId, recoverConfigMap);
+      Set<String> dataInfoIds = recoverConfigRepository.queryKey(tableName());
+
+      if (CollectionUtils.isNotEmpty(dataInfoIds)) {
+        for (String dataInfoId : dataInfoIds) {
+          // dependency config
+          responses.put(dataInfoId, recoverConfigMap.get(dataInfoId));
+        }
+      }
     }
     PROVIDE_DATA_QUERY_COUNTER.inc();
     return responses;
+  }
+
+  private Map<String, PersistenceData> getAllByClusterId(String clusterId) {
+    int total = provideDataMapper.selectTotalCount(clusterId);
+    int round = MathUtils.divideCeil(total, batchQuerySize);
+    Map<String, PersistenceData> responses = Maps.newHashMapWithExpectedSize(total);
+    for (int i = 0; i < round; i++) {
+      int start = i * batchQuerySize;
+      List<ProvideDataDomain> provideDataDomains =
+          provideDataMapper.queryByPage(clusterId, start, batchQuerySize);
+      for (ProvideDataDomain provideDataDomain : provideDataDomains) {
+        PersistenceData persistenceData =
+            ProvideDataDomainConvertor.convert2PersistenceData(provideDataDomain);
+        responses.put(PersistenceDataBuilder.getDataInfoId(persistenceData), persistenceData);
+      }
+    }
+    return responses;
+  }
+
+  @Override
+  public String tableName() {
+    return TableEnum.PROVIDE_DATA.getTableName();
+  }
+
+  @Override
+  public boolean afterConfigSet(String key, String recoverClusterId) {
+    if (defaultCommonConfig.isRecoverCluster()) {
+      return true;
+    }
+    String clusterId = defaultCommonConfig.getClusterId(tableName());
+    ProvideDataDomain data = provideDataMapper.query(clusterId, key);
+    ProvideDataDomain recoverData = provideDataMapper.query(recoverClusterId, key);
+    if (data != null && recoverData == null) {
+      // copy config
+      recoverData =
+          new ProvideDataDomain(
+              recoverClusterId,
+              data.getDataKey(),
+              data.getDataValue(),
+              PersistenceDataBuilder.nextVersion());
+      provideDataMapper.save(recoverData);
+      LOG.info("[afterConfigSet]save recover cluster:{}, data:{}", recoverClusterId, recoverData);
+    }
+    return true;
   }
 }

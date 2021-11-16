@@ -33,6 +33,7 @@ import com.alipay.sofa.registry.server.meta.remoting.meta.MetaServerRenewService
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.alipay.sofa.registry.store.api.elector.LeaderElector;
+import com.alipay.sofa.registry.store.api.meta.RecoverConfigRepository;
 import com.github.rholder.retry.Retryer;
 import com.github.rholder.retry.RetryerBuilder;
 import com.github.rholder.retry.StopStrategies;
@@ -89,6 +90,8 @@ public class MetaServerBootstrap {
 
   @Autowired private ClientManagerService clientManagerService;
 
+  @Autowired private RecoverConfigRepository recoverConfigRepository;
+
   private Server sessionServer;
 
   private Server dataServer;
@@ -127,6 +130,7 @@ public class MetaServerBootstrap {
       LOGGER.info("the configuration items are as follows: " + metaServerConfig.toString());
       ReporterUtils.enablePrometheusDefaultExports();
 
+      recoverConfigRepository.waitSynced();
       clientManagerService.waitSynced();
       openSessionRegisterServer();
 

@@ -22,6 +22,7 @@ import com.alipay.sofa.registry.server.session.metadata.AppRevisionHeartbeatRegi
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.task.MetricsableThreadPoolExecutor;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
+import com.alipay.sofa.registry.util.OsUtils;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -47,6 +48,7 @@ public class ExecutorManager {
   private final ThreadPoolExecutor dataSlotSyncRequestExecutor;
   private final ThreadPoolExecutor accessMetadataExecutor;
   private final ThreadPoolExecutor consoleExecutor;
+  private final ThreadPoolExecutor zoneSdkExecutor;
 
   @Autowired protected SessionServerConfig sessionServerConfig;
 
@@ -67,6 +69,8 @@ public class ExecutorManager {
   private static final String ACCESS_METADATA_EXECUTOR = "AccessMetadataExecutor";
 
   private static final String CONSOLE_EXECUTOR = "ConsoleExecutor";
+
+  private static final String ZONE_SDK_EXECUTOR = "ZoneSdkExecutor";
 
   public ExecutorManager(SessionServerConfig sessionServerConfig) {
     scheduler =
@@ -164,6 +168,16 @@ public class ExecutorManager {
                     TimeUnit.SECONDS,
                     new LinkedBlockingQueue(sessionServerConfig.getConsoleExecutorQueueSize()),
                     new NamedThreadFactory(CONSOLE_EXECUTOR, true)));
+
+    zoneSdkExecutor =
+        reportExecutors.computeIfAbsent(
+            ZONE_SDK_EXECUTOR,
+            k ->
+                MetricsableThreadPoolExecutor.newExecutor(
+                    "ZoneSdkExecutor",
+                    OsUtils.getCpuCount() * 5,
+                    100,
+                    new ThreadPoolExecutor.CallerRunsPolicy()));
   }
 
   public void startScheduler() {}
@@ -204,5 +218,9 @@ public class ExecutorManager {
 
   public ThreadPoolExecutor getConsoleExecutor() {
     return consoleExecutor;
+  }
+
+  public ThreadPoolExecutor getZoneSdkExecutor() {
+    return zoneSdkExecutor;
   }
 }

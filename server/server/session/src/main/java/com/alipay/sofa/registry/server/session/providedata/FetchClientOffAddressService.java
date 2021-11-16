@@ -78,7 +78,8 @@ public class FetchClientOffAddressService
   public FetchClientOffAddressService() {
     super(
         ValueConstants.CLIENT_OFF_ADDRESS_DATA_ID,
-        new ClientOffAddressStorage(INIT_VERSION, Collections.emptyMap(), null));
+        new ClientOffAddressStorage(
+            INIT_VERSION, Collections.emptyMap(), Collections.emptySet(), null));
   }
 
   @PostConstruct
@@ -97,7 +98,9 @@ public class FetchClientOffAddressService
   protected ClientOffAddressResp fetchFromPersistence() {
     ClientManagerAddress clientManagerAddress = clientManagerAddressRepository.queryClientOffData();
     return new ClientOffAddressResp(
-        clientManagerAddress.getVersion(), clientManagerAddress.getClientOffAddress());
+        clientManagerAddress.getVersion(),
+        clientManagerAddress.getClientOffAddress(),
+        clientManagerAddress.getReduces());
   }
 
   @Override
@@ -110,6 +113,7 @@ public class FetchClientOffAddressService
     long oldVersion = expect.getVersion();
 
     Set<String> toBeRemove = Sets.difference(olds, news);
+    Set<String> toBeClientOpen = Sets.difference(toBeRemove, data.reduces);
     Set<String> toBeAdd = Sets.difference(news, olds);
 
     Map<String, AddressVersion> adds = Maps.newHashMapWithExpectedSize(toBeAdd.size());
@@ -124,7 +128,8 @@ public class FetchClientOffAddressService
           new ClientOffAddressStorage(
               data.getVersion(),
               data.clientOffAddress,
-              new ClientOffTable(toBeAdd, adds, toBeRemove));
+              data.reduces,
+              new ClientOffTable(toBeAdd, adds, toBeRemove, toBeClientOpen));
       if (!compareAndSet(expect, update)) {
         LOGGER.error("update clientOffAddress:{} fail.", update.getVersion());
         return false;
@@ -135,13 +140,13 @@ public class FetchClientOffAddressService
 
     afterPropertySet(oldVersion, adds);
     LOGGER.info(
-        "olds clientOffAddress:{}, oldVersion:{}, toBeAdd.size:{}, toBeAdd:{}, toBeRemove.size:{}, toBeRemove:{}, current clientOffAddress:{}, newVersion:{}",
+        "olds clientOffAddress:{}, oldVersion:{}, toBeAdd.size:{}, toBeAdd:{}, toBeClientOpen.size:{}, toBeClientOpen:{}, current clientOffAddress:{}, newVersion:{}",
         olds,
         oldVersion,
         toBeAdd.size(),
         toBeAdd,
-        toBeRemove.size(),
-        toBeRemove,
+        toBeClientOpen.size(),
+        toBeClientOpen,
         storage.get().clientOffAddress.keySet(),
         storage.get().getVersion());
     return true;
@@ -167,12 +172,18 @@ public class FetchClientOffAddressService
   protected static class ClientOffAddressStorage extends SystemDataStorage {
     final Map<String, AddressVersion> clientOffAddress;
 
+    final Set<String> reduces;
+
     final AtomicReference<ClientOffTable> updating;
 
     public ClientOffAddressStorage(
-        long version, Map<String, AddressVersion> clientOffAddress, ClientOffTable updating) {
+        long version,
+        Map<String, AddressVersion> clientOffAddress,
+        Set<String> reduces,
+        ClientOffTable updating) {
       super(version);
       this.clientOffAddress = clientOffAddress;
+      this.reduces = reduces;
       this.updating = new AtomicReference<>(updating);
     }
   }
@@ -180,9 +191,13 @@ public class FetchClientOffAddressService
   protected static class ClientOffAddressResp extends SystemDataStorage {
     final Map<String, AddressVersion> clientOffAddress;
 
-    public ClientOffAddressResp(long version, Map<String, AddressVersion> clientOffAddress) {
+    final Set<String> reduces;
+
+    public ClientOffAddressResp(
+        long version, Map<String, AddressVersion> clientOffAddress, Set<String> reduces) {
       super(version);
       this.clientOffAddress = clientOffAddress;
+      this.reduces = reduces;
     }
   }
 
@@ -193,11 +208,17 @@ public class FetchClientOffAddressService
 
     final Set<String> removes;
 
+    final Set<String> clientOpens;
+
     public ClientOffTable(
-        Set<String> addAddress, Map<String, AddressVersion> adds, Set<String> removes) {
+        Set<String> addAddress,
+        Map<String, AddressVersion> adds,
+        Set<String> removes,
+        Set<String> clientOpens) {
       this.addAddress = addAddress;
       this.adds = adds;
       this.removes = removes;
+      this.clientOpens = clientOpens;
     }
   }
 
@@ -224,8 +245,11 @@ public class FetchClientOffAddressService
     Set<String> addAddress = table.addAddress;
     Map<String, AddressVersion> adds = table.adds;
     Set<String> removes = table.removes;
+    Set<String> clientOpens = table.clientOpens;
 
-    if (CollectionUtils.isEmpty(addAddress) && CollectionUtils.isEmpty(removes)) {
+    if (CollectionUtils.isEmpty(addAddress)
+        && CollectionUtils.isEmpty(removes)
+        && CollectionUtils.isEmpty(clientOpens)) {
       return true;
     }
 
@@ -234,9 +258,17 @@ public class FetchClientOffAddressService
     }
 
     if (CollectionUtils.isNotEmpty(removes)) {
-      doTrafficOn(removes);
+      unMarkChannel(removes);
+    }
+
+    if (CollectionUtils.isNotEmpty(clientOpens)) {
+      doTrafficOn(clientOpens);
     }
     return true;
+  }
+
+  private void unMarkChannel(Set<String> ipSet) {
+    connectionsService.markChannelAndGetIpConnects(ipSet, CLIENT_OFF, null);
   }
 
   private void doTrafficOff(Set<String> ipSet, Map<String, AddressVersion> adds) {
@@ -282,7 +314,9 @@ public class FetchClientOffAddressService
 
   protected void processClientOpen() {
     List<Channel> channels = connectionsService.getAllChannel();
-    Map<String, AddressVersion> clientOffAddress = storage.get().clientOffAddress;
+    ClientOffAddressStorage storage = this.storage.get();
+    Map<String, AddressVersion> clientOffAddress = storage.clientOffAddress;
+    Set<String> reduces = storage.reduces;
 
     Set<String> retryClientOpen = Sets.newHashSetWithExpectedSize(8);
     for (Channel channel : channels) {
@@ -292,9 +326,13 @@ public class FetchClientOffAddressService
       BoltChannel boltChannel = (BoltChannel) channel;
       Object value = boltChannel.getConnAttribute(CLIENT_OFF);
       if (Boolean.TRUE.equals(value) && !clientOffAddress.containsKey(ip)) {
-        LOGGER.warn("[ClientOpenFail] ip:{} client open fail.", ip);
-        // boltChannel.removeAttribute(CLIENT_OFF);
-        retryClientOpen.add(ip);
+
+        if (reduces.contains(ip)) {
+          unMarkChannel(Collections.singleton(ip));
+        } else {
+          LOGGER.warn("[ClientOpenFail] ip:{} client open fail.", ip);
+          retryClientOpen.add(ip);
+        }
       }
     }
 

@@ -208,6 +208,7 @@ public class SessionServerConfiguration {
       list.add(getClientManagerRequestHandler());
       list.add(pubSubDataInfoIdRequestHandler());
       list.add(filterSubscriberIPsHandler());
+      list.add(stopPushRequestHandler());
       return list;
     }
 
@@ -259,6 +260,11 @@ public class SessionServerConfiguration {
     @Bean
     public AbstractServerHandler getClientManagerRequestHandler() {
       return new GetClientManagerRequestHandler();
+    }
+
+    @Bean
+    public AbstractServerHandler stopPushRequestHandler() {
+      return new StopPushRequestHandler();
     }
 
     @Bean
@@ -425,6 +431,11 @@ public class SessionServerConfiguration {
     @Bean
     public SlotTableStatusResource slotTableStatusResource() {
       return new SlotTableStatusResource();
+    }
+
+    @Bean
+    public EmergencyApiResource emergencyApiResource() {
+      return new EmergencyApiResource();
     }
   }
 
@@ -721,7 +732,7 @@ public class SessionServerConfiguration {
     public FetchSystemPropertyService fetchStopPushService(
         SystemPropertyProcessorManager systemPropertyProcessorManager) {
       FetchStopPushService fetchStopPushService = new FetchStopPushService();
-      systemPropertyProcessorManager.addSystemDataProcessor(fetchStopPushService);
+      systemPropertyProcessorManager.addSystemDataPersistenceProcessor(fetchStopPushService);
 
       return fetchStopPushService;
     }
@@ -752,6 +763,15 @@ public class SessionServerConfiguration {
       CompressPushService compressPushService = new CompressPushService();
       systemPropertyProcessorManager.addSystemDataProcessor(compressPushService);
       return compressPushService;
+    }
+
+    @Bean
+    public FetchSystemPropertyService fetchShutdownService(
+        SystemPropertyProcessorManager systemPropertyProcessorManager) {
+      FetchShutdownService fetchShutdownService = new FetchShutdownService();
+      systemPropertyProcessorManager.addSystemDataPersistenceProcessor(fetchShutdownService);
+
+      return fetchShutdownService;
     }
 
     @Bean

@@ -20,8 +20,12 @@ import com.alipay.sofa.registry.common.model.console.PersistenceData;
 import com.alipay.sofa.registry.common.model.console.PersistenceDataBuilder;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.jdbc.AbstractH2DbTestBase;
+import com.alipay.sofa.registry.jdbc.mapper.ProvideDataMapper;
+import com.alipay.sofa.registry.jdbc.mapper.RecoverConfigMapper;
 import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
-import java.util.Collection;
+import com.alipay.sofa.registry.store.api.meta.RecoverConfigRepository;
+import java.sql.SQLException;
+import java.util.Map;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,8 +34,15 @@ public class ProvideDataJdbcRepositoryTest extends AbstractH2DbTestBase {
 
   @Autowired private ProvideDataRepository provideDataJdbcRepository;
 
+  @Autowired private ProvideDataMapper provideDataMapper;
+
+  @Autowired private RecoverConfigMapper recoverConfigMapper;
+
+  @Autowired private RecoverConfigRepository recoverConfigRepository;
+
   @Test
-  public void testPut() {
+  public void testPut() throws SQLException, InterruptedException {
+    // startH2Server();
     long version = System.currentTimeMillis();
 
     String dataInfoId = DataInfo.toDataInfoId("key" + version, "DEFAULT", "DEFAULT");
@@ -42,6 +53,9 @@ public class ProvideDataJdbcRepositoryTest extends AbstractH2DbTestBase {
     Assert.assertEquals("val", provideDataJdbcRepository.get(dataInfoId).getData());
     Assert.assertEquals(
         persistenceData.getVersion(), provideDataJdbcRepository.get(dataInfoId).getVersion());
+
+    // CountDownLatch latch = new CountDownLatch(1);
+    // latch.await();
   }
 
   @Test
@@ -76,7 +90,7 @@ public class ProvideDataJdbcRepositoryTest extends AbstractH2DbTestBase {
     Assert.assertEquals(
         persistenceData.getVersion(), provideDataJdbcRepository.get(dataInfoId).getVersion());
 
-    Collection<PersistenceData> all = provideDataJdbcRepository.getAll();
-    Assert.assertTrue(all.contains(persistenceData));
+    Map<String, PersistenceData> all = provideDataJdbcRepository.getAll();
+    Assert.assertTrue(all.values().contains(persistenceData));
   }
 }

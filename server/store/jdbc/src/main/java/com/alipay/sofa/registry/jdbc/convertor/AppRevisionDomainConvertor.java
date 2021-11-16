@@ -60,6 +60,7 @@ public class AppRevisionDomainConvertor {
     }
 
     AppRevision appRevision = new AppRevision();
+    appRevision.setId(domain.getId());
     appRevision.setDataCenter(domain.getDataCenter());
     appRevision.setAppName(domain.getAppName());
     appRevision.setRevision(domain.getRevision());

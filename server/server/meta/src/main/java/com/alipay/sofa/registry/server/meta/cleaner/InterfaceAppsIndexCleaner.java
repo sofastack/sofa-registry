@@ -17,16 +17,12 @@
 package com.alipay.sofa.registry.server.meta.cleaner;
 
 import com.alipay.sofa.registry.common.model.store.AppRevision;
-import com.alipay.sofa.registry.jdbc.config.DefaultCommonConfig;
 import com.alipay.sofa.registry.jdbc.config.MetadataConfig;
-import com.alipay.sofa.registry.jdbc.convertor.AppRevisionDomainConvertor;
-import com.alipay.sofa.registry.jdbc.domain.AppRevisionDomain;
-import com.alipay.sofa.registry.jdbc.domain.InterfaceAppsIndexDomain;
-import com.alipay.sofa.registry.jdbc.mapper.AppRevisionMapper;
-import com.alipay.sofa.registry.jdbc.mapper.InterfaceAppsIndexMapper;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.MetaLeaderService;
+import com.alipay.sofa.registry.store.api.repository.AppRevisionRepository;
+import com.alipay.sofa.registry.store.api.repository.InterfaceAppsRepository;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import com.google.common.collect.Maps;
@@ -43,11 +39,9 @@ public class InterfaceAppsIndexCleaner implements ApplicationListener<ContextRef
 
   final Renewer renewer = new Renewer();
 
-  @Autowired AppRevisionMapper appRevisionMapper;
+  @Autowired AppRevisionRepository appRevisionRepository;
 
-  @Autowired InterfaceAppsIndexMapper interfaceAppsIndexMapper;
-
-  @Autowired DefaultCommonConfig defaultCommonConfig;
+  @Autowired InterfaceAppsRepository interfaceAppsRepository;
 
   @Autowired MetaLeaderService metaLeaderService;
 
@@ -84,37 +78,26 @@ public class InterfaceAppsIndexCleaner implements ApplicationListener<ContextRef
       int page = 100;
       Map<String, Set<String>> mappings = Maps.newHashMap();
       while (true) {
-        List<AppRevisionDomain> revisionDomains =
-            appRevisionMapper.listRevisions(defaultCommonConfig.getClusterId(), start, page);
-        for (AppRevisionDomain domain : revisionDomains) {
-          start = Math.max(start, domain.getId());
-          if (domain.isDeleted()) {
+        List<AppRevision> revisions = appRevisionRepository.listFromStorage(start, page);
+        for (AppRevision revision : revisions) {
+          start = Math.max(start, revision.getId());
+          if (revision.isDeleted()) {
             continue;
           }
-          AppRevision revision =
-              revisionConvert(AppRevisionDomainConvertor.convert2Revision(domain));
+
           String appName = revision.getAppName();
           for (String interfaceName : revision.getInterfaceMap().keySet()) {
             mappings.computeIfAbsent(appName, k -> Sets.newHashSet()).add(interfaceName);
           }
         }
-        if (revisionDomains.size() < page) {
+        if (revisions.size() < page) {
           break;
         }
       }
       for (Map.Entry<String, Set<String>> entry : mappings.entrySet()) {
         String appName = entry.getKey();
         for (String interfaceName : entry.getValue()) {
-          InterfaceAppsIndexDomain domain =
-              new InterfaceAppsIndexDomain(
-                  defaultCommonConfig.getClusterId(), interfaceName, appName);
-          if (interfaceAppsIndexMapper.update(domain) == 0) {
-            interfaceAppsIndexMapper.replace(domain);
-            LOG.info(
-                "insert interface app mapping {}=>{} succeed",
-                domain.getInterfaceName(),
-                domain.getAppName());
-          }
+          interfaceAppsRepository.renew(interfaceName, appName);
           ConcurrentUtils.sleepUninterruptibly(10, TimeUnit.MILLISECONDS);
         }
       }

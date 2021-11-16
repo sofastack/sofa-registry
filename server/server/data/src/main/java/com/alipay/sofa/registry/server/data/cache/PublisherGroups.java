@@ -90,6 +90,12 @@ public final class PublisherGroups {
     return map;
   }
 
+  Map<String, Integer> getPubCount() {
+    Map<String, Integer> map = Maps.newHashMapWithExpectedSize(publisherGroupMap.size());
+    publisherGroupMap.forEach((k, v) -> map.put(k, v.pubMap.size()));
+    return map;
+  }
+
   Map<String, Publisher> getByConnectId(ConnectId connectId) {
     Map<String, Publisher> map = Maps.newHashMapWithExpectedSize(64);
     publisherGroupMap.values().forEach(v -> map.putAll(v.getByConnectId(connectId)));

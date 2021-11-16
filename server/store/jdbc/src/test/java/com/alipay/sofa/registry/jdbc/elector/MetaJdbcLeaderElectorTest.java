@@ -18,6 +18,7 @@ package com.alipay.sofa.registry.jdbc.elector;
 
 import com.alipay.sofa.registry.jdbc.AbstractH2DbTestBase;
 import com.alipay.sofa.registry.jdbc.config.DefaultCommonConfig;
+import com.alipay.sofa.registry.jdbc.constant.TableEnum;
 import com.alipay.sofa.registry.jdbc.domain.DistributeLockDomain;
 import com.alipay.sofa.registry.jdbc.mapper.DistributeLockMapper;
 import com.alipay.sofa.registry.store.api.elector.AbstractLeaderElector;
@@ -68,7 +69,9 @@ public class MetaJdbcLeaderElectorTest extends AbstractH2DbTestBase {
     waitConditionUntilTimeOut(() -> leaderElector.amILeader(), 5000);
 
     DistributeLockDomain domain =
-        distributeLockMapper.queryDistLock(defaultCommonConfig.getClusterId(), "META-MASTER");
+        distributeLockMapper.queryDistLock(
+            defaultCommonConfig.getClusterId(TableEnum.DISTRIBUTE_LOCK.getTableName()),
+            "META-MASTER");
     domain.setDuration(0L);
     leaderElector.onFollowWorking(domain, leaderElector.myself());
   }

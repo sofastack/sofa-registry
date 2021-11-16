@@ -69,9 +69,9 @@ public class FetchSystemPropertyTest {
     SystemPropertyProcessorManager provideDataProcessorManager =
         new SystemPropertyProcessorManager();
 
-    provideDataProcessorManager.addSystemDataProcessor(fetchStopPushService);
     provideDataProcessorManager.addSystemDataProcessor(fetchGrayPushSwitchService);
     provideDataProcessorManager.addSystemDataProcessor(fetchBlackListService);
+    provideDataProcessorManager.addSystemDataPersistenceProcessor(fetchStopPushService);
     provideDataProcessorManager.addSystemDataPersistenceProcessor(fetchClientOffAddressService);
     Assert.assertTrue(provideDataProcessorManager.startFetchMetaSystemProperty());
     Assert.assertTrue(provideDataProcessorManager.startFetchPersistenceSystemProperty());

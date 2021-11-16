@@ -22,10 +22,8 @@ import com.alipay.sofa.registry.common.model.console.PersistenceDataBuilder;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.cleaner.AppRevisionSlice;
 import com.alipay.sofa.registry.common.model.metaserver.cleaner.AppRevisionSliceRequest;
-import com.alipay.sofa.registry.jdbc.config.DefaultCommonConfig;
+import com.alipay.sofa.registry.common.model.store.AppRevision;
 import com.alipay.sofa.registry.jdbc.config.MetadataConfig;
-import com.alipay.sofa.registry.jdbc.domain.AppRevisionDomain;
-import com.alipay.sofa.registry.jdbc.mapper.AppRevisionMapper;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.MetaLeaderService;
@@ -33,6 +31,8 @@ import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataService;
 import com.alipay.sofa.registry.server.meta.remoting.session.DefaultSessionServerService;
 import com.alipay.sofa.registry.store.api.DBResponse;
 import com.alipay.sofa.registry.store.api.OperationStatus;
+import com.alipay.sofa.registry.store.api.date.DateNowRepository;
+import com.alipay.sofa.registry.store.api.repository.AppRevisionRepository;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
@@ -58,9 +58,9 @@ public class AppRevisionCleaner
 
   private static final boolean DEFAULT_ENABLED = true;
 
-  @Autowired AppRevisionMapper appRevisionMapper;
+  @Autowired DateNowRepository dateNowRepository;
 
-  @Autowired DefaultCommonConfig defaultCommonConfig;
+  @Autowired AppRevisionRepository appRevisionRepository;
 
   @Autowired MetadataConfig metadataConfig;
 
@@ -110,7 +110,7 @@ public class AppRevisionCleaner
         slices.add((AppRevisionSlice) result);
       }
       for (String revision : AppRevisionSlice.merge(slices).getRevisions()) {
-        appRevisionMapper.heartbeat(defaultCommonConfig.getClusterId(), revision);
+        appRevisionRepository.heartbeat(revision);
         ConcurrentUtils.sleepUninterruptibly(10, TimeUnit.MILLISECONDS);
       }
       consecutiveSuccess.success();
@@ -122,7 +122,7 @@ public class AppRevisionCleaner
 
   Date dateBeforeNow(int minutes) {
     Calendar calendar = Calendar.getInstance();
-    calendar.setTime(appRevisionMapper.getNow().getNow());
+    calendar.setTime(dateNowRepository.getNow());
     calendar.add(Calendar.MINUTE, -minutes);
     return calendar.getTime();
   }
@@ -134,15 +134,13 @@ public class AppRevisionCleaner
     if (!consecutiveSuccess.check()) {
       return;
     }
-    List<AppRevisionDomain> expiredDomains =
-        appRevisionMapper.getExpired(
-            defaultCommonConfig.getClusterId(),
-            dateBeforeNow(metadataConfig.getRevisionRenewIntervalMinutes() * 5),
-            maxRemoved);
-    for (AppRevisionDomain domain : expiredDomains) {
-      domain.setDeleted(true);
-      appRevisionMapper.replace(domain);
-      LOG.info("mark deleted revision: {}", domain.getRevision());
+    List<AppRevision> expired =
+        appRevisionRepository.getExpired(
+            dateBeforeNow(metadataConfig.getRevisionRenewIntervalMinutes() * 5), maxRemoved);
+    for (AppRevision revision : expired) {
+      revision.setDeleted(true);
+      appRevisionRepository.replace(revision);
+      LOG.info("mark deleted revision: {}", revision.getRevision());
       ConcurrentUtils.sleepUninterruptibly(10, TimeUnit.MILLISECONDS);
     }
   }
@@ -155,10 +153,8 @@ public class AppRevisionCleaner
       return;
     }
     int count =
-        appRevisionMapper.cleanDeleted(
-            defaultCommonConfig.getClusterId(),
-            dateBeforeNow(metadataConfig.getRevisionRenewIntervalMinutes() * 10),
-            maxRemoved);
+        appRevisionRepository.cleanDeleted(
+            dateBeforeNow(metadataConfig.getRevisionRenewIntervalMinutes() * 10), maxRemoved);
     if (count > 0) {
       LOG.info("clean up {} revisions", count);
     }

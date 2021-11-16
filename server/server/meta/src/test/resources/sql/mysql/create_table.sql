@@ -66,6 +66,15 @@ CREATE TABLE `client_manager_address` (
   UNIQUE KEY `uk_data_center_address` (`data_center`, `address`) BLOCK_SIZE 16384 GLOBAL
 ) DEFAULT CHARSET = utf8mb4 ROW_FORMAT = DYNAMIC COMPRESSION = 'zstd_1.0' REPLICA_NUM = 3 BLOCK_SIZE = 16384 USE_BLOOM_FILTER = FALSE TABLET_SIZE = 134217728 PCTFREE = 10 COMMENT = '关流量pod数据表'
 
+CREATE TABLE `recover_config` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `property_table` varchar(256) NOT NULL COMMENT '容灾独立存储配置table',
+  `property_key` varchar(512) NOT NULL COMMENT '容灾独立存储配置table_key',
+  `gmt_create` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `gmt_modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_table_key` (`property_table`(256), `property_key`(512)) BLOCK_SIZE 16384 GLOBAL
+) AUTO_INCREMENT = 1 DEFAULT CHARSET = utf8mb4 ROW_FORMAT = DYNAMIC COMPRESSION = 'zstd_1.0' REPLICA_NUM = 3 BLOCK_SIZE = 16384 USE_BLOOM_FILTER = FALSE TABLET_SIZE = 134217728 PCTFREE = 10 COMMENT = '容灾集群独立存储配置表'
 
 
 

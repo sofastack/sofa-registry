@@ -52,6 +52,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -717,7 +718,8 @@ public class AbstractMetaServerTestBase extends AbstractTestBase {
             new AddressVersion(System.currentTimeMillis(), (String) address, true));
       }
 
-      ClientManagerAddress resp = new ClientManagerAddress(version.get(), clientOffAddress);
+      ClientManagerAddress resp =
+          new ClientManagerAddress(version.get(), clientOffAddress, Collections.EMPTY_SET);
       return DBResponse.ok(resp).build();
     }
 

@@ -41,6 +41,7 @@ import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.server.shared.providedata.SystemPropertyProcessorManager;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.alipay.sofa.registry.store.api.meta.ClientManagerAddressRepository;
+import com.alipay.sofa.registry.store.api.meta.RecoverConfigRepository;
 import com.github.rholder.retry.Retryer;
 import com.github.rholder.retry.RetryerBuilder;
 import com.github.rholder.retry.StopStrategies;
@@ -97,6 +98,8 @@ public class SessionServerBootstrap {
   @Autowired private SessionRegistryStrategy sessionRegistryStrategy;
 
   @Autowired private ClientManagerAddressRepository clientManagerAddressRepository;
+
+  @Autowired private RecoverConfigRepository recoverConfigRepository;
   private Server server;
 
   private Server dataSyncServer;
@@ -162,6 +165,7 @@ public class SessionServerBootstrap {
       retryer.call(
           () -> slotTableCache.getCurrentSlotTable().getEpoch() != SlotTable.INIT.getEpoch());
 
+      recoverConfigRepository.waitSynced();
       appRevisionCacheRegistry.waitSynced();
       clientManagerAddressRepository.waitSynced();
 
@@ -197,6 +201,7 @@ public class SessionServerBootstrap {
   /** Destroy. */
   public void destroy() {
     doStop();
+    Runtime.getRuntime().halt(0);
   }
 
   private void doStop() {

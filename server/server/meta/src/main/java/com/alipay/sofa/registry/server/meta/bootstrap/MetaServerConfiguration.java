@@ -318,6 +318,11 @@ public class MetaServerConfiguration {
     }
 
     @Bean
+    public ShutdownSwitchResource shutdownSwitchResource() {
+      return new ShutdownSwitchResource();
+    }
+
+    @Bean
     public CompressResource compressedResource() {
       return new CompressResource();
     }
@@ -336,6 +341,11 @@ public class MetaServerConfiguration {
     @Bean
     public ClientManagerResource clientManagerResource() {
       return new ClientManagerResource();
+    }
+
+    @Bean
+    public RecoverConfigResource recoverConfigResource() {
+      return new RecoverConfigResource();
     }
 
     @Bean

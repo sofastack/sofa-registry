@@ -47,6 +47,9 @@ public class DatumCacheTest {
     Map<String, Map<String, List<Publisher>>> publisherMaps = cache.getAllPublisher();
     Assert.assertTrue(publisherMaps.get(testDc).get(publisher.getDataInfoId()).contains(publisher));
 
+    Map<String, Map<String, Integer>> summary = cache.getPubCount();
+    Assert.assertEquals(1, summary.get(testDc).get(publisher.getDataInfoId()).intValue());
+
     Map<String, Publisher> publisherMap = cache.getByConnectId(publisher.connectId());
     Assert.assertTrue(publisherMap.get(publisher.getRegisterId()) == publisher);
 
