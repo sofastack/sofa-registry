@@ -74,11 +74,16 @@ CREATE TABLE IF NOT EXISTS `client_manager_address`
 ) DEFAULT CHARSET = utf8mb4 COMMENT = '关流量pod数据表';
 
 
-
-
-
-
-
+CREATE TABLE IF NOT EXISTS  `recover_config`
+(
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `property_table` varchar(256) NOT NULL COMMENT '容灾独立存储配置table',
+  `property_key` varchar(512) NOT NULL COMMENT '容灾独立存储配置table_key',
+  `gmt_create` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `gmt_modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_table_key` (`property_table`, `property_key`)
+);
 
 
 

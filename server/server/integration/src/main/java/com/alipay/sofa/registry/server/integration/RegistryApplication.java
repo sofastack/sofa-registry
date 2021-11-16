@@ -58,8 +58,6 @@ public class RegistryApplication {
   private static final String META_HTTP_SERVER_PORT = "meta.server.httpServerPort";
   private static final String DATA_HTTP_SERVER_PORT = "data.server.httpServerPort";
   private static final String SESSION_HTTP_SERVER_PORT = "session.server.httpServerPort";
-  private static final String META_NODES = "nodes.metaNode";
-  private static final String NODES_LOCAL_DATA_CENTER = "nodes.localDataCenter";
   private static final String CLUSTER_ID = "DEFAULT_SEGMENT";
   private static final String RECOVER_CLUSTER_ID = "RECOVER_DEFAULT_SEGMENT";
 

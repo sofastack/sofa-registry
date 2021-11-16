@@ -324,6 +324,7 @@ public class MetaServerConfiguration {
     public ShutdownSwitchResource shutdownSwitchResource() {
       return new ShutdownSwitchResource();
     }
+
     @Bean
     @ConditionalOnMissingBean
     public VersionResource versionResource() {

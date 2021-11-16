@@ -43,8 +43,8 @@
            duration,
            gmt_create,
            gmt_modified,
-           term,
-           index
+           `term`,
+           `index`
        )
        VALUES
        (

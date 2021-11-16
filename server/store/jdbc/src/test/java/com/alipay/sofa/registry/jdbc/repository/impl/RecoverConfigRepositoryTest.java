@@ -20,7 +20,7 @@ import com.alipay.sofa.registry.common.model.console.PersistenceData;
 import com.alipay.sofa.registry.common.model.console.PersistenceDataBuilder;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.jdbc.AbstractH2DbTestBase;
-import com.alipay.sofa.registry.jdbc.config.DefaultCommonConfigBean;
+import com.alipay.sofa.registry.store.api.config.DefaultCommonConfigBean;
 import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
 import java.util.Map;
 import java.util.Set;
@@ -60,6 +60,7 @@ public class RecoverConfigRepositoryTest extends AbstractH2DbTestBase {
         "provide_data", ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID, RECOVER_CLUSTER_ID);
     recoverConfigJdbcRepository.save("app_revision", "all", RECOVER_CLUSTER_ID);
     recoverConfigJdbcRepository.doRefresh();
+
     Set<String> data = recoverConfigJdbcRepository.queryKey("provide_data");
     Assert.assertTrue(data.contains(ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID));
     Assert.assertFalse(data.contains(ValueConstants.BLACK_LIST_DATA_ID));
