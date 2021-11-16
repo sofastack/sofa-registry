@@ -31,13 +31,13 @@ public class CommonConfig {
    * server local data center, get from System Property example:
    * nodes.localDataCenter=DefaultDataCenter
    */
-  @Value("${nodes.localDataCenter}")
+  @Value("${nodes.localDataCenter:DefaultDataCenter}")
   private String localDataCenter;
 
   public static final String LOCAL_REGION = System.getProperty("nodes.localRegion");
 
   @Value(
-      "#{PropertySplitter.mapOfSingleList('${nodes.metaNode:DefaultDataCenter:localhost}', '${nodes.localDataCenter}')}")
+      "#{PropertySplitter.mapOfSingleList('${nodes.metaNode:DefaultDataCenter:localhost}', '${nodes.localDataCenter:DefaultDataCenter}')}")
   private Map<String /*dataCenterId*/, Collection<String>> metaNode;
 
   /**

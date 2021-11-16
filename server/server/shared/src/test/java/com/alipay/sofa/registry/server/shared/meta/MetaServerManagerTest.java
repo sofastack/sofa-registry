@@ -24,6 +24,8 @@ import com.alipay.sofa.registry.exception.MetaLeaderQueryException;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.jersey.JerseyClient;
 import com.alipay.sofa.registry.server.shared.TestUtils;
+import com.alipay.sofa.registry.store.api.config.DefaultCommonConfigBean;
+import com.alipay.sofa.registry.store.api.spring.SpringContext;
 import com.google.common.collect.Lists;
 import java.util.*;
 import javax.ws.rs.client.Invocation;
@@ -35,9 +37,9 @@ import org.mockito.Mockito;
 
 public class MetaServerManagerTest {
   @Test
-  public void testLeader() {
+  public void testRestQueryLeader() {
     javax.ws.rs.client.Client client = JerseyClient.getInstance().getClient();
-    Assert.assertNull(AbstractMetaServerManager.queryLeaderInfo(Collections.EMPTY_LIST, client));
+    Assert.assertNull(AbstractMetaServerManager.queryLeaderInfo(Collections.emptyList(), client));
     Assert.assertNull(
         AbstractMetaServerManager.queryLeaderInfo(Lists.newArrayList("localhost"), client));
 
@@ -82,6 +84,9 @@ public class MetaServerManagerTest {
 
     MockServerManager mockServerManager = new MockServerManager();
     mockServerManager.setRsClient(client);
+    DefaultCommonConfigBean defaultCommonConfigBean = new DefaultCommonConfigBean();
+    defaultCommonConfigBean.setPersistenceProfileActive(SpringContext.META_STORE_API_RAFT);
+    mockServerManager.defaultCommonConfig = defaultCommonConfigBean;
     // not refresh
     Assert.assertNull(mockServerManager.metaLeaderInfo);
     // leader is null, not update

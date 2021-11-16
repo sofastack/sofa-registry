@@ -30,7 +30,7 @@ public class NodeConfigBeanProperty extends AbstractNodeConfigBean {
       "#{PropertySplitter.mapOfSingleList('${nodes.metaNode:DefaultDataCenter:localhost}', '${nodes.localDataCenter:DefaultDataCenter}')}")
   private Map<String /*dataCenterId*/, Collection<String>> metaNode;
 
-  @Value("${nodes.localDataCenter}")
+  @Value("${nodes.localDataCenter:DefaultDataCenter}")
   private String localDataCenter;
 
   @Override

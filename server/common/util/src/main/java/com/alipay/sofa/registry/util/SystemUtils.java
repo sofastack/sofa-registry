@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.util;
 
+import org.apache.commons.lang.StringUtils;
+
 public final class SystemUtils {
   private SystemUtils() {}
 
@@ -45,5 +47,9 @@ public final class SystemUtils {
 
   public static String getSystem(String name) {
     return getSystem(name, null);
+  }
+
+  public static String convertEnvKey(String key){
+    return StringUtils.replace(key, ".", "_").toUpperCase();
   }
 }

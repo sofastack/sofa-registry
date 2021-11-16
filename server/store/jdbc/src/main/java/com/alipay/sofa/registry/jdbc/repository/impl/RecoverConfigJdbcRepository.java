@@ -67,8 +67,9 @@ public class RecoverConfigJdbcRepository
   @Override
   public void onApplicationEvent(ContextRefreshedEvent contextRefreshedEvent) {
     ConcurrentUtils.createDaemonThread(this.getClass().getSimpleName() + "WatchDog", watcher)
-        .start();
+            .start();
   }
+
 
   @Override
   public Set<String> queryKey(String propertyTable) {
@@ -81,7 +82,7 @@ public class RecoverConfigJdbcRepository
     }
     List<RecoverConfigDomain> resp = recoverConfigMapper.query(propertyTable);
     if (CollectionUtils.isEmpty(resp)) {
-      return Collections.EMPTY_SET;
+      return Collections.emptySet();
     }
     return resp.stream().map(RecoverConfigDomain::getPropertyKey).collect(Collectors.toSet());
   }
@@ -130,6 +131,7 @@ public class RecoverConfigJdbcRepository
   public void registerCallback(RecoverConfig config) {
     callbackHandler.put(config.tableName(), config);
   }
+
 
   class ConfigWatcher extends LoopRunnable {
 

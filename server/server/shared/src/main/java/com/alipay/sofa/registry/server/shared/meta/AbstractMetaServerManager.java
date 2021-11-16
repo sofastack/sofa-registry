@@ -21,6 +21,7 @@ import com.alipay.sofa.registry.common.model.elector.LeaderInfo;
 import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.BaseHeartBeatResponse;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.exception.MetaLeaderQueryException;
+import com.alipay.sofa.registry.jdbc.constant.TableEnum;
 import com.alipay.sofa.registry.jdbc.domain.DistributeLockDomain;
 import com.alipay.sofa.registry.jdbc.elector.MetaJdbcLeaderElector;
 import com.alipay.sofa.registry.jdbc.mapper.DistributeLockMapper;
@@ -64,7 +65,7 @@ public abstract class AbstractMetaServerManager extends ClientSideExchanger
   @Resource(name = "metaClientHandlers")
   private Collection<ChannelHandler> metaClientHandlers;
 
-  @Autowired private DefaultCommonConfig defaultCommonConfig;
+  @Autowired DefaultCommonConfig defaultCommonConfig;
 
   @Autowired private DistributeLockMapper distributeLockMapper;
 
@@ -212,7 +213,8 @@ public abstract class AbstractMetaServerManager extends ClientSideExchanger
           () -> {
             DistributeLockDomain lock =
                 distributeLockMapper.queryDistLock(
-                    defaultCommonConfig.getClusterId(), MetaJdbcLeaderElector.lockName);
+                    defaultCommonConfig.getClusterId(TableEnum.DISTRIBUTE_LOCK.getTableName()),
+                    MetaJdbcLeaderElector.lockName);
             if (!validateLockLeader(lock)) {
               return null;
             }
@@ -278,7 +280,7 @@ public abstract class AbstractMetaServerManager extends ClientSideExchanger
         LOGGER.error("[resetLeaderFromRestServer] failed to query from url: {}", url, e);
       }
     }
-    throw new RuntimeException();
+    return null;
   }
 
   @VisibleForTesting

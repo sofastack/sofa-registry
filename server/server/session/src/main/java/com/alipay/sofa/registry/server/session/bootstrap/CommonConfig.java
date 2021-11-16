@@ -32,7 +32,7 @@ public class CommonConfig {
    * server local data center, get from System Property example:
    * nodes.localDataCenter=DefaultDataCenter
    */
-  @Value("${nodes.localDataCenter}")
+  @Value("${nodes.localDataCenter:DefaultDataCenter}")
   private String localDataCenter;
 
   /** server local region, get from System Property example: nodes.localRegion=DEFAULT_ZONE */
@@ -44,7 +44,7 @@ public class CommonConfig {
    * nodes.metaNode=DefaultDataCenter:192.168.xxx.xxx,192.168.xxx.xxx,192.168.xxx.xxx|AnotherDataCenter:192.168.xxx.xxx,192.168.xxx.xxx,192.168.xxx.xxx
    */
   @Value(
-      "#{PropertySplitter.mapOfSingleList('${nodes.metaNode:DefaultDataCenter:localhost}', '${nodes.localDataCenter}')}")
+      "#{PropertySplitter.mapOfSingleList('${nodes.metaNode:DefaultDataCenter:localhost}', '${nodes.localDataCenter:DefaultDataCenter}')}")
   private Map<String, Collection<String>> metaNode;
 
   /**

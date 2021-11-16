@@ -19,16 +19,15 @@ package com.alipay.sofa.registry.store.api.config;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.store.api.meta.RecoverConfigRepository;
+import com.alipay.sofa.registry.store.api.spring.SpringContext;
 import com.alipay.sofa.registry.util.SystemUtils;
 import com.google.common.annotations.VisibleForTesting;
 import java.util.Set;
 import javax.annotation.PostConstruct;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.util.CollectionUtils;
-import com.alipay.sofa.common.profile.StringUtil;
-import com.alipay.sofa.registry.store.api.spring.SpringContext;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.util.CollectionUtils;
 
 /**
  * @author xiaojian.xj
@@ -38,7 +37,7 @@ public class DefaultCommonConfigBean implements DefaultCommonConfig {
 
   private static final Logger LOG = LoggerFactory.getLogger(DefaultCommonConfigBean.class);
 
-  @Value("${nodes.localDataCenter}")
+  @Value("${nodes.localDataCenter:DefaultDataCenter}")
   private String dataCenter;
 
   @Value("${nodes.clusterId:}")
@@ -121,6 +120,11 @@ public class DefaultCommonConfigBean implements DefaultCommonConfig {
   @VisibleForTesting
   public void setRecoverClusterId(String recoverClusterId) {
     this.recoverClusterId = recoverClusterId;
+  }
+
+  @VisibleForTesting
+  public void setPersistenceProfileActive(String active){
+    this.persistenceProfileActive = active;
   }
 
   public boolean isJdbc() {

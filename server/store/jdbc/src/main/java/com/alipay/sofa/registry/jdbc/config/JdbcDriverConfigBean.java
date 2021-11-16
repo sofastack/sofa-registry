@@ -236,7 +236,4 @@ public class JdbcDriverConfigBean implements JdbcDriverConfig {
     this.slowSqlMillis = slowSqlMillis;
   }
 
-  public static String getEnvKey(String key) {
-    return (PRE_FIX + "_" + key).toUpperCase();
-  }
 }

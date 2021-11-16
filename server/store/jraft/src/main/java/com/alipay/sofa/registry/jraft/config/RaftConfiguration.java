@@ -18,6 +18,7 @@ package com.alipay.sofa.registry.jraft.config;
 
 import com.alipay.sofa.registry.jraft.repository.impl.AppRevisionRaftRepository;
 import com.alipay.sofa.registry.jraft.repository.impl.InterfaceAppsRaftRepository;
+import com.alipay.sofa.registry.store.api.config.StoreApiConfiguration;
 import com.alipay.sofa.registry.store.api.repository.AppRevisionRepository;
 import com.alipay.sofa.registry.store.api.repository.InterfaceAppsRepository;
 import com.alipay.sofa.registry.store.api.spring.SpringContext;
@@ -25,12 +26,16 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 
 /**
  * @author xiaojian.xj
  * @version $Id: JdbcConfiguration.java, v 0.1 2021年01月17日 16:28 xiaojian.xj Exp $
  */
 @Configuration
+@Import({
+        StoreApiConfiguration.class
+})
 @EnableConfigurationProperties
 @ConditionalOnProperty(
     value = SpringContext.PERSISTENCE_PROFILE_ACTIVE,
