@@ -18,9 +18,6 @@ package com.alipay.sofa.registry.server.session.providedata;
 
 import static org.mockito.Mockito.mock;
 
-import com.alipay.sofa.registry.common.model.ServerDataBox;
-import com.alipay.sofa.registry.common.model.constants.ValueConstants;
-import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import org.junit.Assert;
 import org.junit.Before;
@@ -43,18 +40,10 @@ public class FetchStopPushServiceTest extends FetchStopPushService {
   public void test() {
     Assert.assertTrue(isStopPushSwitch());
 
-    Assert.assertTrue(
-        doProcess(
-            storage.get(),
-            new ProvideData(
-                new ServerDataBox("false"), ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID, 2L)));
+    Assert.assertTrue(doProcess(storage.get(), new StopPushStorage(2L, false)));
     Assert.assertEquals(isStopPushSwitch(), false);
 
-    Assert.assertTrue(
-        doProcess(
-            storage.get(),
-            new ProvideData(
-                new ServerDataBox("true"), ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID, 1L)));
+    Assert.assertTrue(doProcess(storage.get(), new StopPushStorage(1L, true)));
     Assert.assertEquals(isStopPushSwitch(), true);
   }
 }

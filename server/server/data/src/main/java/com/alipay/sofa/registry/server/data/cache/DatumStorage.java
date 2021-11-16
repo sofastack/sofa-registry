@@ -60,6 +60,8 @@ public interface DatumStorage {
 
   Map<String, List<Publisher>> getAllPublisher();
 
+  Map<String, Integer> getPubCount();
+
   DatumVersion put(Publisher publisher);
 
   DatumVersion createEmptyDatumIfAbsent(String dataInfoId, String dataCenter);

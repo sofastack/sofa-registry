@@ -33,6 +33,7 @@ import com.alipay.sofa.registry.test.BaseIntegrationTest;
 import com.alipay.sofa.registry.util.JsonUtils;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.ws.rs.client.Entity;
 import org.junit.Assert;
@@ -215,5 +216,18 @@ public class StopPushDataSwitchTest extends BaseIntegrationTest {
     // unregister Publisher & Subscriber
     registryClient1.unregister(dataId, DEFAULT_GROUP, RegistryType.SUBSCRIBER);
     registryClient1.unregister(dataId, DEFAULT_GROUP, RegistryType.PUBLISHER);
+  }
+
+  @Test
+  public void testShutdownSwitch() throws Exception {
+    // open stop push switch
+    ParaCheckUtil.checkNotNull(metaChannel, "metaChannel");
+    Map map =
+        getMetaChannel()
+            .getWebTarget()
+            .path("/shutdown/query")
+            .request(APPLICATION_JSON)
+            .get(Map.class);
+    Assert.assertFalse(map.isEmpty());
   }
 }

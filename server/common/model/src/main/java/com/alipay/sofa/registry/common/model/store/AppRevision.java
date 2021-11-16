@@ -25,6 +25,8 @@ import java.util.Map;
 
 public class AppRevision implements Serializable {
 
+  private long id;
+
   private String dataCenter;
 
   private String revision;
@@ -49,6 +51,24 @@ public class AppRevision implements Serializable {
     this.dataCenter = dataCenter;
     this.revision = revision;
     this.lastHeartbeat = lastHeartbeat;
+  }
+
+  /**
+   * Getter method for property <tt>id</tt>.
+   *
+   * @return property value of id
+   */
+  public long getId() {
+    return id;
+  }
+
+  /**
+   * Setter method for property <tt>id</tt>.
+   *
+   * @param id value to be assigned to property id
+   */
+  public void setId(long id) {
+    this.id = id;
   }
 
   /**

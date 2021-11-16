@@ -225,9 +225,7 @@ public class BoltServer implements Server {
 
   @Override
   public void close() {
-    if (isStarted.compareAndSet(true, false)) {
-      stopServer();
-    }
+    stopServer();
   }
 
   @Override

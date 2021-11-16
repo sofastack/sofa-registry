@@ -18,13 +18,12 @@ package com.alipay.sofa.registry.server.meta.cleaner;
 
 import static org.mockito.Mockito.*;
 
-import com.alipay.sofa.registry.jdbc.config.DefaultCommonConfig;
 import com.alipay.sofa.registry.jdbc.config.MetadataConfig;
 import com.alipay.sofa.registry.jdbc.domain.AppRevisionDomain;
 import com.alipay.sofa.registry.jdbc.domain.InterfaceAppsIndexDomain;
-import com.alipay.sofa.registry.jdbc.mapper.AppRevisionMapper;
-import com.alipay.sofa.registry.jdbc.mapper.InterfaceAppsIndexMapper;
 import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
+import com.alipay.sofa.registry.store.api.repository.AppRevisionRepository;
+import com.alipay.sofa.registry.store.api.repository.InterfaceAppsRepository;
 import org.assertj.core.util.Lists;
 import org.junit.Before;
 import org.junit.Test;
@@ -36,14 +35,11 @@ public class InterfaceAppsIndexCleanerTest extends AbstractMetaServerTestBase {
   public void beforeTest() throws Exception {
     makeMetaLeader();
     interfaceAppsIndexCleaner = new InterfaceAppsIndexCleaner(metaLeaderService);
-    interfaceAppsIndexCleaner.appRevisionMapper = mock(AppRevisionMapper.class);
-    interfaceAppsIndexCleaner.interfaceAppsIndexMapper = mock(InterfaceAppsIndexMapper.class);
-    interfaceAppsIndexCleaner.defaultCommonConfig = mock(DefaultCommonConfig.class);
+    interfaceAppsIndexCleaner.appRevisionRepository = mock(AppRevisionRepository.class);
+    interfaceAppsIndexCleaner.interfaceAppsRepository = mock(InterfaceAppsRepository.class);
     interfaceAppsIndexCleaner.metadataConfig = mock(MetadataConfig.class);
     when(interfaceAppsIndexCleaner.metadataConfig.getInterfaceAppsIndexRenewIntervalMinutes())
         .thenReturn(10000);
-    when(interfaceAppsIndexCleaner.defaultCommonConfig.getClusterId())
-        .thenReturn("DEFAULT_LOCALDATACENTER");
   }
 
   @Test
@@ -58,11 +54,9 @@ public class InterfaceAppsIndexCleanerTest extends AbstractMetaServerTestBase {
     domain2.setAppName("app2");
     domain2.setServiceParams("{\"service1\":{}, \"service2\": {}}");
     doReturn(Lists.newArrayList(domain1, domain2))
-        .when(mocked.appRevisionMapper)
-        .listRevisions(anyString(), anyInt(), anyInt());
+        .when(mocked.appRevisionRepository)
+        .listFromStorage(anyInt(), anyInt());
     mocked.renew();
-    verify(mocked.interfaceAppsIndexMapper, times(3)).update(any());
-    verify(mocked.interfaceAppsIndexMapper, times(3)).replace(any());
     mocked.renewer.getWaitingMillis();
     mocked.renewer.runUnthrowable();
     mocked.start();
@@ -74,9 +68,6 @@ public class InterfaceAppsIndexCleanerTest extends AbstractMetaServerTestBase {
     InterfaceAppsIndexCleaner mocked = spy(interfaceAppsIndexCleaner);
     InterfaceAppsIndexDomain domain1 = mock(InterfaceAppsIndexDomain.class);
     InterfaceAppsIndexDomain domain2 = mock(InterfaceAppsIndexDomain.class);
-    doReturn(Lists.newArrayList(domain1, domain2))
-        .when(mocked.interfaceAppsIndexMapper)
-        .getExpired(anyString(), any(), anyInt());
     mocked.renew();
     mocked.renew();
     mocked.renew();

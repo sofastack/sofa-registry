@@ -99,18 +99,32 @@ public class FetchClientOffServiceTest {
     fetchClientOffAddressService.postConstruct();
     Assert.assertEquals(0, fetchClientOffAddressService.getClientOffAddress().size());
 
-    Set<String> openIps = CollectionSdks.toIpSet("1.1.1.1;2.2.2.2;3.3.3.3");
+    Set<String> offIps = CollectionSdks.toIpSet("1.1.1.1;2.2.2.2;3.3.3.3");
 
-    Map<String, AddressVersion> addressVersionMap = Maps.newHashMapWithExpectedSize(openIps.size());
-    for (String openIp : openIps) {
+    Map<String, AddressVersion> addressVersionMap = Maps.newHashMapWithExpectedSize(offIps.size());
+    for (String openIp : offIps) {
       addressVersionMap.put(openIp, new AddressVersion(System.currentTimeMillis(), openIp, true));
     }
 
     Assert.assertTrue(
         fetchClientOffAddressService.doProcess(
             fetchClientOffAddressService.getStorage(),
-            new ClientOffAddressResp(1L, addressVersionMap)));
-    Assert.assertEquals(openIps.size(), fetchClientOffAddressService.getClientOffAddress().size());
+            new ClientOffAddressResp(1L, addressVersionMap, Collections.EMPTY_SET)));
+    Assert.assertEquals(offIps.size(), fetchClientOffAddressService.getClientOffAddress().size());
+
+    Thread.sleep(3000);
+    offIps = CollectionSdks.toIpSet("1.1.1.1;2.2.2.2");
+
+    Map<String, AddressVersion> addressVersionMapV1 =
+        Maps.newHashMapWithExpectedSize(offIps.size());
+    for (String openIp : offIps) {
+      addressVersionMapV1.put(openIp, new AddressVersion(System.currentTimeMillis(), openIp, true));
+    }
+    Assert.assertTrue(
+        fetchClientOffAddressService.doProcess(
+            fetchClientOffAddressService.getStorage(),
+            new ClientOffAddressResp(1L, addressVersionMapV1, Collections.singleton("3.3.3.3"))));
+    Assert.assertEquals(offIps.size(), fetchClientOffAddressService.getClientOffAddress().size());
   }
 
   @Test

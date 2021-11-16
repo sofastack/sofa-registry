@@ -52,6 +52,9 @@ public class AbstractH2DbTestBase extends AbstractTestBase implements Applicatio
   public static final String TABLE_STRUCTURE = "sql/h2/create_table.sql";
   public static final String TABLE_DATA = "sql/h2/base_info.sql";
 
+  public static final String CLUSTER_ID = "DEFAULT_SEGMENT";
+  public static final String RECOVER_CLUSTER_ID = "RECOVER_DEFAULT_SEGMENT";
+
   protected final String KEY_H2_PORT = "h2Port";
   private Server h2Server;
 
@@ -61,6 +64,11 @@ public class AbstractH2DbTestBase extends AbstractTestBase implements Applicatio
   public static void beforeAbstractH2DbTestBase()
       throws SQLException, IOException, ClassNotFoundException {
     createTables();
+  }
+
+  public AbstractH2DbTestBase() {
+    System.setProperty("nodes.clusterId", CLUSTER_ID);
+    System.setProperty("nodes.recoverClusterId", RECOVER_CLUSTER_ID);
   }
 
   protected void startH2Server() throws SQLException {

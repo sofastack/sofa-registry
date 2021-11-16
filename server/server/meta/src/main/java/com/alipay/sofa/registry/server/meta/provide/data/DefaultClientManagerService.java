@@ -23,6 +23,7 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.MetaLeaderService;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.store.api.DBResponse;
+import com.alipay.sofa.registry.store.api.date.DateNowRepository;
 import com.alipay.sofa.registry.store.api.meta.ClientManagerAddressRepository;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.LoopRunnable;
@@ -47,6 +48,8 @@ public class DefaultClientManagerService
     implements ClientManagerService, ApplicationListener<ContextRefreshedEvent> {
 
   private static final Logger LOG = LoggerFactory.getLogger("CLIENT-MANAGER", "[clientManager]");
+
+  @Autowired DateNowRepository dateNowRepository;
 
   @Autowired ClientManagerAddressRepository clientManagerAddressRepository;
 
@@ -174,7 +177,7 @@ public class DefaultClientManagerService
 
   Date dateBeforeNow(int day) {
     Calendar calendar = Calendar.getInstance();
-    calendar.setTime(clientManagerAddressRepository.getNow());
+    calendar.setTime(dateNowRepository.getNow());
     calendar.add(Calendar.DATE, -day);
     return calendar.getTime();
   }

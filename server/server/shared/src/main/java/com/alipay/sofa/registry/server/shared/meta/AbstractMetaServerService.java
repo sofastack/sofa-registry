@@ -133,7 +133,7 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
   }
 
   @Override
-  public void renewNode() {
+  public boolean renewNode() {
     final String leaderIp = metaServerManager.getMetaServerLeader();
     final long startTimestamp = System.currentTimeMillis();
     boolean success = true;
@@ -154,6 +154,7 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
           leaderIp,
           System.currentTimeMillis() - startTimestamp);
     }
+    return success;
   }
 
   boolean checkRenewFailCounter() {

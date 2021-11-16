@@ -23,11 +23,10 @@ import com.alipay.sofa.registry.cache.ConsecutiveSuccess;
 import com.alipay.sofa.registry.common.model.console.PersistenceDataBuilder;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.cleaner.AppRevisionSlice;
-import com.alipay.sofa.registry.jdbc.config.DefaultCommonConfig;
+import com.alipay.sofa.registry.common.model.store.AppRevision;
 import com.alipay.sofa.registry.jdbc.config.MetadataConfig;
-import com.alipay.sofa.registry.jdbc.domain.AppRevisionDomain;
-import com.alipay.sofa.registry.jdbc.domain.DateNowDomain;
-import com.alipay.sofa.registry.jdbc.mapper.AppRevisionMapper;
+import com.alipay.sofa.registry.jdbc.repository.impl.AppRevisionJdbcRepository;
+import com.alipay.sofa.registry.jdbc.repository.impl.DateNowJdbcRepository;
 import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
 import com.alipay.sofa.registry.server.meta.provide.data.DefaultProvideDataService;
 import com.alipay.sofa.registry.server.meta.remoting.session.DefaultSessionServerService;
@@ -50,15 +49,14 @@ public class AppRevisionCleanerTest extends AbstractMetaServerTestBase {
   public void beforeTest() throws Exception {
     makeMetaLeader();
     appRevisionCleaner = new AppRevisionCleaner(metaLeaderService);
-    appRevisionCleaner.appRevisionMapper = mock(AppRevisionMapper.class);
+    appRevisionCleaner.dateNowRepository = mock(DateNowJdbcRepository.class);
+    appRevisionCleaner.appRevisionRepository = mock(AppRevisionJdbcRepository.class);
     appRevisionCleaner.sessionServerService = mock(DefaultSessionServerService.class);
-    appRevisionCleaner.defaultCommonConfig = mock(DefaultCommonConfig.class);
     appRevisionCleaner.metadataConfig = mock(MetadataConfig.class);
     appRevisionCleaner.provideDataService = mock(DefaultProvideDataService.class);
     appRevisionCleaner.consecutiveSuccess = new ConsecutiveSuccess(2, 1000);
     when(appRevisionCleaner.metadataConfig.getRevisionRenewIntervalMinutes()).thenReturn(10000);
-    when(appRevisionCleaner.defaultCommonConfig.getClusterId())
-        .thenReturn("DEFAULT_LOCALDATACENTER");
+
     doReturn(
             new DBResponse<>(
                 PersistenceDataBuilder.createPersistenceData(
@@ -66,7 +64,7 @@ public class AppRevisionCleanerTest extends AbstractMetaServerTestBase {
                 OperationStatus.SUCCESS))
         .when(appRevisionCleaner.provideDataService)
         .queryProvideData(anyString());
-    doReturn(new DateNowDomain(new Date())).when(appRevisionCleaner.appRevisionMapper).getNow();
+    // doReturn(new DateNowDomain(new Date())).when(appRevisionCleaner.appRevisionMapper).getNow();
   }
 
   @After
@@ -79,7 +77,7 @@ public class AppRevisionCleanerTest extends AbstractMetaServerTestBase {
   public void testDateBeforeNow() {
     AppRevisionCleaner mocked = spy(appRevisionCleaner);
     Date now = new Date();
-    doReturn(new DateNowDomain(now)).when(mocked.appRevisionMapper).getNow();
+    doReturn(now).when(mocked.dateNowRepository).getNow();
     Date before = mocked.dateBeforeNow(1);
     Assert.assertEquals(before.getTime(), now.getTime() - 60000);
   }
@@ -94,7 +92,7 @@ public class AppRevisionCleanerTest extends AbstractMetaServerTestBase {
     mocked.renewer.getWaitingMillis();
     mocked.renew();
     mocked.renewer.runUnthrowable();
-    verify(mocked.appRevisionMapper, times(6)).heartbeat(anyString(), anyString());
+    verify(mocked.appRevisionRepository, times(6)).heartbeat(anyString());
     mocked.init();
     mocked.start();
     mocked.renewer.close();
@@ -104,12 +102,12 @@ public class AppRevisionCleanerTest extends AbstractMetaServerTestBase {
   @Test
   public void testClean() throws Exception {
     AppRevisionCleaner mocked = spy(appRevisionCleaner);
-    AppRevisionDomain domain = mock(AppRevisionDomain.class);
+    AppRevision domain = mock(AppRevision.class);
     doReturn(Lists.newArrayList(domain))
-        .when(mocked.appRevisionMapper)
-        .getExpired(anyString(), any(), anyInt());
-    doReturn(new DateNowDomain(new Date())).when(mocked.appRevisionMapper).getNow();
-    doReturn(1).when(mocked.appRevisionMapper).cleanDeleted(anyString(), any(), anyInt());
+        .when(mocked.appRevisionRepository)
+        .getExpired(any(), anyInt());
+    doReturn(new Date()).when(mocked.dateNowRepository).getNow();
+    doReturn(1).when(mocked.appRevisionRepository).cleanDeleted(any(), anyInt());
     doReturn(
             Collections.singletonMap(
                 "localhost", new AppRevisionSlice(Collections.singleton("test-123"))))
@@ -120,7 +118,7 @@ public class AppRevisionCleanerTest extends AbstractMetaServerTestBase {
     mocked.markDeleted();
     mocked.cleanup();
     verify(domain, times(1)).setDeleted(true);
-    verify(mocked.appRevisionMapper, times(1)).replace(domain);
+    verify(mocked.appRevisionRepository, times(1)).replace(domain);
     mocked.cleaner.getWaitingMillis();
     mocked.cleaner.runUnthrowable();
     mocked.becomeLeader();

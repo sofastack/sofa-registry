@@ -40,7 +40,7 @@ public interface MetaServerService {
   void resumeRenewer();
 
   /** update data server expireTime */
-  void renewNode();
+  boolean renewNode();
 
   /**
    * Handle slot table change boolean.

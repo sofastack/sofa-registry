@@ -56,8 +56,6 @@ public interface ClientManagerAddressRepository {
 
   void waitSynced();
 
-  Date getNow();
-
   List<String> getExpireAddress(Date date, int limit);
 
   int cleanExpired(List<String> expireAddress);

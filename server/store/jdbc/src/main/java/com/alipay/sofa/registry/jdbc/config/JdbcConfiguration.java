@@ -34,10 +34,14 @@ import com.alibaba.druid.pool.DruidDataSource;
 import com.alibaba.druid.pool.DruidDataSourceFactory;
 import com.alipay.sofa.registry.jdbc.repository.impl.AppRevisionJdbcRepository;
 import com.alipay.sofa.registry.jdbc.repository.impl.ClientManagerAddressJdbcRepository;
+import com.alipay.sofa.registry.jdbc.repository.impl.DateNowJdbcRepository;
 import com.alipay.sofa.registry.jdbc.repository.impl.InterfaceAppsJdbcRepository;
 import com.alipay.sofa.registry.jdbc.repository.impl.ProvideDataJdbcRepository;
+import com.alipay.sofa.registry.jdbc.repository.impl.RecoverConfigJdbcRepository;
+import com.alipay.sofa.registry.store.api.date.DateNowRepository;
 import com.alipay.sofa.registry.store.api.meta.ClientManagerAddressRepository;
 import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
+import com.alipay.sofa.registry.store.api.meta.RecoverConfigRepository;
 import com.alipay.sofa.registry.store.api.repository.AppRevisionRepository;
 import com.alipay.sofa.registry.store.api.repository.InterfaceAppsRepository;
 import com.alipay.sofa.registry.store.api.spring.SpringContext;
@@ -234,6 +238,16 @@ public class JdbcConfiguration {
     @Bean
     public ClientManagerAddressRepository clientManagerAddressJdbcRepository() {
       return new ClientManagerAddressJdbcRepository();
+    }
+
+    @Bean
+    public RecoverConfigRepository recoverConfigJdbcRepository() {
+      return new RecoverConfigJdbcRepository();
+    }
+
+    @Bean
+    public DateNowRepository dateNowJdbcRepository() {
+      return new DateNowJdbcRepository();
     }
   }
 }

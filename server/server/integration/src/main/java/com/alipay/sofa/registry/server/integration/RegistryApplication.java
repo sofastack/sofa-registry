@@ -60,6 +60,8 @@ public class RegistryApplication {
   private static final String SESSION_HTTP_SERVER_PORT = "session.server.httpServerPort";
   private static final String META_NODES = "nodes.metaNode";
   private static final String NODES_LOCAL_DATA_CENTER = "nodes.localDataCenter";
+  private static final String CLUSTER_ID = "DEFAULT_SEGMENT";
+  private static final String RECOVER_CLUSTER_ID = "RECOVER_DEFAULT_SEGMENT";
 
   private static ConfigurableApplicationContext metaApplicationContext;
   private static ConfigurableApplicationContext sessionApplicationContext;
@@ -69,6 +71,9 @@ public class RegistryApplication {
     System.setProperty("spring.profiles.active", "integrate");
     System.setProperty("registry.lease.duration.secs", "10");
     System.setProperty("registry.elector.warm.up.millis", "2000");
+
+    System.setProperty("nodes.clusterId", CLUSTER_ID);
+    System.setProperty("nodes.recoverClusterId", RECOVER_CLUSTER_ID);
     // setup DefaultUncaughtExceptionHandler
     Thread.setDefaultUncaughtExceptionHandler(
         (t, e) ->

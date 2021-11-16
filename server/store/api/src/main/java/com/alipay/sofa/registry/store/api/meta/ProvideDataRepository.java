@@ -17,7 +17,7 @@
 package com.alipay.sofa.registry.store.api.meta;
 
 import com.alipay.sofa.registry.common.model.console.PersistenceData;
-import java.util.Collection;
+import java.util.Map;
 
 /**
  * @author chen.zhu
@@ -54,5 +54,5 @@ public interface ProvideDataRepository {
    *
    * @return
    */
-  Collection<PersistenceData> getAll();
+  Map<String, PersistenceData> getAll();
 }
