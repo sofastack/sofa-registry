@@ -1,6 +1,23 @@
-version: 3
+version: '3'
 services:
-  registry:
-    image: dzdx/sofa-registry:latest
+  registry1:
+    image: dzdx/sofa-registry-test:latest
     environment:
       REGISTRY_APP_NAME: integration
+      JDBC_URL: jdbc:mysql://172.17.0.1:3306/registrymetadb
+      JDBC_USERNAME: root
+      JDBC_PASSWORD: root
+  registry2:
+    image: dzdx/sofa-registry-test:latest
+    environment:
+      REGISTRY_APP_NAME: integration
+      JDBC_URL: jdbc:mysql://172.17.0.1:3306/registrymetadb
+      JDBC_USERNAME: root
+      JDBC_PASSWORD: root
+  registry3:
+    image: dzdx/sofa-registry-test:latest
+    environment:
+      REGISTRY_APP_NAME: integration
+      JDBC_URL: jdbc:mysql://172.17.0.1:3306/registrymetadb
+      JDBC_USERNAME: root
+      JDBC_PASSWORD: root
