@@ -27,6 +27,7 @@ import com.alipay.sofa.registry.jdbc.config.MetadataConfig;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.MetaLeaderService;
+import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataService;
 import com.alipay.sofa.registry.server.meta.remoting.session.DefaultSessionServerService;
 import com.alipay.sofa.registry.store.api.DBResponse;
@@ -43,18 +44,20 @@ import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.scheduling.annotation.Scheduled;
 
 public class AppRevisionCleaner
     implements MetaLeaderService.MetaLeaderElectorListener,
         ApplicationListener<ContextRefreshedEvent> {
   private static final Logger LOG = LoggerFactory.getLogger("METADATA-EXCHANGE", "[AppRevision]");
+  private static final Logger DIGEST_LOG =
+      LoggerFactory.getLogger("METADATA-DIGEST", "[AppRevisionDigest]");
 
   private int lastSlotId = -1;
   private final int slotNum = 256;
 
   final Renewer renewer = new Renewer();
   final Cleaner cleaner = new Cleaner();
-  private final int maxRemoved = 500;
 
   private static final boolean DEFAULT_ENABLED = true;
 
@@ -69,6 +72,8 @@ public class AppRevisionCleaner
   @Autowired MetaLeaderService metaLeaderService;
 
   @Autowired ProvideDataService provideDataService;
+
+  @Autowired MetaServerConfig metaServerConfig;
 
   ConsecutiveSuccess consecutiveSuccess;
 
@@ -136,12 +141,32 @@ public class AppRevisionCleaner
     }
     List<AppRevision> expired =
         appRevisionRepository.getExpired(
-            dateBeforeNow(metadataConfig.getRevisionRenewIntervalMinutes() * 5), maxRemoved);
+            dateBeforeNow(metadataConfig.getRevisionRenewIntervalMinutes() * 5),
+            metaServerConfig.getAppRevisionMaxRemove());
     for (AppRevision revision : expired) {
       revision.setDeleted(true);
       appRevisionRepository.replace(revision);
       LOG.info("mark deleted revision: {}", revision.getRevision());
       ConcurrentUtils.sleepUninterruptibly(10, TimeUnit.MILLISECONDS);
+    }
+  }
+
+  @Scheduled(initialDelay = 60000, fixedDelay = 60000)
+  public void digestAppRevision() {
+    if(!metaLeaderService.amILeader()){
+        return;
+    }
+    try {
+      Map<String, Integer> counts = appRevisionRepository.countByApp();
+      for (Map.Entry<String, Integer> entry : counts.entrySet()) {
+        String app = entry.getKey();
+        int count = entry.getValue();
+        if (count >= metaServerConfig.getAppRevisionCountAlarmThreshold()) {
+          DIGEST_LOG.info("[AppRevisionCountAlarm]app={},count={}", app, count);
+        }
+      }
+    } catch (Throwable e) {
+      DIGEST_LOG.safeError("[AppRevisionCounter] digest failed: ", e);
     }
   }
 
@@ -154,7 +179,8 @@ public class AppRevisionCleaner
     }
     int count =
         appRevisionRepository.cleanDeleted(
-            dateBeforeNow(metadataConfig.getRevisionRenewIntervalMinutes() * 10), maxRemoved);
+            dateBeforeNow(metadataConfig.getRevisionRenewIntervalMinutes() * 10),
+            metaServerConfig.getAppRevisionMaxRemove());
     if (count > 0) {
       LOG.info("clean up {} revisions", count);
     }

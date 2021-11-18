@@ -31,7 +31,8 @@ public interface AppRevisionHandlerStrategy {
    * @param appRevision
    * @param response
    */
-  void handleAppRevisionRegister(AppRevision appRevision, RegisterResponse response);
+  void handleAppRevisionRegister(
+      AppRevision appRevision, RegisterResponse response, String remoteAddress);
 
   /**
    * query apps by services

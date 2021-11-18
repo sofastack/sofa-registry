@@ -28,6 +28,7 @@ import com.alipay.sofa.registry.jdbc.config.MetadataConfig;
 import com.alipay.sofa.registry.jdbc.repository.impl.AppRevisionJdbcRepository;
 import com.alipay.sofa.registry.jdbc.repository.impl.DateNowJdbcRepository;
 import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
+import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfigBean;
 import com.alipay.sofa.registry.server.meta.provide.data.DefaultProvideDataService;
 import com.alipay.sofa.registry.server.meta.remoting.session.DefaultSessionServerService;
 import com.alipay.sofa.registry.store.api.DBResponse;
@@ -49,6 +50,7 @@ public class AppRevisionCleanerTest extends AbstractMetaServerTestBase {
   public void beforeTest() throws Exception {
     makeMetaLeader();
     appRevisionCleaner = new AppRevisionCleaner(metaLeaderService);
+    appRevisionCleaner.metaServerConfig = new MetaServerConfigBean();
     appRevisionCleaner.dateNowRepository = mock(DateNowJdbcRepository.class);
     appRevisionCleaner.appRevisionRepository = mock(AppRevisionJdbcRepository.class);
     appRevisionCleaner.sessionServerService = mock(DefaultSessionServerService.class);
@@ -133,5 +135,11 @@ public class AppRevisionCleanerTest extends AbstractMetaServerTestBase {
         Assert.fail();
       }
     }
+  }
+  @Test
+  public void testDigest(){
+    AppRevisionCleaner mocked = spy(appRevisionCleaner);
+    doReturn(Maps.newHashMap("aaaa", 30)).when(mocked.appRevisionRepository).countByApp();
+    mocked.digestAppRevision();
   }
 }

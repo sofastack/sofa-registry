@@ -47,7 +47,7 @@ public class MetadataRegisterPbHandlerTest {
 
     handler.doHandle(null, request());
     verify(handler.appRevisionHandlerStrategy, times(1))
-        .handleAppRevisionRegister(anyObject(), anyObject());
+        .handleAppRevisionRegister(anyObject(), anyObject(), anyString());
   }
 
   private static MetaRegister request() {

@@ -41,7 +41,7 @@ public class MetadataHeartbeatTest extends MetadataTest {
                 Collections.singletonList(appRevision.getRevision()));
         if (response.getStatusCode() == ValueConstants.METADATA_STATUS_DATA_NOT_FOUND) {
           RegisterResponse result = new RegisterResponse();
-          appRevisionHandlerStrategy.handleAppRevisionRegister(appRevision, result);
+          appRevisionHandlerStrategy.handleAppRevisionRegister(appRevision, result, "");
         }
       }
     }

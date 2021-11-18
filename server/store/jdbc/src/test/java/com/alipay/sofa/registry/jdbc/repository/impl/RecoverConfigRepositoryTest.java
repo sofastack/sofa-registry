@@ -59,7 +59,7 @@ public class RecoverConfigRepositoryTest extends AbstractH2DbTestBase {
     recoverConfigJdbcRepository.save(
         "provide_data", ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID, RECOVER_CLUSTER_ID);
     recoverConfigJdbcRepository.save("app_revision", "all", RECOVER_CLUSTER_ID);
-
+    recoverConfigJdbcRepository.doRefresh();
     Set<String> data = recoverConfigJdbcRepository.queryKey("provide_data");
     Assert.assertTrue(data.contains(ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID));
     Assert.assertFalse(data.contains(ValueConstants.BLACK_LIST_DATA_ID));

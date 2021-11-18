@@ -35,9 +35,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
-import javax.annotation.PostConstruct;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.util.CollectionUtils;
 
@@ -45,7 +46,8 @@ import org.springframework.util.CollectionUtils;
  * @author xiaojian.xj
  * @version : RecoverConfigJdbcRepository.java, v 0.1 2021年09月22日 20:20 xiaojian.xj Exp $
  */
-public class RecoverConfigJdbcRepository implements RecoverConfigRepository {
+public class RecoverConfigJdbcRepository
+    implements RecoverConfigRepository, ApplicationListener<ContextRefreshedEvent> {
 
   private static final Logger LOG = LoggerFactory.getLogger("RECOVER-CONFIG", "[RecoverConfig]");
 
@@ -62,8 +64,8 @@ public class RecoverConfigJdbcRepository implements RecoverConfigRepository {
 
   @Autowired private TransactionTemplate transactionTemplate;
 
-  @PostConstruct
-  private void init() {
+  @Override
+  public void onApplicationEvent(ContextRefreshedEvent contextRefreshedEvent) {
     ConcurrentUtils.createDaemonThread(this.getClass().getSimpleName() + "WatchDog", watcher)
         .start();
   }

@@ -23,6 +23,7 @@ import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.session.converter.pb.AppRevisionConvertor;
 import com.alipay.sofa.registry.server.session.converter.pb.RegisterResponseConvertor;
 import com.alipay.sofa.registry.server.shared.remoting.RemotingHelper;
+import org.apache.commons.lang.StringUtils;
 
 /**
  * @author xiaojian.xj
@@ -34,7 +35,8 @@ public class MetadataRegisterPbHandler extends AbstractClientMetadataRequestHand
   public Object doHandle(Channel channel, MetaRegister request) {
     RegisterResponse registerResponse = new RegisterResponse();
     AppRevision appRevision = AppRevisionConvertor.convert2Java(request);
-    appRevisionHandlerStrategy.handleAppRevisionRegister(appRevision, registerResponse);
+    appRevisionHandlerStrategy.handleAppRevisionRegister(
+        appRevision, registerResponse, channel!= null?channel.getRemoteAddress().toString(): StringUtils.EMPTY);
 
     return RegisterResponseConvertor.convert2Pb(registerResponse);
   }

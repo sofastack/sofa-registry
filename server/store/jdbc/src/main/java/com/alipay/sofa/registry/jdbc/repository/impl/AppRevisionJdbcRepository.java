@@ -41,11 +41,8 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
+import com.google.common.collect.Maps;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.PostConstruct;
@@ -59,6 +56,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class AppRevisionJdbcRepository implements AppRevisionRepository, RecoverConfig {
 
   private static final Logger LOG = LoggerFactory.getLogger("METADATA-EXCHANGE", "[AppRevision]");
+
+  private static final Logger COUNT_LOG =
+      LoggerFactory.getLogger("METADATA-COUNT", "[AppRevision]");
 
   /** map: <revision, AppRevision> */
   private final LoadingCache<String, AppRevision> registry;
@@ -178,6 +178,18 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository, Recover
   void cleanCache() {
     registry.invalidateAll();
     cachedExecutor.clean();
+  }
+
+  @Override
+  public Map<String, Integer> countByApp() {
+    Map<String, Integer> counts = Maps.newHashMap();
+    informer
+        .getContainer()
+        .foreach(
+            (String revision, String appname) -> {
+              counts.put(appname, counts.getOrDefault(appname, 0) + 1);
+            });
+    return counts;
   }
 
   protected void refreshEntryToStorage(AppRevisionDomain entry) {
