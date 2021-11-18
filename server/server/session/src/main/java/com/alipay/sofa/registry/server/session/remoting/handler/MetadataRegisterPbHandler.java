@@ -36,7 +36,9 @@ public class MetadataRegisterPbHandler extends AbstractClientMetadataRequestHand
     RegisterResponse registerResponse = new RegisterResponse();
     AppRevision appRevision = AppRevisionConvertor.convert2Java(request);
     appRevisionHandlerStrategy.handleAppRevisionRegister(
-        appRevision, registerResponse, channel!= null?channel.getRemoteAddress().toString(): StringUtils.EMPTY);
+        appRevision,
+        registerResponse,
+        channel != null ? channel.getRemoteAddress().toString() : StringUtils.EMPTY);
 
     return RegisterResponseConvertor.convert2Pb(registerResponse);
   }
