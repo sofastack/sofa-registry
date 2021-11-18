@@ -158,7 +158,7 @@ public class MetadataTest extends BaseIntegrationTest {
                   () -> {
                     RegisterResponse result = new RegisterResponse();
                     appRevisionHandlerStrategy.handleAppRevisionRegister(
-                        appRevisionRegister, result);
+                        appRevisionRegister, result, "");
                     return result;
                   });
       responses.add(response);
@@ -283,7 +283,7 @@ public class MetadataTest extends BaseIntegrationTest {
                   () -> {
                     RegisterResponse result = new RegisterResponse();
                     appRevisionHandlerStrategy.handleAppRevisionRegister(
-                        appRevisionRegister, result);
+                        appRevisionRegister, result, "");
                     return result;
                   });
       responses.add(response);

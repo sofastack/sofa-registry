@@ -20,6 +20,7 @@ import com.alipay.sofa.registry.common.model.store.AppRevision;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author xiaojian.xj
@@ -54,4 +55,6 @@ public interface AppRevisionRepository {
   void replace(AppRevision appRevision);
 
   int cleanDeleted(Date beforeTime, int limit);
+
+  Map<String, Integer> countByApp();
 }

@@ -50,7 +50,8 @@ public class DefaultAppRevisionHandlerStrategy implements AppRevisionHandlerStra
   protected void beforeRegister(AppRevision appRevision) {}
 
   @Override
-  public void handleAppRevisionRegister(AppRevision appRevision, RegisterResponse response) {
+  public void handleAppRevisionRegister(
+      AppRevision appRevision, RegisterResponse response, String remoteAddress) {
     try {
       validate(appRevision);
       beforeRegister(appRevision);
@@ -64,11 +65,12 @@ public class DefaultAppRevisionHandlerStrategy implements AppRevisionHandlerStra
       LOG.error(msg, e);
     } finally {
       REVISION_LOGGER.info(
-          "{},app={},revision={},size={}",
+          "{},app={},revision={},size={},addr={}",
           response.isSuccess() ? "Y" : "N",
           appRevision.getAppName(),
           appRevision.getRevision(),
-          appRevision.getSize());
+          appRevision.getSize(),
+          remoteAddress);
     }
   }
 

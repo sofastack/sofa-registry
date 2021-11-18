@@ -18,26 +18,31 @@ package com.alipay.sofa.registry.jdbc.repository.impl;
 
 import com.alipay.sofa.registry.jdbc.domain.AppRevisionDomain;
 import com.alipay.sofa.registry.jdbc.informer.DbEntryContainer;
-import com.google.common.collect.Sets;
-import java.util.Set;
+import com.google.common.collect.Maps;
+import java.util.Map;
+import java.util.function.BiConsumer;
 
 public class AppRevisionContainer implements DbEntryContainer<AppRevisionDomain> {
-  private final Set<String> data = Sets.newConcurrentHashSet();
+  private final Map<String, String> data = Maps.newConcurrentMap();
 
   @Override
   public synchronized void onEntry(AppRevisionDomain entry) {
     if (entry.isDeleted()) {
       data.remove(entry.getRevision());
     } else {
-      data.add(entry.getRevision());
+      data.put(entry.getRevision(), entry.getAppName());
     }
   }
 
   public boolean containsRevisionId(String revisionId) {
-    return data.contains(revisionId);
+    return data.containsKey(revisionId);
   }
 
   public int size() {
     return data.size();
+  }
+
+  public void foreach(BiConsumer<String, String> f) {
+    data.forEach(f);
   }
 }

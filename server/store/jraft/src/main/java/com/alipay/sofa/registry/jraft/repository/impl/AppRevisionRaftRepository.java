@@ -68,6 +68,11 @@ public class AppRevisionRaftRepository implements AppRevisionRepository {
   }
 
   @Override
+  public Map<String, Integer> countByApp() {
+    return Collections.emptyMap();
+  }
+
+  @Override
   public Collection<String> availableRevisions() {
     return Collections.EMPTY_LIST;
   }

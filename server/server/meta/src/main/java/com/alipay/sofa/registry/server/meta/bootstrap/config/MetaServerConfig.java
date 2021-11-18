@@ -70,4 +70,8 @@ public interface MetaServerConfig {
   int getClientManagerCleanSecs();
 
   int getClientManagerExpireDays();
+
+  int getAppRevisionMaxRemove();
+
+  int getAppRevisionCountAlarmThreshold();
 }

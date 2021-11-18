@@ -16,6 +16,9 @@
  */
 package com.alipay.sofa.registry.jdbc.repository.impl;
 
+import static com.alipay.sofa.registry.jdbc.repository.impl.MetadataMetrics.ProvideData.PROVIDE_DATA_QUERY_COUNTER;
+import static com.alipay.sofa.registry.jdbc.repository.impl.MetadataMetrics.ProvideData.PROVIDE_DATA_UPDATE_COUNTER;
+
 import com.alipay.sofa.registry.common.model.console.PersistenceData;
 import com.alipay.sofa.registry.common.model.console.PersistenceDataBuilder;
 import com.alipay.sofa.registry.jdbc.config.DefaultCommonConfig;
@@ -30,16 +33,12 @@ import com.alipay.sofa.registry.store.api.meta.RecoverConfig;
 import com.alipay.sofa.registry.store.api.meta.RecoverConfigRepository;
 import com.alipay.sofa.registry.util.MathUtils;
 import com.google.common.collect.Maps;
-import org.apache.commons.collections.CollectionUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import javax.annotation.PostConstruct;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import static com.alipay.sofa.registry.jdbc.repository.impl.MetadataMetrics.ProvideData.PROVIDE_DATA_QUERY_COUNTER;
-import static com.alipay.sofa.registry.jdbc.repository.impl.MetadataMetrics.ProvideData.PROVIDE_DATA_UPDATE_COUNTER;
+import javax.annotation.PostConstruct;
+import org.apache.commons.collections.CollectionUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author xiaojian.xj

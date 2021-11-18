@@ -72,6 +72,9 @@ public class MetaServerConfigBean implements MetaServerConfig {
 
   private int clientManagerExpireDays = 1;
 
+  private int appRevisionMaxRemove = 2000;
+  private int appRevisionCountAlarmThreshold = 20;
+
   private long metaLeaderWarmupMillis =
       SystemUtils.getSystemLong(
           "registry.elector.warm.up.millis",
@@ -498,6 +501,14 @@ public class MetaServerConfigBean implements MetaServerConfig {
     return clientManagerExpireDays;
   }
 
+  @Override
+  public int getAppRevisionMaxRemove() {
+    return appRevisionMaxRemove;
+  }
+
+  public void setAppRevisionMaxRemove(int appRevisionMaxRemove) {
+    this.appRevisionMaxRemove = appRevisionMaxRemove;
+  }
   /**
    * Setter method for property <tt>clientManagerCleanSecs</tt>.
    *
@@ -523,5 +534,14 @@ public class MetaServerConfigBean implements MetaServerConfig {
    */
   public void setClientManagerRefreshLimit(int clientManagerRefreshLimit) {
     this.clientManagerRefreshLimit = clientManagerRefreshLimit;
+  }
+
+  @Override
+  public int getAppRevisionCountAlarmThreshold() {
+    return appRevisionCountAlarmThreshold;
+  }
+
+  public void setAppRevisionCountAlarmThreshold(int appRevisionCountAlarmThreshold) {
+    this.appRevisionCountAlarmThreshold = appRevisionCountAlarmThreshold;
   }
 }
