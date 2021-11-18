@@ -136,8 +136,9 @@ public class AppRevisionCleanerTest extends AbstractMetaServerTestBase {
       }
     }
   }
+
   @Test
-  public void testDigest(){
+  public void testDigest() {
     AppRevisionCleaner mocked = spy(appRevisionCleaner);
     doReturn(Maps.newHashMap("aaaa", 30)).when(mocked.appRevisionRepository).countByApp();
     mocked.digestAppRevision();

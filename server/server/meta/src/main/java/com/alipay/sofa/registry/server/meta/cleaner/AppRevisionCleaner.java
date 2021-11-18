@@ -151,10 +151,10 @@ public class AppRevisionCleaner
     }
   }
 
-  @Scheduled(initialDelay = 60000, fixedDelay = 60000)
+  @Scheduled(initialDelay = 60000, fixedRate = 60000)
   public void digestAppRevision() {
-    if(!metaLeaderService.amILeader()){
-        return;
+    if (!metaLeaderService.amILeader()) {
+      return;
     }
     try {
       Map<String, Integer> counts = appRevisionRepository.countByApp();
