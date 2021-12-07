@@ -28,7 +28,7 @@ import com.alipay.sofa.registry.compress.Compressor;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
-import com.alipay.sofa.registry.server.data.compress.CompressDatumService;
+import com.alipay.sofa.registry.server.data.providedata.CompressDatumService;
 import com.alipay.sofa.registry.server.shared.util.DatumUtils;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.google.common.annotations.VisibleForTesting;

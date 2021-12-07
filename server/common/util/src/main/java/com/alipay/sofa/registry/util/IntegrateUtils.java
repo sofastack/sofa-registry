@@ -18,38 +18,14 @@ package com.alipay.sofa.registry.util;
 
 import org.apache.commons.lang.StringUtils;
 
-public final class SystemUtils {
-  private SystemUtils() {}
+public class IntegrateUtils {
+  private static final String INTEGRATE = "integrate";
 
-  public static int getSystemInteger(String name, int def) {
-    String v = System.getProperty(name);
-    if (v == null) {
-      v = System.getenv(name);
-    }
-    return v == null ? def : Integer.parseInt(v);
+  public static void setIntegrate() {
+    System.setProperty("spring.profiles.active", "integrate");
   }
 
-  public static long getSystemLong(String name, long def) {
-    String v = System.getProperty(name);
-    if (v == null) {
-      v = System.getenv(name);
-    }
-    return v == null ? def : Long.parseLong(v);
-  }
-
-  public static String getSystem(String name, String def) {
-    String v = System.getProperty(name);
-    if (v == null) {
-      v = System.getenv(name);
-    }
-    return v == null ? def : v;
-  }
-
-  public static String getSystem(String name) {
-    return getSystem(name, null);
-  }
-
-  public static String convertEnvKey(String key) {
-    return StringUtils.replace(key, ".", "_").toUpperCase();
+  public static boolean isIntegrate() {
+    return StringUtils.equals(INTEGRATE, System.getProperty("spring.profiles.active"));
   }
 }

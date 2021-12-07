@@ -42,10 +42,10 @@ import com.github.rholder.retry.RetryerBuilder;
 import com.github.rholder.retry.StopStrategies;
 import com.github.rholder.retry.WaitStrategies;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Predicate;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -79,13 +79,7 @@ public abstract class AbstractMetaServerManager extends ClientSideExchanger
   private final Retryer<LeaderInfo> retryer =
       RetryerBuilder.<LeaderInfo>newBuilder()
           .retryIfException()
-          .retryIfResult(
-              new Predicate<LeaderInfo>() {
-                @Override
-                public boolean apply(LeaderInfo input) {
-                  return input == null;
-                }
-              })
+          .retryIfResult(Objects::isNull)
           .withWaitStrategy(WaitStrategies.exponentialWait(1000, 3000, TimeUnit.MILLISECONDS))
           .withStopStrategy(StopStrategies.stopAfterAttempt(5))
           .build();

@@ -19,6 +19,7 @@ package com.alipay.sofa.registry.server.data.bootstrap;
 import com.alipay.sofa.registry.common.model.ProcessId;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
+import com.alipay.sofa.registry.common.model.slot.SlotTableStatusResponse;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -30,15 +31,23 @@ import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.data.change.DataChangeEventCenter;
 import com.alipay.sofa.registry.server.data.lease.SessionLeaseManager;
+import com.alipay.sofa.registry.server.data.providedata.FetchStopPushService;
+import com.alipay.sofa.registry.server.data.slot.SlotManager;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.server.shared.providedata.SystemPropertyProcessorManager;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
+import com.alipay.sofa.registry.util.IntegrateUtils;
+import com.github.rholder.retry.Retryer;
+import com.github.rholder.retry.RetryerBuilder;
+import com.github.rholder.retry.StopStrategies;
+import com.github.rholder.retry.WaitStrategies;
 import com.google.common.annotations.VisibleForTesting;
 import java.lang.annotation.Annotation;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Resource;
 import javax.ws.rs.Path;
@@ -80,6 +89,10 @@ public class DataServerBootstrap {
 
   @Autowired private SystemPropertyProcessorManager systemPropertyProcessorManager;
 
+  @Autowired private SlotManager slotManager;
+
+  @Resource private FetchStopPushService fetchStopPushService;
+
   private Server server;
 
   private Server notifyServer;
@@ -95,6 +108,22 @@ public class DataServerBootstrap {
   private final AtomicBoolean serverForSessionStarted = new AtomicBoolean(false);
 
   private final AtomicBoolean serverForDataSyncStarted = new AtomicBoolean(false);
+
+  private final Retryer<Boolean> startupRetryer =
+      RetryerBuilder.<Boolean>newBuilder()
+          .retryIfRuntimeException()
+          .retryIfResult(input -> !input)
+          .withWaitStrategy(WaitStrategies.exponentialWait(1000, 3000, TimeUnit.MILLISECONDS))
+          .withStopStrategy(StopStrategies.stopAfterAttempt(10))
+          .build();
+
+  private final Retryer<Boolean> addBlacklistRetryer =
+      RetryerBuilder.<Boolean>newBuilder()
+          .retryIfException()
+          .retryIfRuntimeException()
+          .withWaitStrategy(WaitStrategies.exponentialWait(1000, 3000, TimeUnit.MILLISECONDS))
+          .withStopStrategy(StopStrategies.stopAfterAttempt(3))
+          .build();
 
   /** start dataserver */
   public void start() {
@@ -120,12 +149,22 @@ public class DataServerBootstrap {
 
       TaskMetrics.getInstance().registerBolt();
 
+      postStart();
       Runtime.getRuntime().addShutdownHook(new Thread(this::doStop));
 
       LOGGER.info("start server success");
-    } catch (Exception e) {
+    } catch (Throwable e) {
       throw new RuntimeException("start server error", e);
     }
+  }
+
+  private void postStart() throws Throwable {
+    startupRetryer.call(
+        () -> {
+          LOGGER.info("successful start data server, remove self from blacklist");
+          metaServerService.removeSelfFromMetaBlacklist();
+          return true;
+        });
   }
 
   private void openDataServer() {
@@ -243,25 +282,70 @@ public class DataServerBootstrap {
     try {
       LOGGER.info("{} Shutting down Data Server..", new Date().toString());
 
-      if (httpServer != null && httpServer.isOpen()) {
-        httpServer.close();
-      }
+      addBlacklist();
 
-      if (server != null && server.isOpen()) {
-        server.close();
-      }
-
-      if (dataSyncServer != null && dataSyncServer.isOpen()) {
-        dataSyncServer.close();
-      }
-
-      if (notifyServer != null && notifyServer.isOpen()) {
-        notifyServer.close();
-      }
+      stopHttpServer();
+      stopServer();
+      stopDataSyncServer();
+      stopNotifyServer();
     } catch (Throwable e) {
       LOGGER.error("Shutting down Data Server error!", e);
     }
     LOGGER.info("{} Data server is now shutdown...", new Date().toString());
+  }
+
+  private void addBlacklist() {
+    if (IntegrateUtils.isIntegrate()) {
+      LOGGER.info("integration mode, skip add blacklist");
+      return;
+    }
+    try {
+      addBlacklistRetryer.call(
+          () -> {
+            metaServerService.addSelfToMetaBlacklist();
+            return true;
+          });
+      addBlacklistRetryer.call(
+          () -> {
+            if (fetchStopPushService.isStopPushSwitch()) {
+              return true;
+            }
+            SlotTableStatusResponse statusResponse = metaServerService.getSlotTableStatus();
+            if (statusResponse.isProtectionMode()) {
+              return true;
+            }
+            if (slotManager.hasSlot()) {
+              throw new RuntimeException("current data server still own slot, waiting...");
+            }
+            return true;
+          });
+    } catch (Throwable e) {
+      LOGGER.error("add blacklist failed:", e);
+    }
+  }
+
+  private void stopHttpServer() {
+    if (httpServer != null && httpServer.isOpen()) {
+      httpServer.close();
+    }
+  }
+
+  private void stopServer() {
+    if (server != null && server.isOpen()) {
+      server.close();
+    }
+  }
+
+  private void stopDataSyncServer() {
+    if (dataSyncServer != null && dataSyncServer.isOpen()) {
+      dataSyncServer.close();
+    }
+  }
+
+  private void stopNotifyServer() {
+    if (notifyServer != null && notifyServer.isOpen()) {
+      notifyServer.close();
+    }
   }
 
   private void bindResourceConfig() {

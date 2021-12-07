@@ -35,6 +35,8 @@ public interface SlotManager {
 
   SlotAccess checkSlotAccess(int slotId, long srcSlotEpoch, long srcLeaderEpoch);
 
+  boolean hasSlot();
+
   List<BaseSlotStatus> getSlotStatuses();
 
   boolean isLeader(int slotId);

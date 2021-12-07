@@ -123,7 +123,7 @@ public class DefaultCommonConfigBean implements DefaultCommonConfig {
   }
 
   @VisibleForTesting
-  public void setPersistenceProfileActive(String active){
+  public void setPersistenceProfileActive(String active) {
     this.persistenceProfileActive = active;
   }
 

@@ -235,5 +235,4 @@ public class JdbcDriverConfigBean implements JdbcDriverConfig {
   public void setSlowSqlMillis(int slowSqlMillis) {
     this.slowSqlMillis = slowSqlMillis;
   }
-
 }

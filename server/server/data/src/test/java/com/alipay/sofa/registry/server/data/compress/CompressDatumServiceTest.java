@@ -20,6 +20,7 @@ import com.alipay.sofa.registry.common.model.ServerDataBox;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.compress.CompressConstants;
+import com.alipay.sofa.registry.server.data.providedata.CompressDatumService;
 import org.junit.Assert;
 import org.junit.Test;
 

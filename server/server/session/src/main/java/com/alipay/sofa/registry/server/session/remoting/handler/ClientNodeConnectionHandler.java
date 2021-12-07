@@ -49,6 +49,8 @@ public class ClientNodeConnectionHandler extends ListenServerChannelHandler
   private final AtomicSet<ConnectId> pendingClientOff = new AtomicSet<>();
   private final ClientOffWorker worker = new ClientOffWorker();
 
+  private volatile boolean stopped = false;
+
   @Override
   public void onApplicationEvent(ContextRefreshedEvent contextRefreshedEvent) {
     start();
@@ -60,8 +62,15 @@ public class ClientNodeConnectionHandler extends ListenServerChannelHandler
 
   @Override
   public void disconnected(Channel channel) {
+    if (stopped) {
+      return;
+    }
     super.disconnected(channel);
     fireCancelClient(channel);
+  }
+
+  public void stop() {
+    this.stopped = true;
   }
 
   @Override

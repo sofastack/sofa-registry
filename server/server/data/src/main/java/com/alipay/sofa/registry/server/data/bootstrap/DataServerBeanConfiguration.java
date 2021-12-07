@@ -24,8 +24,9 @@ import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.data.cache.DatumStorage;
 import com.alipay.sofa.registry.server.data.cache.LocalDatumStorage;
 import com.alipay.sofa.registry.server.data.change.DataChangeEventCenter;
-import com.alipay.sofa.registry.server.data.compress.CompressDatumService;
 import com.alipay.sofa.registry.server.data.lease.SessionLeaseManager;
+import com.alipay.sofa.registry.server.data.providedata.CompressDatumService;
+import com.alipay.sofa.registry.server.data.providedata.FetchStopPushService;
 import com.alipay.sofa.registry.server.data.remoting.DataMetaServerManager;
 import com.alipay.sofa.registry.server.data.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.server.data.remoting.SessionNodeExchanger;
@@ -400,6 +401,14 @@ public class DataServerBeanConfiguration {
       CompressDatumService compressDatumService = new CompressDatumService();
       systemPropertyProcessorManager.addSystemDataProcessor(compressDatumService);
       return compressDatumService;
+    }
+
+    @Bean
+    public FetchSystemPropertyService fetchStopPushService(
+        SystemPropertyProcessorManager systemPropertyProcessorManager) {
+      FetchStopPushService fetchStopPushService = new FetchStopPushService();
+      systemPropertyProcessorManager.addSystemDataPersistenceProcessor(fetchStopPushService);
+      return fetchStopPushService;
     }
   }
 }
