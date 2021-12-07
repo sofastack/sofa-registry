@@ -34,6 +34,7 @@ import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
 import com.alipay.sofa.registry.server.session.metadata.AppRevisionCacheRegistry;
 import com.alipay.sofa.registry.server.session.providedata.ConfigProvideDataWatcher;
+import com.alipay.sofa.registry.server.session.remoting.handler.ClientNodeConnectionHandler;
 import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
 import com.alipay.sofa.registry.server.session.strategy.SessionRegistryStrategy;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
@@ -42,11 +43,11 @@ import com.alipay.sofa.registry.server.shared.providedata.SystemPropertyProcesso
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.alipay.sofa.registry.store.api.meta.ClientManagerAddressRepository;
 import com.alipay.sofa.registry.store.api.meta.RecoverConfigRepository;
+import com.alipay.sofa.registry.util.IntegrateUtils;
 import com.github.rholder.retry.Retryer;
 import com.github.rholder.retry.RetryerBuilder;
 import com.github.rholder.retry.StopStrategies;
 import com.github.rholder.retry.WaitStrategies;
-import com.google.common.base.Predicate;
 import java.lang.annotation.Annotation;
 import java.util.Collection;
 import java.util.Date;
@@ -114,6 +115,8 @@ public class SessionServerBootstrap {
 
   @Autowired private AppRevisionCacheRegistry appRevisionCacheRegistry;
 
+  @Resource private ClientNodeConnectionHandler clientNodeConnectionHandler;
+
   private Server httpServer;
 
   private final AtomicBoolean metaStart = new AtomicBoolean(false);
@@ -130,18 +133,20 @@ public class SessionServerBootstrap {
 
   private final AtomicBoolean serverForSessionSyncStart = new AtomicBoolean(false);
 
-  private final Retryer<Boolean> retryer =
+  private final Retryer<Boolean> startupRetryer =
       RetryerBuilder.<Boolean>newBuilder()
           .retryIfRuntimeException()
-          .retryIfResult(
-              new Predicate<Boolean>() {
-                @Override
-                public boolean apply(Boolean input) {
-                  return !input;
-                }
-              })
+          .retryIfResult(input -> !input)
           .withWaitStrategy(WaitStrategies.exponentialWait(1000, 3000, TimeUnit.MILLISECONDS))
           .withStopStrategy(StopStrategies.stopAfterAttempt(10))
+          .build();
+
+  private final Retryer<Boolean> addBlacklistRetryer =
+      RetryerBuilder.<Boolean>newBuilder()
+          .retryIfException()
+          .retryIfRuntimeException()
+          .withWaitStrategy(WaitStrategies.exponentialWait(1000, 3000, TimeUnit.MILLISECONDS))
+          .withStopStrategy(StopStrategies.stopAfterAttempt(3))
           .build();
 
   /** Do initialized. */
@@ -155,27 +160,28 @@ public class SessionServerBootstrap {
 
       openSessionSyncServer();
 
-      retryer.call(
+      startupRetryer.call(
           () -> {
             connectMetaServer();
             return true;
           });
 
       // wait until slot table is get
-      retryer.call(
+      startupRetryer.call(
           () -> slotTableCache.getCurrentSlotTable().getEpoch() != SlotTable.INIT.getEpoch());
 
       recoverConfigRepository.waitSynced();
       appRevisionCacheRegistry.waitSynced();
       clientManagerAddressRepository.waitSynced();
 
-      retryer.call(() -> systemPropertyProcessorManager.startFetchPersistenceSystemProperty());
+      startupRetryer.call(
+          () -> systemPropertyProcessorManager.startFetchPersistenceSystemProperty());
 
       startScheduler();
 
       openHttpServer();
 
-      retryer.call(
+      startupRetryer.call(
           () -> {
             connectDataServer();
             return true;
@@ -190,7 +196,7 @@ public class SessionServerBootstrap {
       TaskMetrics.getInstance().registerBolt();
 
       LOGGER.info("Initialized Session Server...");
-
+      postStart();
       Runtime.getRuntime().addShutdownHook(new Thread(this::doStop));
     } catch (Throwable e) {
       LOGGER.error("Cannot bootstrap session server :", e);
@@ -204,15 +210,27 @@ public class SessionServerBootstrap {
     Runtime.getRuntime().halt(0);
   }
 
+  private void postStart() throws Throwable {
+    startupRetryer.call(
+        () -> {
+          LOGGER.info("successful start session server, remove self from blacklist");
+          metaNodeService.removeSelfFromMetaBlacklist();
+          return true;
+        });
+  }
+
   private void doStop() {
     try {
       LOGGER.info("{} Shutting down Session Server..", new Date().toString());
-
-      executorManager.stopScheduler();
       stopHttpServer();
+      clientNodeConnectionHandler.stop(); // stop process disconnect event
       stopServer();
+      // stop http server and client bolt server before add blacklist
+      // make sure client reconnect to other sessions and data
+      addBlacklist();
       stopDataSyncServer();
       stopConsoleServer();
+      executorManager.stopScheduler();
     } catch (Throwable e) {
       LOGGER.error("Shutting down Session Server error!", e);
     }
@@ -326,7 +344,7 @@ public class SessionServerBootstrap {
       metaNodeService.startRenewer();
 
       // start fetch system property data
-      retryer.call(() -> systemPropertyProcessorManager.startFetchMetaSystemProperty());
+      startupRetryer.call(() -> systemPropertyProcessorManager.startFetchMetaSystemProperty());
 
       metaStart.set(true);
 
@@ -417,6 +435,23 @@ public class SessionServerBootstrap {
   private void stopHttpServer() {
     if (httpServer != null && httpServer.isOpen()) {
       httpServer.close();
+    }
+  }
+
+  private void addBlacklist() {
+    if (IntegrateUtils.isIntegrate()) {
+      LOGGER.info("integration mode, skip add blacklist");
+      return;
+    }
+    try {
+      addBlacklistRetryer.call(
+          () -> {
+            metaNodeService.addSelfToMetaBlacklist();
+            return true;
+          });
+      LOGGER.error("add session self to blacklist succeed");
+    } catch (Throwable e) {
+      LOGGER.error("add session self to blacklist failed", e);
     }
   }
 

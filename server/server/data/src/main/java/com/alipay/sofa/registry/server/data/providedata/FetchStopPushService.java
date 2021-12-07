@@ -14,33 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.providedata;
+package com.alipay.sofa.registry.server.data.providedata;
 
-import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
+import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.shared.providedata.BaseStopPushService;
-import com.google.common.annotations.VisibleForTesting;
 import org.springframework.beans.factory.annotation.Autowired;
 
-/**
- * @author xiaojian.xj
- * @version $Id: FetchStopPushService.java, v 0.1 2021年05月16日 17:48 xiaojian.xj Exp $
- */
 public class FetchStopPushService extends BaseStopPushService {
-
-  @Autowired private SessionServerConfig sessionServerConfig;
+  @Autowired private DataServerConfig dataServerConfig;
 
   @Override
   protected int getSystemPropertyIntervalMillis() {
-    return sessionServerConfig.getSystemPropertyIntervalMillis();
-  }
-  /**
-   * Setter method for property <tt>sessionServerConfig</tt>.
-   *
-   * @param sessionServerConfig value to be assigned to property sessionServerConfig
-   */
-  @VisibleForTesting
-  protected FetchStopPushService setSessionServerConfig(SessionServerConfig sessionServerConfig) {
-    this.sessionServerConfig = sessionServerConfig;
-    return this;
+    return dataServerConfig.getSystemPropertyIntervalMillis();
   }
 }

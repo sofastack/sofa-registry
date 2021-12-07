@@ -51,6 +51,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import javax.annotation.PostConstruct;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 
@@ -186,6 +187,24 @@ public final class SlotManagerImpl implements SlotManager {
     }
     return new SlotAccess(
         slotId, currentSlotTableEpoch, SlotAccess.Status.Accept, slot.getLeaderEpoch());
+  }
+
+  public boolean hasSlot() {
+    updateLock.readLock().lock();
+    try {
+      for (SlotState state : slotTableStates.slotStates.values()) {
+        Slot slot = state.slot;
+        if (StringUtils.equals(slot.getLeader(), ServerEnv.IP)) {
+          return true;
+        }
+        if (slot.getFollowers() != null && slot.getFollowers().contains(ServerEnv.IP)) {
+          return true;
+        }
+      }
+    } finally {
+      updateLock.readLock().unlock();
+    }
+    return false;
   }
 
   @Override

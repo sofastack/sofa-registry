@@ -33,9 +33,7 @@ import org.springframework.context.annotation.Import;
  * @version $Id: JdbcConfiguration.java, v 0.1 2021年01月17日 16:28 xiaojian.xj Exp $
  */
 @Configuration
-@Import({
-        StoreApiConfiguration.class
-})
+@Import({StoreApiConfiguration.class})
 @EnableConfigurationProperties
 @ConditionalOnProperty(
     value = SpringContext.PERSISTENCE_PROFILE_ACTIVE,
