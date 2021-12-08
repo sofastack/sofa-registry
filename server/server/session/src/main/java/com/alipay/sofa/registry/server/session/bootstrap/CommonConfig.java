@@ -44,7 +44,7 @@ public class CommonConfig {
    * nodes.metaNode=DefaultDataCenter:192.168.xxx.xxx,192.168.xxx.xxx,192.168.xxx.xxx|AnotherDataCenter:192.168.xxx.xxx,192.168.xxx.xxx,192.168.xxx.xxx
    */
   @Value(
-      "#{PropertySplitter.mapOfSingleList('${nodes.metaNode:DefaultDataCenter:localhost}', '${nodes.localDataCenter:DefaultDataCenter}')}")
+      "#{PropertySplitter.mapOfKeyList('${nodes.localDataCenter:DefaultDataCenter}', '${nodes.metaNode:DefaultDataCenter:localhost}')}")
   private Map<String, Collection<String>> metaNode;
 
   /**

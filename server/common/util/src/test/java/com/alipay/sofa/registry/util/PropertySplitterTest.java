@@ -88,13 +88,14 @@ public class PropertySplitterTest {
   }
 
   @Test
-  public void testMapOfSingleList() {
+  public void testMapOfKeyList() {
+    Assert.assertEquals(propertySplitter.mapOfKeyList("aaa", null).size(), 0);
     Assert.assertEquals(
-        propertySplitter.mapOfList("K1:V1,V2"), propertySplitter.mapOfSingleList("V1,V2", "K1"));
+        propertySplitter.mapOfList("K1:V1,V2"), propertySplitter.mapOfKeyList("K1", "V1,V2"));
     Assert.assertEquals(
-        propertySplitter.mapOfList("K1:V1,V2"), propertySplitter.mapOfSingleList("K2:V1,V2", "K1"));
+        propertySplitter.mapOfList("K1:V1,V2"), propertySplitter.mapOfKeyList("K1", "K2:V1,V2"));
     Assert.assertEquals(
         propertySplitter.mapOfList("K1:V1,V2|K3:V3,V4"),
-        propertySplitter.mapOfSingleList("K1:V1,V2,|K3:V3,V4", "K2"));
+        propertySplitter.mapOfKeyList("K2", "K1:V1,V2,|K3:V3,V4"));
   }
 }

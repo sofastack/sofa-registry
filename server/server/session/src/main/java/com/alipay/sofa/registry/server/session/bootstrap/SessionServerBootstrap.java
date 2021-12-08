@@ -43,7 +43,6 @@ import com.alipay.sofa.registry.server.shared.providedata.SystemPropertyProcesso
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.alipay.sofa.registry.store.api.meta.ClientManagerAddressRepository;
 import com.alipay.sofa.registry.store.api.meta.RecoverConfigRepository;
-import com.alipay.sofa.registry.util.IntegrateUtils;
 import com.github.rholder.retry.Retryer;
 import com.github.rholder.retry.RetryerBuilder;
 import com.github.rholder.retry.StopStrategies;
@@ -227,7 +226,7 @@ public class SessionServerBootstrap {
       stopServer();
       // stop http server and client bolt server before add blacklist
       // make sure client reconnect to other sessions and data
-      addBlacklist();
+      gracefulShutdown();
       stopDataSyncServer();
       stopConsoleServer();
       executorManager.stopScheduler();
@@ -438,14 +437,15 @@ public class SessionServerBootstrap {
     }
   }
 
-  private void addBlacklist() {
-    if (IntegrateUtils.isIntegrate()) {
-      LOGGER.info("integration mode, skip add blacklist");
+  private void gracefulShutdown() {
+    if (!sessionServerConfig.isGracefulShutdown()) {
+      LOGGER.info("disable graceful shutdown, skip add blacklist");
       return;
     }
     try {
       addBlacklistRetryer.call(
           () -> {
+            LOGGER.info("[GracefulShutdown] add self to blacklist");
             metaNodeService.addSelfToMetaBlacklist();
             return true;
           });

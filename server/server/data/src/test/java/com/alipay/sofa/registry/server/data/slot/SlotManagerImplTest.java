@@ -130,20 +130,20 @@ public class SlotManagerImplTest {
     SlotManagerImpl sm = mock.slotManager;
     SlotAccess access = sm.checkSlotAccess(0, 100, null, 100);
     Assert.assertTrue(access.isMoved());
-    SlotManagerImpl.SlotState slotState = new SlotManagerImpl.SlotState(createFollower(0, 100));
+    SlotManagerImpl.SlotState slotState = new SlotManagerImpl.SlotState(createSelfFollower(0, 100));
     access = sm.checkSlotAccess(0, 100, slotState, 100);
     Assert.assertTrue(access.isMoved());
 
-    slotState = new SlotManagerImpl.SlotState(createLeader(0, 100));
+    slotState = new SlotManagerImpl.SlotState(createSelfLeader(0, 100));
     access = sm.checkSlotAccess(0, 100, slotState, 100);
     Assert.assertTrue(access.isMigrating());
 
-    slotState = new SlotManagerImpl.SlotState(createLeader(0, 100));
+    slotState = new SlotManagerImpl.SlotState(createSelfLeader(0, 100));
     slotState.migrated = true;
     access = sm.checkSlotAccess(0, 100, slotState, 101);
     Assert.assertTrue(access.isMisMatch());
 
-    slotState = new SlotManagerImpl.SlotState(createLeader(0, 100));
+    slotState = new SlotManagerImpl.SlotState(createSelfLeader(0, 100));
     slotState.migrated = true;
     access = sm.checkSlotAccess(0, 100, slotState, 100);
     Assert.assertTrue(access.isAccept());
@@ -157,7 +157,7 @@ public class SlotManagerImplTest {
     SlotTable slotTable = newTable_0_1(3, 3);
     sm.updateSlotTable(slotTable);
     sm.processUpdating();
-    SlotManagerImpl.SlotState slotState = new SlotManagerImpl.SlotState(createLeader(0, 3));
+    SlotManagerImpl.SlotState slotState = new SlotManagerImpl.SlotState(createSelfLeader(0, 3));
     slotState.migrated = false;
     // migrating
     KeyedTask kt = Mockito.mock(KeyedTask.class);
@@ -193,7 +193,7 @@ public class SlotManagerImplTest {
     Assert.assertTrue(sync);
 
     // test sync leader
-    slotState = new SlotManagerImpl.SlotState(createFollower(1, 3));
+    slotState = new SlotManagerImpl.SlotState(createSelfFollower(1, 3));
     slotState.syncLeaderTask = kt;
     sync = sm.sync(slotState, 1000, 1000, 100);
     Assert.assertTrue(sync);
@@ -222,7 +222,7 @@ public class SlotManagerImplTest {
     Set<String> sessions = Sets.newHashSet("xx1", "xx2");
     Mock mock = mockSM(10, true, false, sessions);
     SlotManagerImpl sm = mock.slotManager;
-    SlotManagerImpl.SlotState slotState = new SlotManagerImpl.SlotState(createLeader(0, 3));
+    SlotManagerImpl.SlotState slotState = new SlotManagerImpl.SlotState(createSelfLeader(0, 3));
 
     KeyedTask kt1 = Mockito.mock(KeyedTask.class);
     SlotManagerImpl.MigratingTask mt1 = new SlotManagerImpl.MigratingTask("xx1", kt1);
@@ -268,6 +268,30 @@ public class SlotManagerImplTest {
     Assert.assertTrue(mt1.forceSuccess);
   }
 
+  @Test
+  public void testHasSlot() {
+    SlotManagerImpl sm = mockSM(10, false, false, Collections.EMPTY_SET).slotManager;
+
+    sm.updateSlotTable(
+        new SlotTable(
+            1,
+            Lists.newArrayList(createLeader(0, 1, ServerEnv.IP), createFollower(1, 1, "aaaaa"))));
+    sm.processUpdating();
+    Assert.assertTrue(sm.hasSlot());
+
+    sm.updateSlotTable(
+        new SlotTable(
+            2, Lists.newArrayList(createLeader(0, 2, "aaaa"), createFollower(1, 2, ServerEnv.IP))));
+    sm.processUpdating();
+    Assert.assertTrue(sm.hasSlot());
+
+    sm.updateSlotTable(
+        new SlotTable(
+            3, Lists.newArrayList(createLeader(0, 3, "aaaa"), createFollower(1, 3, "aaaa"))));
+    sm.processUpdating();
+    Assert.assertFalse(sm.hasSlot());
+  }
+
   static void slotEquals(SlotTable table, SlotManagerImpl sm) {
     Map<Integer, Slot> slotMap = table.getSlotMap();
     for (Slot slot : slotMap.values()) {
@@ -277,26 +301,32 @@ public class SlotManagerImplTest {
     Assert.assertEquals(sm.getSlotStatuses().size(), slotMap.size());
   }
 
-  static Slot createLeader(int slotId, long leaderEpoch) {
-    return new Slot(slotId, ServerEnv.IP, leaderEpoch, Lists.newArrayList("xxx"));
+  static Slot createLeader(int slotId, long leaderEpoch, String address) {
+    return new Slot(slotId, address, leaderEpoch, Lists.newArrayList("xxx"));
   }
 
-  static Slot createFollower(int slotId, long leaderEpoch) {
-    return new Slot(slotId, "xxx", leaderEpoch, Lists.newArrayList(ServerEnv.IP, "yyy"));
+  static Slot createSelfLeader(int slotId, long leaderEpoch) {
+    return createLeader(slotId, leaderEpoch, ServerEnv.IP);
+  }
+
+  static Slot createFollower(int slotId, long leaderEpoch, String address) {
+    return new Slot(slotId, "xxx", leaderEpoch, Lists.newArrayList(address, "yyy"));
+  }
+
+  static Slot createSelfFollower(int slotId, long leaderEpoch) {
+    return createFollower(slotId, leaderEpoch, ServerEnv.IP);
   }
 
   static SlotTable newTable_0_1(int tableEpoch, int leaderEpoch) {
-    Slot slot0 = createLeader(0, leaderEpoch);
-    Slot slot1 = createFollower(1, leaderEpoch);
-    SlotTable slotTable = new SlotTable(tableEpoch, Lists.newArrayList(slot0, slot1));
-    return slotTable;
+    Slot slot0 = createSelfLeader(0, leaderEpoch);
+    Slot slot1 = createSelfFollower(1, leaderEpoch);
+    return new SlotTable(tableEpoch, Lists.newArrayList(slot0, slot1));
   }
 
   static SlotTable newTable_1_2(int tableEpoch, int leaderEpoch) {
-    Slot slot1 = createLeader(1, leaderEpoch);
-    Slot slot2 = createFollower(2, leaderEpoch);
-    SlotTable slotTable = new SlotTable(tableEpoch, Lists.newArrayList(slot1, slot2));
-    return slotTable;
+    Slot slot1 = createSelfLeader(1, leaderEpoch);
+    Slot slot2 = createSelfFollower(2, leaderEpoch);
+    return new SlotTable(tableEpoch, Lists.newArrayList(slot1, slot2));
   }
 
   static Mock mockSM(int slotId, boolean initSync, boolean initExecutor, Set<String> sessions) {

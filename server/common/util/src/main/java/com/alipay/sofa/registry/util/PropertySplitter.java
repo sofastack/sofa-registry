@@ -33,7 +33,7 @@ public class PropertySplitter {
   }
 
   /** Example: one.example.property = KEY1:VALUE1,KEY2:VALUE2 */
-  public Map<String, String> map(String property) {
+  Map<String, String> map(String property) {
     if (property == null) {
       return new HashMap<>();
     }
@@ -41,25 +41,26 @@ public class PropertySplitter {
   }
 
   /**
-   * Example: property=KEY1:VALUE1.1,VALUE1.2|KEY2:VALUE2.1,VALUE2.2, key=ignored Example: property
-   * = KEY1:VALUE1.1,VALUE1.2, key=KEY2 Example: property = VALUE1.1,VALUE1.2, key=KEY2
+   * Example: property=KEY1:VALUE1.1,VALUE1.2|KEY2:VALUE2.1,VALUE2.2, defaultKey=ignored Example:
+   * property = KEY1:VALUE1.1,VALUE1.2, defaultKey=KEY2 Example: property = VALUE1.1,VALUE1.2,
+   * defaultKey=KEY2
    */
-  public Map<String, Collection<String>> mapOfSingleList(String property, String key) {
-    if (property == null) {
-      return new HashMap<>();
+  public Map<String, Collection<String>> mapOfKeyList(String defaultKey, String property) {
+    if (StringUtils.isBlank(property)) {
+      return Collections.emptyMap();
     }
     if (StringUtils.contains(property, '|')) {
       return mapOfList(property);
     }
     if (StringUtils.contains(property, ':')) {
       Map<String, Collection<String>> singleMap = mapOfList(property);
-      return Collections.singletonMap(key, singleMap.values().stream().findFirst().get());
+      return Collections.singletonMap(defaultKey, singleMap.values().stream().findFirst().get());
     }
-    return Collections.singletonMap(key, list(property));
+    return Collections.singletonMap(defaultKey, list(property));
   }
 
   /** Example: one.example.property = KEY1:VALUE1.1,VALUE1.2|KEY2:VALUE2.1,VALUE2.2 */
-  public Map<String, Collection<String>> mapOfList(String property) {
+  Map<String, Collection<String>> mapOfList(String property) {
     if (property == null) {
       return new HashMap<>();
     }

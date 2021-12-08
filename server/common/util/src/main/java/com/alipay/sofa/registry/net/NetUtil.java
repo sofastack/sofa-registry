@@ -65,7 +65,8 @@ public class NetUtil {
   public static final List<String> NETWORK_INTERFACE_DENYLIST_VALUE =
       SystemUtils.getSystem(NETWORK_INTERFACE_DENYLIST) == null
           ? Collections.emptyList()
-          : Arrays.asList(System.getProperty(NETWORK_INTERFACE_DENYLIST).split(","));
+          : Arrays.asList(
+              StringUtils.trim(System.getProperty(NETWORK_INTERFACE_DENYLIST)).split(","));
 
   /**
    * Gen host string.
@@ -162,7 +163,7 @@ public class NetUtil {
         && IP_PATTERN.matcher(name).matches());
   }
 
-  private static InetAddress getLocalAddress0() {
+  static InetAddress getLocalAddress0() {
     try {
       List<NetworkInterface> interfaces = Collections.list(NetworkInterface.getNetworkInterfaces());
       if (CollectionUtils.isEmpty(interfaces)) {
@@ -184,8 +185,8 @@ public class NetUtil {
             interfaces.stream()
                 .filter(
                     i ->
-                        NETWORK_INTERFACE_DENYLIST_VALUE.contains(i.getName())
-                            || NETWORK_INTERFACE_DENYLIST_VALUE.contains(i.getDisplayName()))
+                        !NETWORK_INTERFACE_DENYLIST_VALUE.contains(i.getName())
+                            && !NETWORK_INTERFACE_DENYLIST_VALUE.contains(i.getDisplayName()))
                 .collect(Collectors.toList());
       }
       if (!CollectionUtils.isEmpty(NETWORK_INTERFACE_PREFERENCE)) {
@@ -210,7 +211,7 @@ public class NetUtil {
     }
   }
 
-  private static InetAddress selectLocalAddress(List<NetworkInterface> nis, List<String> bindings) {
+  static InetAddress selectLocalAddress(List<NetworkInterface> nis, List<String> bindings) {
     for (NetworkInterface ni : nis) {
       if (!bindings.contains(ni.getDisplayName()) && !bindings.contains(ni.getName())) {
         continue;
