@@ -37,7 +37,7 @@ public class CommonConfig {
   public static final String LOCAL_REGION = System.getProperty("nodes.localRegion");
 
   @Value(
-      "#{PropertySplitter.mapOfSingleList('${nodes.metaNode:DefaultDataCenter:localhost}', '${nodes.localDataCenter:DefaultDataCenter}')}")
+      "#{PropertySplitter.mapOfKeyList('${nodes.localDataCenter:DefaultDataCenter}', '${nodes.metaNode:DefaultDataCenter:localhost}')}")
   private Map<String /*dataCenterId*/, Collection<String>> metaNode;
 
   /**

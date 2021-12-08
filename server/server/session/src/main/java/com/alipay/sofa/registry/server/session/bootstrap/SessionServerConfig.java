@@ -188,4 +188,6 @@ public interface SessionServerConfig extends ServerShareConfig {
   boolean isWatchConfigEnable();
 
   int getScanWatcherIntervalMillis();
+
+  boolean isGracefulShutdown();
 }

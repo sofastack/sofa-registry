@@ -32,7 +32,6 @@ import com.alipay.sofa.registry.server.meta.bootstrap.MetaServerBootstrap;
 import com.alipay.sofa.registry.server.session.SessionApplication;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerBootstrap;
 import com.alipay.sofa.registry.util.FileUtils;
-import com.alipay.sofa.registry.util.IntegrateUtils;
 import com.alipay.sofa.registry.util.StringFormatter;
 import java.io.*;
 import java.sql.Connection;
@@ -69,7 +68,7 @@ public class RegistryApplication {
   private static ConfigurableApplicationContext dataApplicationContext;
 
   public static void main(String[] args) throws Exception {
-    IntegrateUtils.setIntegrate();
+    System.setProperty("spring.profiles.active", "integrate");
     System.setProperty("registry.lease.duration.secs", "10");
     System.setProperty("registry.elector.warm.up.millis", "2000");
 

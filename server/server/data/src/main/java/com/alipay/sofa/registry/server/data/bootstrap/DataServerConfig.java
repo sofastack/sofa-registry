@@ -129,6 +129,8 @@ public class DataServerConfig implements ServerShareConfig {
 
   private int systemPropertyIntervalMillis = 3000;
 
+  private boolean gracefulShutdown = false;
+
   /**
    * constructor
    *
@@ -891,5 +893,13 @@ public class DataServerConfig implements ServerShareConfig {
   @Override
   public int getSystemPropertyIntervalMillis() {
     return systemPropertyIntervalMillis;
+  }
+
+  public boolean isGracefulShutdown() {
+    return gracefulShutdown;
+  }
+
+  public void setGracefulShutdown(boolean gracefulShutdown) {
+    this.gracefulShutdown = gracefulShutdown;
   }
 }

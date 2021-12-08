@@ -37,7 +37,6 @@ import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.server.shared.providedata.SystemPropertyProcessorManager;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
-import com.alipay.sofa.registry.util.IntegrateUtils;
 import com.github.rholder.retry.Retryer;
 import com.github.rholder.retry.RetryerBuilder;
 import com.github.rholder.retry.StopStrategies;
@@ -282,7 +281,7 @@ public class DataServerBootstrap {
     try {
       LOGGER.info("{} Shutting down Data Server..", new Date().toString());
 
-      addBlacklist();
+      gracefulShutdown();
 
       stopHttpServer();
       stopServer();
@@ -294,14 +293,16 @@ public class DataServerBootstrap {
     LOGGER.info("{} Data server is now shutdown...", new Date().toString());
   }
 
-  private void addBlacklist() {
-    if (IntegrateUtils.isIntegrate()) {
-      LOGGER.info("integration mode, skip add blacklist");
+  private void gracefulShutdown() {
+    if (!dataServerConfig.isGracefulShutdown()) {
+      LOGGER.info("disable graceful shutdown, skip add blacklist");
       return;
     }
+
     try {
       addBlacklistRetryer.call(
           () -> {
+            LOGGER.info("[GracefulShutdown] add self to blacklist");
             metaServerService.addSelfToMetaBlacklist();
             return true;
           });
@@ -314,6 +315,7 @@ public class DataServerBootstrap {
             if (statusResponse.isProtectionMode()) {
               return true;
             }
+            LOGGER.info("[GracefulShutdown] wait no slot");
             if (slotManager.hasSlot()) {
               throw new RuntimeException("current data server still own slot, waiting...");
             }

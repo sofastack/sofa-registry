@@ -47,7 +47,7 @@
                 <TimeBasedTriggeringPolicy/>
             </Policies>
             <DefaultRolloverStrategy max="30">
-                <Delete basePath="${META_LOG_HOME}" maxDepth="2">
+                <Delete basePath="${LOG_HOME}" maxDepth="2">
                     <IfFileName glob="registry-jetty.log.*" />
                     <IfLastModified age="30d" />
                 </Delete>

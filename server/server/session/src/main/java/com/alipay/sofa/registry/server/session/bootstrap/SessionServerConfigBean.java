@@ -209,6 +209,8 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
   private int watchPushTaskMaxBufferSize = 10000;
 
+  private boolean gracefulShutdown = false;
+
   /**
    * constructor
    *
@@ -1248,6 +1250,15 @@ public class SessionServerConfigBean implements SessionServerConfig {
   @Override
   public int getScanWatcherIntervalMillis() {
     return scanWatcherIntervalMillis;
+  }
+
+  @Override
+  public boolean isGracefulShutdown() {
+    return gracefulShutdown;
+  }
+
+  public void setGracefulShutdown(boolean gracefulShutdown) {
+    this.gracefulShutdown = gracefulShutdown;
   }
 
   public void setScanWatcherIntervalMillis(int scanWatcherIntervalMillis) {
