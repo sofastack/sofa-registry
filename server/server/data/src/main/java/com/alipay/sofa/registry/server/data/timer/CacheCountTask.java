@@ -59,7 +59,7 @@ public class CacheCountTask {
     }
     ScheduledExecutorService executor =
         new ScheduledThreadPoolExecutor(1, new NamedThreadFactory("CacheCountTask"));
-    executor.scheduleWithFixedDelay(() -> count(), intervalSec, intervalSec, TimeUnit.SECONDS);
+    executor.scheduleAtFixedRate(this::count, intervalSec, intervalSec, TimeUnit.SECONDS);
     ConcurrentUtils.createDaemonThread("cache-printer", new PrintTotal()).start();
     return true;
   }

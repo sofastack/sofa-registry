@@ -66,7 +66,7 @@ public class CacheCountTask {
     }
     ScheduledExecutorService executor =
         new ScheduledThreadPoolExecutor(1, new NamedThreadFactory("CacheCountTask"));
-    executor.scheduleWithFixedDelay(this::syncCount, intervalSec, intervalSec, TimeUnit.SECONDS);
+    executor.scheduleAtFixedRate(this::syncCount, intervalSec, intervalSec, TimeUnit.SECONDS);
     return true;
   }
 
