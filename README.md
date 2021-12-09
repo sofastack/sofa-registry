@@ -24,6 +24,8 @@ SOFARegistry 是蚂蚁金服开源的一个生产级、高时效、高可用的�
 
 运行需要 JDK 6 及以上，服务端运行需要 JDK 8及以上。
 
+****推荐使用JDK 8，JDK 16尚未被测试，可能会有兼容性问题。**
+
 ## 文档
 
 - [快速开始](https://www.sofastack.tech/sofa-registry/docs/Server-QuickStart)
