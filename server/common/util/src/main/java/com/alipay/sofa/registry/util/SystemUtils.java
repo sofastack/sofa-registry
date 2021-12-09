@@ -24,7 +24,7 @@ public final class SystemUtils {
   public static int getSystemInteger(String name, int def) {
     String v = System.getProperty(name);
     if (v == null) {
-      v = System.getenv(name);
+      v = System.getenv(convertEnvKey(name));
     }
     return v == null ? def : Integer.parseInt(v);
   }
@@ -32,7 +32,7 @@ public final class SystemUtils {
   public static long getSystemLong(String name, long def) {
     String v = System.getProperty(name);
     if (v == null) {
-      v = System.getenv(name);
+      v = System.getenv(convertEnvKey(name));
     }
     return v == null ? def : Long.parseLong(v);
   }
@@ -40,7 +40,7 @@ public final class SystemUtils {
   public static String getSystem(String name, String def) {
     String v = System.getProperty(name);
     if (v == null) {
-      v = System.getenv(name);
+      v = System.getenv(convertEnvKey(name));
     }
     return v == null ? def : v;
   }
@@ -49,7 +49,7 @@ public final class SystemUtils {
     return getSystem(name, null);
   }
 
-  public static String convertEnvKey(String key) {
+  private static String convertEnvKey(String key) {
     return StringUtils.replace(key, ".", "_").toUpperCase();
   }
 }

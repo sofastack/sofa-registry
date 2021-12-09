@@ -9,12 +9,18 @@ if [[ -z "$REGISTRY_APP_NAME" ]]; then
 fi
 BASE_DIR=`cd $(dirname $0)/../..; pwd`
 APP_JAR="${BASE_DIR}/registry-${REGISTRY_APP_NAME}.jar"
+# set user.home
+JAVA_OPTS="$JAVA_OPTS -Duser.home=${BASE_DIR}"
+
 if [[ -z "$SPRING_CONFIG_LOCATION" ]]; then
-  SPRING_CONFIG_LOCATION=${BASE_DIR}/conf/application.properties
+  SPRING_CONFIG_LOCATION=${BASE_DIR}/conf/
+fi
+JAVA_OPTS="$JAVA_OPTS -Dspring.config.additional-location=${SPRING_CONFIG_LOCATION}"
+
+if [[ -n "$SPRING_PROFILES_ACTIVE" ]]; then
+  JAVA_OPTS="$JAVA_OPTS -Dspring.profiles.active=${SPRING_PROFILES_ACTIVE}"
 fi
 
-# set user.home
-JAVA_OPTS="$JAVA_OPTS -Duser.home=${BASE_DIR} -Dspring.config.location=${SPRING_CONFIG_LOCATION}"
 
 # springboot conf
 SPRINGBOOT_OPTS="${SPRINGBOOT_OPTS} -DLog4jContextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector"

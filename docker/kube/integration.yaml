@@ -47,7 +47,7 @@ data:
     nodes.localRegion=DEFAULT_ZONE
     jdbc.url=jdbc:mysql://mysql.default.svc.cluster.local:3306/registrymetadb
     jdbc.username=root
-    jdbc.password=
+    jdbc.password=root
 ---
 apiVersion: v1
 kind: Secret

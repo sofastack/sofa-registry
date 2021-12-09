@@ -30,7 +30,7 @@ public class JdbcDriverConfigBean implements JdbcDriverConfig {
   private String driverClassName = "com.mysql.jdbc.Driver";
 
   private String url =
-      "jdbc:mysql://127.0.0.1:2883/registrymetadb?useUnicode=true&characterEncoding=utf8";
+      "jdbc:mysql://127.0.0.1:3306/registrymetadb?useUnicode=true&characterEncoding=utf8";
 
   private String username = "username";
 

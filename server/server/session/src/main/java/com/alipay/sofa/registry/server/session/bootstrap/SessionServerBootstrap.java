@@ -449,7 +449,7 @@ public class SessionServerBootstrap {
             metaNodeService.addSelfToMetaBlacklist();
             return true;
           });
-      LOGGER.error("add session self to blacklist succeed");
+      LOGGER.info("add session self to blacklist successfully");
     } catch (Throwable e) {
       LOGGER.error("add session self to blacklist failed", e);
     }

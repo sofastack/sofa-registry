@@ -68,7 +68,9 @@ public class RegistryApplication {
   private static ConfigurableApplicationContext dataApplicationContext;
 
   public static void main(String[] args) throws Exception {
-    System.setProperty("spring.profiles.active", "integrate");
+    if (StringUtils.isBlank(System.getProperty("spring.profiles.active"))) {
+      System.setProperty("spring.profiles.active", "dev");
+    }
     System.setProperty("registry.lease.duration.secs", "10");
     System.setProperty("registry.elector.warm.up.millis", "2000");
 

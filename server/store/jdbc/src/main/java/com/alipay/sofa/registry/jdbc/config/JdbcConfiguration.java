@@ -137,23 +137,20 @@ public class JdbcConfiguration {
       props.put(
           PROP_DRIVERCLASSNAME,
           SystemUtils.getSystem(
-              SystemUtils.convertEnvKey(JdbcDriverConfigBean.PRE_FIX + "." + PROP_DRIVERCLASSNAME),
+              JdbcDriverConfigBean.PRE_FIX + "." + PROP_DRIVERCLASSNAME,
               jdbcDriverConfig.getDriverClassName()));
       props.put(
           PROP_URL,
           SystemUtils.getSystem(
-              SystemUtils.convertEnvKey(JdbcDriverConfigBean.PRE_FIX + "." + PROP_URL),
-              jdbcDriverConfig.getUrl()));
+              JdbcDriverConfigBean.PRE_FIX + "." + PROP_URL, jdbcDriverConfig.getUrl()));
       props.put(
           PROP_USERNAME,
           SystemUtils.getSystem(
-              SystemUtils.convertEnvKey(JdbcDriverConfigBean.PRE_FIX + "." + PROP_USERNAME),
-              jdbcDriverConfig.getUsername()));
+              JdbcDriverConfigBean.PRE_FIX + "." + PROP_USERNAME, jdbcDriverConfig.getUsername()));
       props.put(
           PROP_PASSWORD,
           SystemUtils.getSystem(
-              SystemUtils.convertEnvKey(JdbcDriverConfigBean.PRE_FIX + "." + PROP_PASSWORD),
-              jdbcDriverConfig.getPassword()));
+              JdbcDriverConfigBean.PRE_FIX + "." + PROP_PASSWORD, jdbcDriverConfig.getPassword()));
 
       // todo connection pool config
       props.put(PROP_MINIDLE, jdbcDriverConfig.getMinIdle() + "");

@@ -321,6 +321,7 @@ public class DataServerBootstrap {
             }
             return true;
           });
+      LOGGER.info("add data self to blacklist successfully");
     } catch (Throwable e) {
       LOGGER.error("add blacklist failed:", e);
     }
