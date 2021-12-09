@@ -20,10 +20,8 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.store.api.meta.RecoverConfigRepository;
 import com.alipay.sofa.registry.store.api.spring.SpringContext;
-import com.alipay.sofa.registry.util.SystemUtils;
 import com.google.common.annotations.VisibleForTesting;
 import java.util.Set;
-import javax.annotation.PostConstruct;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -46,28 +44,36 @@ public class DefaultCommonConfigBean implements DefaultCommonConfig {
   @Value("${persistence.profile.active:jdbc}")
   private String persistenceProfileActive;
 
-  private String recoverClusterId = SystemUtils.getSystem("nodes.recoverClusterId", "");
+  @Value("${nodes.recoverClusterId:}")
+  private String recoverClusterId;
 
   private static final String ALL_KEY = "ALL";
 
   @Autowired private RecoverConfigRepository recoverConfigRepository;
 
-  @PostConstruct
-  public void init() throws InterruptedException {
-    if (StringUtils.isEmpty(clusterId) || StringUtils.isEmpty(recoverClusterId)) {
-      throw new InterruptedException("clusterId or recoverClusterId is empty.");
+  private String getDefaultClusterId() {
+    if (StringUtils.isNotBlank(clusterId)) {
+      return clusterId;
     }
+    return dataCenter;
+  }
+
+  private String getDefaultRecoverClusterId() {
+    if (StringUtils.isNotBlank(recoverClusterId)) {
+      return recoverClusterId;
+    }
+    return getDefaultClusterId();
   }
 
   @Override
   public String getClusterId(String table) {
     Set<String> keys = recoverConfigRepository.queryKey(table);
+    String recoverClusterId = getDefaultRecoverClusterId();
     if (!CollectionUtils.isEmpty(keys) && keys.contains(ALL_KEY)) {
       LOG.info("[GetClusterId]propertyTable:{}, clusterId:{}", table, recoverClusterId);
-      return recoverClusterId;
+      return getDefaultRecoverClusterId();
     }
-
-    return clusterId;
+    return getDefaultClusterId();
   }
 
   @Override
@@ -80,6 +86,7 @@ public class DefaultCommonConfigBean implements DefaultCommonConfig {
     }
 
     Set<String> keys = recoverConfigRepository.queryKey(table);
+    String recoverClusterId = getDefaultRecoverClusterId();
     if (!CollectionUtils.isEmpty(keys) && keys.contains(key)) {
       LOG.info(
           "[GetClusterId]propertyTable:{}, propertyKey:{}, clusterId:{}",
@@ -89,12 +96,12 @@ public class DefaultCommonConfigBean implements DefaultCommonConfig {
       return recoverClusterId;
     }
 
-    return clusterId;
+    return getDefaultClusterId();
   }
 
   @Override
   public boolean isRecoverCluster() {
-    return !StringUtils.equals(clusterId, recoverClusterId);
+    return !StringUtils.equals(getDefaultClusterId(), getDefaultRecoverClusterId());
   }
 
   @Override
