@@ -145,7 +145,7 @@ public class MetaJdbcLeaderElector extends AbstractLeaderElector implements Reco
               myself,
               lock.getDuration(),
               lock.getTerm(),
-              lock.getIndex()));
+              lock.getTermDuration()));
       DistributeLockDomain newLock =
           distributeLockMapper.queryDistLock(lock.getDataCenter(), lock.getLockName());
       LOG.info("elector finish, new lock: {}", lock);

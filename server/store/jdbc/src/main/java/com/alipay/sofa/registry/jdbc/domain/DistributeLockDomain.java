@@ -50,7 +50,7 @@ public class DistributeLockDomain {
 
   private long term;
 
-  private long index;
+  private long termDuration;
 
   public DistributeLockDomain() {}
 
@@ -235,7 +235,7 @@ public class DistributeLockDomain {
         + ", term="
         + term
         + ", index="
-        + index
+        + termDuration
         + '}';
   }
 
@@ -247,11 +247,11 @@ public class DistributeLockDomain {
     this.term = term;
   }
 
-  public long getIndex() {
-    return index;
+  public long getTermDuration() {
+    return termDuration;
   }
 
-  public void setIndex(long index) {
-    this.index = index;
+  public void setTermDuration(long termDuration) {
+    this.termDuration = termDuration;
   }
 }
