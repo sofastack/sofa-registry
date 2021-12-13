@@ -24,7 +24,7 @@ public class Crc32cSlotFunctionTest {
   @Test
   public void test() {
     Crc32cSlotFunction function = new Crc32cSlotFunction(256);
-    System.out.println(function.slotOf("paychecker#@#DEFAULT_INSTANCE_ID#@#SOFA_APP"));
+    System.out.println(function.slotOf("aaaaaaaaaa"));
 
     System.out.println(new Date(1624591989649L));
   }
