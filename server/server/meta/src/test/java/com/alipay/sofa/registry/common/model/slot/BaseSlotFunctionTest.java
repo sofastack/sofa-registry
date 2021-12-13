@@ -21,6 +21,7 @@ import com.alipay.sofa.registry.util.FileUtils;
 import com.alipay.sofa.registry.util.JsonUtils;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 
 /**
  * @author chen.zhu
@@ -28,10 +29,11 @@ import java.io.IOException;
  */
 public class BaseSlotFunctionTest extends AbstractMetaServerTestBase {
 
-  public String[] getDataInfoIds() throws IOException {
-    String fileContent =
-        new String(
-            FileUtils.readFileToByteArray(new File("src/test/resources/test/data_info_ids.json")));
-    return JsonUtils.read(fileContent, String[].class);
+  public String[] getDataInfoIds() {
+    ArrayList<String> list = new ArrayList<>();
+    for(int i=0;i<10000;i++){
+      list.add(String.format("dataInfoId-%s", i));
+    }
+    return list.toArray(new String[]{});
   }
 }

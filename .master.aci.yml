@@ -24,7 +24,6 @@ STC扫描:
   pluginConfig:
     markdown: admin/result.md # 向页面输出一些自定义内容
 
-#see https://code.alipay.com/common_release/avatarpoc/blob/master/.aci.test.yml
 集成测试:
   stage: 测试
   plugin: LINKQ-IT         # java集成测试插件

@@ -17,7 +17,6 @@ STC扫描:
   checkRule:
     - stc = 0
 
-# see https://yuque.antfin.com/linke/help/kg1p34#pBvc2
 单元测试:
   stage: 测试
   plugin: LINKQ-UT         # java单元测试插件
@@ -33,7 +32,6 @@ STC扫描:
     markdown: admin/result.md # 向页面输出一些自定义内容
     aciTags: 8G
 
-#see https://code.alipay.com/common_release/avatarpoc/blob/master/.aci.test.yml
 集成测试:
   stage: 测试
   plugin: LINKQ-IT         # java集成测试插件
