@@ -1,0 +1,4 @@
+resources:
+  - configmap.yaml
+  - db-secret.yaml
+  - integration.yaml

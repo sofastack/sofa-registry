@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sofa-registry-config
+data:
+  application.properties: |
+    nodes.localDataCenter=DefaultDataCenter
+    nodes.localRegion=DEFAULT_ZONE
+    jdbc.url=jdbc:mysql://mysql.default.svc.cluster.local:3306/registrymetadb
+    jdbc.username=root
+    jdbc.password=root

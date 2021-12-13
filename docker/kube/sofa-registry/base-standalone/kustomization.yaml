@@ -1,0 +1,6 @@
+resources:
+  - configmap.yaml
+  - db-secret.yaml
+  - meta.yaml
+  - data.yaml
+  - session.yaml

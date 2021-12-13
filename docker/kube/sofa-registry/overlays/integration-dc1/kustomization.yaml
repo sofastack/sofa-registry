@@ -1,0 +1,10 @@
+nameSuffix: -dc1
+resources:
+  - ../../base-integration
+patchesStrategicMerge:
+  - integration-patch.yaml
+  - db-secret-patch.yaml
+  - configmap-patch.yaml
+images:
+  - name: sofastack/sofaregistry
+    newTag: 6.1.4

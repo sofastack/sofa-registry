@@ -1,0 +1,12 @@
+nameSuffix: -dc2
+resources:
+  - ../../base-standalone
+patchesStrategicMerge:
+  - session-patch.yaml
+  - data-patch.yaml
+  - meta-patch.yaml
+  - db-secret-patch.yaml
+  - configmap-patch.yaml
+images:
+  - name: sofastack/sofaregistry
+    newTag: 6.1.4
