@@ -63,7 +63,7 @@
         <commons.lang.version>2.6</commons.lang.version>
         <google.guava.version>18.0</google.guava.version>
         <sofa.common.tools.version>1.0.12</sofa.common.tools.version>
-        <junit.version>4.12</junit.version>
+        <junit.version>4.13.1</junit.version>
         <junit.jupiter.version>5.0.2</junit.jupiter.version>
         <junit.vintage.version>${junit.version}.2</junit.vintage.version>
         <junit.platform.version>1.0.2</junit.platform.version>
