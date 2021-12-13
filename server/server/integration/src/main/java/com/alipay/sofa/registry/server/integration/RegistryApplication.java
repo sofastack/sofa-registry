@@ -58,8 +58,6 @@ public class RegistryApplication {
   private static final String META_HTTP_SERVER_PORT = "meta.server.httpServerPort";
   private static final String DATA_HTTP_SERVER_PORT = "data.server.httpServerPort";
   private static final String SESSION_HTTP_SERVER_PORT = "session.server.httpServerPort";
-  private static final String CLUSTER_ID = "DEFAULT_SEGMENT";
-  private static final String RECOVER_CLUSTER_ID = "RECOVER_DEFAULT_SEGMENT";
 
   private static final String H2_DRIVER = "org.h2.Driver";
 
@@ -74,8 +72,6 @@ public class RegistryApplication {
     System.setProperty("registry.lease.duration.secs", "10");
     System.setProperty("registry.elector.warm.up.millis", "2000");
 
-    System.setProperty("nodes.clusterId", CLUSTER_ID);
-    System.setProperty("nodes.recoverClusterId", RECOVER_CLUSTER_ID);
     // setup DefaultUncaughtExceptionHandler
     Thread.setDefaultUncaughtExceptionHandler(
         (t, e) ->

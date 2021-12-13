@@ -16,8 +16,6 @@ elif [ ${REGISTRY_APP_NAME} == "session" ];then
     exec ${BASE_DIR}/bin/session/start.sh
 elif [ ${REGISTRY_APP_NAME} == "integration" ];then
     exec ${BASE_DIR}/bin/integration/start.sh
-elif [ ${REGISTRY_APP_NAME} == "integration_dev" ];then
-    exec ${BASE_DIR}/bin/integration/start_dev.sh
 else
   echo "REGISTRY_APP_NAME ${REGISTRY_APP_NAME} unexpected" 1>&2
   exit 1

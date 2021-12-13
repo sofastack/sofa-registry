@@ -32,7 +32,7 @@
         </file>
         <file>
             <source>../../server/meta/src/main/resources/log4j2.xml</source>
-            <outputDirectory>./conf/meta</outputDirectory>
+            <outputDirectory>./log-conf/meta</outputDirectory>
             <destName>log4j2.xml</destName>
         </file>
         <file>
@@ -42,7 +42,7 @@
         </file>
         <file>
             <source>../../server/data/src/main/resources/log4j2.xml</source>
-            <outputDirectory>./conf/data</outputDirectory>
+            <outputDirectory>./log-conf/data</outputDirectory>
             <destName>log4j2.xml</destName>
         </file>
         <file>
@@ -52,7 +52,7 @@
         </file>
         <file>
             <source>../../server/session/src/main/resources/log4j2.xml</source>
-            <outputDirectory>./conf/session</outputDirectory>
+            <outputDirectory>./log-conf/session</outputDirectory>
             <destName>log4j2.xml</destName>
         </file>
         <file>
@@ -62,7 +62,7 @@
         </file>
         <file>
             <source>../../server/integration/src/main/resources/log4j2.xml</source>
-            <outputDirectory>./conf/integration</outputDirectory>
+            <outputDirectory>./log-conf/integration</outputDirectory>
             <destName>log4j2.xml</destName>
         </file>
     </files>

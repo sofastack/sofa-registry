@@ -1,0 +1,15 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sofa-registry-data
+  labels:
+    cluster: dc2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      cluster: dc2
+  template:
+    metadata:
+      labels:
+        cluster: dc2

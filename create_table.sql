@@ -33,8 +33,8 @@ CREATE TABLE IF NOT EXISTS `provide_data`
 (
     `id`           bigint(20) unsigned NOT NULL AUTO_INCREMENT COMMENT '主键',
     `data_center`  varchar(128)  NOT NULL COMMENT '集群名',
-    `data_key`     varchar(512) NOT NULL COMMENT 'data key',
-    `data_value`   mediumtext             DEFAULT NULL COMMENT 'data value',
+    `data_key`     varchar(512) NOT NULL COMMENT 'data.yaml key',
+    `data_value`   mediumtext             DEFAULT NULL COMMENT 'data.yaml value',
     `gmt_create`   timestamp     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `gmt_modified` timestamp     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
     `data_version` bigint(20) unsigned NOT NULL DEFAULT '0' COMMENT '版本号',

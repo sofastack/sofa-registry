@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sofa-registry-integration
+  labels:
+    app: sofa-registry
+    type: integration
+    cluster: default-integration
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: sofa-registry
+      type: integration
+      cluster: default-integration
+  template:
+    metadata:
+      labels:
+        app: sofa-registry
+        type: integration
+        cluster: default-integration
+    spec:
+      containers:
+        - name: sofa-registry
+          image: sofastack/sofaregistry:6.1.4
+          env:
+            - name: REGISTRY_APP_NAME
+              value: integration
+            - name: JDBC_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: sofa-registry-secret
+                  key: JDBC_PASSWORD
+          volumeMounts:
+            - name: config-volume
+              mountPath: /registry-distribution/registry-all/conf
+            - name: log-volume
+              mountPath: /home/admin/logs
+          readinessProbe:
+            httpGet:
+              path: /health/check
+              port: 9603
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            requests:
+              memory: 8Gi
+              cpu: 4
+            limits:
+              memory: 8Gi
+              cpu: 4
+      volumes:
+        - name: config-volume
+          configMap:
+            name: sofa-registry-config
+        - name: log-volume
+          emptyDir: { }
