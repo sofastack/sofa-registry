@@ -82,6 +82,7 @@
         <rocksdbjni.version>6.4.6</rocksdbjni.version>
         <main.user.dir>${user.dir}</main.user.dir>
         <argLine>-Dnetwork_interface_denylist=docker0</argLine>
+        <springboot.version>1.5.17.RELEASE</springboot.version>
     </properties>
 
     <dependencyManagement>
@@ -94,7 +95,7 @@
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-starter-parent</artifactId>
-                <version>1.5.17.RELEASE</version>
+                <version>${springboot.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -353,6 +354,35 @@
     </dependencyManagement>
 
     <build>
+    	<pluginManagement>
+    		<plugins>
+    			 <plugin>
+	                <groupId>org.apache.maven.plugins</groupId>
+	                <artifactId>maven-compiler-plugin</artifactId>
+	                <version>3.7.0</version>
+	            </plugin>
+	            <plugin>
+	                <groupId>org.apache.maven.plugins</groupId>
+	                <artifactId>maven-install-plugin</artifactId>
+	                <version>3.0.0-M1</version>
+	            </plugin>
+	            <plugin>
+	                <groupId>org.apache.maven.plugins</groupId>
+	                <artifactId>maven-deploy-plugin</artifactId>
+	                <version>3.0.0-M1</version>
+	            </plugin>
+	            <plugin>
+	                <groupId>org.sonatype.plugins</groupId>
+	                <artifactId>nexus-staging-maven-plugin</artifactId>
+	                <version>1.6.7</version>
+	            </plugin>
+	            <plugin>
+	            	<groupId>org.springframework.boot</groupId>
+				    <artifactId>spring-boot-maven-plugin</artifactId>
+				    <version>${springboot.version}</version>
+	            </plugin>
+    		</plugins>
+    	</pluginManagement>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
