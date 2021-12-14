@@ -19,7 +19,6 @@ package com.alipay.sofa.registry.test;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.junit.Assert.assertTrue;
 
-import com.alipay.common.tracer.context.AbstractLogContext;
 import com.alipay.remoting.Connection;
 import com.alipay.sofa.registry.client.api.ConfigDataObserver;
 import com.alipay.sofa.registry.client.api.RegistryClientConfig;
@@ -145,8 +144,6 @@ public class BaseIntegrationTest extends AbstractTest {
 
   @BeforeClass
   public static void beforeBaseIntegrationClass() throws Exception {
-    // make sure ctx is exist
-    Class.forName(AbstractLogContext.class.getName());
     System.setProperty(
         LoggingSystem.SYSTEM_PROPERTY,
         "org.springframework.boot.logging.log4j2.Log4J2LoggingSystem");

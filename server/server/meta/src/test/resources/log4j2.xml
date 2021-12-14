@@ -3,7 +3,7 @@
 
     <Properties>
         <Property name="META_LOG_HOME">${sys:user.home}/logs/registry/test</Property>
-        <Property name="LOG_LEVEL">INFO</Property>
+        <Property name="LOG_LEVEL">${sys:test.logging.level:-INFO}</Property>
     </Properties>
 
     <appenders>
