@@ -1,6 +1,6 @@
 # SOFARegistry
 
-[![Java CI with Maven](https://github.com/sofastack/sofa-registry/actions/workflows/maven.yml/badge.svg)](https://github.com/sofastack/sofa-registry/actions/workflows/maven.yml)
+[![Java CI with Maven](https://github.com/sofastack/sofa-registry/actions/workflows/unit-test.yml/badge.svg)](https://github.com/sofastack/sofa-registry/actions/workflows/unit-test.yml)
 ![license](https://img.shields.io/badge/license-Apache--2.0-green.svg)
 [![Coverage Status](https://codecov.io/gh/alipay/sofa-registry/branch/master/graph/badge.svg)](https://codecov.io/gh/sofastack/sofa-registry)
 ![maven](https://img.shields.io/github/release/sofastack/sofa-registry.svg)
@@ -24,7 +24,7 @@ SOFARegistry 是蚂蚁金服开源的一个生产级、高时效、高可用的�
 
 运行需要 JDK 6 及以上，服务端运行需要 JDK 8及以上。
 
-****推荐使用JDK 8，JDK 16尚未被测试，可能会有兼容性问题。**
+**推荐使用JDK 8，JDK 16尚未被测试，可能会有兼容性问题**
 
 ## 文档
 

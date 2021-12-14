@@ -23,6 +23,8 @@ jobs:
     - name: ut
       run: mvn compile -B
         && sh ./tools/check_format.sh
-        && mvn clean test -P unit "-Dtest.logging.level=ERROR"
+        && mvn clean test -DisSkipIntegrationTest=true "-Dtest.logging.level=ERROR"
     - name: Codecov
       uses: codecov/codecov-action@v1
+      with:
+        token: ${{secrets.CODECOV_TOKEN}}
