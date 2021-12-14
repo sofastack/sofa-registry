@@ -17,10 +17,6 @@
 package com.alipay.sofa.registry.common.model.slot;
 
 import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
-import com.alipay.sofa.registry.util.FileUtils;
-import com.alipay.sofa.registry.util.JsonUtils;
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 
 /**
@@ -31,9 +27,9 @@ public class BaseSlotFunctionTest extends AbstractMetaServerTestBase {
 
   public String[] getDataInfoIds() {
     ArrayList<String> list = new ArrayList<>();
-    for(int i=0;i<10000;i++){
+    for (int i = 0; i < 10000; i++) {
       list.add(String.format("dataInfoId-%s", i));
     }
-    return list.toArray(new String[]{});
+    return list.toArray(new String[] {});
   }
 }
