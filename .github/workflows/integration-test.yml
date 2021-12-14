@@ -23,4 +23,4 @@ jobs:
       - name: ut
         run: mvn compile -B
           && sh ./tools/check_format.sh
-          && mvn clean test -P int "-Dtest.logging.level=ERROR"
+          && mvn clean test -DisSkipUnitTest=true "-Dtest.logging.level=ERROR"
