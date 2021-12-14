@@ -3,7 +3,7 @@
 
     <Properties>
         <Property name="SESSION_LOG_HOME">~/logs/registry/session</Property>
-        <Property name="LOG_LEVEL">INFO</Property>
+        <Property name="LOG_LEVEL">${sys:test.logging.level:-INFO}</Property>
     </Properties>
 
     <appenders>

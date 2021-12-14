@@ -1,0 +1,8 @@
+ignore:
+  - '**/bootstrap/**'
+  - '**/inegration/**'
+  - '**/client/pb/**'
+  - '**/MetaApplication'
+  - '**/registry/jraft/**'
+  - '**/DataApplication'
+  - '**/SessionApplication'

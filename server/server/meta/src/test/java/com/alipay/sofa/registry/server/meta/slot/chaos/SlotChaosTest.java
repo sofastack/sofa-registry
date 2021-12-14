@@ -90,9 +90,7 @@ public class SlotChaosTest extends AbstractMetaServerTestBase {
   public void testChaos() throws Exception {
     logger.info("[slot-chaos slot] size: " + slotManager.getSlotNums());
 
-    do {
-      chaosRandom = random.nextInt(100);
-    } while (chaosRandom < 30);
+    chaosRandom = random.nextInt(20) + 30;
 
     makeMetaLeader();
     logger.info("[slot-chaos slot] chaosRandom: " + chaosRandom);

@@ -87,11 +87,6 @@
             <version>1.4.200</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>com.alipay.common</groupId>
-            <artifactId>tracer</artifactId>
-            <scope>test</scope>
-        </dependency>
     </dependencies>
     <build>
         <plugins>
@@ -117,7 +112,7 @@
                         <configuration>
                             <testNGArtifactName>none:none</testNGArtifactName>
                             <junitArtifactName>org.junit:com.springsource.org.junit</junitArtifactName>
-                            <argLine>-Xmx1024m -XX:PermSize=256m -XX:MaxPermSize=512m -Dfile.encoding=UTF8</argLine>
+                            <argLine>-Xmx4096m -XX:PermSize=256m -XX:MaxPermSize=512m -Dfile.encoding=UTF8</argLine>
                             <includes>
                                 <!-- 指定单元测试执行范围 -->
                                 <include>**/*Test.java</include>
