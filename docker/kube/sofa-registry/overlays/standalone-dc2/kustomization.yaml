@@ -8,5 +8,5 @@ patchesStrategicMerge:
   - db-secret-patch.yaml
   - configmap-patch.yaml
 images:
-  - name: sofastack/sofaregistry
+  - name: sofaregistry/sofaregistry
     newTag: 6.1.4
