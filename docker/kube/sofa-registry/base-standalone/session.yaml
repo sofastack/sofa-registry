@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
         - name: sofa-registry
-          image: sofastack/sofaregistry:6.1.4
+          image: sofaregistry/sofaregistry:6.1.4
           env:
             - name: REGISTRY_APP_NAME
               value: session
