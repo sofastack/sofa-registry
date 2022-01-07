@@ -150,6 +150,8 @@ public class BaseIntegrationTest extends AbstractTest {
     System.setProperty("spring.profiles.active", "integrate");
     System.setProperty(Lease.LEASE_DURATION, "2");
     System.setProperty(SlotConfig.KEY_DATA_SLOT_NUM, "16");
+    System.setProperty("nodes.clusterId", "DEFAULT_SEGMENT");
+    System.setProperty("nodes.recoverClusterId", "RECOVER_DEFAULT_SEGMENT");
     beforeInit();
   }
 
