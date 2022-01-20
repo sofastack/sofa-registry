@@ -18,14 +18,11 @@ package com.alipay.sofa.registry.test.client;
 
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.GenericResponse;
-import com.alipay.sofa.registry.common.model.sessionserver.ClientManagerQueryRequest;
-import com.alipay.sofa.registry.common.model.sessionserver.ClientManagerResp;
+import com.alipay.sofa.registry.common.model.sessionserver.CheckClientManagerRequest;
+import com.alipay.sofa.registry.common.model.sessionserver.CheckClientManagerResponse;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.remoting.exchange.message.SimpleRequest;
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
-import com.google.common.collect.Sets;
-import java.util.Map;
-import java.util.Set;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -33,43 +30,37 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 /**
  * @author xiaojian.xj
- * @version : QueryClientOffTest.java, v 0.1 2021年08月02日 10:12 xiaojian.xj Exp $
+ * @version : ClientManagerCheckVersionTest.java, v 0.1 2022年01月20日 14:47 xiaojian.xj Exp $
  */
 @RunWith(SpringRunner.class)
-public class QueryClientOffTest extends BaseIntegrationTest {
+public class ClientManagerCheckVersionTest extends BaseIntegrationTest {
   private final String localAddress = sessionChannel.getLocalAddress().getHostString();
-  private final String CLIENT_OFF_STR = "31.1.1.1;32.2.2.2";
-  private final Set<String> CLIENT_OFF_SET = Sets.newHashSet(CLIENT_OFF_STR.split(";"));
+  private final String CLIENT_OFF_STR = "41.1.1.1;42.2.2.2";
 
   @Test
-  public void testQueryClientOff() throws InterruptedException {
+  public void testQueryClientOff() {
     /** client off */
-    CommonResponse response = clientManagerResource.clientOff(CLIENT_OFF_STR);
+    GenericResponse<Long> response = persistenceClientManagerResource.clientOff(CLIENT_OFF_STR);
     Assert.assertTrue(response.isSuccess());
-    Thread.sleep(3000);
-    /** query */
-    GenericResponse<Map<String, ClientManagerResp>> queryResp =
-        sessionClientManagerResource.queryClientOff();
-    Assert.assertTrue(queryResp.isSuccess());
-    ClientManagerResp clientManagerResp = queryResp.getData().get(localAddress);
-    Assert.assertTrue(clientManagerResp.isSuccess());
-    Assert.assertTrue(clientManagerResp.getIps().containsAll(CLIENT_OFF_SET));
+    Assert.assertTrue(response.getData() > 0);
 
-    CommonResponse result =
-        (CommonResponse)
+    String expectedVersion = String.valueOf(response.getData().longValue());
+    CommonResponse commonResponse = persistenceClientManagerResource.checkVersion(expectedVersion);
+    Assert.assertTrue(commonResponse.isSuccess());
+
+    /** check */
+    GenericResponse result =
+        (GenericResponse)
             sessionConsoleExchanger
                 .request(
                     new SimpleRequest(
-                        new ClientManagerQueryRequest(),
+                        new CheckClientManagerRequest(response.getData().longValue()),
                         new URL(localAddress, sessionServerConfig.getConsolePort())))
                 .getResult();
-    Assert.assertTrue(result.isSuccess());
-    GenericResponse resp = (GenericResponse) result;
-    ClientManagerResp data = (ClientManagerResp) resp.getData();
-    Assert.assertTrue(data.getIps().containsAll(CLIENT_OFF_SET));
 
-    /** client open */
-    response = clientManagerResource.clientOpen(CLIENT_OFF_STR);
-    Assert.assertTrue(response.isSuccess());
+    Assert.assertTrue(result.isSuccess());
+    CheckClientManagerResponse data = (CheckClientManagerResponse) result.getData();
+    Assert.assertTrue(data.isPaasCheck());
+    Assert.assertEquals(data.getActualVersion(), response.getData().longValue());
   }
 }

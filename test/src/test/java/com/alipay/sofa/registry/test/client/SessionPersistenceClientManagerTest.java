@@ -44,23 +44,23 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 /**
  * @author xiaojian.xj
- * @version $Id: ClientManagerTest.java, v 0.1 2021年05月31日 11:40 xiaojian.xj Exp $
+ * @version : SessionPersistenceClientManagerTest.java, v 0.1 2022年01月20日 14:49 xiaojian.xj Exp $
  */
 @RunWith(SpringRunner.class)
-public class ClientManagerTest extends BaseIntegrationTest {
+public class SessionPersistenceClientManagerTest extends BaseIntegrationTest {
 
   private String localAddress = sessionChannel.getLocalAddress().getHostString();
-  private final String CLIENT_OFF_STR = "1.1.1.1;2.2.2.2;" + localAddress;
-  private final String CLIENT_OPEN_STR = "2.2.2.2;3.3.3.3;" + localAddress;
+  private final String CLIENT_OFF_STR = "21.1.1.1;22.2.2.2;" + localAddress;
+  private final String CLIENT_OPEN_STR = "22.2.2.2;23.3.3.3;" + localAddress;
 
   private final Set<String> CLIENT_OFF_SET = Sets.newHashSet(CLIENT_OFF_STR.split(";"));
   private final Set<String> CLIENT_OPEN_SET = Sets.newHashSet(CLIENT_OPEN_STR.split(";"));
 
   public static final Set<AddressVersion> CLIENT_OFF_WITH_SUB_SET =
       Sets.newHashSet(
-          new AddressVersion("1.1.1.1", true),
-          new AddressVersion("2.2.2.2", false),
-          new AddressVersion("3.3.3.3", true));
+          new AddressVersion("21.1.1.1", true),
+          new AddressVersion("22.2.2.2", false),
+          new AddressVersion("23.3.3.3", true));
 
   @Test
   public void testClientOff() throws InterruptedException, TimeoutException {
@@ -84,15 +84,20 @@ public class ClientManagerTest extends BaseIntegrationTest {
         isExist(localDatumStorage.getAllPublisher().get(dataInfo.getDataInfoId()), localAddress));
 
     /** client off */
-    CommonResponse response = clientManagerResource.clientOff(CLIENT_OFF_STR);
+    GenericResponse<Long> response = persistenceClientManagerResource.clientOff(CLIENT_OFF_STR);
     Assert.assertTrue(response.isSuccess());
+    Assert.assertTrue(response.getData() > 0);
+    CommonResponse checkVersion =
+        persistenceClientManagerResource.checkVersion(
+            String.valueOf(response.getData().longValue()));
+    Assert.assertTrue(checkVersion.isSuccess());
 
     // check session client off list
     waitConditionUntilTimeOut(
         () -> fetchClientOffAddressService.getClientOffAddress().containsAll(CLIENT_OFF_SET), 5000);
     waitConditionUntilTimeOut(
         () -> {
-          GenericResponse<ClientManagerAddress> query = clientManagerResource.query();
+          GenericResponse<ClientManagerAddress> query = persistenceClientManagerResource.query();
           return query.isSuccess()
               && query
                   .getData()
@@ -120,8 +125,13 @@ public class ClientManagerTest extends BaseIntegrationTest {
         isExist(localDatumStorage.getAllPublisher().get(dataInfo.getDataInfoId()), localAddress));
 
     /** client open */
-    response = clientManagerResource.clientOpen(CLIENT_OPEN_STR);
+    response = persistenceClientManagerResource.clientOpen(CLIENT_OPEN_STR);
     Assert.assertTrue(response.isSuccess());
+    Assert.assertTrue(response.getData() > 0);
+    checkVersion =
+        persistenceClientManagerResource.checkVersion(
+            String.valueOf(response.getData().longValue()));
+    Assert.assertTrue(checkVersion.isSuccess());
 
     SetView<String> difference = Sets.difference(CLIENT_OFF_SET, CLIENT_OPEN_SET);
     waitConditionUntilTimeOut(
@@ -129,7 +139,7 @@ public class ClientManagerTest extends BaseIntegrationTest {
 
     waitConditionUntilTimeOut(
         () -> {
-          GenericResponse<ClientManagerAddress> query = clientManagerResource.query();
+          GenericResponse<ClientManagerAddress> query = persistenceClientManagerResource.query();
           return query.isSuccess()
               && query
                   .getData()
@@ -149,8 +159,13 @@ public class ClientManagerTest extends BaseIntegrationTest {
   @Test
   public void testClientOffWithSub() throws InterruptedException, TimeoutException {
     /** client off */
-    CommonResponse response = clientManagerResource.clientOff(CLIENT_OFF_STR);
+    GenericResponse<Long> response = persistenceClientManagerResource.clientOff(CLIENT_OFF_STR);
     Assert.assertTrue(response.isSuccess());
+    Assert.assertTrue(response.getData() > 0);
+    CommonResponse checkVersion =
+        persistenceClientManagerResource.checkVersion(
+            String.valueOf(response.getData().longValue()));
+    Assert.assertTrue(checkVersion.isSuccess());
 
     // check session client off list
     waitConditionUntilTimeOut(
@@ -164,7 +179,7 @@ public class ClientManagerTest extends BaseIntegrationTest {
 
     /** client off with sub */
     response =
-        clientManagerResource.clientOffWithSub(
+        persistenceClientManagerResource.clientOffWithSub(
             JsonUtils.writeValueAsString(CLIENT_OFF_WITH_SUB_SET));
     Assert.assertTrue(response.isSuccess());
 
@@ -185,7 +200,7 @@ public class ClientManagerTest extends BaseIntegrationTest {
     }
 
     /** client off */
-    response = clientManagerResource.clientOff(CLIENT_OFF_STR);
+    response = persistenceClientManagerResource.clientOff(CLIENT_OFF_STR);
     Assert.assertTrue(response.isSuccess());
 
     // check session client off list
@@ -197,9 +212,14 @@ public class ClientManagerTest extends BaseIntegrationTest {
       Assert.assertTrue(query.isSub());
     }
 
-    /** client off */
-    response = clientManagerResource.clientOpen(CLIENT_OPEN_STR);
+    /** client open */
+    response = persistenceClientManagerResource.clientOpen(CLIENT_OPEN_STR);
     Assert.assertTrue(response.isSuccess());
+    Assert.assertTrue(response.getData() > 0);
+    checkVersion =
+        persistenceClientManagerResource.checkVersion(
+            String.valueOf(response.getData().longValue()));
+    Assert.assertTrue(checkVersion.isSuccess());
 
     // check session client off list
     TimeUnit.SECONDS.sleep(5);
@@ -231,15 +251,20 @@ public class ClientManagerTest extends BaseIntegrationTest {
         isExist(localDatumStorage.getAllPublisher().get(dataInfo.getDataInfoId()), localAddress));
 
     /** client off */
-    CommonResponse response = clientManagerResource.clientOff(CLIENT_OFF_STR);
+    GenericResponse<Long> response = persistenceClientManagerResource.clientOff(CLIENT_OFF_STR);
     Assert.assertTrue(response.isSuccess());
+    Assert.assertTrue(response.getData() > 0);
+    CommonResponse checkVersion =
+        persistenceClientManagerResource.checkVersion(
+            String.valueOf(response.getData().longValue()));
+    Assert.assertTrue(checkVersion.isSuccess());
 
     // check session client off list
     waitConditionUntilTimeOut(
         () -> fetchClientOffAddressService.getClientOffAddress().containsAll(CLIENT_OFF_SET), 5000);
     waitConditionUntilTimeOut(
         () -> {
-          GenericResponse<ClientManagerAddress> query = clientManagerResource.query();
+          GenericResponse<ClientManagerAddress> query = persistenceClientManagerResource.query();
           return query.isSuccess()
               && query
                   .getData()
@@ -267,8 +292,13 @@ public class ClientManagerTest extends BaseIntegrationTest {
         isExist(localDatumStorage.getAllPublisher().get(dataInfo.getDataInfoId()), localAddress));
 
     /** reduce */
-    response = clientManagerResource.reduce(CLIENT_OPEN_STR);
+    response = persistenceClientManagerResource.reduce(CLIENT_OPEN_STR);
     Assert.assertTrue(response.isSuccess());
+    Assert.assertTrue(response.getData() > 0);
+    checkVersion =
+        persistenceClientManagerResource.checkVersion(
+            String.valueOf(response.getData().longValue()));
+    Assert.assertTrue(checkVersion.isSuccess());
 
     SetView<String> difference = Sets.difference(CLIENT_OFF_SET, CLIENT_OPEN_SET);
     waitConditionUntilTimeOut(
@@ -276,7 +306,7 @@ public class ClientManagerTest extends BaseIntegrationTest {
 
     waitConditionUntilTimeOut(
         () -> {
-          GenericResponse<ClientManagerAddress> query = clientManagerResource.query();
+          GenericResponse<ClientManagerAddress> query = persistenceClientManagerResource.query();
           return query.isSuccess()
               && query
                   .getData()
@@ -303,14 +333,7 @@ public class ClientManagerTest extends BaseIntegrationTest {
   }
 
   @Test
-  public void testConfig() throws InterruptedException, TimeoutException {
-    String localAddress = sessionChannel.getLocalAddress().getHostString();
-    GenericResponse<Long> response = persistenceClientManagerResource.clientOpen(localAddress);
-    Assert.assertTrue(response.isSuccess());
-
-    waitConditionUntilTimeOut(
-        () -> !fetchClientOffAddressService.getClientOffAddress().contains(localAddress), 5000);
-
+  public void testConfig() {
     String dataId = "testDataId";
     MyConfigDataObserver dataObserver = new MyConfigDataObserver();
     ConfiguratorRegistration registration = new ConfiguratorRegistration(dataId, dataObserver);

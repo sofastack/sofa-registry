@@ -21,6 +21,7 @@ import static com.alipay.sofa.registry.jdbc.repository.impl.MetadataMetrics.Prov
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress;
 import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress.AddressVersion;
+import com.alipay.sofa.registry.common.model.metaserver.ClientManagerResult;
 import com.alipay.sofa.registry.jdbc.constant.TableEnum;
 import com.alipay.sofa.registry.jdbc.domain.ClientManagerAddressDomain;
 import com.alipay.sofa.registry.jdbc.informer.BaseInformer;
@@ -67,41 +68,39 @@ public class ClientManagerAddressJdbcRepository
   }
 
   @Override
-  public boolean clientOpen(Set<AddressVersion> ipSet) {
-
+  public ClientManagerResult clientOpen(Set<AddressVersion> ipSet) {
     try {
-      doStorage(ipSet, ValueConstants.CLIENT_OPEN);
+      long maxId = doStorage(ipSet, ValueConstants.CLIENT_OPEN);
       CLIENT_MANAGER_UPDATE_COUNTER.inc(ipSet.size());
+      return ClientManagerResult.buildSuccess(maxId);
     } catch (Throwable t) {
       LOG.error("clientOpen:{} error.", ipSet, t);
-      return false;
+      return ClientManagerResult.buildFailRet();
     }
-    return true;
   }
 
   @Override
-  public boolean clientOff(Set<AddressVersion> ipSet) {
+  public ClientManagerResult clientOff(Set<AddressVersion> ipSet) {
     try {
-      doStorage(ipSet, ValueConstants.CLIENT_OFF);
+      long maxId = doStorage(ipSet, ValueConstants.CLIENT_OFF);
       CLIENT_MANAGER_UPDATE_COUNTER.inc(ipSet.size());
+      return ClientManagerResult.buildSuccess(maxId);
     } catch (Throwable t) {
       LOG.error("clientOff:{} error.", ipSet, t);
-      return false;
+      return ClientManagerResult.buildFailRet();
     }
-    return true;
   }
 
   @Override
-  public boolean reduce(Set<AddressVersion> ipSet) {
+  public ClientManagerResult reduce(Set<AddressVersion> ipSet) {
     try {
-
-      doStorage(ipSet, ValueConstants.REDUCE);
+      long maxId = doStorage(ipSet, ValueConstants.REDUCE);
       CLIENT_MANAGER_UPDATE_COUNTER.inc(ipSet.size());
+      return ClientManagerResult.buildSuccess(maxId);
     } catch (Throwable t) {
       LOG.error("clientOff:{} error.", ipSet, t);
-      return false;
+      return ClientManagerResult.buildFailRet();
     }
-    return true;
   }
 
   @Override
@@ -139,7 +138,13 @@ public class ClientManagerAddressJdbcRepository
         defaultCommonConfig.getClusterId(tableName()), date);
   }
 
-  private void doStorage(Set<AddressVersion> ipSet, String operation) {
+  @Override
+  public void wakeup() {
+    informer.watchWakeup();
+  }
+
+  private long doStorage(Set<AddressVersion> ipSet, String operation) {
+    long maxId = 0;
     for (AddressVersion address : ipSet) {
       ClientManagerAddressDomain update =
           new ClientManagerAddressDomain(
@@ -152,8 +157,13 @@ public class ClientManagerAddressJdbcRepository
 
       if (effectRows == 0) {
         clientManagerAddressMapper.insertOnReplace(update);
+        LOG.info("address: {} replace.", update);
+        maxId = update.getId();
+      } else {
+        LOG.info("address: {} exist, skip replace.", update);
       }
     }
+    return maxId;
   }
 
   @Override

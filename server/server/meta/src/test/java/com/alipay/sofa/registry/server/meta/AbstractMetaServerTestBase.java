@@ -24,6 +24,7 @@ import com.alipay.sofa.registry.common.model.console.PersistenceData;
 import com.alipay.sofa.registry.common.model.console.PersistenceDataBuilder;
 import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress;
 import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress.AddressVersion;
+import com.alipay.sofa.registry.common.model.metaserver.ClientManagerResult;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.common.model.slot.SlotConfig;
@@ -36,10 +37,10 @@ import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.Client;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
-import com.alipay.sofa.registry.server.meta.provide.data.ClientManagerService;
 import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataService;
 import com.alipay.sofa.registry.server.meta.slot.balance.BalancePolicy;
 import com.alipay.sofa.registry.server.meta.slot.balance.NaiveBalancePolicy;
+import com.alipay.sofa.registry.server.shared.client.manager.ClientManagerService;
 import com.alipay.sofa.registry.store.api.DBResponse;
 import com.alipay.sofa.registry.store.api.OperationStatus;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
@@ -688,24 +689,24 @@ public class AbstractMetaServerTestBase extends AbstractTestBase {
         new AtomicReference<>(new ConcurrentHashMap<>().newKeySet());
 
     @Override
-    public boolean clientOpen(Set<String> ipSet) {
-      version.incrementAndGet();
-      return cache.get().removeAll(ipSet);
+    public ClientManagerResult clientOpen(Set<String> ipSet) {
+      cache.get().removeAll(ipSet);
+      return ClientManagerResult.buildSuccess(version.incrementAndGet());
     }
 
     @Override
-    public boolean clientOff(Set<String> ipSet) {
-      version.incrementAndGet();
-      return cache.get().addAll(ipSet);
+    public ClientManagerResult clientOff(Set<String> ipSet) {
+      cache.get().addAll(ipSet);
+      return ClientManagerResult.buildSuccess(version.incrementAndGet());
     }
 
     @Override
-    public boolean clientOffWithSub(Set<AddressVersion> address) {
-      version.incrementAndGet();
+    public ClientManagerResult clientOffWithSub(Set<AddressVersion> address) {
 
-      return cache
+      cache
           .get()
           .addAll(address.stream().map(AddressVersion::getAddress).collect(Collectors.toSet()));
+      return ClientManagerResult.buildSuccess(version.incrementAndGet());
     }
 
     @Override
@@ -724,9 +725,9 @@ public class AbstractMetaServerTestBase extends AbstractTestBase {
     }
 
     @Override
-    public boolean reduce(Set<String> ipSet) {
-      version.incrementAndGet();
-      return cache.get().removeAll(ipSet);
+    public ClientManagerResult reduce(Set<String> ipSet) {
+      cache.get().removeAll(ipSet);
+      return ClientManagerResult.buildSuccess(version.incrementAndGet());
     }
 
     @Override

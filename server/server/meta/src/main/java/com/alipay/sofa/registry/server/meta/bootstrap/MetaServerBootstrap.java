@@ -27,9 +27,9 @@ import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
-import com.alipay.sofa.registry.server.meta.provide.data.ClientManagerService;
 import com.alipay.sofa.registry.server.meta.remoting.meta.MetaNodeExchange;
 import com.alipay.sofa.registry.server.meta.remoting.meta.MetaServerRenewService;
+import com.alipay.sofa.registry.server.shared.client.manager.ClientManagerService;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.alipay.sofa.registry.store.api.elector.LeaderElector;
@@ -88,7 +88,7 @@ public class MetaServerBootstrap {
 
   @Autowired private MetaNodeExchange metaNodeExchange;
 
-  @Autowired private ClientManagerService clientManagerService;
+  @Resource private ClientManagerService clientManagerService;
 
   @Autowired private RecoverConfigRepository recoverConfigRepository;
 

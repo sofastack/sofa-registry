@@ -122,7 +122,7 @@ public final class Sdks {
     }
   }
 
-  interface SdkExecutor {
+  public interface SdkExecutor {
     CommonResponse execute(URL url) throws Exception;
   }
 }

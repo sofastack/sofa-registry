@@ -354,6 +354,14 @@ public class FetchClientOffAddressService
   public AddressVersion getAddress(String address) {
     return storage.get().clientOffAddress.get(address);
   }
+
+  public long lastLoadVersion() {
+    return storage.get().getVersion();
+  }
+
+  public void wakeup() {
+    watchDog.wakeup();
+  }
   /**
    * Setter method for property <tt>sessionServerConfig</tt>.
    *

@@ -52,6 +52,7 @@ import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfigBean
 import com.alipay.sofa.registry.server.session.providedata.FetchClientOffAddressService;
 import com.alipay.sofa.registry.server.session.registry.SessionRegistry;
 import com.alipay.sofa.registry.server.session.remoting.console.SessionConsoleExchanger;
+import com.alipay.sofa.registry.server.session.resource.PersistenceClientManagerResource;
 import com.alipay.sofa.registry.server.session.resource.SessionDigestResource;
 import com.alipay.sofa.registry.server.session.store.DataStore;
 import com.alipay.sofa.registry.server.session.store.Interests;
@@ -109,6 +110,7 @@ public class BaseIntegrationTest extends AbstractTest {
   protected static volatile SessionDigestResource sessionDigestResource;
   protected static volatile com.alipay.sofa.registry.server.session.resource.ClientManagerResource
       sessionClientManagerResource;
+  protected static volatile PersistenceClientManagerResource persistenceClientManagerResource;
   protected static volatile FetchClientOffAddressService fetchClientOffAddressService;
   protected static volatile SessionConsoleExchanger sessionConsoleExchanger;
 
@@ -150,8 +152,6 @@ public class BaseIntegrationTest extends AbstractTest {
     System.setProperty("spring.profiles.active", "integrate");
     System.setProperty(Lease.LEASE_DURATION, "2");
     System.setProperty(SlotConfig.KEY_DATA_SLOT_NUM, "16");
-    System.setProperty("nodes.clusterId", "DEFAULT_SEGMENT");
-    System.setProperty("nodes.recoverClusterId", "RECOVER_DEFAULT_SEGMENT");
     beforeInit();
   }
 
@@ -200,6 +200,9 @@ public class BaseIntegrationTest extends AbstractTest {
           sessionApplicationContext.getBean(
               "clientManagerResource",
               com.alipay.sofa.registry.server.session.resource.ClientManagerResource.class);
+      persistenceClientManagerResource =
+          sessionApplicationContext.getBean(
+              "persistenceClientManagerResource", PersistenceClientManagerResource.class);
       sessionConsoleExchanger =
           sessionApplicationContext.getBean(
               "sessionConsoleExchanger", SessionConsoleExchanger.class);
