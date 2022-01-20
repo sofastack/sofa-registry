@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.meta.resource;
+package com.alipay.sofa.registry.server.session.resource;
 
 import com.alipay.sofa.registry.common.model.CollectionSdks;
 import com.alipay.sofa.registry.common.model.CommonResponse;
@@ -24,6 +24,7 @@ import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress.Add
 import com.alipay.sofa.registry.common.model.metaserver.ClientManagerResult;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.server.session.client.manager.CheckClientManagerService;
 import com.alipay.sofa.registry.server.shared.client.manager.ClientManagerService;
 import com.alipay.sofa.registry.store.api.DBResponse;
 import com.alipay.sofa.registry.store.api.OperationStatus;
@@ -31,72 +32,73 @@ import com.alipay.sofa.registry.util.JsonUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.annotations.VisibleForTesting;
 import java.util.Set;
-import javax.annotation.Resource;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 
 /**
- * The type Clients open resource.
- *
  * @author xiaojian.xj
- * @version $Id : ClientManagerResource.java, v 0.1 2018-11-22 19:04 xiaojian.xj Exp $$
+ * @version : PersistenceClientManagerResource.java, v 0.1 2022年01月20日 14:51 xiaojian.xj Exp $
  */
-@Path("api/clientManager")
+@Path("api/clientManager/persistence")
 @Produces(MediaType.APPLICATION_JSON)
-public class ClientManagerResource {
-
-  private static final Logger DB_LOGGER =
-      LoggerFactory.getLogger(ClientManagerResource.class, "[DBService]");
+public class PersistenceClientManagerResource {
+  private static final Logger LOGGER =
+      LoggerFactory.getLogger(ClientManagerResource.class, "[PersistenceClientManager]");
 
   public static final TypeReference<Set<AddressVersion>> FORMAT =
       new TypeReference<Set<AddressVersion>>() {};
 
-  @Resource private ClientManagerService clientManagerService;
+  @Autowired private ClientManagerService clientManagerService;
+
+  @Autowired private CheckClientManagerService checkClientManagerService;
 
   /** Client off */
   @POST
   @Path("/clientOff")
-  public CommonResponse clientOff(@FormParam("ips") String ips) {
+  public GenericResponse<Long> clientOff(@FormParam("ips") String ips) {
     if (StringUtils.isBlank(ips)) {
-      return CommonResponse.buildFailedResponse("ips is empty");
+      return new GenericResponse().fillFailed("clientOff ips is empty.");
     }
     Set<String> ipSet = CollectionSdks.toIpSet(ips);
 
     ClientManagerResult ret = clientManagerService.clientOff(ipSet);
+    LOGGER.info("client off result:{}, ips:{}", ret, ips);
 
-    DB_LOGGER.info("client off result:{}, ips:{}", ret, ips);
-
-    CommonResponse response = CommonResponse.buildSuccessResponse();
+    GenericResponse<Long> response = new GenericResponse();
     response.setSuccess(ret.isSuccess());
+    response.setData(ret.getVersion());
     return response;
   }
 
   /** Client off */
   @POST
   @Path("/clientOffWithSub")
-  public CommonResponse clientOffWithSub(@FormParam("ips") String ips) {
+  public GenericResponse<Long> clientOffWithSub(@FormParam("ips") String ips) {
     if (StringUtils.isBlank(ips)) {
-      return CommonResponse.buildFailedResponse("ips is empty");
+      return new GenericResponse().fillFailed("clientOffWithSub ips is empty.");
     }
 
     Set<AddressVersion> read = JsonUtils.read(ips, FORMAT);
     if (!validate(read)) {
-      DB_LOGGER.error("client off new error, ips:{}", read);
-      return CommonResponse.buildFailedResponse("ips is invalidate");
+      LOGGER.error("client off new error, ips:{}", read);
+      return new GenericResponse().fillFailed("ips is invalidate.");
     }
 
     ClientManagerResult ret = clientManagerService.clientOffWithSub(read);
 
-    DB_LOGGER.info("client off result:{}, ips:{}", ret, ips);
+    LOGGER.info("clientOffWithSub result:{}, ips:{}", ret, ips);
 
-    CommonResponse response = CommonResponse.buildSuccessResponse();
+    GenericResponse<Long> response = new GenericResponse();
     response.setSuccess(ret.isSuccess());
+    response.setData(ret.getVersion());
     return response;
   }
 
@@ -115,45 +117,63 @@ public class ClientManagerResource {
   /** Client Open */
   @POST
   @Path("/clientOpen")
-  public CommonResponse clientOpen(@FormParam("ips") String ips) {
+  public GenericResponse<Long> clientOpen(@FormParam("ips") String ips) {
     if (StringUtils.isBlank(ips)) {
-      return CommonResponse.buildFailedResponse("ips is empty");
+      return new GenericResponse().fillFailed("clientOpen ips is empty.");
     }
     Set<String> ipSet = CollectionSdks.toIpSet(ips);
 
     ClientManagerResult ret = clientManagerService.clientOpen(ipSet);
 
-    DB_LOGGER.info("client open result:{}, ips:{}", ret, ips);
+    LOGGER.info("client open result:{}, ips:{}", ret, ips);
 
-    CommonResponse response = CommonResponse.buildSuccessResponse();
+    GenericResponse<Long> response = new GenericResponse();
     response.setSuccess(ret.isSuccess());
+    response.setData(ret.getVersion());
     return response;
   }
 
   /** Client Open */
   @POST
   @Path("/reduce")
-  public CommonResponse reduce(@FormParam("ips") String ips) {
+  public GenericResponse<Long> reduce(@FormParam("ips") String ips) {
     if (StringUtils.isBlank(ips)) {
-      return CommonResponse.buildFailedResponse("ips is empty");
+      return new GenericResponse().fillFailed("reduce ips is empty.");
     }
     Set<String> ipSet = CollectionSdks.toIpSet(ips);
 
     ClientManagerResult ret = clientManagerService.reduce(ipSet);
 
-    DB_LOGGER.info("reduce result:{}, ips:{}", ret, ips);
+    LOGGER.info("reduce result:{}, ips:{}", ret, ips);
 
-    CommonResponse response = CommonResponse.buildSuccessResponse();
+    GenericResponse<Long> response = new GenericResponse();
     response.setSuccess(ret.isSuccess());
+    response.setData(ret.getVersion());
     return response;
   }
 
-  /** Client Open */
+  @GET
+  @Path("/checkVersion")
+  public CommonResponse checkVersion(@QueryParam("version") String version) {
+    try {
+      long expectedVersion = Long.parseLong(version);
+      boolean check = checkClientManagerService.check(expectedVersion);
+      LOGGER.info("check version: {} ret: {}", version, check);
+      CommonResponse response = CommonResponse.buildSuccessResponse();
+      response.setSuccess(check);
+      return response;
+    } catch (Throwable t) {
+      LOGGER.error("check version: {} fail.", version, t);
+      CommonResponse response = CommonResponse.buildFailedResponse("check version fail.");
+      return response;
+    }
+  }
+
   @GET
   @Path("/query")
   public GenericResponse<ClientManagerAddress> query() {
     DBResponse<ClientManagerAddress> ret = clientManagerService.queryClientOffAddress();
-    DB_LOGGER.info("client off result:{}", ret.getOperationStatus(), ret.getEntity());
+    LOGGER.info("client off result:{}", ret.getOperationStatus(), ret.getEntity());
 
     if (ret.getOperationStatus() != OperationStatus.SUCCESS) {
       return new GenericResponse<ClientManagerAddress>().fillFailed("data not found");
@@ -167,7 +187,8 @@ public class ClientManagerResource {
    * @param clientManagerService value to be assigned to property clientManagerService
    */
   @VisibleForTesting
-  public ClientManagerResource setClientManagerService(ClientManagerService clientManagerService) {
+  public PersistenceClientManagerResource setClientManagerService(
+      ClientManagerService clientManagerService) {
     this.clientManagerService = clientManagerService;
     return this;
   }

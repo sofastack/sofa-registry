@@ -28,7 +28,6 @@ import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfigBeanProperty;
 import com.alipay.sofa.registry.server.meta.cleaner.AppRevisionCleaner;
 import com.alipay.sofa.registry.server.meta.cleaner.InterfaceAppsIndexCleaner;
-import com.alipay.sofa.registry.server.meta.provide.data.ClientManagerService;
 import com.alipay.sofa.registry.server.meta.provide.data.DefaultClientManagerService;
 import com.alipay.sofa.registry.server.meta.provide.data.DefaultProvideDataService;
 import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataService;
@@ -48,6 +47,7 @@ import com.alipay.sofa.registry.server.meta.remoting.meta.MetaServerRenewService
 import com.alipay.sofa.registry.server.meta.resource.*;
 import com.alipay.sofa.registry.server.meta.resource.filter.LeaderAwareFilter;
 import com.alipay.sofa.registry.server.meta.slot.status.SlotTableStatusService;
+import com.alipay.sofa.registry.server.shared.client.manager.ClientManagerService;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.alipay.sofa.registry.server.shared.resource.MetricsResource;
 import com.alipay.sofa.registry.server.shared.resource.SlotGenericResource;

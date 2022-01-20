@@ -21,7 +21,7 @@ import static org.mockito.Mockito.spy;
 import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress;
 import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
-import com.alipay.sofa.registry.server.meta.provide.data.ClientManagerService;
+import com.alipay.sofa.registry.server.shared.client.manager.ClientManagerService;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;

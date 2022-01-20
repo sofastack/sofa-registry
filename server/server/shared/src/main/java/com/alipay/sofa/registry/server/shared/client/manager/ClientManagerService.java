@@ -14,16 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.meta.provide.data;
+package com.alipay.sofa.registry.server.shared.client.manager;
 
 import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress;
 import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress.AddressVersion;
+import com.alipay.sofa.registry.common.model.metaserver.ClientManagerResult;
 import com.alipay.sofa.registry.store.api.DBResponse;
 import java.util.Set;
 
 /**
  * @author xiaojian.xj
- * @version $Id: ClientManagerService.java, v 0.1 2021年05月12日 15:19 xiaojian.xj Exp $
+ * @version : ClientManagerService.java, v 0.1 2022年01月20日 14:42 xiaojian.xj Exp $
  */
 public interface ClientManagerService {
 
@@ -33,7 +34,7 @@ public interface ClientManagerService {
    * @param ipSet
    * @return
    */
-  boolean clientOpen(Set<String> ipSet);
+  ClientManagerResult clientOpen(Set<String> ipSet);
 
   /**
    * client off
@@ -41,9 +42,9 @@ public interface ClientManagerService {
    * @param ipSet
    * @return
    */
-  boolean clientOff(Set<String> ipSet);
+  ClientManagerResult clientOff(Set<String> ipSet);
 
-  boolean clientOffWithSub(Set<AddressVersion> address);
+  ClientManagerResult clientOffWithSub(Set<AddressVersion> address);
 
   /**
    * query client off ips
@@ -57,7 +58,7 @@ public interface ClientManagerService {
    * @param ipSet
    * @return
    */
-  boolean reduce(Set<String> ipSet);
+  ClientManagerResult reduce(Set<String> ipSet);
 
   void waitSynced();
 }

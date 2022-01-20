@@ -24,6 +24,9 @@
     </update>
 
     <insert id="insertOnReplace" parameterType="com.alipay.sofa.registry.jdbc.domain.ClientManagerAddressDomain">
+        <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Long">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
             <![CDATA[
             replace /*+ QUERY_TIMEOUT(3000000) */ into client_manager_address(data_center, address, operation, gmt_create, gmt_modified, pub, sub)
             values (#{dataCenter},#{address},#{operation},CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,#{pub},#{sub})

@@ -24,13 +24,20 @@
     </update>
 
     <insert id="insertOnReplace" parameterType="com.alipay.sofa.registry.jdbc.domain.ClientManagerAddressDomain">
-            <![CDATA[
-                delete from client_manager_address where data_center=#{dataCenter} and address = #{address};
-            ]]>
-            <![CDATA[
+        <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Long">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+
+        <![CDATA[
+            delete from client_manager_address where data_center=#{dataCenter} and address = #{address};
+        ]]>
+
+        <![CDATA[
             insert into client_manager_address(data_center, address, operation, gmt_create, gmt_modified, pub, sub)
-            values (#{dataCenter},#{address},#{operation},CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,#{pub},#{sub}) on duplicate key update gmt_modified=CURRENT_TIMESTAMP;
-            ]]>
+            values (#{dataCenter},#{address},#{operation},CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,#{pub},#{sub})
+            on duplicate key update gmt_modified=CURRENT_TIMESTAMP;
+        ]]>
+
     </insert>
 
     <select id="queryAfterThanByLimit" resultMap="clientManagerAddressResultMap">
