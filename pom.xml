@@ -82,6 +82,7 @@
         <rocksdbjni.version>6.4.6</rocksdbjni.version>
         <guava-retrying.version>2.0.0</guava-retrying.version>
         <zstd-jni.version>1.3.6-1</zstd-jni.version>
+        <log4j2.version>2.17.0</log4j2.version>
         <main.user.dir>${user.dir}</main.user.dir>
         <argLine>-Dnetwork_interface_denylist=docker0</argLine>
         <!-- for linke 添加isSkipUT, isSkipIT参数声明，防止编译时产生错误 -->
@@ -284,6 +285,16 @@
                 <groupId>org.eclipse.jetty</groupId>
                 <artifactId>jetty-continuation</artifactId>
                 <version>${jetty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-core</artifactId>
+                <version>${log4j2.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-api</artifactId>
+                <version>${log4j2.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.alipay.sofa.lookout</groupId>
