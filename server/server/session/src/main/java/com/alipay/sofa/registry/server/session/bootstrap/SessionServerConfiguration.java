@@ -812,6 +812,14 @@ public class SessionServerConfiguration {
     }
 
     @Bean
+    public FetchCircuitBreakerService fetchCircuitBreakerService(
+        SystemPropertyProcessorManager systemPropertyProcessorManager) {
+      FetchCircuitBreakerService fetchCircuitBreakerService = new FetchCircuitBreakerService();
+      systemPropertyProcessorManager.addSystemDataPersistenceProcessor(fetchCircuitBreakerService);
+      return fetchCircuitBreakerService;
+    }
+
+    @Bean
     public ConfigProvideDataWatcher configProvideDataWatcher() {
       return new ConfigProvideDataWatcher();
     }

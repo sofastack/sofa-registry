@@ -17,16 +17,52 @@
 package com.alipay.sofa.registry.common.model.store;
 
 public final class CircuitBreakerStatistic {
-  final String group;
 
-  final int failCount;
+  private final String group;
 
-  final long lastFailTimeStamp;
+  private final String address;
 
-  public CircuitBreakerStatistic(String group, int failCount, long lastFailTimeStamp) {
+  private final String ip;
+
+  private volatile long failCount = 0;
+
+  private volatile long lastFailTimeStamp;
+
+  private volatile long consecutiveSuccess = 0;
+
+  public CircuitBreakerStatistic(String group, String ip, String address) {
     this.group = group;
+    this.ip = ip;
+    this.address = address;
+  }
+
+  public CircuitBreakerStatistic(
+      String group, String ip, String address, long failCount, long lastFailTimeStamp) {
+    this.group = group;
+    this.ip = ip;
+    this.address = address;
     this.failCount = failCount;
     this.lastFailTimeStamp = lastFailTimeStamp;
+  }
+
+  public synchronized void success(int threshold) {
+    consecutiveSuccess++;
+    if (consecutiveSuccess >= threshold) {
+      failCount = 0;
+      lastFailTimeStamp = 0;
+    }
+  }
+
+  public synchronized void fail() {
+    failCount++;
+    lastFailTimeStamp = System.currentTimeMillis();
+    consecutiveSuccess = 0;
+  }
+
+  public boolean circuitBreaker(int failThreshold, long silenceMillis) {
+
+    return failCount > failThreshold
+        && System.currentTimeMillis() < lastFailTimeStamp + silenceMillis;
   }
 
   /**
@@ -39,30 +75,56 @@ public final class CircuitBreakerStatistic {
   }
 
   /**
+   * Getter method for property <tt>ip</tt>.
+   *
+   * @return property value of ip
+   */
+  public String getIp() {
+    return ip;
+  }
+
+  /**
+   * Getter method for property <tt>address</tt>.
+   *
+   * @return property value of address
+   */
+  public String getAddress() {
+    return address;
+  }
+
+  /**
    * Getter method for property <tt>failCount</tt>.
    *
    * @return property value of failCount
    */
-  public int getFailCount() {
+  public long getFailCount() {
     return failCount;
   }
 
   /**
-   * Getter method for property <tt>lastFailTimeStamp</tt>.
+   * Getter method for property <tt>consecutiveSuccess</tt>.
    *
-   * @return property value of lastFailTimeStamp
+   * @return property value of consecutiveSuccess
    */
-  public long getLastFailTimeStamp() {
-    return lastFailTimeStamp;
+  public long getConsecutiveSuccess() {
+    return consecutiveSuccess;
   }
 
   @Override
   public String toString() {
-    return "Statistic{"
-        + "failCount="
+    return "CircuitBreakerStatistic{"
+        + "group='"
+        + group
+        + '\''
+        + ", address='"
+        + address
+        + '\''
+        + ", failCount="
         + failCount
         + ", lastFailTimeStamp="
         + lastFailTimeStamp
+        + ", consecutiveSuccess="
+        + consecutiveSuccess
         + '}';
   }
 }

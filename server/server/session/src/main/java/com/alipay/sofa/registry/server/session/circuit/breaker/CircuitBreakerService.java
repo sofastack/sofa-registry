@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.server.session.circuit.breaker;
 
 import com.alipay.sofa.registry.common.model.store.CircuitBreakerStatistic;
+import com.alipay.sofa.registry.common.model.store.Subscriber;
 
 /**
  * @author xiaojian.xj
@@ -29,4 +30,24 @@ public interface CircuitBreakerService {
    * @return
    */
   boolean pushCircuitBreaker(CircuitBreakerStatistic statistic);
+
+  /**
+   * statistic when push success
+   *
+   * @param dataCenter
+   * @param pushVersion
+   * @param subscriber
+   * @return
+   */
+  boolean onPushSuccess(String dataCenter, long pushVersion, int pushNum, Subscriber subscriber);
+
+  /**
+   * statistic when push fail
+   *
+   * @param dataCenter
+   * @param pushVersion
+   * @param subscriber
+   * @return
+   */
+  boolean onPushFail(String dataCenter, long pushVersion, Subscriber subscriber);
 }

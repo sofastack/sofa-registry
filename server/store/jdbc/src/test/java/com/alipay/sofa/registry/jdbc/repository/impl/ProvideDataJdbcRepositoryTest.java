@@ -26,13 +26,14 @@ import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
 import com.alipay.sofa.registry.store.api.meta.RecoverConfigRepository;
 import java.sql.SQLException;
 import java.util.Map;
+import javax.annotation.Resource;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class ProvideDataJdbcRepositoryTest extends AbstractH2DbTestBase {
 
-  @Autowired private ProvideDataRepository provideDataJdbcRepository;
+  @Resource private ProvideDataRepository provideDataRepository;
 
   @Autowired private ProvideDataMapper provideDataMapper;
 
@@ -48,11 +49,11 @@ public class ProvideDataJdbcRepositoryTest extends AbstractH2DbTestBase {
     String dataInfoId = DataInfo.toDataInfoId("key" + version, "DEFAULT", "DEFAULT");
     PersistenceData persistenceData =
         PersistenceDataBuilder.createPersistenceData(dataInfoId, "val");
-    boolean success = provideDataJdbcRepository.put(persistenceData, persistenceData.getVersion());
+    boolean success = provideDataRepository.put(persistenceData);
     Assert.assertTrue(success);
-    Assert.assertEquals("val", provideDataJdbcRepository.get(dataInfoId).getData());
+    Assert.assertEquals("val", provideDataRepository.get(dataInfoId).getData());
     Assert.assertEquals(
-        persistenceData.getVersion(), provideDataJdbcRepository.get(dataInfoId).getVersion());
+        persistenceData.getVersion(), provideDataRepository.get(dataInfoId).getVersion());
 
     // CountDownLatch latch = new CountDownLatch(1);
     // latch.await();
@@ -66,15 +67,15 @@ public class ProvideDataJdbcRepositoryTest extends AbstractH2DbTestBase {
     PersistenceData persistenceData =
         PersistenceDataBuilder.createPersistenceData(dataInfoId, "val");
 
-    boolean success = provideDataJdbcRepository.put(persistenceData, version);
+    boolean success = provideDataRepository.put(persistenceData);
     Assert.assertTrue(success);
-    Assert.assertEquals("val", provideDataJdbcRepository.get(dataInfoId).getData());
+    Assert.assertEquals("val", provideDataRepository.get(dataInfoId).getData());
     Assert.assertEquals(
-        persistenceData.getVersion(), provideDataJdbcRepository.get(dataInfoId).getVersion());
-    boolean remove = provideDataJdbcRepository.remove(dataInfoId, persistenceData.getVersion());
+        persistenceData.getVersion(), provideDataRepository.get(dataInfoId).getVersion());
+    boolean remove = provideDataRepository.remove(dataInfoId, persistenceData.getVersion());
 
     Assert.assertTrue(remove);
-    Assert.assertTrue(provideDataJdbcRepository.get(dataInfoId) == null);
+    Assert.assertTrue(provideDataRepository.get(dataInfoId) == null);
   }
 
   @Test
@@ -84,13 +85,13 @@ public class ProvideDataJdbcRepositoryTest extends AbstractH2DbTestBase {
     String dataInfoId = DataInfo.toDataInfoId("testGetAll" + version, "DEFAULT", "DEFAULT");
     PersistenceData persistenceData =
         PersistenceDataBuilder.createPersistenceData(dataInfoId, "val");
-    boolean success = provideDataJdbcRepository.put(persistenceData, persistenceData.getVersion());
+    boolean success = provideDataRepository.put(persistenceData);
     Assert.assertTrue(success);
-    Assert.assertEquals("val", provideDataJdbcRepository.get(dataInfoId).getData());
+    Assert.assertEquals("val", provideDataRepository.get(dataInfoId).getData());
     Assert.assertEquals(
-        persistenceData.getVersion(), provideDataJdbcRepository.get(dataInfoId).getVersion());
+        persistenceData.getVersion(), provideDataRepository.get(dataInfoId).getVersion());
 
-    Map<String, PersistenceData> all = provideDataJdbcRepository.getAll();
+    Map<String, PersistenceData> all = provideDataRepository.getAll();
     Assert.assertTrue(all.values().contains(persistenceData));
   }
 }

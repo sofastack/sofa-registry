@@ -8,6 +8,6 @@
     </resultMap>
 
     <select id="getNow" resultMap="dateNowResult">
-        select /*+ QUERY_TIMEOUT(3000000) */ NOW(6) as now;
+        select NOW(6) as now;
     </select>
 </mapper>
