@@ -18,6 +18,8 @@ package com.alipay.sofa.registry.server.session.push;
 
 import static com.alipay.sofa.registry.server.session.push.PushMetrics.Push.BUFFER_REPLACE_COUNTER;
 import static com.alipay.sofa.registry.server.session.push.PushMetrics.Push.BUFFER_SKIP_COUNTER;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 
 import com.alipay.remoting.rpc.exception.InvokeTimeoutException;
 import com.alipay.sofa.registry.common.model.store.BaseInfo;
@@ -26,8 +28,10 @@ import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.remoting.ChannelOverflowException;
 import com.alipay.sofa.registry.remoting.exchange.RequestChannelClosedException;
+import com.alipay.sofa.registry.server.session.AbstractSessionServerTestBase.InMemoryCircuitBreakerService;
 import com.alipay.sofa.registry.server.session.TestUtils;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfigBean;
+import com.alipay.sofa.registry.server.session.circuit.breaker.CircuitBreakerService;
 import com.alipay.sofa.registry.server.session.node.service.ClientNodeService;
 import com.alipay.sofa.registry.server.session.providedata.FetchGrayPushSwitchService;
 import com.alipay.sofa.registry.server.session.providedata.FetchStopPushService;
@@ -232,7 +236,7 @@ public class PushProcessorTest {
     Assert.assertFalse(processor.doPush(task));
     Assert.assertEquals(processor.pushingRecords.size(), 0);
 
-    processor.clientNodeService = Mockito.mock(ClientNodeService.class);
+    processor.clientNodeService = mock(ClientNodeService.class);
     // push success
     Assert.assertTrue(processor.doPush(task));
 
@@ -383,12 +387,14 @@ public class PushProcessorTest {
     SessionServerConfigBean config = TestUtils.newSessionConfig("testDc");
     config.setPushTaskBufferBucketSize(1);
     processor.sessionServerConfig = config;
-    processor.clientNodeService = Mockito.mock(ClientNodeService.class);
+    processor.clientNodeService = mock(ClientNodeService.class);
     processor.pushSwitchService = new PushSwitchService();
     processor.pushSwitchService.setFetchStopPushService(new FetchStopPushService());
     processor.pushSwitchService.setFetchGrayPushSwitchService(new FetchGrayPushSwitchService());
     processor.pushSwitchService.fetchStopPushService.setStopPushSwitch(
         System.currentTimeMillis(), false);
+    CircuitBreakerService circuitBreakerService = spy(InMemoryCircuitBreakerService.class);
+    processor.circuitBreakerService = circuitBreakerService;
     processor.pushDataGenerator = new PushDataGenerator();
     processor.pushDataGenerator.sessionServerConfig = config;
     processor.intTaskBuffer();

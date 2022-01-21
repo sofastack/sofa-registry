@@ -48,11 +48,11 @@ public class ProvideDataJdbcRepository implements ProvideDataRepository, Recover
 
   private static final Logger LOG = LoggerFactory.getLogger("META-PROVIDEDATA", "[ProvideData]");
 
-  @Autowired private ProvideDataMapper provideDataMapper;
+  @Autowired protected ProvideDataMapper provideDataMapper;
 
-  @Autowired private DefaultCommonConfig defaultCommonConfig;
+  @Autowired protected DefaultCommonConfig defaultCommonConfig;
 
-  @Autowired private RecoverConfigRepository recoverConfigRepository;
+  @Autowired protected RecoverConfigRepository recoverConfigRepository;
 
   private static final Integer batchQuerySize = 1000;
 
@@ -62,29 +62,57 @@ public class ProvideDataJdbcRepository implements ProvideDataRepository, Recover
   }
 
   @Override
+  public boolean put(PersistenceData persistenceData) {
+    String dataInfoId = PersistenceDataBuilder.getDataInfoId(persistenceData);
+    String clusterId = defaultCommonConfig.getClusterId(tableName(), dataInfoId);
+
+    ProvideDataDomain domain =
+        ProvideDataDomainConvertor.convert2ProvideData(persistenceData, clusterId);
+    return insertOrUpdate(domain);
+  }
+
+  @Override
   public boolean put(PersistenceData persistenceData, long expectVersion) {
 
     String dataInfoId = PersistenceDataBuilder.getDataInfoId(persistenceData);
     String clusterId = defaultCommonConfig.getClusterId(tableName(), dataInfoId);
     ProvideDataDomain exist = provideDataMapper.query(clusterId, dataInfoId);
 
-    PROVIDE_DATA_QUERY_COUNTER.inc();
     ProvideDataDomain domain =
         ProvideDataDomainConvertor.convert2ProvideData(persistenceData, clusterId);
+    if (exist != null && exist.getDataVersion() != expectVersion) {
+      LOG.error(
+          "save provideData: {}, expectVersion: {}, exist: {}",
+          persistenceData,
+          expectVersion,
+          exist);
+      return false;
+    }
+    return insertOrUpdate(domain, exist);
+  }
+
+  protected boolean insertOrUpdate(ProvideDataDomain domain) {
+    PROVIDE_DATA_QUERY_COUNTER.inc();
+
+    ProvideDataDomain exist = provideDataMapper.query(domain.getDataCenter(), domain.getDataKey());
+    return insertOrUpdate(domain, exist);
+  }
+
+  protected boolean insertOrUpdate(ProvideDataDomain domain, ProvideDataDomain exist) {
     int affect;
     try {
       if (exist == null) {
         affect = provideDataMapper.save(domain);
         if (LOG.isInfoEnabled()) {
-          LOG.info("save provideData: {}, affect rows: {}", persistenceData, affect);
+          LOG.info("save provideData: {}, affect rows: {}", domain, affect);
         }
       } else {
-        affect = provideDataMapper.update(domain, expectVersion);
+        affect = provideDataMapper.update(domain, exist.getDataVersion());
         if (LOG.isInfoEnabled()) {
           LOG.info(
               "update provideData: {}, expectVersion: {}, affect rows: {}",
               domain,
-              expectVersion,
+              exist.getDataVersion(),
               affect);
         }
       }
@@ -96,7 +124,7 @@ public class ProvideDataJdbcRepository implements ProvideDataRepository, Recover
             "put provideData fail, query: {}, update: {}, expectVersion: {}",
             query,
             domain,
-            expectVersion);
+            exist.getDataVersion());
       }
 
     } catch (Throwable t) {

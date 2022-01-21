@@ -26,9 +26,20 @@ import java.util.Map;
 public interface ProvideDataRepository {
 
   /**
-   * save or update provideData
+   * save or update provideData, such as stop_push_switch; directly use new value to override old
+   * value;
    *
    * @param persistenceData
+   * @return
+   */
+  boolean put(PersistenceData persistenceData);
+
+  /**
+   * save or update with cas, such as node_server_operate_list; it use previous value to produce new
+   * value;
+   *
+   * @param persistenceData
+   * @param expectVersion
    * @return
    */
   boolean put(PersistenceData persistenceData, long expectVersion);

@@ -95,13 +95,11 @@ public class EmergencyApiResource {
       return CommonResponse.buildFailedResponse(
           "leader is healthy, should not close push by session.");
     }
-    PersistenceData expect =
-        provideDataRepository.get(ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID);
 
     PersistenceData update =
         PersistenceDataBuilder.createPersistenceDataForBool(
             ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID, true);
-    provideDataRepository.put(update, expect.getVersion());
+    provideDataRepository.put(update);
     return CommonResponse.buildSuccessResponse();
   }
 
@@ -129,12 +127,11 @@ public class EmergencyApiResource {
       return CommonResponse.buildFailedResponse(
           "leader is healthy, should not stop server by session.");
     }
-    PersistenceData expect = provideDataRepository.get(ValueConstants.SHUTDOWN_SWITCH_DATA_ID);
 
     PersistenceData update =
         PersistenceDataBuilder.createPersistenceDataForBool(
             ValueConstants.SHUTDOWN_SWITCH_DATA_ID, true);
-    provideDataRepository.put(update, expect == null ? 0 : expect.getVersion());
+    provideDataRepository.put(update);
     return CommonResponse.buildSuccessResponse();
   }
 

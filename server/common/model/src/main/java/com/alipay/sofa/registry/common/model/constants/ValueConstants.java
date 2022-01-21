@@ -80,6 +80,10 @@ public class ValueConstants {
       DataInfo.toDataInfoId(
           "registry.client.off.list", SESSION_PROVIDE_DATA_INSTANCE_ID, SESSION_PROVIDE_DATA_GROUP);
 
+  public static final String CIRCUIT_BREAKER_DATA_ID =
+      DataInfo.toDataInfoId(
+          "registry.circuit.breaker", SESSION_PROVIDE_DATA_INSTANCE_ID, SESSION_PROVIDE_DATA_GROUP);
+
   public static final String DATA_DATUM_SYNC_SESSION_INTERVAL_SEC =
       DataInfo.toDataInfoId(
           "data.datum.sync.session.interval.sec",
