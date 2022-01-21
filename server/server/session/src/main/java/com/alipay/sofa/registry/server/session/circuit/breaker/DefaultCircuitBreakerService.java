@@ -26,9 +26,8 @@ import com.alipay.sofa.registry.server.session.push.PushLog;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import java.util.concurrent.TimeUnit;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author xiaojian.xj
@@ -43,9 +42,7 @@ public class DefaultCircuitBreakerService implements CircuitBreakerService {
   @Autowired protected FetchCircuitBreakerService fetchCircuitBreakerService;
 
   private final Cache<String, CircuitBreakerStatistic> circuitBreakerAddress =
-          CacheBuilder.newBuilder()
-                  .maximumSize(2000L)
-                  .expireAfterWrite(10, TimeUnit.MINUTES).build();
+      CacheBuilder.newBuilder().maximumSize(2000L).expireAfterWrite(10, TimeUnit.MINUTES).build();
 
   public DefaultCircuitBreakerService() {
     CacheCleaner.autoClean(circuitBreakerAddress, 1000 * 60 * 10);
@@ -63,28 +60,29 @@ public class DefaultCircuitBreakerService implements CircuitBreakerService {
     }
 
     if (fetchCircuitBreakerService.isSwitchOpen()) {
-      return addressCircuitBreaker(statistic);
+      return addressCircuitBreak(statistic);
     }
     int silenceMillis = sessionServerConfig.getPushCircuitBreakerSilenceMillis();
-    return statistic.circuitBreaker(
+    return statistic.circuitBreak(
         sessionServerConfig.getPushCircuitBreakerThreshold(), silenceMillis);
   }
 
-  protected boolean addressCircuitBreaker(CircuitBreakerStatistic statistic) {
+  protected boolean addressCircuitBreak(CircuitBreakerStatistic statistic) {
     if (fetchCircuitBreakerService.getCircuitBreaker().contains(statistic.getIp())) {
       LOGGER.info("[ArtificialCircuitBreaker]push check circuit break, statistic:{}", statistic);
       return true;
     }
     int silenceMillis = sessionServerConfig.getPushCircuitBreakerSilenceMillis();
-    CircuitBreakerStatistic addressStatistic = circuitBreakerAddress.getIfPresent(statistic.getAddress());
+    CircuitBreakerStatistic addressStatistic =
+        circuitBreakerAddress.getIfPresent(statistic.getAddress());
     if (addressStatistic != null) {
-      return addressStatistic.circuitBreaker(
+      return addressStatistic.circuitBreak(
               sessionServerConfig.getPushAddressCircuitBreakerThreshold(), silenceMillis)
-          || statistic.circuitBreaker(
+          || statistic.circuitBreak(
               sessionServerConfig.getPushCircuitBreakerThreshold(), silenceMillis);
     }
 
-    return statistic.circuitBreaker(
+    return statistic.circuitBreak(
         sessionServerConfig.getPushCircuitBreakerThreshold(), silenceMillis);
   }
 
@@ -110,7 +108,9 @@ public class DefaultCircuitBreakerService implements CircuitBreakerService {
     }
 
     try {
-      CircuitBreakerStatistic statistic = circuitBreakerAddress.get(address, () -> new CircuitBreakerStatistic(subscriber.getGroup(), ip, address));
+      CircuitBreakerStatistic statistic =
+          circuitBreakerAddress.get(
+              address, () -> new CircuitBreakerStatistic(subscriber.getGroup(), ip, address));
       statistic.fail();
       return true;
     } catch (Throwable e) {
@@ -142,9 +142,9 @@ public class DefaultCircuitBreakerService implements CircuitBreakerService {
 
     if (!subscriber.checkAndUpdateCtx(dataCenter, pushVersion, pushNum)) {
       LOGGER.info(
-              "PushN, failed to checkAndUpdateCtx onPushSuccess, {}, {}",
-              subscriber.getDataInfoId(),
-              address);
+          "PushN, failed to checkAndUpdateCtx onPushSuccess, {}, {}",
+          subscriber.getDataInfoId(),
+          address);
       return false;
     }
     return true;

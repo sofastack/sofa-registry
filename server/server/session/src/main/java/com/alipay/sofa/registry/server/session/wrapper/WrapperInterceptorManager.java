@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.wrapper;
 
+import com.alipay.sofa.registry.common.model.wrapper.WrapperInterceptor;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.google.common.collect.Lists;

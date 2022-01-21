@@ -18,12 +18,12 @@ package com.alipay.sofa.registry.server.session;
 
 import static junit.framework.Assert.*;
 
+import com.alipay.sofa.registry.common.model.wrapper.Wrapper;
+import com.alipay.sofa.registry.common.model.wrapper.WrapperInterceptor;
+import com.alipay.sofa.registry.common.model.wrapper.WrapperInvocation;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.server.session.wrapper.Wrapper;
-import com.alipay.sofa.registry.server.session.wrapper.WrapperInterceptor;
 import com.alipay.sofa.registry.server.session.wrapper.WrapperInterceptorManager;
-import com.alipay.sofa.registry.server.session.wrapper.WrapperInvocation;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import org.junit.Rule;
@@ -139,7 +139,7 @@ public class WrapperInvocationTest {
                 return () -> input;
               }
             },
-            wrapperInterceptorManager);
+            wrapperInterceptorManager.getInterceptorChain());
 
     wrapperInvocation.proceed();
 

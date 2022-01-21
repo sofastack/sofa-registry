@@ -16,7 +16,9 @@
  */
 package com.alipay.sofa.registry.common.model.metaserver.blacklist;
 
+import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.metaserver.DataOperation;
+import com.alipay.sofa.registry.common.model.metaserver.NodeServerOperateInfo;
 import java.io.Serializable;
 
 /**
@@ -27,17 +29,34 @@ public class RegistryForbiddenServerRequest implements Serializable {
 
   private final DataOperation operation;
 
+  private final NodeType nodeType;
+
   private final String ip;
 
+  private final String cell;
+
+  private NodeServerOperateInfo operateInfo;
+
   /**
-   * Constructor.
-   *
-   * @param operation the operation
-   * @param ip the ip
+   * @param operation
+   * @param nodeType
+   * @param ip
    */
-  public RegistryForbiddenServerRequest(DataOperation operation, String ip) {
+  public RegistryForbiddenServerRequest(
+      DataOperation operation, NodeType nodeType, String ip, String cell) {
     this.operation = operation;
+    this.nodeType = nodeType;
     this.ip = ip;
+    this.cell = cell;
+  }
+
+  /**
+   * Getter method for property <tt>nodeType</tt>.
+   *
+   * @return property value of nodeType
+   */
+  public NodeType getNodeType() {
+    return nodeType;
   }
 
   /**
@@ -58,8 +77,48 @@ public class RegistryForbiddenServerRequest implements Serializable {
     return ip;
   }
 
+  /**
+   * Getter method for property <tt>cell</tt>.
+   *
+   * @return property value of cell
+   */
+  public String getCell() {
+    return cell;
+  }
+
+  /**
+   * Getter method for property <tt>operateInfo</tt>.
+   *
+   * @return property value of operateInfo
+   */
+  public NodeServerOperateInfo getOperateInfo() {
+    return operateInfo;
+  }
+
+  /**
+   * Setter method for property <tt>operateInfo</tt>.
+   *
+   * @param operateInfo value to be assigned to property operateInfo
+   */
+  public void setOperateInfo(NodeServerOperateInfo operateInfo) {
+    this.operateInfo = operateInfo;
+  }
+
   @Override
   public String toString() {
-    return "ForbiddenServerRequest{" + "operation=" + operation + ", ip='" + ip + '\'' + '}';
+    return "RegistryForbiddenServerRequest{"
+        + "operation="
+        + operation
+        + ", nodeType="
+        + nodeType
+        + ", ip='"
+        + ip
+        + '\''
+        + ", cell='"
+        + cell
+        + '\''
+        + ", operateInfo="
+        + operateInfo
+        + '}';
   }
 }

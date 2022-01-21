@@ -16,9 +16,6 @@
  */
 package com.alipay.sofa.registry.server.meta;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.console.PersistenceData;
 import com.alipay.sofa.registry.common.model.console.PersistenceDataBuilder;
@@ -32,11 +29,14 @@ import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.exception.SofaRegistryRuntimeException;
+import com.alipay.sofa.registry.jdbc.domain.ProvideDataDomain;
+import com.alipay.sofa.registry.jdbc.mapper.ProvideDataMapper;
 import com.alipay.sofa.registry.remoting.CallbackHandler;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.Client;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
+import com.alipay.sofa.registry.server.meta.provide.data.NodeOperatingService;
 import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataService;
 import com.alipay.sofa.registry.server.meta.slot.balance.BalancePolicy;
 import com.alipay.sofa.registry.server.meta.slot.balance.NaiveBalancePolicy;
@@ -48,6 +48,13 @@ import com.alipay.sofa.registry.util.JsonUtils;
 import com.alipay.sofa.registry.util.MathUtils;
 import com.alipay.sofa.registry.util.ObjectFactory;
 import com.google.common.collect.Maps;
+import org.assertj.core.util.Lists;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.rules.TestName;
+import org.springframework.util.CollectionUtils;
+
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -55,6 +62,7 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -70,11 +78,9 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BooleanSupplier;
 import java.util.stream.Collectors;
-import org.assertj.core.util.Lists;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.rules.TestName;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * @author chen.zhu
@@ -681,6 +687,15 @@ public class AbstractMetaServerTestBase extends AbstractTestBase {
     public void loseLeader() {}
   }
 
+  public static class InMemoryNodeOperatingService extends NodeOperatingService {
+
+    public InMemoryNodeOperatingService() {}
+
+    public InMemoryNodeOperatingService(ProvideDataService provideDataService) {
+      super(provideDataService);
+    }
+  }
+
   public class InMemoryClientManagerServiceRepo implements ClientManagerService {
 
     private final AtomicLong version = new AtomicLong(0L);
@@ -750,6 +765,73 @@ public class AbstractMetaServerTestBase extends AbstractTestBase {
     @Override
     public URL getNodeUrl() {
       return new URL(ip);
+    }
+  }
+
+  public static class InMemoryProvideDataMapper implements ProvideDataMapper {
+
+    private Map<String /*dataCenter*/, Map<String /*dataKey*/, ProvideDataDomain>> localRepo =
+        new ConcurrentHashMap<>();
+
+    @Override
+    public synchronized int save(ProvideDataDomain data) {
+      Date date = new Date();
+      data.setGmtCreate(date);
+      data.setGmtModified(date);
+
+      Map<String, ProvideDataDomain> map =
+          localRepo.computeIfAbsent(data.getDataCenter(), k -> Maps.newConcurrentMap());
+      map.put(data.getDataKey(), data);
+      return 1;
+    }
+
+    @Override
+    public synchronized int update(ProvideDataDomain data, long exceptVersion) {
+      Map<String, ProvideDataDomain> map = localRepo.get(data.getDataCenter());
+      if (CollectionUtils.isEmpty(map)) {
+        return 0;
+      }
+      ProvideDataDomain provideDataDomain = map.get(data.getDataKey());
+      if (provideDataDomain == null || provideDataDomain.getDataVersion() != exceptVersion) {
+        return 0;
+      }
+      provideDataDomain.setDataValue(data.getDataValue());
+      provideDataDomain.setDataVersion(data.getDataVersion());
+      provideDataDomain.setGmtModified(new Date());
+      return 1;
+    }
+
+    @Override
+    public synchronized ProvideDataDomain query(String dataCenter, String dataKey) {
+      Map<String, ProvideDataDomain> map = localRepo.get(dataCenter);
+      return CollectionUtils.isEmpty(map) ? null : map.get(dataKey);
+    }
+
+    @Override
+    public synchronized int remove(String dataCenter, String dataKey, long dataVersion) {
+      Map<String, ProvideDataDomain> map = localRepo.get(dataCenter);
+      if (CollectionUtils.isEmpty(map)) {
+        return 0;
+      }
+      ProvideDataDomain provideDataDomain = map.get(dataKey);
+      if (provideDataDomain == null || provideDataDomain.getDataVersion() != dataVersion) {
+        return 0;
+      }
+      map.remove(dataKey);
+      return 1;
+    }
+
+    @Override
+    public synchronized List<ProvideDataDomain> queryByPage(
+        String dataCenter, int start, int limit) {
+      // not implement
+      return null;
+    }
+
+    @Override
+    public synchronized int selectTotalCount(String dataCenter) {
+      Map<String, ProvideDataDomain> map = localRepo.get(dataCenter);
+      return CollectionUtils.isEmpty(map) ? 0 : map.size();
     }
   }
 }

@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.common.model.metaserver.blacklist;
 
+import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.metaserver.DataOperation;
 import org.junit.Assert;
 import org.junit.Test;
@@ -24,7 +25,7 @@ public class RegistryForbiddenServerRequestTest {
   @Test
   public void test() {
     RegistryForbiddenServerRequest request =
-        new RegistryForbiddenServerRequest(DataOperation.ADD, "test");
+        new RegistryForbiddenServerRequest(DataOperation.ADD, NodeType.DATA, "test", "testCell");
     Assert.assertEquals(request.getOperation(), DataOperation.ADD);
     Assert.assertEquals(request.getIp(), "test");
     Assert.assertTrue(request.toString(), request.toString().contains("test"));

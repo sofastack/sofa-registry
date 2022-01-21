@@ -1227,7 +1227,8 @@ public class SessionServerConfigBean implements SessionServerConfig {
   /**
    * Setter method for property <tt>pushCircuitBreakerSilenceMillis</tt>.
    *
-   * @param pushCircuitBreakerSilenceMillis value to be assigned to property pushCircuitBreakerSilenceMillis
+   * @param pushCircuitBreakerSilenceMillis value to be assigned to property
+   *     pushCircuitBreakerSilenceMillis
    */
   public void setPushCircuitBreakerSilenceMillis(int pushCircuitBreakerSilenceMillis) {
     this.pushCircuitBreakerSilenceMillis = pushCircuitBreakerSilenceMillis;

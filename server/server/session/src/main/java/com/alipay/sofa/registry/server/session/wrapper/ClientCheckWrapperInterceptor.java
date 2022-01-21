@@ -17,6 +17,8 @@
 package com.alipay.sofa.registry.server.session.wrapper;
 
 import com.alipay.sofa.registry.common.model.store.BaseInfo;
+import com.alipay.sofa.registry.common.model.wrapper.WrapperInterceptor;
+import com.alipay.sofa.registry.common.model.wrapper.WrapperInvocation;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;

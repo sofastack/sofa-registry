@@ -28,8 +28,11 @@ import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfigBeanProperty;
 import com.alipay.sofa.registry.server.meta.cleaner.AppRevisionCleaner;
 import com.alipay.sofa.registry.server.meta.cleaner.InterfaceAppsIndexCleaner;
+import com.alipay.sofa.registry.server.meta.lease.filter.DefaultForbiddenServerManager;
+import com.alipay.sofa.registry.server.meta.lease.filter.RegistryForbiddenServerManager;
 import com.alipay.sofa.registry.server.meta.provide.data.DefaultClientManagerService;
 import com.alipay.sofa.registry.server.meta.provide.data.DefaultProvideDataService;
+import com.alipay.sofa.registry.server.meta.provide.data.NodeOperatingService;
 import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataService;
 import com.alipay.sofa.registry.server.meta.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.server.meta.remoting.MetaServerExchanger;
@@ -47,7 +50,6 @@ import com.alipay.sofa.registry.server.meta.remoting.meta.MetaServerRenewService
 import com.alipay.sofa.registry.server.meta.resource.*;
 import com.alipay.sofa.registry.server.meta.resource.filter.LeaderAwareFilter;
 import com.alipay.sofa.registry.server.meta.slot.status.SlotTableStatusService;
-import com.alipay.sofa.registry.server.shared.client.manager.ClientManagerService;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.alipay.sofa.registry.server.shared.resource.MetricsResource;
 import com.alipay.sofa.registry.server.shared.resource.SlotGenericResource;
@@ -252,6 +254,12 @@ public class MetaServerConfiguration {
     public SlotTableStatusService slotTableStatusService() {
       return new SlotTableStatusService();
     }
+
+    @Bean
+    @ConditionalOnMissingBean(name = "registryForbiddenServerManager")
+    public RegistryForbiddenServerManager registryForbiddenServerManager() {
+      return new DefaultForbiddenServerManager();
+    }
   }
 
   @Configuration
@@ -263,7 +271,12 @@ public class MetaServerConfiguration {
     }
 
     @Bean
-    public ClientManagerService clientManagerService() {
+    public NodeOperatingService nodeOperatingService() {
+      return new NodeOperatingService();
+    }
+
+    @Bean
+    public DefaultClientManagerService clientManagerService() {
       return new DefaultClientManagerService();
     }
 
@@ -350,6 +363,11 @@ public class MetaServerConfiguration {
     @Bean
     public ClientManagerResource clientManagerResource() {
       return new ClientManagerResource();
+    }
+
+    @Bean
+    public CircuitBreakerResources circuitBreakerResources() {
+      return new CircuitBreakerResources();
     }
 
     @Bean

@@ -59,7 +59,7 @@ public final class CircuitBreakerStatistic {
     consecutiveSuccess = 0;
   }
 
-  public boolean circuitBreaker(int failThreshold, long silenceMillis) {
+  public boolean circuitBreak(int failThreshold, long silenceMillis) {
 
     return failCount > failThreshold
         && System.currentTimeMillis() < lastFailTimeStamp + silenceMillis;

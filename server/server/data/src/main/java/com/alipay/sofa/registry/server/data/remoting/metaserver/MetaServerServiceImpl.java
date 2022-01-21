@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.data.remoting.metaserver;
 
+import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.BaseHeartBeatResponse;
 import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.HeartbeatRequest;
@@ -24,6 +25,7 @@ import com.alipay.sofa.registry.common.model.slot.BaseSlotStatus;
 import com.alipay.sofa.registry.common.model.slot.SlotConfig;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.common.model.store.URL;
+import com.alipay.sofa.registry.server.data.bootstrap.CommonConfig;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.server.data.remoting.SessionNodeExchanger;
@@ -51,6 +53,8 @@ public class MetaServerServiceImpl extends AbstractMetaServerService<BaseHeartBe
   @Autowired private SessionNodeExchanger sessionNodeExchanger;
 
   @Autowired private DataServerConfig dataServerConfig;
+
+  @Autowired private CommonConfig commonConfig;
 
   private volatile SlotTable currentSlotTable;
 
@@ -102,6 +106,16 @@ public class MetaServerServiceImpl extends AbstractMetaServerService<BaseHeartBe
                 slotStatuses)
             .setSlotTable(currentSlotTable);
     return request;
+  }
+
+  @Override
+  protected NodeType nodeType() {
+    return NodeType.DATA;
+  }
+
+  @Override
+  protected String cell() {
+    return commonConfig.getLocalRegion();
   }
 
   private DataNode createNode() {

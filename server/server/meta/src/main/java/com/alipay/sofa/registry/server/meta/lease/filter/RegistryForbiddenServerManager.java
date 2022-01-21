@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.server.meta.lease.filter;
 
 import com.alipay.sofa.registry.common.model.Node;
+import com.alipay.sofa.registry.common.model.metaserver.blacklist.RegistryForbiddenServerRequest;
 import com.alipay.sofa.registry.server.meta.lease.LeaseFilter;
 
 /**
@@ -25,7 +26,7 @@ import com.alipay.sofa.registry.server.meta.lease.LeaseFilter;
  */
 public interface RegistryForbiddenServerManager extends LeaseFilter<Node> {
 
-  boolean addToBlacklist(String ip);
+  boolean addToBlacklist(RegistryForbiddenServerRequest request);
 
-  boolean removeFromBlacklist(String ip);
+  boolean removeFromBlacklist(RegistryForbiddenServerRequest request);
 }

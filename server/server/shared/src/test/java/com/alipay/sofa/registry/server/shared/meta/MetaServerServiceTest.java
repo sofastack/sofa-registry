@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.server.shared.meta;
 
 import com.alipay.sofa.registry.common.model.GenericResponse;
+import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.ProcessId;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.common.model.metaserver.cluster.VersionedList;
@@ -193,6 +194,16 @@ public class MetaServerServiceTest {
     @Override
     protected HeartbeatRequest createRequest() {
       return null;
+    }
+
+    @Override
+    protected NodeType nodeType() {
+      return NodeType.DATA;
+    }
+
+    @Override
+    protected String cell() {
+      return "testCell";
     }
 
     @Override
