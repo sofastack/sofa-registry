@@ -47,4 +47,11 @@ public class PersistenceDataBuilder {
   public static long nextVersion() {
     return System.currentTimeMillis();
   }
+
+  public static String getEntityData(PersistenceData data) {
+    if (data != null) {
+      return data.getData();
+    }
+    return null;
+  }
 }

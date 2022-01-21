@@ -98,7 +98,8 @@ public class CircuitBreakerServiceTest extends AbstractSessionServerTestBase {
   public void testPushCircuitBreaker() {
 
     Subscriber subscriber = TestUtils.newZoneSubscriber(DATA_INFO_ID, TEST_CELL);
-    circuitBreakerService.onPushSuccess(TEST_DATA_CENTER, PUSH_VERSION.incrementAndGet(), 1, subscriber);
+    circuitBreakerService.onPushSuccess(
+        TEST_DATA_CENTER, PUSH_VERSION.incrementAndGet(), 1, subscriber);
 
     // 1.init switch
     boolean ret = fetchCircuitBreakerService.start();
@@ -177,7 +178,8 @@ public class CircuitBreakerServiceTest extends AbstractSessionServerTestBase {
         () -> CollectionUtils.isEmpty(fetchCircuitBreakerService.getCircuitBreaker()), MAX_WAIT);
 
     Subscriber subscriber = TestUtils.newZoneSubscriber(DATA_INFO_ID, TEST_CELL);
-    circuitBreakerService.onPushSuccess(TEST_DATA_CENTER, PUSH_VERSION.incrementAndGet(), 1, subscriber);
+    circuitBreakerService.onPushSuccess(
+        TEST_DATA_CENTER, PUSH_VERSION.incrementAndGet(), 1, subscriber);
 
     ret = circuitBreakerService.pushCircuitBreaker(subscriber.getStatistic(TEST_DATA_CENTER));
     Assert.assertFalse(ret);
@@ -235,8 +237,10 @@ public class CircuitBreakerServiceTest extends AbstractSessionServerTestBase {
     Subscriber subscriber1 = TestUtils.newZoneSubscriber(DATA_INFO_ID, TEST_CELL);
     Subscriber subscriber2 = TestUtils.newZoneSubscriber(DATA_INFO_ID, TEST_CELL);
 
-    circuitBreakerService.onPushSuccess(TEST_DATA_CENTER, PUSH_VERSION.incrementAndGet(), 1, subscriber1);
-    circuitBreakerService.onPushSuccess(TEST_DATA_CENTER, PUSH_VERSION.incrementAndGet(), 1, subscriber2);
+    circuitBreakerService.onPushSuccess(
+        TEST_DATA_CENTER, PUSH_VERSION.incrementAndGet(), 1, subscriber1);
+    circuitBreakerService.onPushSuccess(
+        TEST_DATA_CENTER, PUSH_VERSION.incrementAndGet(), 1, subscriber2);
 
     // 2.su1 fail and sub2 fail, address fail count = CIRCUIT_BREAKER_THRESHOLD
     for (int i = 0; i < CIRCUIT_BREAKER_THRESHOLD / 2; i++) {

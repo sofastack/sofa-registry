@@ -90,6 +90,7 @@ public abstract class AbstractLeaderElector implements LeaderElector {
     synchronized (this) {
       if (isObserver) {
         leaderInfo = doQuery();
+        LOG.info("meta role: Observer, leaderInfo: {}", leaderInfo);
       } else {
         leaderInfo = doElect();
       }

@@ -77,10 +77,7 @@ public class FetchCircuitBreakerService
         LOGGER.error("update circuit breaker address:{} fail.", update);
         return false;
       }
-      LOGGER.info(
-              "Fetch circuit breaker data, prev={}, current={}",
-              expect,
-              update);
+      LOGGER.info("Fetch circuit breaker data, prev={}, current={}", expect, update);
     } catch (Throwable t) {
       LOGGER.error("update circuit breaker address:{} error.", update, t);
     }

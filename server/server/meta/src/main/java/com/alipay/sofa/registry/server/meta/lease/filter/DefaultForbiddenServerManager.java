@@ -17,62 +17,72 @@
 package com.alipay.sofa.registry.server.meta.lease.filter;
 
 import com.alipay.sofa.registry.common.model.Node;
+import com.alipay.sofa.registry.common.model.Node.NodeType;
+import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.console.PersistenceData;
 import com.alipay.sofa.registry.common.model.console.PersistenceDataBuilder;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.Lease;
+import com.alipay.sofa.registry.common.model.metaserver.NodeServerOperateInfo;
+import com.alipay.sofa.registry.common.model.metaserver.OperationInfo;
+import com.alipay.sofa.registry.common.model.metaserver.blacklist.RegistryForbiddenServerRequest;
+import com.alipay.sofa.registry.exception.SofaRegistryRuntimeException;
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.server.meta.provide.data.NodeOperatingService;
 import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataService;
-import com.alipay.sofa.registry.store.api.DBResponse;
-import com.alipay.sofa.registry.store.api.OperationStatus;
 import com.alipay.sofa.registry.util.JsonUtils;
-import com.google.common.collect.Sets;
 import java.util.Set;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 /**
  * @author chen.zhu
  *     <p>Mar 18, 2021
  */
-@Component
 public class DefaultForbiddenServerManager implements RegistryForbiddenServerManager {
 
+  protected final Logger LOGGER =
+      LoggerFactory.getLogger(
+          "WRAPPER-INTERCEPTOR", String.format("[%s]", getClass().getSimpleName()));
+
   @Autowired private ProvideDataService provideDataService;
+
+  @Autowired private NodeOperatingService nodeOperatingService;
 
   private static final Long NOT_FOUND_VERSION = 0L;
 
   public DefaultForbiddenServerManager() {}
 
-  public DefaultForbiddenServerManager(ProvideDataService provideDataService) {
+  public DefaultForbiddenServerManager(ProvideDataService provideDataService,
+                                       NodeOperatingService nodeOperatingService) {
     this.provideDataService = provideDataService;
+    this.nodeOperatingService = nodeOperatingService;
   }
 
-  private ForbiddenServer getForbiddenServers() {
-    DBResponse<PersistenceData> response =
-        provideDataService.queryProvideData(ValueConstants.REGISTRY_SERVER_BLACK_LIST_DATA_ID);
+  protected ForbiddenServer getForbiddenServers() {
+    Tuple<Long, NodeServerOperateInfo> operateInfo =
+        nodeOperatingService.queryOperateInfoAndVersion();
 
-    if (response.getOperationStatus() == OperationStatus.SUCCESS) {
-      PersistenceData persistenceData = response.getEntity();
-      Set<String> servers = JsonUtils.read(persistenceData.getData(), Set.class);
-      return new ForbiddenServer(persistenceData.getVersion(), servers);
+    if (operateInfo == null || operateInfo.o1 == null || operateInfo.o2 == null) {
+      return new ForbiddenServer();
     }
-
-    return new ForbiddenServer(NOT_FOUND_VERSION, Sets.newHashSet());
+    return new ForbiddenServer(operateInfo.o1, operateInfo.o2);
   }
 
   @Override
-  public boolean addToBlacklist(String ip) {
+  public boolean addToBlacklist(RegistryForbiddenServerRequest request) {
     ForbiddenServer servers = getForbiddenServers();
-    if (servers.servers.add(ip)) {
+    if (servers.add(request.getNodeType(), request.getCell(), request.getIp())) {
       return store(servers);
     }
     return true;
   }
 
   @Override
-  public boolean removeFromBlacklist(String ip) {
+  public boolean removeFromBlacklist(RegistryForbiddenServerRequest request) {
     ForbiddenServer servers = getForbiddenServers();
-    if (servers.servers.remove(ip)) {
+    if (servers.remove(request.getNodeType(), request.getCell(), request.getIp())) {
       return store(servers);
     }
     return true;
@@ -81,25 +91,103 @@ public class DefaultForbiddenServerManager implements RegistryForbiddenServerMan
   @Override
   public boolean allowSelect(Lease<Node> lease) {
     ForbiddenServer servers = getForbiddenServers();
-    return !servers.servers.contains(lease.getRenewal().getNodeUrl().getIpAddress());
+    return !servers.contains(lease.getRenewal().getNodeUrl().getIpAddress());
   }
 
   protected boolean store(ForbiddenServer servers) {
     PersistenceData persistence =
         PersistenceDataBuilder.createPersistenceData(
-            ValueConstants.REGISTRY_SERVER_BLACK_LIST_DATA_ID,
-            JsonUtils.writeValueAsString(servers.servers));
+            ValueConstants.NODE_SERVER_OPERATING_DATA_ID,
+            JsonUtils.writeValueAsString(servers.server));
 
     return provideDataService.saveProvideData(persistence, servers.version);
   }
 
-  class ForbiddenServer {
+  protected class ForbiddenServer {
     final long version;
-    final Set<String> servers;
+    final NodeServerOperateInfo server;
 
-    public ForbiddenServer(long version, Set<String> servers) {
+    public ForbiddenServer() {
+      this(NOT_FOUND_VERSION, new NodeServerOperateInfo());
+    }
+
+    public ForbiddenServer(long version, NodeServerOperateInfo server) {
       this.version = version;
-      this.servers = servers;
+      this.server = server;
+    }
+
+    public boolean add(NodeType nodeType, String cell, String address) {
+      switch (nodeType) {
+        case META:
+          return server.addMetas(cell, address);
+        case DATA:
+          return server.addDatas(cell, address);
+        case SESSION:
+          return server.addSessions(cell, address);
+        default:
+          throw new SofaRegistryRuntimeException("unexpected node type: " + nodeType);
+      }
+    }
+
+    public boolean remove(NodeType nodeType, String cell, String address) {
+      switch (nodeType) {
+        case META:
+          return server.removeMetas(cell, address);
+        case DATA:
+          return server.removeDatas(cell, address);
+        case SESSION:
+          return server.removeSessions(cell, address);
+        default:
+          throw new SofaRegistryRuntimeException("unexpected node type: " + nodeType);
+      }
+    }
+
+    public boolean contains(String address) {
+
+      return contains(NodeType.META, address)
+          || contains(NodeType.DATA, address)
+          || contains(NodeType.SESSION, address);
+    }
+
+    public boolean contains(NodeType nodeType, String address) {
+      Set<OperationInfo> set;
+      switch (nodeType) {
+        case META:
+          set = server.getMetas();
+          break;
+        case DATA:
+          set = server.getDatas();
+          break;
+        case SESSION:
+          set = server.sessionNodes();
+          break;
+        default:
+          throw new SofaRegistryRuntimeException("unexpected node type: " + nodeType);
+      }
+      long count =
+          set.stream()
+              .map(OperationInfo::getAddress)
+              .filter(operating -> StringUtils.equals(address, operating))
+              .count();
+      return count == 1;
+    }
+
+    /**
+     * Getter method for property <tt>version</tt>.
+     *
+     * @return property value of version
+     */
+    public long getVersion() {
+      return version;
+    }
+
+    /**
+     * Getter method for property <tt>server</tt>.
+     *
+     * @return property value of server
+     */
+    public NodeServerOperateInfo getServer() {
+      return server;
     }
   }
 }

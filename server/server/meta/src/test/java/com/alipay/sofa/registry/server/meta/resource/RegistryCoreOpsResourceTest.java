@@ -18,7 +18,6 @@ package com.alipay.sofa.registry.server.meta.resource;
 
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 import com.alipay.sofa.registry.common.model.CommonResponse;
@@ -28,35 +27,56 @@ import com.alipay.sofa.registry.exception.SofaRegistryRuntimeException;
 import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
 import com.alipay.sofa.registry.server.meta.lease.filter.DefaultForbiddenServerManager;
 import com.alipay.sofa.registry.server.meta.lease.filter.RegistryForbiddenServerManager;
+import com.alipay.sofa.registry.server.meta.provide.data.NodeOperatingService;
 import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataService;
 import com.alipay.sofa.registry.store.api.DBResponse;
+import com.alipay.sofa.registry.store.api.elector.LeaderElector;
+import com.google.common.collect.Lists;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
+import org.mockito.runners.MockitoJUnitRunner;
 
+@RunWith(MockitoJUnitRunner.class)
 public class RegistryCoreOpsResourceTest extends AbstractMetaServerTestBase {
 
-  private RegistryForbiddenServerManager registryForbiddenServerManager;
+  @InjectMocks
+  private RegistryForbiddenServerManager registryForbiddenServerManager =
+      new DefaultForbiddenServerManager();
+
+  @Spy private InMemoryProvideDataRepo provideDataService;
+
+  @Spy private InMemoryNodeOperatingService nodeOperatingService;
+
+  @Mock private LeaderElector leaderElector;
 
   private RegistryCoreOpsResource resource;
 
-  private ProvideDataService provideDataService = spy(new InMemoryProvideDataRepo());
-
   @Before
   public void before() {
-    registryForbiddenServerManager = new DefaultForbiddenServerManager(provideDataService);
+    MockitoAnnotations.initMocks(RegistryForbiddenServerManager.class);
+    MockitoAnnotations.initMocks(NodeOperatingService.class);
+
+    when(leaderElector.getLeader()).thenReturn("127.0.0.1");
+
     resource =
         new RegistryCoreOpsResource()
             .setRegistryForbiddenServerManager(registryForbiddenServerManager);
+    nodeOperatingService.setProvideDataService(provideDataService);
   }
 
   @Test
   public void testKickoffServer() {
-    CommonResponse response = resource.kickoffServer("fakeip");
+    CommonResponse response = resource.kickoffServer("testCell", "DATA", "fakeip");
     Assert.assertFalse(response.isSuccess());
     Assert.assertEquals("invalid ip address: fakeip", response.getMessage());
 
-    response = resource.kickoffServer("127.0.0.1");
+    response = resource.kickoffServer("testCell", "DATA", "127.0.0.1");
     Assert.assertTrue(response.isSuccess());
     Assert.assertFalse(
         registryForbiddenServerManager.allowSelect(new Lease<>(new SimpleNode("127.0.0.1"), 100)));
@@ -65,7 +85,7 @@ public class RegistryCoreOpsResourceTest extends AbstractMetaServerTestBase {
   @Test
   public void testKickoffServerException() {
     ProvideDataService provideDataService = mock(ProvideDataService.class);
-    registryForbiddenServerManager = new DefaultForbiddenServerManager(provideDataService);
+    registryForbiddenServerManager = new DefaultForbiddenServerManager(provideDataService, nodeOperatingService);
     resource =
         new RegistryCoreOpsResource()
             .setRegistryForbiddenServerManager(registryForbiddenServerManager);
@@ -76,25 +96,25 @@ public class RegistryCoreOpsResourceTest extends AbstractMetaServerTestBase {
     doThrow(new SofaRegistryRuntimeException("expected"))
         .when(provideDataService)
         .saveProvideData(mockPersistenceData(), System.currentTimeMillis());
-    CommonResponse response = resource.kickoffServer("127.0.0.1");
+    CommonResponse response = resource.kickoffServer("testCell", "DATA", "127.0.0.1");
     Assert.assertFalse(response.isSuccess());
   }
 
   @Test
   public void testRejoinServerGroup() {
-    CommonResponse response = resource.rejoinServerGroup("fakeip");
+    CommonResponse response = resource.rejoinServerGroup("testCell", "DATA", "fakeip");
     Assert.assertFalse(response.isSuccess());
     Assert.assertEquals("invalid ip address: fakeip", response.getMessage());
 
     Assert.assertTrue(
         registryForbiddenServerManager.allowSelect(new Lease<>(new SimpleNode("127.0.0.1"), 100)));
 
-    response = resource.kickoffServer("127.0.0.1");
+    response = resource.kickoffServer("testCell", "DATA", "127.0.0.1");
     Assert.assertTrue(response.isSuccess());
     Assert.assertFalse(
         registryForbiddenServerManager.allowSelect(new Lease<>(new SimpleNode("127.0.0.1"), 100)));
 
-    response = resource.rejoinServerGroup("127.0.0.1");
+    response = resource.rejoinServerGroup("testCell", "DATA", "127.0.0.1");
     Assert.assertTrue(response.isSuccess());
     Assert.assertTrue(
         registryForbiddenServerManager.allowSelect(new Lease<>(new SimpleNode("127.0.0.1"), 100)));
