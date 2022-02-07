@@ -22,6 +22,7 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.LoopRunnable;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import java.util.Date;
 import java.util.List;
@@ -45,6 +46,12 @@ public abstract class AbstractLeaderElector implements LeaderElector {
 
   private final LeaderElectorTrigger leaderElectorTrigger = new LeaderElectorTrigger();
 
+  private volatile String address;
+
+  public AbstractLeaderElector() {
+    address = NetUtil.getLocalAddress().getHostAddress();
+  }
+
   @Override
   public void registerLeaderAware(LeaderAware leaderAware) {
     leaderAwares.add(leaderAware);
@@ -53,6 +60,11 @@ public abstract class AbstractLeaderElector implements LeaderElector {
   @PostConstruct
   public void init() {
     ConcurrentUtils.createDaemonThread("LeaderElectorTrigger", leaderElectorTrigger).start();
+  }
+
+  @VisibleForTesting
+  public void setAddress(String address) {
+    this.address = address;
   }
 
   private class LeaderElectorTrigger extends LoopRunnable {
@@ -93,7 +105,7 @@ public abstract class AbstractLeaderElector implements LeaderElector {
 
   @Override
   public String myself() {
-    return NetUtil.getLocalAddress().getHostAddress();
+    return address;
   }
   /**
    * start compete leader
