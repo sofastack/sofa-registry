@@ -54,7 +54,7 @@
            #{duration},
            NOW(3),
            NOW(3),
-           1,
+           0,
            0
        )
        ON DUPLICATE KEY UPDATE lock_name = #{lockName}
@@ -72,7 +72,7 @@
     <update id="ownerHeartbeat" parameterType="com.alipay.sofa.registry.jdbc.domain.DistributeLockDomain">
         <![CDATA[
           update distribute_lock set owner = #{owner}, gmt_modified =  NOW(3), `term_duration` = (`term_duration` + 1)
-          where data_center = #{dataCenter} and lock_name = #{lockName} and owner = #{owner} and term = #{term} and `term_duration` = #{termDuration}  and timestampdiff(SECOND, gmt_modified, NOW()) < #{duration}/1000
+          where data_center = #{dataCenter} and lock_name = #{lockName} and owner = #{owner}
         ]]>
     </update>
 
