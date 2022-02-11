@@ -213,7 +213,7 @@ public abstract class AbstractMetaServerManager extends ClientSideExchanger
               return null;
             }
             String leader = lock.getOwner();
-            long epoch = lock.getGmtModified().getTime();
+            long epoch = lock.getGmtModifiedUnixMillis();
             return new LeaderInfo(epoch, leader);
           });
     } catch (Throwable e) {
@@ -227,7 +227,7 @@ public abstract class AbstractMetaServerManager extends ClientSideExchanger
       LOGGER.error("[resetLeaderFromDb] failed to query leader from db: lock null");
       return false;
     }
-    long expireTimestamp = lock.getGmtModified().getTime() + lock.getDuration() / 2;
+    long expireTimestamp = lock.getGmtModifiedUnixMillis() + lock.getDuration() / 2;
     long now = System.currentTimeMillis();
     if (expireTimestamp < now) {
       LOGGER.error("[resetLeaderFromDb] failed to query leader from db: lock expired {}", lock);

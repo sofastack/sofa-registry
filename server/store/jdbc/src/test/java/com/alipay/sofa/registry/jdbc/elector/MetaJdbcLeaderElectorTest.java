@@ -93,9 +93,9 @@ public class MetaJdbcLeaderElectorTest extends AbstractH2DbTestBase {
 
     AbstractLeaderElector.LeaderInfo leaderInfo = MetaJdbcLeaderElector.leaderFrom(lock);
     Assert.assertEquals(leaderInfo.getLeader(), lock.getOwner());
-    Assert.assertEquals(leaderInfo.getEpoch(), lock.getGmtModified().getTime());
+    Assert.assertEquals(leaderInfo.getEpoch(), lock.getGmtModifiedUnixMillis());
     Assert.assertEquals(
-        leaderInfo.getExpireTimestamp(), lock.getGmtModified().getTime() + 1000 / 2);
+        leaderInfo.getExpireTimestamp(), lock.getGmtModifiedUnixMillis() + 1000 / 2);
   }
 
   private static class ElectLoop extends LoopRunnable {
