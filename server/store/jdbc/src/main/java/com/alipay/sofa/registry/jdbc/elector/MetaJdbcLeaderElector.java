@@ -99,8 +99,8 @@ public class MetaJdbcLeaderElector extends AbstractLeaderElector implements Reco
   public static LeaderInfo leaderFrom(DistributeLockDomain lock) {
     return calcLeaderInfo(
         lock.getOwner(),
-        lock.getGmtModified().getTime(),
-        lock.getGmtModified(),
+        lock.getGmtModifiedUnixMillis(),
+        lock.getGmtModifiedUnixMillis(),
         lock.getDuration());
   }
   /**

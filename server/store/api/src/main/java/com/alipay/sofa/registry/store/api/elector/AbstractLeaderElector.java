@@ -24,7 +24,6 @@ import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.LoopRunnable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.PostConstruct;
@@ -198,8 +197,8 @@ public abstract class AbstractLeaderElector implements LeaderElector {
   }
 
   protected static LeaderInfo calcLeaderInfo(
-      String leader, long epoch, Date lastHeartbeat, long duration) {
-    final long expireTimestamp = lastHeartbeat.getTime() + duration / 2;
+      String leader, long epoch, long lastHeartbeat, long duration) {
+    final long expireTimestamp = lastHeartbeat + duration / 2;
     return new LeaderInfo(epoch, leader, expireTimestamp);
   }
 
