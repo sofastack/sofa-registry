@@ -66,6 +66,7 @@
             <destName>log4j2.xml</destName>
         </file>
     </files>
+
     <moduleSets>
         <moduleSet>
             <useAllReactorProjects>true</useAllReactorProjects>

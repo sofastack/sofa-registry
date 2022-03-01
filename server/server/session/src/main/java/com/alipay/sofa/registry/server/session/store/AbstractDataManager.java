@@ -80,7 +80,8 @@ public abstract class AbstractDataManager<T extends BaseInfo>
   }
 
   protected Tuple<T, Boolean> addData(T data) {
-    return connectDataIndexer.add(data.connectId(), DataPos.of(data), () -> addDataToStore(data));
+    DataPos dataPos = DataPos.of(data);
+    return connectDataIndexer.add(data.connectId(), dataPos, () -> addDataToStore(data));
   }
 
   @Override
@@ -248,7 +249,8 @@ public abstract class AbstractDataManager<T extends BaseInfo>
       store.forEach(
           (dataInfoId, datum) -> {
             for (T data : datum.values()) {
-              consumer.accept(data.connectId(), DataPos.of(data));
+              DataPos dataPos = DataPos.of(data);
+              consumer.accept(data.connectId(), dataPos);
             }
           });
     }

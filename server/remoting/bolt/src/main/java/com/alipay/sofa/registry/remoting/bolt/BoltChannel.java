@@ -33,6 +33,8 @@ import javax.ws.rs.client.WebTarget;
  */
 public class BoltChannel implements Channel {
 
+  private static final String ATTR_CLIENT_IP = "attr.client.ip";
+
   private final Connection connection;
 
   private AsyncContext asyncContext;
@@ -151,5 +153,17 @@ public class BoltChannel implements Channel {
         getRemoteAddress(),
         getLocalAddress(),
         markProtobuf);
+  }
+
+  public void setClientIP(String clientIP) {
+    connection.setAttribute(ATTR_CLIENT_IP, clientIP);
+  }
+
+  public String getClientIP() {
+    Object obj = connection.getAttribute(ATTR_CLIENT_IP);
+    if (obj == null) {
+      return connection.getRemoteIP();
+    }
+    return (String) obj;
   }
 }

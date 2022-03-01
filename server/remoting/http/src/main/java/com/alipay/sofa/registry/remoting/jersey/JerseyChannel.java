@@ -22,6 +22,7 @@ import java.net.InetSocketAddress;
 import java.net.URI;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.WebTarget;
+import org.apache.commons.lang.StringUtils;
 
 /**
  * @author shangyu.wh
@@ -86,5 +87,13 @@ public class JerseyChannel implements Channel {
   @Override
   public void close() {
     client.close();
+  }
+
+  @Override
+  public void setClientIP(String clientIP) {}
+
+  @Override
+  public String getClientIP() {
+    return StringUtils.EMPTY;
   }
 }

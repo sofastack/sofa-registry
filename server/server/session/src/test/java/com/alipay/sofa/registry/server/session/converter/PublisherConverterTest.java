@@ -35,7 +35,9 @@ public class PublisherConverterTest {
     TestUtils.setField(register);
     register.setDataList(Lists.newArrayList(new DataBox("testDataBox")));
     long now1 = System.currentTimeMillis();
-    Publisher publisher = PublisherConverter.convert(register);
+    Publisher publisher =
+        PublisherConverter.convert(
+            register, new TestUtils.MockBlotChannel(9600, "192.168.0.1", 34567));
     long now2 = System.currentTimeMillis();
     TestUtils.assertBetween(publisher.getRegisterTimestamp(), now1, now2);
     TestUtils.assertEquals(register, publisher);

@@ -606,21 +606,20 @@ public class SessionRegistry implements Registry {
       LOGGER.warn("server not init when clean connect: {}", sessionServerConfig.getServerPort());
       return;
     }
-
     Set<ConnectId> connectIndexes = Sets.newHashSetWithExpectedSize(1024 * 8);
     connectIndexes.addAll(sessionDataStore.getConnectIds());
     connectIndexes.addAll(sessionInterests.getConnectIds());
     connectIndexes.addAll(sessionWatchers.getConnectIds());
 
-    List<ConnectId> connectIds = new ArrayList<>(64);
+    List<ConnectId> toClose = new ArrayList<>(64);
     for (ConnectId connectId : connectIndexes) {
       Channel channel =
           sessionServer.getChannel(
               new URL(connectId.getClientHostAddress(), connectId.getClientPort()));
       if (channel == null) {
-        connectIds.add(connectId);
+        toClose.add(connectId);
       }
     }
-    clean(connectIds);
+    clean(toClose);
   }
 }

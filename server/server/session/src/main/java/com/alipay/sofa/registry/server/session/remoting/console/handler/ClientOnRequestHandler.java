@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.server.session.remoting.console.handler;
 
 import com.alipay.sofa.registry.common.model.CommonResponse;
+import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.sessionserver.ClientOnRequest;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -32,7 +33,7 @@ public final class ClientOnRequestHandler extends AbstractConsoleHandler<ClientO
 
   @Override
   public Object doHandle(Channel channel, ClientOnRequest request) {
-    List<String> conIds = connectionsService.closeIpConnects(request.getIps());
+    List<ConnectId> conIds = connectionsService.closeIpConnects(request.getIps());
     LOGGER.info("clientOn conIds: {}", conIds);
     return CommonResponse.buildSuccessResponse();
   }

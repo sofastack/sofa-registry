@@ -33,7 +33,9 @@ public class SubscriberConverterTest {
     register.setScope(ScopeEnum.dataCenter.name());
     long now1 = System.currentTimeMillis();
     register.setAcceptEncoding("zstd,gzip");
-    Subscriber subscriber = SubscriberConverter.convert(register);
+    Subscriber subscriber =
+        SubscriberConverter.convert(
+            register, new TestUtils.MockBlotChannel(9600, "192.168.0.1", 34567));
     long now2 = System.currentTimeMillis();
     TestUtils.assertBetween(subscriber.getRegisterTimestamp(), now1, now2);
     TestUtils.assertEquals(register, subscriber);
@@ -46,7 +48,9 @@ public class SubscriberConverterTest {
     ConfiguratorRegister register = new ConfiguratorRegister();
     TestUtils.setField(register);
     long now1 = System.currentTimeMillis();
-    Watcher watcher = SubscriberConverter.convert(register);
+    Watcher watcher =
+        SubscriberConverter.convert(
+            register, new TestUtils.MockBlotChannel(9600, "192.168.0.1", 34567));
     long now2 = System.currentTimeMillis();
     TestUtils.assertBetween(watcher.getRegisterTimestamp(), now1, now2);
     TestUtils.assertEquals(register, watcher);
