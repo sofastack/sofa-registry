@@ -30,6 +30,10 @@ public class BaseRegistration {
 
   protected String appName;
 
+  protected String instanceId;
+
+  protected String ip;
+
   /**
    * Getter method for property <tt>dataId</tt>.
    *
@@ -82,6 +86,22 @@ public class BaseRegistration {
    */
   public void setAppName(String appName) {
     this.appName = appName;
+  }
+
+  public String getInstanceId() {
+    return instanceId;
+  }
+
+  public void setInstanceId(String instanceId) {
+    this.instanceId = instanceId;
+  }
+
+  public String getIp() {
+    return ip;
+  }
+
+  public void setIp(String ip) {
+    this.ip = ip;
   }
 
   /** @see Object#toString() */

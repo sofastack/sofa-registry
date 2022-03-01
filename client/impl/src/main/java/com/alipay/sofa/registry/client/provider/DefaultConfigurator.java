@@ -119,7 +119,11 @@ public class DefaultConfigurator extends AbstractInternalRegister implements Con
     readLock.lock();
     ConfiguratorRegister register = new ConfiguratorRegister();
     try {
-      register.setInstanceId(config.getInstanceId());
+      if (StringUtils.isNotEmpty(registration.getInstanceId())) {
+        register.setInstanceId(registration.getInstanceId());
+      } else {
+        register.setInstanceId(config.getInstanceId());
+      }
       if (StringUtils.isNotEmpty(config.getZone())) {
         register.setZone(config.getZone());
       } else {
@@ -130,6 +134,7 @@ public class DefaultConfigurator extends AbstractInternalRegister implements Con
       } else {
         register.setAppName(config.getAppName());
       }
+      register.setIp(registration.getIp());
       register.setDataId(registration.getDataId());
       register.setGroup(registration.getGroup());
       register.setRegistId(REGIST_ID);

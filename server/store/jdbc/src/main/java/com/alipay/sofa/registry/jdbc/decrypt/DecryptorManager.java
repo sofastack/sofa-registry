@@ -22,7 +22,6 @@ import com.google.common.annotations.VisibleForTesting;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
-
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 

@@ -17,8 +17,7 @@
 package com.alipay.sofa.registry.server.session.providedata;
 
 import static com.alipay.sofa.registry.common.model.constants.ValueConstants.CLIENT_OFF;
-import static org.mockito.Matchers.anyList;
-import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -135,7 +134,6 @@ public class FetchClientOffServiceTest {
     boltChannel.setConnAttribute(CLIENT_OFF, Boolean.TRUE);
 
     when(connectionsService.getAllChannel()).thenReturn(Collections.singletonList(this.channel));
-    when(connectionsService.getIpFromConnectId(anyString())).thenReturn(url.getIpAddress());
 
     fetchClientOffAddressService.processClientOpen();
     Thread.sleep(2000);

@@ -14,27 +14,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.mapper;
+package com.alipay.sofa.registry.jdbc.decrypt;
 
-import java.util.Collections;
-import org.junit.Assert;
-import org.junit.Test;
+/** @Author dzdx @Date 2022/2/28 8:06 下午 @Version 1.0 */
+public class NoopDecryptor implements Decryptor {
+  @Override
+  public String name() {
+    return "noop";
+  }
 
-public class ConnectionMapperTest {
-  @Test
-  public void test() {
-    final String key = "testKey";
-    final String val = "testVal";
-    ConnectionMapper mapper = new ConnectionMapper();
-    mapper.add(key, val);
-    Assert.assertTrue(mapper.contains(key));
-    Assert.assertEquals(mapper.get(key), val);
-    Assert.assertNotEquals(mapper.get(key + "1"), val);
-    Assert.assertEquals(mapper.size(), 1);
-    Assert.assertEquals(mapper.get(), Collections.singletonMap(key, val));
-    mapper.remove(key + "1");
-    Assert.assertEquals(mapper.size(), 1);
-    mapper.remove(key);
-    Assert.assertNull(mapper.get(key));
+  @Override
+  public String type() {
+    return "";
+  }
+
+  @Override
+  public String decrypt(String cipher) {
+    return cipher;
+  }
+
+  @Override
+  public boolean enabled() {
+    return false;
   }
 }

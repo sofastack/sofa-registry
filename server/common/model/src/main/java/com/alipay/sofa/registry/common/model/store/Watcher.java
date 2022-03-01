@@ -67,6 +67,7 @@ public class Watcher extends BaseInfo {
     watcher.setGroup(watcher.getGroup());
     watcher.setDataId(watcher.getDataId());
     watcher.setClientId(watcher.getClientId());
+    watcher.setIp(watcher.getIp());
     watcher.setCell(watcher.getCell());
     watcher.setProcessId(watcher.getProcessId());
     watcher.setAppName(watcher.getAppName());

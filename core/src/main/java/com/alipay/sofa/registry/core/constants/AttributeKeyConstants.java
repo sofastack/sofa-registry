@@ -30,4 +30,8 @@ public class AttributeKeyConstants {
   public static final String ATTRIBUTE_SIGNATURE = "!Signature";
   /** Timestamp Key */
   public static final String ATTRIBUTE_TIMESTAMP = "!Timestamp";
+
+  public static final String ATTRIBUTE_CLIENT_IP = "!ClientIp";
+
+  public static final String ATTRIBUTE_BLOCKED_REQUEST = "!Blocked";
 }

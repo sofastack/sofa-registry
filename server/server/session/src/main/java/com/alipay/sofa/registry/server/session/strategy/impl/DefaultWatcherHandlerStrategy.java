@@ -49,27 +49,24 @@ public class DefaultWatcherHandlerStrategy implements WatcherHandlerStrategy {
       RegisterResponse registerResponse) {
     Watcher watcher = null;
     try {
-      configuratorRegister.setIp(channel.getRemoteAddress().getAddress().getHostAddress());
-      configuratorRegister.setPort(channel.getRemoteAddress().getPort());
-
       if (StringUtils.isBlank(configuratorRegister.getInstanceId())) {
         configuratorRegister.setInstanceId(DEFAULT_INSTANCE_ID);
       }
 
-      watcher = SubscriberConverter.convert(configuratorRegister);
+      watcher = SubscriberConverter.convert(configuratorRegister, channel);
       watcher.setProcessId(
           channel.getRemoteAddress().getHostName() + ":" + channel.getRemoteAddress().getPort());
 
-      handle(watcher, channel, configuratorRegister, registerResponse);
+      handle(configuratorRegister, channel, watcher, registerResponse);
     } catch (Throwable e) {
-      handleError(configuratorRegister, watcher, registerResponse, e);
+      handleError(configuratorRegister, channel, watcher, registerResponse, e);
     }
   }
 
   protected void handle(
-      Watcher watcher,
-      Channel channel,
       ConfiguratorRegister register,
+      Channel channel,
+      Watcher watcher,
       RegisterResponse registerResponse) {
     watcher.setSourceAddress(
         new URL(channel.getRemoteAddress(), BoltUtil.getBoltCustomSerializer(channel)));
@@ -87,14 +84,15 @@ public class DefaultWatcherHandlerStrategy implements WatcherHandlerStrategy {
     registerResponse.setRegistId(register.getRegistId());
     registerResponse.setSuccess(true);
     registerResponse.setMessage("ConfiguratorRegister register success!");
-    log(true, register, watcher);
+    log(true, register, watcher, channel);
   }
 
-  private void log(boolean success, ConfiguratorRegister register, Watcher watcher) {
+  private void log(
+      boolean success, ConfiguratorRegister register, Watcher watcher, Channel channel) {
     // [Y|N],[R|U|N],app,zone,dataInfoId,registerId,clientVersion,clientIp,clientPort
     Metrics.Access.watCount(success);
     WATCH_LOGGER.info(
-        "{},{},{},{},{},{},{},{},{},{},{},attrs={}",
+        "{},{},{},{},{},{},{},{},{},{},{},clientIp={},attrs={}",
         success ? 'Y' : 'N',
         EventTypeConstants.getEventTypeFlag(register.getEventType()),
         register.getAppName(),
@@ -104,17 +102,19 @@ public class DefaultWatcherHandlerStrategy implements WatcherHandlerStrategy {
         register.getInstanceId(),
         register.getRegistId(),
         watcher == null ? "" : watcher.getClientVersion(),
+        channel.getRemoteAddress().getAddress().getHostAddress(),
+        channel.getRemoteAddress().getPort(),
         register.getIp(),
-        register.getPort(),
         watcher == null ? "0" : watcher.attributesSize());
   }
 
   protected void handleError(
       ConfiguratorRegister register,
+      Channel channal,
       Watcher watcher,
       RegisterResponse registerResponse,
       Throwable e) {
-    log(false, register, watcher);
+    log(false, register, watcher, channal);
     RegisterLogs.logError(register, "Watcher", registerResponse, e);
   }
 }

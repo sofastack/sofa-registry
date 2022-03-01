@@ -36,6 +36,7 @@ import com.alibaba.druid.pool.DruidDataSourceFactory;
 import com.alipay.sofa.registry.jdbc.decrypt.DecryptConstants;
 import com.alipay.sofa.registry.jdbc.decrypt.Decryptor;
 import com.alipay.sofa.registry.jdbc.decrypt.DecryptorManager;
+import com.alipay.sofa.registry.jdbc.decrypt.NoopDecryptor;
 import com.alipay.sofa.registry.jdbc.repository.impl.AppRevisionJdbcRepository;
 import com.alipay.sofa.registry.jdbc.repository.impl.ClientManagerAddressJdbcRepository;
 import com.alipay.sofa.registry.jdbc.repository.impl.DateNowJdbcRepository;
@@ -128,6 +129,13 @@ public class JdbcConfiguration {
       filter.setSlowSqlMillis(jdbcDriverConfig.getSlowSqlMillis());
       filter.setLogSlowSql(true);
       return filter;
+    }
+
+    @Bean
+    public Decryptor noopDecryptor() {
+      // expected at least 1 bean which qualifies as autowire candidate for @Autowired
+      // Collection<Decryptor>
+      return new NoopDecryptor();
     }
 
     @Bean
