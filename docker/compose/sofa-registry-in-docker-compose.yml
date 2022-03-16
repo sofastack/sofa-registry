@@ -1,8 +1,8 @@
 version: '3.3'
 services:
-  sofa-regisstry:
+  sofa-registry:
     image: sofaregistry/sofaregistry:6.1.4
-    container_name: sofa-regisstry-integration
+    container_name: sofa-registry-integration
     depends_on:
       - sofa-mysql
     links:
