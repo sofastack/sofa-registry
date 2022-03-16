@@ -19,11 +19,11 @@ services:
       JDBC_PASSWORD: root
       REGISTRY_APP_NAME: integration
     networks:
-      - sofa-regisrty-ns
+      - sofa-registry-ns
   sofa-mysql:
     image: mysql:5.7
-    command: --init-file /docker-entrypoint-initdb.d/init.sql --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
-    container_name: sofa-regisrty-mysql
+    command: --init-file /docker-entrypoint-initdb.d/init.sql --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    container_name: sofa-registry-mysql
     restart: always
     ports:
       - 3306:3306
@@ -34,7 +34,7 @@ services:
       MYSQL_DATABASE: registrymetadb
       TZ: Asia/Shanghai
     networks:
-      - sofa-regisrty-ns
+      - sofa-registry-ns
 networks:
-  sofa-regisrty-ns:
+  sofa-registry-ns:
     driver: bridge
