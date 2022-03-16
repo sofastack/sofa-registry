@@ -12,6 +12,7 @@ services:
       - 9615:9615
       - 9622:9622
       - 9603:9603
+      - 9600:9600
     environment:
       JDBC_URL: jdbc:mysql://sofa-mysql:3306/registrymetadb?useSSL=false&useUnicode=true&characterEncoding=utf8
       JDBC_USERNAME: root
