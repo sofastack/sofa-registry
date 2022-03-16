@@ -22,7 +22,7 @@ services:
   sofa-mysql:
     image: mysql:5.7
     command: --init-file /docker-entrypoint-initdb.d/init.sql --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
-    container_name: sofa-regisstry-mysql
+    container_name: sofa-regisrty-mysql
     restart: always
     ports:
       - 3306:3306
