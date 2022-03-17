@@ -54,8 +54,8 @@ public class DefaultForbiddenServerManager implements RegistryForbiddenServerMan
 
   public DefaultForbiddenServerManager() {}
 
-  public DefaultForbiddenServerManager(ProvideDataService provideDataService,
-                                       NodeOperatingService nodeOperatingService) {
+  public DefaultForbiddenServerManager(
+      ProvideDataService provideDataService, NodeOperatingService nodeOperatingService) {
     this.provideDataService = provideDataService;
     this.nodeOperatingService = nodeOperatingService;
   }

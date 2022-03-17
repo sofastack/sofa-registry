@@ -246,7 +246,7 @@ public class FirePushService {
     List<Subscriber> subscribersSend = Lists.newArrayList();
     for (Subscriber subscriber : subscribers) {
       CircuitBreakerStatistic statistic = subscriber.getStatistic(dataCenter);
-      if (circuitBreakerService.pushCircuitBreaker(statistic)) {
+      if (circuitBreakerService.pushCircuitBreaker(statistic, subscriber.hasPushed())) {
         LOGGER.info(
             "[CircuitBreaker]subscriber:{} push check circuit break, statistic:{}",
             subscriber.shortDesc(),

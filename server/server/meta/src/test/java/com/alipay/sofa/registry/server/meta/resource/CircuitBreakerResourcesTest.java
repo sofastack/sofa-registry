@@ -20,6 +20,7 @@ import static com.alipay.sofa.registry.common.model.constants.ValueConstants.CIR
 
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.console.CircuitBreakerData;
+import com.alipay.sofa.registry.common.model.console.CircuitBreakerData.CircuitBreakOption;
 import com.alipay.sofa.registry.common.model.console.PersistenceData;
 import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
 import com.alipay.sofa.registry.store.api.DBResponse;
@@ -47,9 +48,10 @@ public class CircuitBreakerResourcesTest extends AbstractMetaServerTestBase {
   @Test
   public void testSwitch() {
     // 1.add
-    CommonResponse add = circuitBreakerResources.add("1.1.1.1;2.2.2.2");
+    CommonResponse add =
+        circuitBreakerResources.add(CircuitBreakOption.STOP_PUSH.getOption(), "1.1.1.1;2.2.2.2");
     Assert.assertTrue(add.isSuccess());
-    add = circuitBreakerResources.add("3.3.3.3");
+    add = circuitBreakerResources.add(CircuitBreakOption.STOP_PUSH.getOption(), "3.3.3.3");
     Assert.assertTrue(add.isSuccess());
 
     CircuitBreakerData query = query();
@@ -58,7 +60,8 @@ public class CircuitBreakerResourcesTest extends AbstractMetaServerTestBase {
     Assert.assertEquals(Sets.newHashSet("1.1.1.1", "2.2.2.2", "3.3.3.3"), query.getAddress());
 
     // 2.remove
-    CommonResponse remove = circuitBreakerResources.remove("2.2.2.2");
+    CommonResponse remove =
+        circuitBreakerResources.remove(CircuitBreakOption.STOP_PUSH.getOption(), "2.2.2.2");
     Assert.assertTrue(remove.isSuccess());
     query = query();
     Assert.assertEquals(2, query.getAddress().size());
@@ -82,7 +85,7 @@ public class CircuitBreakerResourcesTest extends AbstractMetaServerTestBase {
     Assert.assertFalse(query.isAddressSwitch());
 
     // 5.add
-    add = circuitBreakerResources.add("4.4.4.4");
+    add = circuitBreakerResources.add(CircuitBreakOption.STOP_PUSH.getOption(), "4.4.4.4");
     Assert.assertTrue(add.isSuccess());
 
     query = query();

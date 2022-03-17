@@ -26,16 +26,15 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.lease.filter.RegistryForbiddenServerManager;
 import com.alipay.sofa.registry.server.meta.resource.filter.LeaderAwareRestController;
 import com.google.common.annotations.VisibleForTesting;
-import org.apache.commons.lang.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import sun.net.util.IPAddressUtil;
-
 import javax.ws.rs.FormParam;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import sun.net.util.IPAddressUtil;
 
 /**
  * @author chen.zhu

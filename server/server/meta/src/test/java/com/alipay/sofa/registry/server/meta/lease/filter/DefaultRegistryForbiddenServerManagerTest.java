@@ -16,17 +16,13 @@
  */
 package com.alipay.sofa.registry.server.meta.lease.filter;
 
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.*;
 
 import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.metaserver.DataOperation;
-import com.alipay.sofa.registry.common.model.metaserver.Lease;
 import com.alipay.sofa.registry.common.model.metaserver.blacklist.RegistryForbiddenServerRequest;
-import com.alipay.sofa.registry.exception.SofaRegistryRuntimeException;
 import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
-import com.alipay.sofa.registry.server.meta.cluster.node.NodeModifiedTest;
 import com.alipay.sofa.registry.server.meta.provide.data.NodeOperatingService;
 import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataService;
 import org.junit.Assert;
@@ -46,14 +42,15 @@ public class DefaultRegistryForbiddenServerManagerTest extends AbstractMetaServe
     provideDataService = spy(new InMemoryProvideDataRepo());
     nodeOperatingService = mock(NodeOperatingService.class);
     when(nodeOperatingService.queryOperateInfoAndVersion()).thenReturn(new Tuple<>(0l, null));
-    registryForbiddenServerManager = new DefaultForbiddenServerManager(provideDataService, nodeOperatingService);
+    registryForbiddenServerManager =
+        new DefaultForbiddenServerManager(provideDataService, nodeOperatingService);
   }
 
   @Test
   public void testNormalCase() {
     RegistryForbiddenServerRequest add =
-            new RegistryForbiddenServerRequest(
-                    DataOperation.ADD, NodeType.DATA, "127.0.0.1", "testCell");
+        new RegistryForbiddenServerRequest(
+            DataOperation.ADD, NodeType.DATA, "127.0.0.1", "testCell");
     boolean success = registryForbiddenServerManager.addToBlacklist(add);
     Assert.assertTrue(success);
   }

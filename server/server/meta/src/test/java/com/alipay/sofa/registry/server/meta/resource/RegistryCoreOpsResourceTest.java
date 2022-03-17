@@ -31,7 +31,6 @@ import com.alipay.sofa.registry.server.meta.provide.data.NodeOperatingService;
 import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataService;
 import com.alipay.sofa.registry.store.api.DBResponse;
 import com.alipay.sofa.registry.store.api.elector.LeaderElector;
-import com.google.common.collect.Lists;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -85,7 +84,8 @@ public class RegistryCoreOpsResourceTest extends AbstractMetaServerTestBase {
   @Test
   public void testKickoffServerException() {
     ProvideDataService provideDataService = mock(ProvideDataService.class);
-    registryForbiddenServerManager = new DefaultForbiddenServerManager(provideDataService, nodeOperatingService);
+    registryForbiddenServerManager =
+        new DefaultForbiddenServerManager(provideDataService, nodeOperatingService);
     resource =
         new RegistryCoreOpsResource()
             .setRegistryForbiddenServerManager(registryForbiddenServerManager);

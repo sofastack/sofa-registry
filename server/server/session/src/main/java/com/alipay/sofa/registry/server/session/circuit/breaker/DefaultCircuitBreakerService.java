@@ -42,7 +42,7 @@ public class DefaultCircuitBreakerService implements CircuitBreakerService {
   @Autowired protected FetchCircuitBreakerService fetchCircuitBreakerService;
 
   private final Cache<String, CircuitBreakerStatistic> circuitBreakerAddress =
-      CacheBuilder.newBuilder().maximumSize(2000L).expireAfterWrite(10, TimeUnit.MINUTES).build();
+      CacheBuilder.newBuilder().maximumSize(2000L).expireAfterAccess(10, TimeUnit.MINUTES).build();
 
   public DefaultCircuitBreakerService() {
     CacheCleaner.autoClean(circuitBreakerAddress, 1000 * 60 * 10);
@@ -54,8 +54,14 @@ public class DefaultCircuitBreakerService implements CircuitBreakerService {
    * @param statistic
    * @return
    */
-  public boolean pushCircuitBreaker(CircuitBreakerStatistic statistic) {
+  @Override
+  public boolean pushCircuitBreaker(CircuitBreakerStatistic statistic, boolean hasPushed) {
     if (statistic == null) {
+      return false;
+    }
+
+    // not circuit break on sub.register
+    if (!hasPushed) {
       return false;
     }
 
@@ -68,7 +74,7 @@ public class DefaultCircuitBreakerService implements CircuitBreakerService {
   }
 
   protected boolean addressCircuitBreak(CircuitBreakerStatistic statistic) {
-    if (fetchCircuitBreakerService.getCircuitBreaker().contains(statistic.getIp())) {
+    if (fetchCircuitBreakerService.getStopPushCircuitBreaker().contains(statistic.getIp())) {
       LOGGER.info("[ArtificialCircuitBreaker]push check circuit break, statistic:{}", statistic);
       return true;
     }
