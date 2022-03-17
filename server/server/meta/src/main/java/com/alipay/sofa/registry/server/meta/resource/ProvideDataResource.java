@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.meta.resource;
 
+import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.console.PersistenceData;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideDataChangeEvent;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
@@ -25,7 +26,9 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.provide.data.DefaultProvideDataNotifier;
 import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataService;
 import com.alipay.sofa.registry.server.meta.resource.filter.LeaderAwareRestController;
+import com.alipay.sofa.registry.store.api.DBResponse;
 import com.google.common.annotations.VisibleForTesting;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -49,6 +52,14 @@ public class ProvideDataResource {
   @Autowired private ProvideDataService provideDataService;
 
   @Autowired private DefaultProvideDataNotifier provideDataNotifier;
+
+  @GET
+  @Path("query")
+  @Produces(MediaType.APPLICATION_JSON)
+  public GenericResponse<PersistenceData> query(String dataInfoId) {
+    DBResponse<PersistenceData> queryResponse = provideDataService.queryProvideData(dataInfoId);
+    return new GenericResponse<PersistenceData>().fillSucceed(queryResponse.getEntity());
+  }
 
   @POST
   @Path("put")

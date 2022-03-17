@@ -71,7 +71,8 @@ public class FetchCircuitBreakerServiceTest extends AbstractSessionServerTestBas
     Assert.assertTrue(ret);
     waitConditionUntilTimeOut(() -> !fetchCircuitBreakerService.isSwitchOpen(), MAX_WAIT);
     waitConditionUntilTimeOut(
-        () -> CollectionUtils.isEmpty(fetchCircuitBreakerService.getCircuitBreaker()), MAX_WAIT);
+        () -> CollectionUtils.isEmpty(fetchCircuitBreakerService.getStopPushCircuitBreaker()),
+        MAX_WAIT);
 
     // 2.switch open
     PersistenceData persistenceData =
@@ -83,7 +84,8 @@ public class FetchCircuitBreakerServiceTest extends AbstractSessionServerTestBas
     Assert.assertTrue(put);
     waitConditionUntilTimeOut(() -> fetchCircuitBreakerService.isSwitchOpen(), MAX_WAIT);
     waitConditionUntilTimeOut(
-        () -> CollectionUtils.isEmpty(fetchCircuitBreakerService.getCircuitBreaker()), MAX_WAIT);
+        () -> CollectionUtils.isEmpty(fetchCircuitBreakerService.getStopPushCircuitBreaker()),
+        MAX_WAIT);
 
     // 3.add
     HashSet<String> address = Sets.newHashSet("1.1.1.1", "2.2.2.2");
@@ -95,9 +97,9 @@ public class FetchCircuitBreakerServiceTest extends AbstractSessionServerTestBas
     Assert.assertTrue(put);
     waitConditionUntilTimeOut(() -> fetchCircuitBreakerService.isSwitchOpen(), MAX_WAIT);
     waitConditionUntilTimeOut(
-        () -> fetchCircuitBreakerService.getCircuitBreaker().size() == 2, MAX_WAIT);
+        () -> fetchCircuitBreakerService.getStopPushCircuitBreaker().size() == 2, MAX_WAIT);
     waitConditionUntilTimeOut(
-        () -> address.equals(fetchCircuitBreakerService.getCircuitBreaker()), MAX_WAIT);
+        () -> address.equals(fetchCircuitBreakerService.getStopPushCircuitBreaker()), MAX_WAIT);
 
     // 4.remove
     address.remove("1.1.1.1");
@@ -109,9 +111,9 @@ public class FetchCircuitBreakerServiceTest extends AbstractSessionServerTestBas
     Assert.assertTrue(put);
     waitConditionUntilTimeOut(() -> fetchCircuitBreakerService.isSwitchOpen(), MAX_WAIT);
     waitConditionUntilTimeOut(
-        () -> fetchCircuitBreakerService.getCircuitBreaker().size() == 1, MAX_WAIT);
+        () -> fetchCircuitBreakerService.getStopPushCircuitBreaker().size() == 1, MAX_WAIT);
     waitConditionUntilTimeOut(
-        () -> address.equals(fetchCircuitBreakerService.getCircuitBreaker()), MAX_WAIT);
+        () -> address.equals(fetchCircuitBreakerService.getStopPushCircuitBreaker()), MAX_WAIT);
 
     // 5.switch close
     persistenceData =
@@ -122,8 +124,8 @@ public class FetchCircuitBreakerServiceTest extends AbstractSessionServerTestBas
     Assert.assertTrue(put);
     waitConditionUntilTimeOut(() -> !fetchCircuitBreakerService.isSwitchOpen(), MAX_WAIT);
     waitConditionUntilTimeOut(
-        () -> fetchCircuitBreakerService.getCircuitBreaker().size() == 1, MAX_WAIT);
+        () -> fetchCircuitBreakerService.getStopPushCircuitBreaker().size() == 1, MAX_WAIT);
     waitConditionUntilTimeOut(
-        () -> address.equals(fetchCircuitBreakerService.getCircuitBreaker()), MAX_WAIT);
+        () -> address.equals(fetchCircuitBreakerService.getStopPushCircuitBreaker()), MAX_WAIT);
   }
 }

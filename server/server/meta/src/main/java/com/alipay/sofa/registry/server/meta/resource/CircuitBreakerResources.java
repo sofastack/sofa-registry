@@ -18,7 +18,10 @@ package com.alipay.sofa.registry.server.meta.resource;
 
 import com.alipay.sofa.registry.common.model.CollectionSdks;
 import com.alipay.sofa.registry.common.model.CommonResponse;
+import com.alipay.sofa.registry.common.model.GenericResponse;
+import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.console.CircuitBreakerData;
+import com.alipay.sofa.registry.common.model.console.CircuitBreakerData.CircuitBreakOption;
 import com.alipay.sofa.registry.common.model.console.PersistenceData;
 import com.alipay.sofa.registry.common.model.console.PersistenceDataBuilder;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
@@ -29,15 +32,13 @@ import com.alipay.sofa.registry.server.meta.resource.filter.LeaderAwareRestContr
 import com.alipay.sofa.registry.store.api.DBResponse;
 import com.alipay.sofa.registry.store.api.OperationStatus;
 import com.alipay.sofa.registry.util.JsonUtils;
-import com.google.common.collect.Sets;
-import java.util.Set;
 import javax.annotation.Resource;
 import javax.ws.rs.FormParam;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 
 /**
@@ -52,6 +53,14 @@ public class CircuitBreakerResources {
       LoggerFactory.getLogger(CircuitBreakerResources.class, "[CircuitBreaker]");
 
   @Resource private ProvideDataService provideDataService;
+
+  @GET
+  @Path("query")
+  @Produces(MediaType.APPLICATION_JSON)
+  public GenericResponse<CircuitBreakerData> query() {
+    Tuple<CircuitBreakerData, Long> tuple = queryData();
+    return new GenericResponse().fillSucceed(tuple.o1);
+  }
 
   @POST
   @Path("switch/close")
@@ -82,32 +91,20 @@ public class CircuitBreakerResources {
   @POST
   @Path("add")
   @Produces(MediaType.APPLICATION_JSON)
-  public CommonResponse add(@FormParam("ips") String ips) {
-    if (StringUtils.isBlank(ips)) {
-      LOGGER.error("circuit breaker add ips is blank.");
-      return CommonResponse.buildFailedResponse("ips is empty");
-    }
-    Set<String> ipSet = CollectionSdks.toIpSet(ips);
-
-    DBResponse<PersistenceData> queryResponse =
-        provideDataService.queryProvideData(ValueConstants.CIRCUIT_BREAKER_DATA_ID);
-    long expectVersion = 0;
-    Boolean addressSwitch = null;
-    PersistenceData persistenceData = queryResponse.getEntity();
-    if (queryResponse.getOperationStatus() == OperationStatus.SUCCESS && persistenceData != null) {
-      CircuitBreakerData read = JsonUtils.read(persistenceData.getData(), CircuitBreakerData.class);
-      if (read != null && CollectionUtils.isNotEmpty(read.getAddress())) {
-        ipSet.addAll(read.getAddress());
-      }
-      addressSwitch = read.isAddressSwitch();
-      expectVersion = persistenceData.getVersion();
+  public CommonResponse add(@FormParam("option") String option, @FormParam("ips") String ips) {
+    CircuitBreakOption optionEnum = CircuitBreakOption.getByOption(option);
+    if (optionEnum == null || StringUtils.isBlank(ips)) {
+      LOGGER.error("circuit breaker option or ips is blank.");
+      return CommonResponse.buildFailedResponse("option or ips is blank.");
     }
 
-    persistenceData =
+    Tuple<CircuitBreakerData, Long> tuple = queryData();
+    tuple.o1.add(optionEnum, CollectionSdks.toIpSet(ips));
+
+    PersistenceData persistenceData =
         PersistenceDataBuilder.createPersistenceData(
-            ValueConstants.CIRCUIT_BREAKER_DATA_ID,
-            JsonUtils.writeValueAsString(new CircuitBreakerData(addressSwitch, ipSet)));
-    boolean put = provideDataService.saveProvideData(persistenceData, expectVersion);
+            ValueConstants.CIRCUIT_BREAKER_DATA_ID, JsonUtils.writeValueAsString(tuple.o1));
+    boolean put = provideDataService.saveProvideData(persistenceData, tuple.o2);
 
     LOGGER.info("add circuit breaker ips: {}, ret: {}", ips, put);
     CommonResponse response = CommonResponse.buildSuccessResponse();
@@ -118,38 +115,20 @@ public class CircuitBreakerResources {
   @POST
   @Path("remove")
   @Produces(MediaType.APPLICATION_JSON)
-  public CommonResponse remove(@FormParam("ips") String ips) {
-    if (StringUtils.isBlank(ips)) {
-      LOGGER.error("circuit breaker remove ips is blank.");
-      return CommonResponse.buildFailedResponse("ips is empty");
-    }
-    Set<String> ipSet = CollectionSdks.toIpSet(ips);
+  public CommonResponse remove(@FormParam("option") String option, @FormParam("ips") String ips) {
+    CircuitBreakOption optionEnum = CircuitBreakOption.getByOption(option);
 
-    DBResponse<PersistenceData> queryResponse =
-        provideDataService.queryProvideData(ValueConstants.CIRCUIT_BREAKER_DATA_ID);
-
-    PersistenceData persistenceData = queryResponse.getEntity();
-    if (queryResponse.getOperationStatus() == OperationStatus.NOTFOUND || persistenceData == null) {
-      LOGGER.error(
-          "circuit breaker remove ips:{} fail, dataId: {} not found.",
-          ips,
-          ValueConstants.CIRCUIT_BREAKER_DATA_ID);
-      return CommonResponse.buildFailedResponse("data not exist.");
+    if (optionEnum == null || StringUtils.isBlank(ips)) {
+      LOGGER.error("circuit breaker option or ips is blank.");
+      return CommonResponse.buildFailedResponse("option or ips is blank.");
     }
+    Tuple<CircuitBreakerData, Long> tuple = queryData();
+    tuple.o1.remove(optionEnum, CollectionSdks.toIpSet(ips));
 
-    CircuitBreakerData read = JsonUtils.read(persistenceData.getData(), CircuitBreakerData.class);
-    if (read == null || CollectionUtils.isEmpty(read.getAddress())) {
-      LOGGER.error("circuit breaker remove ips:{} fail, data: {} is empty.", ips, read);
-      return CommonResponse.buildFailedResponse("data is empty.");
-    }
-    read.getAddress().removeAll(ipSet);
-    long expectVersion = persistenceData.getVersion();
-    persistenceData =
+    PersistenceData persistenceData =
         PersistenceDataBuilder.createPersistenceData(
-            ValueConstants.CIRCUIT_BREAKER_DATA_ID,
-            JsonUtils.writeValueAsString(
-                new CircuitBreakerData(read.isAddressSwitch(), read.getAddress())));
-    boolean put = provideDataService.saveProvideData(persistenceData, expectVersion);
+            ValueConstants.CIRCUIT_BREAKER_DATA_ID, JsonUtils.writeValueAsString(tuple.o1));
+    boolean put = provideDataService.saveProvideData(persistenceData, tuple.o2);
 
     LOGGER.info("remove circuit breaker ips: {}, ret: {}", ips, put);
     CommonResponse response = CommonResponse.buildSuccessResponse();
@@ -158,24 +137,28 @@ public class CircuitBreakerResources {
   }
 
   private boolean switchSave(boolean b) {
+    Tuple<CircuitBreakerData, Long> tuple = queryData();
+    tuple.o1.setAddressSwitch(b);
+
+    PersistenceData persistenceData =
+        PersistenceDataBuilder.createPersistenceData(
+            ValueConstants.CIRCUIT_BREAKER_DATA_ID, JsonUtils.writeValueAsString(tuple.o1));
+    return provideDataService.saveProvideData(persistenceData, tuple.o2);
+  }
+
+  private Tuple<CircuitBreakerData, Long> queryData() {
     DBResponse<PersistenceData> queryResponse =
         provideDataService.queryProvideData(ValueConstants.CIRCUIT_BREAKER_DATA_ID);
-
-    Set<String> ipSet = Sets.newHashSet();
     long expectVersion = 0;
-
     PersistenceData persistenceData = queryResponse.getEntity();
+    CircuitBreakerData read = null;
     if (queryResponse.getOperationStatus() == OperationStatus.SUCCESS && persistenceData != null) {
-      CircuitBreakerData read = JsonUtils.read(persistenceData.getData(), CircuitBreakerData.class);
-      if (read != null) {
-        ipSet = read.getAddress();
-      }
+      read = JsonUtils.read(persistenceData.getData(), CircuitBreakerData.class);
       expectVersion = persistenceData.getVersion();
     }
-    persistenceData =
-        PersistenceDataBuilder.createPersistenceData(
-            ValueConstants.CIRCUIT_BREAKER_DATA_ID,
-            JsonUtils.writeValueAsString(new CircuitBreakerData(b, ipSet)));
-    return provideDataService.saveProvideData(persistenceData, expectVersion);
+    if (read == null) {
+      read = new CircuitBreakerData();
+    }
+    return new Tuple<>(read, expectVersion);
   }
 }

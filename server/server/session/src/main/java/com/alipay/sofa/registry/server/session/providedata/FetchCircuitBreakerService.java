@@ -46,7 +46,8 @@ public class FetchCircuitBreakerService
   @Resource private ProvideDataRepository provideDataRepository;
 
   private static final CircuitBreakerStorage INIT =
-      new CircuitBreakerStorage(INIT_VERSION, false, Collections.emptySet());
+      new CircuitBreakerStorage(
+          INIT_VERSION, false, Collections.emptySet(), Collections.emptySet());
 
   public FetchCircuitBreakerService() {
     super(ValueConstants.CIRCUIT_BREAKER_DATA_ID, INIT);
@@ -66,7 +67,10 @@ public class FetchCircuitBreakerService
     }
     CircuitBreakerData read = JsonUtils.read(persistenceData.getData(), CircuitBreakerData.class);
     return new CircuitBreakerStorage(
-        persistenceData.getVersion(), read.addressSwitch(INIT.addressSwitch), read.getAddress());
+        persistenceData.getVersion(),
+        read.addressSwitch(INIT.addressSwitch),
+        read.getAddress(),
+        read.getOverflowAddress());
   }
 
   @Override
@@ -88,21 +92,35 @@ public class FetchCircuitBreakerService
 
     final boolean addressSwitch;
     final Set<String> address;
+    final Set<String> overflowAddress;
 
-    public CircuitBreakerStorage(long version, boolean addressSwitch, Set<String> address) {
+    public CircuitBreakerStorage(
+        long version, boolean addressSwitch, Set<String> address, Set<String> overflowAddress) {
       super(version);
       this.addressSwitch = addressSwitch;
       this.address = address;
+      this.overflowAddress = overflowAddress;
     }
 
     @Override
     public String toString() {
-      return "CircuitBreakerStorage{" + "version=" + getVersion() + "address=" + address + '}';
+      return "CircuitBreakerStorage{"
+          + "addressSwitch="
+          + addressSwitch
+          + ", address="
+          + address
+          + ", overflowAddress="
+          + overflowAddress
+          + '}';
     }
   }
 
-  public Set<String> getCircuitBreaker() {
+  public Set<String> getStopPushCircuitBreaker() {
     return this.storage.get().address;
+  }
+
+  public Set<String> getOverflowAddress() {
+    return this.storage.get().overflowAddress;
   }
 
   public boolean isSwitchOpen() {

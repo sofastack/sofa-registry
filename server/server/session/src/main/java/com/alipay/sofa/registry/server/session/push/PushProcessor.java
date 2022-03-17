@@ -371,8 +371,9 @@ public class PushProcessor {
       return;
     }
 
-    if (circuitBreakerRecordWhenDoPushError(task.datum)) {
-      // record push exception
+    // record push exception
+    if (circuitBreakerRecordWhenDoPushError(
+        task.datum, task.subscriber.getSourceAddress().getIpAddress())) {
       for (Subscriber subscriber : task.subscriberMap.values()) {
         if (!circuitBreakerService.onPushFail(
             task.datum.getDataCenter(), task.datum.getVersion(), subscriber)) {
@@ -405,7 +406,7 @@ public class PushProcessor {
     LOGGER.error("[PushFail]taskId={}, {}", task.taskID, task.pushingTaskKey, e);
   }
 
-  boolean circuitBreakerRecordWhenDoPushError(SubDatum datum) {
+  boolean circuitBreakerRecordWhenDoPushError(SubDatum datum, String ip) {
     return false;
   }
 

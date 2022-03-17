@@ -25,7 +25,6 @@ import com.alipay.sofa.registry.server.meta.lease.LeaseFilter;
 import com.alipay.sofa.registry.server.meta.lease.filter.DefaultForbiddenServerManager;
 import com.alipay.sofa.registry.server.meta.lease.filter.RegistryForbiddenServerManager;
 import com.alipay.sofa.registry.server.meta.provide.data.NodeOperatingService;
-import com.alipay.sofa.registry.store.api.elector.LeaderElector;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 import org.assertj.core.util.Lists;

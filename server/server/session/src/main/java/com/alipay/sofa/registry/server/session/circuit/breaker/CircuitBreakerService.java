@@ -27,9 +27,10 @@ public interface CircuitBreakerService {
 
   /**
    * @param statistic
+   * @param hasPushed
    * @return
    */
-  boolean pushCircuitBreaker(CircuitBreakerStatistic statistic);
+  boolean pushCircuitBreaker(CircuitBreakerStatistic statistic, boolean hasPushed);
 
   /**
    * statistic when push success

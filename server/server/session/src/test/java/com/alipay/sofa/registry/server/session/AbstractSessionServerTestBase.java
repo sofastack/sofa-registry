@@ -586,7 +586,7 @@ public class AbstractSessionServerTestBase extends AbstractTestBase {
   public static class InMemoryCircuitBreakerService implements CircuitBreakerService {
 
     @Override
-    public boolean pushCircuitBreaker(CircuitBreakerStatistic statistic) {
+    public boolean pushCircuitBreaker(CircuitBreakerStatistic statistic, boolean hasPushed) {
       return false;
     }
 
