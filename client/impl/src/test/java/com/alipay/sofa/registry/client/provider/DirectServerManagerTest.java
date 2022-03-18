@@ -41,7 +41,7 @@ import static org.mockito.Mockito.*;
 public class DirectServerManagerTest {
 
     @Test
-    public void initServerList() throws Exception {
+    public void initServerList() {
         // given
         PowerMockito.mockStatic(HttpClientUtils.class);
         RegistryClientConfig config = mock(RegistryClientConfig.class);
