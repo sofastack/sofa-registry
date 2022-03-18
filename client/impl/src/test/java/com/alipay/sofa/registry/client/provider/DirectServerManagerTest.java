@@ -16,21 +16,20 @@
  */
 package com.alipay.sofa.registry.client.provider;
 
+import static org.junit.Assert.assertNotNull;
+import static org.mockito.Mockito.*;
+
 import com.alipay.sofa.registry.client.api.RegistryClientConfig;
 import com.alipay.sofa.registry.client.remoting.ServerManager;
 import com.alipay.sofa.registry.client.remoting.ServerNode;
 import com.alipay.sofa.registry.client.util.HttpClientUtils;
+import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
-
-import java.util.List;
-
-import static org.junit.Assert.assertNotNull;
-import static org.mockito.Mockito.*;
 
 /**
  * @author zhiqiang.li
@@ -40,24 +39,24 @@ import static org.mockito.Mockito.*;
 @PrepareForTest(HttpClientUtils.class)
 public class DirectServerManagerTest {
 
-    @Test
-    public void initServerList() {
-        // given
-        PowerMockito.mockStatic(HttpClientUtils.class);
-        RegistryClientConfig config = mock(RegistryClientConfig.class);
+  @Test
+  public void initServerList() {
+    // given
+    PowerMockito.mockStatic(HttpClientUtils.class);
+    RegistryClientConfig config = mock(RegistryClientConfig.class);
 
-        // when
-        when(config.getRegistryEndpoint()).thenReturn("127.0.0.1");
+    // when
+    when(config.getRegistryEndpoint()).thenReturn("127.0.0.1");
 
-        // then
-        ServerManager serverManager = new DirectServerManager(config);
+    // then
+    ServerManager serverManager = new DirectServerManager(config);
 
-        List<ServerNode> serverList = serverManager.getServerList();
-        ServerNode node = serverManager.random();
+    List<ServerNode> serverList = serverManager.getServerList();
+    ServerNode node = serverManager.random();
 
-        assertNotNull(serverList);
-        assertNotNull(node);
-        Assert.assertEquals(serverList.size(), 1);
-        Assert.assertEquals("127.0.0.1:9600", node.getUrl());
-    }
+    assertNotNull(serverList);
+    assertNotNull(node);
+    Assert.assertEquals(serverList.size(), 1);
+    Assert.assertEquals("127.0.0.1:9600", node.getUrl());
+  }
 }

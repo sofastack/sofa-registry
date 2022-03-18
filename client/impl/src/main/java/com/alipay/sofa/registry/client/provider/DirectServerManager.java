@@ -20,34 +20,33 @@ import com.alipay.sofa.registry.client.api.RegistryClientConfig;
 import com.alipay.sofa.registry.client.remoting.ServerManager;
 import com.alipay.sofa.registry.client.remoting.ServerNode;
 import com.alipay.sofa.registry.client.util.ServerNodeParser;
-
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * The type Direct server manager.
- * Return server node RegistryClientConfig.getRegistryEndpoint()+ PORT 9600
+ * The type Direct server manager. Return server node RegistryClientConfig.getRegistryEndpoint()+
+ * PORT 9600
  *
  * @author zhiqiang.li
  * @version $Id : DirectServerManager.java, v 0.1 2022-03-18 13:37 zhiqiang.li Exp $$
  */
 public class DirectServerManager implements ServerManager {
 
-    private final List<ServerNode> serverNodes;
+  private final List<ServerNode> serverNodes;
 
-    public DirectServerManager(RegistryClientConfig config) {
-        this.serverNodes = new ArrayList<ServerNode>();
-        this.serverNodes.add(ServerNodeParser.parse(String.format("%s:9600", config.getRegistryEndpoint())));
-    }
+  public DirectServerManager(RegistryClientConfig config) {
+    this.serverNodes = new ArrayList<ServerNode>();
+    this.serverNodes.add(
+        ServerNodeParser.parse(String.format("%s:9600", config.getRegistryEndpoint())));
+  }
 
+  @Override
+  public List<ServerNode> getServerList() {
+    return serverNodes;
+  }
 
-    @Override
-    public List<ServerNode> getServerList() {
-        return serverNodes;
-    }
-
-    @Override
-    public ServerNode random() {
-        return serverNodes.get(0);
-    }
+  @Override
+  public ServerNode random() {
+    return serverNodes.get(0);
+  }
 }
