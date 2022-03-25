@@ -20,7 +20,6 @@ import com.alipay.sofa.registry.client.api.RegistryClientConfig;
 import com.alipay.sofa.registry.client.remoting.ServerManager;
 import com.alipay.sofa.registry.client.remoting.ServerNode;
 import com.alipay.sofa.registry.client.util.ServerNodeParser;
-
 import java.util.ArrayList;
 import java.util.List;
 
