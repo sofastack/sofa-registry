@@ -33,21 +33,21 @@ import java.util.List;
  */
 public class DirectServerManager implements ServerManager {
 
-    private final List<ServerNode> serverNodes;
+  private final List<ServerNode> serverNodes;
 
-    public DirectServerManager(RegistryClientConfig config) {
-        this.serverNodes = new ArrayList<ServerNode>();
-        this.serverNodes.add(
-                ServerNodeParser.parse(String.format("%s:%s", config.getRegistryEndpoint(), config.getRegistryEndpoint())));
-    }
+  public DirectServerManager(RegistryClientConfig config) {
+    this.serverNodes = new ArrayList<ServerNode>();
+    this.serverNodes.add(
+        ServerNodeParser.parse(String.format("%s:%s", config.getRegistryEndpoint(), config.getRegistryEndpoint())));
+  }
 
-    @Override
-    public List<ServerNode> getServerList() {
-        return serverNodes;
-    }
+  @Override
+  public List<ServerNode> getServerList() {
+    return serverNodes;
+  }
 
-    @Override
-    public ServerNode random() {
-        return serverNodes.get(0);
-    }
+  @Override
+  public ServerNode random() {
+    return serverNodes.get(0);
+  }
 }
