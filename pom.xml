@@ -2,11 +2,11 @@
 <project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-   
+
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.alipay.sofa</groupId>
     <artifactId>registry-parent</artifactId>
-    <version>6.1.4-SNAPSHOT</version>
+    <version>6.2.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>${project.groupId}:${project.artifactId}</name>
@@ -70,7 +70,7 @@
         <sofa.hessian.version>3.3.12</sofa.hessian.version>
         <netty.version>4.1.25.Final</netty.version>
         <jersey.version>2.26</jersey.version>
-        <protobuf.version>3.5.1</protobuf.version>
+        <protobuf.version>3.19.4</protobuf.version>
         <slf4j.version>1.7.21</slf4j.version>
         <lookout.version>1.5.2</lookout.version>
         <mockito.version>1.10.19</mockito.version>
@@ -492,45 +492,45 @@
                 </configuration>
             </plugin>
             <plugin>
-              <groupId>com.diffplug.spotless</groupId>
-              <artifactId>spotless-maven-plugin</artifactId>
-              <version>1.20.0</version>
+                <groupId>com.diffplug.spotless</groupId>
+                <artifactId>spotless-maven-plugin</artifactId>
+                <version>1.20.0</version>
                 <executions>
-                  <execution>
-                    <goals>
-                      <goal>apply</goal>
-                    </goals>
-                    <phase>compile</phase>
-                  </execution>
+                    <execution>
+                        <goals>
+                            <goal>apply</goal>
+                        </goals>
+                        <phase>compile</phase>
+                    </execution>
                 </executions>
-              <configuration>
-               <formats>
-                    <format>
-                      <!-- define the files to apply to -->
-                      <includes>
-                        <include>.xml</include>
-                        <include>.gitignore</include>
-                        <include>.properties</include>
-                      </includes>
-                      <trimTrailingWhitespace/>
-                      <endWithNewline/>
-                    </format>
-              </formats>
-                <java>
-                  <!-- include all java files in "java" folders under "src" -->
-                  <includes>
-                    <include>src/**/java/**/*.java</include>
-                  </includes>
-                  <removeUnusedImports />
-                  <googleJavaFormat>
-                    <version>1.7</version>
-                    <style>GOOGLE</style>
-                  </googleJavaFormat>
-                  <licenseHeader>
-                     <file>${user.dir}/tools/codestyle/HEADER</file>
-                  </licenseHeader>
-                </java>
-              </configuration>
+                <configuration>
+                    <formats>
+                        <format>
+                            <!-- define the files to apply to -->
+                            <includes>
+                                <include>.xml</include>
+                                <include>.gitignore</include>
+                                <include>.properties</include>
+                            </includes>
+                            <trimTrailingWhitespace/>
+                            <endWithNewline/>
+                        </format>
+                    </formats>
+                    <java>
+                        <!-- include all java files in "java" folders under "src" -->
+                        <includes>
+                            <include>src/**/java/**/*.java</include>
+                        </includes>
+                        <removeUnusedImports/>
+                        <googleJavaFormat>
+                            <version>1.7</version>
+                            <style>GOOGLE</style>
+                        </googleJavaFormat>
+                        <licenseHeader>
+                            <file>${user.dir}/tools/codestyle/HEADER</file>
+                        </licenseHeader>
+                    </java>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.jacoco</groupId>
@@ -575,7 +575,7 @@
                     </includes>
                     <excludes>
                         <!-- 这里需要根据自己的需要指定要排除单元测试 -->
-<!--                        <exclude>com/alipay/**/*.java</exclude>-->
+                        <!--                        <exclude>com/alipay/**/*.java</exclude>-->
                     </excludes>
                     <!-- 如无特殊需求，将forkMode设置为once -->
                     <forkMode>once</forkMode>

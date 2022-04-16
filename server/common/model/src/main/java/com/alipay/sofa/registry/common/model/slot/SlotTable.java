@@ -172,6 +172,20 @@ public final class SlotTable implements Serializable {
     return new SlotTable(epoch, slotMap);
   }
 
+  public SlotTable filterLeader(String ip) {
+    if (slots.isEmpty()) {
+      return this;
+    }
+    final Map<Integer, Slot> slotMap = Maps.newHashMapWithExpectedSize(slots.size());
+    slots.forEach(
+        (k, v) -> {
+          if (v.getLeader().equals(ip)) {
+            slotMap.put(k, v);
+          }
+        });
+    return new SlotTable(epoch, slotMap);
+  }
+
   public int getLeaderNum(String dataServerIp) {
     return (int) slots.values().stream().filter(s -> dataServerIp.equals(s.getLeader())).count();
   }

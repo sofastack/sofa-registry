@@ -162,8 +162,8 @@ public class StopPushDataSwitchTest extends BaseIntegrationTest {
         sessionApplicationContext.getBean(PushSwitchService.class);
 
     waitConditionUntilTimeOut(pushSwitchService.getFetchStopPushService()::isStopPushSwitch, 6000);
-    waitConditionUntilTimeOut(() -> pushSwitchService.canIpPush(otherAddress), 6000);
-    Assert.assertFalse(pushSwitchService.canIpPush(localAddress));
+    waitConditionUntilTimeOut(() -> pushSwitchService.canIpPushMulti(otherAddress), 6000);
+    Assert.assertFalse(pushSwitchService.canIpPushMulti(localAddress));
 
     PublisherRegistration registration = new PublisherRegistration(dataId);
     registryClient1.register(registration, value);

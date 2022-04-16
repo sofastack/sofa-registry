@@ -24,6 +24,8 @@ import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.Heartbea
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.MetaNode;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
+import com.alipay.sofa.registry.common.model.multi.cluster.DataCenterMetadata;
+import com.alipay.sofa.registry.common.model.multi.cluster.RemoteSlotTableStatus;
 import com.alipay.sofa.registry.common.model.slot.SlotConfig;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.exception.SofaRegistryMetaLeaderException;
@@ -36,8 +38,13 @@ import com.alipay.sofa.registry.server.meta.metaserver.impl.DefaultCurrentDcMeta
 import com.alipay.sofa.registry.server.meta.monitor.data.DataMessageListener;
 import com.alipay.sofa.registry.server.meta.monitor.heartbeat.HeartbeatListener;
 import com.alipay.sofa.registry.server.meta.monitor.session.SessionMessageListener;
+import com.alipay.sofa.registry.server.meta.multi.cluster.DefaultMultiClusterSlotTableSyncer.RemoteClusterSlotState;
+import com.alipay.sofa.registry.server.meta.multi.cluster.MultiClusterSlotTableSyncer;
 import com.alipay.sofa.registry.server.shared.slot.SlotTableUtils;
+import com.google.common.collect.Maps;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -48,6 +55,10 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public class HeartbeatRequestHandler extends BaseMetaServerHandler<HeartbeatRequest<Node>> {
   private static final Logger HEARTBEAT_LOG = LoggerFactory.getLogger("HEARTBEAT");
+
+  private static final Logger MULTI_CLUSTER_LOGGER =
+      LoggerFactory.getLogger("MULTI-CLUSTER-SRV", "[Heartbeat]");
+
   private static final Logger LOGGER = LoggerFactory.getLogger(HeartbeatRequestHandler.class);
 
   @Autowired private DefaultCurrentDcMetaServer currentDcMetaServer;
@@ -61,6 +72,8 @@ public class HeartbeatRequestHandler extends BaseMetaServerHandler<HeartbeatRequ
   private List<SessionMessageListener> sessionMessageListeners;
 
   @Autowired private NodeConfig nodeConfig;
+
+  @Autowired private MultiClusterSlotTableSyncer multiClusterSlotTableSyncer;
 
   /**
    * Do handle object.
@@ -90,6 +103,7 @@ public class HeartbeatRequestHandler extends BaseMetaServerHandler<HeartbeatRequ
       switch (renewNode.getNodeType()) {
         case SESSION:
         case DATA:
+          Map<String, RemoteSlotTableStatus> remoteSlotTableStatus = calculateStatus(heartbeat);
           response =
               new BaseHeartBeatResponse(
                   true,
@@ -97,7 +111,8 @@ public class HeartbeatRequestHandler extends BaseMetaServerHandler<HeartbeatRequ
                   slotTable,
                   sessionMetaInfo,
                   metaLeaderService.getLeader(),
-                  metaLeaderService.getLeaderEpoch());
+                  metaLeaderService.getLeaderEpoch(),
+                  remoteSlotTableStatus);
           break;
         case META:
           response =
@@ -295,6 +310,51 @@ public class HeartbeatRequestHandler extends BaseMetaServerHandler<HeartbeatRequ
         isValidChannel = false;
       }
     }
+  }
+
+  /**
+   * calculate remoteSlotTableStatus
+   *
+   * @return
+   */
+  private Map<String, RemoteSlotTableStatus> calculateStatus(HeartbeatRequest<Node> heartbeat) {
+    Map<String, RemoteClusterSlotState> remoteState =
+        multiClusterSlotTableSyncer.getMultiClusterSlotTable();
+    Map<String, Long> dataRemoteSlotTable = heartbeat.getRemoteClusterSlotTableEpoch();
+
+    Map<String, RemoteSlotTableStatus> result = Maps.newHashMap();
+    for (Entry<String, RemoteClusterSlotState> metaEntry : remoteState.entrySet()) {
+      String dataCenter = metaEntry.getKey();
+      RemoteClusterSlotState state = metaEntry.getValue();
+      Long slotTableEpoch = dataRemoteSlotTable.get(dataCenter);
+      SlotTable exist = state.getSlotTable();
+      DataCenterMetadata dataCenterMetadata = metaEntry.getValue().getDataCenterMetadata();
+      if (slotTableEpoch == null || slotTableEpoch < exist.getEpoch()) {
+        MULTI_CLUSTER_LOGGER.info(
+            "[calculateStatus]node:{}, heartbeat request:{}/{}, newSlotTableEpoch:{}/{}, slotTable upgrade: {}",
+            heartbeat.getNode(),
+            dataCenter,
+            slotTableEpoch,
+            dataCenter,
+            exist.getEpoch(),
+            exist);
+        result.put(dataCenter, RemoteSlotTableStatus.upgrade(exist, dataCenterMetadata));
+      } else if (slotTableEpoch > exist.getEpoch()) {
+        // it should not happen, print error log and return false
+        MULTI_CLUSTER_LOGGER.error(
+            "[calculateStatus]node:{}, heartbeat request:{}/{}, newSlotTableEpoch:{}/{}, heartbeat error.",
+            heartbeat.getNode(),
+            dataCenter,
+            slotTableEpoch,
+            dataCenter,
+            exist.getEpoch());
+        result.put(dataCenter, RemoteSlotTableStatus.conflict(exist));
+      } else {
+        result.put(
+            dataCenter, RemoteSlotTableStatus.notUpgrade(slotTableEpoch, dataCenterMetadata));
+      }
+    }
+    return result;
   }
 
   /**

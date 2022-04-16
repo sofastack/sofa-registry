@@ -19,6 +19,7 @@ package com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat;
 import com.alipay.sofa.registry.common.model.metaserver.cluster.VersionedList;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.MetaNode;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
+import com.alipay.sofa.registry.common.model.multi.cluster.RemoteSlotTableStatus;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.google.common.collect.Sets;
 import java.io.Serializable;
@@ -42,6 +43,8 @@ public class BaseHeartBeatResponse implements Serializable {
 
   private final long metaLeaderEpoch;
 
+  private final Map<String, RemoteSlotTableStatus> remoteSlotTableStatus;
+
   public BaseHeartBeatResponse(boolean heartbeatOnLeader, String metaLeader, long metaLeaderEpoch) {
     this(heartbeatOnLeader, null, null, metaLeader, metaLeaderEpoch);
   }
@@ -52,7 +55,14 @@ public class BaseHeartBeatResponse implements Serializable {
       SlotTable slotTable,
       String metaLeader,
       long metaLeaderEpoch) {
-    this(heartbeatOnLeader, metaNodes, slotTable, VersionedList.EMPTY, metaLeader, metaLeaderEpoch);
+    this(
+        heartbeatOnLeader,
+        metaNodes,
+        slotTable,
+        VersionedList.EMPTY,
+        metaLeader,
+        metaLeaderEpoch,
+        Collections.emptyMap());
   }
 
   public BaseHeartBeatResponse(
@@ -61,13 +71,15 @@ public class BaseHeartBeatResponse implements Serializable {
       SlotTable slotTable,
       VersionedList<SessionNode> sessionNodes,
       String metaLeader,
-      long metaLeaderEpoch) {
+      long metaLeaderEpoch,
+      Map<String, RemoteSlotTableStatus> remoteSlotTableStatus) {
     this.heartbeatOnLeader = heartbeatOnLeader;
     this.slotTable = slotTable;
     this.metaNodes = metaNodes;
     this.sessionNodes = sessionNodes;
     this.metaLeader = metaLeader;
     this.metaLeaderEpoch = metaLeaderEpoch;
+    this.remoteSlotTableStatus = remoteSlotTableStatus;
   }
 
   public SlotTable getSlotTable() {
@@ -108,5 +120,14 @@ public class BaseHeartBeatResponse implements Serializable {
 
   public boolean isHeartbeatOnLeader() {
     return this.heartbeatOnLeader;
+  }
+
+  /**
+   * Getter method for property <tt>remoteSlotTableStatus</tt>.
+   *
+   * @return property value of remoteSlotTableStatus
+   */
+  public Map<String, RemoteSlotTableStatus> getRemoteSlotTableStatus() {
+    return remoteSlotTableStatus;
   }
 }

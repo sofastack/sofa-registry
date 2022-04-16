@@ -19,6 +19,7 @@ package com.alipay.sofa.registry.jdbc.mapper;
 import com.alipay.sofa.registry.jdbc.domain.AppRevisionDomain;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 import org.apache.ibatis.annotations.Param;
 
 /**
@@ -30,30 +31,12 @@ public interface AppRevisionMapper {
   /**
    * query revision
    *
-   * @param dataCenter
+   * @param dataCenters
    * @param revision
    * @return
    */
   public AppRevisionDomain queryRevision(
-      @Param("dataCenter") String dataCenter, @Param("revision") String revision);
-
-  /**
-   * batch query
-   *
-   * @param revisions
-   * @return
-   */
-  public List<AppRevisionDomain> batchQuery(
-      @Param("dataCenter") String dataCenter, @Param("revisions") List<String> revisions);
-
-  /**
-   * batchHeartbeat
-   *
-   * @param dataCenter
-   * @param revisions
-   */
-  void batchHeartbeat(
-      @Param("dataCenter") String dataCenter, @Param("revisions") List<String> revisions);
+      @Param("dataCenters") Set<String> dataCenters, @Param("revision") String revision);
 
   List<AppRevisionDomain> listRevisions(
       @Param("dataCenter") String dataCenter,

@@ -31,7 +31,7 @@ public class SessionCacheServiceTest {
 
   @Test
   public void testGet() {
-    SessionCacheService cacheService = new SessionCacheService();
+    SessionCacheService cacheService = new SessionCacheService(readWriteCacheMap);
     cacheService.sessionServerConfig = TestUtils.newSessionConfig(dataCenter);
 
     DatumCacheGenerator generator = new DatumCacheGenerator();

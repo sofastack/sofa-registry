@@ -16,12 +16,12 @@
  */
 package com.alipay.sofa.registry.server.session.store;
 
-import com.alipay.sofa.registry.common.model.Tuple;
-import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
+import com.alipay.sofa.registry.server.session.registry.SessionRegistry.SelectSubscriber;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author shangyu.wh
@@ -43,7 +43,7 @@ public interface Interests extends DataManager<Subscriber, String, String> {
 
   Collection<Subscriber> getInterests(String datumDataInfoId);
 
-  Tuple<Map<String, DatumVersion>, List<Subscriber>> selectSubscribers(String dataCenter);
+  SelectSubscriber selectSubscribers(Set<String> dataCenters);
 
   Map<String, List<String>> filterIPs(String group, int limit);
 

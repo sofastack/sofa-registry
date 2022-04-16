@@ -20,6 +20,7 @@ import com.alipay.sofa.registry.jdbc.domain.AppRevisionDomain;
 import com.alipay.sofa.registry.jdbc.informer.DbEntryContainer;
 import com.google.common.collect.Maps;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.BiConsumer;
 
 public class AppRevisionContainer implements DbEntryContainer<AppRevisionDomain> {
@@ -40,6 +41,10 @@ public class AppRevisionContainer implements DbEntryContainer<AppRevisionDomain>
 
   public int size() {
     return data.size();
+  }
+
+  public Set<String> allRevisions() {
+    return data.keySet();
   }
 
   public void foreach(BiConsumer<String, String> f) {

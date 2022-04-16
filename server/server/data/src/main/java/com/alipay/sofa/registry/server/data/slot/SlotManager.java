@@ -18,8 +18,6 @@ package com.alipay.sofa.registry.server.data.slot;
 
 import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.slot.BaseSlotStatus;
-import com.alipay.sofa.registry.common.model.slot.Slot;
-import com.alipay.sofa.registry.common.model.slot.SlotAccess;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import java.util.List;
 
@@ -27,21 +25,11 @@ import java.util.List;
  * @author yuzhi.lyz
  * @version v 0.1 2020-10-30 10:46 yuzhi.lyz Exp $
  */
-public interface SlotManager {
-
-  int slotOf(String dataInfoId);
-
-  Slot getSlot(int slotId);
-
-  SlotAccess checkSlotAccess(int slotId, long srcSlotEpoch, long srcLeaderEpoch);
+public interface SlotManager extends SlotAccessor {
 
   boolean hasSlot();
 
   List<BaseSlotStatus> getSlotStatuses();
-
-  boolean isLeader(int slotId);
-
-  boolean isFollower(int slotId);
 
   boolean updateSlotTable(SlotTable slotTable);
 

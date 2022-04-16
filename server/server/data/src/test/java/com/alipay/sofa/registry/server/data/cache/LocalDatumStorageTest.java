@@ -70,9 +70,9 @@ public class LocalDatumStorageTest {
     Publisher publisher = TestBaseUtils.createTestPublisher(testDataId);
     v = storage.put(publisher);
     Assert.assertNull(v);
-    v = storage.createEmptyDatumIfAbsent(testDataInfoId, testDc);
+    v = storage.createEmptyDatumIfAbsent(testDc, testDataInfoId);
     Assert.assertNull(v);
-    v = storage.put(publisher.getDataInfoId(), Lists.newArrayList(publisher));
+    v = storage.putPublisher(publisher.getDataInfoId(), Lists.newArrayList(publisher));
     Assert.assertNull(v);
   }
 
@@ -191,7 +191,7 @@ public class LocalDatumStorageTest {
     Assert.assertEquals(map.get(publisher3.getDataInfoId()).size(), 1);
 
     v =
-        storage.remove(
+        storage.removePublishers(
             publisher3.getDataInfoId(),
             publisher3.getSessionProcessId(),
             Collections.singletonMap(publisher3.getRegisterId(), publisher3.registerVersion()));
@@ -218,7 +218,7 @@ public class LocalDatumStorageTest {
     Assert.assertTrue(map.get(publisher3.getDataInfoId()).contains(publisher3));
 
     v =
-        storage.remove(
+        storage.removePublishers(
             publisher3.getDataInfoId(),
             publisher3.getSessionProcessId(),
             Collections.singletonMap(
@@ -228,7 +228,7 @@ public class LocalDatumStorageTest {
     Assert.assertNull(v);
 
     v =
-        storage.remove(
+        storage.removePublishers(
             publisher3.getDataInfoId(),
             publisher3.getSessionProcessId(),
             Collections.singletonMap(
@@ -238,7 +238,7 @@ public class LocalDatumStorageTest {
     Assert.assertNull(v);
 
     v =
-        storage.remove(
+        storage.removePublishers(
             publisher3.getDataInfoId(),
             publisher3.getSessionProcessId(),
             Collections.singletonMap(
@@ -258,7 +258,7 @@ public class LocalDatumStorageTest {
     Assert.assertNotNull(v);
 
     v =
-        storage.remove(
+        storage.removePublishers(
             publisher.getDataInfoId(),
             publisher.getSessionProcessId(),
             Collections.singletonMap(
@@ -302,9 +302,11 @@ public class LocalDatumStorageTest {
 
     int slotId = SlotFunctionRegistry.getFunc().slotOf(publisher.getDataInfoId());
     Map<String, DatumVersion> versionMap =
-        storage.clean(slotId + 1, publisher.getSessionProcessId(), CleanContinues.ALWAYS);
+        storage.cleanBySessionId(
+            slotId + 1, publisher.getSessionProcessId(), CleanContinues.ALWAYS);
     Assert.assertEquals(versionMap.size(), 0);
-    versionMap = storage.clean(slotId, publisher.getSessionProcessId(), CleanContinues.ALWAYS);
+    versionMap =
+        storage.cleanBySessionId(slotId, publisher.getSessionProcessId(), CleanContinues.ALWAYS);
     Assert.assertEquals(versionMap.size(), 1);
     Assert.assertTrue(versionMap.containsKey(publisher.getDataInfoId()));
     Map<String, List<Publisher>> map = storage.getAllPublisher();

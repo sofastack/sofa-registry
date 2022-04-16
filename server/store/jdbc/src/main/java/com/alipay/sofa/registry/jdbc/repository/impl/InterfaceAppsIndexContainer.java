@@ -17,53 +17,69 @@
 package com.alipay.sofa.registry.jdbc.repository.impl;
 
 import com.alipay.sofa.registry.common.model.appmeta.InterfaceMapping;
+import com.alipay.sofa.registry.common.model.store.WordCache;
 import com.alipay.sofa.registry.jdbc.domain.InterfaceAppsIndexDomain;
 import com.alipay.sofa.registry.jdbc.informer.DbEntryContainer;
 import com.alipay.sofa.registry.util.TimestampUtil;
 import com.google.common.collect.Maps;
 import java.util.Map;
 import java.util.Set;
+import org.springframework.util.CollectionUtils;
 
 public class InterfaceAppsIndexContainer implements DbEntryContainer<InterfaceAppsIndexDomain> {
 
-  private final Map<String, InterfaceMapping> data = Maps.newConcurrentMap();
+  // <dataInfoId, <dataCenter, InterfaceMapping>>
+  private final Map<String, Map<String, InterfaceMapping>> multiData = Maps.newConcurrentMap();
 
   private void addEntry(InterfaceAppsIndexDomain entry) {
+
+    String interfaceName = WordCache.getWordCache(entry.getInterfaceName());
+    String dataCenter = WordCache.getWordCache(entry.getDataCenter());
+    String appName = WordCache.getWordCache(entry.getAppName());
+    long nanoTime = TimestampUtil.getNanosLong(entry.getGmtCreate());
+
+    Map<String, InterfaceMapping> data =
+        multiData.computeIfAbsent(interfaceName, k -> Maps.newConcurrentMap());
+
     InterfaceMapping mapping =
-        data.computeIfAbsent(
-            entry.getInterfaceName(),
-            k ->
-                new InterfaceMapping(
-                    TimestampUtil.getNanosLong(entry.getGmtCreate()), entry.getAppName()));
-    data.put(
-        entry.getInterfaceName(),
-        mapping.addApp(TimestampUtil.getNanosLong(entry.getGmtCreate()), entry.getAppName()));
+        data.computeIfAbsent(dataCenter, k -> new InterfaceMapping(nanoTime, appName));
+    data.put(entry.getInterfaceName(), mapping.addApp(nanoTime, appName));
   }
 
   private void removeEntry(InterfaceAppsIndexDomain entry) {
+
+    String interfaceName = WordCache.getWordCache(entry.getInterfaceName());
+    String dataCenter = WordCache.getWordCache(entry.getDataCenter());
+    String appName = WordCache.getWordCache(entry.getAppName());
+    long nanoTime = TimestampUtil.getNanosLong(entry.getGmtCreate());
+
+    Map<String, InterfaceMapping> data =
+        multiData.computeIfAbsent(interfaceName, k -> Maps.newConcurrentMap());
+
     InterfaceMapping mapping =
-        data.computeIfAbsent(
-            entry.getInterfaceName(),
-            k -> new InterfaceMapping(TimestampUtil.getNanosLong(entry.getGmtCreate())));
-    data.put(
-        entry.getInterfaceName(),
-        mapping.removeApp(TimestampUtil.getNanosLong(entry.getGmtCreate()), entry.getAppName()));
+        data.computeIfAbsent(dataCenter, k -> new InterfaceMapping(nanoTime));
+    data.put(interfaceName, mapping.removeApp(nanoTime, appName));
   }
 
-  public boolean containsName(String interfaceName, String appName) {
-    InterfaceMapping mapping = data.get(interfaceName);
+  public boolean containsName(String dataCenter, String interfaceName, String appName) {
+    Map<String, InterfaceMapping> data = multiData.get(interfaceName);
+    if (CollectionUtils.isEmpty(data)) {
+      return false;
+    }
+
+    InterfaceMapping mapping = data.get(dataCenter);
     if (mapping == null) {
       return false;
     }
     return mapping.getApps().contains(appName);
   }
 
-  public InterfaceMapping getAppMapping(String interfaceName) {
-    return data.get(interfaceName);
+  public Map<String, InterfaceMapping> getAppMapping(String interfaceName) {
+    return Maps.newHashMap(multiData.get(interfaceName));
   }
 
   public Set<String> interfaces() {
-    return data.keySet();
+    return multiData.keySet();
   }
 
   @Override

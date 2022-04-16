@@ -17,8 +17,8 @@
 package com.alipay.sofa.registry.jdbc.mapper;
 
 import com.alipay.sofa.registry.jdbc.domain.InterfaceAppsIndexDomain;
-import java.util.Date;
 import java.util.List;
+import java.util.Set;
 import org.apache.ibatis.annotations.Param;
 
 /**
@@ -26,16 +26,6 @@ import org.apache.ibatis.annotations.Param;
  * @version $Id: InterfaceAppsIndexMapper.java, v 0.1 2021年01月24日 17:04 xiaojian.xj Exp $
  */
 public interface InterfaceAppsIndexMapper {
-
-  /**
-   * batch query by interfaceName
-   *
-   * @param dataCenter
-   * @param interfaceNames
-   * @return
-   */
-  List<InterfaceAppsIndexDomain> batchQueryByInterface(
-      @Param("dataCenter") String dataCenter, @Param("interfaceNames") List<String> interfaceNames);
 
   /**
    * insert on replace
@@ -56,17 +46,12 @@ public interface InterfaceAppsIndexMapper {
   /**
    * query domains which gmt_modified is after than maxUpdate
    *
-   * @param dataCenter
+   * @param dataCenters
    * @param maxId
    * @returns
    */
   List<InterfaceAppsIndexDomain> queryLargeThan(
-      @Param("dataCenter") String dataCenter,
+      @Param("dataCenters") Set<String> dataCenters,
       @Param("maxId") long maxId,
       @Param("limitCount") int limitCount);
-
-  List<InterfaceAppsIndexDomain> getExpired(
-      @Param("dataCenter") String dataCenter,
-      @Param("beforeTime") Date beforeTime,
-      @Param("limit") int limit);
 }

@@ -20,7 +20,6 @@ import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.ProcessId;
 import com.alipay.sofa.registry.common.model.RegisterVersion;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
-import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.util.StringFormatter;
@@ -28,8 +27,8 @@ import com.google.common.collect.Maps;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
+import java.util.function.BiConsumer;
 import org.glassfish.jersey.internal.guava.Sets;
 import org.springframework.util.CollectionUtils;
 
@@ -139,39 +138,8 @@ public final class PublisherGroups {
     return group == null ? null : group.remove(sessionProcessId, removedPublishers);
   }
 
-  Map<String, Map<String, DatumSummary>> getSummary(Set<String> sessions) {
-    Map<String /*sessionIp*/, Map<String /*dataInfoId*/, DatumSummary>> summaries =
-        Maps.newHashMap();
-
-    for (String sessionIp : sessions) {
-      summaries.computeIfAbsent(sessionIp, v -> Maps.newHashMapWithExpectedSize(64));
-    }
-
-    for (Entry<String, PublisherGroup> pubEntry : publisherGroupMap.entrySet()) {
-      Map<String /*sessionIp*/, DatumSummary> summary = pubEntry.getValue().getSummary(sessions);
-
-      for (Entry<String, DatumSummary> entry : summary.entrySet()) {
-        if (entry.getValue().isEmpty()) {
-          continue;
-        }
-        Map<String, DatumSummary> summaryMap = summaries.get(entry.getKey());
-        summaryMap.put(pubEntry.getKey(), entry.getValue());
-      }
-    }
-
-    return summaries;
-  }
-
-  Map<String, DatumSummary> getAllSummary() {
-    Map<String, DatumSummary> summaries = Maps.newHashMap();
-    publisherGroupMap.forEach(
-        (k, g) -> {
-          DatumSummary summary = g.getAllSummary();
-          if (!summary.isEmpty()) {
-            summaries.put(k, summary);
-          }
-        });
-    return summaries;
+  void foreach(BiConsumer<String, PublisherGroup> f) {
+    publisherGroupMap.forEach(f);
   }
 
   Set<ProcessId> getSessionProcessIds() {

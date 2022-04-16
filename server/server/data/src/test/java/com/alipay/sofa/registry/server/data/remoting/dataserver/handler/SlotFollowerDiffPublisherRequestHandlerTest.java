@@ -26,7 +26,7 @@ import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
 import com.alipay.sofa.registry.common.model.slot.DataSlotDiffPublisherRequest;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.server.data.TestBaseUtils;
-import com.alipay.sofa.registry.server.data.cache.DatumCache;
+import com.alipay.sofa.registry.server.data.cache.DatumStorageDelegate;
 import com.alipay.sofa.registry.server.data.slot.SlotManager;
 import java.util.Collections;
 import java.util.List;
@@ -58,8 +58,8 @@ public class SlotFollowerDiffPublisherRequestHandlerTest {
     Assert.assertFalse(failed.isSuccess());
     SlotManager slotManager = mock(SlotManager.class);
     handler.setSlotManager(slotManager);
-    DatumCache datumCache = TestBaseUtils.newLocalDatumCache("testDc", true);
-    handler.setLocalDatumStorage(datumCache.getLocalDatumStorage());
+    DatumStorageDelegate datumStorageDelegate = TestBaseUtils.newLocalDatumCache("testDc", true);
+    handler.setLocalDatumStorage(datumStorageDelegate.getLocalDatumStorage());
     handler.setDataServerConfig(TestBaseUtils.newDataConfig("testDc"));
     return handler;
   }

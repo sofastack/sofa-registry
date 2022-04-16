@@ -55,4 +55,4 @@ STC扫描:
       - export PATH=$PATH:/opt/taobao/java/bin:/opt/taobao/maven/bin
       - java -version
       - mvn -version
-      - mvn clean package -Dmaven.test.skip=true -Pdev
+      - mvn clean package -Dmaven.test.skip=true -s /etc/lantern/mvn/settings/settings-release-alipay.xml -Pdev

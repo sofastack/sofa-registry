@@ -42,10 +42,12 @@ import org.mockito.Mockito;
 
 public class MetaServerServiceTest {
 
+  private static final String TEST_DATA_CENTER = "testDC";
+
   @Test
   public void testCheckFailCounter() {
     MockServerService mockServerService = new MockServerService();
-    mockServerService.setMetaServerManager(Mockito.mock(MetaServerManager.class));
+    mockServerService.setMetaLeaderExchanger(Mockito.mock(MetaLeaderExchanger.class));
     Assert.assertFalse(mockServerService.checkRenewFailCounter());
     mockServerService.renewFailCounter.set(mockServerService.MAX_RENEW_FAIL_COUNT - 1);
     Assert.assertFalse(mockServerService.checkRenewFailCounter());
@@ -57,7 +59,7 @@ public class MetaServerServiceTest {
   @Test
   public void testHandleHeartbeatResp() {
     MockServerService mockServerService = new MockServerService();
-    mockServerService.setMetaServerManager(Mockito.mock(MetaServerManager.class));
+    mockServerService.setMetaLeaderExchanger(Mockito.mock(MetaLeaderExchanger.class));
 
     TestUtils.assertRunException(
         RuntimeException.class,
@@ -66,14 +68,14 @@ public class MetaServerServiceTest {
 
     TestUtils.assertRunException(
         RuntimeException.class, () -> mockServerService.handleHeartbeatResponse(null));
-    Mockito.verify(mockServerService.metaServerManager, Mockito.times(0))
-        .refresh(Mockito.anyObject());
+    Mockito.verify(mockServerService.metaLeaderExchanger, Mockito.times(0))
+        .learn(Mockito.anyString(), Mockito.anyObject());
 
     // false and data is null
     TestUtils.assertRunException(
         RuntimeException.class,
         () -> mockServerService.handleHeartbeatResponse(new GenericResponse<>()));
-    Mockito.verify(mockServerService.metaServerManager, Mockito.times(0))
+    Mockito.verify(mockServerService.metaLeaderExchanger, Mockito.times(0))
         .refresh(Mockito.anyObject());
 
     // not leader
@@ -84,7 +86,7 @@ public class MetaServerServiceTest {
     resp.setData(heartBeatResponse);
     TestUtils.assertRunException(
         RuntimeException.class, () -> mockServerService.handleHeartbeatResponse(resp));
-    Mockito.verify(mockServerService.metaServerManager, Mockito.times(1))
+    Mockito.verify(mockServerService.metaLeaderExchanger, Mockito.times(1))
         .refresh(Mockito.anyObject());
 
     // is leader and false
@@ -104,14 +106,14 @@ public class MetaServerServiceTest {
     resp.setData(heartBeatResponse);
     TestUtils.assertRunException(
         RuntimeException.class, () -> mockServerService.handleHeartbeatResponse(resp));
-    Mockito.verify(mockServerService.metaServerManager, Mockito.times(1))
+    Mockito.verify(mockServerService.metaLeaderExchanger, Mockito.times(1))
         .refresh(Mockito.anyObject());
 
     // is leader and true
     mockServerService.renewFailCounter.incrementAndGet();
     resp.setSuccess(true);
     mockServerService.handleHeartbeatResponse(resp);
-    Mockito.verify(mockServerService.metaServerManager, Mockito.times(2))
+    Mockito.verify(mockServerService.metaLeaderExchanger, Mockito.times(2))
         .refresh(Mockito.anyObject());
     Assert.assertEquals(mockServerService.renewFailCounter.get(), 0);
     Assert.assertEquals(1, mockServerService.getSessionServerEpoch());
@@ -139,7 +141,7 @@ public class MetaServerServiceTest {
   @Test
   public void testSuspend() {
     MockServerService mockServerService = new MockServerService();
-    mockServerService.setMetaServerManager(Mockito.mock(MetaServerManager.class));
+    mockServerService.setMetaLeaderExchanger(Mockito.mock(MetaLeaderExchanger.class));
     mockServerService.startRenewer();
     WakeUpLoopRunnable loop = mockServerService.renewer;
     Assert.assertFalse(loop.isSuspended());
@@ -152,7 +154,7 @@ public class MetaServerServiceTest {
   @Test
   public void testFetchData() {
     MockServerService mockServerService = new MockServerService();
-    mockServerService.setMetaServerManager(Mockito.mock(MetaServerManager.class));
+    mockServerService.setMetaLeaderExchanger(Mockito.mock(MetaLeaderExchanger.class));
     TestUtils.assertRunException(
         RuntimeException.class, () -> mockServerService.fetchData("testDataId"));
     Response response =
@@ -162,7 +164,7 @@ public class MetaServerServiceTest {
             return null;
           }
         };
-    Mockito.when(mockServerService.metaServerManager.sendRequest(Mockito.anyObject()))
+    Mockito.when(mockServerService.metaLeaderExchanger.sendRequest(Mockito.anyObject()))
         .thenReturn(response);
     TestUtils.assertRunException(
         RuntimeException.class, () -> mockServerService.fetchData("testDataId"));
@@ -174,7 +176,7 @@ public class MetaServerServiceTest {
             return provideData;
           }
         };
-    Mockito.when(mockServerService.metaServerManager.sendRequest(Mockito.anyObject()))
+    Mockito.when(mockServerService.metaLeaderExchanger.sendRequest(Mockito.anyObject()))
         .thenReturn(response);
     ProvideData got = mockServerService.fetchData("testDataId");
     Assert.assertEquals(provideData, got);

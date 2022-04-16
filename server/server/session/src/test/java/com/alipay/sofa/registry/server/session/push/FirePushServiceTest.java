@@ -107,8 +107,8 @@ public class FirePushServiceTest {
     svc.pushProcessor.pushSwitchService = Mockito.mock(PushSwitchService.class);
 
     Subscriber subscriber = TestUtils.newZoneSubscriber(dataId, zone);
-    when(svc.pushSwitchService.canIpPush(anyString())).thenReturn(true);
-    when(svc.pushProcessor.pushSwitchService.canIpPush(anyString())).thenReturn(true);
+    when(svc.pushSwitchService.canIpPushMulti(anyString())).thenReturn(true);
+    when(svc.pushProcessor.pushSwitchService.canIpPushMulti(anyString())).thenReturn(true);
     Assert.assertTrue(svc.fireOnPushEmpty(subscriber, "testDc", 1L));
 
     svc.fireOnPushEmpty(subscriber, "testDc", System.currentTimeMillis());

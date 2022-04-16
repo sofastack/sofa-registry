@@ -18,17 +18,26 @@ package com.alipay.sofa.registry.server.session.push;
 
 import com.alipay.sofa.registry.common.model.TraceTimes;
 import com.alipay.sofa.registry.util.StringFormatter;
+import com.google.common.collect.Sets;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import org.springframework.util.CollectionUtils;
 
 public final class TriggerPushContext {
-  public final String dataCenter;
   public final String dataNode;
-  private long expectDatumVersion;
+  private Map<String, Long> expectDatumVersion;
   private TraceTimes firstTraceTimes;
   private TraceTimes lastTraceTimes;
 
   public TriggerPushContext(
       String dataCenter, long expectDatumVersion, String dataNode, long triggerSessionTimestamp) {
-    this(dataCenter, expectDatumVersion, dataNode, triggerSessionTimestamp, new TraceTimes());
+    this(
+        Collections.singletonMap(dataCenter, expectDatumVersion),
+        dataNode,
+        triggerSessionTimestamp,
+        new TraceTimes());
   }
 
   public TriggerPushContext(
@@ -37,12 +46,35 @@ public final class TriggerPushContext {
       String dataNode,
       long triggerSessionTimestamp,
       TraceTimes traceTimes) {
-    this.dataCenter = dataCenter;
+    this(
+        Collections.singletonMap(dataCenter, expectDatumVersion),
+        dataNode,
+        triggerSessionTimestamp,
+        traceTimes);
+  }
+
+  public TriggerPushContext(
+      Map<String, Long> expectDatumVersion, String dataNode, long triggerSessionTimestamp) {
+    this(expectDatumVersion, dataNode, triggerSessionTimestamp, new TraceTimes());
+  }
+
+  public TriggerPushContext(
+      Map<String, Long> expectDatumVersion,
+      String dataNode,
+      long triggerSessionTimestamp,
+      TraceTimes traceTimes) {
     this.dataNode = dataNode;
     this.expectDatumVersion = expectDatumVersion;
     traceTimes.setTriggerSession(triggerSessionTimestamp);
     this.firstTraceTimes = traceTimes;
     this.lastTraceTimes = traceTimes;
+  }
+
+  public Set<String> dataCenters() {
+    if (CollectionUtils.isEmpty(expectDatumVersion)) {
+      return Collections.emptySet();
+    }
+    return expectDatumVersion.keySet();
   }
 
   public TraceTimes getFirstTimes() {
@@ -62,11 +94,11 @@ public final class TriggerPushContext {
     }
   }
 
-  public long getExpectDatumVersion() {
+  public Map<String, Long> getExpectDatumVersion() {
     return expectDatumVersion;
   }
 
-  public void setExpectDatumVersion(long expectDatumVersion) {
+  public void setExpectDatumVersion(Map<String, Long> expectDatumVersion) {
     this.expectDatumVersion = expectDatumVersion;
   }
 
@@ -83,7 +115,45 @@ public final class TriggerPushContext {
 
   @Override
   public String toString() {
-    return StringFormatter.format(
-        "TriggerPushCtx{{},ver={},dc={}}", dataNode, expectDatumVersion, dataCenter);
+    return StringFormatter.format("TriggerPushCtx{{},ver={}}", dataNode, expectDatumVersion);
+  }
+
+  /**
+   * return true when this all datacenter version are smaller than changeCtx
+   *
+   * @param changeCtx
+   * @return
+   */
+  public boolean smallerThan(TriggerPushContext changeCtx) {
+    Set<String> difference =
+        Sets.difference(this.expectDatumVersion.keySet(), changeCtx.expectDatumVersion.keySet());
+    if (difference.size() > 0) {
+      return false;
+    }
+    for (Entry<String, Long> entry : this.expectDatumVersion.entrySet()) {
+      Long ctxVersion = changeCtx.expectDatumVersion.get(entry.getKey());
+      if (ctxVersion == null || entry.getValue() > ctxVersion) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  public int mergeVersion(TriggerPushContext changeCtx) {
+    int merge = 0;
+    Set<String> difference =
+        Sets.difference(changeCtx.expectDatumVersion.keySet(), this.expectDatumVersion.keySet());
+    for (Entry<String, Long> entry : expectDatumVersion.entrySet()) {
+      Long ctxVersion = changeCtx.expectDatumVersion.get(entry.getKey());
+      if (ctxVersion != null || entry.getValue() < ctxVersion) {
+        entry.setValue(ctxVersion);
+        merge++;
+      }
+    }
+    for (String key : difference) {
+      expectDatumVersion.put(key, changeCtx.expectDatumVersion.get(key));
+      merge++;
+    }
+    return merge;
   }
 }

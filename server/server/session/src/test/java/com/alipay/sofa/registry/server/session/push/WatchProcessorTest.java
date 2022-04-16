@@ -46,7 +46,7 @@ public class WatchProcessorTest {
 
     Assert.assertFalse(processor.doExecuteOnWatch(w, data, System.currentTimeMillis()));
 
-    when(processor.pushSwitchService.canIpPush(anyString())).thenReturn(true);
+    when(processor.pushSwitchService.canIpPushMulti(anyString())).thenReturn(true);
     Assert.assertFalse(processor.doExecuteOnWatch(w, data, System.currentTimeMillis()));
 
     data =

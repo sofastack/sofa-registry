@@ -32,6 +32,7 @@ import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractClientHandler;
 import com.alipay.sofa.registry.server.shared.remoting.RemotingHelper;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.Executor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -75,14 +76,15 @@ public class DataChangeRequestHandler extends AbstractClientHandler<DataChangeRe
 
   @Override
   public Object doHandle(Channel channel, DataChangeRequest dataChangeRequest) {
-    if (!pushSwitchService.canPush()) {
-      return null;
-    }
     final String dataNode = RemotingHelper.getRemoteHostAddress(channel);
     final String dataCenter = dataChangeRequest.getDataCenter();
     final long changeTimestamp = System.currentTimeMillis();
     for (Map.Entry<String, DatumVersion> e : dataChangeRequest.getDataInfoIds().entrySet()) {
+
       final String dataInfoId = e.getKey();
+      if (!pushSwitchService.canPushMulti(dataInfoId, Collections.singleton(dataCenter))) {
+        continue;
+      }
       final DatumVersion version = e.getValue();
       Interests.InterestVersionCheck check =
           sessionInterests.checkInterestVersion(dataCenter, dataInfoId, version.getValue());

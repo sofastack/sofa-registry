@@ -23,7 +23,6 @@ import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.compress.CompressUtils;
 import com.alipay.sofa.registry.compress.Compressor;
 import com.alipay.sofa.registry.core.model.DataBox;
-import com.alipay.sofa.registry.core.model.ReceivedData;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.net.NetUtil;
@@ -83,12 +82,12 @@ public class CompressPushService
   }
 
   public Compressor getCompressor(
-      ReceivedData receivedData, String[] acceptEncodes, String clientIp) {
+      Map<String, List<DataBox>> data, String[] acceptEncodes, String clientIp) {
     CompressPushSwitch compressPushSwitch = getCompressSwitch();
     if (!compressEnabled(compressPushSwitch, clientIp)) {
       return null;
     }
-    if (dataBoxesMapSize(receivedData.getData()) < compressPushSwitch.getCompressMinSize()) {
+    if (dataBoxesMapSize(data) < compressPushSwitch.getCompressMinSize()) {
       return null;
     }
     return CompressUtils.find(acceptEncodes, compressPushSwitch.getForbidEncodes());

@@ -23,10 +23,11 @@ import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author shangyu.wh
- * @version $Id: RenewNodesRequest.java, v 0.1 2018-03-30 19:51 shangyu.wh Exp $
+ * @version $Id: HeartbeatRequest.java, v 0.1 2018-03-30 19:51 shangyu.wh Exp $
  */
 public class HeartbeatRequest<T extends Node> implements Serializable {
 
@@ -46,6 +47,9 @@ public class HeartbeatRequest<T extends Node> implements Serializable {
 
   private SlotTable slotTable;
 
+  // <cluster, slotTableEpoch>
+  private final Map<String, Long> remoteClusterSlotTableEpoch;
+
   /**
    * constructor
    *
@@ -57,13 +61,15 @@ public class HeartbeatRequest<T extends Node> implements Serializable {
       long slotTableEpoch,
       String dataCenter,
       long timestamp,
-      SlotConfig.SlotBasicInfo slotBasicInfo) {
+      SlotConfig.SlotBasicInfo slotBasicInfo,
+      Map<String, Long> remoteClusterSlotTableEpoch) {
     this.node = node;
     this.slotTableEpoch = slotTableEpoch;
     this.dataCenter = dataCenter;
     this.timestamp = timestamp;
     this.slotBasicInfo = slotBasicInfo;
     this.slotStatuses = Collections.emptyList();
+    this.remoteClusterSlotTableEpoch = remoteClusterSlotTableEpoch;
   }
 
   /**
@@ -78,13 +84,15 @@ public class HeartbeatRequest<T extends Node> implements Serializable {
       String dataCenter,
       long timestamp,
       SlotConfig.SlotBasicInfo slotBasicInfo,
-      final List<BaseSlotStatus> slotStatuses) {
+      final List<BaseSlotStatus> slotStatuses,
+      Map<String, Long> remoteClusterSlotTableEpoch) {
     this.node = node;
     this.slotTableEpoch = slotTableEpoch;
     this.dataCenter = dataCenter;
     this.timestamp = timestamp;
     this.slotBasicInfo = slotBasicInfo;
     this.slotStatuses = slotStatuses;
+    this.remoteClusterSlotTableEpoch = remoteClusterSlotTableEpoch;
   }
 
   /**
@@ -177,6 +185,15 @@ public class HeartbeatRequest<T extends Node> implements Serializable {
   public HeartbeatRequest<T> setSlotTable(SlotTable slotTable) {
     this.slotTable = slotTable;
     return this;
+  }
+
+  /**
+   * Getter method for property <tt>remoteClusterSlotTableEpoch</tt>.
+   *
+   * @return property value of remoteClusterSlotTableEpoch
+   */
+  public Map<String, Long> getRemoteClusterSlotTableEpoch() {
+    return remoteClusterSlotTableEpoch;
   }
 
   /**

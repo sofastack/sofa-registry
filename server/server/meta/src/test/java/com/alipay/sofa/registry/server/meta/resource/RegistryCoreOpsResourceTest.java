@@ -61,7 +61,7 @@ public class RegistryCoreOpsResourceTest extends AbstractMetaServerTestBase {
     MockitoAnnotations.initMocks(RegistryForbiddenServerManager.class);
     MockitoAnnotations.initMocks(NodeOperatingService.class);
 
-    when(leaderElector.getLeader()).thenReturn("127.0.0.1");
+    when(leaderElector.getLeaderInfo().getLeader()).thenReturn("127.0.0.1");
 
     resource =
         new RegistryCoreOpsResource()

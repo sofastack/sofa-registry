@@ -33,7 +33,7 @@ public class DatumCacheTest {
 
   @Test
   public void test() {
-    DatumCache cache = TestBaseUtils.newLocalDatumCache(testDc, true);
+    DatumStorageDelegate cache = TestBaseUtils.newLocalDatumCache(testDc, true);
     LocalDatumStorage storage = (LocalDatumStorage) cache.getLocalDatumStorage();
 
     Publisher publisher = TestBaseUtils.createTestPublisher(testDataId);
@@ -41,13 +41,13 @@ public class DatumCacheTest {
 
     Datum datum = cache.get("xx", publisher.getDataInfoId());
     TestBaseUtils.assertEquals(datum, publisher);
-    Map<String, Map<String, Datum>> datumMap = cache.getAll();
+    Map<String, Map<String, Datum>> datumMap = cache.getLocalAll();
     TestBaseUtils.assertEquals(datumMap.get(testDc).get(publisher.getDataInfoId()), publisher);
 
-    Map<String, Map<String, List<Publisher>>> publisherMaps = cache.getAllPublisher();
+    Map<String, Map<String, List<Publisher>>> publisherMaps = cache.getLocalAllPublisher();
     Assert.assertTrue(publisherMaps.get(testDc).get(publisher.getDataInfoId()).contains(publisher));
 
-    Map<String, Map<String, Integer>> summary = cache.getPubCount();
+    Map<String, Map<String, Integer>> summary = cache.getLocalPubCount();
     Assert.assertEquals(1, summary.get(testDc).get(publisher.getDataInfoId()).intValue());
 
     Map<String, Publisher> publisherMap = cache.getByConnectId(publisher.connectId());
@@ -62,7 +62,7 @@ public class DatumCacheTest {
     v = cache.updateVersion("xx", publisher.getDataInfoId());
     Assert.assertTrue(v.getValue() > datum.getVersion());
 
-    cache.clean("xx", publisher.getDataInfoId());
+    cache.cleanLocal("xx", publisher.getDataInfoId());
 
     datum = cache.get("xx", publisher.getDataInfoId());
     Assert.assertTrue(datum.getPubMap().isEmpty());

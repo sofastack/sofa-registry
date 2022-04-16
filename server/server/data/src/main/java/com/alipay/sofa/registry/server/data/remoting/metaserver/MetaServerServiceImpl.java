@@ -25,11 +25,12 @@ import com.alipay.sofa.registry.common.model.slot.BaseSlotStatus;
 import com.alipay.sofa.registry.common.model.slot.SlotConfig;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.common.model.store.URL;
-import com.alipay.sofa.registry.server.data.bootstrap.CommonConfig;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
+import com.alipay.sofa.registry.server.data.multi.cluster.slot.MultiClusterSlotManager;
 import com.alipay.sofa.registry.server.data.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.server.data.remoting.SessionNodeExchanger;
 import com.alipay.sofa.registry.server.data.slot.SlotManager;
+import com.alipay.sofa.registry.server.shared.config.CommonConfig;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.meta.AbstractMetaServerService;
 import com.alipay.sofa.registry.server.shared.slot.SlotTableRecorder;
@@ -55,6 +56,8 @@ public class MetaServerServiceImpl extends AbstractMetaServerService<BaseHeartBe
   @Autowired private DataServerConfig dataServerConfig;
 
   @Autowired private CommonConfig commonConfig;
+
+  @Autowired private MultiClusterSlotManager multiClusterSlotManager;
 
   private volatile SlotTable currentSlotTable;
 
@@ -89,6 +92,8 @@ public class MetaServerServiceImpl extends AbstractMetaServerService<BaseHeartBe
           "[handleRenewResult] slot table is {}",
           result.getSlotTable() == null ? "null" : "SlotTable.INIT");
     }
+
+    multiClusterSlotManager.updateSlotTable(result.getRemoteSlotTableStatus());
   }
 
   @Override
@@ -103,7 +108,8 @@ public class MetaServerServiceImpl extends AbstractMetaServerService<BaseHeartBe
                 dataServerConfig.getLocalDataCenter(),
                 System.currentTimeMillis(),
                 SlotConfig.slotBasicInfo(),
-                slotStatuses)
+                slotStatuses,
+                multiClusterSlotManager.getSlotTableEpoch())
             .setSlotTable(currentSlotTable);
     return request;
   }

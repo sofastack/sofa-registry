@@ -20,7 +20,7 @@
 
 <mapper namespace="com.alipay.sofa.registry.jdbc.mapper.DistributeLockMapper">
 
-    <resultMap type="com.alipay.sofa.registry.jdbc.domain.DistributeLockDomain" id="distributeLockResultMap">
+    <resultMap type="com.alipay.sofa.registry.common.model.elector.DistributeLockInfo" id="distributeLockResultMap">
         <id property="id" column="id" javaType="long" jdbcType="BIGINT"/>
         <result property="dataCenter" column="data_center" javaType="java.lang.String" jdbcType="VARCHAR"/>
         <result property="lockName" column="lock_name" javaType="java.lang.String" jdbcType="VARCHAR"/>

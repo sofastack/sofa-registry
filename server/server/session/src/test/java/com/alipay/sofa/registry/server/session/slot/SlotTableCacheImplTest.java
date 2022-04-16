@@ -139,10 +139,9 @@ public class SlotTableCacheImplTest extends AbstractSessionServerTestBase {
   @Test
   public void testCurrentSlotTable() throws InterruptedException {
     slotTableCache.updateSlotTable(randomSlotTable());
-    Assert.assertNotSame(
-        slotTableCache.getCurrentSlotTable(), slotTableCache.getCurrentSlotTable());
-    Assert.assertEquals(slotTableCache.getCurrentSlotTable(), slotTableCache.getCurrentSlotTable());
-    SlotTable prev = slotTableCache.getCurrentSlotTable();
+    Assert.assertNotSame(slotTableCache.getLocalSlotTable(), slotTableCache.getLocalSlotTable());
+    Assert.assertEquals(slotTableCache.getLocalSlotTable(), slotTableCache.getLocalSlotTable());
+    SlotTable prev = slotTableCache.getLocalSlotTable();
     CountDownLatch latch = new CountDownLatch(1);
     executors.execute(
         new Runnable() {
@@ -153,14 +152,14 @@ public class SlotTableCacheImplTest extends AbstractSessionServerTestBase {
           }
         });
     latch.await();
-    Assert.assertNotEquals(prev, slotTableCache.getCurrentSlotTable());
+    Assert.assertNotEquals(prev, slotTableCache.getLocalSlotTable());
   }
 
   @Test
   public void testWillNotUpdateLowerEpoch() {
     slotTableCache.updateSlotTable(randomSlotTable());
     slotTableCache.updateSlotTable(new SlotTable(123, randomSlotTable().getSlots()));
-    Assert.assertNotEquals(123, slotTableCache.getCurrentSlotTable().getEpoch());
+    Assert.assertNotEquals(123, slotTableCache.getLocalSlotTable().getEpoch());
   }
 
   @Test

@@ -19,7 +19,7 @@ package com.alipay.sofa.registry.server.data.timer;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.server.data.TestBaseUtils;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
-import com.alipay.sofa.registry.server.data.cache.DatumCache;
+import com.alipay.sofa.registry.server.data.cache.DatumStorageDelegate;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -34,8 +34,8 @@ public class CacheCountTaskTest {
     // npe
     Assert.assertFalse(task.count());
 
-    DatumCache datumCache = TestBaseUtils.newLocalDatumCache("testDc", true);
-    task.setDatumCache(datumCache);
+    DatumStorageDelegate datumStorageDelegate = TestBaseUtils.newLocalDatumCache("testDc", true);
+    task.setDatumCache(datumStorageDelegate);
 
     cfg.setCacheCountIntervalSecs(0);
     Assert.assertFalse(task.init());
@@ -45,7 +45,7 @@ public class CacheCountTaskTest {
 
     cfg.setCacheCountIntervalSecs(1);
     Publisher pub = TestBaseUtils.createTestPublisher("testDataId");
-    datumCache.getLocalDatumStorage().put(pub);
+    datumStorageDelegate.getLocalDatumStorage().put(pub);
     // has item
     Assert.assertTrue(task.count());
     Assert.assertTrue(task.init());

@@ -19,7 +19,6 @@ package com.alipay.sofa.registry.jdbc.elector;
 import com.alipay.sofa.registry.jdbc.AbstractH2DbTestBase;
 import com.alipay.sofa.registry.jdbc.config.MetaElectorConfigBean;
 import com.alipay.sofa.registry.jdbc.constant.TableEnum;
-import com.alipay.sofa.registry.jdbc.domain.DistributeLockDomain;
 import com.alipay.sofa.registry.jdbc.mapper.DistributeLockMapper;
 import com.alipay.sofa.registry.store.api.config.DefaultCommonConfig;
 import com.alipay.sofa.registry.store.api.elector.AbstractLeaderElector;

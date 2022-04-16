@@ -32,7 +32,7 @@ import com.alipay.sofa.registry.remoting.bolt.serializer.ProtobufCustomSerialize
 import com.alipay.sofa.registry.remoting.bolt.serializer.ProtobufSerializer;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
-import com.alipay.sofa.registry.server.session.metadata.AppRevisionCacheRegistry;
+import com.alipay.sofa.registry.server.session.metadata.MetadataCacheRegistry;
 import com.alipay.sofa.registry.server.session.providedata.ConfigProvideDataWatcher;
 import com.alipay.sofa.registry.server.session.remoting.handler.ClientNodeConnectionHandler;
 import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
@@ -112,7 +112,7 @@ public class SessionServerBootstrap {
   @Resource(name = "consoleHandlers")
   private Collection<AbstractServerHandler> consoleHandlers;
 
-  @Autowired private AppRevisionCacheRegistry appRevisionCacheRegistry;
+  @Autowired private MetadataCacheRegistry metadataCacheRegistry;
 
   @Resource private ClientNodeConnectionHandler clientNodeConnectionHandler;
 
@@ -167,10 +167,12 @@ public class SessionServerBootstrap {
 
       // wait until slot table is get
       startupRetryer.call(
-          () -> slotTableCache.getCurrentSlotTable().getEpoch() != SlotTable.INIT.getEpoch());
+          () -> slotTableCache.getLocalSlotTable().getEpoch() != SlotTable.INIT.getEpoch());
+
+      metadataCacheRegistry.startSynced();
 
       recoverConfigRepository.waitSynced();
-      appRevisionCacheRegistry.waitSynced();
+      metadataCacheRegistry.waitSynced();
       clientManagerAddressRepository.waitSynced();
 
       startupRetryer.call(

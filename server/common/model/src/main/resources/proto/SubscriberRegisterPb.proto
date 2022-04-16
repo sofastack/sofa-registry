@@ -9,5 +9,6 @@ message SubscriberRegisterPb {
     string scope = 1;
     BaseRegisterPb baseRegister = 2;
     string acceptEncoding =  3;
+    bool acceptMulti = 4;
 }
 

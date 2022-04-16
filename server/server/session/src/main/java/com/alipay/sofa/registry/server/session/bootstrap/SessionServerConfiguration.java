@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.bootstrap;
 
+import com.alipay.sofa.registry.common.model.slot.filter.SyncSlotAcceptorManager;
 import com.alipay.sofa.registry.common.model.wrapper.WrapperInterceptor;
 import com.alipay.sofa.registry.jdbc.config.JdbcConfiguration;
 import com.alipay.sofa.registry.jraft.config.RaftConfiguration;
@@ -28,7 +29,7 @@ import com.alipay.sofa.registry.server.session.acceptor.WriteDataAcceptorImpl;
 import com.alipay.sofa.registry.server.session.cache.CacheGenerator;
 import com.alipay.sofa.registry.server.session.cache.CacheService;
 import com.alipay.sofa.registry.server.session.cache.DatumCacheGenerator;
-import com.alipay.sofa.registry.server.session.cache.SessionCacheService;
+import com.alipay.sofa.registry.server.session.cache.SessionDatumCacheService;
 import com.alipay.sofa.registry.server.session.circuit.breaker.CircuitBreakerService;
 import com.alipay.sofa.registry.server.session.circuit.breaker.DefaultCircuitBreakerService;
 import com.alipay.sofa.registry.server.session.client.manager.CheckClientManagerService;
@@ -37,15 +38,18 @@ import com.alipay.sofa.registry.server.session.filter.IPMatchStrategy;
 import com.alipay.sofa.registry.server.session.filter.ProcessFilter;
 import com.alipay.sofa.registry.server.session.filter.blacklist.BlacklistMatchProcessFilter;
 import com.alipay.sofa.registry.server.session.filter.blacklist.DefaultIPMatchStrategy;
+import com.alipay.sofa.registry.server.session.filter.slot.SyncSlotAcceptAllManager;
 import com.alipay.sofa.registry.server.session.limit.AccessLimitService;
 import com.alipay.sofa.registry.server.session.limit.AccessLimitServiceImpl;
 import com.alipay.sofa.registry.server.session.mapper.ConnectionMapper;
-import com.alipay.sofa.registry.server.session.metadata.AppRevisionCacheRegistry;
-import com.alipay.sofa.registry.server.session.metadata.AppRevisionHeartbeatRegistry;
+import com.alipay.sofa.registry.server.session.metadata.MetadataCacheRegistry;
+import com.alipay.sofa.registry.server.session.multi.cluster.DataCenterMetadataCache;
+import com.alipay.sofa.registry.server.session.multi.cluster.DataCenterMetadataCacheImpl;
 import com.alipay.sofa.registry.server.session.node.service.*;
 import com.alipay.sofa.registry.server.session.providedata.*;
 import com.alipay.sofa.registry.server.session.push.*;
 import com.alipay.sofa.registry.server.session.registry.Registry;
+import com.alipay.sofa.registry.server.session.registry.RegistryScanCallable;
 import com.alipay.sofa.registry.server.session.registry.SessionRegistry;
 import com.alipay.sofa.registry.server.session.remoting.ClientNodeExchanger;
 import com.alipay.sofa.registry.server.session.remoting.DataNodeExchanger;
@@ -65,7 +69,8 @@ import com.alipay.sofa.registry.server.session.strategy.impl.*;
 import com.alipay.sofa.registry.server.session.wrapper.*;
 import com.alipay.sofa.registry.server.shared.client.manager.BaseClientManagerService;
 import com.alipay.sofa.registry.server.shared.client.manager.ClientManagerService;
-import com.alipay.sofa.registry.server.shared.meta.MetaServerManager;
+import com.alipay.sofa.registry.server.shared.config.CommonConfig;
+import com.alipay.sofa.registry.server.shared.meta.MetaLeaderExchanger;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.server.shared.providedata.FetchSystemPropertyService;
 import com.alipay.sofa.registry.server.shared.providedata.ProvideDataProcessor;
@@ -174,13 +179,18 @@ public class SessionServerConfiguration {
     }
 
     @Bean
-    public MetaServerManager metaServerManager() {
+    public MetaLeaderExchanger metaLeaderExchanger() {
       return new SessionMetaServerManager();
     }
 
     @Bean
     public SlotTableCache slotTableCache() {
       return new SlotTableCacheImpl();
+    }
+
+    @Bean
+    public DataCenterMetadataCache dataCenterMetadataCache() {
+      return new DataCenterMetadataCacheImpl();
     }
 
     @Bean(name = "serverHandlers")
@@ -292,6 +302,11 @@ public class SessionServerConfiguration {
     @Bean
     public AbstractServerHandler dataSlotDiffDigestRequestHandler() {
       return new DataSlotDiffDigestRequestHandler();
+    }
+
+    @Bean
+    public SyncSlotAcceptorManager syncSlotAcceptAllManager() {
+      return new SyncSlotAcceptAllManager();
     }
 
     @Bean
@@ -492,6 +507,11 @@ public class SessionServerConfiguration {
     public DataStore sessionDataStore() {
       return new SessionDataStore();
     }
+
+    @Bean
+    public RegistryScanCallable registryScanCallable() {
+      return new RegistryScanCallable();
+    }
   }
 
   @Configuration
@@ -571,8 +591,8 @@ public class SessionServerConfiguration {
   public static class SessionCacheConfiguration {
 
     @Bean
-    public CacheService sessionCacheService() {
-      return new SessionCacheService();
+    public CacheService sessionDatumCacheService() {
+      return new SessionDatumCacheService();
     }
 
     @Bean(name = "com.alipay.sofa.registry.server.session.cache.DatumKey")
@@ -581,13 +601,8 @@ public class SessionServerConfiguration {
     }
 
     @Bean
-    public AppRevisionCacheRegistry appRevisionCacheRegistry() {
-      return new AppRevisionCacheRegistry();
-    }
-
-    @Bean
-    public AppRevisionHeartbeatRegistry appRevisionHeartbeatRegistry() {
-      return new AppRevisionHeartbeatRegistry();
+    public MetadataCacheRegistry metadataCacheRegistry() {
+      return new MetadataCacheRegistry();
     }
   }
 

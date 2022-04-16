@@ -18,10 +18,13 @@ package com.alipay.sofa.registry.jdbc.repository.impl;
 
 import static com.alipay.sofa.registry.jdbc.repository.impl.MetadataMetrics.ProvideData.CLIENT_MANAGER_UPDATE_COUNTER;
 
+import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress;
 import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress.AddressVersion;
 import com.alipay.sofa.registry.common.model.metaserver.ClientManagerResult;
+import com.alipay.sofa.registry.exception.SofaRegistryRuntimeException;
+import com.alipay.sofa.registry.jdbc.config.MetadataConfig;
 import com.alipay.sofa.registry.jdbc.constant.TableEnum;
 import com.alipay.sofa.registry.jdbc.domain.ClientManagerAddressDomain;
 import com.alipay.sofa.registry.jdbc.informer.BaseInformer;
@@ -32,10 +35,20 @@ import com.alipay.sofa.registry.store.api.config.DefaultCommonConfig;
 import com.alipay.sofa.registry.store.api.date.DateNowRepository;
 import com.alipay.sofa.registry.store.api.meta.ClientManagerAddressRepository;
 import com.alipay.sofa.registry.store.api.meta.RecoverConfig;
+import com.alipay.sofa.registry.util.NamedThreadFactory;
+import com.alipay.sofa.registry.util.StringFormatter;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
@@ -47,7 +60,7 @@ import org.springframework.util.CollectionUtils;
 public class ClientManagerAddressJdbcRepository
     implements ClientManagerAddressRepository, RecoverConfig {
 
-  private static final Logger LOG = LoggerFactory.getLogger("META-PROVIDEDATA", "[ClientManager]");
+  private static final Logger LOG = LoggerFactory.getLogger("CLIENT-MANAGER", "[ClientManager]");
 
   @Autowired private DefaultCommonConfig defaultCommonConfig;
 
@@ -55,14 +68,33 @@ public class ClientManagerAddressJdbcRepository
 
   @Autowired private DateNowRepository dateNowRepository;
 
+  @Autowired private MetadataConfig metadataConfig;
+
+  private ThreadPoolExecutor clientManagerExecutor;
+
   final Informer informer;
 
   public ClientManagerAddressJdbcRepository() {
     informer = new Informer();
   }
 
+  public ClientManagerAddressJdbcRepository(MetadataConfig metadataConfig) {
+    informer = new Informer();
+    this.metadataConfig = metadataConfig;
+  }
+
   @PostConstruct
   public void init() {
+    clientManagerExecutor =
+        new ThreadPoolExecutor(
+            metadataConfig.getClientManagerExecutorPoolSize(),
+            metadataConfig.getClientManagerExecutorPoolSize(),
+            60,
+            TimeUnit.SECONDS,
+            new LinkedBlockingDeque<>(metadataConfig.getClientManagerExecutorQueueSize()),
+            new NamedThreadFactory("ClientManagerExecutor"),
+            new CallerRunsPolicy());
+
     informer.setEnabled(true);
     informer.start();
   }
@@ -143,26 +175,47 @@ public class ClientManagerAddressJdbcRepository
     informer.watchWakeup();
   }
 
-  private long doStorage(Set<AddressVersion> ipSet, String operation) {
-    long maxId = 0;
+  private long doStorage(Set<AddressVersion> ipSet, String operation)
+      throws ExecutionException, InterruptedException, TimeoutException {
+    List<Future<Tuple<Boolean, Long>>> futures = Lists.newArrayList();
     for (AddressVersion address : ipSet) {
-      ClientManagerAddressDomain update =
-          new ClientManagerAddressDomain(
-              defaultCommonConfig.getClusterId(tableName()),
-              address.getAddress(),
-              operation,
-              address.isPub(),
-              address.isSub());
-      int effectRows = clientManagerAddressMapper.update(update);
+      Future<Tuple<Boolean, Long>> future =
+          clientManagerExecutor.submit(
+              () -> {
+                long maxId = 0;
+                ClientManagerAddressDomain update =
+                    new ClientManagerAddressDomain(
+                        defaultCommonConfig.getClusterId(tableName()),
+                        address.getAddress(),
+                        operation,
+                        address.isPub(),
+                        address.isSub());
+                int effectRows = clientManagerAddressMapper.update(update);
 
-      if (effectRows == 0) {
-        clientManagerAddressMapper.insertOnReplace(update);
-        LOG.info("address: {} replace.", update);
-        maxId = update.getId();
-      } else {
-        LOG.info("address: {} exist, skip replace.", update);
+                if (effectRows == 0) {
+                  clientManagerAddressMapper.insertOnReplace(update);
+                  LOG.info("address: {} replace.", update);
+                  maxId = update.getId();
+                } else {
+                  LOG.info("address: {} exist, skip replace.", update);
+                }
+                return new Tuple<>(true, maxId);
+              });
+      futures.add(future);
+    }
+
+    long maxId = 0;
+    for (Future<Tuple<Boolean, Long>> future : futures) {
+      Tuple<Boolean, Long> tuple = future.get(3000, TimeUnit.MILLISECONDS);
+      if (tuple.o1 == null || !tuple.o1) {
+        throw new SofaRegistryRuntimeException(
+            StringFormatter.format("ips: {}, operation:{} execute error.", ipSet, operation));
+      }
+      if (tuple.o2 > maxId) {
+        maxId = tuple.o2;
       }
     }
+
     return maxId;
   }
 
@@ -202,5 +255,17 @@ public class ClientManagerAddressJdbcRepository
   @VisibleForTesting
   public void setClientManagerAddressMapper(ClientManagerAddressMapper clientManagerAddressMapper) {
     this.clientManagerAddressMapper = clientManagerAddressMapper;
+  }
+
+  /**
+   * Setter method for property <tt>defaultCommonConfig</tt>.
+   *
+   * @param defaultCommonConfig value to be assigned to property defaultCommonConfig
+   */
+  @VisibleForTesting
+  public ClientManagerAddressJdbcRepository setDefaultCommonConfig(
+      DefaultCommonConfig defaultCommonConfig) {
+    this.defaultCommonConfig = defaultCommonConfig;
+    return this;
   }
 }

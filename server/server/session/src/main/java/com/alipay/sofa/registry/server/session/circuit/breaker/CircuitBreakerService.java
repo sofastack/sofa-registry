@@ -18,6 +18,7 @@ package com.alipay.sofa.registry.server.session.circuit.breaker;
 
 import com.alipay.sofa.registry.common.model.store.CircuitBreakerStatistic;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
+import java.util.Map;
 
 /**
  * @author xiaojian.xj
@@ -35,20 +36,20 @@ public interface CircuitBreakerService {
   /**
    * statistic when push success
    *
-   * @param dataCenter
-   * @param pushVersion
+   * @param versions dataCenter -> version
+   * @param pushNums dataCenter -> pushNum
    * @param subscriber
    * @return
    */
-  boolean onPushSuccess(String dataCenter, long pushVersion, int pushNum, Subscriber subscriber);
+  boolean onPushSuccess(
+      Map<String, Long> versions, Map<String, Integer> pushNums, Subscriber subscriber);
 
   /**
    * statistic when push fail
    *
-   * @param dataCenter
-   * @param pushVersion
+   * @param versions
    * @param subscriber
    * @return
    */
-  boolean onPushFail(String dataCenter, long pushVersion, Subscriber subscriber);
+  boolean onPushFail(Map<String, Long> versions, Subscriber subscriber);
 }

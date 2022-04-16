@@ -62,7 +62,7 @@ public class ReceivedDataConverterTest {
                 ScopeEnum.dataCenter,
                 subIds,
                 localZone,
-                ZonePredicate.zonePredicate(
+                ZonePredicate.pushDataPredicate(
                     subDatum.getDataId(), localZone, ScopeEnum.dataCenter, configBean))
             .getPayload();
 

@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.bootstrap;
 
+import com.alipay.sofa.registry.server.shared.config.CommonConfig;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.util.OsUtils;
 import java.util.Collection;
@@ -79,6 +80,14 @@ public class SessionServerConfigBean implements SessionServerConfig {
   private int dataChangeFetchTaskWorkerSize = OsUtils.getCpuCount() * 6;
 
   private int subscriberRegisterTaskWorkerSize = OsUtils.getCpuCount() * 4;
+
+  private int metadataRegisterExecutorPoolSize = OsUtils.getCpuCount() * 3;
+
+  private int metadataRegisterExecutorQueueSize = 1000;
+
+  private int scanExecutorPoolSize = OsUtils.getCpuCount() * 3;
+
+  private int scanExecutorQueueSize = 100;
 
   private int dataChangeDebouncingMillis = 1000;
   private int dataChangeMaxDebouncingMillis = 3000;
@@ -214,6 +223,8 @@ public class SessionServerConfigBean implements SessionServerConfig {
   private int watchPushTaskMaxBufferSize = 10000;
 
   private boolean gracefulShutdown = false;
+
+  private int scanTimeoutMills = 10 * 1000;
 
   /**
    * constructor
@@ -355,6 +366,11 @@ public class SessionServerConfigBean implements SessionServerConfig {
   }
 
   @Override
+  public Set<String> getLocalDataCenterZones() {
+    return commonConfig.getLocalSegmentRegions();
+  }
+
+  @Override
   public String getClientCell(String subscriberCell) {
     return this.getSessionServerRegion();
   }
@@ -369,6 +385,11 @@ public class SessionServerConfigBean implements SessionServerConfig {
       sessionServerRegion = sessionServerRegion.toUpperCase();
     }
     this.sessionServerRegion = sessionServerRegion;
+  }
+
+  @Override
+  public boolean isLocalDataCenter(String dataCenter) {
+    return StringUtils.equals(getSessionServerDataCenter(), dataCenter);
   }
 
   @Override
@@ -1360,5 +1381,77 @@ public class SessionServerConfigBean implements SessionServerConfig {
    */
   public void setPushAddressCircuitBreakerThreshold(int pushAddressCircuitBreakerThreshold) {
     this.pushAddressCircuitBreakerThreshold = pushAddressCircuitBreakerThreshold;
+  }
+
+  @Override
+  public int getMetadataRegisterExecutorPoolSize() {
+    return metadataRegisterExecutorPoolSize;
+  }
+
+  @Override
+  public int getMetadataRegisterExecutorQueueSize() {
+    return metadataRegisterExecutorQueueSize;
+  }
+
+  @Override
+  public int getScanExecutorPoolSize() {
+    return scanExecutorPoolSize;
+  }
+
+  @Override
+  public int getScanExecutorQueueSize() {
+    return scanExecutorQueueSize;
+  }
+
+  @Override
+  public long getScanTimeoutMills() {
+    return scanTimeoutMills;
+  }
+
+  /**
+   * Setter method for property <tt>metadataRegisterExecutorPoolSize</tt>.
+   *
+   * @param metadataRegisterExecutorPoolSize value to be assigned to property
+   *     metadataRegisterExecutorPoolSize
+   */
+  public void setMetadataRegisterExecutorPoolSize(int metadataRegisterExecutorPoolSize) {
+    this.metadataRegisterExecutorPoolSize = metadataRegisterExecutorPoolSize;
+  }
+
+  /**
+   * Setter method for property <tt>metadataRegisterExecutorQueueSize</tt>.
+   *
+   * @param metadataRegisterExecutorQueueSize value to be assigned to property
+   *     metadataRegisterExecutorQueueSize
+   */
+  public void setMetadataRegisterExecutorQueueSize(int metadataRegisterExecutorQueueSize) {
+    this.metadataRegisterExecutorQueueSize = metadataRegisterExecutorQueueSize;
+  }
+
+  /**
+   * Setter method for property <tt>scanExecutorPoolSize</tt>.
+   *
+   * @param scanExecutorPoolSize value to be assigned to property scanExecutorPoolSize
+   */
+  public void setScanExecutorPoolSize(int scanExecutorPoolSize) {
+    this.scanExecutorPoolSize = scanExecutorPoolSize;
+  }
+
+  /**
+   * Setter method for property <tt>scanExecutorQueueSize</tt>.
+   *
+   * @param scanExecutorQueueSize value to be assigned to property scanExecutorQueueSize
+   */
+  public void setScanExecutorQueueSize(int scanExecutorQueueSize) {
+    this.scanExecutorQueueSize = scanExecutorQueueSize;
+  }
+
+  /**
+   * Setter method for property <tt>scanTimeoutMills</tt>.
+   *
+   * @param scanTimeoutMills value to be assigned to property scanTimeoutMills
+   */
+  public void setScanTimeoutMills(int scanTimeoutMills) {
+    this.scanTimeoutMills = scanTimeoutMills;
   }
 }

@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.jdbc.informer;
 
 import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.store.api.meta.DbEntry;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import com.google.common.collect.Lists;
@@ -37,7 +38,7 @@ public abstract class BaseInformer<T extends DbEntry, C extends DbEntryContainer
   private final Lock listLock = new ReentrantLock();
 
   protected final WatchLoop watchLoop = new WatchLoop();
-  private final ListLoop listLoop = new ListLoop();
+  protected final ListLoop listLoop = new ListLoop();
   private volatile boolean enabled;
   private boolean started;
   private volatile long syncStartVersion;
@@ -154,6 +155,10 @@ public abstract class BaseInformer<T extends DbEntry, C extends DbEntryContainer
     if (enabled) {
       listLoop.wakeup();
     }
+  }
+
+  public void listWakeup() {
+    listLoop.wakeup();
   }
 
   private void syncStart() {

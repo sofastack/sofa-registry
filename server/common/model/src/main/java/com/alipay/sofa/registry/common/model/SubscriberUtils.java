@@ -52,6 +52,21 @@ public final class SubscriberUtils {
     return ret;
   }
 
+  public static Map<Boolean, List<Subscriber>> groupByMulti(List<Subscriber> subscribers) {
+
+    if (subscribers.isEmpty()) {
+      return Collections.emptyMap();
+    }
+    Map<Boolean, List<Subscriber>> ret = Maps.newHashMapWithExpectedSize(2);
+    for (Subscriber subscriber : subscribers) {
+      List<Subscriber> subs =
+          ret.computeIfAbsent(subscriber.acceptMulti(), k -> Lists.newArrayList());
+      subs.add(subscriber);
+    }
+
+    return ret;
+  }
+
   public static Map<ScopeEnum, List<Subscriber>> groupByScope(Collection<Subscriber> subscribers) {
     if (subscribers.isEmpty()) {
       return Collections.emptyMap();
@@ -101,6 +116,23 @@ public final class SubscriberUtils {
       }
     }
     return acceptEncodes;
+  }
+
+  public static boolean getAndAssertAcceptMulti(Collection<Subscriber> subscribers) {
+    Iterator<Subscriber> iterator = subscribers.iterator();
+    Subscriber first = iterator.next();
+    boolean acceptMulti = first.acceptMulti();
+    while (iterator.hasNext()) {
+      Subscriber subscriber = iterator.next();
+      if (acceptMulti != subscriber.acceptMulti()) {
+        throw new RuntimeException(
+            StringFormatter.format(
+                "conflict acceptMulti, one is {}, anther is {}",
+                first.shortDesc(),
+                subscriber.shortDesc()));
+      }
+    }
+    return acceptMulti;
   }
 
   public static void assertClientVersion(

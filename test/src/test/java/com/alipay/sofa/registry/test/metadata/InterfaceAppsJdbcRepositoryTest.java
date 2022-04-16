@@ -17,7 +17,7 @@
 package com.alipay.sofa.registry.test.metadata;
 
 import com.alipay.sofa.registry.common.model.appmeta.InterfaceMapping;
-import com.alipay.sofa.registry.server.session.metadata.AppRevisionCacheRegistry;
+import com.alipay.sofa.registry.server.session.metadata.MetadataCacheRegistry;
 import com.alipay.sofa.registry.store.api.repository.InterfaceAppsRepository;
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
 import java.util.ArrayList;
@@ -34,7 +34,7 @@ import org.junit.Test;
 public class InterfaceAppsJdbcRepositoryTest extends BaseIntegrationTest {
   private InterfaceAppsRepository interfaceAppsJdbcRepository;
 
-  private AppRevisionCacheRegistry appRevisionCacheRegistry;
+  private MetadataCacheRegistry appRevisionCacheRegistry;
 
   @Before
   public void buildAppRevision() {
@@ -43,8 +43,7 @@ public class InterfaceAppsJdbcRepositoryTest extends BaseIntegrationTest {
             "interfaceAppsJdbcRepository", InterfaceAppsRepository.class);
 
     appRevisionCacheRegistry =
-        sessionApplicationContext.getBean(
-            "appRevisionCacheRegistry", AppRevisionCacheRegistry.class);
+        sessionApplicationContext.getBean("appRevisionCacheRegistry", MetadataCacheRegistry.class);
   }
 
   @Test

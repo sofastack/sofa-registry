@@ -50,6 +50,7 @@ import com.alipay.sofa.registry.server.meta.resource.ClientManagerResource;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfigBean;
 import com.alipay.sofa.registry.server.session.providedata.FetchClientOffAddressService;
+import com.alipay.sofa.registry.server.session.push.PushSwitchService;
 import com.alipay.sofa.registry.server.session.registry.SessionRegistry;
 import com.alipay.sofa.registry.server.session.remoting.console.SessionConsoleExchanger;
 import com.alipay.sofa.registry.server.session.resource.PersistenceClientManagerResource;
@@ -62,6 +63,7 @@ import com.alipay.sofa.registry.util.StringFormatter;
 import java.io.*;
 import java.lang.reflect.Field;
 import java.util.*;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
@@ -115,6 +117,9 @@ public class BaseIntegrationTest extends AbstractTest {
   protected static volatile SessionConsoleExchanger sessionConsoleExchanger;
 
   protected static volatile SessionServerConfigBean sessionServerConfig;
+
+  protected static volatile PushSwitchService pushSwitchService;
+
   protected static int sessionPort = 9603;
   protected static int consolePort = 9604;
   protected static int metaPort = 9615;
@@ -206,6 +211,8 @@ public class BaseIntegrationTest extends AbstractTest {
       sessionConsoleExchanger =
           sessionApplicationContext.getBean(
               "sessionConsoleExchanger", SessionConsoleExchanger.class);
+      pushSwitchService =
+          sessionApplicationContext.getBean("pushSwitchService", PushSwitchService.class);
 
       sessionServerConfig =
           (SessionServerConfigBean)
@@ -281,16 +288,28 @@ public class BaseIntegrationTest extends AbstractTest {
     ParaCheckUtil.checkNotNull(metaChannel.getWebTarget(), "metaChannel");
   }
 
-  protected static void openPush() {
+  protected static void openPush() throws InterruptedException, TimeoutException {
     Result result =
         metaChannel.getWebTarget().path("/stopPushDataSwitch/close").request().get(Result.class);
     Assert.assertTrue(result.isSuccess());
+
+    LOGGER.info(
+        "fetchStopPushService.isStopPushSwitch:" + pushSwitchService.canLocalDataCenterPush());
+    waitConditionUntilTimeOut(BaseIntegrationTest::isOpenPush, 6000);
   }
 
-  protected static void closePush() {
+  private static boolean isOpenPush() {
+    return !pushSwitchService.canLocalDataCenterPush();
+  }
+
+  protected static void closePush() throws InterruptedException, TimeoutException {
     Result result =
         metaChannel.getWebTarget().path("/stopPushDataSwitch/open").request().get(Result.class);
     Assert.assertTrue(result.isSuccess());
+
+    LOGGER.info(
+        "fetchStopPushService.isStopPushSwitch:" + pushSwitchService.canLocalDataCenterPush());
+    waitConditionUntilTimeOut(pushSwitchService::canLocalDataCenterPush, 6000);
   }
 
   public static class MySubscriberDataObserver implements SubscriberDataObserver {

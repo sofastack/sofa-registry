@@ -19,7 +19,6 @@ package com.alipay.sofa.registry.server.session.push;
 import static org.mockito.Mockito.*;
 
 import com.alipay.sofa.registry.common.model.client.pb.ReceivedConfigDataPb;
-import com.alipay.sofa.registry.common.model.client.pb.ReceivedDataPb;
 import com.alipay.sofa.registry.common.model.metaserver.CompressPushSwitch;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.common.model.store.*;

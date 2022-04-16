@@ -544,11 +544,11 @@ public class SlotDiffSyncerTest {
       List<Publisher> p2 = TestBaseUtils.createTestPublishers(slotId, 2);
       List<Publisher> p3 = TestBaseUtils.createTestPublishers(slotId, 2);
       List<Publisher> p4 = TestBaseUtils.createTestPublishers(slotId, 2);
-      storage.put(p1.get(0).getDataInfoId(), p1);
-      storage.put(p2.get(0).getDataInfoId(), p2);
-      storage.put(p3.get(0).getDataInfoId(), p3);
+      storage.putPublisher(p1.get(0).getDataInfoId(), p1);
+      storage.putPublisher(p2.get(0).getDataInfoId(), p2);
+      storage.putPublisher(p3.get(0).getDataInfoId(), p3);
       // empty d4
-      storage.createEmptyDatumIfAbsent(p4.get(0).getDataInfoId(), dc);
+      storage.createEmptyDatumIfAbsent(dc, p4.get(0).getDataInfoId());
       ms.p1 = p1;
       ms.p2 = p2;
       ms.p3 = p3;

@@ -66,13 +66,13 @@ public class DefaultMetaLeaderElectorTest extends AbstractMetaServerTestBase {
 
   @Test
   public void testGetLeader() {
-    when(leaderElector.getLeader()).thenReturn(ServerEnv.IP);
+    when(leaderElector.getLeaderInfo().getLeader()).thenReturn(ServerEnv.IP);
     Assert.assertEquals(ServerEnv.IP, metaLeaderElector.getLeader());
   }
 
   @Test
   public void testGetLeaderEpoch() {
-    when(leaderElector.getLeaderEpoch()).thenReturn(0L);
+    when(leaderElector.getLeaderInfo().getEpoch()).thenReturn(0L);
     Assert.assertEquals(0L, metaLeaderElector.getLeaderEpoch());
   }
 

@@ -22,12 +22,14 @@ import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.server.session.registry.SessionRegistry.SelectSubscriber;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.util.CollectionUtils;
@@ -77,39 +79,58 @@ public class SessionInterests extends AbstractDataManager<Subscriber> implements
   }
 
   @Override
-  public Tuple<Map<String, DatumVersion>, List<Subscriber>> selectSubscribers(String dataCenter) {
+  public SelectSubscriber selectSubscribers(Set<String> dataCenters) {
     final String localDataCenter = sessionServerConfig.getSessionServerDataCenter();
-    final boolean isLocalDataCenter = localDataCenter.equals(dataCenter);
+
     Store<Subscriber> store = getStore();
-    final Map<String, DatumVersion> versions =
-        Maps.newHashMapWithExpectedSize(store.getDataInfoIds().size());
-    final List<Subscriber> toPushEmptySubscribers = Lists.newArrayListWithCapacity(256);
+    int dataInfoIdSize = store.getDataInfoIds().size();
+    final Map<String, Map<String, DatumVersion>> versions =
+        Maps.newHashMapWithExpectedSize(dataCenters.size());
+    final Map<String, List<Subscriber>> toPushEmptySubscribers =
+        Maps.newHashMapWithExpectedSize(dataCenters.size());
+    final List<Subscriber> toRegisterMultiSubscribers = Lists.newArrayListWithCapacity(128);
 
     store.forEach(
         (String dataInfoId, Map<String, Subscriber> subs) -> {
           if (CollectionUtils.isEmpty(subs)) {
             return;
           }
-          long maxVersion = 0;
           for (Subscriber sub : subs.values()) {
-            // not global sub and not local dataCenter, not interest the other dataCenter's pub
-            if (sub.getScope() != ScopeEnum.global && !isLocalDataCenter) {
+
+            if (!sub.hasPushed()) {
+              toRegisterMultiSubscribers.add(sub);
               continue;
             }
-            if (sub.isMarkedPushEmpty(dataCenter)) {
-              if (sub.needPushEmpty(dataCenter)) {
-                toPushEmptySubscribers.add(sub);
+
+            for (String dataCenter : dataCenters) {
+              Map<String, DatumVersion> vers =
+                  versions.computeIfAbsent(
+                      dataCenter, k -> Maps.newHashMapWithExpectedSize(dataInfoIdSize));
+              List<Subscriber> pushEmpty =
+                  toPushEmptySubscribers.computeIfAbsent(
+                      dataCenter, k -> Lists.newArrayListWithCapacity(256));
+
+              final boolean isLocalDataCenter = localDataCenter.equals(dataCenter);
+              // not global sub and not local dataCenter, not interest the other dataCenter's pub
+              if (sub.getScope() != ScopeEnum.global && !isLocalDataCenter) {
+                continue;
               }
-              continue;
-            }
-            final long pushVersion = sub.getPushedVersion(dataCenter);
-            if (maxVersion < pushVersion) {
-              maxVersion = pushVersion;
+
+              if (sub.isMarkedPushEmpty(dataCenter)) {
+                if (sub.needPushEmpty(dataCenter)) {
+                  pushEmpty.add(sub);
+                }
+                continue;
+              }
+              final long pushVersion = sub.getPushedVersion(dataCenter);
+              DatumVersion maxVersion = vers.computeIfAbsent(dataInfoId, k -> new DatumVersion(0));
+              if (maxVersion.getValue() < pushVersion) {
+                vers.put(dataInfoId, new DatumVersion(pushVersion));
+              }
             }
           }
-          versions.put(dataInfoId, new DatumVersion(maxVersion));
         });
-    return Tuple.of(versions, toPushEmptySubscribers);
+    return new SelectSubscriber(versions, toPushEmptySubscribers, toRegisterMultiSubscribers);
   }
 
   @Override

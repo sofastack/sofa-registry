@@ -16,71 +16,71 @@
  */
 package com.alipay.sofa.registry.server.session.push;
 
+import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
+import com.alipay.sofa.registry.server.session.multi.cluster.DataCenterMetadataCache;
 import com.alipay.sofa.registry.server.session.providedata.FetchGrayPushSwitchService;
-import com.alipay.sofa.registry.server.session.providedata.FetchStopPushService;
-import com.google.common.annotations.VisibleForTesting;
+import com.alipay.sofa.registry.util.ParaCheckUtil;
+import java.util.Set;
 import javax.annotation.Resource;
 import org.apache.commons.collections.CollectionUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 
 public class PushSwitchService {
 
-  @Resource FetchStopPushService fetchStopPushService;
+  @Autowired private SessionServerConfig sessionServerConfig;
 
-  @Resource FetchGrayPushSwitchService fetchGrayPushSwitchService;
+  @Resource private FetchGrayPushSwitchService fetchGrayPushSwitchService;
 
-  public PushSwitchService() {}
+  @Autowired private DataCenterMetadataCache dataCenterMetadataCache;
 
-  public boolean isGlobalPushSwitchStopped() {
-    return fetchStopPushService.isStopPushSwitch();
+  public boolean canPushMulti(String dataInfoId, Set<String> dataCenters) {
+    ParaCheckUtil.checkNotBlank(dataInfoId, "push.dataInfoId");
+    ParaCheckUtil.checkNotEmpty(dataCenters, "push.dataCenters");
+    for (String dataCenter : dataCenters) {
+      if (!dataCenterCanPush(dataCenter)) {
+        return false;
+      }
+    }
+    return true;
   }
 
-  public boolean canPush() {
-    return !fetchStopPushService.isStopPushSwitch()
+  public boolean canLocalDataCenterPush() {
+    return dataCenterCanPush(sessionServerConfig.getSessionServerDataCenter())
         || CollectionUtils.isNotEmpty(fetchGrayPushSwitchService.getOpenIps());
   }
 
-  public boolean canIpPush(String ip) {
-    return !fetchStopPushService.isStopPushSwitch()
-        || fetchGrayPushSwitchService.getOpenIps().contains(ip);
+  public boolean canIpPushMulti(String ip, String dataInfoId, Set<String> dataCenters) {
+    ParaCheckUtil.checkNotBlank(dataInfoId, "push.dataInfoId");
+    ParaCheckUtil.checkNotBlank(ip, "push.ip");
+    ParaCheckUtil.checkNotEmpty(dataCenters, "push.dataCenters");
+
+    for (String dataCenter : dataCenters) {
+      if (!dataCenterAndIpCanPush(dataCenter, ip)) {
+        return false;
+      }
+    }
+    return true;
   }
 
-  /**
-   * Setter method for property <tt>fetchStopPushService</tt>.
-   *
-   * @param fetchStopPushService value to be assigned to property fetchStopPushService
-   */
-  @VisibleForTesting
-  public void setFetchStopPushService(FetchStopPushService fetchStopPushService) {
-    this.fetchStopPushService = fetchStopPushService;
+  public boolean canIpPushLocal(String ip) {
+    ParaCheckUtil.checkNotBlank(ip, "push.ip");
+    return dataCenterAndIpCanPush(sessionServerConfig.getSessionServerDataCenter(), ip);
   }
 
-  /**
-   * Setter method for property <tt>fetchGrayPushSwitchService</tt>.
-   *
-   * @param fetchGrayPushSwitchService value to be assigned to property fetchGrayPushSwitchService
-   */
-  @VisibleForTesting
-  public void setFetchGrayPushSwitchService(FetchGrayPushSwitchService fetchGrayPushSwitchService) {
-    this.fetchGrayPushSwitchService = fetchGrayPushSwitchService;
+  private boolean dataCenterCanPush(String dataCenter) {
+    Boolean stopPush = dataCenterMetadataCache.isStopPush(dataCenter);
+    if (stopPush == null || stopPush) {
+      return false;
+    }
+    return true;
   }
 
-  /**
-   * Getter method for property <tt>fetchStopPushService</tt>.
-   *
-   * @return property value of fetchStopPushService
-   */
-  @VisibleForTesting
-  public FetchStopPushService getFetchStopPushService() {
-    return fetchStopPushService;
-  }
-
-  /**
-   * Getter method for property <tt>fetchGrayPushSwitchService</tt>.
-   *
-   * @return property value of fetchGrayPushSwitchService
-   */
-  @VisibleForTesting
-  public FetchGrayPushSwitchService getFetchGrayPushSwitchService() {
-    return fetchGrayPushSwitchService;
+  private boolean dataCenterAndIpCanPush(String dataCenter, String ip) {
+    Boolean stopPush = dataCenterMetadataCache.isStopPush(dataCenter);
+    if (stopPush == null || stopPush) {
+      return sessionServerConfig.isLocalDataCenter(dataCenter)
+          && fetchGrayPushSwitchService.getOpenIps().contains(ip);
+    }
+    return true;
   }
 }

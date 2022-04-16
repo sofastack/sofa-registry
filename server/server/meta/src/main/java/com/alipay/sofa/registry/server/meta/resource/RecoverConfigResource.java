@@ -50,7 +50,7 @@ public class RecoverConfigResource {
     if (StringUtils.isBlank(table)
         || StringUtils.isBlank(key)
         || StringUtils.isBlank(recoverClusterId)) {
-      return CommonResponse.buildFailedResponse("table, key, recoverClusterId is allow empty.");
+      return CommonResponse.buildFailedResponse("table, key, recoverClusterId is not allow empty.");
     }
 
     boolean ret = recoverConfigRepository.save(table, key, recoverClusterId);
@@ -67,7 +67,7 @@ public class RecoverConfigResource {
   public CommonResponse removeConfig(
       @FormParam("table") String table, @FormParam("key") String key) {
     if (StringUtils.isBlank(table) || StringUtils.isBlank(key)) {
-      return CommonResponse.buildFailedResponse("table and key is allow empty.");
+      return CommonResponse.buildFailedResponse("table and key is not allow empty.");
     }
 
     boolean ret = recoverConfigRepository.remove(table, key);

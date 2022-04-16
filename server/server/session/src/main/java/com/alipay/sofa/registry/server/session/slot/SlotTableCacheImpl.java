@@ -16,15 +16,20 @@
  */
 package com.alipay.sofa.registry.server.session.slot;
 
+import com.alipay.sofa.registry.common.model.multi.cluster.RemoteSlotTableStatus;
 import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.common.model.slot.func.SlotFunction;
 import com.alipay.sofa.registry.common.model.slot.func.SlotFunctionRegistry;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.shared.slot.SlotTableRecorder;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Maps;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import org.apache.commons.lang.StringUtils;
@@ -39,11 +44,14 @@ public final class SlotTableCacheImpl implements SlotTableCache {
 
   private final SlotFunction slotFunction = SlotFunctionRegistry.getFunc();
 
-  private volatile SlotTable slotTable = SlotTable.INIT;
   private final Lock lock = new ReentrantLock();
+
+  private final Map<String, SlotTable> slotTableMap = Maps.newConcurrentMap();
 
   @Autowired(required = false)
   private List<SlotTableRecorder> recorders;
+
+  @Autowired private SessionServerConfig sessionServerConfig;
 
   @Override
   public int slotOf(String dataInfoId) {
@@ -51,44 +59,82 @@ public final class SlotTableCacheImpl implements SlotTableCache {
   }
 
   @Override
-  public Slot getSlot(String dataInfoId) {
+  public Slot getSlot(String dataCenter, String dataInfoId) {
     int slotId = slotOf(dataInfoId);
-    return slotTable.getSlot(slotId);
+    return getSlot(dataCenter, slotId);
   }
 
   @Override
-  public Slot getSlot(int slotId) {
-    return slotTable.getSlot(slotId);
+  public Slot getSlot(String dataCenter, int slotId) {
+    SlotTable slotTable = slotTableMap.get(dataCenter);
+    return slotTable == null ? null : slotTable.getSlot(slotId);
   }
 
   @Override
-  public String getLeader(int slotId) {
-    final Slot slot = slotTable.getSlot(slotId);
+  public String getLeader(String dataCenter, int slotId) {
+    final Slot slot = getSlot(dataCenter, slotId);
     return slot == null ? null : slot.getLeader();
   }
 
   @Override
-  public long getEpoch() {
-    return slotTable.getEpoch();
+  public long getEpoch(String dataCenter) {
+    SlotTable slotTable = slotTableMap.get(dataCenter);
+    return slotTable == null ? SlotTable.INIT.getEpoch() : slotTable.getEpoch();
   }
 
   @Override
-  public boolean updateSlotTable(SlotTable slotTable) {
+  public boolean updateLocalSlotTable(SlotTable slotTable) {
     lock.lock();
     final long curEpoch;
     try {
-      curEpoch = this.slotTable.getEpoch();
+      curEpoch = slotTableMap.get(sessionServerConfig.getSessionServerDataCenter()).getEpoch();
       if (curEpoch >= slotTable.getEpoch()) {
-        LOGGER.info("skip update, current={}, update={}", curEpoch, slotTable.getEpoch());
+        LOGGER.info(
+            "skip update, dataCenter={}, current={}, update={}",
+            sessionServerConfig.getSessionServerDataCenter(),
+            curEpoch,
+            slotTable.getEpoch());
         return false;
       }
       recordSlotTable(slotTable);
-      this.slotTable = slotTable;
+      slotTableMap.put(sessionServerConfig.getSessionServerDataCenter(), slotTable);
     } finally {
       lock.unlock();
     }
-    checkForSlotTable(curEpoch, slotTable);
+    checkForSlotTable(sessionServerConfig.getSessionServerDataCenter(), curEpoch, slotTable);
     return true;
+  }
+
+  @Override
+  public boolean updateRemoteSlotTable(Map<String, RemoteSlotTableStatus> remoteSlotTableStatus) {
+
+    boolean success = true;
+    lock.lock();
+    try {
+      for (Entry<String, RemoteSlotTableStatus> entry : remoteSlotTableStatus.entrySet()) {
+        RemoteSlotTableStatus value = entry.getValue();
+        final long curEpoch = slotTableMap.get(entry.getKey()).getEpoch();
+
+        if (!value.isSlotTableUpgrade() || value.getSlotTable() == null) {
+          LOGGER.info(
+              "skip update, dataCenter={}, current={}, upgrade=false", entry.getKey(), curEpoch);
+          continue;
+        }
+
+        SlotTable slotTable = value.getSlotTable();
+
+        if (curEpoch >= slotTable.getEpoch()) {
+          LOGGER.info("skip update, current={}, update={}", curEpoch, slotTable.getEpoch());
+          success = false;
+        }
+        recordSlotTable(slotTable);
+        slotTableMap.put(sessionServerConfig.getSessionServerDataCenter(), slotTable);
+      }
+    } finally {
+      lock.unlock();
+    }
+
+    return success;
   }
 
   private void recordSlotTable(SlotTable slotTable) {
@@ -102,20 +148,36 @@ public final class SlotTableCacheImpl implements SlotTableCache {
     }
   }
 
-  protected void checkForSlotTable(long curEpoch, SlotTable updating) {
+  protected void checkForSlotTable(String dataCenter, long curEpoch, SlotTable updating) {
     for (Slot slot : updating.getSlots()) {
       if (StringUtils.isBlank(slot.getLeader())) {
-        LOGGER.error("[NoLeader] {}", slot);
+        LOGGER.error("[NoLeader] {},{}", dataCenter, slot);
       }
     }
     LOGGER.info(
-        "updating slot table, expect={}, current={}, {}", updating.getEpoch(), curEpoch, updating);
+        "updating slot table, dataCenter={}, expect={}, current={}, {}",
+        dataCenter,
+        updating.getEpoch(),
+        curEpoch,
+        updating);
   }
 
   @Override
-  public SlotTable getCurrentSlotTable() {
-    final SlotTable now = this.slotTable;
+  public SlotTable getLocalSlotTable() {
+    final SlotTable now = slotTableMap.get(sessionServerConfig.getSessionServerDataCenter());
     return new SlotTable(now.getEpoch(), now.getSlots());
+  }
+
+  @Override
+  public Map<String, Long> getRemoteSlotTableEpoch() {
+    Map<String, Long> ret = Maps.newHashMapWithExpectedSize(slotTableMap.size() - 1);
+    for (Entry<String, SlotTable> entry : slotTableMap.entrySet()) {
+      if (StringUtils.equals(entry.getKey(), sessionServerConfig.getSessionServerDataCenter())) {
+        continue;
+      }
+      ret.put(entry.getKey(), entry.getValue().getEpoch());
+    }
+    return ret;
   }
 
   @VisibleForTesting

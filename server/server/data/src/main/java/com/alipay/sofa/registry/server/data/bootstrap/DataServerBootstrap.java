@@ -66,6 +66,8 @@ public class DataServerBootstrap {
 
   @Autowired private DataServerConfig dataServerConfig;
 
+  @Autowired private MultiClusterDataServerConfig multiClusterDataServerConfig;
+
   @Autowired private MetaServerService metaServerService;
 
   @Autowired private ApplicationContext applicationContext;
@@ -86,6 +88,9 @@ public class DataServerBootstrap {
   @Resource(name = "serverSyncHandlers")
   private Collection<AbstractServerHandler> serverSyncHandlers;
 
+  @Resource(name = "remoteDataServerHandlers")
+  private Collection<AbstractServerHandler> remoteDataServerHandlers;
+
   @Autowired private SystemPropertyProcessorManager systemPropertyProcessorManager;
 
   @Autowired private SlotManager slotManager;
@@ -98,6 +103,8 @@ public class DataServerBootstrap {
 
   private Server dataSyncServer;
 
+  private Server remoteDataSyncServer;
+
   private Server httpServer;
 
   private final AtomicBoolean httpServerStarted = new AtomicBoolean(false);
@@ -107,6 +114,8 @@ public class DataServerBootstrap {
   private final AtomicBoolean serverForSessionStarted = new AtomicBoolean(false);
 
   private final AtomicBoolean serverForDataSyncStarted = new AtomicBoolean(false);
+
+  private final AtomicBoolean serverForMultiClusterDataSyncStarted = new AtomicBoolean(false);
 
   private final Retryer<Boolean> startupRetryer =
       RetryerBuilder.<Boolean>newBuilder()
@@ -136,6 +145,8 @@ public class DataServerBootstrap {
       openDataServer();
 
       openDataSyncServer();
+
+      openMultiClusterDataSyncServer();
 
       openHttpServer();
 
@@ -212,6 +223,32 @@ public class DataServerBootstrap {
       serverForDataSyncStarted.set(false);
       LOGGER.error("Data sync server start error! port:{}", dataServerConfig.getSyncDataPort(), e);
       throw new RuntimeException("Data sync server start error!", e);
+    }
+  }
+
+  private void openMultiClusterDataSyncServer() {
+    try {
+      if (serverForMultiClusterDataSyncStarted.compareAndSet(false, true)) {
+        remoteDataSyncServer =
+            boltExchange.open(
+                new URL(
+                    NetUtil.getLocalAddress().getHostAddress(),
+                    multiClusterDataServerConfig.getSyncRemoteSlotLeaderPort()),
+                multiClusterDataServerConfig.getSyncSlotLowWaterMark(),
+                multiClusterDataServerConfig.getSyncSlotHighWaterMark(),
+                remoteDataServerHandlers.toArray(
+                    new ChannelHandler[remoteDataServerHandlers.size()]));
+        LOGGER.info(
+            "Multi cluster data server for sync started! port:{}",
+            multiClusterDataServerConfig.getSyncRemoteSlotLeaderPort());
+      }
+    } catch (Exception e) {
+      serverForMultiClusterDataSyncStarted.set(false);
+      LOGGER.error(
+          "Multi cluster data sync server start error! port:{}",
+          multiClusterDataServerConfig.getSyncRemoteSlotLeaderPort(),
+          e);
+      throw new RuntimeException("Multi cluster data sync server start error!", e);
     }
   }
 

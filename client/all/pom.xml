@@ -6,7 +6,7 @@
 
     <groupId>com.alipay.sofa</groupId>
     <artifactId>registry-client-all</artifactId>
-    <version>6.1.4-SNAPSHOT</version>
+    <version>6.2.0-SNAPSHOT</version>
 
     <name>${project.groupId}:${project.artifactId}</name>
     <url>http://github.com/alipay/sofa-registry</url>

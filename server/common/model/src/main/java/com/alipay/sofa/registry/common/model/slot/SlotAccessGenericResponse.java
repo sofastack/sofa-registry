@@ -23,10 +23,9 @@ import com.alipay.sofa.registry.common.model.GenericResponse;
  * @version v 0.1 2020-10-30 11:05 yuzhi.lyz Exp $
  */
 public final class SlotAccessGenericResponse<T> extends GenericResponse<T> {
-  private final SlotAccess slotAccess;
+  private SlotAccess slotAccess;
 
-  private SlotAccessGenericResponse(
-      boolean success, String message, SlotAccess slotAccess, T data) {
+  public SlotAccessGenericResponse(boolean success, String message, SlotAccess slotAccess, T data) {
     this.slotAccess = slotAccess;
     this.setData(data);
     this.setSuccess(success);

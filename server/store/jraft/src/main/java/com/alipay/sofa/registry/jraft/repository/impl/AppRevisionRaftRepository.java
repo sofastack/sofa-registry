@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -81,4 +82,15 @@ public class AppRevisionRaftRepository implements AppRevisionRepository {
   public List<AppRevision> listFromStorage(long start, int limit) {
     return null;
   }
+
+  @Override
+  public void startSynced() {}
+
+  @Override
+  public Set<String> dataCenters() {
+    return null;
+  }
+
+  @Override
+  public void setDatCenters(Set<String> dataCenters) {}
 }

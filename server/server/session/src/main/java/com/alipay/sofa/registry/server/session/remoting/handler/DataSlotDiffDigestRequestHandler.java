@@ -22,6 +22,7 @@ import com.alipay.sofa.registry.common.model.dataserver.DatumDigest;
 import com.alipay.sofa.registry.common.model.slot.DataSlotDiffDigestRequest;
 import com.alipay.sofa.registry.common.model.slot.DataSlotDiffDigestResult;
 import com.alipay.sofa.registry.common.model.slot.DataSlotDiffUtils;
+import com.alipay.sofa.registry.common.model.slot.filter.SyncSlotAcceptorManager;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -35,6 +36,7 @@ import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.alipay.sofa.registry.util.StringFormatter;
 import java.util.Map;
 import java.util.concurrent.Executor;
+import javax.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -46,11 +48,13 @@ public class DataSlotDiffDigestRequestHandler
   private static final Logger LOGGER =
       LoggerFactory.getLogger(DataSlotDiffDigestRequestHandler.class);
 
-  @Autowired ExecutorManager executorManager;
+  @Autowired private ExecutorManager executorManager;
 
-  @Autowired DataStore sessionDataStore;
+  @Autowired private DataStore sessionDataStore;
 
-  @Autowired SlotTableCache slotTableCache;
+  @Autowired private SlotTableCache slotTableCache;
+
+  @Resource private SyncSlotAcceptorManager syncSlotAcceptAllManager;
 
   @Override
   public void checkParam(DataSlotDiffDigestRequest request) {
@@ -66,7 +70,7 @@ public class DataSlotDiffDigestRequestHandler
               request.getSlotId(),
               request.getDatumDigest(),
               sessionDataStore.getDataInfoIdPublishers(request.getSlotId()));
-      result.setSlotTableEpoch(slotTableCache.getEpoch());
+      result.setSlotTableEpoch(slotTableCache.getEpoch(request.getLocalDataCenter()));
       result.setSessionProcessId(ServerEnv.PROCESS_ID);
       return new GenericResponse().fillSucceed(result);
     } catch (Throwable e) {
@@ -88,8 +92,8 @@ public class DataSlotDiffDigestRequestHandler
       Map<String, Map<String, Publisher>> existingPublishers) {
 
     DataSlotDiffDigestResult result =
-        DataSlotDiffUtils.diffDigestResult(digestMap, existingPublishers);
-    DataSlotDiffUtils.logDiffResult(result, targetSlot);
+        DataSlotDiffUtils.diffDigestResult(digestMap, existingPublishers, syncSlotAcceptAllManager);
+    DataSlotDiffUtils.logDiffResult(result, targetSlot, LOGGER);
     return result;
   }
 

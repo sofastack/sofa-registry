@@ -36,6 +36,7 @@ import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.exchange.message.Response;
+import com.alipay.sofa.registry.server.shared.config.CommonConfig;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.StringFormatter;
@@ -55,7 +56,9 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
     implements MetaServerService {
   protected final Logger RENEWER_LOGGER = LoggerFactory.getLogger("META-RENEW");
 
-  @Autowired protected MetaServerManager metaServerManager;
+  @Autowired protected MetaLeaderExchanger metaLeaderExchanger;
+
+  @Autowired protected CommonConfig commonConfig;
 
   protected volatile State state = State.NULL;
 
@@ -106,13 +109,15 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
 
   @Override
   public void addSelfToMetaBlacklist() {
-    metaServerManager.sendRequest(
+    metaLeaderExchanger.sendRequest(
+        commonConfig.getLocalDataCenter(),
         new RegistryForbiddenServerRequest(DataOperation.ADD, nodeType(), cell(), ServerEnv.IP));
   }
 
   @Override
   public void removeSelfFromMetaBlacklist() {
-    metaServerManager.sendRequest(
+    metaLeaderExchanger.sendRequest(
+        commonConfig.getLocalDataCenter(),
         new RegistryForbiddenServerRequest(DataOperation.REMOVE, nodeType(), cell(), ServerEnv.IP));
   }
 
@@ -135,13 +140,16 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
 
   @Override
   public boolean renewNode() {
-    final String leaderIp = metaServerManager.getMetaServerLeader();
+    final String leaderIp = getMetaServerLeader();
     final long startTimestamp = System.currentTimeMillis();
     boolean success = true;
     try {
       HeartbeatRequest heartbeatRequest = createRequest();
       GenericResponse<T> resp =
-          (GenericResponse<T>) metaServerManager.sendRequest(heartbeatRequest).getResult();
+          (GenericResponse<T>)
+              metaLeaderExchanger
+                  .sendRequest(commonConfig.getLocalDataCenter(), heartbeatRequest)
+                  .getResult();
       handleHeartbeatResponse(resp);
 
       success = true;
@@ -163,7 +171,7 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
       RENEWER_LOGGER.error(
           "renewNode failed [{}] times, prepare to reset leader from rest api.",
           renewFailCounter.get());
-      metaServerManager.resetLeader();
+      metaLeaderExchanger.resetLeader(commonConfig.getLocalDataCenter());
       renewFailCounter.set(0);
       return true;
     }
@@ -174,9 +182,12 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
     if (resp == null) {
       throw new RuntimeException("renew node to metaServer error : resp is null");
     }
+    String localDataCenter = commonConfig.getLocalDataCenter();
     if (resp.isSuccess()) {
       updateState(resp.getData());
-      metaServerManager.refresh(resp.getData());
+      BaseHeartBeatResponse data = resp.getData();
+      metaLeaderExchanger.learn(
+          localDataCenter, new LeaderInfo(data.getMetaLeaderEpoch(), data.getMetaLeader()));
       handleRenewResult(resp.getData());
       renewFailCounter.set(0);
     } else {
@@ -189,7 +200,8 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
       // heartbeat on follow, refresh leader;
       // it will renewNode on leader next time;
       if (!data.isHeartbeatOnLeader()) {
-        metaServerManager.refresh(data);
+        metaLeaderExchanger.learn(
+            localDataCenter, new LeaderInfo(data.getMetaLeaderEpoch(), data.getMetaLeader()));
         // refresh the leader from follower, but the info maybe is incorrect
         // throw the exception to trigger the counter inc
         // if the info is correct, the counter would be reset after heartbeat
@@ -235,9 +247,11 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
 
   @Override
   public ProvideData fetchData(String dataInfoId) {
-    final String leaderIp = metaServerManager.getMetaServerLeader();
+    final String leaderIp = getMetaServerLeader();
     try {
-      Response response = metaServerManager.sendRequest(new FetchProvideDataRequest(dataInfoId));
+      Response response =
+          metaLeaderExchanger.sendRequest(
+              commonConfig.getLocalDataCenter(), new FetchProvideDataRequest(dataInfoId));
 
       Object result = response.getResult();
       if (result instanceof ProvideData) {
@@ -260,11 +274,13 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
 
   @Override
   public FetchSystemPropertyResult fetchSystemProperty(String dataInfoId, long version) {
-    final String leaderIp = metaServerManager.getMetaServerLeader();
+    final String leaderIp = getMetaServerLeader();
 
     try {
       Response response =
-          metaServerManager.sendRequest(new FetchSystemPropertyRequest(dataInfoId, version));
+          metaLeaderExchanger.sendRequest(
+              commonConfig.getLocalDataCenter(),
+              new FetchSystemPropertyRequest(dataInfoId, version));
 
       FetchSystemPropertyResult result = (FetchSystemPropertyResult) response.getResult();
       return result;
@@ -281,11 +297,12 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
 
   @Override
   public SlotTableStatusResponse getSlotTableStatus() {
-
-    final String leaderIp = metaServerManager.getMetaServerLeader();
+    final String leaderIp = getMetaServerLeader();
 
     try {
-      Response response = metaServerManager.sendRequest(new GetSlotTableStatusRequest());
+      Response response =
+          metaLeaderExchanger.sendRequest(
+              commonConfig.getLocalDataCenter(), new GetSlotTableStatusRequest());
       SlotTableStatusResponse result = (SlotTableStatusResponse) response.getResult();
       return result;
     } catch (Throwable e) {
@@ -316,7 +333,8 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
   }
 
   public String getMetaServerLeader() {
-    return metaServerManager.getMetaServerLeader();
+    String localDataCenter = commonConfig.getLocalDataCenter();
+    return metaLeaderExchanger.getLeader(localDataCenter).getLeader();
   }
 
   public List<String> getSessionServerList(String zonename) {
@@ -379,8 +397,13 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
     }
   }
 
+  /**
+   * Setter method for property <tt>metaLeaderExchanger</tt>.
+   *
+   * @param metaLeaderExchanger value to be assigned to property metaLeaderExchanger
+   */
   @VisibleForTesting
-  public void setMetaServerManager(MetaServerManager metaServerManager) {
-    this.metaServerManager = metaServerManager;
+  public void setMetaLeaderExchanger(MetaLeaderExchanger metaLeaderExchanger) {
+    this.metaLeaderExchanger = metaLeaderExchanger;
   }
 }

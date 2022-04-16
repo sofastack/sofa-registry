@@ -24,7 +24,7 @@ import com.alipay.sofa.registry.common.model.slot.SlotConfig;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.server.data.TestBaseUtils;
 import com.alipay.sofa.registry.server.data.cache.CleanContinues;
-import com.alipay.sofa.registry.server.data.cache.DatumCache;
+import com.alipay.sofa.registry.server.data.cache.DatumStorageDelegate;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.BatchPutDataHandler;
 import com.alipay.sofa.registry.server.data.slot.SlotManager;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
@@ -41,9 +41,9 @@ public class DatumApiResourceTest {
   private DatumApiResource newResource() {
     DatumApiResource resource = new DatumApiResource();
     resource.dataServerConfig = TestBaseUtils.newDataConfig("testDc");
-    DatumCache datumCache = TestBaseUtils.newLocalDatumCache("testDc", true);
-    resource.datumCache = datumCache;
-    resource.localDatumStorage = datumCache.getLocalDatumStorage();
+    DatumStorageDelegate datumStorageDelegate = TestBaseUtils.newLocalDatumCache("testDc", true);
+    resource.datumStorageDelegate = datumStorageDelegate;
+    resource.localDatumStorage = datumStorageDelegate.getLocalDatumStorage();
     resource.slotManager = Mockito.mock(SlotManager.class);
     resource.batchPutDataHandler = Mockito.mock(BatchPutDataHandler.class);
     return resource;
@@ -154,7 +154,8 @@ public class DatumApiResourceTest {
             new Answer<Object>() {
               public Object answer(InvocationOnMock var1) throws Throwable {
                 for (int i = 0; i < SlotConfig.SLOT_NUM; i++) {
-                  resource.localDatumStorage.clean(i, ServerEnv.PROCESS_ID, CleanContinues.ALWAYS);
+                  resource.localDatumStorage.cleanBySessionId(
+                      i, ServerEnv.PROCESS_ID, CleanContinues.ALWAYS);
                 }
                 return null;
               }

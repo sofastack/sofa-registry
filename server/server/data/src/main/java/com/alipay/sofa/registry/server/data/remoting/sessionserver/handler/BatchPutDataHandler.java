@@ -28,6 +28,7 @@ import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.UnPublisher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.remoting.Channel;
+import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.change.DataChangeType;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.google.common.collect.Maps;
@@ -41,6 +42,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class BatchPutDataHandler extends AbstractDataHandler<BatchRequest> {
   private static final Logger LOGGER = DataLog.PUT_LOGGER;
   @Autowired private ThreadPoolExecutor publishProcessorExecutor;
+
+  @Autowired private DataServerConfig dataServerConfig;
 
   @Override
   public void checkParam(BatchRequest request) {
@@ -64,8 +67,17 @@ public class BatchPutDataHandler extends AbstractDataHandler<BatchRequest> {
     final ProcessId sessionProcessId = request.getSessionProcessId();
     processSessionProcessId(channel, sessionProcessId);
 
+    return handleRequest(request, sessionProcessId);
+  }
+
+  public SlotAccessGenericResponse<Object> handleRequest(
+      BatchRequest request, ProcessId sessionProcessId) {
     final SlotAccess slotAccess =
-        checkAccess(request.getSlotId(), request.getSlotTableEpoch(), request.getSlotLeaderEpoch());
+        checkAccess(
+            dataServerConfig.getLocalDataCenter(),
+            request.getSlotId(),
+            request.getSlotTableEpoch(),
+            request.getSlotLeaderEpoch());
     if (slotAccess.isMoved() || slotAccess.isMisMatch()) {
       // only reject the when moved
       return SlotAccessGenericResponse.failedResponse(slotAccess);
@@ -138,13 +150,13 @@ public class BatchPutDataHandler extends AbstractDataHandler<BatchRequest> {
     publisher = Publisher.internPublisher(publisher);
     if (publisher.getPublishType() == PublishType.TEMPORARY) {
       // create datum for the temp publisher, we need the datum.version for check ver
-      localDatumStorage.createEmptyDatumIfAbsent(
-          publisher.getDataInfoId(), dataServerConfig.getLocalDataCenter());
+      datumStorageDelegate.createEmptyDatumIfAbsent(
+          dataServerConfig.getLocalDataCenter(), publisher.getDataInfoId());
       // temporary only notify session, not store
       dataChangeEventCenter.onTempPubChange(publisher, dataServerConfig.getLocalDataCenter());
       return null;
     }
-    return localDatumStorage.put(publisher);
+    return datumStorageDelegate.putPublisher(dataServerConfig.getLocalDataCenter(), publisher);
   }
 
   public Map<String, DatumVersion> doHandle(
@@ -152,7 +164,9 @@ public class BatchPutDataHandler extends AbstractDataHandler<BatchRequest> {
     Map<String, Map<String, RegisterVersion>> publisherMap = request.getPublisherMap();
     Map<String, DatumVersion> ret = Maps.newHashMapWithExpectedSize(publisherMap.size());
     for (Map.Entry<String, Map<String, RegisterVersion>> e : publisherMap.entrySet()) {
-      DatumVersion version = localDatumStorage.remove(e.getKey(), sessionProcessId, e.getValue());
+      DatumVersion version =
+          datumStorageDelegate.removePublishers(
+              dataServerConfig.getLocalDataCenter(), e.getKey(), sessionProcessId, e.getValue());
       if (version != null) {
         ret.put(e.getKey(), version);
       }

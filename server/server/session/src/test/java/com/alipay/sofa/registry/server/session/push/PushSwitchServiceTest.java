@@ -32,14 +32,14 @@ public class PushSwitchServiceTest {
     service.fetchStopPushService = new FetchStopPushService();
     service.fetchGrayPushSwitchService = new FetchGrayPushSwitchService();
     service.fetchStopPushService.setStopPushSwitch(init, true);
-    Assert.assertFalse(service.canPush());
+    Assert.assertFalse(service.canLocalDataCenterPush());
     service.fetchGrayPushSwitchService.setOpenIps(init, Arrays.asList("127.0.0.1"));
-    Assert.assertTrue(service.canPush());
-    Assert.assertFalse(service.canIpPush("127.0.0.2"));
-    Assert.assertTrue(service.canIpPush("127.0.0.1"));
+    Assert.assertTrue(service.canLocalDataCenterPush());
+    Assert.assertFalse(service.canIpPushMulti("127.0.0.2"));
+    Assert.assertTrue(service.canIpPushMulti("127.0.0.1"));
 
     service.fetchStopPushService.setStopPushSwitch(init, false);
-    Assert.assertTrue(service.canIpPush("127.0.0.2"));
-    Assert.assertTrue(service.canIpPush("127.0.0.1"));
+    Assert.assertTrue(service.canIpPushMulti("127.0.0.2"));
+    Assert.assertTrue(service.canIpPushMulti("127.0.0.1"));
   }
 }

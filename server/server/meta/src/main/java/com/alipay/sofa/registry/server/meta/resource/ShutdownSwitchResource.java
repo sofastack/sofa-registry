@@ -26,10 +26,10 @@ import com.alipay.sofa.registry.core.model.Result;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.provide.data.DefaultProvideDataNotifier;
+import com.alipay.sofa.registry.server.meta.provide.data.FetchStopPushService;
 import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataService;
 import com.alipay.sofa.registry.server.meta.resource.filter.LeaderAwareRestController;
 import com.alipay.sofa.registry.server.shared.resource.AuthChecker;
-import com.alipay.sofa.registry.server.shared.util.PersistenceDataParser;
 import com.alipay.sofa.registry.store.api.DBResponse;
 import com.alipay.sofa.registry.store.api.OperationStatus;
 import com.alipay.sofa.registry.util.JsonUtils;
@@ -59,6 +59,8 @@ public class ShutdownSwitchResource {
 
   @Autowired private DefaultProvideDataNotifier provideDataNotifier;
 
+  @Autowired private FetchStopPushService fetchStopPushService;
+
   @POST
   @Path("update")
   @Produces(MediaType.APPLICATION_JSON)
@@ -69,7 +71,7 @@ public class ShutdownSwitchResource {
       return Result.failed("auth check fail");
     }
 
-    if (!isStopPush()) {
+    if (!fetchStopPushService.isStopPush()) {
       DB_LOGGER.error("push switch is open");
       return Result.failed("push switch is open");
     }
@@ -121,12 +123,6 @@ public class ShutdownSwitchResource {
           provideDataChangeEvent);
     }
     provideDataNotifier.notifyProvideDataChange(provideDataChangeEvent);
-  }
-
-  private boolean isStopPush() {
-    DBResponse<PersistenceData> stopPushResp =
-        provideDataService.queryProvideData(ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID);
-    return PersistenceDataParser.parse2BoolIgnoreCase(stopPushResp, false);
   }
 
   @VisibleForTesting
