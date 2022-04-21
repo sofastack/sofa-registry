@@ -31,6 +31,7 @@ import com.alipay.sofa.registry.server.session.providedata.FetchClientOffAddress
 import com.alipay.sofa.registry.server.session.push.FirePushService;
 import com.alipay.sofa.registry.server.session.registry.SessionRegistry;
 import com.alipay.sofa.registry.server.shared.remoting.RemotingHelper;
+import com.google.common.collect.Lists;
 import javax.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -59,14 +60,20 @@ public class ClientOffWrapperInterceptor
 
     URL url = storeData.getSourceAddress();
 
+    String socketIp = url.getIpAddress();
+    String attrIp = storeData.getIp();
+
     AddressVersion address = null;
-    AddressVersion socketMatch = fetchClientOffAddressService.getAddress(url.getIpAddress());
-    AddressVersion ipMatch = fetchClientOffAddressService.getAddress(storeData.getIp());
-    if (socketMatch != null) {
-      address = socketMatch;
-    }
-    if (ipMatch != null) {
-      address = ipMatch;
+
+    for (String ip : Lists.newArrayList(socketIp, attrIp)) {
+      if (ip == null) {
+        continue;
+      }
+      AddressVersion addrVer = fetchClientOffAddressService.getAddress(ip);
+      if (addrVer == null) {
+        continue;
+      }
+      address = addrVer;
     }
     if (address != null) {
       markChannel(registerInvokeData.getChannel());

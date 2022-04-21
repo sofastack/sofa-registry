@@ -20,7 +20,6 @@ import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.store.StoreData;
 import com.alipay.sofa.registry.remoting.Channel;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author shangyu.wh
@@ -48,14 +47,6 @@ public interface Registry {
    * @param connectIds
    */
   void clientOff(List<ConnectId> connectIds);
-
-  /**
-   * client off the connectIds: 1. clean pubs, keep sub/wat; 2. check sub with sub registerTimestamp
-   * check
-   *
-   * @param connectIds
-   */
-  void clientOffWithTimestampCheck(Map<ConnectId, Long> connectIds);
 
   /**
    * disable the connectIds: 1. clean pub/sub/wat; 2. check sub
