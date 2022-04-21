@@ -44,10 +44,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.PostConstruct;
@@ -242,7 +239,6 @@ public class FetchClientOffAddressService
     }
 
     Set<String> addAddress = table.addAddress;
-    Map<String, AddressVersion> adds = table.adds;
     Set<String> removes = table.removes;
     Set<String> clientOpens = table.clientOpens;
 
@@ -253,7 +249,7 @@ public class FetchClientOffAddressService
     }
 
     if (CollectionUtils.isNotEmpty(addAddress)) {
-      doTrafficOff(addAddress, adds);
+      doTrafficOff(addAddress);
     }
 
     if (CollectionUtils.isNotEmpty(removes)) {
@@ -270,23 +266,15 @@ public class FetchClientOffAddressService
     connectionsService.markChannelAndGetIpConnects(ipSet, CLIENT_OFF, null);
   }
 
-  private void doTrafficOff(Set<String> ipSet, Map<String, AddressVersion> adds) {
+  private void doTrafficOff(Set<String> ipSet) {
     List<ConnectId> conIds =
         connectionsService.markChannelAndGetIpConnects(ipSet, CLIENT_OFF, Boolean.TRUE);
 
     if (CollectionUtils.isEmpty(conIds)) {
       return;
     }
-    LOGGER.info("clientOff conIds: {}", conIds.toString());
-
-    Map<ConnectId, Long> connectIds = Maps.newHashMapWithExpectedSize(conIds.size());
-    for (ConnectId conId : conIds) {
-      AddressVersion addressVersion = adds.get(conId.getClientHostAddress());
-      ParaCheckUtil.checkNotNull(addressVersion, "addressVersion");
-      connectIds.put(conId, addressVersion.getVersion());
-    }
-    ParaCheckUtil.checkEquals(conIds.size(), connectIds.size(), "connectIds");
-    sessionRegistry.clientOffWithTimestampCheck(connectIds);
+    LOGGER.info("clientOff conIds: {},ips: {}", conIds.toString(), ipSet);
+    sessionRegistry.clientOff(conIds);
   }
 
   private void doTrafficOn(Set<String> ipSet) {

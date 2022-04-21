@@ -36,7 +36,7 @@ import java.util.List;
 public final class PublisherConverter {
   private PublisherConverter() {}
 
-  private static final Converter<Tuple<PublisherRegister, Channel>, Publisher> publisherConverter =
+  private static final Converter<Tuple<PublisherRegister, Channel>, Publisher> PUBLISHER_CONVERTER =
       source -> {
         Publisher publisher = new Publisher();
         PublisherRegister register = source.getFirst();
@@ -88,7 +88,7 @@ public final class PublisherConverter {
    * @return
    */
   public static Publisher convert(PublisherRegister publisherRegister, Channel channel) {
-    return publisherConverter.convert(new Tuple<>(publisherRegister, channel));
+    return PUBLISHER_CONVERTER.convert(new Tuple<>(publisherRegister, channel));
   }
 
   public static List<ServerDataBox> convert(List<DataBox> boxList) {

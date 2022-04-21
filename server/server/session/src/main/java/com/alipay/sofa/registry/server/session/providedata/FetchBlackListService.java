@@ -131,6 +131,7 @@ public class FetchBlackListService extends AbstractFetchSystemPropertyService<Bl
 
       List<ConnectId> conIds = connectionsService.getIpConnects(ipSet);
       // blacklist remove pub, sub, watch
+      LOGGER.info("blacklist conIds: {},ips: {}", conIds, ipSet);
       sessionRegistry.blacklist(conIds);
     }
   }

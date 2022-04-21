@@ -234,11 +234,63 @@ public class BlacklistTest extends BaseIntegrationTest {
     assertEquals(1, subscriberMap.size());
   }
 
+  @Test
+  public void testSetClientIP() throws Exception {
+    Map<String, Map<String, Set<String>>> map = new HashMap<>();
+    Set<String> set1 = new HashSet<>();
+    String ip = "33.33.33.33";
+    set1.add(ip);
+
+    Map<String, Set<String>> map1 = Maps.newHashMap();
+    map1.put(BlacklistConstants.IP_FULL, set1);
+
+    map.put(BlacklistConstants.FORBIDDEN_PUB, map1);
+
+    String dataId = "test-dataId-blacklistClientIp" + System.nanoTime();
+    String content = "data";
+    PublisherRegistration registration = new PublisherRegistration(dataId);
+    registration.setIp(ip);
+    com.alipay.sofa.registry.client.api.Publisher publisher =
+        registryClient1.register(registration, content);
+    Thread.sleep(2000L);
+    Map<String, List<Publisher>> publisherMap = queryPubs(dataId);
+    assertEquals(1, publisherMap.size());
+    assertEquals(1, publisherMap.get("PUB").size());
+
+    ObjectMapper mapper = new ObjectMapper();
+    Result response =
+        getMetaChannel()
+            .getWebTarget()
+            .path("blacklist/update")
+            .request()
+            .post(
+                Entity.entity(mapper.writeValueAsString(map), MediaType.APPLICATION_JSON),
+                Result.class);
+    assertTrue(response.isSuccess());
+    Thread.sleep(3000L);
+    publisherMap = queryPubs(dataId);
+    assertEquals(0, publisherMap.size());
+
+    publisher.republish(content);
+    Thread.sleep(2000L);
+    publisherMap = queryPubs(dataId);
+    assertEquals(0, publisherMap.size());
+  }
+
   @AfterClass
   public static void afterClass() {
     registryClient1.unregister("test-dataId-blacklist", DEFAULT_GROUP, RegistryType.SUBSCRIBER);
     registryClient1.unregister("test-dataId-blacklist", DEFAULT_GROUP, RegistryType.PUBLISHER);
     registryClient1.unregister("test-dataId-blacklist2", DEFAULT_GROUP, RegistryType.SUBSCRIBER);
     registryClient1.unregister("test-dataId-blacklist2", DEFAULT_GROUP, RegistryType.PUBLISHER);
+  }
+
+  private Map<String, List<Publisher>> queryPubs(String dataId) {
+    return sessionChannel
+        .getWebTarget()
+        .path("digest/pub/data/query")
+        .queryParam("dataInfoId", DataInfo.toDataInfoId(dataId, DEFAULT_INSTANCE_ID, DEFAULT_GROUP))
+        .request(APPLICATION_JSON)
+        .get(new GenericType<Map<String, List<Publisher>>>() {});
   }
 }
