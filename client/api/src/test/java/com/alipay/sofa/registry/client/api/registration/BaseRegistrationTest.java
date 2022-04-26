@@ -34,13 +34,4 @@ public class BaseRegistrationTest {
     Assert.assertEquals(
         "BaseRegistration{dataId='dataId', group='group', appName='app'}", registration.toString());
   }
-
-  @Test
-  public void testSetAttrs() {
-    BaseRegistration registration = new BaseRegistration();
-    registration.setIp("127.0.0.1");
-    Assert.assertEquals(registration.getIp(), "127.0.0.1");
-    registration.setInstanceId("instanceId");
-    Assert.assertEquals(registration.getInstanceId(), "instanceId");
-  }
 }

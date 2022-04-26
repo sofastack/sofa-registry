@@ -59,7 +59,6 @@ public class BlacklistMatchProcessFilter implements ProcessFilter<BaseInfo> {
         if (StringUtils.isNotBlank(ip)) {
           ipMatched = ipMatchStrategy.match(ip, () -> BlacklistConstants.FORBIDDEN_PUB);
         }
-        return socketMatched || ipMatched;
       case SUBSCRIBER:
         if (url != null) {
           socketMatched =
@@ -69,9 +68,7 @@ public class BlacklistMatchProcessFilter implements ProcessFilter<BaseInfo> {
         if (StringUtils.isNotBlank(ip)) {
           ipMatched = ipMatchStrategy.match(ip, () -> BlacklistConstants.FORBIDDEN_SUB_BY_PREFIX);
         }
-        return socketMatched || ipMatched;
-      default:
-        return false;
     }
+    return socketMatched || ipMatched;
   }
 }

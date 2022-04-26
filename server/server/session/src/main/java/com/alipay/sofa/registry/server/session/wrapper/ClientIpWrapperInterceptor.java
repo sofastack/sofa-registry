@@ -44,6 +44,6 @@ public class ClientIpWrapperInterceptor implements WrapperInterceptor<RegisterIn
 
   @Override
   public int getOrder() {
-    return -1;
+    return 0;
   }
 }
