@@ -53,6 +53,8 @@ public class DefaultPublisherHandlerStrategy implements PublisherHandlerStrategy
     try {
       String ip = channel.getRemoteAddress().getAddress().getHostAddress();
       int port = channel.getRemoteAddress().getPort();
+      publisherRegister.setIp(ip);
+      publisherRegister.setPort(port);
 
       if (StringUtils.isBlank(publisherRegister.getZone())) {
         publisherRegister.setZone(ValueConstants.DEFAULT_ZONE);
@@ -62,19 +64,19 @@ public class DefaultPublisherHandlerStrategy implements PublisherHandlerStrategy
         publisherRegister.setInstanceId(DEFAULT_INSTANCE_ID);
       }
 
-      publisher = PublisherConverter.convert(publisherRegister, channel);
+      publisher = PublisherConverter.convert(publisherRegister);
       publisher.setProcessId(ip + ":" + port);
 
-      handle(publisherRegister, channel, publisher, registerResponse, fromPb);
+      handle(publisher, channel, publisherRegister, registerResponse, fromPb);
     } catch (Throwable e) {
-      handleError(publisherRegister, channel, publisher, registerResponse, fromPb, e);
+      handleError(publisherRegister, publisher, registerResponse, fromPb, e);
     }
   }
 
   protected void handle(
-      PublisherRegister publisherRegister,
-      Channel channel,
       Publisher publisher,
+      Channel channel,
+      PublisherRegister publisherRegister,
       RegisterResponse registerResponse,
       boolean pb) {
     publisher.setSourceAddress(new URL(channel.getRemoteAddress()));
@@ -91,21 +93,17 @@ public class DefaultPublisherHandlerStrategy implements PublisherHandlerStrategy
     registerResponse.setVersion(publisher.getVersion());
     registerResponse.setRegistId(publisherRegister.getRegistId());
     registerResponse.setMessage("Publisher register success!");
-    log(true, publisherRegister, publisher, channel, pb);
+    log(true, publisherRegister, publisher, pb);
   }
 
   private void log(
-      boolean success,
-      PublisherRegister publisherRegister,
-      Publisher publisher,
-      Channel channel,
-      boolean pb) {
+      boolean success, PublisherRegister publisherRegister, Publisher publisher, boolean pb) {
     // [Y|N],[R|U|N],app,zone,dataInfoId,registerId,version,registerTimestamp,clientVersion,clientIp,clientPort,dataSize
     long size = DatumUtils.DataBoxListSize(publisherRegister.getDataList());
     Metrics.Access.pubCount(success);
     Metrics.Access.pubSize("registry", publisherRegister.getGroup(), size);
     PUB_LOGGER.info(
-        "{},{},{},{},{},G={},I={},{},{},{},{},{},{},clientIp={},size={},pb={},attrs={}",
+        "{},{},{},{},{},G={},I={},{},{},{},{},{},{},size={},pb={},attrs={}",
         success ? 'Y' : 'N',
         EventTypeConstants.getEventTypeFlag(publisherRegister.getEventType()),
         publisherRegister.getAppName(),
@@ -117,9 +115,8 @@ public class DefaultPublisherHandlerStrategy implements PublisherHandlerStrategy
         publisherRegister.getVersion(),
         publisher == null ? "" : publisher.getRegisterTimestamp(),
         publisher == null ? "" : publisher.getClientVersion(),
-        channel.getRemoteAddress().getAddress().getHostAddress(),
-        channel.getRemoteAddress().getPort(),
         publisherRegister.getIp(),
+        publisherRegister.getPort(),
         size,
         pb ? 'Y' : 'N',
         publisher == null ? "0" : publisher.attributesSize());
@@ -127,12 +124,11 @@ public class DefaultPublisherHandlerStrategy implements PublisherHandlerStrategy
 
   protected void handleError(
       PublisherRegister publisherRegister,
-      Channel channel,
       Publisher publisher,
       RegisterResponse registerResponse,
       boolean pb,
       Throwable e) {
-    log(false, publisherRegister, publisher, channel, pb);
+    log(false, publisherRegister, publisher, pb);
     RegisterLogs.logError(publisherRegister, "Publisher", registerResponse, e);
   }
 }

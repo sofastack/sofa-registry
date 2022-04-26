@@ -44,14 +44,14 @@ public abstract class DataIndexer<K, V> {
     ConcurrentUtils.createDaemonThread(name + "-IndexerRefresher", indexerRefresher).start();
   }
 
-  public <R> R add(K k, V v, UnThrowableCallable<R> dataStoreCaller) {
+  public <R> R add(K key, V val, UnThrowableCallable<R> dataStoreCaller) {
     Term term = lastTerm;
     term.start.incrementAndGet();
     try {
       if (doubleWrite) {
-        insert(tempIndex, k, v);
+        insert(tempIndex, key, val);
       }
-      insert(index, k, v);
+      insert(index, key, val);
       return dataStoreCaller.call();
     } finally {
       term.done.incrementAndGet();

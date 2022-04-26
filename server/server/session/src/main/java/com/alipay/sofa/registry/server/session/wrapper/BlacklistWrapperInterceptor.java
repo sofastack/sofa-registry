@@ -16,12 +16,12 @@
  */
 package com.alipay.sofa.registry.server.session.wrapper;
 
+import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.store.BaseInfo;
 import com.alipay.sofa.registry.common.model.store.StoreData.DataType;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.common.model.wrapper.WrapperInterceptor;
 import com.alipay.sofa.registry.common.model.wrapper.WrapperInvocation;
-import com.alipay.sofa.registry.core.constants.AttributeKeyConstants;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.server.session.filter.ProcessFilter;
 import com.alipay.sofa.registry.server.session.loggers.Loggers;
@@ -52,7 +52,7 @@ public class BlacklistWrapperInterceptor
 
     RegisterInvokeData registerInvokeData = invocation.getParameterSupplier().get();
     BaseInfo storeData = (BaseInfo) registerInvokeData.getStoreData();
-    if (Strings.isNotBlank(storeData.attributeOf(AttributeKeyConstants.ATTRIBUTE_BLOCKED_REQUEST))
+    if (Strings.isNotBlank(storeData.attributeOf(ValueConstants.BLOCKED_REQUEST_KEY))
         || processFilter.match(storeData)) {
       if (DataType.PUBLISHER == storeData.getDataType()) {
         // match blacklist stop pub.

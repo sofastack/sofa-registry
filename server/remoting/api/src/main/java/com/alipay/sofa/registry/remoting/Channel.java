@@ -86,8 +86,4 @@ public interface Channel {
   WebTarget getWebTarget();
 
   void close();
-
-  void setClientIP(String clientIP);
-
-  String getClientIP();
 }

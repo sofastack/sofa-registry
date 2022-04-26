@@ -54,6 +54,8 @@ public class DefaultSubscriberHandlerStrategy implements SubscriberHandlerStrate
     try {
       String ip = channel.getRemoteAddress().getAddress().getHostAddress();
       int port = channel.getRemoteAddress().getPort();
+      subscriberRegister.setIp(ip);
+      subscriberRegister.setPort(port);
 
       if (StringUtils.isBlank(subscriberRegister.getZone())) {
         subscriberRegister.setZone(ValueConstants.DEFAULT_ZONE);
@@ -63,19 +65,19 @@ public class DefaultSubscriberHandlerStrategy implements SubscriberHandlerStrate
         subscriberRegister.setInstanceId(DEFAULT_INSTANCE_ID);
       }
 
-      subscriber = SubscriberConverter.convert(subscriberRegister, channel);
+      subscriber = SubscriberConverter.convert(subscriberRegister);
       subscriber.setProcessId(ip + ":" + port);
 
-      handle(subscriberRegister, channel, subscriber, registerResponse, fromPb);
+      handle(subscriber, channel, subscriberRegister, registerResponse, fromPb);
     } catch (Throwable e) {
-      handleError(subscriberRegister, channel, subscriber, registerResponse, fromPb, e);
+      handleError(subscriberRegister, subscriber, registerResponse, fromPb, e);
     }
   }
 
   protected void handle(
-      SubscriberRegister subscriberRegister,
-      Channel channel,
       Subscriber subscriber,
+      Channel channel,
+      SubscriberRegister subscriberRegister,
       RegisterResponse registerResponse,
       boolean pb) {
     subscriber.setSourceAddress(
@@ -94,19 +96,15 @@ public class DefaultSubscriberHandlerStrategy implements SubscriberHandlerStrate
     registerResponse.setRegistId(subscriberRegister.getRegistId());
     registerResponse.setSuccess(true);
     registerResponse.setMessage("Subscriber register success!");
-    log(true, subscriberRegister, subscriber, channel, pb);
+    log(true, subscriberRegister, subscriber, pb);
   }
 
   private void log(
-      boolean success,
-      SubscriberRegister subscriberRegister,
-      Subscriber subscriber,
-      Channel channel,
-      boolean pb) {
+      boolean success, SubscriberRegister subscriberRegister, Subscriber subscriber, boolean pb) {
     // [Y|N],[R|U|N],app,zone,dataInfoId,registerId,scope,elementType,clientVersion,clientIp,clientPort
     Metrics.Access.subCount(success);
     SUB_LOGGER.info(
-        "{},{},{},{},{},G={},I={},{},{},{},{},{},{},{},{},clientIp={},pb={},attrs={}",
+        "{},{},{},{},{},G={},I={},{},{},{},{},{},{},{},{},pb={},attrs={}",
         success ? 'Y' : 'N',
         EventTypeConstants.getEventTypeFlag(subscriberRegister.getEventType()),
         subscriberRegister.getAppName(),
@@ -120,21 +118,19 @@ public class DefaultSubscriberHandlerStrategy implements SubscriberHandlerStrate
         subscriber == null ? "" : subscriber.getClientVersion(),
         subscriber == null ? "" : subscriber.getRegisterTimestamp(),
         subscriber == null ? "" : subscriber.getVersion(),
-        channel.getRemoteAddress().getAddress().getHostAddress(),
-        channel.getRemoteAddress().getPort(),
         subscriberRegister.getIp(),
+        subscriberRegister.getPort(),
         pb ? 'Y' : 'N',
         subscriber == null ? "0" : subscriber.attributesSize());
   }
 
   protected void handleError(
       SubscriberRegister subscriberRegister,
-      Channel channel,
       Subscriber subscriber,
       RegisterResponse registerResponse,
       boolean pb,
       Throwable e) {
-    log(false, subscriberRegister, subscriber, channel, pb);
+    log(false, subscriberRegister, subscriber, pb);
     RegisterLogs.logError(subscriberRegister, "Subscriber", registerResponse, e);
   }
 }
