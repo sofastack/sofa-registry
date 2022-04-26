@@ -23,7 +23,6 @@ import com.alipay.sofa.registry.server.session.filter.ProcessFilter;
 import com.alipay.sofa.registry.server.session.providedata.FetchBlackListService;
 import java.util.List;
 import javax.annotation.Resource;
-import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -45,30 +44,22 @@ public class BlacklistMatchProcessFilter implements ProcessFilter<BaseInfo> {
     if (null == configList || configList.size() == 0) {
       return false;
     }
-    boolean socketMatched = false;
-    boolean ipMatched = false;
 
     URL url = storeData.getSourceAddress();
-    String ip = storeData.getIp();
-    switch (storeData.getDataType()) {
-      case PUBLISHER:
-        if (url != null) {
-          socketMatched =
-              ipMatchStrategy.match(url.getIpAddress(), () -> BlacklistConstants.FORBIDDEN_PUB);
-        }
-        if (StringUtils.isNotBlank(ip)) {
-          ipMatched = ipMatchStrategy.match(ip, () -> BlacklistConstants.FORBIDDEN_PUB);
-        }
-      case SUBSCRIBER:
-        if (url != null) {
-          socketMatched =
-              ipMatchStrategy.match(
-                  url.getIpAddress(), () -> BlacklistConstants.FORBIDDEN_SUB_BY_PREFIX);
-        }
-        if (StringUtils.isNotBlank(ip)) {
-          ipMatched = ipMatchStrategy.match(ip, () -> BlacklistConstants.FORBIDDEN_SUB_BY_PREFIX);
-        }
+
+    if (url != null) {
+      switch (storeData.getDataType()) {
+        case PUBLISHER:
+          return ipMatchStrategy.match(url.getIpAddress(), () -> BlacklistConstants.FORBIDDEN_PUB);
+
+        case SUBSCRIBER:
+          return ipMatchStrategy.match(
+              url.getIpAddress(), () -> BlacklistConstants.FORBIDDEN_SUB_BY_PREFIX);
+
+        default:
+          return false;
+      }
     }
-    return socketMatched || ipMatched;
+    return false;
   }
 }

@@ -21,6 +21,7 @@ import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.session.TestUtils;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfigBean;
+import com.alipay.sofa.registry.server.session.mapper.ConnectionMapper;
 import com.alipay.sofa.registry.server.session.store.DataStore;
 import com.alipay.sofa.registry.server.session.store.SessionInterests;
 import com.alipay.sofa.registry.server.session.store.SessionWatchers;
@@ -37,6 +38,7 @@ public class ConnectionsServiceTest {
     SessionServerConfigBean configBean = TestUtils.newSessionConfig("testDc");
     ConnectionsService connectionsService = new ConnectionsService();
     connectionsService.sessionServerConfig = configBean;
+    connectionsService.connectionMapper = new ConnectionMapper();
     connectionsService.sessionDataStore = Mockito.mock(DataStore.class);
 
     connectionsService.sessionInterests = new SessionInterests();

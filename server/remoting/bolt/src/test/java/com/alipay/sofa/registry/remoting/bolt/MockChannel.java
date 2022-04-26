@@ -19,7 +19,6 @@ package com.alipay.sofa.registry.remoting.bolt;
 import com.alipay.sofa.registry.remoting.Channel;
 import java.net.InetSocketAddress;
 import javax.ws.rs.client.WebTarget;
-import org.apache.commons.lang.StringUtils;
 
 /**
  * @author xuanbei
@@ -64,12 +63,4 @@ public class MockChannel implements Channel {
 
   @Override
   public void close() {}
-
-  @Override
-  public void setClientIP(String clientIP) {}
-
-  @Override
-  public String getClientIP() {
-    return StringUtils.EMPTY;
-  }
 }

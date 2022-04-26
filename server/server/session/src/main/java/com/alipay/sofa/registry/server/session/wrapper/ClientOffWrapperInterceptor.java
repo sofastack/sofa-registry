@@ -59,15 +59,7 @@ public class ClientOffWrapperInterceptor
 
     URL url = storeData.getSourceAddress();
 
-    AddressVersion address = null;
-    AddressVersion socketMatch = fetchClientOffAddressService.getAddress(url.getIpAddress());
-    AddressVersion ipMatch = fetchClientOffAddressService.getAddress(storeData.getIp());
-    if (socketMatch != null) {
-      address = socketMatch;
-    }
-    if (ipMatch != null) {
-      address = ipMatch;
-    }
+    AddressVersion address = fetchClientOffAddressService.getAddress(url.getIpAddress());
     if (address != null) {
       markChannel(registerInvokeData.getChannel());
       LOGGER.info(

@@ -14,20 +14,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.core.constants;
+package com.alipay.sofa.registry.test.mapper;
+
+import com.alipay.sofa.registry.server.session.mapper.ConnectionMapper;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
- * @author zhuoyu.sjw
- * @version $Id: AttributeKeyConstants.java, v 0.1 2018-03-30 20:18 zhuoyu.sjw Exp $$
+ * @author ruoshan
+ * @since 5.4.1
  */
-public class AttributeKeyConstants {
+public class ConnectionMapperTest {
 
-  /** Access Key */
-  public static final String ATTRIBUTE_ACCESS_KEY = "!AccessKey";
-  /** Algorithm Key */
-  public static final String ATTRIBUTE_ALGORITHM = "!Algorithm";
-  /** Signature Key */
-  public static final String ATTRIBUTE_SIGNATURE = "!Signature";
-  /** Timestamp Key */
-  public static final String ATTRIBUTE_TIMESTAMP = "!Timestamp";
+  @Test
+  public void simpleTestForMap() {
+    String connectId = "1.1.1.1:1234";
+    String clientIp = "2.2.2.2";
+    ConnectionMapper connectionMapper = new ConnectionMapper();
+    // add
+
+    connectionMapper.add(connectId, clientIp);
+    Assert.assertTrue(connectionMapper.contains(connectId));
+    Assert.assertEquals(clientIp, connectionMapper.get(connectId));
+    // remove
+    connectionMapper.remove(connectId);
+    Assert.assertFalse(connectionMapper.contains(connectId));
+  }
 }

@@ -66,8 +66,6 @@ public abstract class BaseInfo implements Serializable, StoreData<String> {
 
   private volatile Map<String, String> attributes;
 
-  private String ip;
-
   /** ClientVersion Enum */
   public enum ClientVersion {
     /** */
@@ -327,14 +325,6 @@ public abstract class BaseInfo implements Serializable, StoreData<String> {
    */
   public void setInstanceId(String instanceId) {
     this.instanceId = WordCache.getWordCache(instanceId);
-  }
-
-  public String getIp() {
-    return ip;
-  }
-
-  public void setIp(String ip) {
-    this.ip = WordCache.getWordCache(ip);
   }
 
   /**

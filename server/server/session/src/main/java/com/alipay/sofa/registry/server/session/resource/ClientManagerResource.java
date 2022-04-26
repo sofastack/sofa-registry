@@ -27,12 +27,12 @@ import com.alipay.sofa.registry.common.model.sessionserver.ClientOnRequest;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
 import com.alipay.sofa.registry.remoting.exchange.message.SimpleRequest;
 import com.alipay.sofa.registry.server.session.bootstrap.ExecutorManager;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.connections.ConnectionsService;
+import com.alipay.sofa.registry.server.session.mapper.ConnectionMapper;
 import com.alipay.sofa.registry.server.session.providedata.FetchClientOffAddressService;
 import com.alipay.sofa.registry.server.session.registry.SessionRegistry;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
@@ -70,6 +70,8 @@ public class ClientManagerResource {
   @Autowired private MetaServerService metaServerService;
   @Autowired private ConnectionsService connectionsService;
 
+  @Autowired private ConnectionMapper connectionMapper;
+
   @Autowired private NodeExchanger sessionConsoleExchanger;
 
   @Resource private FetchClientOffAddressService fetchClientOffAddressService;
@@ -98,7 +100,7 @@ public class ClientManagerResource {
       return CommonResponse.buildFailedResponse("ips is empty");
     }
     final List<String> ipList = CollectionSdks.toIpList(ips);
-    List<ConnectId> conIds = connectionsService.closeIpConnects(ipList);
+    List<String> conIds = connectionsService.closeIpConnects(ipList);
     LOGGER.info("clientOn ips={}, conIds={}", ips, conIds);
 
     return CommonResponse.buildSuccessResponse();
@@ -206,15 +208,7 @@ public class ClientManagerResource {
   @GET
   @Path("/connectionMapper.json")
   public Map<String, String> connectionMapper() {
-    Map<String, String> ret = Maps.newHashMap();
-    for (Channel channel : connectionsService.getAllChannel()) {
-      String clientIP = channel.getClientIP();
-      String socketRemoteIP = channel.getRemoteAddress().getAddress().getHostAddress();
-      if (!StringUtils.equals(clientIP, socketRemoteIP)) {
-        ret.put(channel.getRemoteAddress().toString(), clientIP);
-      }
-    }
-    return ret;
+    return connectionMapper.get();
   }
 
   public List<URL> getOtherConsoleServersCurrentZone() {

@@ -122,7 +122,6 @@ public class Publisher extends BaseInfo {
     publisher.setGroup(publisher.getGroup());
     publisher.setDataId(publisher.getDataId());
     publisher.setClientId(publisher.getClientId());
-    publisher.setIp(publisher.getIp());
     publisher.setCell(publisher.getCell());
     publisher.setProcessId(publisher.getProcessId());
     publisher.setAppName(publisher.getAppName());

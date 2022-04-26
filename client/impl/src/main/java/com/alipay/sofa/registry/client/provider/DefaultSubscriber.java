@@ -176,11 +176,7 @@ public class DefaultSubscriber extends AbstractInternalRegister implements Subsc
       }
 
       register = new SubscriberRegister();
-      if (StringUtils.isNotEmpty(registration.getInstanceId())) {
-        register.setInstanceId(registration.getInstanceId());
-      } else {
-        register.setInstanceId(config.getInstanceId());
-      }
+      register.setInstanceId(config.getInstanceId());
       if (StringUtils.isNotEmpty(config.getZone())) {
         register.setZone(config.getZone());
       } else {
@@ -191,7 +187,6 @@ public class DefaultSubscriber extends AbstractInternalRegister implements Subsc
       } else {
         register.setAppName(config.getAppName());
       }
-      register.setIp(registration.getIp());
       register.setDataId(registration.getDataId());
       register.setGroup(registration.getGroup());
       register.setRegistId(REGIST_ID);
