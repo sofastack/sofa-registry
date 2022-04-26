@@ -217,22 +217,37 @@ public class SessionRegistry implements Registry {
 
   @Override
   public void clean(List<ConnectId> connectIds) {
-    disableConnect(new HashSet<>(connectIds), true, false);
+    disableConnect(connectIds, true, false);
   }
 
   @Override
   public void clientOff(List<ConnectId> connectIds) {
     ClientManagerMetric.CLIENT_OFF_COUNTER.inc(connectIds.size());
-    disableConnect(new HashSet<>(connectIds), false, true);
+    disableConnect(connectIds, false, true);
+  }
+
+  @Override
+  public void clientOffWithTimestampCheck(Map<ConnectId, Long> connectIds) {
+    ClientManagerMetric.CLIENT_OFF_COUNTER.inc(connectIds.size());
+    disableConnect(connectIds.keySet(), false, true, connectIds);
   }
 
   @Override
   public void blacklist(List<ConnectId> connectIds) {
-    disableConnect(new HashSet<>(connectIds), true, true);
+    disableConnect(connectIds, true, true);
   }
 
   private void disableConnect(
-      Set<ConnectId> connectIdSet, boolean removeSubAndWat, boolean checkSub) {
+      List<ConnectId> connectIds, boolean removeSubAndWat, boolean checkSub) {
+    Set<ConnectId> connectIdSet = Collections.unmodifiableSet(Sets.newHashSet(connectIds));
+    disableConnect(connectIdSet, removeSubAndWat, checkSub, Collections.emptyMap());
+  }
+
+  private void disableConnect(
+      Set<ConnectId> connectIdSet,
+      boolean removeSubAndWat,
+      boolean checkSub,
+      Map<ConnectId, Long> connectIdVersions) {
     if (CollectionUtils.isEmpty(connectIdSet)) {
       return;
     }
@@ -252,6 +267,18 @@ public class SessionRegistry implements Registry {
         int subEmptyCount = 0;
         for (Subscriber sub : subEntry.getValue().values()) {
           if (isPushEmpty(sub)) {
+            Long clientOffVersion = connectIdVersions.get(subEntry.getKey());
+            if (clientOffVersion != null && clientOffVersion < sub.getRegisterTimestamp()) {
+              Loggers.CLIENT_DISABLE_LOG.error(
+                  "[ClientOffVersionError]subEmpty,{},{},{}, clientOffVersion={} is smaller than subRegisterTimestamp={}",
+                  sub.getDataInfoId(),
+                  dataCenter,
+                  subEntry.getKey(),
+                  clientOffVersion,
+                  sub.getRegisterTimestamp());
+              continue;
+            }
+
             subEmptyCount++;
             firePushService.fireOnPushEmpty(sub, dataCenter);
             Loggers.CLIENT_DISABLE_LOG.info(
