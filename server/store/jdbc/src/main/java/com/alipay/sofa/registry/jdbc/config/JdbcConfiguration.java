@@ -33,9 +33,6 @@ import com.alibaba.druid.filter.logging.Slf4jLogFilter;
 import com.alibaba.druid.filter.stat.StatFilter;
 import com.alibaba.druid.pool.DruidDataSource;
 import com.alibaba.druid.pool.DruidDataSourceFactory;
-import com.alipay.sofa.registry.jdbc.decrypt.DecryptConstants;
-import com.alipay.sofa.registry.jdbc.decrypt.Decryptor;
-import com.alipay.sofa.registry.jdbc.decrypt.DecryptorManager;
 import com.alipay.sofa.registry.jdbc.repository.impl.AppRevisionJdbcRepository;
 import com.alipay.sofa.registry.jdbc.repository.impl.ClientManagerAddressJdbcRepository;
 import com.alipay.sofa.registry.jdbc.repository.impl.DateNowJdbcRepository;
@@ -53,7 +50,6 @@ import com.alipay.sofa.registry.store.api.spring.SpringContext;
 import com.alipay.sofa.registry.util.SystemUtils;
 import com.google.common.collect.Lists;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 import javax.sql.DataSource;
@@ -62,7 +58,6 @@ import org.apache.ibatis.mapping.VendorDatabaseIdProvider;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.annotation.MapperScan;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -130,17 +125,6 @@ public class JdbcConfiguration {
       return filter;
     }
 
-    @Bean
-    @ConditionalOnMissingBean
-    public Collection<Decryptor> decryptors() {
-      return Lists.newArrayList();
-    }
-
-    @Bean
-    public DecryptorManager decryptorManager() {
-      return new DecryptorManager();
-    }
-
     /**
      * create datasource
      *
@@ -148,8 +132,7 @@ public class JdbcConfiguration {
      * @throws Exception
      */
     @Bean
-    public DataSource dataSource(
-        DecryptorManager decryptorManager, JdbcDriverConfig jdbcDriverConfig) throws Exception {
+    public DataSource dataSource(JdbcDriverConfig jdbcDriverConfig) throws Exception {
       Properties props = new Properties();
       props.put(
           PROP_DRIVERCLASSNAME,
@@ -166,11 +149,8 @@ public class JdbcConfiguration {
               JdbcDriverConfigBean.PRE_FIX + "." + PROP_USERNAME, jdbcDriverConfig.getUsername()));
       props.put(
           PROP_PASSWORD,
-          decryptorManager.decrypt(
-              DecryptConstants.JDBC_PASSWORD,
-              SystemUtils.getSystem(
-                  JdbcDriverConfigBean.PRE_FIX + "." + PROP_PASSWORD,
-                  jdbcDriverConfig.getPassword())));
+          SystemUtils.getSystem(
+              JdbcDriverConfigBean.PRE_FIX + "." + PROP_PASSWORD, jdbcDriverConfig.getPassword()));
 
       // todo connection pool config
       props.put(PROP_MINIDLE, jdbcDriverConfig.getMinIdle() + "");
