@@ -227,12 +227,6 @@ public class SessionRegistry implements Registry {
   }
 
   @Override
-  public void clientOffWithTimestampCheck(Map<ConnectId, Long> connectIds) {
-    ClientManagerMetric.CLIENT_OFF_COUNTER.inc(connectIds.size());
-    disableConnect(connectIds.keySet(), false, true, connectIds);
-  }
-
-  @Override
   public void blacklist(List<ConnectId> connectIds) {
     disableConnect(connectIds, true, true);
   }
