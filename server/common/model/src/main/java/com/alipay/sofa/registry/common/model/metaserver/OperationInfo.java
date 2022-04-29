@@ -127,4 +127,14 @@ public class OperationInfo {
   public void setOperateTs(long operateTs) {
     this.operateTs = operateTs;
   }
+
+  @Override
+  public String toString() {
+    return "OperationInfo{" +
+            "nodeType=" + nodeType +
+            ", cell='" + cell + '\'' +
+            ", address='" + address + '\'' +
+            ", operateTs=" + operateTs +
+            '}';
+  }
 }

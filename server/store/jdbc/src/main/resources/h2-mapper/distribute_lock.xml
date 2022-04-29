@@ -28,7 +28,7 @@
         <result property="duration" column="duration" javaType="long" jdbcType="BIGINT"/>
         <result property="gmtCreate" column="gmt_create" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
         <result property="gmtModified" column="gmt_modified" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
-        <result property="gmtModifiedUnixNanos" column="gmt_modified_unixnanos" javaType="long" jdbcType="INTEGER"/>
+        <result property="gmtModifiedUnixNanos" column="gmt_modified_unixnanos" javaType="long" jdbcType="BIGINT"/>
         <result property="gmtDbServerTime" column="gmt_db_server_time" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
         <result property="term" column="term" javaType="long" jdbcType="BIGINT"/>
         <result property="termDuration" column="term_duration" javaType="long" jdbcType="BIGINT"/>

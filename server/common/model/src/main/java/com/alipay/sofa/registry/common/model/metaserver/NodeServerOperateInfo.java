@@ -215,4 +215,13 @@ public class NodeServerOperateInfo {
     return operationInfos.remove(
         new OperationInfo(NodeType.SESSION, cell, address, System.currentTimeMillis()));
   }
+
+  @Override
+  public String toString() {
+    return "NodeServerOperateInfo{" +
+            "metas=" + metas +
+            ", datas=" + datas +
+            ", sessions=" + sessions +
+            '}';
+  }
 }

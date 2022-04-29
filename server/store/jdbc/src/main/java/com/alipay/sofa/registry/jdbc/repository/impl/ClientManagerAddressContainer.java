@@ -47,7 +47,7 @@ public class ClientManagerAddressContainer implements DbEntryContainer<ClientMan
         clientOffData.put(
             clientManagerAddress.getAddress(),
             new AddressVersion(
-                clientManagerAddress.getGmtCreate().getTime(),
+                clientManagerAddress.getGmtCreateUnixMillis(),
                 clientManagerAddress.getAddress(),
                 clientManagerAddress.isSub()));
         reduces.remove(clientManagerAddress.getAddress());
