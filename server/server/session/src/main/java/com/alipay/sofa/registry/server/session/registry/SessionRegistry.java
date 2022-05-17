@@ -418,6 +418,16 @@ public class SessionRegistry implements Registry {
           resultMap.put(slotId, result);
         }
       } catch (Throwable e) {
+        SCAN_VER_LOGGER.info(
+                "[fetchSlotVer]round={},{},{},leader={},interests={},gets={},success={}",
+                round,
+                slotId,
+                dataCenter,
+                slotTableCache.getLeader(slotId),
+                interestVersions.size(),
+                0,
+                "N");
+
         SCAN_VER_LOGGER.error(
             "round={}, failed to fetch versions slotId={}, size={}",
             round,
