@@ -208,10 +208,7 @@ public class FetchClientOffAddressService
 
     final Set<String> clientOpens;
 
-    public ClientOffTable(
-        Set<String> addAddress,
-        Set<String> removes,
-        Set<String> clientOpens) {
+    public ClientOffTable(Set<String> addAddress, Set<String> removes, Set<String> clientOpens) {
       this.addAddress = addAddress;
       this.removes = removes;
       this.clientOpens = clientOpens;

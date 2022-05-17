@@ -19,10 +19,8 @@ package com.alipay.sofa.registry.client.provider;
 import com.alipay.sofa.registry.client.api.Publisher;
 import com.alipay.sofa.registry.client.api.RegistryClientConfig;
 import com.alipay.sofa.registry.client.api.registration.PublisherRegistration;
-import com.alipay.sofa.registry.client.constants.ValueConstants;
 import com.alipay.sofa.registry.client.task.TaskEvent;
 import com.alipay.sofa.registry.client.task.Worker;
-import com.alipay.sofa.registry.client.util.StringUtils;
 import com.alipay.sofa.registry.core.constants.EventTypeConstants;
 import com.alipay.sofa.registry.core.model.DataBox;
 import com.alipay.sofa.registry.core.model.PublisherRegister;
@@ -106,23 +104,8 @@ public class DefaultPublisher extends AbstractInternalRegister implements Publis
     PublisherRegister register;
     try {
       register = new PublisherRegister();
-      register.setInstanceId(config.getInstanceId());
-      if (StringUtils.isNotEmpty(config.getZone())) {
-        register.setZone(config.getZone());
-      } else {
-        register.setZone(ValueConstants.DEFAULT_ZONE);
-      }
-      if (StringUtils.isNotEmpty(registration.getAppName())) {
-        register.setAppName(registration.getAppName());
-      } else {
-        register.setAppName(config.getAppName());
-      }
-      register.setDataId(registration.getDataId());
-      register.setGroup(registration.getGroup());
       register.setRegistId(REGIST_ID);
-      register.setVersion(this.getPubVersion().get());
-      register.setTimestamp(this.getTimestamp());
-
+      setAttributes(register, registration, config);
       // auth signature
       setAuthSignature(register);
 

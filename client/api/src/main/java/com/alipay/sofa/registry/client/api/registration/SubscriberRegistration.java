@@ -95,6 +95,12 @@ public class SubscriberRegistration extends BaseRegistration {
         + ", appName='"
         + appName
         + '\''
+        + ", instanceId='"
+        + instanceId
+        + '\''
+        + ", ip='"
+        + ip
+        + '\''
         + ", scopeEnum="
         + scopeEnum
         + ", subscriberDataObserver="

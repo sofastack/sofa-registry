@@ -19,7 +19,6 @@ package com.alipay.sofa.registry.server.session.registry;
 import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.store.StoreData;
 import com.alipay.sofa.registry.remoting.Channel;
-
 import java.util.List;
 
 /**

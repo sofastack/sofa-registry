@@ -218,10 +218,13 @@ public class NodeServerOperateInfo {
 
   @Override
   public String toString() {
-    return "NodeServerOperateInfo{" +
-            "metas=" + metas +
-            ", datas=" + datas +
-            ", sessions=" + sessions +
-            '}';
+    return "NodeServerOperateInfo{"
+        + "metas="
+        + metas
+        + ", datas="
+        + datas
+        + ", sessions="
+        + sessions
+        + '}';
   }
 }

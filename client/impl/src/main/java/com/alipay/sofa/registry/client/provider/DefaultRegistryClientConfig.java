@@ -32,6 +32,8 @@ public class DefaultRegistryClientConfig implements RegistryClientConfig {
   /** */
   private String instanceId;
 
+  private String ip;
+
   /** */
   private String zone;
 
@@ -94,6 +96,7 @@ public class DefaultRegistryClientConfig implements RegistryClientConfig {
    *
    * @param env the env
    * @param instanceId the instance id
+   * @param ip the ip
    * @param zone the zone
    * @param registryEndpoint the registry endpoint
    * @param registryEndpointPort the registry endpoint port
@@ -116,6 +119,7 @@ public class DefaultRegistryClientConfig implements RegistryClientConfig {
   public DefaultRegistryClientConfig(
       String env,
       String instanceId,
+      String ip,
       String zone,
       String registryEndpoint,
       int registryEndpointPort,
@@ -137,6 +141,7 @@ public class DefaultRegistryClientConfig implements RegistryClientConfig {
       boolean eventBusEnable) {
     this.env = env;
     this.instanceId = instanceId;
+    this.ip = ip;
     this.zone = zone;
     this.registryEndpoint = registryEndpoint;
     this.registryEndpointPort = registryEndpointPort;
@@ -176,6 +181,11 @@ public class DefaultRegistryClientConfig implements RegistryClientConfig {
   @Override
   public String getInstanceId() {
     return instanceId;
+  }
+
+  @Override
+  public String getIp() {
+    return ip;
   }
 
   /**
@@ -421,6 +431,9 @@ public class DefaultRegistryClientConfig implements RegistryClientConfig {
     if (instanceId != null ? !instanceId.equals(that.instanceId) : that.instanceId != null) {
       return false;
     }
+    if (ip != null ? !ip.equals(that.ip) : that.ip != null) {
+      return false;
+    }
     if (zone != null ? !zone.equals(that.zone) : that.zone != null) {
       return false;
     }
@@ -444,6 +457,7 @@ public class DefaultRegistryClientConfig implements RegistryClientConfig {
   public int hashCode() {
     int result = env != null ? env.hashCode() : 0;
     result = 31 * result + (instanceId != null ? instanceId.hashCode() : 0);
+    result = 31 * result + (ip != null ? ip.hashCode() : 0);
     result = 31 * result + (zone != null ? zone.hashCode() : 0);
     result = 31 * result + (registryEndpoint != null ? registryEndpoint.hashCode() : 0);
     result = 31 * result + registryEndpointPort;
@@ -465,6 +479,8 @@ public class DefaultRegistryClientConfig implements RegistryClientConfig {
         + '\''
         + ", instanceId='"
         + instanceId
+        + ", ip='"
+        + ip
         + '\''
         + ", zone='"
         + zone

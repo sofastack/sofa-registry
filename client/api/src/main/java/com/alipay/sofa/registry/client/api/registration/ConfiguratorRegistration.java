@@ -70,6 +70,12 @@ public class ConfiguratorRegistration extends BaseRegistration {
         + ", appName='"
         + appName
         + '\''
+        + ", instanceId='"
+        + instanceId
+        + '\''
+        + ", ip='"
+        + ip
+        + '\''
         + '}';
   }
 }
