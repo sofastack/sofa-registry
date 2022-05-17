@@ -21,12 +21,10 @@ import com.alipay.sofa.registry.client.api.Subscriber;
 import com.alipay.sofa.registry.client.api.SubscriberDataObserver;
 import com.alipay.sofa.registry.client.api.model.UserData;
 import com.alipay.sofa.registry.client.api.registration.SubscriberRegistration;
-import com.alipay.sofa.registry.client.constants.ValueConstants;
 import com.alipay.sofa.registry.client.model.SegmentData;
 import com.alipay.sofa.registry.client.task.TaskEvent;
 import com.alipay.sofa.registry.client.task.Worker;
 import com.alipay.sofa.registry.client.util.CommonUtils;
-import com.alipay.sofa.registry.client.util.StringUtils;
 import com.alipay.sofa.registry.core.constants.EventTypeConstants;
 import com.alipay.sofa.registry.core.model.DataBox;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
@@ -176,24 +174,9 @@ public class DefaultSubscriber extends AbstractInternalRegister implements Subsc
       }
 
       register = new SubscriberRegister();
-      register.setInstanceId(config.getInstanceId());
-      if (StringUtils.isNotEmpty(config.getZone())) {
-        register.setZone(config.getZone());
-      } else {
-        register.setZone(ValueConstants.DEFAULT_ZONE);
-      }
-      if (StringUtils.isNotEmpty(registration.getAppName())) {
-        register.setAppName(registration.getAppName());
-      } else {
-        register.setAppName(config.getAppName());
-      }
-      register.setDataId(registration.getDataId());
-      register.setGroup(registration.getGroup());
       register.setRegistId(REGIST_ID);
-      register.setVersion(this.getPubVersion().get());
-      register.setTimestamp(this.getTimestamp());
       register.setScope(registration.getScopeEnum().name());
-
+      setAttributes(register, registration, config);
       // auth signature
       setAuthSignature(register);
 

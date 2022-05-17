@@ -50,6 +50,12 @@ public class PublisherRegistration extends BaseRegistration {
         + ", appName='"
         + appName
         + '\''
-        + '}';
+        + ", instanceId='"
+        + instanceId
+        + '\''
+        + ", ip='"
+        + ip
+        + '\''
+        + +'}';
   }
 }

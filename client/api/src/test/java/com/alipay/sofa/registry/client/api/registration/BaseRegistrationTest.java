@@ -28,10 +28,23 @@ public class BaseRegistrationTest {
     registration.setAppName("app");
     registration.setDataId("dataId");
     registration.setGroup("group");
+    registration.setInstanceId("instanceId");
+    registration.setIp("ip");
     Assert.assertEquals("app", registration.getAppName());
     Assert.assertEquals("dataId", registration.getDataId());
     Assert.assertEquals("group", registration.getGroup());
+    Assert.assertEquals("instanceId", registration.getInstanceId());
+    Assert.assertEquals("ip", registration.getIp());
     Assert.assertEquals(
-        "BaseRegistration{dataId='dataId', group='group', appName='app'}", registration.toString());
+        "BaseRegistration{dataId='dataId', group='group', appName='app', instanceId='instanceId', ip='ip'}", registration.toString());
+  }
+
+  @Test
+  public void testSetAttrs() {
+    BaseRegistration registration = new BaseRegistration();
+    registration.setIp("127.0.0.1");
+    Assert.assertEquals(registration.getIp(), "127.0.0.1");
+    registration.setInstanceId("instanceId");
+    Assert.assertEquals(registration.getInstanceId(), "instanceId");
   }
 }

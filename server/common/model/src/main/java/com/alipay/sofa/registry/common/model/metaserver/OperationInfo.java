@@ -130,11 +130,17 @@ public class OperationInfo {
 
   @Override
   public String toString() {
-    return "OperationInfo{" +
-            "nodeType=" + nodeType +
-            ", cell='" + cell + '\'' +
-            ", address='" + address + '\'' +
-            ", operateTs=" + operateTs +
-            '}';
+    return "OperationInfo{"
+        + "nodeType="
+        + nodeType
+        + ", cell='"
+        + cell
+        + '\''
+        + ", address='"
+        + address
+        + '\''
+        + ", operateTs="
+        + operateTs
+        + '}';
   }
 }

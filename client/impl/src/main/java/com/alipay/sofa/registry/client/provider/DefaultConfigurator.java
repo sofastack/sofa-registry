@@ -21,11 +21,9 @@ import com.alipay.sofa.registry.client.api.Configurator;
 import com.alipay.sofa.registry.client.api.RegistryClientConfig;
 import com.alipay.sofa.registry.client.api.model.ConfigData;
 import com.alipay.sofa.registry.client.api.registration.ConfiguratorRegistration;
-import com.alipay.sofa.registry.client.constants.ValueConstants;
 import com.alipay.sofa.registry.client.model.ConfiguratorData;
 import com.alipay.sofa.registry.client.task.TaskEvent;
 import com.alipay.sofa.registry.client.task.Worker;
-import com.alipay.sofa.registry.client.util.StringUtils;
 import com.alipay.sofa.registry.core.constants.EventTypeConstants;
 import com.alipay.sofa.registry.core.model.ConfiguratorRegister;
 import com.alipay.sofa.registry.core.model.DataBox;
@@ -119,23 +117,8 @@ public class DefaultConfigurator extends AbstractInternalRegister implements Con
     readLock.lock();
     ConfiguratorRegister register = new ConfiguratorRegister();
     try {
-      register.setInstanceId(config.getInstanceId());
-      if (StringUtils.isNotEmpty(config.getZone())) {
-        register.setZone(config.getZone());
-      } else {
-        register.setZone(ValueConstants.DEFAULT_ZONE);
-      }
-      if (StringUtils.isNotEmpty(registration.getAppName())) {
-        register.setAppName(registration.getAppName());
-      } else {
-        register.setAppName(config.getAppName());
-      }
-      register.setDataId(registration.getDataId());
-      register.setGroup(registration.getGroup());
       register.setRegistId(REGIST_ID);
-      register.setVersion(this.getPubVersion().get());
-      register.setTimestamp(this.getTimestamp());
-
+      setAttributes(register, registration, config);
       // auth signature
       setAuthSignature(register);
 
