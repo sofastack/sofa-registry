@@ -72,8 +72,12 @@ public class CompressPushKey implements CompressKey {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     CompressPushKey that = (CompressPushKey) o;
     return version == that.version
         && Objects.equals(encode, that.encode)
@@ -131,8 +135,12 @@ public class CompressPushKey implements CompressKey {
 
     @Override
     public boolean equals(Object o) {
-      if (this == o) return true;
-      if (o == null || getClass() != o.getClass()) return false;
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
       ZoneCount zoneCount = (ZoneCount) o;
       return count == zoneCount.count && Objects.equals(zone, zoneCount.zone);
     }

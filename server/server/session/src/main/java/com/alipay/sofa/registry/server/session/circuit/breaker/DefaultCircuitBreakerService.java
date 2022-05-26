@@ -82,14 +82,18 @@ public class DefaultCircuitBreakerService implements CircuitBreakerService {
     CircuitBreakerStatistic addressStatistic =
         circuitBreakerAddress.getIfPresent(statistic.getAddress());
     if (addressStatistic != null) {
-      boolean addressCircuitBreak = addressStatistic.circuitBreak(
+      boolean addressCircuitBreak =
+          addressStatistic.circuitBreak(
               sessionServerConfig.getPushAddressCircuitBreakerThreshold(), silenceMillis);
-      boolean subCircuitBreak = statistic.circuitBreak(
+      boolean subCircuitBreak =
+          statistic.circuitBreak(
               sessionServerConfig.getPushCircuitBreakerThreshold(), silenceMillis);
-      LOGGER.info("[addressCircuitBreak]addressCircuitBreak: {}, addressStatistic:{}, subCircuitBreak:{}, subStatistic:{}", addressCircuitBreak,
-              addressStatistic,
-              subCircuitBreak,
-              statistic);
+      LOGGER.info(
+          "[addressCircuitBreak]addressCircuitBreak: {}, addressStatistic:{}, subCircuitBreak:{}, subStatistic:{}",
+          addressCircuitBreak,
+          addressStatistic,
+          subCircuitBreak,
+          statistic);
       return addressCircuitBreak || subCircuitBreak;
     }
 
@@ -123,7 +127,8 @@ public class DefaultCircuitBreakerService implements CircuitBreakerService {
           circuitBreakerAddress.get(
               address, () -> new CircuitBreakerStatistic(subscriber.getGroup(), ip, address));
       statistic.fail();
-      LOGGER.info("PushN, dataInfoId={}, inc circuit statistic={}", subscriber.getDataInfoId(), statistic);
+      LOGGER.info(
+          "PushN, dataInfoId={}, inc circuit statistic={}", subscriber.getDataInfoId(), statistic);
       return true;
     } catch (Throwable e) {
       LOGGER.error("[onPushFail]get from circuitBreakerAddress error.", e);
