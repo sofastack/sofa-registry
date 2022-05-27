@@ -35,6 +35,7 @@ import com.alipay.sofa.registry.store.api.config.DefaultCommonConfig;
 import com.alipay.sofa.registry.store.api.date.DateNowRepository;
 import com.alipay.sofa.registry.store.api.meta.RecoverConfig;
 import com.alipay.sofa.registry.store.api.repository.AppRevisionRepository;
+import com.alipay.sofa.registry.util.NamedThreadFactory;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.cache.Cache;
@@ -43,8 +44,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Maps;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -67,6 +67,9 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository, Recover
       CacheBuilder.newBuilder().expireAfterWrite(2, TimeUnit.MINUTES).build();
 
   private final CachedExecutor<String, Boolean> cachedExecutor = new CachedExecutor<>(1000 * 10);
+
+  private final ScheduledExecutorService revisionDigestService =
+      new ScheduledThreadPoolExecutor(1, new NamedThreadFactory("RevisionDigest"));
 
   @Autowired private AppRevisionMapper appRevisionMapper;
 
@@ -106,20 +109,17 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository, Recover
     informer.setEnabled(true);
     informer.start();
 
-    Timer timer = new Timer("AppRevisionDigest", true);
-    timer.scheduleAtFixedRate(
-        new TimerTask() {
-          @Override
-          public void run() {
-            try {
-              LOG.info("informer revision size: {}", informer.getContainer().size());
-            } catch (Throwable t) {
-              LOG.safeError("informer revision size digest error", (Throwable) t);
-            }
+    revisionDigestService.scheduleAtFixedRate(
+        () -> {
+          try {
+            LOG.info("informer revision size: {}", informer.getContainer().size());
+          } catch (Throwable t) {
+            LOG.safeError("informer revision size digest error", (Throwable) t);
           }
         },
-        60 * 1000,
-        60 * 1000);
+        60,
+        60,
+        TimeUnit.SECONDS);
   }
 
   @Override

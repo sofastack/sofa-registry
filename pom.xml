@@ -6,7 +6,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.alipay.sofa</groupId>
     <artifactId>registry-parent</artifactId>
-    <version>6.1.4</version>
+    <version>6.1.5-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>${project.groupId}:${project.artifactId}</name>
@@ -454,7 +454,40 @@
     </dependencyManagement>
 
     <build>
+
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-pmd-plugin</artifactId>
+                <version>3.11.0</version>
+                <configuration>
+                    <sourceEncoding>${project.build.sourceEncoding}</sourceEncoding>
+                    <targetJdk>${maven.compiler.target}</targetJdk>
+                    <printFailingErrors>true</printFailingErrors>
+                    <rulesets>
+                        <ruleset>${main.user.dir}/ruleset.xml</ruleset>
+                    </rulesets>
+                    <excludes>
+                        <exclude>**/FixClassTypeResolver.java</exclude>
+                    </excludes>
+                    <failurePriority>2</failurePriority>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.alibaba.p3c</groupId>
+                        <artifactId>p3c-pmd</artifactId>
+                        <version>2.0.1</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
@@ -587,143 +620,100 @@
 
     <profiles>
         <profile>
-            <id>dev</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <repositories>
-                <repository>
-                    <id>maven-snapshot</id>
-                    <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-                    <releases>
-                        <enabled>false</enabled>
-                    </releases>
-                    <snapshots>
-                        <enabled>true</enabled>
-                    </snapshots>
-                </repository>
-                <repository>
-                    <id>central_prod</id>
-                    <url>http://mvn.test.alipay.net/artifactory/content/groups/public/</url>
-                    <snapshots>
-                        <enabled>true</enabled>
-                    </snapshots>
-                </repository>
-                <repository>
-                    <id>central</id>
-                    <url>http://mvn.dev.alipay.net/artifactory/content/groups/public/</url>
-                    <snapshots>
-                        <enabled>true</enabled>
-                    </snapshots>
-                </repository>
-            </repositories>
-            <pluginRepositories>
-                <pluginRepository>
-                    <id>maven-snapshot</id>
-                    <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-                    <releases>
-                        <enabled>false</enabled>
-                    </releases>
-                    <snapshots>
-                        <enabled>true</enabled>
-                    </snapshots>
-                </pluginRepository>
-                <pluginRepository>
-                    <id>central_prod</id>
-                    <url>http://mvn.test.alipay.net/artifactory/content/groups/public/</url>
-                    <snapshots>
-                        <enabled>true</enabled>
-                    </snapshots>
-                </pluginRepository>
-                <pluginRepository>
-                    <id>central</id>
-                    <url>http://mvn.dev.alipay.net/artifactory/content/groups/public/</url>
-                    <snapshots>
-                        <enabled>true</enabled>
-                    </snapshots>
-                </pluginRepository>
-            </pluginRepositories>
-        </profile>
-        <profile>
-            <id>test</id>
-            <repositories>
-                <repository>
-                    <id>maven-snapshot</id>
-                    <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-                    <releases>
-                        <enabled>false</enabled>
-                    </releases>
-                    <snapshots>
-                        <enabled>true</enabled>
-                    </snapshots>
-                </repository>
-                <repository>
-                    <id>central_prod</id>
-                    <url>http://mvn.test.alipay.net/artifactory/content/groups/public/</url>
-                    <snapshots>
-                        <enabled>true</enabled>
-                    </snapshots>
-                </repository>
-            </repositories>
-            <pluginRepositories>
-                <pluginRepository>
-                    <id>maven-snapshot</id>
-                    <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-                    <releases>
-                        <enabled>false</enabled>
-                    </releases>
-                    <snapshots>
-                        <enabled>true</enabled>
-                    </snapshots>
-                </pluginRepository>
-                <pluginRepository>
-                    <id>central_prod</id>
-                    <url>http://mvn.test.alipay.net/artifactory/content/groups/public/</url>
-                    <snapshots>
-                        <enabled>true</enabled>
-                    </snapshots>
-                </pluginRepository>
-            </pluginRepositories>
-        </profile>
-        <!-- antcode release jar -->
-        <profile>
-            <id>antcode-release</id>
-            <distributionManagement>
-                <repository>
-                    <id>maven-release</id>
-                    <name>antcode maven release</name>
-                    <url>http://mvn.test.alipay.net/artifactory/content/repositories/maven-release/</url>
-                </repository>
-                <snapshotRepository>
-                    <id>maven-release</id>
-                    <name>antcode maven snapshot</name>
-                    <url>http://mvn.test.alipay.net/artifactory/content/repositories/maven-snapshot/</url>
-                </snapshotRepository>
-            </distributionManagement>
-        </profile>
-        <!-- 以下内容是配置jar包发布指定的mvn库，与上面配置不冲突 -->
-        <profile>
             <id>alipay-dev</id>
-            <distributionManagement>
+            <repositories>
                 <repository>
-                    <id>nexus-server@alipay-dev</id>
-                    <name>alipay dev Repository</name>
-                    <url>http://mvn.dev.alipay.net/artifactory/content/repositories/middleware</url>
+                    <id>maven-snapshot</id>
+                    <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+                    <releases>
+                        <enabled>false</enabled>
+                    </releases>
+                    <snapshots>
+                        <enabled>true</enabled>
+                    </snapshots>
                 </repository>
-            </distributionManagement>
+                <repository>
+                    <id>central_prod</id>
+                    <url>http://mvn.test.alipay.net/artifactory/content/groups/public/</url>
+                    <snapshots>
+                        <enabled>true</enabled>
+                    </snapshots>
+                </repository>
+                <repository>
+                    <id>central</id>
+                    <url>http://mvn.dev.alipay.net/artifactory/content/groups/public/</url>
+                    <snapshots>
+                        <enabled>true</enabled>
+                    </snapshots>
+                </repository>
+            </repositories>
+            <pluginRepositories>
+                <pluginRepository>
+                    <id>maven-snapshot</id>
+                    <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+                    <releases>
+                        <enabled>false</enabled>
+                    </releases>
+                    <snapshots>
+                        <enabled>true</enabled>
+                    </snapshots>
+                </pluginRepository>
+                <pluginRepository>
+                    <id>central_prod</id>
+                    <url>http://mvn.test.alipay.net/artifactory/content/groups/public/</url>
+                    <snapshots>
+                        <enabled>true</enabled>
+                    </snapshots>
+                </pluginRepository>
+                <pluginRepository>
+                    <id>central</id>
+                    <url>http://mvn.dev.alipay.net/artifactory/content/groups/public/</url>
+                    <snapshots>
+                        <enabled>true</enabled>
+                    </snapshots>
+                </pluginRepository>
+            </pluginRepositories>
         </profile>
-
         <profile>
-            <id>alipay-release</id>
-            <distributionManagement>
+            <id>alipay-test</id>
+            <repositories>
                 <repository>
-                    <id>nexus-server@alipay-release</id>
-                    <name>alipay release Repository</name>
-                    <url>http://mvn.test.alipay.net/artifactory/content/repositories/middleware</url>
+                    <id>maven-snapshot</id>
+                    <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+                    <releases>
+                        <enabled>false</enabled>
+                    </releases>
+                    <snapshots>
+                        <enabled>true</enabled>
+                    </snapshots>
                 </repository>
-            </distributionManagement>
+                <repository>
+                    <id>central_prod</id>
+                    <url>http://mvn.test.alipay.net/artifactory/content/groups/public/</url>
+                    <snapshots>
+                        <enabled>true</enabled>
+                    </snapshots>
+                </repository>
+            </repositories>
+            <pluginRepositories>
+                <pluginRepository>
+                    <id>maven-snapshot</id>
+                    <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+                    <releases>
+                        <enabled>false</enabled>
+                    </releases>
+                    <snapshots>
+                        <enabled>true</enabled>
+                    </snapshots>
+                </pluginRepository>
+                <pluginRepository>
+                    <id>central_prod</id>
+                    <url>http://mvn.test.alipay.net/artifactory/content/groups/public/</url>
+                    <snapshots>
+                        <enabled>true</enabled>
+                    </snapshots>
+                </pluginRepository>
+            </pluginRepositories>
         </profile>
-
     </profiles>
-
 </project>

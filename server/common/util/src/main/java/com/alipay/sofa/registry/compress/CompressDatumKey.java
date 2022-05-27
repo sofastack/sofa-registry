@@ -40,8 +40,12 @@ public class CompressDatumKey implements CompressKey {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     CompressDatumKey that = (CompressDatumKey) o;
     return version == that.version
         && pubNum == that.pubNum

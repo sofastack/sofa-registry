@@ -36,7 +36,8 @@ public class BaseRegistrationTest {
     Assert.assertEquals("instanceId", registration.getInstanceId());
     Assert.assertEquals("ip", registration.getIp());
     Assert.assertEquals(
-        "BaseRegistration{dataId='dataId', group='group', appName='app', instanceId='instanceId', ip='ip'}", registration.toString());
+        "BaseRegistration{dataId='dataId', group='group', appName='app', instanceId='instanceId', ip='ip'}",
+        registration.toString());
   }
 
   @Test

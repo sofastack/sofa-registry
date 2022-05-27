@@ -91,7 +91,7 @@ public final class DatumVersionUtil {
   }
 
   public static boolean useConfregVersionGen() {
-    return datumVersionType.equals(DATUM_VERSION_TYPE_CONFREG);
+    return DATUM_VERSION_TYPE_CONFREG.equals(datumVersionType);
   }
 
   public static long confregNextId(long lastVersion) {
