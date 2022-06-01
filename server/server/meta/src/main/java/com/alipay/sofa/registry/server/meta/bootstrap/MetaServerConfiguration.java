@@ -399,6 +399,11 @@ public class MetaServerConfiguration {
     public RegistryCoreOpsResource registryCoreOpsResource() {
       return new RegistryCoreOpsResource();
     }
+
+    @Bean
+    public RegistryCoreOpsV2Resource registryCoreOpsV2Resource() {
+      return new RegistryCoreOpsV2Resource();
+    }
   }
 
   @Configuration

@@ -47,6 +47,7 @@ public class DirectServerManagerTest {
 
     // when
     when(config.getRegistryEndpoint()).thenReturn("127.0.0.1");
+    when(config.getRegistryEndpointPort()).thenReturn(9600);
 
     // then
     ServerManager serverManager = new DirectServerManager(config);
