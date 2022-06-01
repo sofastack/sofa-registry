@@ -36,10 +36,12 @@ public class DirectServerManager implements ServerManager {
 
   public DirectServerManager(RegistryClientConfig config) {
     this.serverNodes = new ArrayList<ServerNode>();
+    int port = config.getRegistryEndpointPort();
+    if (port == 0) {
+      port = 9600;
+    }
     this.serverNodes.add(
-        ServerNodeParser.parse(
-            String.format(
-                "%s:%s", config.getRegistryEndpoint(), config.getRegistryEndpointPort())));
+        ServerNodeParser.parse(String.format("%s:%s", config.getRegistryEndpoint(), port)));
   }
 
   @Override
