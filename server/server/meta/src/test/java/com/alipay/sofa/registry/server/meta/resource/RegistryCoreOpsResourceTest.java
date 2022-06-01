@@ -54,7 +54,7 @@ public class RegistryCoreOpsResourceTest extends AbstractMetaServerTestBase {
 
   @Mock private LeaderElector leaderElector;
 
-  private RegistryCoreOpsResource resource;
+  private RegistryCoreOpsV2Resource resource;
 
   @Before
   public void before() {
@@ -64,7 +64,7 @@ public class RegistryCoreOpsResourceTest extends AbstractMetaServerTestBase {
     when(leaderElector.getLeader()).thenReturn("127.0.0.1");
 
     resource =
-        new RegistryCoreOpsResource()
+        new RegistryCoreOpsV2Resource()
             .setRegistryForbiddenServerManager(registryForbiddenServerManager);
     nodeOperatingService.setProvideDataService(provideDataService);
   }
@@ -87,7 +87,7 @@ public class RegistryCoreOpsResourceTest extends AbstractMetaServerTestBase {
     registryForbiddenServerManager =
         new DefaultForbiddenServerManager(provideDataService, nodeOperatingService);
     resource =
-        new RegistryCoreOpsResource()
+        new RegistryCoreOpsV2Resource()
             .setRegistryForbiddenServerManager(registryForbiddenServerManager);
 
     when(provideDataService.queryProvideData(ValueConstants.REGISTRY_SERVER_BLACK_LIST_DATA_ID))
