@@ -38,7 +38,8 @@ public class DirectServerManager implements ServerManager {
     this.serverNodes = new ArrayList<ServerNode>();
     this.serverNodes.add(
         ServerNodeParser.parse(
-            String.format("%s:%s", config.getRegistryEndpoint(), config.getRegistryEndpoint())));
+            String.format(
+                "%s:%s", config.getRegistryEndpoint(), config.getRegistryEndpointPort())));
   }
 
   @Override
