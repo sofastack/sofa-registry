@@ -32,8 +32,9 @@ import org.junit.Test;
  * @version $Id: BoltServerTest.java, v 0.1 2018-05-14 19:34 shangyu.wh Exp $
  */
 public class BoltServerTest {
-  private static URL url = new URL("0.0.0.0", 12345);
-  private static BoltServer server = new BoltServer(url, Collections.emptyList());
+  private static URL url = new URL("127.0.0.1", 12345);
+  private static URL listenURL = new URL("0.0.0.0", 12345);
+  private static BoltServer server = new BoltServer(listenURL, Collections.emptyList());
 
   @BeforeClass
   public static void before() {
