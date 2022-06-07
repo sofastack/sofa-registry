@@ -34,6 +34,8 @@ SOFARegistry 是蚂蚁金服开源的一个生产级、高时效、高可用的�
 - [运维手册](https://www.sofastack.tech/sofa-registry/docs/Deployment)
 - [发布历史](https://www.sofastack.tech/sofa-registry/docs/ReleaseNotes)
 - [发展路线](https://www.sofastack.tech/sofa-registry/docs/RoadMap)
+- 源码解析
+   - [SlotTable](https://www.sofastack.tech/projects/sofa-registry/code-analyze/code-analyze-slottable/)
 
 
 ## 贡献
