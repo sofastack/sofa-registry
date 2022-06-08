@@ -32,6 +32,7 @@ import com.alipay.sofa.registry.remoting.bolt.serializer.ProtobufCustomSerialize
 import com.alipay.sofa.registry.remoting.bolt.serializer.ProtobufSerializer;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
+import com.alipay.sofa.registry.remoting.jersey.JettyServer;
 import com.alipay.sofa.registry.server.session.metadata.AppRevisionCacheRegistry;
 import com.alipay.sofa.registry.server.session.providedata.ConfigProvideDataWatcher;
 import com.alipay.sofa.registry.server.session.remoting.handler.ClientNodeConnectionHandler;
@@ -50,12 +51,17 @@ import com.github.rholder.retry.WaitStrategies;
 import java.lang.annotation.Annotation;
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Resource;
 import javax.ws.rs.Path;
 import javax.ws.rs.ext.Provider;
+
+import com.google.common.collect.Lists;
+import org.eclipse.jetty.server.Handler;
+import org.eclipse.jetty.server.handler.HandlerList;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -74,7 +80,7 @@ public class SessionServerBootstrap {
 
   @Autowired private Exchange boltExchange;
 
-  @Autowired private Exchange jerseyExchange;
+  @Autowired private Exchange jettyExchange;
 
   @Autowired private ExecutorManager executorManager;
 
@@ -85,7 +91,7 @@ public class SessionServerBootstrap {
   @Autowired private NodeExchanger dataNodeExchanger;
   @Autowired private NodeExchanger dataNodeNotifyExchanger;
 
-  @Autowired private ResourceConfig jerseyResourceConfig;
+  @Autowired private ResourceConfig sessionJerseyConfig;
 
   @Autowired private ApplicationContext applicationContext;
 
@@ -357,16 +363,28 @@ public class SessionServerBootstrap {
     }
   }
 
+  private Handler createHandler(){
+    HandlerList handlerList = new HandlerList();
+    List<Handler> hs = Lists.newArrayList();
+    if(sessionServerConfig.isSwaggerEnabled()){
+      hs.add(JettyServer.createSwaggerHandler());
+    }
+    hs.add(JettyServer.createStaticHandler("/web-admin", "web-admin", "index.html"));
+    hs.add(JettyServer.createHandler(sessionJerseyConfig));
+    handlerList.setHandlers(hs.toArray(new Handler[]{}));
+    return handlerList;
+  }
+
   private void openHttpServer() {
     try {
       if (httpStart.compareAndSet(false, true)) {
         bindResourceConfig();
         httpServer =
-            jerseyExchange.open(
+            jettyExchange.open(
                 new URL(
                     NetUtil.getLocalAddress().getHostAddress(),
                     sessionServerConfig.getHttpServerPort()),
-                new ResourceConfig[] {jerseyResourceConfig});
+                    new Handler[]{createHandler()});
         LOGGER.info("Open http server port {} success!", sessionServerConfig.getHttpServerPort());
       }
     } catch (Exception e) {
@@ -386,8 +404,8 @@ public class SessionServerBootstrap {
     if (beans != null && !beans.isEmpty()) {
       beans.forEach(
           (beanName, bean) -> {
-            jerseyResourceConfig.registerInstances(bean);
-            jerseyResourceConfig.register(bean.getClass());
+            sessionJerseyConfig.registerInstances(bean);
+            sessionJerseyConfig.register(bean.getClass());
           });
     }
   }

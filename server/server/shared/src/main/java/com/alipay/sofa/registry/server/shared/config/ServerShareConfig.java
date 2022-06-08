@@ -22,5 +22,8 @@ package com.alipay.sofa.registry.server.shared.config;
  */
 public interface ServerShareConfig {
 
-  int getSystemPropertyIntervalMillis();
+
+  boolean isSwaggerEnabled();
+
+  boolean isGracefulShutdown();
 }

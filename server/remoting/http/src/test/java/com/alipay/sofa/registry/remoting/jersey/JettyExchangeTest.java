@@ -22,9 +22,11 @@ import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.remoting.CallbackHandler;
 import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.remoting.jersey.exchange.JerseyExchange;
+import com.alipay.sofa.registry.remoting.jersey.exchange.JettyExchange;
 import java.net.InetSocketAddress;
 import java.util.concurrent.Executor;
+
+import org.eclipse.jetty.server.Handler;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.junit.Assert;
@@ -34,7 +36,7 @@ import org.junit.Test;
  * @author xuanbei
  * @since 2019/3/27
  */
-public class JerseyExchangeTest {
+public class JettyExchangeTest {
   private static final int JERSEY_TEST_PORT = 9662;
 
   @Test
@@ -57,14 +59,15 @@ public class JerseyExchangeTest {
           }
         };
 
-    JerseyExchange jerseyExchange = new JerseyExchange();
+    JettyExchange jettyExchange = new JettyExchange();
     URL url = new URL(NetUtil.getLocalAddress().getHostAddress(), JERSEY_TEST_PORT);
-    JerseyJettyServer jerseyJettyServer =
-        (JerseyJettyServer) jerseyExchange.open(url, new ResourceConfig[] {resourceConfig});
-    testJerseyJettyServer(url, jerseyJettyServer, jerseyExchange, callbackHandler);
+    JettyServer jettyServer =
+        (JettyServer) jettyExchange.open(url, new Handler[]
+         {JettyServer.createHandler(resourceConfig)});
+    testJerseyJettyServer(url, jettyServer, jettyExchange, callbackHandler);
 
-    JerseyClient jerseyClient1 = (JerseyClient) jerseyExchange.getClient("jersey");
-    JerseyClient jerseyClient2 = (JerseyClient) jerseyExchange.connect("jersey", url);
+    JerseyClient jerseyClient1 = (JerseyClient) jettyExchange.getClient("jersey");
+    JerseyClient jerseyClient2 = (JerseyClient) jettyExchange.connect("jersey", url);
     Assert.assertEquals(jerseyClient1, jerseyClient2);
     testJerseyClient(url, jerseyClient1, callbackHandler);
 
@@ -73,13 +76,13 @@ public class JerseyExchangeTest {
     String result =
         jerseyChannel.getWebTarget().path("test").request(APPLICATION_JSON).get(String.class);
     Assert.assertEquals("TestResource", result);
-    jerseyJettyServer.close();
+    jettyServer.close();
   }
 
   @Test
   public void testServer() {
     ResourceConfig resourceConfig = new ResourceConfig();
-    JerseyJettyServer server = new JerseyJettyServer(resourceConfig, null);
+    JettyServer server = new JettyServer(JettyServer.createHandler(resourceConfig), null);
 
     assertException(RuntimeException.class, () -> server.startServer());
     Assert.assertFalse(server.isOpen());
@@ -96,22 +99,22 @@ public class JerseyExchangeTest {
 
   private void testJerseyJettyServer(
       URL url,
-      JerseyJettyServer jerseyJettyServer,
-      JerseyExchange jerseyExchange,
+      JettyServer jettyServer,
+      JettyExchange jettyExchange,
       CallbackHandler callbackHandler) {
-    Assert.assertEquals(jerseyJettyServer, jerseyExchange.getServer(JERSEY_TEST_PORT));
-    Assert.assertTrue(jerseyJettyServer.isOpen());
-    Assert.assertEquals(jerseyJettyServer.getChannels().size(), 0);
-    Assert.assertNull(jerseyJettyServer.getChannel(new InetSocketAddress(9663)));
-    Assert.assertNull(jerseyJettyServer.getChannel(url));
+    Assert.assertEquals(jettyServer, jettyExchange.getServer(JERSEY_TEST_PORT));
+    Assert.assertTrue(jettyServer.isOpen());
+    Assert.assertEquals(jettyServer.getChannels().size(), 0);
+    Assert.assertNull(jettyServer.getChannel(new InetSocketAddress(9663)));
+    Assert.assertNull(jettyServer.getChannel(url));
     Assert.assertEquals(
-        new InetSocketAddress(JERSEY_TEST_PORT), jerseyJettyServer.getLocalAddress());
-    Assert.assertFalse(jerseyJettyServer.isClosed());
+        new InetSocketAddress(JERSEY_TEST_PORT), jettyServer.getLocalAddress());
+    Assert.assertFalse(jettyServer.isClosed());
 
-    jerseyJettyServer.sendCallback(
+    jettyServer.sendCallback(
         new JerseyChannel(null, null), new Object(), callbackHandler, 1000);
     Assert.assertNull(
-        jerseyJettyServer.sendSync(new JerseyChannel(null, null), new Object(), 1000));
+        jettyServer.sendSync(new JerseyChannel(null, null), new Object(), 1000));
   }
 
   private void testJerseyClient(

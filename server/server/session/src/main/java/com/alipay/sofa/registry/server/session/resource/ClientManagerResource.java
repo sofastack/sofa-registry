@@ -49,6 +49,9 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -58,6 +61,8 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @author kezhu.wukz
  * @version $Id : ClientsResource.java, v 0.1 2018-11-22 19:04 kezhu.wukz Exp $$
  */
+
+@Api("客户端操作")
 @Path("api/clientManager")
 @Produces(MediaType.APPLICATION_JSON)
 public class ClientManagerResource {
@@ -79,6 +84,7 @@ public class ClientManagerResource {
   @Autowired protected ExecutorManager executorManager;
 
   /** Client off */
+  @ApiOperation(value = "单机关流")
   @POST
   @Path("/clientOff")
   public CommonResponse clientOff(@FormParam("ips") String ips) {
@@ -93,6 +99,7 @@ public class ClientManagerResource {
   }
 
   /** Client on */
+  @ApiOperation(value = "单机开流")
   @POST
   @Path("/clientOpen")
   public CommonResponse clientOn(@FormParam("ips") String ips) {
@@ -107,6 +114,7 @@ public class ClientManagerResource {
   }
 
   /** Client off */
+  @ApiOperation(value = "zone关流")
   @POST
   @Path("/zone/clientOff")
   public CommonResponse clientOffInZone(@FormParam("ips") String ips) {
@@ -138,6 +146,7 @@ public class ClientManagerResource {
   }
 
   /** Client on */
+  @ApiOperation(value = "zone开流")
   @POST
   @Path("/zone/clientOpen")
   public CommonResponse clientOnInZone(@FormParam("ips") String ips) {
@@ -168,6 +177,7 @@ public class ClientManagerResource {
   }
 
   /** Client on */
+  @ApiOperation(value = "查询开流状态")
   @POST
   @Path("/zone/queryClientOff")
   public GenericResponse<Map<String, ClientManagerResp>> queryClientOff() {
@@ -205,6 +215,7 @@ public class ClientManagerResource {
     return new GenericResponse().fillSucceed(resp);
   }
 
+  @ApiOperation("查询连接映射")
   @GET
   @Path("/connectionMapper.json")
   public Map<String, String> connectionMapper() {

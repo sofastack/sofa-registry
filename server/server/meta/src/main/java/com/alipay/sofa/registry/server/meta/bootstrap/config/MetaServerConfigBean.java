@@ -85,9 +85,14 @@ public class MetaServerConfigBean implements MetaServerConfig {
 
   private int metaSchedulerPoolSize = OsUtils.getCpuCount();
 
+
   // <=0 means no protection
   private int dataNodeProtectionNum =
       SystemUtils.getSystemInteger("registry.data.protection.num", 0);
+
+  private boolean swaggerEnabled = true;
+
+  private boolean gracefulShutdown = false;
 
   /**
    * Gets get session server port.
@@ -543,5 +548,23 @@ public class MetaServerConfigBean implements MetaServerConfig {
 
   public void setAppRevisionCountAlarmThreshold(int appRevisionCountAlarmThreshold) {
     this.appRevisionCountAlarmThreshold = appRevisionCountAlarmThreshold;
+  }
+
+
+  public boolean isSwaggerEnabled() {
+    return swaggerEnabled;
+  }
+
+  @Override
+  public boolean isGracefulShutdown() {
+    return gracefulShutdown;
+  }
+
+  public void setGracefulShutdown(boolean gracefulShutdown){
+    this.gracefulShutdown = gracefulShutdown;
+  }
+
+  public void setSwaggerEnabled(boolean swaggerEnabled) {
+    this.swaggerEnabled = swaggerEnabled;
   }
 }

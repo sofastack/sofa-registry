@@ -21,7 +21,7 @@ import com.alipay.sofa.registry.jdbc.config.JdbcElectorConfiguration;
 import com.alipay.sofa.registry.jraft.config.RaftConfiguration;
 import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
-import com.alipay.sofa.registry.remoting.jersey.exchange.JerseyExchange;
+import com.alipay.sofa.registry.remoting.jersey.exchange.JettyExchange;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfigBean;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
@@ -48,6 +48,7 @@ import com.alipay.sofa.registry.server.meta.remoting.handler.RegistryForbiddenSe
 import com.alipay.sofa.registry.server.meta.remoting.meta.MetaNodeExchange;
 import com.alipay.sofa.registry.server.meta.remoting.meta.MetaServerRenewService;
 import com.alipay.sofa.registry.server.meta.resource.*;
+import com.alipay.sofa.registry.server.meta.resource.config.MetaJerseyConfig;
 import com.alipay.sofa.registry.server.meta.resource.filter.LeaderAwareFilter;
 import com.alipay.sofa.registry.server.meta.slot.status.SlotTableStatusService;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
@@ -68,7 +69,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import org.glassfish.jersey.jackson.JacksonFeature;
+
 import org.glassfish.jersey.server.ResourceConfig;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -152,8 +153,8 @@ public class MetaServerConfiguration {
     }
 
     @Bean
-    public Exchange jerseyExchange() {
-      return new JerseyExchange();
+    public Exchange jettyExchange() {
+      return new JettyExchange();
     }
 
     @Bean(name = "sessionServerHandlers")
@@ -296,10 +297,8 @@ public class MetaServerConfiguration {
   public static class ResourceConfiguration {
 
     @Bean
-    public ResourceConfig jerseyResourceConfig() {
-      ResourceConfig resourceConfig = new ResourceConfig();
-      resourceConfig.register(JacksonFeature.class);
-      return resourceConfig;
+    public ResourceConfig metaJerseyConfig() {
+      return new MetaJerseyConfig();
     }
 
     @Bean
