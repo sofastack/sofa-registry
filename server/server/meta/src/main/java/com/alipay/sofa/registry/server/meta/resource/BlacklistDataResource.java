@@ -27,6 +27,8 @@ import com.alipay.sofa.registry.server.meta.provide.data.DefaultProvideDataNotif
 import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataService;
 import com.alipay.sofa.registry.server.meta.resource.filter.LeaderAwareRestController;
 import com.google.common.annotations.VisibleForTesting;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -37,6 +39,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @author shangyu.wh
  * @version $Id: StopPushDataResource.java, v 0.1 2018-07-25 11:40 shangyu.wh Exp $
  */
+@Api("黑名单")
 @Path("blacklist")
 @LeaderAwareRestController
 public class BlacklistDataResource {
@@ -56,6 +59,7 @@ public class BlacklistDataResource {
    * '{"FORBIDDEN_PUB":{"IP_FULL":["1.1.1.1","10.15.233.150"]},"FORBIDDEN_SUB_BY_PREFIX":{"IP_FULL":["1.1.1.1"]}}'
    * -H "Content-Type: application/json" -X POST http://localhost:9615/blacklist/update
    */
+  @ApiOperation("更新黑名单")
   @POST
   @Path("update")
   @Produces(MediaType.APPLICATION_JSON)

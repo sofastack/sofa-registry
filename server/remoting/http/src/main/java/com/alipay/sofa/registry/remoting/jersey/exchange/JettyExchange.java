@@ -23,39 +23,38 @@ import com.alipay.sofa.registry.remoting.Client;
 import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.remoting.jersey.JerseyClient;
-import com.alipay.sofa.registry.remoting.jersey.JerseyJettyServer;
+import com.alipay.sofa.registry.remoting.jersey.JettyServer;
 import java.net.URI;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.ws.rs.core.UriBuilder;
-import org.glassfish.jersey.server.ResourceConfig;
+import org.eclipse.jetty.server.Handler;
 
 /**
  * @author shangyu.wh
- * @version $Id: JerseyExchange.java, v 0.1 2018-01-29 19:49 shangyu.wh Exp $
+ * @version $Id: JettyExchange.java, v 0.1 2018-01-29 19:49 shangyu.wh Exp $
  */
-public class JerseyExchange implements Exchange<ResourceConfig> {
+public class JettyExchange implements Exchange<Handler> {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(JerseyExchange.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(JettyExchange.class);
 
   private ConcurrentHashMap<Integer, Server> serverMap = new ConcurrentHashMap<>();
 
   private Client client;
 
   @Override
-  public Client connect(String serverType, URL serverUrl, ResourceConfig... channelHandlers) {
+  public Client connect(String serverType, URL serverUrl, Handler... channelHandlers) {
     JerseyClient jerseyClient = JerseyClient.getInstance();
     setClient(jerseyClient);
     return jerseyClient;
   }
 
   @Override
-  public Client connect(
-      String serverType, int connNum, URL serverUrl, ResourceConfig... channelHandlers) {
+  public Client connect(String serverType, int connNum, URL serverUrl, Handler... channelHandlers) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public Server open(URL url, ResourceConfig... resources) {
+  public Server open(URL url, Handler... handlers) {
 
     URI uri;
     try {
@@ -64,23 +63,22 @@ public class JerseyExchange implements Exchange<ResourceConfig> {
       LOGGER.error("get server URI error!", e);
       throw new RuntimeException("get server URI error!", e);
     }
-    JerseyJettyServer jerseyServer = new JerseyJettyServer(resources[0], uri);
-    setServer(jerseyServer, url);
-    jerseyServer.startServer();
+    JettyServer jettyServer = new JettyServer(handlers[0], uri);
+    setServer(jettyServer, url);
+    jettyServer.startServer();
 
-    return jerseyServer;
+    return jettyServer;
   }
 
   @Override
-  public Server open(
-      URL url, int lowWaterMark, int highWaterMark, ResourceConfig... channelHandlers) {
+  public Server open(URL url, int lowWaterMark, int highWaterMark, Handler... channelHandlers) {
     return open(url, channelHandlers);
   }
 
   @Override
   public Client getClient(String serverType) {
     if (null == client) {
-      synchronized (JerseyExchange.class) {
+      synchronized (JettyExchange.class) {
         if (null == client) {
           JerseyClient jerseyClient = JerseyClient.getInstance();
           setClient(jerseyClient);

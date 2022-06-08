@@ -55,7 +55,7 @@ public class DataServerBootstrapTest {
 
   @Mock private SlotManager slotManager;
 
-  @Mock private Exchange jerseyExchange;
+  @Mock private Exchange jettyExchange;
 
   @Mock private Exchange boltExchange;
 

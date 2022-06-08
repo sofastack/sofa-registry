@@ -215,6 +215,8 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
   private boolean gracefulShutdown = false;
 
+  private boolean swaggerEnabled = true;
+
   /**
    * constructor
    *
@@ -1360,5 +1362,13 @@ public class SessionServerConfigBean implements SessionServerConfig {
    */
   public void setPushAddressCircuitBreakerThreshold(int pushAddressCircuitBreakerThreshold) {
     this.pushAddressCircuitBreakerThreshold = pushAddressCircuitBreakerThreshold;
+  }
+
+  public boolean isSwaggerEnabled() {
+    return swaggerEnabled;
+  }
+
+  public void setSwaggerEnabled(boolean swaggerEnabled) {
+    this.swaggerEnabled = swaggerEnabled;
   }
 }

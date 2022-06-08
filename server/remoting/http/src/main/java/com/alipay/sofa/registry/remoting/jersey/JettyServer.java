@@ -32,8 +32,11 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.ws.rs.ProcessingException;
 import org.eclipse.jetty.server.*;
+import org.eclipse.jetty.server.handler.ContextHandler;
+import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.util.log.Log;
 import org.eclipse.jetty.util.log.Slf4jLog;
+import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.glassfish.jersey.internal.guava.ThreadFactoryBuilder;
 import org.glassfish.jersey.jetty.JettyHttpContainer;
@@ -47,11 +50,11 @@ import org.glassfish.jersey.server.spi.Container;
  * @author shangyu.wh
  * @version $Id: Jersey.java, v 0.1 2018-01-29 17:57 shangyu.wh Exp $
  */
-public class JerseyJettyServer implements Server {
+public class JettyServer implements Server {
   private static final String NCSA_FORMAT = "%{client}a \"%r\" %s %O";
-  private static final Logger LOGGER = LoggerFactory.getLogger(JerseyJettyServer.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(JettyServer.class);
 
-  private final ResourceConfig resourceConfig;
+  private final Handler handler;
 
   private final URI baseUri;
 
@@ -62,11 +65,11 @@ public class JerseyJettyServer implements Server {
   /**
    * constructor
    *
-   * @param resourceConfig
+   * @param handler
    * @param baseUri
    */
-  public JerseyJettyServer(ResourceConfig resourceConfig, URI baseUri) {
-    this.resourceConfig = resourceConfig;
+  public JettyServer(Handler handler, URI baseUri) {
+    this.handler = handler;
     this.baseUri = baseUri;
   }
 
@@ -75,7 +78,7 @@ public class JerseyJettyServer implements Server {
     if (isStarted.compareAndSet(false, true)) {
       try {
         Log.setLog(new Slf4jLog());
-        server = createServer(getBaseUri(), resourceConfig, true);
+        server = createServer(getBaseUri(), handler, true);
       } catch (Throwable e) {
         isStarted.set(false);
         LOGGER.error("Start Jetty jersey server error!", e);
@@ -84,14 +87,28 @@ public class JerseyJettyServer implements Server {
     }
   }
 
+  public static Handler createSwaggerHandler() {
+    return createStaticHandler("/swagger-doc", "swagger-doc", "index.html");
+  }
+
+  public static Handler createStaticHandler(
+      String contextPath, String resourceName, String welcomeFile) {
+    ResourceHandler staticHandler = new ResourceHandler();
+    staticHandler.setDirectoriesListed(true);
+    staticHandler.setWelcomeFiles(new String[] {welcomeFile});
+
+    ContextHandler staticContextHandler = new ContextHandler();
+    staticContextHandler.setContextPath(contextPath);
+    staticContextHandler.setBaseResource(Resource.newClassPathResource(resourceName));
+    staticContextHandler.setHandler(staticHandler);
+    return staticContextHandler;
+  }
+
   public static org.eclipse.jetty.server.Server createServer(
-      final URI uri, final ResourceConfig resourceConfig, final boolean start) {
+      final URI uri, final Handler handler, final boolean start) {
     if (uri == null) {
       throw new IllegalArgumentException(LocalizationMessages.URI_CANNOT_BE_NULL());
     }
-
-    JettyHttpContainer handler =
-        ContainerFactory.createContainer(JettyHttpContainer.class, resourceConfig);
 
     int defaultPort = Container.DEFAULT_HTTP_PORT;
 
@@ -107,9 +124,7 @@ public class JerseyJettyServer implements Server {
     http.setAcceptQueueSize(512);
     http.setPort(port);
     server.setConnectors(new Connector[] {http});
-    if (handler != null) {
-      server.setHandler(handler);
-    }
+    server.setHandler(handler);
 
     if (start) {
       try {
@@ -221,5 +236,9 @@ public class JerseyJettyServer implements Server {
   @Override
   public int getChannelCount() {
     return 0;
+  }
+
+  public static Handler createHandler(ResourceConfig config) {
+    return ContainerFactory.createContainer(JettyHttpContainer.class, config);
   }
 }

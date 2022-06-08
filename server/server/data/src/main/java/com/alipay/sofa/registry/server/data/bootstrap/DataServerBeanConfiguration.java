@@ -19,7 +19,7 @@ package com.alipay.sofa.registry.server.data.bootstrap;
 import com.alipay.sofa.registry.jdbc.config.JdbcConfiguration;
 import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
-import com.alipay.sofa.registry.remoting.jersey.exchange.JerseyExchange;
+import com.alipay.sofa.registry.remoting.jersey.exchange.JettyExchange;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.data.cache.DatumStorage;
 import com.alipay.sofa.registry.server.data.cache.LocalDatumStorage;
@@ -41,6 +41,7 @@ import com.alipay.sofa.registry.server.data.resource.DataDigestResource;
 import com.alipay.sofa.registry.server.data.resource.DatumApiResource;
 import com.alipay.sofa.registry.server.data.resource.HealthResource;
 import com.alipay.sofa.registry.server.data.resource.SlotTableStatusResource;
+import com.alipay.sofa.registry.server.data.resource.config.DataJerseyConfig;
 import com.alipay.sofa.registry.server.data.slot.SlotManager;
 import com.alipay.sofa.registry.server.data.slot.SlotManagerImpl;
 import com.alipay.sofa.registry.server.data.timer.CacheCountTask;
@@ -66,7 +67,6 @@ import java.util.Collection;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -164,8 +164,8 @@ public class DataServerBeanConfiguration {
   public static class SessionRemotingConfiguration {
 
     @Bean
-    public Exchange jerseyExchange() {
-      return new JerseyExchange();
+    public Exchange jettyExchange() {
+      return new JettyExchange();
     }
 
     @Bean
@@ -271,10 +271,8 @@ public class DataServerBeanConfiguration {
   public static class ResourceConfiguration {
 
     @Bean
-    public ResourceConfig jerseyResourceConfig() {
-      ResourceConfig resourceConfig = new ResourceConfig();
-      resourceConfig.register(JacksonFeature.class);
-      return resourceConfig;
+    public ResourceConfig dataJerseyConfig() {
+      return new DataJerseyConfig();
     }
 
     @Bean
