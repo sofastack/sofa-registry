@@ -52,21 +52,23 @@ public class MetaJdbcLeaderElector extends AbstractLeaderElector implements Reco
    */
   @Override
   protected LeaderInfo doElect() {
+    //1、查询锁
     DistributeLockDomain lock =
         distributeLockMapper.queryDistLock(defaultCommonConfig.getClusterId(tableName()), lockName);
 
     /** compete and return leader */
+    //2、不存在则创建锁
     if (lock == null) {
       return competeLeader(defaultCommonConfig.getClusterId(tableName()));
     }
-
+    //3、判断角色
     ElectorRole role = amILeader(lock.getOwner()) ? ElectorRole.LEADER : ElectorRole.FOLLOWER;
     if (role == ElectorRole.LEADER) {
-      lock = onLeaderWorking(lock, myself());
+      lock = onLeaderWorking(lock, myself());//4、提交心跳
     } else {
-      lock = onFollowWorking(lock, myself());
+      lock = onFollowWorking(lock, myself());//5、判断过期与否，如过期，则cas竞争锁
     }
-    LeaderInfo result = leaderFrom(lock);
+    LeaderInfo result = leaderFrom(lock);//6、锁信息转换为LeaderInfo
     LOG.info("meta role : {}, leaderInfo: {}", role, result);
     return result;
   }
