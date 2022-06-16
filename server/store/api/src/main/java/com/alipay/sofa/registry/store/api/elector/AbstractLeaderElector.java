@@ -77,15 +77,15 @@ public abstract class AbstractLeaderElector implements LeaderElector {
 
   public void elect() {
     synchronized (this) {
-      if (isObserver) {
+      if (isObserver) {//如果是Observer，不参与选主
         leaderInfo = doQuery();
       } else {
         leaderInfo = doElect();
       }
 
-      if (amILeader()) {
+      if (amILeader()) {//我是leader
         onIamLeader();
-      } else {
+      } else {//我不是leader
         onIamNotLeader();
       }
     }
