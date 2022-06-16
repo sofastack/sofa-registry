@@ -16,23 +16,39 @@
  */
 package com.alipay.sofa.registry.server.meta.lease.impl;
 
+import com.alipay.sofa.registry.common.model.Node.NodeType;
+import com.alipay.sofa.registry.common.model.metaserver.DataOperation;
 import com.alipay.sofa.registry.common.model.metaserver.Lease;
+import com.alipay.sofa.registry.common.model.metaserver.blacklist.RegistryForbiddenServerRequest;
 import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
 import com.alipay.sofa.registry.server.meta.lease.LeaseFilter;
 import com.alipay.sofa.registry.server.meta.lease.filter.DefaultForbiddenServerManager;
+import com.alipay.sofa.registry.server.meta.lease.filter.RegistryForbiddenServerManager;
+import com.alipay.sofa.registry.server.meta.provide.data.NodeOperatingService;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 import org.assertj.core.util.Lists;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
+import org.mockito.runners.MockitoJUnitRunner;
 
+@RunWith(MockitoJUnitRunner.class)
 public class AbstractEvictableFilterableLeaseManagerTest extends AbstractMetaServerTestBase {
 
   private AbstractEvictableFilterableLeaseManager leaseManager;
 
-  private DefaultForbiddenServerManager forbiddenServerManager =
-      new DefaultForbiddenServerManager(new InMemoryProvideDataRepo());
+  @InjectMocks
+  private RegistryForbiddenServerManager registryForbiddenServerManager =
+      new DefaultForbiddenServerManager();
+
+  @Spy private InMemoryProvideDataRepo provideDataService;
+
+  @Spy private InMemoryNodeOperatingService nodeOperatingService;
 
   @Before
   public void beforeAbstractEvictableFilterableLeaseManagerTest()
@@ -49,8 +65,11 @@ public class AbstractEvictableFilterableLeaseManagerTest extends AbstractMetaSer
             return 1000;
           }
         };
+    MockitoAnnotations.initMocks(RegistryForbiddenServerManager.class);
+    MockitoAnnotations.initMocks(NodeOperatingService.class);
+    nodeOperatingService.setProvideDataService(provideDataService);
     leaseManager.metaLeaderService = metaLeaderService;
-    leaseManager.setLeaseFilters(Lists.newArrayList(forbiddenServerManager));
+    leaseManager.setLeaseFilters(Lists.newArrayList(registryForbiddenServerManager));
     makeMetaLeader();
   }
 
@@ -63,7 +82,9 @@ public class AbstractEvictableFilterableLeaseManagerTest extends AbstractMetaSer
     SimpleNode node = new SimpleNode(randomIp());
     leaseManager.renew(node, 100);
     Assert.assertEquals(nodeNum + 1, leaseManager.getLeaseMeta().getClusterMembers().size());
-    forbiddenServerManager.addToBlacklist(node.getNodeUrl().getIpAddress());
+    registryForbiddenServerManager.addToBlacklist(
+        new RegistryForbiddenServerRequest(
+            DataOperation.ADD, NodeType.DATA, node.getNodeUrl().getIpAddress(), "testCell"));
     Assert.assertEquals(nodeNum, leaseManager.getLeaseMeta().getClusterMembers().size());
   }
 

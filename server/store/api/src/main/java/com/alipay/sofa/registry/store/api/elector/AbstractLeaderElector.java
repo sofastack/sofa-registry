@@ -22,8 +22,8 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.LoopRunnable;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.PostConstruct;
@@ -45,6 +45,12 @@ public abstract class AbstractLeaderElector implements LeaderElector {
 
   private final LeaderElectorTrigger leaderElectorTrigger = new LeaderElectorTrigger();
 
+  private volatile String address;
+
+  public AbstractLeaderElector() {
+    address = NetUtil.getLocalAddress().getHostAddress();
+  }
+
   @Override
   public void registerLeaderAware(LeaderAware leaderAware) {
     leaderAwares.add(leaderAware);
@@ -53,6 +59,11 @@ public abstract class AbstractLeaderElector implements LeaderElector {
   @PostConstruct
   public void init() {
     ConcurrentUtils.createDaemonThread("LeaderElectorTrigger", leaderElectorTrigger).start();
+  }
+
+  @VisibleForTesting
+  public void setAddress(String address) {
+    this.address = address;
   }
 
   private class LeaderElectorTrigger extends LoopRunnable {
@@ -79,6 +90,7 @@ public abstract class AbstractLeaderElector implements LeaderElector {
     synchronized (this) {
       if (isObserver) {//如果是Observer，不参与选主
         leaderInfo = doQuery();
+        LOG.info("meta role: Observer, leaderInfo: {}", leaderInfo);
       } else {
         leaderInfo = doElect();
       }
@@ -93,7 +105,7 @@ public abstract class AbstractLeaderElector implements LeaderElector {
 
   @Override
   public String myself() {
-    return NetUtil.getLocalAddress().getHostAddress();
+    return address;
   }
   /**
    * start compete leader
@@ -186,8 +198,8 @@ public abstract class AbstractLeaderElector implements LeaderElector {
   }
 
   protected static LeaderInfo calcLeaderInfo(
-      String leader, long epoch, Date lastHeartbeat, long duration) {
-    final long expireTimestamp = lastHeartbeat.getTime() + duration / 2;
+      String leader, long epoch, long lastHeartbeat, long duration) {
+    final long expireTimestamp = lastHeartbeat + duration / 2;
     return new LeaderInfo(epoch, leader, expireTimestamp);
   }
 

@@ -20,6 +20,8 @@ import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.store.*;
+import com.alipay.sofa.registry.common.model.wrapper.Wrapper;
+import com.alipay.sofa.registry.common.model.wrapper.WrapperInvocation;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
@@ -44,9 +46,7 @@ import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.session.store.Watchers;
 import com.alipay.sofa.registry.server.session.strategy.SessionRegistryStrategy;
 import com.alipay.sofa.registry.server.session.wrapper.RegisterInvokeData;
-import com.alipay.sofa.registry.server.session.wrapper.Wrapper;
 import com.alipay.sofa.registry.server.session.wrapper.WrapperInterceptorManager;
-import com.alipay.sofa.registry.server.session.wrapper.WrapperInvocation;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.LoopRunnable;
@@ -165,7 +165,7 @@ public class SessionRegistry implements Registry {
                 return () -> new RegisterInvokeData(storeData, channel);
               }
             },
-            wrapperInterceptorManager);
+            wrapperInterceptorManager.getInterceptorChain());
 
     try {
       wrapperInvocation.proceed();
@@ -224,12 +224,6 @@ public class SessionRegistry implements Registry {
   public void clientOff(List<ConnectId> connectIds) {
     ClientManagerMetric.CLIENT_OFF_COUNTER.inc(connectIds.size());
     disableConnect(connectIds, false, true);
-  }
-
-  @Override
-  public void clientOffWithTimestampCheck(Map<ConnectId, Long> connectIds) {
-    ClientManagerMetric.CLIENT_OFF_COUNTER.inc(connectIds.size());
-    disableConnect(connectIds.keySet(), false, true, connectIds);
   }
 
   @Override
@@ -424,6 +418,16 @@ public class SessionRegistry implements Registry {
           resultMap.put(slotId, result);
         }
       } catch (Throwable e) {
+        SCAN_VER_LOGGER.info(
+            "[fetchSlotVer]round={},{},{},leader={},interests={},gets={},success={}",
+            round,
+            slotId,
+            dataCenter,
+            slotTableCache.getLeader(slotId),
+            interestVersions.size(),
+            0,
+            "N");
+
         SCAN_VER_LOGGER.error(
             "round={}, failed to fetch versions slotId={}, size={}",
             round,

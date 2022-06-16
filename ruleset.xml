@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<ruleset name="quickstart"
+         xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
+    <description>
+        My custom rules
+    </description>
+    <rule ref="rulesets/java/ali-flowcontrol.xml">
+        <exclude name="NeedBraceRule"/>
+    </rule>
+    <rule ref="rulesets/java/ali-comment.xml">
+        <exclude name="EnumConstantsMustHaveCommentRule"/>
+    </rule>
+    <rule ref="rulesets/java/ali-concurrent.xml">
+        <exclude name="AvoidManuallyCreateThreadRule"/>
+        <exclude name="ThreadLocalShouldRemoveRule"/>
+    </rule>
+    <rule ref="rulesets/java/ali-constant.xml"/>
+    <rule ref="rulesets/java/ali-exception.xml"/>
+    <rule ref="rulesets/java/ali-oop.xml"/>
+    <rule ref="rulesets/java/ali-orm.xml"/>
+    <rule ref="rulesets/java/ali-other.xml"/>
+    <rule ref="rulesets/java/ali-set.xml"/>
+</ruleset>

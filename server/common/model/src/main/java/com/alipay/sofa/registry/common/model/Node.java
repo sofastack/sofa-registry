@@ -18,6 +18,7 @@ package com.alipay.sofa.registry.common.model;
 
 import com.alipay.sofa.registry.common.model.store.URL;
 import java.io.Serializable;
+import org.apache.commons.lang.StringUtils;
 
 /**
  * @author shangyu.wh
@@ -31,7 +32,20 @@ public interface Node extends Serializable {
     SESSION,
     META,
     DATA,
-    CONSOLE
+    CONSOLE,
+    ;
+
+    public static NodeType codeOf(String type) {
+      if (StringUtils.isBlank(type)) {
+        return null;
+      }
+      for (NodeType nodeType : NodeType.values()) {
+        if (StringUtils.containsIgnoreCase(type, nodeType.name())) {
+          return nodeType;
+        }
+      }
+      return null;
+    }
   }
 
   /**

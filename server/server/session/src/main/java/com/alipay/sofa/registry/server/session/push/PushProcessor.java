@@ -30,6 +30,7 @@ import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.ChannelOverflowException;
 import com.alipay.sofa.registry.remoting.exchange.RequestChannelClosedException;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
+import com.alipay.sofa.registry.server.session.circuit.breaker.CircuitBreakerService;
 import com.alipay.sofa.registry.server.session.node.service.ClientNodeService;
 import com.alipay.sofa.registry.server.shared.util.DatumUtils;
 import com.alipay.sofa.registry.task.KeyedThreadPoolExecutor;
@@ -65,6 +66,8 @@ public class PushProcessor {
   @Autowired protected PushDataGenerator pushDataGenerator;
 
   @Autowired protected ClientNodeService clientNodeService;
+
+  @Autowired protected CircuitBreakerService circuitBreakerService;;
 
   final Cleaner cleaner = new Cleaner();
 
@@ -368,10 +371,12 @@ public class PushProcessor {
       return;
     }
 
-    if (circuitBreakerRecordWhenDoPushError(task.datum)) {
-      // record push exception
+    // record push exception
+    if (circuitBreakerRecordWhenDoPushError(
+        task.datum, task.subscriber.getSourceAddress().getIpAddress())) {
       for (Subscriber subscriber : task.subscriberMap.values()) {
-        if (!subscriber.onPushFail(task.datum.getDataCenter(), task.datum.getVersion())) {
+        if (!circuitBreakerService.onPushFail(
+            task.datum.getDataCenter(), task.datum.getVersion(), subscriber)) {
           LOGGER.info("[handleDoPushException]taskId={}, {}", task.taskID, task.pushingTaskKey);
         }
       }
@@ -401,7 +406,7 @@ public class PushProcessor {
     LOGGER.error("[PushFail]taskId={}, {}", task.taskID, task.pushingTaskKey, e);
   }
 
-  boolean circuitBreakerRecordWhenDoPushError(SubDatum datum) {
+  boolean circuitBreakerRecordWhenDoPushError(SubDatum datum, String ip) {
     return false;
   }
 
@@ -458,10 +463,11 @@ public class PushProcessor {
           SubscriberUtils.getMaxPushedVersion(
               pushTask.datum.getDataCenter(), pushTask.subscriberMap.values());
       for (Subscriber subscriber : pushTask.subscriberMap.values()) {
-        if (!subscriber.checkAndUpdateCtx(
+        if (!circuitBreakerService.onPushSuccess(
             pushTask.datum.getDataCenter(),
             pushTask.datum.getVersion(),
-            pushTask.getPushDataCount())) {
+            pushTask.getPushDataCount(),
+            subscriber)) {
           LOGGER.info(
               "PushY, but failed to updateVersion, {}, {}",
               pushTask.taskID,
@@ -528,7 +534,8 @@ public class PushProcessor {
       if (needRecord) {
         // record push fail
         for (Subscriber subscriber : pushTask.subscriberMap.values()) {
-          if (!subscriber.onPushFail(pushTask.datum.getDataCenter(), pushTask.datum.getVersion())) {
+          if (!circuitBreakerService.onPushFail(
+              pushTask.datum.getDataCenter(), pushTask.datum.getVersion(), subscriber)) {
             LOGGER.info(
                 "PushN, failed to do onPushFail, {}, {}", pushTask.taskID, pushTask.pushingTaskKey);
           }

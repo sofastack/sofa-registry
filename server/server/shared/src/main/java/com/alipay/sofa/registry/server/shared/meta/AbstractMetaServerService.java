@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.server.shared.meta;
 
 import com.alipay.sofa.registry.common.model.GenericResponse;
+import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.ProcessId;
 import com.alipay.sofa.registry.common.model.elector.LeaderInfo;
 import com.alipay.sofa.registry.common.model.metaserver.DataOperation;
@@ -106,13 +107,13 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
   @Override
   public void addSelfToMetaBlacklist() {
     metaServerManager.sendRequest(
-        new RegistryForbiddenServerRequest(DataOperation.ADD, ServerEnv.IP));
+        new RegistryForbiddenServerRequest(DataOperation.ADD, nodeType(), cell(), ServerEnv.IP));
   }
 
   @Override
   public void removeSelfFromMetaBlacklist() {
     metaServerManager.sendRequest(
-        new RegistryForbiddenServerRequest(DataOperation.REMOVE, ServerEnv.IP));
+        new RegistryForbiddenServerRequest(DataOperation.REMOVE, nodeType(), cell(), ServerEnv.IP));
   }
 
   private final class Renewer extends WakeUpLoopRunnable {
@@ -344,6 +345,10 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
   protected abstract void handleRenewResult(T result);
 
   protected abstract HeartbeatRequest createRequest();
+
+  protected abstract NodeType nodeType();
+
+  protected abstract String cell();
 
   protected abstract long getCurrentSlotTableEpoch();
 

@@ -20,16 +20,13 @@ import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.server.meta.lease.filter.RegistryForbiddenServerManager;
 import com.alipay.sofa.registry.server.meta.resource.filter.LeaderAwareRestController;
-import com.google.common.annotations.VisibleForTesting;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import org.apache.commons.lang.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import sun.net.util.IPAddressUtil;
 
 /**
@@ -41,65 +38,43 @@ public class RegistryCoreOpsResource {
 
   private final Logger LOGGER = LoggerFactory.getLogger(RegistryCoreOpsResource.class);
 
-  @Autowired private RegistryForbiddenServerManager registryForbiddenServerManager;
-
+  /**
+   * use /opsapi/v2 instead
+   *
+   * @param ip
+   * @return
+   */
   @PUT
   @Path("/server/group/quit/{ip}")
   @Produces(MediaType.APPLICATION_JSON)
   @LeaderAwareRestController
+  @Deprecated
   public CommonResponse kickoffServer(@PathParam(value = "ip") String ip) {
-    LOGGER.info("[kickoffServer][begin] server [{}]", ip);
+    LOGGER.warn("[kickoffServer][begin] server [{}], use opsapi/v2 instead", ip);
     if (StringUtils.isBlank(ip) || !IPAddressUtil.isIPv4LiteralAddress(ip)) {
       LOGGER.error("[kickoffServer]invalid ip: {}", ip);
       return GenericResponse.buildFailedResponse("invalid ip address: " + ip);
     }
-    try {
-      boolean success = registryForbiddenServerManager.addToBlacklist(ip);
-
-      if (!success) {
-        LOGGER.error("[kickoffServer] add ip: {} to blacklist fail.", ip);
-      }
-      return success
-          ? GenericResponse.buildSuccessResponse()
-          : GenericResponse.buildFailedResponse("kickoffServer: " + ip + " fail.");
-    } catch (Throwable th) {
-      LOGGER.error("[kickoffServer]", th);
-      return GenericResponse.buildFailedResponse(th.getMessage());
-    } finally {
-      LOGGER.info("[kickoffServer][end] server [{}]", ip);
-    }
+    return GenericResponse.buildSuccessResponse("use opsapi/v2 instead");
   }
 
+  /**
+   * use /opsapi/v2 instead
+   *
+   * @param ip
+   * @return
+   */
   @PUT
   @Path("/server/group/join/{ip}")
   @Produces(MediaType.APPLICATION_JSON)
   @LeaderAwareRestController
+  @Deprecated
   public CommonResponse rejoinServerGroup(@PathParam(value = "ip") String ip) {
-    LOGGER.info("[rejoinServerGroup][begin] server [{}]", ip);
+    LOGGER.warn("[rejoinServerGroup][begin] server [{}], use opsapi/v2 instead", ip);
     if (StringUtils.isBlank(ip) || !IPAddressUtil.isIPv4LiteralAddress(ip)) {
       LOGGER.error("[rejoinServerGroup]invalid ip: {}", ip);
       return GenericResponse.buildFailedResponse("invalid ip address: " + ip);
     }
-    try {
-      boolean success = registryForbiddenServerManager.removeFromBlacklist(ip);
-      if (!success) {
-        LOGGER.error("[rejoinServerGroup] remove ip: {} to blacklist fail.", ip);
-      }
-      return success
-          ? GenericResponse.buildSuccessResponse()
-          : GenericResponse.buildFailedResponse("rejoinServerGroup: " + ip + " fail.");
-    } catch (Throwable th) {
-      LOGGER.error("[rejoinServerGroup]", th);
-      return GenericResponse.buildFailedResponse(th.getMessage());
-    } finally {
-      LOGGER.info("[rejoinServerGroup][end] server [{}]", ip);
-    }
-  }
-
-  @VisibleForTesting
-  protected RegistryCoreOpsResource setRegistryForbiddenServerManager(
-      RegistryForbiddenServerManager registryForbiddenServerManager) {
-    this.registryForbiddenServerManager = registryForbiddenServerManager;
-    return this;
+    return GenericResponse.buildSuccessResponse("use opsapi/v2 instead");
   }
 }

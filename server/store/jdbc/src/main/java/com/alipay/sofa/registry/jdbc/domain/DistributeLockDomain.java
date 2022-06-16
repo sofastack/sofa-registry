@@ -48,6 +48,8 @@ public class DistributeLockDomain {
   /** current timestamp in db */
   private Date gmtDbServerTime;
 
+  private long gmtModifiedUnixNanos;
+
   private long term;
 
   private long termDuration;
@@ -253,5 +255,17 @@ public class DistributeLockDomain {
 
   public void setTermDuration(long termDuration) {
     this.termDuration = termDuration;
+  }
+
+  public long getGmtModifiedUnixNanos() {
+    return gmtModifiedUnixNanos;
+  }
+
+  public long getGmtModifiedUnixMillis() {
+    return gmtModifiedUnixNanos / 1000000;
+  }
+
+  public void setGmtModifiedUnixNanos(long gmtModifiedUnixNanos) {
+    this.gmtModifiedUnixNanos = gmtModifiedUnixNanos;
   }
 }

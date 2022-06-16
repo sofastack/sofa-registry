@@ -38,6 +38,8 @@ public interface RegistryClientConfig {
    */
   String getInstanceId();
 
+  String getIp();
+
   /**
    * Gets cell.
    *

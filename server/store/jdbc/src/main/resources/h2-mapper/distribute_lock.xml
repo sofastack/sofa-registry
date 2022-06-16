@@ -28,6 +28,7 @@
         <result property="duration" column="duration" javaType="long" jdbcType="BIGINT"/>
         <result property="gmtCreate" column="gmt_create" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
         <result property="gmtModified" column="gmt_modified" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
+        <result property="gmtModifiedUnixNanos" column="gmt_modified_unixnanos" javaType="long" jdbcType="BIGINT"/>
         <result property="gmtDbServerTime" column="gmt_db_server_time" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
         <result property="term" column="term" javaType="long" jdbcType="BIGINT"/>
         <result property="termDuration" column="term_duration" javaType="long" jdbcType="BIGINT"/>
@@ -44,7 +45,7 @@
            gmt_create,
            gmt_modified,
            term,
-           `term_duration`
+           term_duration
        )
        VALUES
        (
@@ -54,7 +55,7 @@
            #{duration},
            NOW(3),
            NOW(3),
-           1,
+           0,
            0
        )
        ON DUPLICATE KEY UPDATE lock_name = #{lockName}
@@ -72,12 +73,12 @@
     <update id="ownerHeartbeat" parameterType="com.alipay.sofa.registry.jdbc.domain.DistributeLockDomain">
         <![CDATA[
           update distribute_lock set owner = #{owner}, gmt_modified =  NOW(3), `term_duration` = (`term_duration` + 1)
-          where data_center = #{dataCenter} and lock_name = #{lockName} and owner = #{owner} and term = #{term} and `term_duration` = #{termDuration}  and timestampdiff(SECOND, gmt_modified, NOW()) < #{duration}/1000
+          where data_center = #{dataCenter} and lock_name = #{lockName} and owner = #{owner}
         ]]>
     </update>
 
     <select id="queryDistLock" resultMap="distributeLockResultMap">
-        select *, NOW(3) as gmt_db_server_time from distribute_lock
+        select *, NOW(3) as gmt_db_server_time, EXTRACT(EPOCH FROM gmt_modified)*1000000000 as gmt_modified_unixnanos from distribute_lock
         where data_center = #{dataCenter} and lock_name = #{lockName}
     </select>
 

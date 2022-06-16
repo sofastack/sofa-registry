@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.wrapper;
+package com.alipay.sofa.registry.common.model.wrapper;
 
 import java.util.Iterator;
 import java.util.List;
@@ -30,9 +30,7 @@ public class WrapperInvocation<T, R> {
 
   private Iterator<WrapperInterceptor> iterator;
 
-  public WrapperInvocation(
-      Wrapper<T, R> target, WrapperInterceptorManager wrapperInterceptorManager) {
-    List<WrapperInterceptor> interceptorChain = wrapperInterceptorManager.getInterceptorChain();
+  public WrapperInvocation(Wrapper<T, R> target, List<WrapperInterceptor> interceptorChain) {
     this.iterator = interceptorChain.iterator();
     this.target = target;
   }

@@ -28,6 +28,7 @@ import static com.alipay.sofa.registry.client.constants.ValueConstants.DEFAULT_Z
 public class DefaultRegistryClientConfigBuilder {
   private String env;
   private String instanceId;
+  private String ip;
   private String zone = DEFAULT_ZONE;
   private String registryEndpoint;
   private int registryEndpointPort = 9603;
@@ -76,6 +77,16 @@ public class DefaultRegistryClientConfigBuilder {
    */
   public DefaultRegistryClientConfigBuilder setInstanceId(String instanceId) {
     this.instanceId = instanceId;
+    return this;
+  }
+
+  /**
+   * Sets ip.
+   *
+   * @param ip the ip
+   */
+  public DefaultRegistryClientConfigBuilder setIp(String ip) {
+    this.ip = ip;
     return this;
   }
 
@@ -290,6 +301,7 @@ public class DefaultRegistryClientConfigBuilder {
     return new DefaultRegistryClientConfig(
         env,
         instanceId,
+        ip,
         zone,
         registryEndpoint,
         registryEndpointPort,

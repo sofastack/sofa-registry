@@ -20,6 +20,8 @@ import com.alipay.sofa.registry.common.model.ElementType;
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.ProcessId;
 import com.alipay.sofa.registry.common.model.PublishType;
+import com.alipay.sofa.registry.common.model.console.PersistenceData;
+import com.alipay.sofa.registry.common.model.console.PersistenceDataBuilder;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.common.model.slot.SlotConfig;
@@ -31,6 +33,8 @@ import com.alipay.sofa.registry.remoting.CallbackHandler;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.Client;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfigBean;
+import com.alipay.sofa.registry.server.session.circuit.breaker.CircuitBreakerService;
+import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
 import com.alipay.sofa.registry.util.JsonUtils;
 import com.alipay.sofa.registry.util.ObjectFactory;
@@ -41,6 +45,7 @@ import java.lang.reflect.Modifier;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -575,6 +580,65 @@ public class AbstractSessionServerTestBase extends AbstractTestBase {
     @Override
     public URL getNodeUrl() {
       return new URL(ip);
+    }
+  }
+
+  public static class InMemoryCircuitBreakerService implements CircuitBreakerService {
+
+    @Override
+    public boolean pushCircuitBreaker(CircuitBreakerStatistic statistic, boolean hasPushed) {
+      return false;
+    }
+
+    @Override
+    public boolean onPushSuccess(
+        String dataCenter, long pushVersion, int pushNum, Subscriber subscriber) {
+      return subscriber.checkAndUpdateCtx(dataCenter, pushVersion, pushNum);
+    }
+
+    @Override
+    public boolean onPushFail(String dataCenter, long pushVersion, Subscriber subscriber) {
+      return subscriber.onPushFail(dataCenter, pushVersion);
+    }
+  }
+
+  public static class InMemoryProvideDataRepository implements ProvideDataRepository {
+
+    private Map<String, PersistenceData> localRepo = new ConcurrentHashMap<>();
+
+    @Override
+    public boolean put(PersistenceData persistenceData) {
+      localRepo.put(PersistenceDataBuilder.getDataInfoId(persistenceData), persistenceData);
+      return true;
+    }
+
+    @Override
+    public boolean put(PersistenceData data, long expectVersion) {
+      PersistenceData exist = localRepo.get(PersistenceDataBuilder.getDataInfoId(data));
+      if (exist == null) {
+        localRepo.put(PersistenceDataBuilder.getDataInfoId(data), data);
+        return true;
+      } else if (exist.getVersion() == expectVersion) {
+        localRepo.put(PersistenceDataBuilder.getDataInfoId(data), data);
+        return true;
+      }
+      return false;
+    }
+
+    @Override
+    public PersistenceData get(String key) {
+      return localRepo.get(key);
+    }
+
+    @Override
+    public boolean remove(String key, long version) {
+      PersistenceData remove = localRepo.remove(key);
+      return remove != null;
+    }
+
+    @Override
+    public Map<String, PersistenceData> getAll() {
+      return Maps.newHashMap(localRepo);
     }
   }
 }

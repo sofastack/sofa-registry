@@ -43,6 +43,8 @@ public class ClientManagerAddressDomain implements DbEntry {
   /** last update time */
   private Date gmtModify;
 
+  private long gmtCreateUnixNanos;
+
   /** client_off pub true:持久化关流pub false:临时关流pub */
   private boolean pub;
 
@@ -191,6 +193,18 @@ public class ClientManagerAddressDomain implements DbEntry {
 
   public boolean isSub() {
     return sub;
+  }
+
+  public long getGmtCreateUnixNanos() {
+    return gmtCreateUnixNanos;
+  }
+
+  public long getGmtCreateUnixMillis() {
+    return gmtCreateUnixNanos / 1000000;
+  }
+
+  public void setGmtCreateUnixNanos(long gmtGmtCreateUnixNanos) {
+    this.gmtCreateUnixNanos = gmtCreateUnixNanos;
   }
 
   @Override

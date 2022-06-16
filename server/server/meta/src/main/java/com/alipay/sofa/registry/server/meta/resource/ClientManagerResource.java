@@ -21,15 +21,17 @@ import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress;
 import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress.AddressVersion;
+import com.alipay.sofa.registry.common.model.metaserver.ClientManagerResult;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.server.meta.provide.data.ClientManagerService;
+import com.alipay.sofa.registry.server.shared.client.manager.ClientManagerService;
 import com.alipay.sofa.registry.store.api.DBResponse;
 import com.alipay.sofa.registry.store.api.OperationStatus;
 import com.alipay.sofa.registry.util.JsonUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.annotations.VisibleForTesting;
 import java.util.Set;
+import javax.annotation.Resource;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -37,7 +39,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import org.apache.commons.lang.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 
 /**
@@ -56,7 +57,7 @@ public class ClientManagerResource {
   public static final TypeReference<Set<AddressVersion>> FORMAT =
       new TypeReference<Set<AddressVersion>>() {};
 
-  @Autowired private ClientManagerService clientManagerService;
+  @Resource private ClientManagerService clientManagerService;
 
   /** Client off */
   @POST
@@ -67,12 +68,12 @@ public class ClientManagerResource {
     }
     Set<String> ipSet = CollectionSdks.toIpSet(ips);
 
-    boolean ret = clientManagerService.clientOff(ipSet);
+    ClientManagerResult ret = clientManagerService.clientOff(ipSet);
 
     DB_LOGGER.info("client off result:{}, ips:{}", ret, ips);
 
     CommonResponse response = CommonResponse.buildSuccessResponse();
-    response.setSuccess(ret);
+    response.setSuccess(ret.isSuccess());
     return response;
   }
 
@@ -90,12 +91,12 @@ public class ClientManagerResource {
       return CommonResponse.buildFailedResponse("ips is invalidate");
     }
 
-    boolean ret = clientManagerService.clientOffWithSub(read);
+    ClientManagerResult ret = clientManagerService.clientOffWithSub(read);
 
     DB_LOGGER.info("client off result:{}, ips:{}", ret, ips);
 
     CommonResponse response = CommonResponse.buildSuccessResponse();
-    response.setSuccess(ret);
+    response.setSuccess(ret.isSuccess());
     return response;
   }
 
@@ -120,12 +121,12 @@ public class ClientManagerResource {
     }
     Set<String> ipSet = CollectionSdks.toIpSet(ips);
 
-    boolean ret = clientManagerService.clientOpen(ipSet);
+    ClientManagerResult ret = clientManagerService.clientOpen(ipSet);
 
     DB_LOGGER.info("client open result:{}, ips:{}", ret, ips);
 
     CommonResponse response = CommonResponse.buildSuccessResponse();
-    response.setSuccess(ret);
+    response.setSuccess(ret.isSuccess());
     return response;
   }
 
@@ -138,12 +139,12 @@ public class ClientManagerResource {
     }
     Set<String> ipSet = CollectionSdks.toIpSet(ips);
 
-    boolean ret = clientManagerService.reduce(ipSet);
+    ClientManagerResult ret = clientManagerService.reduce(ipSet);
 
     DB_LOGGER.info("reduce result:{}, ips:{}", ret, ips);
 
     CommonResponse response = CommonResponse.buildSuccessResponse();
-    response.setSuccess(ret);
+    response.setSuccess(ret.isSuccess());
     return response;
   }
 

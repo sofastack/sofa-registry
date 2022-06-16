@@ -227,7 +227,11 @@ public class Subscriber extends BaseInfo {
   public synchronized CircuitBreakerStatistic getStatistic(String dataCenter) {
     final PushContext ctx = getPushContext(dataCenter);
     return new CircuitBreakerStatistic(
-        getGroup(), ctx.pushedFailCount, ctx.lastPushedFailTimeStamp);
+        getGroup(),
+        getSourceAddress().getIpAddress(),
+        getSourceAddress().buildAddressString(),
+        ctx.pushedFailCount,
+        ctx.lastPushedFailTimeStamp);
   }
 
   /**

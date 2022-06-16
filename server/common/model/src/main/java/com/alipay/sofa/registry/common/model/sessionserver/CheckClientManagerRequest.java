@@ -14,27 +14,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.wrapper;
+package com.alipay.sofa.registry.common.model.sessionserver;
+
+import java.io.Serializable;
 
 /**
- * @author shangyu.wh
- * @version 1.0: WrapperInterceptor.java, v 0.1 2019-06-18 11:45 shangyu.wh Exp $
+ * @author xiaojian.xj
+ * @version : CheckClientManagerRequest.java, v 0.1 2022年01月04日 20:43 xiaojian.xj Exp $
  */
-public interface WrapperInterceptor<T, R> {
+public class CheckClientManagerRequest implements Serializable {
+
+  private final long expectedVersion;
+
+  public CheckClientManagerRequest(long expectedVersion) {
+    this.expectedVersion = expectedVersion;
+  }
 
   /**
-   * invoke inside function
+   * Getter method for property <tt>expectedVersion</tt>.
    *
-   * @param invocation
-   * @return
-   * @throws Exception
+   * @return property value of expectedVersion
    */
-  R invokeCodeWrapper(WrapperInvocation<T, R> invocation) throws Exception;
+  public long getExpectedVersion() {
+    return expectedVersion;
+  }
 
-  /**
-   * Interceptor order
-   *
-   * @return
-   */
-  int getOrder();
+  @Override
+  public String toString() {
+    return "CheckClientManagerRequest{" + "expectedVersion=" + expectedVersion + '}';
+  }
 }

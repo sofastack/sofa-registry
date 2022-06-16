@@ -38,7 +38,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 @RunWith(SpringRunner.class)
 public class QueryClientOffTest extends BaseIntegrationTest {
   private final String localAddress = sessionChannel.getLocalAddress().getHostString();
-  private final String CLIENT_OFF_STR = "1.1.1.1;2.2.2.2;";
+  private final String CLIENT_OFF_STR = "31.1.1.1;32.2.2.2";
   private final Set<String> CLIENT_OFF_SET = Sets.newHashSet(CLIENT_OFF_STR.split(";"));
 
   @Test
@@ -53,7 +53,7 @@ public class QueryClientOffTest extends BaseIntegrationTest {
     Assert.assertTrue(queryResp.isSuccess());
     ClientManagerResp clientManagerResp = queryResp.getData().get(localAddress);
     Assert.assertTrue(clientManagerResp.isSuccess());
-    Assert.assertEquals(clientManagerResp.getIps(), CLIENT_OFF_SET);
+    Assert.assertTrue(clientManagerResp.getIps().containsAll(CLIENT_OFF_SET));
 
     CommonResponse result =
         (CommonResponse)
@@ -66,7 +66,7 @@ public class QueryClientOffTest extends BaseIntegrationTest {
     Assert.assertTrue(result.isSuccess());
     GenericResponse resp = (GenericResponse) result;
     ClientManagerResp data = (ClientManagerResp) resp.getData();
-    Assert.assertEquals(data.getIps(), CLIENT_OFF_SET);
+    Assert.assertTrue(data.getIps().containsAll(CLIENT_OFF_SET));
 
     /** client open */
     response = clientManagerResource.clientOpen(CLIENT_OFF_STR);

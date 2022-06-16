@@ -173,7 +173,7 @@ public interface SessionServerConfig extends ServerShareConfig {
 
   int getPushCircuitBreakerThreshold();
 
-  int getPushCircuitBreakerSleepMillis();
+  int getPushCircuitBreakerSilenceMillis();
 
   int getSkipPushEmptySilentMillis();
 
@@ -190,4 +190,8 @@ public interface SessionServerConfig extends ServerShareConfig {
   int getScanWatcherIntervalMillis();
 
   boolean isGracefulShutdown();
+
+  int getPushAddressCircuitBreakerThreshold();
+
+  int getPushConsecutiveSuccess();
 }

@@ -194,7 +194,11 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
   private int pushCircuitBreakerThreshold = 10;
 
-  private int pushCircuitBreakerSleepMillis = 60 * 1000;
+  private int pushCircuitBreakerSilenceMillis = 60 * 1000;
+
+  private int pushAddressCircuitBreakerThreshold = 50;
+
+  private int pushConsecutiveSuccess = 1;
 
   private int skipPushEmptySilentMillis = 30 * 1000;
 
@@ -1211,23 +1215,23 @@ public class SessionServerConfigBean implements SessionServerConfig {
   }
 
   /**
-   * Getter method for property <tt>pushCircuitBreakerSleepMillis</tt>.
+   * Getter method for property <tt>pushCircuitBreakerSilenceMillis</tt>.
    *
-   * @return property value of pushCircuitBreakerSleepMillis
+   * @return property value of pushCircuitBreakerSilenceMillis
    */
   @Override
-  public int getPushCircuitBreakerSleepMillis() {
-    return pushCircuitBreakerSleepMillis;
+  public int getPushCircuitBreakerSilenceMillis() {
+    return pushCircuitBreakerSilenceMillis;
   }
 
   /**
-   * Setter method for property <tt>pushCircuitBreakerSleepMillis</tt>.
+   * Setter method for property <tt>pushCircuitBreakerSilenceMillis</tt>.
    *
-   * @param pushCircuitBreakerSleepMillis value to be assigned to property
-   *     pushCircuitBreakerSleepMillis
+   * @param pushCircuitBreakerSilenceMillis value to be assigned to property
+   *     pushCircuitBreakerSilenceMillis
    */
-  public void setPushCircuitBreakerSleepMillis(int pushCircuitBreakerSleepMillis) {
-    this.pushCircuitBreakerSleepMillis = pushCircuitBreakerSleepMillis;
+  public void setPushCircuitBreakerSilenceMillis(int pushCircuitBreakerSilenceMillis) {
+    this.pushCircuitBreakerSilenceMillis = pushCircuitBreakerSilenceMillis;
   }
 
   public int getSkipPushEmptySilentMillis() {
@@ -1317,5 +1321,44 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
   public void setWatchPushTaskMaxBufferSize(int watchPushTaskMaxBufferSize) {
     this.watchPushTaskMaxBufferSize = watchPushTaskMaxBufferSize;
+  }
+
+  /**
+   * Getter method for property <tt>pushConsecutiveSuccess</tt>.
+   *
+   * @return property value of pushConsecutiveSuccess
+   */
+  @Override
+  public int getPushConsecutiveSuccess() {
+    return pushConsecutiveSuccess;
+  }
+
+  /**
+   * Setter method for property <tt>pushConsecutiveSuccess</tt>.
+   *
+   * @param pushConsecutiveSuccess value to be assigned to property pushConsecutiveSuccess
+   */
+  public void setPushConsecutiveSuccess(int pushConsecutiveSuccess) {
+    this.pushConsecutiveSuccess = pushConsecutiveSuccess;
+  }
+
+  /**
+   * Getter method for property <tt>pushAddressCircuitBreakerThreshold</tt>.
+   *
+   * @return property value of pushAddressCircuitBreakerThreshold
+   */
+  @Override
+  public int getPushAddressCircuitBreakerThreshold() {
+    return pushAddressCircuitBreakerThreshold;
+  }
+
+  /**
+   * Setter method for property <tt>pushAddressCircuitBreakerThreshold</tt>.
+   *
+   * @param pushAddressCircuitBreakerThreshold value to be assigned to property
+   *     pushAddressCircuitBreakerThreshold
+   */
+  public void setPushAddressCircuitBreakerThreshold(int pushAddressCircuitBreakerThreshold) {
+    this.pushAddressCircuitBreakerThreshold = pushAddressCircuitBreakerThreshold;
   }
 }

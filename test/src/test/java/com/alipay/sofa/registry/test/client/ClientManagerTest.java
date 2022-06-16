@@ -89,7 +89,7 @@ public class ClientManagerTest extends BaseIntegrationTest {
 
     // check session client off list
     waitConditionUntilTimeOut(
-        () -> fetchClientOffAddressService.getClientOffAddress().equals(CLIENT_OFF_SET), 5000);
+        () -> fetchClientOffAddressService.getClientOffAddress().containsAll(CLIENT_OFF_SET), 5000);
     waitConditionUntilTimeOut(
         () -> {
           GenericResponse<ClientManagerAddress> query = clientManagerResource.query();
@@ -125,7 +125,7 @@ public class ClientManagerTest extends BaseIntegrationTest {
 
     SetView<String> difference = Sets.difference(CLIENT_OFF_SET, CLIENT_OPEN_SET);
     waitConditionUntilTimeOut(
-        () -> fetchClientOffAddressService.getClientOffAddress().equals(difference), 5000);
+        () -> fetchClientOffAddressService.getClientOffAddress().containsAll(difference), 5000);
 
     waitConditionUntilTimeOut(
         () -> {
@@ -154,7 +154,7 @@ public class ClientManagerTest extends BaseIntegrationTest {
 
     // check session client off list
     waitConditionUntilTimeOut(
-        () -> fetchClientOffAddressService.getClientOffAddress().equals(CLIENT_OFF_SET), 5000);
+        () -> fetchClientOffAddressService.getClientOffAddress().containsAll(CLIENT_OFF_SET), 5000);
 
     for (String address : CLIENT_OFF_SET) {
       AddressVersion query = fetchClientOffAddressService.getAddress(address);
@@ -176,7 +176,7 @@ public class ClientManagerTest extends BaseIntegrationTest {
 
     // check session client off list
     waitConditionUntilTimeOut(
-        () -> fetchClientOffAddressService.getClientOffAddress().equals(merge), 5000);
+        () -> fetchClientOffAddressService.getClientOffAddress().containsAll(merge), 5000);
 
     for (AddressVersion addressVersion : CLIENT_OFF_WITH_SUB_SET) {
       AddressVersion query = fetchClientOffAddressService.getAddress(addressVersion.getAddress());
@@ -236,7 +236,7 @@ public class ClientManagerTest extends BaseIntegrationTest {
 
     // check session client off list
     waitConditionUntilTimeOut(
-        () -> fetchClientOffAddressService.getClientOffAddress().equals(CLIENT_OFF_SET), 5000);
+        () -> fetchClientOffAddressService.getClientOffAddress().containsAll(CLIENT_OFF_SET), 5000);
     waitConditionUntilTimeOut(
         () -> {
           GenericResponse<ClientManagerAddress> query = clientManagerResource.query();
@@ -272,7 +272,7 @@ public class ClientManagerTest extends BaseIntegrationTest {
 
     SetView<String> difference = Sets.difference(CLIENT_OFF_SET, CLIENT_OPEN_SET);
     waitConditionUntilTimeOut(
-        () -> fetchClientOffAddressService.getClientOffAddress().equals(difference), 5000);
+        () -> fetchClientOffAddressService.getClientOffAddress().containsAll(difference), 5000);
 
     waitConditionUntilTimeOut(
         () -> {
@@ -303,7 +303,14 @@ public class ClientManagerTest extends BaseIntegrationTest {
   }
 
   @Test
-  public void testConfig() {
+  public void testConfig() throws InterruptedException, TimeoutException {
+    String localAddress = sessionChannel.getLocalAddress().getHostString();
+    GenericResponse<Long> response = persistenceClientManagerResource.clientOpen(localAddress);
+    Assert.assertTrue(response.isSuccess());
+
+    waitConditionUntilTimeOut(
+        () -> !fetchClientOffAddressService.getClientOffAddress().contains(localAddress), 5000);
+
     String dataId = "testDataId";
     MyConfigDataObserver dataObserver = new MyConfigDataObserver();
     ConfiguratorRegistration registration = new ConfiguratorRegistration(dataId, dataObserver);

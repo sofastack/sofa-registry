@@ -129,7 +129,7 @@ public class FetchClientOffAddressService
               data.getVersion(),
               data.clientOffAddress,
               data.reduces,
-              new ClientOffTable(toBeAdd, adds, toBeRemove, toBeClientOpen));
+              new ClientOffTable(toBeAdd, toBeRemove, toBeClientOpen));
       if (!compareAndSet(expect, update)) {
         LOGGER.error("update clientOffAddress:{} fail.", update.getVersion());
         return false;
@@ -204,19 +204,12 @@ public class FetchClientOffAddressService
   static final class ClientOffTable {
     final Set<String> addAddress;
 
-    final Map<String, AddressVersion> adds;
-
     final Set<String> removes;
 
     final Set<String> clientOpens;
 
-    public ClientOffTable(
-        Set<String> addAddress,
-        Map<String, AddressVersion> adds,
-        Set<String> removes,
-        Set<String> clientOpens) {
+    public ClientOffTable(Set<String> addAddress, Set<String> removes, Set<String> clientOpens) {
       this.addAddress = addAddress;
-      this.adds = adds;
       this.removes = removes;
       this.clientOpens = clientOpens;
     }
@@ -243,7 +236,6 @@ public class FetchClientOffAddressService
     }
 
     Set<String> addAddress = table.addAddress;
-    Map<String, AddressVersion> adds = table.adds;
     Set<String> removes = table.removes;
     Set<String> clientOpens = table.clientOpens;
 
@@ -254,7 +246,7 @@ public class FetchClientOffAddressService
     }
 
     if (CollectionUtils.isNotEmpty(addAddress)) {
-      doTrafficOff(addAddress, adds);
+      doTrafficOff(addAddress);
     }
 
     if (CollectionUtils.isNotEmpty(removes)) {
@@ -271,7 +263,7 @@ public class FetchClientOffAddressService
     connectionsService.markChannelAndGetIpConnects(ipSet, CLIENT_OFF, null);
   }
 
-  private void doTrafficOff(Set<String> ipSet, Map<String, AddressVersion> adds) {
+  private void doTrafficOff(Set<String> ipSet) {
     List<ConnectId> conIds =
         connectionsService.markChannelAndGetIpConnects(ipSet, CLIENT_OFF, Boolean.TRUE);
 
@@ -279,15 +271,7 @@ public class FetchClientOffAddressService
       return;
     }
     LOGGER.info("clientOff conIds: {}", conIds.toString());
-
-    Map<ConnectId, Long> connectIds = Maps.newHashMapWithExpectedSize(conIds.size());
-    for (ConnectId conId : conIds) {
-      AddressVersion addressVersion = adds.get(conId.getClientHostAddress());
-      ParaCheckUtil.checkNotNull(addressVersion, "addressVersion");
-      connectIds.put(conId, addressVersion.getVersion());
-    }
-    ParaCheckUtil.checkEquals(conIds.size(), connectIds.size(), "connectIds");
-    sessionRegistry.clientOffWithTimestampCheck(connectIds);
+    sessionRegistry.clientOff(conIds);
   }
 
   private void doTrafficOn(Set<String> ipSet) {
@@ -353,6 +337,14 @@ public class FetchClientOffAddressService
 
   public AddressVersion getAddress(String address) {
     return storage.get().clientOffAddress.get(address);
+  }
+
+  public long lastLoadVersion() {
+    return storage.get().getVersion();
+  }
+
+  public void wakeup() {
+    watchDog.wakeup();
   }
   /**
    * Setter method for property <tt>sessionServerConfig</tt>.

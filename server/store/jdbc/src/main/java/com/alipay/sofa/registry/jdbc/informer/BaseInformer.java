@@ -36,7 +36,7 @@ public abstract class BaseInformer<T extends DbEntry, C extends DbEntryContainer
 
   private final Lock listLock = new ReentrantLock();
 
-  private final WatchLoop watchLoop = new WatchLoop();
+  protected final WatchLoop watchLoop = new WatchLoop();
   private final ListLoop listLoop = new ListLoop();
   private volatile boolean enabled;
   private boolean started;
@@ -183,6 +183,10 @@ public abstract class BaseInformer<T extends DbEntry, C extends DbEntryContainer
   protected abstract Date getNow();
 
   protected void preList(C newContainer) {}
+
+  public void watchWakeup() {
+    watchLoop.wakeup();
+  }
 
   private final class WatchLoop extends WakeUpLoopRunnable {
 

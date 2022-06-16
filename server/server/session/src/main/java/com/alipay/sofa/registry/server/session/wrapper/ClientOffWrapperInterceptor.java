@@ -21,6 +21,8 @@ import static com.alipay.sofa.registry.common.model.constants.ValueConstants.CLI
 import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress.AddressVersion;
 import com.alipay.sofa.registry.common.model.store.*;
 import com.alipay.sofa.registry.common.model.store.StoreData.DataType;
+import com.alipay.sofa.registry.common.model.wrapper.WrapperInterceptor;
+import com.alipay.sofa.registry.common.model.wrapper.WrapperInvocation;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.bolt.BoltChannel;

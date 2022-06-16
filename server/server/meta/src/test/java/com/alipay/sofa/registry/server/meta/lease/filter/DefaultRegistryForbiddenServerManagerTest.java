@@ -16,13 +16,14 @@
  */
 package com.alipay.sofa.registry.server.meta.lease.filter;
 
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.*;
 
-import com.alipay.sofa.registry.common.model.metaserver.Lease;
-import com.alipay.sofa.registry.exception.SofaRegistryRuntimeException;
+import com.alipay.sofa.registry.common.model.Node.NodeType;
+import com.alipay.sofa.registry.common.model.Tuple;
+import com.alipay.sofa.registry.common.model.metaserver.DataOperation;
+import com.alipay.sofa.registry.common.model.metaserver.blacklist.RegistryForbiddenServerRequest;
 import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
-import com.alipay.sofa.registry.server.meta.cluster.node.NodeModifiedTest;
+import com.alipay.sofa.registry.server.meta.provide.data.NodeOperatingService;
 import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataService;
 import org.junit.Assert;
 import org.junit.Before;
@@ -34,36 +35,23 @@ public class DefaultRegistryForbiddenServerManagerTest extends AbstractMetaServe
 
   private ProvideDataService provideDataService;
 
+  private NodeOperatingService nodeOperatingService;
+
   @Before
   public void beforeDefaultRegistryForbiddenServerManagerTest() {
     provideDataService = spy(new InMemoryProvideDataRepo());
-    registryForbiddenServerManager = new DefaultForbiddenServerManager(provideDataService);
+    nodeOperatingService = mock(NodeOperatingService.class);
+    when(nodeOperatingService.queryOperateInfoAndVersion()).thenReturn(new Tuple<>(0l, null));
+    registryForbiddenServerManager =
+        new DefaultForbiddenServerManager(provideDataService, nodeOperatingService);
   }
 
   @Test
   public void testNormalCase() {
-    registryForbiddenServerManager.addToBlacklist("127.0.0.1");
-    Assert.assertFalse(
-        registryForbiddenServerManager.allowSelect(
-            new Lease<>(new NodeModifiedTest.SimpleNode("127.0.0.1"), System.currentTimeMillis())));
-    registryForbiddenServerManager.removeFromBlacklist("127.0.0.1");
-    Assert.assertTrue(
-        registryForbiddenServerManager.allowSelect(
-            new Lease<>(new NodeModifiedTest.SimpleNode("127.0.0.1"), System.currentTimeMillis())));
-  }
-
-  @Test(expected = SofaRegistryRuntimeException.class)
-  public void testException() {
-    Assert.assertTrue(
-        registryForbiddenServerManager.allowSelect(
-            new Lease<>(new NodeModifiedTest.SimpleNode("127.0.0.1"), System.currentTimeMillis())));
-    provideDataService = mock(ProvideDataService.class);
-    when(provideDataService.queryProvideData(anyString()))
-        .thenThrow(new SofaRegistryRuntimeException("expected io exception"));
-    registryForbiddenServerManager = new DefaultForbiddenServerManager(provideDataService);
-    Assert.assertTrue(
-        registryForbiddenServerManager.allowSelect(
-            new Lease<>(new NodeModifiedTest.SimpleNode("127.0.0.1"), System.currentTimeMillis())));
-    registryForbiddenServerManager.addToBlacklist("127.0.0.1");
+    RegistryForbiddenServerRequest add =
+        new RegistryForbiddenServerRequest(
+            DataOperation.ADD, NodeType.DATA, "127.0.0.1", "testCell");
+    boolean success = registryForbiddenServerManager.addToBlacklist(add);
+    Assert.assertTrue(success);
   }
 }

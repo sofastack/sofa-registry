@@ -17,8 +17,12 @@
 package com.alipay.sofa.registry.client.provider;
 
 import com.alipay.sofa.registry.client.api.Register;
+import com.alipay.sofa.registry.client.api.RegistryClientConfig;
+import com.alipay.sofa.registry.client.api.registration.BaseRegistration;
 import com.alipay.sofa.registry.client.auth.AuthManager;
+import com.alipay.sofa.registry.client.constants.ValueConstants;
 import com.alipay.sofa.registry.client.constants.VersionConstants;
+import com.alipay.sofa.registry.client.util.StringUtils;
 import com.alipay.sofa.registry.core.model.BaseRegister;
 import java.util.HashMap;
 import java.util.Map;
@@ -313,6 +317,34 @@ public abstract class AbstractInternalRegister implements Register {
    */
   public void setAuthManager(AuthManager authManager) {
     this.authManager = authManager;
+  }
+
+  protected void setAttributes(
+      BaseRegister to, BaseRegistration from, RegistryClientConfig config) {
+    if (StringUtils.isNotEmpty(from.getInstanceId())) {
+      to.setInstanceId(from.getInstanceId());
+    } else {
+      to.setInstanceId(config.getInstanceId());
+    }
+    if (StringUtils.isNotEmpty(config.getZone())) {
+      to.setZone(config.getZone());
+    } else {
+      to.setZone(ValueConstants.DEFAULT_ZONE);
+    }
+    if (StringUtils.isNotEmpty(from.getAppName())) {
+      to.setAppName(from.getAppName());
+    } else {
+      to.setAppName(config.getAppName());
+    }
+    if (StringUtils.isNotEmpty(from.getIp())) {
+      to.setIp(from.getIp());
+    } else {
+      to.setIp(config.getIp());
+    }
+    to.setDataId(from.getDataId());
+    to.setGroup(from.getGroup());
+    to.setVersion(this.getPubVersion().get());
+    to.setTimestamp(this.getTimestamp());
   }
 
   /** @see Object#toString() */

@@ -10,6 +10,7 @@
         <result property="operation" column="operation" javaType="java.lang.String" jdbcType="VARCHAR"/>
         <result property="gmtCreate" column="gmt_create" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
         <result property="gmtModify" column="gmt_modified" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
+        <result property="gmtCreateUnixNanos" column="gmt_create_unixnanos" javaType="long" jdbcType="BIGINT"/>
         <result property="pub" column="pub" javaType="boolean" jdbcType="TINYINT"/>
         <result property="sub" column="sub" javaType="boolean" jdbcType="TINYINT"/>
     </resultMap>
@@ -24,17 +25,24 @@
     </update>
 
     <insert id="insertOnReplace" parameterType="com.alipay.sofa.registry.jdbc.domain.ClientManagerAddressDomain">
-            <![CDATA[
-                delete from client_manager_address where data_center=#{dataCenter} and address = #{address};
-            ]]>
-            <![CDATA[
+        <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Long">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+
+        <![CDATA[
+            delete from client_manager_address where data_center=#{dataCenter} and address = #{address};
+        ]]>
+
+        <![CDATA[
             insert into client_manager_address(data_center, address, operation, gmt_create, gmt_modified, pub, sub)
-            values (#{dataCenter},#{address},#{operation},CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,#{pub},#{sub}) on duplicate key update gmt_modified=CURRENT_TIMESTAMP;
-            ]]>
+            values (#{dataCenter},#{address},#{operation},CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,#{pub},#{sub})
+            on duplicate key update gmt_modified=CURRENT_TIMESTAMP;
+        ]]>
+
     </insert>
 
     <select id="queryAfterThanByLimit" resultMap="clientManagerAddressResultMap">
-        select * from client_manager_address where data_center = #{dataCenter} and id > #{maxId}
+        select *, EXTRACT(EPOCH FROM gmt_create)*1000000000 as gmt_create_unixnanos from client_manager_address where data_center = #{dataCenter} and id > #{maxId}
         order by id limit #{limit}
     </select>
 

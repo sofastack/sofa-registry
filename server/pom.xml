@@ -7,7 +7,7 @@
     <parent>
         <groupId>com.alipay.sofa</groupId>
         <artifactId>registry-parent</artifactId>
-        <version>6.1.4-SNAPSHOT</version>
+        <version>6.1.5</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -26,8 +26,18 @@
         <module>common</module>
         <module>store</module>
         <module>server</module>
-        <module>distribution</module>
     </modules>
+    <profiles>
+        <profile>
+            <id>server-release</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <modules>
+                <module>distribution</module>
+            </modules>
+        </profile>
+    </profiles>
     <properties>
         <!-- Build args -->
         <maven.compiler.source>1.8</maven.compiler.source>

@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.bootstrap;
 
+import com.alipay.sofa.registry.common.model.wrapper.WrapperInterceptor;
 import com.alipay.sofa.registry.jdbc.config.JdbcConfiguration;
 import com.alipay.sofa.registry.jraft.config.RaftConfiguration;
 import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
@@ -30,6 +31,7 @@ import com.alipay.sofa.registry.server.session.cache.DatumCacheGenerator;
 import com.alipay.sofa.registry.server.session.cache.SessionCacheService;
 import com.alipay.sofa.registry.server.session.circuit.breaker.CircuitBreakerService;
 import com.alipay.sofa.registry.server.session.circuit.breaker.DefaultCircuitBreakerService;
+import com.alipay.sofa.registry.server.session.client.manager.CheckClientManagerService;
 import com.alipay.sofa.registry.server.session.connections.ConnectionsService;
 import com.alipay.sofa.registry.server.session.filter.IPMatchStrategy;
 import com.alipay.sofa.registry.server.session.filter.ProcessFilter;
@@ -61,6 +63,8 @@ import com.alipay.sofa.registry.server.session.store.*;
 import com.alipay.sofa.registry.server.session.strategy.*;
 import com.alipay.sofa.registry.server.session.strategy.impl.*;
 import com.alipay.sofa.registry.server.session.wrapper.*;
+import com.alipay.sofa.registry.server.shared.client.manager.BaseClientManagerService;
+import com.alipay.sofa.registry.server.shared.client.manager.ClientManagerService;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerManager;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.server.shared.providedata.FetchSystemPropertyService;
@@ -213,6 +217,7 @@ public class SessionServerConfiguration {
       list.add(clientOffRequestHandler());
       list.add(clientOnRequestHandler());
       list.add(getClientManagerRequestHandler());
+      list.add(checkClientManagerHandler());
       list.add(pubSubDataInfoIdRequestHandler());
       list.add(filterSubscriberIPsHandler());
       list.add(stopPushRequestHandler());
@@ -267,6 +272,11 @@ public class SessionServerConfiguration {
     @Bean
     public AbstractServerHandler getClientManagerRequestHandler() {
       return new GetClientManagerRequestHandler();
+    }
+
+    @Bean
+    public AbstractServerHandler checkClientManagerHandler() {
+      return new CheckClientManagerHandler();
     }
 
     @Bean
@@ -442,6 +452,11 @@ public class SessionServerConfiguration {
     }
 
     @Bean
+    public PersistenceClientManagerResource persistenceClientManagerResource() {
+      return new PersistenceClientManagerResource();
+    }
+
+    @Bean
     public SlotTableStatusResource slotTableStatusResource() {
       return new SlotTableStatusResource();
     }
@@ -539,6 +554,16 @@ public class SessionServerConfiguration {
     @ConditionalOnMissingBean
     public FetchPubSubDataInfoIdService fetchPubSubDataInfoIdService() {
       return new FetchPubSubDataInfoIdService();
+    }
+
+    @Bean
+    public ClientManagerService clientManagerService() {
+      return new BaseClientManagerService();
+    }
+
+    @Bean
+    public CheckClientManagerService checkClientManagerService() {
+      return new CheckClientManagerService();
     }
   }
 
@@ -785,6 +810,14 @@ public class SessionServerConfiguration {
       systemPropertyProcessorManager.addSystemDataPersistenceProcessor(fetchShutdownService);
 
       return fetchShutdownService;
+    }
+
+    @Bean
+    public FetchCircuitBreakerService fetchCircuitBreakerService(
+        SystemPropertyProcessorManager systemPropertyProcessorManager) {
+      FetchCircuitBreakerService fetchCircuitBreakerService = new FetchCircuitBreakerService();
+      systemPropertyProcessorManager.addSystemDataPersistenceProcessor(fetchCircuitBreakerService);
+      return fetchCircuitBreakerService;
     }
 
     @Bean

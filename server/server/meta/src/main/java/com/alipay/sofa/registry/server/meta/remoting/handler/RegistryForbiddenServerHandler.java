@@ -53,10 +53,10 @@ public class RegistryForbiddenServerHandler
     boolean success = false;
     switch (operation) {
       case ADD:
-        success = registryForbiddenServerManager.addToBlacklist(ip);
+        success = registryForbiddenServerManager.addToBlacklist(request);
         break;
       case REMOVE:
-        success = registryForbiddenServerManager.removeFromBlacklist(ip);
+        success = registryForbiddenServerManager.removeFromBlacklist(request);
         break;
       default:
         break;

@@ -17,12 +17,14 @@
 package com.alipay.sofa.registry.server.session.node.service;
 
 import com.alipay.sofa.registry.common.model.Node;
+import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.BaseHeartBeatResponse;
 import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.HeartbeatRequest;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 import com.alipay.sofa.registry.common.model.slot.SlotConfig;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.common.model.store.URL;
+import com.alipay.sofa.registry.server.session.bootstrap.CommonConfig;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.server.session.remoting.DataNodeNotifyExchanger;
@@ -46,6 +48,8 @@ public class MetaServerServiceImpl extends AbstractMetaServerService<BaseHeartBe
   @Autowired private DataNodeExchanger dataNodeExchanger;
 
   @Autowired private DataNodeNotifyExchanger dataNodeNotifyExchanger;
+
+  @Autowired private CommonConfig commonConfig;
 
   @Override
   protected long getCurrentSlotTableEpoch() {
@@ -82,6 +86,16 @@ public class MetaServerServiceImpl extends AbstractMetaServerService<BaseHeartBe
             System.currentTimeMillis(),
             SlotConfig.slotBasicInfo())
         .setSlotTable(slotTableCache.getCurrentSlotTable());
+  }
+
+  @Override
+  protected NodeType nodeType() {
+    return NodeType.SESSION;
+  }
+
+  @Override
+  protected String cell() {
+    return commonConfig.getLocalRegion();
   }
 
   private Node createNode() {

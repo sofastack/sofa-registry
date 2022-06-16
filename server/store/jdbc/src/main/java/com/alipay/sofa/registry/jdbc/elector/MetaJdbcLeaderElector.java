@@ -39,11 +39,11 @@ public class MetaJdbcLeaderElector extends AbstractLeaderElector implements Reco
 
   public static final String lockName = "META-MASTER";
 
-  @Autowired private DistributeLockMapper distributeLockMapper;
+  @Autowired DistributeLockMapper distributeLockMapper;
 
-  @Autowired private MetaElectorConfig metaElectorConfig;
+  @Autowired MetaElectorConfig metaElectorConfig;
 
-  @Autowired private DefaultCommonConfig defaultCommonConfig;
+  @Autowired DefaultCommonConfig defaultCommonConfig;
 
   /**
    * start elect, return current leader
@@ -101,8 +101,8 @@ public class MetaJdbcLeaderElector extends AbstractLeaderElector implements Reco
   public static LeaderInfo leaderFrom(DistributeLockDomain lock) {
     return calcLeaderInfo(
         lock.getOwner(),
-        lock.getGmtModified().getTime(),
-        lock.getGmtModified(),
+        lock.getGmtModifiedUnixMillis(),
+        lock.getGmtModifiedUnixMillis(),
         lock.getDuration());
   }
   /**

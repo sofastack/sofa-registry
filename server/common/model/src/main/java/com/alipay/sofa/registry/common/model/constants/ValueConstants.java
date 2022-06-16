@@ -80,6 +80,38 @@ public class ValueConstants {
       DataInfo.toDataInfoId(
           "registry.client.off.list", SESSION_PROVIDE_DATA_INSTANCE_ID, SESSION_PROVIDE_DATA_GROUP);
 
+  public static final String CIRCUIT_BREAKER_DATA_ID =
+      DataInfo.toDataInfoId(
+          "registry.circuit.breaker", SESSION_PROVIDE_DATA_INSTANCE_ID, SESSION_PROVIDE_DATA_GROUP);
+
+  // registry node quit interceptor disable
+  public static final String NODE_QUIT_INTERCEPTOR_DISABLE_DATA_ID =
+      DataInfo.toDataInfoId(
+          "registry.node.quit.interceptor.disable",
+          SESSION_PROVIDE_DATA_INSTANCE_ID,
+          SESSION_PROVIDE_DATA_GROUP);
+
+  // make interceptor(check meta leader status) disable
+  public static final String META_LEADER_INTERCEPTOR_DISABLE_DATA_ID =
+      DataInfo.toDataInfoId(
+          "registry.meta.leader.interceptor.disable",
+          SESSION_PROVIDE_DATA_INSTANCE_ID,
+          SESSION_PROVIDE_DATA_GROUP);
+
+  // make interceptor(check data capacity) disable
+  public static final String DATA_CAPACITY_INTERCEPTOR_DISABLE_DATA_ID =
+      DataInfo.toDataInfoId(
+          "registry.data.capacity.interceptor.disable",
+          SESSION_PROVIDE_DATA_INSTANCE_ID,
+          SESSION_PROVIDE_DATA_GROUP);
+
+  // make interceptor(check session capacity) disable
+  public static final String SESSION_CAPACITY_INTERCEPTOR_DISABLE_DATA_ID =
+      DataInfo.toDataInfoId(
+          "registry.session.capacity.interceptor.disable",
+          SESSION_PROVIDE_DATA_INSTANCE_ID,
+          SESSION_PROVIDE_DATA_GROUP);
+
   public static final String DATA_DATUM_SYNC_SESSION_INTERVAL_SEC =
       DataInfo.toDataInfoId(
           "data.datum.sync.session.interval.sec",
@@ -93,6 +125,12 @@ public class ValueConstants {
   public static final String REGISTRY_SERVER_BLACK_LIST_DATA_ID =
       DataInfo.toDataInfoId(
           "registry.server.black.list",
+          SESSION_PROVIDE_DATA_INSTANCE_ID,
+          SESSION_PROVIDE_DATA_GROUP);
+
+  public static final String NODE_SERVER_OPERATING_DATA_ID =
+      DataInfo.toDataInfoId(
+          "registry.node.server.operating.data",
           SESSION_PROVIDE_DATA_INSTANCE_ID,
           SESSION_PROVIDE_DATA_GROUP);
 

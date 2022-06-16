@@ -24,10 +24,13 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
+import com.alipay.sofa.registry.util.NamedThreadFactory;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.google.common.annotations.VisibleForTesting;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.PostConstruct;
 import org.apache.commons.lang.time.DateUtils;
@@ -44,6 +47,8 @@ public class CacheDigestTask {
   @Autowired private DatumCache datumCache;
 
   @Autowired private DataServerConfig dataServerConfig;
+  private final ScheduledExecutorService executorService =
+      new ScheduledThreadPoolExecutor(1, new NamedThreadFactory("CacheDigestTask"));
 
   @PostConstruct
   public boolean init() {
@@ -56,15 +61,9 @@ public class CacheDigestTask {
     firstDate = DateUtils.round(firstDate, Calendar.MINUTE);
     firstDate.setMinutes(
         firstDate.getMinutes() / intervalMinutes * intervalMinutes + intervalMinutes);
-    Timer timer = new Timer("CacheDigestTask", true);
-    TimerTask task =
-        new TimerTask() {
-          @Override
-          public void run() {
-            dump();
-          }
-        };
-    timer.scheduleAtFixedRate(task, firstDate, intervalMinutes * 60 * 1000);
+    long firstDelay = firstDate.getTime() - System.currentTimeMillis();
+    executorService.scheduleAtFixedRate(
+        this::dump, firstDelay, (long) intervalMinutes * 60 * 1000, TimeUnit.MILLISECONDS);
     return true;
   }
 

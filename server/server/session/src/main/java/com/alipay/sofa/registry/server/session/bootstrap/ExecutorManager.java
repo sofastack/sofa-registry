@@ -49,6 +49,7 @@ public class ExecutorManager {
   private final ThreadPoolExecutor accessMetadataExecutor;
   private final ThreadPoolExecutor consoleExecutor;
   private final ThreadPoolExecutor zoneSdkExecutor;
+  private final ThreadPoolExecutor clientManagerCheckExecutor;
 
   @Autowired protected SessionServerConfig sessionServerConfig;
 
@@ -71,6 +72,8 @@ public class ExecutorManager {
   private static final String CONSOLE_EXECUTOR = "ConsoleExecutor";
 
   private static final String ZONE_SDK_EXECUTOR = "ZoneSdkExecutor";
+
+  private static final String CLIENT_MANAGER_CHECK_EXECUTOR = "ClientManagerCheckExecutor";
 
   public ExecutorManager(SessionServerConfig sessionServerConfig) {
     scheduler =
@@ -174,7 +177,17 @@ public class ExecutorManager {
             ZONE_SDK_EXECUTOR,
             k ->
                 MetricsableThreadPoolExecutor.newExecutor(
-                    "ZoneSdkExecutor",
+                    ZONE_SDK_EXECUTOR,
+                    OsUtils.getCpuCount() * 5,
+                    100,
+                    new ThreadPoolExecutor.CallerRunsPolicy()));
+
+    clientManagerCheckExecutor =
+        reportExecutors.computeIfAbsent(
+            CLIENT_MANAGER_CHECK_EXECUTOR,
+            k ->
+                MetricsableThreadPoolExecutor.newExecutor(
+                    CLIENT_MANAGER_CHECK_EXECUTOR,
                     OsUtils.getCpuCount() * 5,
                     100,
                     new ThreadPoolExecutor.CallerRunsPolicy()));
@@ -222,5 +235,14 @@ public class ExecutorManager {
 
   public ThreadPoolExecutor getZoneSdkExecutor() {
     return zoneSdkExecutor;
+  }
+
+  /**
+   * Getter method for property <tt>clientManagerCheckExecutor</tt>.
+   *
+   * @return property value of clientManagerCheckExecutor
+   */
+  public ThreadPoolExecutor getClientManagerCheckExecutor() {
+    return clientManagerCheckExecutor;
   }
 }
