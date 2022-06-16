@@ -95,7 +95,7 @@ public abstract class AbstractLeaderElector implements LeaderElector {
         leaderInfo = doElect();
       }
 
-      if (amILeader()) {//我是leader
+      if (amILeader()) {
         onIamLeader();
       } else {//我不是leader
         onIamNotLeader();
