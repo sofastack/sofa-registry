@@ -38,8 +38,11 @@ SOFARegistry 是蚂蚁金服开源的一个生产级、高时效、高可用的�
    - [SlotTable](https://www.sofastack.tech/projects/sofa-registry/code-analyze/code-analyze-slottable/)
    - [发布订阅推送](https://www.sofastack.tech/projects/sofa-registry/code-analyze/code-analyze-publish-subscription-push/)
    - [registry meta 选主](https://www.sofastack.tech/projects/sofa-registry/code-analyze/code-analyze-registry-meta/)
+   - [数据表监听](https://www.sofastack.tech/projects/sofa-registry/code-analyze/code-analyza-data-table-listening/)
+   - [无损运维](https://www.sofastack.tech/projects/sofa-registry/code-analyze/code-analyze-non-destructive-o-and-m/)
+   - [推送延迟 trace](https://www.sofastack.tech/projects/sofa-registry/code-analyze/code-analyze-push-delay-trace/)
+   - [推送开关](https://www.sofastack.tech/projects/sofa-registry/code-analyze/code-analyze-push-switch/)
    - [通讯数据压缩](https://www.sofastack.tech/projects/sofa-registry/code-analyze/code-analyze-communication-data-compression/)
-
 
 
 ## 贡献
