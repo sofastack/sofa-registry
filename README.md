@@ -45,7 +45,6 @@ SOFARegistry 是蚂蚁金服开源的一个生产级、高时效、高可用的�
    - [通讯数据压缩](https://www.sofastack.tech/projects/sofa-registry/code-analyze/code-analyze-communication-data-compression/)
 
 
-
 ## 贡献
 
 [如何参与 SOFARegistry 代码贡献](https://www.sofastack.tech/sofa-registry/docs/Contributing)
