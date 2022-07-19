@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.jdbc.repository.impl;
 
 import com.alipay.sofa.registry.common.model.appmeta.InterfaceMapping;
+import com.alipay.sofa.registry.common.model.store.WordCache;
 import com.alipay.sofa.registry.jdbc.domain.InterfaceAppsIndexDomain;
 import com.alipay.sofa.registry.jdbc.informer.DbEntryContainer;
 import com.alipay.sofa.registry.util.TimestampUtil;
@@ -29,25 +30,21 @@ public class InterfaceAppsIndexContainer implements DbEntryContainer<InterfaceAp
   private final Map<String, InterfaceMapping> data = Maps.newConcurrentMap();
 
   private void addEntry(InterfaceAppsIndexDomain entry) {
+    String interfaceName = WordCache.getWordCache(entry.getInterfaceName());
+    String appName = WordCache.getWordCache(entry.getAppName());
+    long nanoTime = TimestampUtil.getNanosLong(entry.getGmtCreate());
     InterfaceMapping mapping =
-        data.computeIfAbsent(
-            entry.getInterfaceName(),
-            k ->
-                new InterfaceMapping(
-                    TimestampUtil.getNanosLong(entry.getGmtCreate()), entry.getAppName()));
-    data.put(
-        entry.getInterfaceName(),
-        mapping.addApp(TimestampUtil.getNanosLong(entry.getGmtCreate()), entry.getAppName()));
+        data.computeIfAbsent(interfaceName, k -> new InterfaceMapping(nanoTime, appName));
+    data.put(entry.getInterfaceName(), mapping.addApp(nanoTime, appName));
   }
 
   private void removeEntry(InterfaceAppsIndexDomain entry) {
+    String interfaceName = WordCache.getWordCache(entry.getInterfaceName());
+    String appName = WordCache.getWordCache(entry.getAppName());
+    long nanoTime = TimestampUtil.getNanosLong(entry.getGmtCreate());
     InterfaceMapping mapping =
-        data.computeIfAbsent(
-            entry.getInterfaceName(),
-            k -> new InterfaceMapping(TimestampUtil.getNanosLong(entry.getGmtCreate())));
-    data.put(
-        entry.getInterfaceName(),
-        mapping.removeApp(TimestampUtil.getNanosLong(entry.getGmtCreate()), entry.getAppName()));
+        data.computeIfAbsent(interfaceName, k -> new InterfaceMapping(nanoTime));
+    data.put(interfaceName, mapping.removeApp(nanoTime, appName));
   }
 
   public boolean containsName(String interfaceName, String appName) {
