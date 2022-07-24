@@ -107,13 +107,13 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
   @Override
   public void addSelfToMetaBlacklist() {
     metaServerManager.sendRequest(
-        new RegistryForbiddenServerRequest(DataOperation.ADD, nodeType(), cell(), ServerEnv.IP));
+        new RegistryForbiddenServerRequest(DataOperation.ADD, nodeType(), ServerEnv.IP, cell()));
   }
 
   @Override
   public void removeSelfFromMetaBlacklist() {
     metaServerManager.sendRequest(
-        new RegistryForbiddenServerRequest(DataOperation.REMOVE, nodeType(), cell(), ServerEnv.IP));
+        new RegistryForbiddenServerRequest(DataOperation.REMOVE, nodeType(), ServerEnv.IP, cell()));
   }
 
   private final class Renewer extends WakeUpLoopRunnable {
