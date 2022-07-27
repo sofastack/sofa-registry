@@ -146,6 +146,12 @@ public class ValueConstants {
       DataInfo.toDataInfoId(
           "compress.datum.switch", SESSION_PROVIDE_DATA_INSTANCE_ID, SESSION_PROVIDE_DATA_GROUP);
 
+  public static final String APP_REVISION_WRITE_RULE =
+          DataInfo.toDataInfoId(
+                 "app_revision.write.rule" ,
+              SESSION_PROVIDE_DATA_INSTANCE_ID,
+              SESSION_PROVIDE_DATA_GROUP);
+
   public static final String DISABLE_DATA_ID_CASE_SENSITIVE_SWITCH =
       "disable.dataId.case.sensitive";
 

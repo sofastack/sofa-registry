@@ -16,10 +16,12 @@
  */
 package com.alipay.sofa.registry.jdbc.convertor;
 
+import com.alipay.sofa.common.profile.StringUtil;
 import com.alipay.sofa.registry.common.model.store.AppRevision;
 import com.alipay.sofa.registry.core.model.AppRevisionInterface;
 import com.alipay.sofa.registry.jdbc.domain.AppRevisionDomain;
 import com.alipay.sofa.registry.util.JsonUtils;
+import com.alipay.sofa.registry.util.StringUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -66,7 +68,12 @@ public class AppRevisionDomainConvertor {
     appRevision.setRevision(domain.getRevision());
     appRevision.setClientVersion(domain.getClientVersion());
     appRevision.setBaseParams(JsonUtils.read(domain.getBaseParams(), BASE_FORMAT));
-    appRevision.setInterfaceMap(JsonUtils.read(domain.getServiceParams(), SERVICE_FORMAT));
+
+    String serviceParams = domain.getServiceParamsLarge();
+    if(StringUtil.isBlank(serviceParams)){
+      serviceParams = domain.getServiceParams();
+    }
+    appRevision.setInterfaceMap(JsonUtils.read(serviceParams, SERVICE_FORMAT));
     appRevision.setLastHeartbeat(domain.getGmtModify());
     appRevision.setDeleted(domain.isDeleted());
     return appRevision;
