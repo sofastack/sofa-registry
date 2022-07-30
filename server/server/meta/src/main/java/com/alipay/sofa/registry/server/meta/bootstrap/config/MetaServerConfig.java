@@ -16,11 +16,13 @@
  */
 package com.alipay.sofa.registry.server.meta.bootstrap.config;
 
+import com.alipay.sofa.registry.server.shared.config.ServerShareConfig;
+
 /**
  * @author shangyu.wh
  * @version $Id: MetaServerConfig.java, v 0.1 2018-01-16 10:58 shangyu.wh Exp $
  */
-public interface MetaServerConfig {
+public interface MetaServerConfig extends ServerShareConfig {
   int getSessionServerPort();
 
   int getDataServerPort();

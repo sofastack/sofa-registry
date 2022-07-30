@@ -22,6 +22,8 @@ import com.alipay.sofa.registry.server.session.bootstrap.SessionServerBootstrap;
 import com.alipay.sofa.registry.util.Bool;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.MetricRegistry;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import javax.annotation.PostConstruct;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -36,6 +38,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @author shangyu.wh
  * @version $Id: PushSwitchResource.java, v 0.1 2018-10-29 16:51 shangyu.wh Exp $
  */
+@Api(value = "健康")
 @Path("health")
 public class HealthResource {
 
@@ -48,6 +51,7 @@ public class HealthResource {
     ReporterUtils.startSlf4jReporter(60, metrics);
   }
 
+  @ApiOperation(value = "健康检查")
   @GET
   @Path("check")
   @Produces(MediaType.APPLICATION_JSON)

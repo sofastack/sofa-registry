@@ -22,7 +22,7 @@ import com.alipay.sofa.registry.jraft.config.RaftConfiguration;
 import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
-import com.alipay.sofa.registry.remoting.jersey.exchange.JerseyExchange;
+import com.alipay.sofa.registry.remoting.jersey.exchange.JettyExchange;
 import com.alipay.sofa.registry.server.session.acceptor.WriteDataAcceptor;
 import com.alipay.sofa.registry.server.session.acceptor.WriteDataAcceptorImpl;
 import com.alipay.sofa.registry.server.session.cache.CacheGenerator;
@@ -54,6 +54,7 @@ import com.alipay.sofa.registry.server.session.remoting.console.SessionConsoleEx
 import com.alipay.sofa.registry.server.session.remoting.console.handler.*;
 import com.alipay.sofa.registry.server.session.remoting.handler.*;
 import com.alipay.sofa.registry.server.session.resource.*;
+import com.alipay.sofa.registry.server.session.resource.config.SessionJerseyConfig;
 import com.alipay.sofa.registry.server.session.scheduler.timertask.CacheCountTask;
 import com.alipay.sofa.registry.server.session.scheduler.timertask.SessionCacheDigestTask;
 import com.alipay.sofa.registry.server.session.scheduler.timertask.SyncClientsHeartbeatTask;
@@ -87,7 +88,6 @@ import java.util.Collection;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -104,7 +104,7 @@ import org.springframework.context.annotation.Import;
   SessionServerInitializer.class,
   StoreApiConfiguration.class,
   JdbcConfiguration.class,
-  RaftConfiguration.class
+  RaftConfiguration.class,
 })
 @EnableConfigurationProperties
 public class SessionServerConfiguration {
@@ -149,8 +149,8 @@ public class SessionServerConfiguration {
     }
 
     @Bean
-    public Exchange jerseyExchange() {
-      return new JerseyExchange();
+    public Exchange jettyExchange() {
+      return new JettyExchange();
     }
 
     @Bean
@@ -388,9 +388,7 @@ public class SessionServerConfiguration {
 
     @Bean
     public ResourceConfig jerseyResourceConfig() {
-      ResourceConfig resourceConfig = new ResourceConfig();
-      resourceConfig.register(JacksonFeature.class);
-      return resourceConfig;
+      return new SessionJerseyConfig();
     }
 
     @Bean

@@ -46,7 +46,7 @@ public class AbstractMetaHttpResourceTestBase extends AbstractMetaServerTestBase
 
   private Server httpServer;
 
-  @Autowired private Exchange jerseyExchange;
+  @Autowired private Exchange jettyExchange;
 
   @Autowired private ApplicationContext applicationContext;
 
@@ -67,7 +67,7 @@ public class AbstractMetaHttpResourceTestBase extends AbstractMetaServerTestBase
       if (httpStart.compareAndSet(false, true)) {
         bindResourceConfig();
         httpServer =
-            jerseyExchange.open(
+            jettyExchange.open(
                 new URL(
                     NetUtil.getLocalAddress().getHostAddress(),
                     metaServerConfig.getHttpServerPort()),

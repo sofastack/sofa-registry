@@ -189,9 +189,9 @@ public interface SessionServerConfig extends ServerShareConfig {
 
   int getScanWatcherIntervalMillis();
 
-  boolean isGracefulShutdown();
-
   int getPushAddressCircuitBreakerThreshold();
 
   int getPushConsecutiveSuccess();
+
+  int getSystemPropertyIntervalMillis();
 }

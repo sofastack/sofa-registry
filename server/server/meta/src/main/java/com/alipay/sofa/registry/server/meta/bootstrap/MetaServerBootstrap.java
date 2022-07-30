@@ -26,6 +26,7 @@ import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
+import com.alipay.sofa.registry.remoting.jersey.JettyServer;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.remoting.meta.MetaNodeExchange;
 import com.alipay.sofa.registry.server.meta.remoting.meta.MetaServerRenewService;
@@ -39,9 +40,11 @@ import com.github.rholder.retry.RetryerBuilder;
 import com.github.rholder.retry.StopStrategies;
 import com.github.rholder.retry.WaitStrategies;
 import com.google.common.base.Predicate;
+import com.google.common.collect.Lists;
 import java.lang.annotation.Annotation;
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -49,6 +52,8 @@ import javax.annotation.Resource;
 import javax.ws.rs.Path;
 import javax.ws.rs.ext.Provider;
 import org.apache.commons.lang.StringUtils;
+import org.eclipse.jetty.server.Handler;
+import org.eclipse.jetty.server.handler.HandlerList;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -65,7 +70,7 @@ public class MetaServerBootstrap {
 
   @Autowired private Exchange boltExchange;
 
-  @Autowired private Exchange jerseyExchange;
+  @Autowired private Exchange jettyExchange;
 
   @Autowired private ExecutorManager executorManager;
 
@@ -78,7 +83,7 @@ public class MetaServerBootstrap {
   @Resource(name = "metaServerHandlers")
   private Collection<AbstractServerHandler> metaServerHandlers;
 
-  @Autowired private ResourceConfig jerseyResourceConfig;
+  @Autowired private ResourceConfig metaJerseyConfig;
 
   @Autowired private ApplicationContext applicationContext;
 
@@ -283,16 +288,27 @@ public class MetaServerBootstrap {
     }
   }
 
+  private Handler createHandler() {
+    HandlerList handlerList = new HandlerList();
+    List<Handler> hs = Lists.newArrayList();
+    if (metaServerConfig.isSwaggerEnabled()) {
+      hs.add(JettyServer.createSwaggerHandler());
+    }
+    hs.add(JettyServer.createHandler(metaJerseyConfig));
+    handlerList.setHandlers(hs.toArray(new Handler[] {}));
+    return handlerList;
+  }
+
   private void openHttpServer() {
     try {
       if (httpServerStarted.compareAndSet(false, true)) {
         bindResourceConfig();
         httpServer =
-            jerseyExchange.open(
+            jettyExchange.open(
                 new URL(
                     NetUtil.getLocalAddress().getHostAddress(),
                     metaServerConfig.getHttpServerPort()),
-                new ResourceConfig[] {jerseyResourceConfig});
+                new Handler[] {createHandler()});
         LOGGER.info("Open http server port {} success!", metaServerConfig.getHttpServerPort());
       }
     } catch (Exception e) {
@@ -310,7 +326,7 @@ public class MetaServerBootstrap {
   private void registerInstances(Class<? extends Annotation> annotationType) {
     Map<String, Object> beans = applicationContext.getBeansWithAnnotation(annotationType);
     if (beans != null && beans.size() > 0) {
-      beans.forEach((beanName, bean) -> jerseyResourceConfig.registerInstances(bean));
+      beans.forEach((beanName, bean) -> metaJerseyConfig.registerInstances(bean));
     }
   }
 

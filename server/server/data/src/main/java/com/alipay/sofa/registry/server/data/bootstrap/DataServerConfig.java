@@ -131,6 +131,8 @@ public class DataServerConfig implements ServerShareConfig {
 
   private boolean gracefulShutdown = false;
 
+  private boolean swaggerEnabled = true;
+
   /**
    * constructor
    *
@@ -890,7 +892,6 @@ public class DataServerConfig implements ServerShareConfig {
     return ToStringBuilder.reflectionToString(this, ToStringStyle.MULTI_LINE_STYLE);
   }
 
-  @Override
   public int getSystemPropertyIntervalMillis() {
     return systemPropertyIntervalMillis;
   }
@@ -901,5 +902,14 @@ public class DataServerConfig implements ServerShareConfig {
 
   public void setGracefulShutdown(boolean gracefulShutdown) {
     this.gracefulShutdown = gracefulShutdown;
+  }
+
+  @Override
+  public boolean isSwaggerEnabled() {
+    return swaggerEnabled;
+  }
+
+  public void setSwaggerEnabled(boolean swaggerEnabled) {
+    this.swaggerEnabled = swaggerEnabled;
   }
 }
