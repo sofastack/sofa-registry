@@ -23,7 +23,7 @@ STC扫描:
   checkRule:
     - passRate = 100
   tools:
-    jdk: '1.8'  #jdk版本枚举：1.6、1.7、1.8
+    jdk: '1.11'  #jdk版本枚举：1.6、1.7、1.8
     maven: 3.2.5
   parameters:
     encoding: UTF-8 # 编码设置
@@ -38,7 +38,7 @@ STC扫描:
   checkRule:
     - passRate = 100
   tools:
-    jdk: '1.8'
+    jdk: '1.11'
   parameters:
     encoding: UTF-8 # 编码设置
   pluginConfig:
