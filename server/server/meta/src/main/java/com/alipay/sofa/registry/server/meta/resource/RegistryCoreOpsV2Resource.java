@@ -33,8 +33,9 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import org.apache.commons.lang.StringUtils;
+import org.glassfish.jersey.internal.guava.InetAddresses;
 import org.springframework.beans.factory.annotation.Autowired;
-import sun.net.util.IPAddressUtil;
+
 
 /**
  * @author chen.zhu
@@ -65,7 +66,7 @@ public class RegistryCoreOpsV2Resource {
       return GenericResponse.buildFailedResponse("invalid nodeType: " + nodeType);
     }
 
-    if (StringUtils.isBlank(ip) || !IPAddressUtil.isIPv4LiteralAddress(ip)) {
+    if (StringUtils.isBlank(ip) || !InetAddresses.isUriInetAddress(ip)) {
       LOGGER.error("[kickoffServerV2]invalid ip: {}", ip);
       return GenericResponse.buildFailedResponse("invalid ip address: " + ip);
     }
@@ -106,7 +107,7 @@ public class RegistryCoreOpsV2Resource {
       return GenericResponse.buildFailedResponse("invalid nodeType: " + nodeType);
     }
 
-    if (StringUtils.isBlank(ip) || !IPAddressUtil.isIPv4LiteralAddress(ip)) {
+    if (StringUtils.isBlank(ip) || !InetAddresses.isUriInetAddress(ip)) {
       LOGGER.error("[rejoinServerGroupV2]invalid ip: {}", ip);
       return GenericResponse.buildFailedResponse("invalid ip address: " + ip);
     }
