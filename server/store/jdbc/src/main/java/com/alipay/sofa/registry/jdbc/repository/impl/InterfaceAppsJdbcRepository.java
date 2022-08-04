@@ -128,6 +128,11 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository, Rec
   }
 
   @Override
+  public Map<String, InterfaceMapping> allServiceMapping() {
+    return informer.getContainer().allServiceMapping();
+  }
+
+  @Override
   public String tableName() {
     return TableEnum.INTERFACE_APP_INDEX.getTableName();
   }

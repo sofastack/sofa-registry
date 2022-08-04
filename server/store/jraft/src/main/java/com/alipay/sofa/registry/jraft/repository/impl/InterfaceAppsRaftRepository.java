@@ -56,4 +56,9 @@ public class InterfaceAppsRaftRepository implements InterfaceAppsRepository {
   public long getDataVersion() {
     return 0;
   }
+
+  @Override
+  public Map<String, InterfaceMapping> allServiceMapping() {
+    return null;
+  }
 }
