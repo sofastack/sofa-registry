@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.jdbc;
 
+import com.alipay.sofa.registry.util.FileUtils;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.store.AppRevision;
 import com.alipay.sofa.registry.common.model.store.DataInfo;

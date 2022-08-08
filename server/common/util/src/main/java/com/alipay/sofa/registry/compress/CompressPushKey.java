@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.compress;
 
 import com.alipay.sofa.registry.core.model.DataBox;
+import com.alipay.sofa.registry.core.model.ReceivedData;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.alipay.sofa.registry.util.StringUtils;
 import java.util.*;
@@ -70,8 +71,12 @@ public class CompressPushKey implements CompressKey {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     CompressPushKey that = (CompressPushKey) o;
     return version == that.version
         && Objects.equals(encode, that.encode)
@@ -129,8 +134,12 @@ public class CompressPushKey implements CompressKey {
 
     @Override
     public boolean equals(Object o) {
-      if (this == o) return true;
-      if (o == null || getClass() != o.getClass()) return false;
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
       ZoneCount zoneCount = (ZoneCount) o;
       return count == zoneCount.count && Objects.equals(zone, zoneCount.zone);
     }

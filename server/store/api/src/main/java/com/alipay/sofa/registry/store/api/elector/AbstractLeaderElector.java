@@ -88,7 +88,7 @@ public abstract class AbstractLeaderElector implements LeaderElector {
 
   public void elect() {
     synchronized (this) {
-      if (isObserver) {
+      if (isObserver) { // 如果是Observer，不参与选主
         leaderInfo = doQuery();
         LOG.info("meta role: Observer, leaderInfo: {}", leaderInfo);
       } else {
@@ -97,7 +97,7 @@ public abstract class AbstractLeaderElector implements LeaderElector {
 
       if (amILeader()) {
         onIamLeader();
-      } else {
+      } else { // 我不是leader
         onIamNotLeader();
       }
     }
@@ -165,12 +165,22 @@ public abstract class AbstractLeaderElector implements LeaderElector {
    * @return the get elector
    */
   @Override
-  public LeaderInfo getLeaderInfo() {
+  public String getLeader() {
 
     if (leaderNotExpired()) {
-      return leaderInfo;
+      return leaderInfo.leader;
     }
-    return LeaderInfo.HAS_NO_LEADER;
+    return LeaderInfo.HAS_NO_LEADER.leader;
+  }
+
+  /**
+   * Gets get elector epoch.
+   *
+   * @return the get elector epoch
+   */
+  @Override
+  public long getLeaderEpoch() {
+    return leaderInfo.epoch;
   }
 
   /** notify when change to elector */

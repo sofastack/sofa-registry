@@ -71,10 +71,8 @@ import org.apache.commons.lang.StringUtils;
 import org.h2.tools.Server;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringBootConfiguration;
-import org.springframework.boot.logging.LoggingSystem;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ConfigurableApplicationContext;
 

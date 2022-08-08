@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.jdbc.repository.impl;
 
+import com.alipay.sofa.registry.common.model.store.WordCache;
 import com.alipay.sofa.registry.jdbc.domain.AppRevisionDomain;
 import com.alipay.sofa.registry.jdbc.informer.DbEntryContainer;
 import com.google.common.collect.Maps;
@@ -28,10 +29,12 @@ public class AppRevisionContainer implements DbEntryContainer<AppRevisionDomain>
 
   @Override
   public synchronized void onEntry(AppRevisionDomain entry) {
+    String revision = WordCache.getWordCache(entry.getRevision());
+    String appName = WordCache.getWordCache(entry.getAppName());
     if (entry.isDeleted()) {
-      data.remove(entry.getRevision());
+      data.remove(revision);
     } else {
-      data.put(entry.getRevision(), entry.getAppName());
+      data.put(revision, appName);
     }
   }
 

@@ -59,6 +59,9 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository, Recover
 
   private static final Logger LOG = LoggerFactory.getLogger("METADATA-EXCHANGE", "[AppRevision]");
 
+  private static final Logger COUNT_LOG =
+      LoggerFactory.getLogger("METADATA-COUNT", "[AppRevision]");
+
   /** map: <revision, AppRevision> */
   private final LoadingCache<String, AppRevision> registry;
 
@@ -66,6 +69,9 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository, Recover
       CacheBuilder.newBuilder().expireAfterWrite(2, TimeUnit.MINUTES).build();
 
   private final CachedExecutor<String, Boolean> cachedExecutor = new CachedExecutor<>(1000 * 10);
+
+  private final ScheduledExecutorService revisionDigestService =
+      new ScheduledThreadPoolExecutor(1, new NamedThreadFactory("RevisionDigest"));
 
   @Autowired private AppRevisionMapper appRevisionMapper;
 
@@ -93,6 +99,10 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository, Recover
                     REVISION_CACHE_MISS_COUNTER.inc();
                     AppRevisionDomain revisionDomain =
                         appRevisionMapper.queryRevision(dataCenters, revision);
+                    REVISION_CACHE_MISS_COUNTER.inc();
+                    AppRevisionDomain revisionDomain =
+                        appRevisionMapper.queryRevision(
+                            defaultCommonConfig.getClusterId(tableName()), revision);
                     if (revisionDomain == null || revisionDomain.isDeleted()) {
                       throw new RevisionNotExistException(revision);
                     }
@@ -100,25 +110,28 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository, Recover
                   }
                 });
     CacheCleaner.autoClean(localRevisions, 1000 * 60 * 10);
+
+      informer = new Informer();
+
   }
 
   @PostConstruct
   public void init() {
 
-    Timer timer = new Timer("AppRevisionDigest", true);
-    timer.scheduleAtFixedRate(
-        new TimerTask() {
-          @Override
-          public void run() {
-            try {
-              LOG.info("informer revision size: {}", informer.getContainer().size());
-            } catch (Throwable t) {
-              LOG.safeError("informer revision size digest error", t);
-            }
+    informer.setEnabled(true);
+    informer.start();
+
+    revisionDigestService.scheduleAtFixedRate(
+        () -> {
+          try {
+            LOG.info("informer revision size: {}", informer.getContainer().size());
+          } catch (Throwable t) {
+            LOG.safeError("informer revision size digest error", (Throwable) t);
           }
         },
-        60 * 1000,
-        60 * 1000);
+        60,
+        60,
+        TimeUnit.SECONDS);
   }
 
   @Override

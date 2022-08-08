@@ -14,6 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+<<<<<<< HEAD:server/store/jdbc/src/main/java/com/alipay/sofa/registry/jdbc/config/MetadataConfig.java
 package com.alipay.sofa.registry.jdbc.config;
 
 /**
@@ -32,4 +33,25 @@ public interface MetadataConfig {
   int getClientManagerExecutorPoolSize();
 
   int getClientManagerExecutorQueueSize();
+=======
+package com.alipay.sofa.registry.server.shared.providedata;
+
+import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
+
+/**
+ * @author xiaojian.xj
+ * @version $Id: FetchSystemPropertyService.java, v 0.1 2021年05月16日 13:06 xiaojian.xj Exp $
+ */
+public interface FetchSystemPropertyService extends ProvideDataProcessor {
+
+  /** start start data */
+  boolean start();
+
+  boolean doFetch();
+
+  @Override
+  default boolean processData(ProvideData data) {
+    return doFetch();
+  }
+>>>>>>> sofastack/master:server/server/shared/src/main/java/com/alipay/sofa/registry/server/shared/providedata/FetchSystemPropertyService.java
 }

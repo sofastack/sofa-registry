@@ -7,3 +7,8 @@ ignore:
   - '**/DataApplication'
   - '**/SessionApplication'
   - '**/RegistryApplication'
+
+comment:
+  behavior: default
+  layout: reach,diff,flags,files,footer
+  require_changes: false

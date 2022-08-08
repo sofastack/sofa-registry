@@ -25,6 +25,8 @@ import com.alipay.sofa.registry.remoting.bolt.BoltClient;
 import com.alipay.sofa.registry.remoting.bolt.BoltServer;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.util.OsUtils;
+import org.apache.commons.lang.StringUtils;
+
 import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -44,6 +46,14 @@ public class BoltExchange implements Exchange<ChannelHandler> {
     System.setProperty(Configs.TP_QUEUE_SIZE, String.valueOf(1000 * 10));
     System.setProperty(Configs.TP_MIN_SIZE, String.valueOf(OsUtils.getCpuCount() * 10));
     System.setProperty(Configs.TP_MAX_SIZE, String.valueOf(OsUtils.getCpuCount() * 10));
+
+    // bolt.tcp.heartbeat.maxtimes * bolt.tcp.heartbeat.interval
+    // If the client has not sent heartbeat for 45 seconds, it is determined as down
+    // The default value of 90s is too long. Change it to 45s to reduce the impact of physical
+    // machine downtime
+    if (StringUtils.isEmpty(System.getProperty(Configs.TCP_SERVER_IDLE))) {
+      System.setProperty(Configs.TCP_SERVER_IDLE, String.valueOf(45000));
+    }
   }
 
   @Override

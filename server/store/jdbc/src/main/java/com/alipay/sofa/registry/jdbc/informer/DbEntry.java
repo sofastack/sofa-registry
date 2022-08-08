@@ -14,27 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-<<<<<<< HEAD:server/server/meta/src/main/java/com/alipay/sofa/registry/server/meta/slot/SlotBalancer.java
-package com.alipay.sofa.registry.server.meta.slot;
+package com.alipay.sofa.registry.jdbc.informer;
 
-import com.alipay.sofa.registry.common.model.slot.SlotTable;
+import java.util.Date;
 
-/**
- * @author chen.zhu
- *     <p>Jan 15, 2021
- */
-public interface SlotBalancer {
+public interface DbEntry {
+  long getId();
 
-  SlotTable balance();
+  Date getGmtCreate();
 }
-=======
-package com.alipay.sofa.registry.server.meta.remoting.session;
-
-import com.alipay.sofa.registry.server.meta.remoting.notifier.Notifier;
-
-/**
- * @author chen.zhu
- *     <p>Feb 23, 2021
- */
-public interface SessionServerService extends Notifier {}
->>>>>>> sofastack/master:server/server/meta/src/main/java/com/alipay/sofa/registry/server/meta/remoting/session/SessionServerService.java

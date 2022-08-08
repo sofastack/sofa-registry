@@ -94,16 +94,16 @@ public abstract class AbstractDataHandler<T> extends AbstractServerHandler<T> {
       String dataCenter, int slotId, long slotTableEpoch, long slotLeaderEpoch) {
     final SlotAccess slotAccess =
         slotAccessor.checkSlotAccess(dataCenter, slotId, slotTableEpoch, slotLeaderEpoch);
-    if (slotAccess.isMoved()) {
+        if (slotAccess.isMoved()) {
       LOGGER_SLOT_ACCESS.warn(
           "[moved]{}, dataCenter={}, leaderEpoch={}, tableEpoch={}",
           slotAccess,
           dataCenter,
           slotLeaderEpoch,
           slotTableEpoch);
-    }
+        }
 
-    if (slotAccess.isMigrating()) {
+        if (slotAccess.isMigrating()) {
       LOGGER_SLOT_ACCESS.warn(
           "[migrating]{}, dataCenter={}, leaderEpoch={}, tableEpoch={}",
           slotAccess,
