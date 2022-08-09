@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -70,6 +71,11 @@ public class AppRevisionRaftRepository implements AppRevisionRepository {
   @Override
   public Map<String, Integer> countByApp() {
     return Collections.emptyMap();
+  }
+
+  @Override
+  public Set<String> allRevisionIds() {
+    return null;
   }
 
   @Override
