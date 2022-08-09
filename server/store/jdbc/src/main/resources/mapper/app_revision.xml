@@ -19,7 +19,7 @@
     <select id="queryRevision" resultMap="appRevisionResultMap">
         <![CDATA[
 
-                 select /*+ QUERY_TIMEOUT(3000000) */ * from app_revision
+                 select /*+ QUERY_TIMEOUT(3000000),read_consistency(weak) */ * from app_revision
                                   where data_center = #{dataCenter} and revision = #{revision}
 
 
@@ -27,7 +27,7 @@
     </select>
 
     <select id="batchQuery" parameterType="java.util.List" resultMap="appRevisionResultMap">
-        select /*+ QUERY_TIMEOUT(3000000) */ * from app_revision where data_center = #{dataCenter}
+        select /*+ QUERY_TIMEOUT(3000000),read_consistency(weak) */ * from app_revision where data_center = #{dataCenter}
         <if test="revisions != null and revisions.size() > 0">
             and revision in
             <foreach collection="revisions" index="index" item="item" open="(" separator="," close=")">
@@ -50,7 +50,7 @@
 
 
     <select id="batchCheck" parameterType="java.util.List" resultType="java.lang.String">
-        select /*+ QUERY_TIMEOUT(3000000) */ revision from app_revision where data_center = #{dataCenter}
+        select /*+ QUERY_TIMEOUT(3000000),read_consistency(weak) */ revision from app_revision where data_center = #{dataCenter}
         <if test="revisions != null and revisions.size() > 0">
             and revision in
             <foreach collection="revisions" index="index" item="item" open="(" separator="," close=")">
@@ -61,7 +61,7 @@
 
     <select id="listRevisions" resultMap="appRevisionResultMap">
     <![CDATA[
-        select /*+ QUERY_TIMEOUT(3000000) */ * from app_revision where data_center = #{dataCenter} and id > #{afterId} order by id limit #{limit}
+        select /*+ QUERY_TIMEOUT(3000000),read_consistency(weak) */ * from app_revision where data_center = #{dataCenter} and id > #{afterId} order by id limit #{limit}
     ]]>
     </select>
 
@@ -98,7 +98,7 @@
     </insert>
     <select id="getExpired" resultMap="appRevisionResultMap">
 <![CDATA[
-        select /*+ QUERY_TIMEOUT(3000000) */ * from app_revision where data_center=#{dataCenter} and gmt_modified < #{beforeTime} and deleted='0'
+        select /*+ QUERY_TIMEOUT(3000000),read_consistency(weak) */ * from app_revision where data_center=#{dataCenter} and gmt_modified < #{beforeTime} and deleted='0'
         limit #{limit}
 ]]>
     </select>

@@ -21,11 +21,16 @@ import static org.mockito.Mockito.*;
 
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.client.pb.ServiceAppMappingRequest;
+import com.alipay.sofa.registry.common.model.client.pb.ServiceAppMappingResponse;
+import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.server.session.TestUtils;
 import com.alipay.sofa.registry.server.session.bootstrap.ExecutorManager;
+import com.alipay.sofa.registry.server.session.push.PushSwitchService;
 import com.alipay.sofa.registry.server.session.strategy.AppRevisionHandlerStrategy;
+import com.alipay.sofa.registry.server.session.strategy.impl.DefaultAppRevisionHandlerStrategy;
+import org.assertj.core.util.Lists;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -53,7 +58,18 @@ public class ServiceAppMappingPbHandlerTest {
     ServiceAppMappingPbHandler handler = newHandler();
     Channel channel = new TestUtils.MockBlotChannel(9600, "192.168.0.3", 56555);
     handler.doHandle(channel, request());
-    verify(handler.appRevisionHandlerStrategy, times(1)).queryApps(anyList());
+    verify(handler.appRevisionHandlerStrategy, times(1)).queryApps(anyList(), anyString());
+  }
+
+  @Test
+  public void testStopPush() {
+    PushSwitchService pushSwitchService = mock(PushSwitchService.class);
+    when(pushSwitchService.canIpPush(anyString())).thenReturn(false);
+    DefaultAppRevisionHandlerStrategy strategy = new DefaultAppRevisionHandlerStrategy();
+    strategy.setPushSwitchService(pushSwitchService);
+
+    ServiceAppMappingResponse response = strategy.queryApps(Lists.newArrayList("123"), "");
+    Assert.assertEquals(ValueConstants.METADATA_STATUS_DATA_NOT_FOUND, response.getStatusCode());
   }
 
   private static ServiceAppMappingRequest request() {

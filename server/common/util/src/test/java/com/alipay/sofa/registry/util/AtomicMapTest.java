@@ -14,20 +14,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.metadata;
+package com.alipay.sofa.registry.util;
 
-import com.alipay.sofa.registry.store.api.repository.AppRevisionRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author xiaojian.xj
- * @version $Id: AppRevisionHeartbeatRegistry.java, v 0.1 2021年02月09日 15:47 xiaojian.xj Exp $
+ * @version : AtomicMapTest.java, v 0.1 2022年08月03日 17:54 xiaojian.xj Exp $
  */
-public class AppRevisionHeartbeatRegistry {
+public class AtomicMapTest {
 
-  @Autowired private AppRevisionRepository appRevisionRepository;
+  @Test
+  public void test() {
+    AtomicMap<String, String> map = new AtomicMap();
+    map.put("a", "1");
+    map.put("b", "2");
 
-  public boolean heartbeat(String revision) {
-    return appRevisionRepository.heartbeat(revision);
+    Assert.assertEquals(2, map.getAndReset().size());
+    Assert.assertEquals(0, map.getAndReset().size());
   }
 }

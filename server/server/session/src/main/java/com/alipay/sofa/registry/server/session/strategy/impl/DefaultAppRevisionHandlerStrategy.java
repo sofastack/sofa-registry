@@ -27,11 +27,12 @@ import com.alipay.sofa.registry.core.model.RegisterResponse;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.converter.pb.AppRevisionConvertor;
-import com.alipay.sofa.registry.server.session.metadata.AppRevisionCacheRegistry;
-import com.alipay.sofa.registry.server.session.metadata.AppRevisionHeartbeatRegistry;
+import com.alipay.sofa.registry.server.session.metadata.MetadataCacheRegistry;
+import com.alipay.sofa.registry.server.session.push.PushSwitchService;
 import com.alipay.sofa.registry.server.session.strategy.AppRevisionHandlerStrategy;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.alipay.sofa.registry.util.StringFormatter;
+import com.google.common.annotations.VisibleForTesting;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -43,9 +44,9 @@ public class DefaultAppRevisionHandlerStrategy implements AppRevisionHandlerStra
   private static final Logger REVISION_LOGGER =
       LoggerFactory.getLogger("REVISION-RECEIVE", "[register]");
 
-  @Autowired private AppRevisionCacheRegistry appRevisionCacheService;
+  @Autowired private MetadataCacheRegistry metadataCacheRegistry;
 
-  @Autowired private AppRevisionHeartbeatRegistry appRevisionHeartbeatRegistry;
+  @Autowired private PushSwitchService pushSwitchService;
 
   protected void beforeRegister(AppRevision appRevision) {}
 
@@ -55,7 +56,7 @@ public class DefaultAppRevisionHandlerStrategy implements AppRevisionHandlerStra
     try {
       validate(appRevision);
       beforeRegister(appRevision);
-      appRevisionCacheService.register(appRevision);
+      metadataCacheRegistry.register(appRevision);
       response.setSuccess(true);
       response.setMessage("app revision register success!");
     } catch (Throwable e) {
@@ -75,14 +76,19 @@ public class DefaultAppRevisionHandlerStrategy implements AppRevisionHandlerStra
   }
 
   @Override
-  public ServiceAppMappingResponse queryApps(List<String> services) {
+  public ServiceAppMappingResponse queryApps(List<String> services, String remoteIp) {
     ParaCheckUtil.checkNotEmpty(services, "services");
     ServiceAppMappingResponse.Builder builder = ServiceAppMappingResponse.newBuilder();
+
+    if (!pushSwitchService.canIpPush(remoteIp)) {
+      builder.setStatusCode(ValueConstants.METADATA_STATUS_DATA_NOT_FOUND);
+      return builder.build();
+    }
 
     int statusCode = ValueConstants.METADATA_STATUS_PROCESS_SUCCESS;
     try {
       for (String service : services) {
-        InterfaceMapping appNames = appRevisionCacheService.getAppNames(service);
+        InterfaceMapping appNames = metadataCacheRegistry.getAppNames(service);
         AppList.Builder build = AppList.newBuilder().addAllApps(appNames.getApps());
         build.setVersion(appNames.getNanosVersion());
         builder.putServiceAppMapping(service, build.build());
@@ -110,7 +116,7 @@ public class DefaultAppRevisionHandlerStrategy implements AppRevisionHandlerStra
         queryRevision = revision;
         AppRevision appRevision = null;
         try {
-          appRevision = appRevisionCacheService.getRevision(revision);
+          appRevision = metadataCacheRegistry.getRevision(revision);
         } catch (Throwable e) {
           LOG.error("query revision {} error", queryRevision, e);
         }
@@ -142,7 +148,7 @@ public class DefaultAppRevisionHandlerStrategy implements AppRevisionHandlerStra
     for (String revision : revisions) {
       // avoid the error break the heartbeat of next revisions
       try {
-        boolean success = appRevisionHeartbeatRegistry.heartbeat(revision);
+        boolean success = metadataCacheRegistry.heartbeat(revision);
         if (!success) {
           statusCode = ValueConstants.METADATA_STATUS_DATA_NOT_FOUND;
           String msg = StringFormatter.format("heartbeat revision not found, {}", revision);
@@ -164,5 +170,29 @@ public class DefaultAppRevisionHandlerStrategy implements AppRevisionHandlerStra
   private void validate(AppRevision appRevision) {
     ParaCheckUtil.checkNotBlank(appRevision.getAppName(), "appRevision.appName");
     ParaCheckUtil.checkNotBlank(appRevision.getRevision(), "appRevision.revision");
+  }
+
+  /**
+   * Setter method for property <tt>metadataCacheRegistry</tt>.
+   *
+   * @param metadataCacheRegistry value to be assigned to property metadataCacheRegistry
+   */
+  @VisibleForTesting
+  public DefaultAppRevisionHandlerStrategy setMetadataCacheRegistry(
+      MetadataCacheRegistry metadataCacheRegistry) {
+    this.metadataCacheRegistry = metadataCacheRegistry;
+    return this;
+  }
+
+  /**
+   * Setter method for property <tt>pushSwitchService</tt>.
+   *
+   * @param pushSwitchService value to be assigned to property pushSwitchService
+   */
+  @VisibleForTesting
+  public DefaultAppRevisionHandlerStrategy setPushSwitchService(
+      PushSwitchService pushSwitchService) {
+    this.pushSwitchService = pushSwitchService;
+    return this;
   }
 }

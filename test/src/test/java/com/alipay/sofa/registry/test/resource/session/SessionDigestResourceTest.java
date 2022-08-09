@@ -37,7 +37,7 @@ import com.alipay.sofa.registry.core.model.AppRevisionInterface;
 import com.alipay.sofa.registry.core.model.RegisterResponse;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.net.NetUtil;
-import com.alipay.sofa.registry.server.session.metadata.AppRevisionCacheRegistry;
+import com.alipay.sofa.registry.server.session.metadata.MetadataCacheRegistry;
 import com.alipay.sofa.registry.server.session.strategy.AppRevisionHandlerStrategy;
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
@@ -78,16 +78,18 @@ public class SessionDigestResourceTest extends BaseIntegrationTest {
 
   protected AppRevisionHandlerStrategy appRevisionHandlerStrategy;
 
-  protected AppRevisionCacheRegistry appRevisionCacheRegistry;
+  protected MetadataCacheRegistry metadataCacheRegistry;
+
 
   @Before
   public void before() {
     appRevisionHandlerStrategy =
         sessionApplicationContext.getBean(
             "appRevisionHandlerStrategy", AppRevisionHandlerStrategy.class);
-    appRevisionCacheRegistry =
-        sessionApplicationContext.getBean(
-            "appRevisionCacheRegistry", AppRevisionCacheRegistry.class);
+
+    metadataCacheRegistry =
+            sessionApplicationContext.getBean(
+                    "metadataCacheRegistry", MetadataCacheRegistry.class);
   }
 
   @BeforeClass
@@ -358,7 +360,7 @@ public class SessionDigestResourceTest extends BaseIntegrationTest {
       Assert.assertTrue(future.get().isSuccess());
     }
 
-    appRevisionCacheRegistry.waitSynced();
+    metadataCacheRegistry.waitSynced();
   }
 
   @Test

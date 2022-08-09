@@ -19,6 +19,7 @@ package com.alipay.sofa.registry.jdbc.repository.impl;
 import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.appmeta.InterfaceMapping;
 import com.alipay.sofa.registry.concurrent.CachedExecutor;
+import com.alipay.sofa.registry.jdbc.config.MetadataConfig;
 import com.alipay.sofa.registry.jdbc.constant.TableEnum;
 import com.alipay.sofa.registry.jdbc.domain.InterfaceAppsIndexDomain;
 import com.alipay.sofa.registry.jdbc.informer.BaseInformer;
@@ -29,9 +30,17 @@ import com.alipay.sofa.registry.store.api.config.DefaultCommonConfig;
 import com.alipay.sofa.registry.store.api.date.DateNowRepository;
 import com.alipay.sofa.registry.store.api.meta.RecoverConfig;
 import com.alipay.sofa.registry.store.api.repository.InterfaceAppsRepository;
+import com.alipay.sofa.registry.util.NamedThreadFactory;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -49,8 +58,12 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository, Rec
 
   @Autowired private DateNowRepository dateNowRepository;
 
+  @Autowired private MetadataConfig metadataConfig;
+
   private final CachedExecutor<Tuple<String, String>, Boolean> cachedExecutor =
       new CachedExecutor<>(1000 * 10);
+
+  private ThreadPoolExecutor serviceAppsExecutor;
 
   final Informer informer;
 
@@ -58,8 +71,23 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository, Rec
     informer = new Informer();
   }
 
+  public InterfaceAppsJdbcRepository(MetadataConfig metadataConfig) {
+    informer = new Informer();
+    this.metadataConfig = metadataConfig;
+  }
+
   @PostConstruct
   public void init() {
+    serviceAppsExecutor =
+        new ThreadPoolExecutor(
+            metadataConfig.getInterfaceAppsExecutorPoolSize(),
+            metadataConfig.getInterfaceAppsExecutorPoolSize(),
+            60,
+            TimeUnit.SECONDS,
+            new LinkedBlockingDeque<>(metadataConfig.getInterfaceAppsExecutorQueueSize()),
+            new NamedThreadFactory("ServiceAppsExecutor"),
+            new ThreadPoolExecutor.CallerRunsPolicy());
+
     informer.setEnabled(true);
     informer.start();
   }
@@ -75,14 +103,38 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository, Rec
   }
 
   @Override
-  public void register(String interfaceName, String appName) {
+  public void register(String appName, Set<String> interfaceNames) {
+    String localDataCenter = defaultCommonConfig.getClusterId(tableName());
     InterfaceAppsIndexContainer c = informer.getContainer();
-    if (c.containsName(interfaceName, appName)) {
-      return;
+
+    List<Future> futures = Lists.newArrayList();
+
+    for (String interfaceName : interfaceNames) {
+      if (c.containsName(interfaceName, appName)) {
+        continue;
+      }
+      Future future =
+          serviceAppsExecutor.submit(
+              () -> {
+                refreshEntryToStorage(
+                    new InterfaceAppsIndexDomain(localDataCenter, interfaceName, appName));
+                return;
+              });
+      futures.add(future);
     }
-    refreshEntryToStorage(
-        new InterfaceAppsIndexDomain(
-            defaultCommonConfig.getClusterId(tableName()), interfaceName, appName));
+
+    try {
+      for (Future future : futures) {
+        future.get(2000, TimeUnit.MILLISECONDS);
+      }
+    } catch (Throwable t) {
+      LOG.error("register error, app:{}, interfaceNames:{}", appName, interfaceNames, t);
+      throw new RuntimeException(
+              StringFormatter.format(
+                      "register error, app:{}, interfaceNames:{}",
+                      appName,
+                      interfaceNames));
+    }
   }
 
   @Override
@@ -186,5 +238,29 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository, Rec
 
   interface ConflictCallback {
     void callback(InterfaceAppsIndexContainer current, InterfaceAppsIndexContainer newContainer);
+  }
+
+  /**
+   * Setter method for property <tt>interfaceAppsIndexMapper</tt>.
+   *
+   * @param interfaceAppsIndexMapper value to be assigned to property interfaceAppsIndexMapper
+   */
+  @VisibleForTesting
+  public InterfaceAppsJdbcRepository setInterfaceAppsIndexMapper(
+      InterfaceAppsIndexMapper interfaceAppsIndexMapper) {
+    this.interfaceAppsIndexMapper = interfaceAppsIndexMapper;
+    return this;
+  }
+
+  /**
+   * Setter method for property <tt>defaultCommonConfig</tt>.
+   *
+   * @param defaultCommonConfig value to be assigned to property defaultCommonConfig
+   */
+  @VisibleForTesting
+  public InterfaceAppsJdbcRepository setDefaultCommonConfig(
+      DefaultCommonConfig defaultCommonConfig) {
+    this.defaultCommonConfig = defaultCommonConfig;
+    return this;
   }
 }

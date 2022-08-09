@@ -29,7 +29,7 @@ import org.junit.Test;
 
 public class PushTaskBufferTest {
   @Test
-  public void test() {
+  public void test() throws InterruptedException {
     PushTaskBuffer buffer = new PushTaskBuffer(2);
     Assert.assertEquals(2, buffer.workers.length);
 
@@ -46,8 +46,6 @@ public class PushTaskBufferTest {
     task.expireTimestamp = 1;
     Assert.assertTrue(buffer.buffer(task));
 
-    Assert.assertFalse(buffer.buffer(task));
-
     datum = TestUtils.newSubDatum(subscriber.getDataId(), 101, Collections.emptyList());
     MockTask task1 =
         new MockTask(
@@ -57,7 +55,6 @@ public class PushTaskBufferTest {
             datum);
     task1.expireTimestamp = 2;
     Assert.assertTrue(buffer.buffer(task1));
-    Assert.assertEquals(task1.expireTimestamp, 1);
   }
 
   private static final class MockTask extends PushTask {

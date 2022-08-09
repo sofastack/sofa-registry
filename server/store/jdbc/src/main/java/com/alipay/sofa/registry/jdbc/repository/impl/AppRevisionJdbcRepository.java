@@ -127,9 +127,9 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository, Recover
     if (appRevision == null) {
       throw new RuntimeException("jdbc register app revision error, appRevision is null.");
     }
-    for (String interfaceName : appRevision.getInterfaceMap().keySet()) {
-      interfaceAppsJdbcRepository.register(interfaceName, appRevision.getAppName());
-    }
+    interfaceAppsJdbcRepository.register(
+        appRevision.getAppName(), appRevision.getInterfaceMap().keySet());
+
     localRevisions.put(appRevision.getRevision(), true);
     if (informer.getContainer().containsRevisionId(appRevision.getRevision())) {
       return;

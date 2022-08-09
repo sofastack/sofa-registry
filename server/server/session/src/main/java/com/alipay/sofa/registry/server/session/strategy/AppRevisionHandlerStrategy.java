@@ -40,7 +40,7 @@ public interface AppRevisionHandlerStrategy {
    * @param services
    * @return
    */
-  ServiceAppMappingResponse queryApps(List<String> services);
+  ServiceAppMappingResponse queryApps(List<String> services, String remoteIp);
 
   /**
    * query appRevision

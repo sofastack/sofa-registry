@@ -20,13 +20,16 @@ import com.alipay.sofa.registry.common.model.ElementType;
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.ProcessId;
 import com.alipay.sofa.registry.common.model.PublishType;
+import com.alipay.sofa.registry.common.model.appmeta.InterfaceMapping;
 import com.alipay.sofa.registry.common.model.console.PersistenceData;
 import com.alipay.sofa.registry.common.model.console.PersistenceDataBuilder;
+import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.common.model.slot.SlotConfig;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.common.model.store.*;
+import com.alipay.sofa.registry.core.model.AppRevisionInterface;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.exception.SofaRegistryRuntimeException;
 import com.alipay.sofa.registry.remoting.CallbackHandler;
@@ -35,6 +38,8 @@ import com.alipay.sofa.registry.remoting.Client;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfigBean;
 import com.alipay.sofa.registry.server.session.circuit.breaker.CircuitBreakerService;
 import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
+import com.alipay.sofa.registry.store.api.repository.AppRevisionRepository;
+import com.alipay.sofa.registry.store.api.repository.InterfaceAppsRepository;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
 import com.alipay.sofa.registry.util.JsonUtils;
 import com.alipay.sofa.registry.util.ObjectFactory;
@@ -45,6 +50,7 @@ import java.lang.reflect.Modifier;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.util.*;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -78,6 +84,54 @@ public class AbstractSessionServerTestBase extends AbstractTestBase {
     modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
 
     field.set(null, newValue);
+  }
+
+  public List<AppRevision> buildAppRevisions(int size, String itfPrefix) {
+    List<AppRevision> appRevisionList = new ArrayList<>();
+    for (int i = 1; i <= size; i++) {
+      long l = System.currentTimeMillis();
+      String suffix = l + "-" + i;
+
+      String appname = "foo" + suffix;
+      String revision = "1111" + suffix;
+
+      AppRevision appRevision = new AppRevision();
+      appRevision.setAppName(appname);
+      appRevision.setRevision(revision);
+      appRevision.setClientVersion("1.0");
+
+      Map<String, List<String>> baseParams = Maps.newHashMap();
+      baseParams.put(
+          "metaBaseParam1", com.google.common.collect.Lists.newArrayList("metaBaseValue1"));
+      appRevision.setBaseParams(baseParams);
+
+      Map<String, AppRevisionInterface> interfaceMap = Maps.newHashMap();
+      String dataInfo1 =
+          DataInfo.toDataInfoId(
+                  itfPrefix + "func1" + suffix, ValueConstants.DEFAULT_GROUP, ValueConstants.DEFAULT_INSTANCE_ID);
+      String dataInfo2 =
+          DataInfo.toDataInfoId(
+                  itfPrefix + "func2" + suffix, ValueConstants.DEFAULT_GROUP, ValueConstants.DEFAULT_INSTANCE_ID);
+
+      AppRevisionInterface inf1 = new AppRevisionInterface();
+      AppRevisionInterface inf2 = new AppRevisionInterface();
+      interfaceMap.put(dataInfo1, inf1);
+      interfaceMap.put(dataInfo2, inf2);
+      appRevision.setInterfaceMap(interfaceMap);
+
+      inf1.setId("1");
+      Map<String, List<String>> serviceParams1 = new HashMap<String, List<String>>();
+      serviceParams1.put("metaParam2", com.google.common.collect.Lists.newArrayList("metaValue2"));
+      inf1.setServiceParams(serviceParams1);
+
+      inf2.setId("2");
+      Map<String, List<String>> serviceParams2 = new HashMap<String, List<String>>();
+      serviceParams1.put("metaParam3", com.google.common.collect.Lists.newArrayList("metaValues3"));
+      inf1.setServiceParams(serviceParams2);
+
+      appRevisionList.add(appRevision);
+    }
+    return appRevisionList;
   }
 
   protected static void waitConditionUntilTimeOut(
@@ -639,6 +693,133 @@ public class AbstractSessionServerTestBase extends AbstractTestBase {
     @Override
     public Map<String, PersistenceData> getAll() {
       return Maps.newHashMap(localRepo);
+    }
+  }
+
+  public static class InMemoryAppRevisionRepository implements AppRevisionRepository {
+
+    private static final Map<String, AppRevision> revisions = Maps.newConcurrentMap();
+
+    private InterfaceAppsRepository interfaceAppsRepository;
+
+    /**
+     * Setter method for property <tt>interfaceAppsRepository</tt>.
+     *
+     * @param interfaceAppsRepository value to be assigned to property interfaceAppsRepository
+     */
+    public void setInterfaceAppsRepository(InterfaceAppsRepository interfaceAppsRepository) {
+      this.interfaceAppsRepository = interfaceAppsRepository;
+    }
+
+    /**
+     * persistence appRevision
+     *
+     * @param appRevision
+     */
+    @Override
+    public void register(AppRevision appRevision) throws Exception {
+      interfaceAppsRepository.register(
+          appRevision.getAppName(), appRevision.getInterfaceMap().keySet());
+      revisions.putIfAbsent(appRevision.getRevision(), appRevision);
+    }
+
+    /**
+     * get AppRevision
+     *
+     * @param revision
+     * @return
+     */
+    @Override
+    public AppRevision queryRevision(String revision) {
+      return revisions.get(revision);
+    }
+
+    @Override
+    public boolean heartbeat(String revision) {
+      return true;
+    }
+
+    @Override
+    public Collection<String> availableRevisions() {
+      return revisions.keySet();
+    }
+
+    @Override
+    public List<AppRevision> listFromStorage(long start, int limit) {
+      return Lists.newArrayList(revisions.values());
+    }
+
+    @Override
+    public void waitSynced() {}
+
+    @Override
+    public List<AppRevision> getExpired(Date beforeTime, int limit) {
+      return Collections.emptyList();
+    }
+
+    @Override
+    public void replace(AppRevision appRevision) {}
+
+    @Override
+    public int cleanDeleted(Date beforeTime, int limit) {
+      return 0;
+    }
+
+    @Override
+    public Map<String, Integer> countByApp() {
+      Map<String, Integer> countMap = Maps.newHashMap();
+      for (Entry<String, AppRevision> entry : revisions.entrySet()) {
+        Integer count =
+            countMap.computeIfAbsent(entry.getValue().getAppName(), k -> new Integer(0));
+        count++;
+        countMap.put(entry.getValue().getAppName(), count);
+      }
+      return countMap;
+    }
+
+    @Override
+    public Set<String> allRevisionIds() {
+      return revisions.keySet();
+    }
+  }
+
+  public static class InMemoryInterfaceAppsRepository implements InterfaceAppsRepository {
+
+    private static final Map<String, InterfaceMapping> mapping = Maps.newHashMap();
+    /**
+     * get revisions by interfaceName
+     *
+     * @param dataInfoId
+     * @return return <appName, revisions>
+     */
+    @Override
+    public synchronized InterfaceMapping getAppNames(String dataInfoId) {
+      return mapping.get(dataInfoId);
+    }
+
+    @Override
+    public synchronized void register(String appName, Set<String> interfaceNames) {
+      for (String interfaceName : interfaceNames) {
+        InterfaceMapping interfaceMapping =
+            mapping.computeIfAbsent(interfaceName, k -> new InterfaceMapping(System.nanoTime()));
+        mapping.put(interfaceName, interfaceMapping.addApp(System.nanoTime(), appName));
+      }
+    }
+
+    @Override
+    public void renew(String interfaceName, String appName) {}
+
+    @Override
+    public void waitSynced() {}
+
+    @Override
+    public long getDataVersion() {
+      return 0;
+    }
+
+    @Override
+    public Map<String, InterfaceMapping> allServiceMapping() {
+      return Maps.newHashMap(mapping);
     }
   }
 }

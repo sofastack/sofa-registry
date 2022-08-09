@@ -40,8 +40,7 @@ import com.alipay.sofa.registry.server.session.filter.blacklist.DefaultIPMatchSt
 import com.alipay.sofa.registry.server.session.limit.AccessLimitService;
 import com.alipay.sofa.registry.server.session.limit.AccessLimitServiceImpl;
 import com.alipay.sofa.registry.server.session.mapper.ConnectionMapper;
-import com.alipay.sofa.registry.server.session.metadata.AppRevisionCacheRegistry;
-import com.alipay.sofa.registry.server.session.metadata.AppRevisionHeartbeatRegistry;
+import com.alipay.sofa.registry.server.session.metadata.MetadataCacheRegistry;
 import com.alipay.sofa.registry.server.session.node.service.*;
 import com.alipay.sofa.registry.server.session.providedata.*;
 import com.alipay.sofa.registry.server.session.push.*;
@@ -581,13 +580,8 @@ public class SessionServerConfiguration {
     }
 
     @Bean
-    public AppRevisionCacheRegistry appRevisionCacheRegistry() {
-      return new AppRevisionCacheRegistry();
-    }
-
-    @Bean
-    public AppRevisionHeartbeatRegistry appRevisionHeartbeatRegistry() {
-      return new AppRevisionHeartbeatRegistry();
+    public MetadataCacheRegistry metadataCacheRegistry() {
+      return new MetadataCacheRegistry();
     }
   }
 
