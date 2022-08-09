@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS `app_revision`
     `app_name`       varchar(128) NOT NULL COMMENT '应用名',
     `base_params`    text         DEFAULT NULL COMMENT '基础参数',
     `service_params` text         DEFAULT NULL COMMENT '服务参数',
+    `service_params_large` mediumtext         DEFAULT NULL COMMENT '服务参数',
     `gmt_create`     timestamp    NOT NULL COMMENT '创建时间',
     `gmt_modified`   timestamp    NOT NULL COMMENT '修改时间',
     `client_version` varchar(512) DEFAULT NULL COMMENT '客户端版本',

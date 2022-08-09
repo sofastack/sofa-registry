@@ -16,11 +16,13 @@
  */
 package com.alipay.sofa.registry.jdbc.convertor;
 
+import com.alipay.sofa.common.profile.StringUtil;
 import com.alipay.sofa.registry.common.model.store.AppRevision;
 import com.alipay.sofa.registry.core.model.AppRevisionInterface;
 import com.alipay.sofa.registry.jdbc.domain.AppRevisionDomain;
 import com.alipay.sofa.registry.util.JsonUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.google.common.annotations.VisibleForTesting;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -38,6 +40,8 @@ public class AppRevisionDomainConvertor {
   public static final TypeReference<HashMap<String, AppRevisionInterface>> SERVICE_FORMAT =
       new TypeReference<HashMap<String, AppRevisionInterface>>() {};
 
+  private static volatile EnableConfig enableConfig = new EnableConfig();
+
   public static AppRevisionDomain convert2Domain(String dataCenter, AppRevision appRevision) {
     if (appRevision == null) {
       return null;
@@ -48,7 +52,13 @@ public class AppRevisionDomainConvertor {
     domain.setRevision(appRevision.getRevision());
     domain.setClientVersion(appRevision.getClientVersion());
     domain.setBaseParams(JsonUtils.writeValueAsString(appRevision.getBaseParams()));
-    domain.setServiceParams(JsonUtils.writeValueAsString(appRevision.getInterfaceMap()));
+    String serviceParamsData = JsonUtils.writeValueAsString(appRevision.getInterfaceMap());
+    if (enableConfig.isServiceParams()) {
+      domain.setServiceParams(serviceParamsData);
+    }
+    if (enableConfig.isServiceParamsLarge()) {
+      domain.setServiceParamsLarge(serviceParamsData);
+    }
     domain.setDeleted(appRevision.isDeleted());
     return domain;
   }
@@ -66,7 +76,12 @@ public class AppRevisionDomainConvertor {
     appRevision.setRevision(domain.getRevision());
     appRevision.setClientVersion(domain.getClientVersion());
     appRevision.setBaseParams(JsonUtils.read(domain.getBaseParams(), BASE_FORMAT));
-    appRevision.setInterfaceMap(JsonUtils.read(domain.getServiceParams(), SERVICE_FORMAT));
+
+    String serviceParams = domain.getServiceParamsLarge();
+    if (StringUtil.isBlank(serviceParams)) {
+      serviceParams = domain.getServiceParams();
+    }
+    appRevision.setInterfaceMap(JsonUtils.read(serviceParams, SERVICE_FORMAT));
     appRevision.setLastHeartbeat(domain.getGmtModify());
     appRevision.setDeleted(domain.isDeleted());
     return appRevision;
@@ -85,5 +100,41 @@ public class AppRevisionDomainConvertor {
       }
     }
     return revisions;
+  }
+
+  public static void setEnableConfig(EnableConfig enableConfig) {
+    if (!enableConfig.isServiceParamsLarge() && !enableConfig.isServiceParams()) {
+      throw new RuntimeException(
+          "At least one of serviceParams and serviceParamsLarge is not false");
+    }
+    AppRevisionDomainConvertor.enableConfig = enableConfig;
+  }
+
+  @VisibleForTesting
+  public static EnableConfig getEnableConfig() {
+    return enableConfig;
+  }
+
+  public static class EnableConfig {
+    private boolean serviceParams;
+    private boolean serviceParamsLarge;
+
+    public EnableConfig() {
+      serviceParams = true;
+      serviceParamsLarge = false;
+    }
+
+    public EnableConfig(boolean serviceParams, boolean serviceParamsLarge) {
+      this.serviceParams = serviceParams;
+      this.serviceParamsLarge = serviceParamsLarge;
+    }
+
+    public boolean isServiceParams() {
+      return serviceParams;
+    }
+
+    public boolean isServiceParamsLarge() {
+      return serviceParamsLarge;
+    }
   }
 }
