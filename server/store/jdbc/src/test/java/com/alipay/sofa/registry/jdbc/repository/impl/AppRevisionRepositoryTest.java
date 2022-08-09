@@ -17,9 +17,7 @@
 package com.alipay.sofa.registry.jdbc.repository.impl;
 
 import com.alipay.sofa.registry.common.model.appmeta.InterfaceMapping;
-import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.store.AppRevision;
-import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.core.model.AppRevisionInterface;
 import com.alipay.sofa.registry.jdbc.AbstractH2DbTestBase;
 import com.alipay.sofa.registry.jdbc.TestUtils;
@@ -33,11 +31,7 @@ import com.alipay.sofa.registry.store.api.repository.InterfaceAppsRepository;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.LoopRunnable;
 import com.google.common.cache.LoadingCache;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.UncheckedExecutionException;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -62,55 +56,13 @@ public class AppRevisionRepositoryTest extends AbstractH2DbTestBase {
 
   private List<AppRevision> appRevisionList;
 
-  private static final Integer APP_REVISION_SIZE = 1;
+  private static final Integer APP_REVISION_SIZE = 100;
 
   @Before
   public void buildAppRevision() {
     ((AppRevisionJdbcRepository) appRevisionJdbcRepository).init();
     ((InterfaceAppsJdbcRepository) interfaceAppsJdbcRepository).init();
-    appRevisionList = new ArrayList<>();
-    for (int i = 1; i <= APP_REVISION_SIZE; i++) {
-      long l = System.currentTimeMillis();
-      String suffix = l + "-" + i;
-
-      String appname = "foo" + suffix;
-      String revision = "1111" + suffix;
-
-      AppRevision appRevision = new AppRevision();
-      appRevision.setAppName(appname);
-      appRevision.setRevision(revision);
-      appRevision.setClientVersion("1.0");
-
-      Map<String, List<String>> baseParams = Maps.newHashMap();
-      baseParams.put("metaBaseParam1", Lists.newArrayList("metaBaseValue1"));
-      appRevision.setBaseParams(baseParams);
-
-      Map<String, AppRevisionInterface> interfaceMap = Maps.newHashMap();
-      String dataInfo1 =
-          DataInfo.toDataInfoId(
-              "func1" + suffix, ValueConstants.DEFAULT_GROUP, ValueConstants.DEFAULT_INSTANCE_ID);
-      String dataInfo2 =
-          DataInfo.toDataInfoId(
-              "func2" + suffix, ValueConstants.DEFAULT_GROUP, ValueConstants.DEFAULT_INSTANCE_ID);
-
-      AppRevisionInterface inf1 = new AppRevisionInterface();
-      AppRevisionInterface inf2 = new AppRevisionInterface();
-      interfaceMap.put(dataInfo1, inf1);
-      interfaceMap.put(dataInfo2, inf2);
-      appRevision.setInterfaceMap(interfaceMap);
-
-      inf1.setId("1");
-      Map<String, List<String>> serviceParams1 = new HashMap<String, List<String>>();
-      serviceParams1.put("metaParam2", Lists.newArrayList("metaValue2"));
-      inf1.setServiceParams(serviceParams1);
-
-      inf2.setId("2");
-      Map<String, List<String>> serviceParams2 = new HashMap<String, List<String>>();
-      serviceParams1.put("metaParam3", Lists.newArrayList("metaValues3"));
-      inf1.setServiceParams(serviceParams2);
-
-      appRevisionList.add(appRevision);
-    }
+    appRevisionList = buildAppRevisions(APP_REVISION_SIZE);
   }
 
   private void register() throws Exception {
@@ -246,6 +198,6 @@ public class AppRevisionRepositoryTest extends AbstractH2DbTestBase {
     register();
     appRevisionJdbcRepository.waitSynced();
     Map<String, Integer> counts = appRevisionJdbcRepository.countByApp();
-    Assert.assertEquals(1, counts.size());
+    Assert.assertEquals(APP_REVISION_SIZE.intValue(), counts.size());
   }
 }

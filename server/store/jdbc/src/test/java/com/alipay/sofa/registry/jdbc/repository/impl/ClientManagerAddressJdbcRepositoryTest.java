@@ -16,13 +16,18 @@
  */
 package com.alipay.sofa.registry.jdbc.repository.impl;
 
+import static org.mockito.Matchers.anyObject;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress;
 import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress.AddressVersion;
 import com.alipay.sofa.registry.common.model.metaserver.ClientManagerResult;
+import com.alipay.sofa.registry.exception.SofaRegistryRuntimeException;
 import com.alipay.sofa.registry.jdbc.AbstractH2DbTestBase;
+import com.alipay.sofa.registry.jdbc.config.MetadataConfig;
 import com.alipay.sofa.registry.jdbc.constant.TableEnum;
 import com.alipay.sofa.registry.jdbc.domain.ClientManagerAddressDomain;
 import com.alipay.sofa.registry.jdbc.mapper.ClientManagerAddressMapper;
@@ -194,5 +199,31 @@ public class ClientManagerAddressJdbcRepositoryTest extends AbstractH2DbTestBase
 
     int expireClientOffSize = clientManagerAddressJdbcRepository.getClientOffSizeBefore(new Date());
     Assert.assertEquals(expireClientOffSize, difference.size());
+  }
+
+  @Test
+  public void testException() {
+    MetadataConfig metadataConfig = mock(MetadataConfig.class);
+    when(metadataConfig.getClientManagerExecutorPoolSize()).thenReturn(1);
+    when(metadataConfig.getClientManagerExecutorQueueSize()).thenReturn(1);
+
+    DefaultCommonConfig defaultCommonConfig = mock(DefaultCommonConfig.class);
+    when(defaultCommonConfig.getClusterId(anyString())).thenReturn("DEFAULT_DATACENTER");
+
+    ClientManagerAddressMapper clientManagerAddressMapper = mock(ClientManagerAddressMapper.class);
+    when(clientManagerAddressMapper.update(anyObject()))
+        .thenThrow(new SofaRegistryRuntimeException("expect exception."));
+
+    ClientManagerAddressJdbcRepository clientManagerAddressJdbcRepository =
+        new ClientManagerAddressJdbcRepository();
+
+    clientManagerAddressJdbcRepository
+        .setClientManagerAddressMapper(clientManagerAddressMapper)
+        .setDefaultCommonConfig(defaultCommonConfig);
+
+    ClientManagerResult clientManagerResult =
+        clientManagerAddressJdbcRepository.clientOff(clientOffSet);
+    Assert.assertFalse(clientManagerResult.isSuccess());
+    Assert.assertEquals(clientManagerResult.getVersion(), ClientManagerResult.FAIL_VERSION);
   }
 }

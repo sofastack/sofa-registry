@@ -21,6 +21,7 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.store.api.repository.InterfaceAppsRepository;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -40,10 +41,12 @@ public class InterfaceAppsRaftRepository implements InterfaceAppsRepository {
   }
 
   @Override
-  public void register(String interfaceName, String appName) {
-    InterfaceMapping interfaceMapping =
-        interfaceApps.computeIfAbsent(interfaceName, k -> new InterfaceMapping(-1));
-    interfaceMapping.getApps().add(appName);
+  public void register(String appName, Set<String> interfaceNames) {
+    for (String interfaceName : interfaceNames) {
+      InterfaceMapping interfaceMapping =
+          interfaceApps.computeIfAbsent(interfaceName, k -> new InterfaceMapping(-1));
+      interfaceMapping.getApps().add(appName);
+    }
   }
 
   @Override

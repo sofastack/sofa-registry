@@ -17,18 +17,21 @@
 package com.alipay.sofa.registry.test.metadata;
 
 import com.alipay.sofa.registry.common.model.appmeta.InterfaceMapping;
+import com.alipay.sofa.registry.common.model.client.pb.AppList;
 import com.alipay.sofa.registry.common.model.client.pb.MetaHeartbeatResponse;
+import com.alipay.sofa.registry.common.model.client.pb.ServiceAppMappingResponse;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.store.AppRevision;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.core.model.AppRevisionInterface;
 import com.alipay.sofa.registry.core.model.RegisterResponse;
 import com.alipay.sofa.registry.jdbc.mapper.AppRevisionMapper;
-import com.alipay.sofa.registry.server.session.metadata.AppRevisionCacheRegistry;
-import com.alipay.sofa.registry.server.session.metadata.AppRevisionHeartbeatRegistry;
+import com.alipay.sofa.registry.server.session.metadata.MetadataCacheRegistry;
+import com.alipay.sofa.registry.server.session.push.PushSwitchService;
 import com.alipay.sofa.registry.server.session.strategy.AppRevisionHandlerStrategy;
 import com.alipay.sofa.registry.store.api.config.DefaultCommonConfig;
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -41,6 +44,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeoutException;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -56,9 +60,7 @@ public class MetadataTest extends BaseIntegrationTest {
 
   protected AppRevisionHandlerStrategy appRevisionHandlerStrategy;
 
-  protected AppRevisionCacheRegistry appRevisionCacheRegistry;
-
-  protected AppRevisionHeartbeatRegistry appRevisionHeartbeatRegistry;
+  protected MetadataCacheRegistry metadataCacheRegistry;
 
   protected List<AppRevision> appRevisionList;
 
@@ -66,21 +68,22 @@ public class MetadataTest extends BaseIntegrationTest {
 
   protected DefaultCommonConfig defaultCommonConfig;
 
+  protected static volatile PushSwitchService pushSwitchService;
+
   @Before
   public void buildAppRevision() {
     appRevisionHandlerStrategy =
         sessionApplicationContext.getBean(
             "appRevisionHandlerStrategy", AppRevisionHandlerStrategy.class);
-    appRevisionCacheRegistry =
-        sessionApplicationContext.getBean(
-            "appRevisionCacheRegistry", AppRevisionCacheRegistry.class);
-    appRevisionHeartbeatRegistry =
-        sessionApplicationContext.getBean(
-            "appRevisionHeartbeatRegistry", AppRevisionHeartbeatRegistry.class);
+    metadataCacheRegistry =
+        sessionApplicationContext.getBean("metadataCacheRegistry", MetadataCacheRegistry.class);
     appRevisionMapper =
         sessionApplicationContext.getBean("appRevisionMapper", AppRevisionMapper.class);
     defaultCommonConfig =
         sessionApplicationContext.getBean("defaultCommonConfig", DefaultCommonConfig.class);
+
+    pushSwitchService =
+        sessionApplicationContext.getBean("pushSwitchService", PushSwitchService.class);
 
     appRevisionList = new ArrayList<>();
     for (int i = 1; i <= 1; i++) {
@@ -168,7 +171,7 @@ public class MetadataTest extends BaseIntegrationTest {
       Assert.assertTrue(future.get().isSuccess());
     }
 
-    appRevisionCacheRegistry.waitSynced();
+    metadataCacheRegistry.waitSynced();
     // query app_revision
     List<Future<AppRevision>> appRevisions = new ArrayList<>();
     for (AppRevision appRevisionRegister : appRevisionList) {
@@ -177,13 +180,13 @@ public class MetadataTest extends BaseIntegrationTest {
               (Callable)
                   () -> {
                     AppRevision revision =
-                        appRevisionCacheRegistry.getRevision(appRevisionRegister.getRevision());
+                        metadataCacheRegistry.getRevision(appRevisionRegister.getRevision());
                     Assert.assertEquals(revision.getRevision(), appRevisionRegister.getRevision());
                     return revision;
                   });
       appRevisions.add(appRevision);
     }
-    appRevisionCacheRegistry.waitSynced();
+    metadataCacheRegistry.waitSynced();
 
     Map<String, AppRevision> revisionMap = new HashMap<>();
     for (Future<AppRevision> future : appRevisions) {
@@ -201,7 +204,7 @@ public class MetadataTest extends BaseIntegrationTest {
                 (Callable)
                     () -> {
                       String dataInfoId = entry.getKey();
-                      InterfaceMapping appNames = appRevisionCacheRegistry.getAppNames(dataInfoId);
+                      InterfaceMapping appNames = metadataCacheRegistry.getAppNames(dataInfoId);
                       Assert.assertTrue(appNames.getNanosVersion() > 0);
                       Assert.assertTrue(appNames.getApps().size() == 1);
                       Assert.assertTrue(
@@ -220,8 +223,74 @@ public class MetadataTest extends BaseIntegrationTest {
     for (AppRevision appRevisionRegister : appRevisionList) {
       fixedThreadPool.submit(
           () -> {
-            appRevisionHeartbeatRegistry.heartbeat(appRevisionRegister.getRevision());
+            metadataCacheRegistry.heartbeat(appRevisionRegister.getRevision());
           });
+    }
+  }
+
+  @Test
+  public void testStopPush() throws ExecutionException, InterruptedException, TimeoutException {
+    ExecutorService fixedThreadPool = Executors.newFixedThreadPool(1);
+    List<Future<RegisterResponse>> responses = new ArrayList<>();
+
+    // register
+    for (AppRevision appRevisionRegister : appRevisionList) {
+      Future<RegisterResponse> response =
+          fixedThreadPool.submit(
+              (Callable)
+                  () -> {
+                    RegisterResponse result = new RegisterResponse();
+                    appRevisionHandlerStrategy.handleAppRevisionRegister(
+                        appRevisionRegister, result, "");
+                    return result;
+                  });
+      responses.add(response);
+    }
+
+    for (Future<RegisterResponse> future : responses) {
+      Assert.assertTrue(future.get().isSuccess());
+    }
+
+    metadataCacheRegistry.waitSynced();
+
+    // close push
+    closePush();
+    LOGGER.info(
+        "fetchStopPushService.isStopPushSwitch:"
+            + pushSwitchService.getFetchStopPushService().isStopPushSwitch());
+    waitConditionUntilTimeOut(pushSwitchService.getFetchStopPushService()::isStopPushSwitch, 6000);
+
+    // query by interface when stop push
+    for (AppRevision appRevisionRegister : appRevisionList) {
+      ServiceAppMappingResponse res =
+          appRevisionHandlerStrategy.queryApps(
+              Lists.newArrayList(appRevisionRegister.getInterfaceMap().keySet()), "");
+      Assert.assertEquals(res.getStatusCode(), ValueConstants.METADATA_STATUS_METHOD_NOT_ALLOW);
+    }
+
+    // open push
+    openPush();
+    LOGGER.info(
+        "fetchStopPushService.isStopPushSwitch:"
+            + pushSwitchService.getFetchStopPushService().isStopPushSwitch());
+    waitConditionUntilTimeOut(MetadataTest::isOpenPush, 6000);
+
+    // query by interface
+    for (AppRevision appRevisionRegister : appRevisionList) {
+
+      ServiceAppMappingResponse res =
+          appRevisionHandlerStrategy.queryApps(
+              Lists.newArrayList(appRevisionRegister.getInterfaceMap().keySet()), "");
+      Assert.assertEquals(res.getStatusCode(), ValueConstants.METADATA_STATUS_PROCESS_SUCCESS);
+
+      for (Map.Entry<String, AppRevisionInterface> entry :
+          appRevisionRegister.getInterfaceMap().entrySet()) {
+
+        String dataInfoId = entry.getKey();
+        AppList appNames = res.getServiceAppMappingMap().get(dataInfoId);
+        Assert.assertTrue(appNames.getVersion() > 0);
+        Assert.assertTrue(appNames.getAppsList().size() == 1);
+      }
     }
   }
 
@@ -234,7 +303,7 @@ public class MetadataTest extends BaseIntegrationTest {
       fixedThreadPool.submit(
           () -> {
             AppRevision revision =
-                appRevisionCacheRegistry.getRevision(appRevisionRegister.getRevision());
+                metadataCacheRegistry.getRevision(appRevisionRegister.getRevision());
             Assert.assertTrue(revision == null);
           });
     }
@@ -246,7 +315,7 @@ public class MetadataTest extends BaseIntegrationTest {
         fixedThreadPool.submit(
             () -> {
               String dataInfoId = entry.getKey();
-              InterfaceMapping appNames = appRevisionCacheRegistry.getAppNames(dataInfoId);
+              InterfaceMapping appNames = metadataCacheRegistry.getAppNames(dataInfoId);
               Assert.assertTrue(appNames.getNanosVersion() == -1);
               Assert.assertTrue(appNames.getApps().size() == 0);
             });
@@ -301,7 +370,7 @@ public class MetadataTest extends BaseIntegrationTest {
               (Callable)
                   () -> {
                     AppRevision revision =
-                        appRevisionCacheRegistry.getRevision(appRevisionRegister.getRevision());
+                        metadataCacheRegistry.getRevision(appRevisionRegister.getRevision());
                     Assert.assertEquals(revision.getRevision(), appRevisionRegister.getRevision());
                     return revision;
                   });
@@ -318,7 +387,7 @@ public class MetadataTest extends BaseIntegrationTest {
                 (Callable)
                     () -> {
                       String dataInfoId = entry.getKey();
-                      InterfaceMapping appNames = appRevisionCacheRegistry.getAppNames(dataInfoId);
+                      InterfaceMapping appNames = metadataCacheRegistry.getAppNames(dataInfoId);
                       Assert.assertTrue(appNames.getNanosVersion() > 0);
                       Assert.assertTrue(appNames.getApps().size() == 1);
                       Assert.assertTrue(
@@ -329,5 +398,9 @@ public class MetadataTest extends BaseIntegrationTest {
         appsFuture.add(submit);
       }
     }
+  }
+
+  private static boolean isOpenPush() {
+    return !pushSwitchService.getFetchStopPushService().isStopPushSwitch();
   }
 }

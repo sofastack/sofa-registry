@@ -103,7 +103,7 @@ public class ClientManagerServiceTest extends AbstractH2DbTestBase {
     clientOffSet.add("4.4.4.4");
     clientManagerService.clientOffWithSub(address);
 
-    Thread.sleep(2000);
+    Thread.sleep(4000);
     clientOffResponse = clientManagerService.queryClientOffAddress();
     Assert.assertEquals(clientOffResponse.getOperationStatus(), OperationStatus.SUCCESS);
     clientOffData = clientOffResponse.getEntity();
@@ -115,7 +115,7 @@ public class ClientManagerServiceTest extends AbstractH2DbTestBase {
     Assert.assertFalse(addressVersion.isSub());
 
     clientManagerService.clientOff(Collections.singleton("4.4.4.4"));
-    Thread.sleep(2000);
+    Thread.sleep(4000);
     clientOffResponse = clientManagerService.queryClientOffAddress();
     Assert.assertEquals(clientOffResponse.getOperationStatus(), OperationStatus.SUCCESS);
     clientOffData = clientOffResponse.getEntity();
@@ -128,7 +128,7 @@ public class ClientManagerServiceTest extends AbstractH2DbTestBase {
     Assert.assertTrue(addressVersion.isSub());
 
     clientManagerService.clientOpen(clientOpenSet);
-    Thread.sleep(2000);
+    Thread.sleep(4000);
     DBResponse<ClientManagerAddress> clientOpenResponse =
         clientManagerService.queryClientOffAddress();
     Assert.assertEquals(clientOpenResponse.getOperationStatus(), OperationStatus.SUCCESS);
@@ -149,7 +149,7 @@ public class ClientManagerServiceTest extends AbstractH2DbTestBase {
 
     when(metaLeaderService.amIStableAsLeader()).thenReturn(true);
     clientManagerService.start();
-    Thread.sleep(2000);
+    Thread.sleep(4000);
 
     /** check expire after clean */
     expireAddress = clientManagerAddressRepository.getExpireAddress(new Date(), 100);

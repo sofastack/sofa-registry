@@ -24,4 +24,8 @@ public interface MetadataConfig {
   int getRevisionRenewIntervalMinutes();
 
   int getInterfaceAppsIndexRenewIntervalMinutes();
+
+  int getClientManagerExecutorPoolSize();
+
+  int getClientManagerExecutorQueueSize();
 }
