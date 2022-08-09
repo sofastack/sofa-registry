@@ -21,7 +21,6 @@ import com.alipay.sofa.registry.common.model.store.AppRevision;
 import com.alipay.sofa.registry.core.model.AppRevisionInterface;
 import com.alipay.sofa.registry.jdbc.AbstractH2DbTestBase;
 import com.alipay.sofa.registry.jdbc.TestUtils;
-import com.alipay.sofa.registry.jdbc.constant.TableEnum;
 import com.alipay.sofa.registry.jdbc.convertor.AppRevisionDomainConvertor;
 import com.alipay.sofa.registry.jdbc.domain.AppRevisionDomain;
 import com.alipay.sofa.registry.jdbc.mapper.AppRevisionMapper;
@@ -34,7 +33,10 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
+
+import org.glassfish.jersey.internal.guava.Sets;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -56,6 +58,8 @@ public class AppRevisionRepositoryTest extends AbstractH2DbTestBase {
 
   private List<AppRevision> appRevisionList;
 
+  private Set<String> dataCenters = Sets.newHashSet();
+
   private static final Integer APP_REVISION_SIZE = 100;
 
   @Before
@@ -64,6 +68,12 @@ public class AppRevisionRepositoryTest extends AbstractH2DbTestBase {
     ((InterfaceAppsJdbcRepository) interfaceAppsJdbcRepository).init();
 
     appRevisionList = buildAppRevisions(APP_REVISION_SIZE);
+
+    dataCenters.add(defaultCommonConfig.getDefaultClusterId());
+    appRevisionJdbcRepository.setDataCenters(dataCenters);
+    interfaceAppsJdbcRepository.setDataCenters(dataCenters);
+
+    appRevisionJdbcRepository.startSynced();
   }
 
   private void register() throws Exception {
@@ -158,17 +168,14 @@ public class AppRevisionRepositoryTest extends AbstractH2DbTestBase {
     for (AppRevision appRevision : appRevisionList) {
       boolean before = appRevisionJdbcRepository.heartbeat(appRevision.getRevision());
       Assert.assertTrue(before);
-      AppRevisionDomain query =
-          appRevisionMapper.queryRevision(
-              defaultCommonConfig.getClusterId(TableEnum.APP_REVISION.getTableName()),
-              appRevision.getRevision());
+      AppRevisionDomain query = appRevisionMapper.queryRevision(dataCenters, appRevision.getRevision());
       Assert.assertTrue(query != null);
     }
 
     for (AppRevision appRevision : appRevisionList) {
       AppRevisionDomain domain =
           AppRevisionDomainConvertor.convert2Domain(
-              defaultCommonConfig.getClusterId(TableEnum.APP_REVISION.getTableName()), appRevision);
+              defaultCommonConfig.getDefaultClusterId(), appRevision);
       domain.setDeleted(true);
       appRevisionMapper.replace(domain);
     }
@@ -188,7 +195,7 @@ public class AppRevisionRepositoryTest extends AbstractH2DbTestBase {
       Assert.assertTrue(success);
       AppRevisionDomain domain =
           AppRevisionDomainConvertor.convert2Domain(
-              defaultCommonConfig.getClusterId(TableEnum.APP_REVISION.getTableName()), appRevision);
+              defaultCommonConfig.getDefaultClusterId(), appRevision);
       domain.setDeleted(true);
       appRevisionMapper.replace(domain);
     }
@@ -199,6 +206,6 @@ public class AppRevisionRepositoryTest extends AbstractH2DbTestBase {
     register();
     appRevisionJdbcRepository.waitSynced();
     Map<String, Integer> counts = appRevisionJdbcRepository.countByApp();
-    Assert.assertEquals(1, counts.size());
+    Assert.assertEquals(APP_REVISION_SIZE.intValue(), counts.size());
   }
 }

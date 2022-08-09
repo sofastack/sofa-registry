@@ -20,26 +20,17 @@ import com.alipay.sofa.registry.common.model.console.PersistenceData;
 import com.alipay.sofa.registry.common.model.console.PersistenceDataBuilder;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.jdbc.AbstractH2DbTestBase;
-import com.alipay.sofa.registry.jdbc.mapper.ProvideDataMapper;
-import com.alipay.sofa.registry.jdbc.mapper.RecoverConfigMapper;
 import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
-import com.alipay.sofa.registry.store.api.meta.RecoverConfigRepository;
-import java.sql.SQLException;
-import java.util.Map;
-import javax.annotation.Resource;
 import org.junit.Assert;
 import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
+
+import javax.annotation.Resource;
+import java.sql.SQLException;
+import java.util.Map;
 
 public class ProvideDataJdbcRepositoryTest extends AbstractH2DbTestBase {
 
   @Resource private ProvideDataRepository provideDataRepository;
-
-  @Autowired private ProvideDataMapper provideDataMapper;
-
-  @Autowired private RecoverConfigMapper recoverConfigMapper;
-
-  @Autowired private RecoverConfigRepository recoverConfigRepository;
 
   @Test
   public void testPut() throws SQLException, InterruptedException {

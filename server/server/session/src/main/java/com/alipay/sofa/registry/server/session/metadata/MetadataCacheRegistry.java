@@ -93,10 +93,10 @@ public class MetadataCacheRegistry {
 
     Set<String> dataCenters = getMetadataDataCenters();
 
-    appRevisionRepository.setDatCenters(dataCenters);
+    appRevisionRepository.setDataCenters(dataCenters);
     appRevisionRepository.startSynced();
 
-    interfaceAppsRepository.setDatCenters(dataCenters);
+    interfaceAppsRepository.setDataCenters(dataCenters);
     interfaceAppsRepository.startSynced();
   }
 
@@ -184,8 +184,8 @@ public class MetadataCacheRegistry {
     @Override
     public void runUnthrowable() {
       Set<String> dataCenters = getMetadataDataCenters();
-      appRevisionRepository.setDatCenters(dataCenters);
-      interfaceAppsRepository.setDatCenters(dataCenters);
+      appRevisionRepository.setDataCenters(dataCenters);
+      interfaceAppsRepository.setDataCenters(dataCenters);
     }
 
     @Override

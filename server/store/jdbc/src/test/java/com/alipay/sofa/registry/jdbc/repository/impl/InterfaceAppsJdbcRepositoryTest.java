@@ -34,8 +34,12 @@ import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import com.google.common.collect.Sets;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,6 +51,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class InterfaceAppsJdbcRepositoryTest extends AbstractH2DbTestBase {
 
   @Autowired private InterfaceAppsRepository interfaceAppsJdbcRepository;
+
+  @Autowired private DefaultCommonConfig defaultCommonConfig;
+
+  private Set<String> dataCenters = Sets.newHashSet();
+
+  @Before
+  public void init() {
+    dataCenters.add(defaultCommonConfig.getDefaultClusterId());
+    interfaceAppsJdbcRepository.setDataCenters(dataCenters);
+  }
 
   @Test
   public void batchSaveTest() {
@@ -80,14 +94,14 @@ public class InterfaceAppsJdbcRepositoryTest extends AbstractH2DbTestBase {
       InterfaceMapping mapping = impl.getAppNames(interfaceName);
       InterfaceAppsIndexDomain domain =
           new InterfaceAppsIndexDomain(
-              "", interfaceName, mapping.getApps().stream().findFirst().get());
-      domain.setGmtCreate(TimestampUtil.fromNanosLong(mapping.getNanosVersion()));
+                  defaultCommonConfig.getDefaultClusterId(), interfaceName, mapping.getApps().stream().findFirst().get());
+      domain.setGmtCreate(TimestampUtil.fromNanosLong(mapping.getNanosVersion() - 1));
       c1.onEntry(domain);
     }
     impl.informer.preList(impl.informer.getContainer());
     Assert.assertEquals(conflictCount.getAndSet(0), 0);
     impl.informer.preList(c1);
-    Assert.assertEquals(conflictCount.getAndSet(0), 100);
+    Assert.assertEquals(conflictCount.getAndSet(0), impl.informer.getContainer().interfaces().size());
     impl.getDataVersion();
   }
 

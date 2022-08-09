@@ -17,7 +17,6 @@
 package com.alipay.sofa.registry.compress;
 
 import com.alipay.sofa.registry.core.model.DataBox;
-import com.alipay.sofa.registry.core.model.ReceivedData;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.alipay.sofa.registry.util.StringUtils;
 import java.util.*;

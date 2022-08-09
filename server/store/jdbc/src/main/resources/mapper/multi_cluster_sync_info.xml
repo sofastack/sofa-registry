@@ -26,9 +26,9 @@
         <result property="remoteDataCenter" column="remote_data_center" javaType="java.lang.String" jdbcType="VARCHAR"/>
         <result property="remoteMetaAddress" column="remote_meta_address" javaType="java.lang.String" jdbcType="VARCHAR"/>
         <result property="enableSyncDatum" column="enable_sync_datum" javaType="java.lang.String" jdbcType="VARCHAR"/>
-        <result property="syncDataInfoIds" column="sync_datainfoids" javaType="java.lang.String" jdbcType="MEDIUMTEXT"/>
+        <result property="syncDataInfoIds" column="sync_datainfoids" javaType="java.lang.String" jdbcType="LONGVARCHAR"/>
         <result property="synPublisherGroups" column="syn_publisher_groups" javaType="java.lang.String" jdbcType="VARCHAR"/>
-        <result property="ignoreDataInfoIds" column="ignore_datainfoids" javaType="java.lang.String" jdbcType="TEXT"/>
+        <result property="ignoreDataInfoIds" column="ignore_datainfoids" javaType="java.lang.String" jdbcType="LONGVARCHAR"/>
         <result property="dataVersion" column="data_version" javaType="long" jdbcType="BIGINT"/>
         <result property="gmtCreate" column="gmt_create" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
         <result property="gmtModified" column="gmt_modified" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
@@ -87,6 +87,12 @@
     <select id="queryByCluster" resultMap="multiClusterSyncResultMap">
         <![CDATA[ select * from multi_cluster_sync_info
                   where data_center = #{dataCenter}
+        ]]>
+    </select>
+
+    <select id="query" resultMap="multiClusterSyncResultMap">
+        <![CDATA[ select * from multi_cluster_sync_info
+                  where data_center = #{dataCenter} and remote_data_center = #{remoteDataCenter}
         ]]>
     </select>
 

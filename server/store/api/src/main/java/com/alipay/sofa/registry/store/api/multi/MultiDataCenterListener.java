@@ -26,5 +26,5 @@ public interface MultiDataCenterListener {
 
   Set<String> dataCenters();
 
-  void setDatCenters(Set<String> dataCenters);
+  void setDataCenters(Set<String> dataCenters);
 }

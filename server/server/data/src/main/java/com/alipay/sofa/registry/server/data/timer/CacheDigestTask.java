@@ -48,8 +48,8 @@ public class CacheDigestTask {
 
   @Autowired private DataServerConfig dataServerConfig;
 
-    private final ScheduledExecutorService executorService =
-            new ScheduledThreadPoolExecutor(1, new NamedThreadFactory("CacheDigestTask"));
+  private final ScheduledExecutorService executorService =
+      new ScheduledThreadPoolExecutor(1, new NamedThreadFactory("CacheDigestTask"));
 
   @PostConstruct
   public boolean init() {

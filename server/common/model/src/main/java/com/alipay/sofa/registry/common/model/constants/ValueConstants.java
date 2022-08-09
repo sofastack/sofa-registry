@@ -47,9 +47,6 @@ public class ValueConstants {
 
   public static final int RAFT_SERVER_PORT = SYSTEM_RAFT_PORT != null ? SYSTEM_RAFT_PORT : 9614;
 
-  public static final int CROSS_DC_META_SYNC_INTERVAL_MILLI =
-      Integer.getInteger("CROSS_DC_META_SYNC_INTERVAL_MILLI", 60 * 1000);
-
   private static final String SYSTEM_RAFT_GROUP = System.getProperty("RAFT_SERVER_GROUP");
 
   public static final String RAFT_SERVER_GROUP =

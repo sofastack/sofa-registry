@@ -24,6 +24,7 @@ import com.alipay.sofa.registry.jdbc.constant.TableEnum;
 import com.alipay.sofa.registry.jdbc.domain.InterfaceAppsIndexDomain;
 import com.alipay.sofa.registry.jdbc.informer.BaseInformer;
 import com.alipay.sofa.registry.jdbc.mapper.InterfaceAppsIndexMapper;
+import com.alipay.sofa.registry.jdbc.repository.impl.AppRevisionJdbcRepository.Informer;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.store.api.config.DefaultCommonConfig;
@@ -67,14 +68,12 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository, Rec
 
   private ThreadPoolExecutor serviceAppsExecutor;
 
-  Informer informer;
+  final Informer informer = new Informer();
 
   public InterfaceAppsJdbcRepository() {
-    informer = new Informer();
   }
 
   public InterfaceAppsJdbcRepository(MetadataConfig metadataConfig) {
-    informer = new Informer();
     this.metadataConfig = metadataConfig;
   }
 
@@ -164,7 +163,7 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository, Rec
   public void startSynced() {
     ParaCheckUtil.checkNotEmpty(dataCenters, "dataCenters");
 
-    informer = new Informer();
+    // after set datacenters
     informer.setEnabled(true);
     informer.start();
   }
@@ -215,7 +214,7 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository, Rec
   }
 
   @Override
-  public synchronized void setDatCenters(Set<String> dataCenters) {
+  public synchronized void setDataCenters(Set<String> dataCenters) {
 
     if (!this.dataCenters.equals(dataCenters)) {
       // wakeup list loop to rebuild container

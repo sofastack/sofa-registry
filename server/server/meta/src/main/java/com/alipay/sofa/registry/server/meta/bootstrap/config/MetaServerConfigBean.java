@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.registry.server.meta.bootstrap.config;
 
-import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.Lease;
 import com.alipay.sofa.registry.server.shared.config.CommonConfig;
 import com.alipay.sofa.registry.util.OsUtils;
@@ -265,16 +264,6 @@ public class MetaServerConfigBean implements MetaServerConfig {
    */
   public void setMetaNodeExchangeTimeoutMillis(int metaNodeExchangeTimeoutMillis) {
     this.metaNodeExchangeTimeoutMillis = metaNodeExchangeTimeoutMillis;
-  }
-
-  /**
-   * Gets get cross dc meta sync interval milli.
-   *
-   * @return the get cross dc meta sync interval milli
-   */
-  @Override
-  public int getCrossDcMetaSyncIntervalMillis() {
-    return ValueConstants.CROSS_DC_META_SYNC_INTERVAL_MILLI;
   }
 
   /**

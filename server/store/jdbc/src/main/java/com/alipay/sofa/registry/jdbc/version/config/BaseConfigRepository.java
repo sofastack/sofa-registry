@@ -67,6 +67,12 @@ public abstract class BaseConfigRepository<T extends ConfigEntry> {
         return false;
       }
 
+      if (expectVersion == 0) {
+        // it will throw duplicate key exception when parallel invocation
+        insert(entry);
+        return true;
+      }
+
       int affect = updateWithExpectVersion(entry, expectVersion);
       if (affect == 0) {
         logger.error("update config entry fail, affect=0, entry:{}", entry);

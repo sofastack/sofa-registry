@@ -35,6 +35,7 @@ import com.alipay.sofa.registry.store.api.config.DefaultCommonConfig;
 import com.alipay.sofa.registry.store.api.date.DateNowRepository;
 import com.alipay.sofa.registry.store.api.meta.RecoverConfig;
 import com.alipay.sofa.registry.store.api.repository.AppRevisionRepository;
+import com.alipay.sofa.registry.util.NamedThreadFactory;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.google.common.annotations.VisibleForTesting;
@@ -46,6 +47,8 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -81,7 +84,7 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository, Recover
 
   @Autowired private DefaultCommonConfig defaultCommonConfig;
 
-  Informer informer;
+  private final Informer informer = new Informer();
 
   private Set<String> dataCenters = Sets.newConcurrentHashSet();
 
@@ -99,10 +102,6 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository, Recover
                     REVISION_CACHE_MISS_COUNTER.inc();
                     AppRevisionDomain revisionDomain =
                         appRevisionMapper.queryRevision(dataCenters, revision);
-                    REVISION_CACHE_MISS_COUNTER.inc();
-                    AppRevisionDomain revisionDomain =
-                        appRevisionMapper.queryRevision(
-                            defaultCommonConfig.getClusterId(tableName()), revision);
                     if (revisionDomain == null || revisionDomain.isDeleted()) {
                       throw new RevisionNotExistException(revision);
                     }
@@ -110,16 +109,10 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository, Recover
                   }
                 });
     CacheCleaner.autoClean(localRevisions, 1000 * 60 * 10);
-
-      informer = new Informer();
-
   }
 
   @PostConstruct
   public void init() {
-
-    informer.setEnabled(true);
-    informer.start();
 
     revisionDigestService.scheduleAtFixedRate(
         () -> {
@@ -237,7 +230,7 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository, Recover
   public void startSynced() {
     ParaCheckUtil.checkNotEmpty(dataCenters, "dataCenters");
 
-    informer = new Informer();
+    // after set datacenters
     informer.setEnabled(true);
     informer.start();
   }
@@ -278,7 +271,7 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository, Recover
   }
 
   @Override
-  public synchronized void setDatCenters(Set<String> dataCenters) {
+  public synchronized void setDataCenters(Set<String> dataCenters) {
     if (!this.dataCenters.equals(dataCenters)) {
       LOG.info("dataCenters change from {} to {}", this.dataCenters, dataCenters);
       this.dataCenters = dataCenters;

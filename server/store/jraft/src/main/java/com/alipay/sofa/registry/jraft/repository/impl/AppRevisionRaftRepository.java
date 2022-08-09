@@ -92,5 +92,5 @@ public class AppRevisionRaftRepository implements AppRevisionRepository {
   }
 
   @Override
-  public void setDatCenters(Set<String> dataCenters) {}
+  public void setDataCenters(Set<String> dataCenters) {}
 }

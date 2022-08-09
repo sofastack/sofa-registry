@@ -253,8 +253,9 @@ public class ClientManagerAddressJdbcRepository
    * @param clientManagerAddressMapper value to be assigned to property clientManagerAddressMapper
    */
   @VisibleForTesting
-  public void setClientManagerAddressMapper(ClientManagerAddressMapper clientManagerAddressMapper) {
+  public ClientManagerAddressJdbcRepository setClientManagerAddressMapper(ClientManagerAddressMapper clientManagerAddressMapper) {
     this.clientManagerAddressMapper = clientManagerAddressMapper;
+    return this;
   }
 
   /**

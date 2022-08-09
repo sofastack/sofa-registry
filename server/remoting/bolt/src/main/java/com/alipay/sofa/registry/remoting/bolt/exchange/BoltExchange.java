@@ -25,11 +25,10 @@ import com.alipay.sofa.registry.remoting.bolt.BoltClient;
 import com.alipay.sofa.registry.remoting.bolt.BoltServer;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.util.OsUtils;
-import org.apache.commons.lang.StringUtils;
-
 import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import org.apache.commons.lang.StringUtils;
 
 /**
  * @author shangyu.wh

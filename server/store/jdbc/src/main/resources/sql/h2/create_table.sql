@@ -77,7 +77,7 @@ CREATE TABLE `recover_config` (
   `gmt_create` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `gmt_modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
   PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_table_key` (`property_table`, `property_key`)
+  UNIQUE KEY `uk_property_table_key` (`property_table`, `property_key`)
 );
 
 drop table if exists multi_cluster_sync_info;
@@ -93,7 +93,7 @@ CREATE TABLE `multi_cluster_sync_info` (
   `gmt_create` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `gmt_modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
   PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_table_key` (`data_center`, `remote_data_center`)
+  UNIQUE KEY `uk_data_center_remote_data_center` (`data_center`, `remote_data_center`)
 );
 
 

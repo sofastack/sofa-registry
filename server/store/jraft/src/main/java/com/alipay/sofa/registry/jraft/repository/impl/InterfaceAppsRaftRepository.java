@@ -70,5 +70,5 @@ public class InterfaceAppsRaftRepository implements InterfaceAppsRepository {
   }
 
   @Override
-  public void setDatCenters(Set<String> dataCenters) {}
+  public void setDataCenters(Set<String> dataCenters) {}
 }

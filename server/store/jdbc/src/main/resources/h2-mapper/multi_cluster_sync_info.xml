@@ -25,6 +25,10 @@
         <result property="dataCenter" column="data_center" javaType="java.lang.String" jdbcType="VARCHAR"/>
         <result property="remoteDataCenter" column="remote_data_center" javaType="java.lang.String" jdbcType="VARCHAR"/>
         <result property="remoteMetaAddress" column="remote_meta_address" javaType="java.lang.String" jdbcType="VARCHAR"/>
+        <result property="enableSyncDatum" column="enable_sync_datum" javaType="java.lang.String" jdbcType="VARCHAR"/>
+        <result property="syncDataInfoIds" column="sync_datainfoids" javaType="java.lang.String" jdbcType="LONGVARCHAR"/>
+        <result property="synPublisherGroups" column="syn_publisher_groups" javaType="java.lang.String" jdbcType="VARCHAR"/>
+        <result property="ignoreDataInfoIds" column="ignore_datainfoids" javaType="java.lang.String" jdbcType="LONGVARCHAR"/>
         <result property="dataVersion" column="data_version" javaType="long" jdbcType="BIGINT"/>
         <result property="gmtCreate" column="gmt_create" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
         <result property="gmtModified" column="gmt_modified" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
@@ -32,33 +36,53 @@
 
     <insert id="save" parameterType="com.alipay.sofa.registry.jdbc.domain.MultiClusterSyncDomain">
         <![CDATA[
-       INSERT INTO multi_cluster_sync_info
-       (
-           data_center,
-           remote_data_center,
-           remote_meta_address,
-           data_version,
-           gmt_create,
-           gmt_modified
-       )
-       VALUES
-       (
-           #{dataCenter},
-           #{remoteDataCenter},
-           #{remoteMetaAddress},
-           #{dataVersion},
-           CURRENT_TIMESTAMP,
-           CURRENT_TIMESTAMP
-       )
-       ]]>
+        INSERT INTO multi_cluster_sync_info
+        (
+            data_center,
+            remote_data_center,
+            remote_meta_address,
+            enable_sync_datum,
+            sync_datainfoids,
+            syn_publisher_groups,
+            ignore_datainfoids,
+            data_version,
+            gmt_create,
+            gmt_modified
+        )
+        VALUES
+        (
+            #{dataCenter},
+            #{remoteDataCenter},
+            #{remoteMetaAddress},
+            #{enableSyncDatum},
+            #{syncDataInfoIds},
+            #{synPublisherGroups},
+            #{ignoreDataInfoIds},
+            #{dataVersion},
+            CURRENT_TIMESTAMP,
+            CURRENT_TIMESTAMP
+        )
+        ]]>
     </insert>
 
     <update id="update">
         <![CDATA[
-       update multi_cluster_sync_info set remote_meta_address = #{remoteMetaAddress}, data_version = #{data.dataVersion}, gmt_modified = CURRENT_TIMESTAMP
-       where data_center = #{data.dataCenter} and remote_data_center = #{remoteDataCenter} and data_version = #{exceptVersion}
-       ]]>
+        update multi_cluster_sync_info set
+                                           remote_meta_address = #{remoteMetaAddress},
+                                           enable_sync_datum = #{enableSyncDatum},
+                                           sync_datainfoids = #{syncDataInfoIds},
+                                           syn_publisher_groups = #{synPublisherGroups},
+                                           ignore_datainfoids = #{ignoreDataInfoIds},
+                                           data_version = #{data.dataVersion},
+                                           gmt_modified = CURRENT_TIMESTAMP
+        where
+            data_center = #{data.dataCenter}
+          and remote_data_center = #{remoteDataCenter}
+          and data_version = #{exceptVersion}
+        ]]>
     </update>
+
+
 
     <select id="queryByCluster" resultMap="multiClusterSyncResultMap">
         <![CDATA[ select * from multi_cluster_sync_info
@@ -66,7 +90,7 @@
         ]]>
     </select>
 
-    <select id="queryByCluster" resultMap="multiClusterSyncResultMap">
+    <select id="query" resultMap="multiClusterSyncResultMap">
         <![CDATA[ select * from multi_cluster_sync_info
                   where data_center = #{dataCenter} and remote_data_center = #{remoteDataCenter}
         ]]>
@@ -74,7 +98,7 @@
 
     <delete id="remove">
         delete from multi_cluster_sync_info where data_center = #{dataCenter} and remote_data_center = #{remoteDataCenter}
-        and data_version = #{dataVersion}
+                                              and data_version = #{dataVersion}
     </delete>
 
 </mapper>

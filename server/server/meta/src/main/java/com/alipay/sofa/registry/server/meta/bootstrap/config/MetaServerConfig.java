@@ -37,8 +37,6 @@ public interface MetaServerConfig {
 
   int getHttpServerPort();
 
-  int getCrossDcMetaSyncIntervalMillis();
-
   int getExpireCheckIntervalMillis();
 
   int getDataNodeExchangeTimeoutMillis();
