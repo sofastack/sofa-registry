@@ -26,25 +26,39 @@ import com.alipay.sofa.registry.client.api.model.RegistryType;
 import com.alipay.sofa.registry.client.api.registration.PublisherRegistration;
 import com.alipay.sofa.registry.client.api.registration.SubscriberRegistration;
 import com.alipay.sofa.registry.common.model.GenericResponse;
+import com.alipay.sofa.registry.common.model.appmeta.InterfaceMapping;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.sessionserver.PubSubDataInfoIdResp;
+import com.alipay.sofa.registry.common.model.store.AppRevision;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
+import com.alipay.sofa.registry.core.model.AppRevisionInterface;
+import com.alipay.sofa.registry.core.model.RegisterResponse;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.net.NetUtil;
+import com.alipay.sofa.registry.server.session.metadata.AppRevisionCacheRegistry;
+import com.alipay.sofa.registry.server.session.strategy.AppRevisionHandlerStrategy;
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
+import com.google.common.collect.Maps;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -59,6 +73,22 @@ public class SessionDigestResourceTest extends BaseIntegrationTest {
   private static final String dataId = "test-dataId-" + System.nanoTime();
   private static final String value = "SessionDigestResourceTest";
   private static final MySubscriberDataObserver observer = new MySubscriberDataObserver();
+
+  protected static List<AppRevision> appRevisionList;
+
+  protected AppRevisionHandlerStrategy appRevisionHandlerStrategy;
+
+  protected AppRevisionCacheRegistry appRevisionCacheRegistry;
+
+  @Before
+  public void before() {
+    appRevisionHandlerStrategy =
+        sessionApplicationContext.getBean(
+            "appRevisionHandlerStrategy", AppRevisionHandlerStrategy.class);
+    appRevisionCacheRegistry =
+        sessionApplicationContext.getBean(
+            "appRevisionCacheRegistry", AppRevisionCacheRegistry.class);
+  }
 
   @BeforeClass
   public static void beforeClass() throws Exception {
@@ -80,6 +110,68 @@ public class SessionDigestResourceTest extends BaseIntegrationTest {
     assertEquals(true, observer.userData.getZoneData().containsKey(LOCAL_REGION));
     assertEquals(1, observer.userData.getZoneData().get(LOCAL_REGION).size());
     assertEquals(value, observer.userData.getZoneData().get(LOCAL_REGION).get(0));
+
+    appRevisionList = new ArrayList<>();
+    for (int i = 1; i <= 1; i++) {
+      long l = System.currentTimeMillis();
+      String suffix = l + "-" + i;
+
+      String appname = "foo" + suffix;
+      String revision = "1111" + suffix;
+
+      AppRevision appRevision = new AppRevision();
+      appRevision.setAppName(appname);
+      appRevision.setRevision(revision);
+      appRevision.setClientVersion("1.0");
+
+      Map<String, List<String>> baseParams = Maps.newHashMap();
+      baseParams.put(
+          "metaBaseParam1",
+          new ArrayList<String>() {
+            {
+              add("metaBaseValue1");
+            }
+          });
+      appRevision.setBaseParams(baseParams);
+
+      Map<String, AppRevisionInterface> interfaceMap = Maps.newHashMap();
+      String dataInfo1 =
+          DataInfo.toDataInfoId(
+              "SessionDigestResourceTest-func1" + suffix, ValueConstants.DEFAULT_GROUP, ValueConstants.DEFAULT_INSTANCE_ID);
+      String dataInfo2 =
+          DataInfo.toDataInfoId(
+              "SessionDigestResourceTest-func2" + suffix, ValueConstants.DEFAULT_GROUP, ValueConstants.DEFAULT_INSTANCE_ID);
+
+      AppRevisionInterface inf1 = new AppRevisionInterface();
+      AppRevisionInterface inf2 = new AppRevisionInterface();
+      interfaceMap.put(dataInfo1, inf1);
+      interfaceMap.put(dataInfo2, inf2);
+      appRevision.setInterfaceMap(interfaceMap);
+
+      inf1.setId("1");
+      Map<String, List<String>> serviceParams1 = new HashMap<String, List<String>>();
+      serviceParams1.put(
+          "metaParam2",
+          new ArrayList<String>() {
+            {
+              add("metaValue2");
+            }
+          });
+      inf1.setServiceParams(serviceParams1);
+
+      inf2.setId("2");
+      Map<String, List<String>> serviceParams2 = new HashMap<String, List<String>>();
+      serviceParams1.put(
+          "metaParam3",
+          new ArrayList<String>() {
+            {
+              add("metaValue3");
+            }
+          });
+      inf1.setServiceParams(serviceParams2);
+
+      appRevisionList.add(appRevision);
+    }
   }
 
   @AfterClass
@@ -242,5 +334,56 @@ public class SessionDigestResourceTest extends BaseIntegrationTest {
     Set<String> subs = data.getSubDataInfoIds().get(LOCAL_ADDRESS);
     Assert.assertTrue(pubs.contains(dataInfoId));
     Assert.assertTrue(subs.contains(dataInfoId));
+  }
+
+  public void registerAppRevision() throws ExecutionException, InterruptedException {
+    ExecutorService fixedThreadPool = Executors.newFixedThreadPool(1);
+    List<Future<RegisterResponse>> responses = new ArrayList<>();
+
+    // register
+    for (AppRevision appRevisionRegister : appRevisionList) {
+      Future<RegisterResponse> response =
+          fixedThreadPool.submit(
+              (Callable)
+                  () -> {
+                    RegisterResponse result = new RegisterResponse();
+                    appRevisionHandlerStrategy.handleAppRevisionRegister(
+                        appRevisionRegister, result, "");
+                    return result;
+                  });
+      responses.add(response);
+    }
+
+    for (Future<RegisterResponse> future : responses) {
+      Assert.assertTrue(future.get().isSuccess());
+    }
+
+    appRevisionCacheRegistry.waitSynced();
+  }
+
+  @Test
+  public void testGetMetadata() throws ExecutionException, InterruptedException {
+    registerAppRevision();
+
+    Set<String> revisionIds =
+        sessionChannel
+            .getWebTarget()
+            .path("digest/metadata/allRevisionIds")
+            .request(APPLICATION_JSON)
+            .get(Set.class);
+
+    Map<String, InterfaceMapping> mappings =
+        sessionChannel
+            .getWebTarget()
+            .path("digest/metadata/allServiceMapping")
+            .request(APPLICATION_JSON)
+            .get(Map.class);
+
+    for (AppRevision revision : appRevisionList) {
+      Assert.assertTrue(revisionIds.contains(revision.getRevision()));
+      for (String itf : revision.getInterfaceMap().keySet()) {
+        Assert.assertTrue(mappings.containsKey(itf));
+      }
+    }
   }
 }

@@ -17,7 +17,6 @@
 package com.alipay.sofa.registry.store.api.repository;
 
 import com.alipay.sofa.registry.common.model.appmeta.InterfaceMapping;
-
 import java.util.Map;
 
 /**
