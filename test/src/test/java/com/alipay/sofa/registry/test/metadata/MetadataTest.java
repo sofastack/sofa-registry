@@ -67,6 +67,8 @@ public class MetadataTest extends BaseIntegrationTest {
 
   protected DefaultCommonConfig defaultCommonConfig;
 
+  protected static volatile PushSwitchService pushSwitchService;
+
   @Before
   public void buildAppRevision() {
     appRevisionHandlerStrategy =
@@ -78,6 +80,9 @@ public class MetadataTest extends BaseIntegrationTest {
         sessionApplicationContext.getBean("appRevisionMapper", AppRevisionMapper.class);
     defaultCommonConfig =
         sessionApplicationContext.getBean("defaultCommonConfig", DefaultCommonConfig.class);
+
+    pushSwitchService =
+        sessionApplicationContext.getBean("pushSwitchService", PushSwitchService.class);
 
     appRevisionList = new ArrayList<>();
     for (int i = 1; i <= 1; i++) {
@@ -247,7 +252,12 @@ public class MetadataTest extends BaseIntegrationTest {
 
     metadataCacheRegistry.waitSynced();
 
+    // close push
     closePush();
+    LOGGER.info(
+        "fetchStopPushService.isStopPushSwitch:"
+            + pushSwitchService.getFetchStopPushService().isStopPushSwitch());
+    waitConditionUntilTimeOut(pushSwitchService.getFetchStopPushService()::isStopPushSwitch, 6000);
 
     // query by interface when stop push
     for (AppRevision appRevisionRegister : appRevisionList) {
@@ -259,6 +269,10 @@ public class MetadataTest extends BaseIntegrationTest {
 
     // open push
     openPush();
+    LOGGER.info(
+        "fetchStopPushService.isStopPushSwitch:"
+            + pushSwitchService.getFetchStopPushService().isStopPushSwitch());
+    waitConditionUntilTimeOut(MetadataTest::isOpenPush, 6000);
 
     // query by interface
     for (AppRevision appRevisionRegister : appRevisionList) {
@@ -383,5 +397,9 @@ public class MetadataTest extends BaseIntegrationTest {
         appsFuture.add(submit);
       }
     }
+  }
+
+  private static boolean isOpenPush() {
+    return !pushSwitchService.getFetchStopPushService().isStopPushSwitch();
   }
 }

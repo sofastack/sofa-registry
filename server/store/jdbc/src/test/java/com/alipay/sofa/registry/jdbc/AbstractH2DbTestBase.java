@@ -186,6 +186,53 @@ public class AbstractH2DbTestBase extends AbstractTest implements ApplicationCon
     }
   }
 
+  public List<AppRevision> buildAppRevisions(int size) {
+    List<AppRevision> appRevisionList = new ArrayList<>();
+    for (int i = 1; i <= size; i++) {
+      long l = System.currentTimeMillis();
+      String suffix = l + "-" + i;
+
+      String appname = "foo" + suffix;
+      String revision = "1111" + suffix;
+
+      AppRevision appRevision = new AppRevision();
+      appRevision.setAppName(appname);
+      appRevision.setRevision(revision);
+      appRevision.setClientVersion("1.0");
+
+      Map<String, List<String>> baseParams = Maps.newHashMap();
+      baseParams.put("metaBaseParam1", Lists.newArrayList("metaBaseValue1"));
+      appRevision.setBaseParams(baseParams);
+
+      Map<String, AppRevisionInterface> interfaceMap = Maps.newHashMap();
+      String dataInfo1 =
+          DataInfo.toDataInfoId(
+              "func1" + suffix, ValueConstants.DEFAULT_GROUP, ValueConstants.DEFAULT_INSTANCE_ID);
+      String dataInfo2 =
+          DataInfo.toDataInfoId(
+              "func2" + suffix, ValueConstants.DEFAULT_GROUP, ValueConstants.DEFAULT_INSTANCE_ID);
+
+      AppRevisionInterface inf1 = new AppRevisionInterface();
+      AppRevisionInterface inf2 = new AppRevisionInterface();
+      interfaceMap.put(dataInfo1, inf1);
+      interfaceMap.put(dataInfo2, inf2);
+      appRevision.setInterfaceMap(interfaceMap);
+
+      inf1.setId("1");
+      Map<String, List<String>> serviceParams1 = new HashMap<String, List<String>>();
+      serviceParams1.put("metaParam2", Lists.newArrayList("metaValue2"));
+      inf1.setServiceParams(serviceParams1);
+
+      inf2.setId("2");
+      Map<String, List<String>> serviceParams2 = new HashMap<String, List<String>>();
+      serviceParams1.put("metaParam3", Lists.newArrayList("metaValues3"));
+      inf1.setServiceParams(serviceParams2);
+
+      appRevisionList.add(appRevision);
+    }
+    return appRevisionList;
+  }
+
   @Override
   public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
     this.applicationContext = applicationContext;

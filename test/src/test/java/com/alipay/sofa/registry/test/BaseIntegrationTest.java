@@ -290,24 +290,12 @@ public class BaseIntegrationTest extends AbstractTest {
     Result result =
         metaChannel.getWebTarget().path("/stopPushDataSwitch/close").request().get(Result.class);
     Assert.assertTrue(result.isSuccess());
-
-    LOGGER.info(
-        "fetchStopPushService.isStopPushSwitch:" + pushSwitchService.canLocalDataCenterPush());
-    waitConditionUntilTimeOut(BaseIntegrationTest::isOpenPush, 6000);
   }
 
-  private static boolean isOpenPush() {
-    return !pushSwitchService.canLocalDataCenterPush();
-  }
-
-  protected static void closePush() throws InterruptedException, TimeoutException {
+  protected static void closePush() {
     Result result =
         metaChannel.getWebTarget().path("/stopPushDataSwitch/open").request().get(Result.class);
     Assert.assertTrue(result.isSuccess());
-
-    LOGGER.info(
-        "fetchStopPushService.isStopPushSwitch:" + pushSwitchService.canLocalDataCenterPush());
-    waitConditionUntilTimeOut(pushSwitchService::canLocalDataCenterPush, 6000);
   }
 
   public static class MySubscriberDataObserver implements SubscriberDataObserver {

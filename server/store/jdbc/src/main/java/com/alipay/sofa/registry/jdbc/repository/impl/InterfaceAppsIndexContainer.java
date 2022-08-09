@@ -87,6 +87,10 @@ public class InterfaceAppsIndexContainer implements DbEntryContainer<InterfaceAp
     return multiData.keySet();
   }
 
+  public Map<String, InterfaceMapping> allServiceMapping() {
+    return Maps.newHashMap(data);
+  }
+
   @Override
   public synchronized void onEntry(InterfaceAppsIndexDomain entry) {
     if (entry.isReference()) {

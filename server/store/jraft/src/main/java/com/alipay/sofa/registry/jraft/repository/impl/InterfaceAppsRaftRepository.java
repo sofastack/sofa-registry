@@ -42,7 +42,6 @@ public class InterfaceAppsRaftRepository implements InterfaceAppsRepository {
 
   @Override
   public void register(String appName, Set<String> interfaceNames) {
-
     for (String interfaceName : interfaceNames) {
       InterfaceMapping interfaceMapping =
           interfaceApps.computeIfAbsent(interfaceName, k -> new InterfaceMapping(-1));
@@ -62,6 +61,11 @@ public class InterfaceAppsRaftRepository implements InterfaceAppsRepository {
   @Override
   public long getDataVersion() {
     return 0;
+  }
+
+  @Override
+  public Map<String, InterfaceMapping> allServiceMapping() {
+    return null;
   }
 
   @Override

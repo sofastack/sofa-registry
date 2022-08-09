@@ -21,6 +21,7 @@ import com.alipay.sofa.registry.server.session.metadata.MetadataCacheRegistry;
 import com.alipay.sofa.registry.store.api.repository.InterfaceAppsRepository;
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import org.junit.Assert;
@@ -34,7 +35,7 @@ import org.junit.Test;
 public class InterfaceAppsJdbcRepositoryTest extends BaseIntegrationTest {
   private InterfaceAppsRepository interfaceAppsJdbcRepository;
 
-  private MetadataCacheRegistry appRevisionCacheRegistry;
+  private MetadataCacheRegistry metadataCacheRegistry;
 
   @Before
   public void buildAppRevision() {
@@ -42,8 +43,8 @@ public class InterfaceAppsJdbcRepositoryTest extends BaseIntegrationTest {
         sessionApplicationContext.getBean(
             "interfaceAppsJdbcRepository", InterfaceAppsRepository.class);
 
-    appRevisionCacheRegistry =
-        sessionApplicationContext.getBean("appRevisionCacheRegistry", MetadataCacheRegistry.class);
+    metadataCacheRegistry =
+        sessionApplicationContext.getBean("metadataCacheRegistry", MetadataCacheRegistry.class);
   }
 
   @Test
@@ -57,11 +58,11 @@ public class InterfaceAppsJdbcRepositoryTest extends BaseIntegrationTest {
 
     HashSet<String> sets = new HashSet<>(services.subList(0, 50));
     for (String service : sets) {
-      interfaceAppsJdbcRepository.register(service, app);
+      interfaceAppsJdbcRepository.register(app, Collections.singleton(service));
     }
     interfaceAppsJdbcRepository.waitSynced();
     for (String service : services) {
-      InterfaceMapping appNames = appRevisionCacheRegistry.getAppNames(service);
+      InterfaceMapping appNames = metadataCacheRegistry.getAppNames(service);
       if (sets.contains(service)) {
         Assert.assertEquals(1, appNames.getApps().size());
         Assert.assertTrue(appNames.getApps().contains(app));
@@ -70,11 +71,11 @@ public class InterfaceAppsJdbcRepositoryTest extends BaseIntegrationTest {
       }
     }
     for (String service : services) {
-      interfaceAppsJdbcRepository.register(service, app);
+      interfaceAppsJdbcRepository.register(app, Collections.singleton(service));
     }
     interfaceAppsJdbcRepository.waitSynced();
     for (String service : services) {
-      InterfaceMapping appNames = appRevisionCacheRegistry.getAppNames(service);
+      InterfaceMapping appNames = metadataCacheRegistry.getAppNames(service);
 
       Assert.assertEquals(1, appNames.getApps().size());
       Assert.assertTrue(appNames.getApps().contains(app));

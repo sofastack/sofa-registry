@@ -22,6 +22,7 @@ import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.Tuple;
+import com.alipay.sofa.registry.common.model.appmeta.InterfaceMapping;
 import com.alipay.sofa.registry.common.model.sessionserver.PubSubDataInfoIdRequest;
 import com.alipay.sofa.registry.common.model.sessionserver.PubSubDataInfoIdResp;
 import com.alipay.sofa.registry.common.model.store.Publisher;
@@ -42,6 +43,8 @@ import com.alipay.sofa.registry.server.session.store.FetchPubSubDataInfoIdServic
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.session.store.Watchers;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
+import com.alipay.sofa.registry.store.api.repository.AppRevisionRepository;
+import com.alipay.sofa.registry.store.api.repository.InterfaceAppsRepository;
 import com.alipay.sofa.registry.task.MetricsableThreadPoolExecutor;
 import com.alipay.sofa.registry.util.OsUtils;
 import com.codahale.metrics.Gauge;
@@ -98,6 +101,10 @@ public class SessionDigestResource {
 
   @Autowired private NodeExchanger sessionConsoleExchanger;
 
+  @Autowired private AppRevisionRepository appRevisionRepository;
+
+  @Autowired private InterfaceAppsRepository interfaceAppsRepository;
+
   private static final String LOCAL_ADDRESS = NetUtil.getLocalAddress().getHostAddress();
 
   @Autowired private MetaServerService mataNodeService;
@@ -126,6 +133,20 @@ public class SessionDigestResource {
     MetricRegistry metrics = new MetricRegistry();
     metrics.register("pushSwitch", (Gauge<Map>) () -> getPushSwitch());
     ReporterUtils.startSlf4jReporter(60, metrics);
+  }
+
+  @GET
+  @Path("/metadata/allRevisionIds")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Set<String> allRevisionIds() {
+    return appRevisionRepository.allRevisionIds();
+  }
+
+  @GET
+  @Path("/metadata/allServiceMapping")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Map<String, InterfaceMapping> allServiceMapping() {
+    return interfaceAppsRepository.allServiceMapping();
   }
 
   @GET

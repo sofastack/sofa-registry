@@ -18,12 +18,14 @@ package com.alipay.sofa.registry.server.session.bootstrap;
 
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.task.MetricsableThreadPoolExecutor;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
 import com.alipay.sofa.registry.util.OsUtils;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -48,6 +50,8 @@ public class ExecutorManager {
   private final ThreadPoolExecutor zoneSdkExecutor;
   private final ThreadPoolExecutor clientManagerCheckExecutor;
   private final ThreadPoolExecutor scanExecutor;
+
+  @Autowired protected MetaServerService metaServerService;
 
   private final ThreadPoolExecutor appRevisionRegisterExecutor;
 

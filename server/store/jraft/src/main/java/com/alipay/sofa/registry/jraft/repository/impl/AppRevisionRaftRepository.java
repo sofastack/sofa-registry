@@ -74,6 +74,11 @@ public class AppRevisionRaftRepository implements AppRevisionRepository {
   }
 
   @Override
+  public Set<String> allRevisionIds() {
+    return null;
+  }
+
+  @Override
   public Collection<String> availableRevisions() {
     return Collections.EMPTY_LIST;
   }

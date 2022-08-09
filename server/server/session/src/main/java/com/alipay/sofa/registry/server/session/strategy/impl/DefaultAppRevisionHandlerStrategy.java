@@ -173,6 +173,18 @@ public class DefaultAppRevisionHandlerStrategy implements AppRevisionHandlerStra
   }
 
   /**
+   * Setter method for property <tt>metadataCacheRegistry</tt>.
+   *
+   * @param metadataCacheRegistry value to be assigned to property metadataCacheRegistry
+   */
+  @VisibleForTesting
+  public DefaultAppRevisionHandlerStrategy setMetadataCacheRegistry(
+      MetadataCacheRegistry metadataCacheRegistry) {
+    this.metadataCacheRegistry = metadataCacheRegistry;
+    return this;
+  }
+
+  /**
    * Setter method for property <tt>pushSwitchService</tt>.
    *
    * @param pushSwitchService value to be assigned to property pushSwitchService

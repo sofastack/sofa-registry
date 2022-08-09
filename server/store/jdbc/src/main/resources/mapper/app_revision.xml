@@ -11,6 +11,7 @@
         <result property="clientVersion" column="client_version" javaType="java.lang.String" jdbcType="VARCHAR"/>
         <result property="baseParams" column="base_params" javaType="java.lang.String" jdbcType="LONGVARCHAR"/>
         <result property="serviceParams" column="service_params" javaType="java.lang.String" jdbcType="LONGVARCHAR"/>
+        <result property="serviceParamsLarge" column="service_params_large" javaType="java.lang.String" jdbcType="LONGVARCHAR"/>
         <result property="gmtCreate" column="gmt_create" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
         <result property="gmtModify" column="gmt_modified" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
     </resultMap>
@@ -45,6 +46,7 @@
                client_version,
                base_params,
                service_params,
+               service_params_large,
                deleted,
                gmt_create,
                gmt_modified
@@ -56,6 +58,7 @@
                #{clientVersion},
                #{baseParams},
                #{serviceParams},
+               #{serviceParamsLarge},
                #{deleted},
                CURRENT_TIMESTAMP,
                CURRENT_TIMESTAMP

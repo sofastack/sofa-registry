@@ -58,6 +58,7 @@ public class AppRevisionRepositoryTest extends AbstractH2DbTestBase {
 
   private List<AppRevision> appRevisionList;
 
+  private static final Integer APP_REVISION_SIZE = 100;
   private Set<String> dataCenters = Sets.newHashSet();
 
   private static final Integer APP_REVISION_SIZE = 100;
@@ -66,8 +67,8 @@ public class AppRevisionRepositoryTest extends AbstractH2DbTestBase {
   public void buildAppRevision() {
     ((AppRevisionJdbcRepository) appRevisionJdbcRepository).init();
     ((InterfaceAppsJdbcRepository) interfaceAppsJdbcRepository).init();
-
     appRevisionList = buildAppRevisions(APP_REVISION_SIZE);
+
 
     dataCenters.add(defaultCommonConfig.getDefaultClusterId());
     appRevisionJdbcRepository.setDataCenters(dataCenters);

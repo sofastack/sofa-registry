@@ -46,7 +46,7 @@ public class AppRevisionContainer implements DbEntryContainer<AppRevisionDomain>
     return data.size();
   }
 
-  public Set<String> allRevisions() {
+  public Set<String> allRevisionIds() {
     return data.keySet();
   }
 

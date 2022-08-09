@@ -46,6 +46,8 @@ public class AppRevisionDomain implements DbEntry {
   /** service_params */
   private String serviceParams;
 
+  private String serviceParamsLarge;
+
   /** create time */
   private Date gmtCreate;
 
@@ -254,5 +256,13 @@ public class AppRevisionDomain implements DbEntry {
         + ", deleted="
         + deleted
         + '}';
+  }
+
+  public String getServiceParamsLarge() {
+    return serviceParamsLarge;
+  }
+
+  public void setServiceParamsLarge(String serviceParamsLarge) {
+    this.serviceParamsLarge = serviceParamsLarge;
   }
 }

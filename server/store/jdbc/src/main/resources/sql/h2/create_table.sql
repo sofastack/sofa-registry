@@ -6,6 +6,7 @@ create table APP_REVISION (
   app_name varchar(128) not null,
   base_params text default null,
   service_params text default null,
+  service_params_large mediumtext default null,
   gmt_create timestamp not null,
   gmt_modified timestamp not null,
   client_version varchar(512) default null,

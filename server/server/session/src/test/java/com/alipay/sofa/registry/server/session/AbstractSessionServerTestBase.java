@@ -86,14 +86,7 @@ public class AbstractSessionServerTestBase extends AbstractTestBase {
     field.set(null, newValue);
   }
 
-  protected static void waitConditionUntilTimeOut(
-      BooleanSupplier booleanSupplier, int waitTimeMilli)
-      throws TimeoutException, InterruptedException {
-
-    waitConditionUntilTimeOut(booleanSupplier, waitTimeMilli, 2);
-  }
-
-  public List<AppRevision> buildAppRevisions(int size) {
+  public List<AppRevision> buildAppRevisions(int size, String itfPrefix) {
     List<AppRevision> appRevisionList = new ArrayList<>();
     for (int i = 1; i <= size; i++) {
       long l = System.currentTimeMillis();
@@ -115,10 +108,10 @@ public class AbstractSessionServerTestBase extends AbstractTestBase {
       Map<String, AppRevisionInterface> interfaceMap = Maps.newHashMap();
       String dataInfo1 =
           DataInfo.toDataInfoId(
-              "func1" + suffix, ValueConstants.DEFAULT_GROUP, ValueConstants.DEFAULT_INSTANCE_ID);
+                  itfPrefix + "func1" + suffix, ValueConstants.DEFAULT_GROUP, ValueConstants.DEFAULT_INSTANCE_ID);
       String dataInfo2 =
           DataInfo.toDataInfoId(
-              "func2" + suffix, ValueConstants.DEFAULT_GROUP, ValueConstants.DEFAULT_INSTANCE_ID);
+                  itfPrefix + "func2" + suffix, ValueConstants.DEFAULT_GROUP, ValueConstants.DEFAULT_INSTANCE_ID);
 
       AppRevisionInterface inf1 = new AppRevisionInterface();
       AppRevisionInterface inf2 = new AppRevisionInterface();
@@ -139,6 +132,13 @@ public class AbstractSessionServerTestBase extends AbstractTestBase {
       appRevisionList.add(appRevision);
     }
     return appRevisionList;
+  }
+
+  protected static void waitConditionUntilTimeOut(
+      BooleanSupplier booleanSupplier, int waitTimeMilli)
+      throws TimeoutException, InterruptedException {
+
+    waitConditionUntilTimeOut(booleanSupplier, waitTimeMilli, 2);
   }
 
   protected static void waitConditionUntilTimeOut(
@@ -696,46 +696,6 @@ public class AbstractSessionServerTestBase extends AbstractTestBase {
     }
   }
 
-  public static class InMemoryProvideDataRepository implements ProvideDataRepository {
-
-    private Map<String, PersistenceData> localRepo = new ConcurrentHashMap<>();
-
-    @Override
-    public boolean put(PersistenceData persistenceData) {
-      localRepo.put(PersistenceDataBuilder.getDataInfoId(persistenceData), persistenceData);
-      return true;
-    }
-
-    @Override
-    public boolean put(PersistenceData data, long expectVersion) {
-      PersistenceData exist = localRepo.get(PersistenceDataBuilder.getDataInfoId(data));
-      if (exist == null) {
-        localRepo.put(PersistenceDataBuilder.getDataInfoId(data), data);
-        return true;
-      } else if (exist.getVersion() == expectVersion) {
-        localRepo.put(PersistenceDataBuilder.getDataInfoId(data), data);
-        return true;
-      }
-      return false;
-    }
-
-    @Override
-    public PersistenceData get(String key) {
-      return localRepo.get(key);
-    }
-
-    @Override
-    public boolean remove(String key, long version) {
-      PersistenceData remove = localRepo.remove(key);
-      return remove != null;
-    }
-
-    @Override
-    public Map<String, PersistenceData> getAll() {
-      return Maps.newHashMap(localRepo);
-    }
-  }
-
   public static class InMemoryAppRevisionRepository implements AppRevisionRepository {
 
     private static final Map<String, AppRevision> revisions = Maps.newConcurrentMap();
@@ -816,6 +776,11 @@ public class AbstractSessionServerTestBase extends AbstractTestBase {
       }
       return countMap;
     }
+
+    @Override
+    public Set<String> allRevisionIds() {
+      return revisions.keySet();
+    }
   }
 
   public static class InMemoryInterfaceAppsRepository implements InterfaceAppsRepository {
@@ -850,6 +815,11 @@ public class AbstractSessionServerTestBase extends AbstractTestBase {
     @Override
     public long getDataVersion() {
       return 0;
+    }
+
+    @Override
+    public Map<String, InterfaceMapping> allServiceMapping() {
+      return Maps.newHashMap(mapping);
     }
   }
 }

@@ -135,6 +135,7 @@ public class MetadataCacheRegistry {
 
           if (success == null || !success) {
             String revision = entry.getKey();
+            LOG.info("register fail, retry ro register revision:{}", revision);
             register(registers.get(revision));
           }
         } catch (Throwable throwable) {

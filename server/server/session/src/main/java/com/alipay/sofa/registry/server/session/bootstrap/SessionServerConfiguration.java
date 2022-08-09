@@ -819,6 +819,15 @@ public class SessionServerConfiguration {
     }
 
     @Bean
+    public FetchSystemPropertyService appRevisionWriteSwitchService(
+        SystemPropertyProcessorManager systemPropertyProcessorManager) {
+      AppRevisionWriteSwitchService appRevisionWriteSwitchService =
+          new AppRevisionWriteSwitchService();
+      systemPropertyProcessorManager.addSystemDataProcessor(appRevisionWriteSwitchService);
+      return appRevisionWriteSwitchService;
+    }
+
+    @Bean
     public FetchSystemPropertyService fetchShutdownService(
         SystemPropertyProcessorManager systemPropertyProcessorManager) {
       FetchShutdownService fetchShutdownService = new FetchShutdownService();

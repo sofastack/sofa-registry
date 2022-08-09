@@ -16,10 +16,23 @@
  */
 package com.alipay.sofa.registry.server.meta.resource;
 
+import com.alipay.sofa.registry.common.model.Node;
+import com.alipay.sofa.registry.common.model.console.PersistenceData;
+import com.alipay.sofa.registry.common.model.console.PersistenceDataBuilder;
+import com.alipay.sofa.registry.common.model.constants.ValueConstants;
+import com.alipay.sofa.registry.common.model.metaserver.ProvideDataChangeEvent;
 import com.alipay.sofa.registry.core.model.Result;
+import com.alipay.sofa.registry.jdbc.convertor.AppRevisionDomainConvertor;
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.cleaner.AppRevisionCleaner;
 import com.alipay.sofa.registry.server.meta.cleaner.InterfaceAppsIndexCleaner;
+import com.alipay.sofa.registry.server.meta.provide.data.DefaultProvideDataNotifier;
+import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataService;
 import com.alipay.sofa.registry.server.meta.resource.filter.LeaderAwareRestController;
+import com.alipay.sofa.registry.util.JsonUtils;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Sets;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,9 +41,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 @LeaderAwareRestController
 public class MetaCenterResource {
 
+  private static final Logger DB_LOGGER =
+      LoggerFactory.getLogger(MetaCenterResource.class, "[DBService]");
+
   @Autowired private InterfaceAppsIndexCleaner interfaceAppsIndexCleaner;
 
   @Autowired private AppRevisionCleaner appRevisionCleaner;
+
+  @Autowired ProvideDataService provideDataService;
+
+  @Autowired DefaultProvideDataNotifier provideDataNotifier;
 
   @PUT
   @Path("interfaceAppsIndex/renew")
@@ -59,6 +79,50 @@ public class MetaCenterResource {
 
   MetaCenterResource setInterfaceAppsIndexCleaner(InterfaceAppsIndexCleaner cleaner) {
     interfaceAppsIndexCleaner = cleaner;
+    return this;
+  }
+
+  @PUT
+  @Path("appRevision/writeSwitch")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  public Result setAppRevisionWriteSwitch(AppRevisionDomainConvertor.EnableConfig enableConfig) {
+    PersistenceData persistenceData =
+        PersistenceDataBuilder.createPersistenceData(
+            ValueConstants.APP_REVISION_WRITE_SWITCH_DATA_ID,
+            JsonUtils.writeValueAsString(enableConfig));
+    Result result = new Result();
+    boolean ret;
+    try {
+      ret = provideDataService.saveProvideData(persistenceData);
+      DB_LOGGER.info("app revision write switch {} to DB result {}", enableConfig, ret);
+    } catch (Throwable e) {
+      DB_LOGGER.error("app revision write switch {} to DB result error", enableConfig, e);
+      result.setSuccess(false);
+      result.setMessage(e.getMessage());
+      return result;
+    }
+    if (ret) {
+      ProvideDataChangeEvent provideDataChangeEvent =
+          new ProvideDataChangeEvent(
+              ValueConstants.APP_REVISION_WRITE_SWITCH_DATA_ID,
+              persistenceData.getVersion(),
+              Sets.newHashSet(Node.NodeType.SESSION));
+      provideDataNotifier.notifyProvideDataChange(provideDataChangeEvent);
+    }
+    result.setSuccess(ret);
+    return result;
+  }
+
+  @VisibleForTesting
+  public MetaCenterResource setProvideDataNotifier(DefaultProvideDataNotifier provideDataNotifier) {
+    this.provideDataNotifier = provideDataNotifier;
+    return this;
+  }
+
+  @VisibleForTesting
+  public MetaCenterResource setProvideDataService(ProvideDataService provideDataService) {
+    this.provideDataService = provideDataService;
     return this;
   }
 }
