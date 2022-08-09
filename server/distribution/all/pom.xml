@@ -72,6 +72,7 @@
                             <descriptors>
                                 <descriptor>distribution-all.xml</descriptor>
                             </descriptors>
+                            <tarLongFileMode>posix</tarLongFileMode>
                         </configuration>
                     </execution>
                 </executions>
