@@ -136,14 +136,14 @@ public class SessionDigestResource {
   }
 
   @GET
-  @Path("/data/queryDetail")
+  @Path("/metadata/allRevisionIds")
   @Produces(MediaType.APPLICATION_JSON)
   public Set<String> allRevisionIds() {
     return appRevisionRepository.allRevisionIds();
   }
 
   @GET
-  @Path("/data/queryDetail")
+  @Path("/metadata/allServiceMapping")
   @Produces(MediaType.APPLICATION_JSON)
   public Map<String, InterfaceMapping> allServiceMapping() {
     return interfaceAppsRepository.allServiceMapping();
