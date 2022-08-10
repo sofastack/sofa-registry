@@ -6,7 +6,11 @@
 
     <groupId>com.alipay.sofa</groupId>
     <artifactId>registry-client-all</artifactId>
+<<<<<<< HEAD
     <version>6.2.0-SNAPSHOT</version>
+=======
+    <version>6.1.6</version>
+>>>>>>> sofastack/master
 
     <name>${project.groupId}:${project.artifactId}</name>
     <url>http://github.com/alipay/sofa-registry</url>

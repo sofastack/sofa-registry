@@ -62,9 +62,6 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository, Recover
 
   private static final Logger LOG = LoggerFactory.getLogger("METADATA-EXCHANGE", "[AppRevision]");
 
-  private static final Logger COUNT_LOG =
-      LoggerFactory.getLogger("METADATA-COUNT", "[AppRevision]");
-
   /** map: <revision, AppRevision> */
   private final LoadingCache<String, AppRevision> registry;
 

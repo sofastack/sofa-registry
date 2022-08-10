@@ -5,7 +5,11 @@
     <parent>
         <artifactId>registry-server</artifactId>
         <groupId>com.alipay.sofa</groupId>
+<<<<<<< HEAD
         <version>6.2.0-SNAPSHOT</version>
+=======
+        <version>6.1.6</version>
+>>>>>>> sofastack/master
     </parent>
     <modelVersion>4.0.0</modelVersion>
 

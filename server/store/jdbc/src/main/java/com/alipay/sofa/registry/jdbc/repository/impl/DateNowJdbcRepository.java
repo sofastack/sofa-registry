@@ -43,7 +43,7 @@ public class DateNowJdbcRepository implements DateNowRepository {
   private final DateTimeWatcher watcher = new DateTimeWatcher();
 
   @PostConstruct
-  private void init() {
+  public void init() {
     ConcurrentUtils.createDaemonThread(this.getClass().getSimpleName() + "WatchDog", watcher)
         .start();
   }
