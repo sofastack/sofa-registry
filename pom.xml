@@ -477,7 +477,7 @@
                         <ruleset>${main.user.dir}/ruleset.xml</ruleset>
                     </rulesets>
                     <excludes>
-                        <exclude>**/client/pb/*.*</exclude>
+                        <exclude>**/FixClassTypeResolver.java</exclude>
                     </excludes>
                     <failurePriority>2</failurePriority>
                 </configuration>
