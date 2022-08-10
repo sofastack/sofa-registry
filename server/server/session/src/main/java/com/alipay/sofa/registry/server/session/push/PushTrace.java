@@ -42,7 +42,6 @@ public final class PushTrace {
       Hack.hackLoggerDisruptor(LoggerFactory.getLogger("PUSH-TRACE"));
   private static final Logger SLOW_LOGGER =
       Hack.hackLoggerDisruptor(LoggerFactory.getLogger("PUSH-TRACE-SLOW"));
-  private static final int MAX_NTP_TIME_PRECISION_MILLIS = 200;
   private final SubDatum datum;
   final long pushCreateTimestamp = System.currentTimeMillis();
 
