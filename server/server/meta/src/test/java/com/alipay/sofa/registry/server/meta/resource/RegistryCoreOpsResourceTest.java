@@ -30,6 +30,7 @@ import com.alipay.sofa.registry.server.meta.lease.filter.RegistryForbiddenServer
 import com.alipay.sofa.registry.server.meta.provide.data.NodeOperatingService;
 import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataService;
 import com.alipay.sofa.registry.store.api.DBResponse;
+import com.alipay.sofa.registry.store.api.elector.AbstractLeaderElector.LeaderInfo;
 import com.alipay.sofa.registry.store.api.elector.LeaderElector;
 import org.junit.Assert;
 import org.junit.Before;
@@ -61,7 +62,7 @@ public class RegistryCoreOpsResourceTest extends AbstractMetaServerTestBase {
     MockitoAnnotations.initMocks(RegistryForbiddenServerManager.class);
     MockitoAnnotations.initMocks(NodeOperatingService.class);
 
-    when(leaderElector.getLeaderInfo().getLeader()).thenReturn("127.0.0.1");
+    when(leaderElector.getLeaderInfo()).thenReturn(leaderInfo);
 
     resource =
         new RegistryCoreOpsResource()

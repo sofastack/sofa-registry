@@ -22,7 +22,6 @@ import com.alipay.sofa.registry.jdbc.domain.InterfaceAppsIndexDomain;
 import com.alipay.sofa.registry.jdbc.informer.DbEntryContainer;
 import com.alipay.sofa.registry.util.TimestampUtil;
 import com.google.common.collect.Maps;
-
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
@@ -87,8 +86,8 @@ public class InterfaceAppsIndexContainer implements DbEntryContainer<InterfaceAp
     return multiData.keySet();
   }
 
-  public Map<String, InterfaceMapping> allServiceMapping() {
-    return Maps.newHashMap(data);
+  public Map<String, Map<String, InterfaceMapping>> allServiceMapping() {
+    return Maps.newHashMap(multiData);
   }
 
   @Override

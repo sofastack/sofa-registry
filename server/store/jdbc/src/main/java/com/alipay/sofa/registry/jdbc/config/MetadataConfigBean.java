@@ -75,36 +75,6 @@ public class MetadataConfigBean implements MetadataConfig {
   }
 
   /**
-   * Setter method for property <tt>interfaceAppsExecutorPoolSize</tt>.
-   *
-   * @param interfaceAppsExecutorPoolSize value to be assigned to property
-   *     interfaceAppsExecutorPoolSize
-   */
-  public void setInterfaceAppsExecutorPoolSize(int interfaceAppsExecutorPoolSize) {
-    this.interfaceAppsExecutorPoolSize = interfaceAppsExecutorPoolSize;
-  }
-
-  /**
-   * Setter method for property <tt>interfaceAppsExecutorQueueSize</tt>.
-   *
-   * @param interfaceAppsExecutorQueueSize value to be assigned to property
-   *     interfaceAppsExecutorQueueSize
-   */
-  public void setInterfaceAppsExecutorQueueSize(int interfaceAppsExecutorQueueSize) {
-    this.interfaceAppsExecutorQueueSize = interfaceAppsExecutorQueueSize;
-  }
-
-  /**
-   * Setter method for property <tt>clientManagerExecutorPoolSize</tt>.
-   *
-   * @param clientManagerExecutorPoolSize value to be assigned to property
-   *     clientManagerExecutorPoolSize
-   */
-  public void setClientManagerExecutorPoolSize(int clientManagerExecutorPoolSize) {
-    this.clientManagerExecutorPoolSize = clientManagerExecutorPoolSize;
-  }
-
-  /**
    * Setter method for property <tt>clientManagerExecutorQueueSize</tt>.
    *
    * @param clientManagerExecutorQueueSize value to be assigned to property
@@ -142,15 +112,5 @@ public class MetadataConfigBean implements MetadataConfig {
    */
   public void setClientManagerExecutorPoolSize(int clientManagerExecutorPoolSize) {
     this.clientManagerExecutorPoolSize = clientManagerExecutorPoolSize;
-  }
-
-  /**
-   * Setter method for property <tt>clientManagerExecutorQueueSize</tt>.
-   *
-   * @param clientManagerExecutorQueueSize value to be assigned to property
-   *     clientManagerExecutorQueueSize
-   */
-  public void setClientManagerExecutorQueueSize(int clientManagerExecutorQueueSize) {
-    this.clientManagerExecutorQueueSize = clientManagerExecutorQueueSize;
   }
 }

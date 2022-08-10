@@ -77,7 +77,8 @@ public class MetadataCacheRegistryTest extends AbstractSessionServerTestBase {
 
   @Before
   public void before() {
-    appRevisionList = buildAppRevisions(APP_REVISION_SIZE, "MetadataCacheRegistryTest-testRegister-");
+    appRevisionList =
+        buildAppRevisions(APP_REVISION_SIZE, "MetadataCacheRegistryTest-testRegister-");
     appRevisionRepository.setInterfaceAppsRepository(interfaceAppsRepository);
 
     when(executorManager.getAppRevisionRegisterExecutor()).thenReturn(EXECUTOR);

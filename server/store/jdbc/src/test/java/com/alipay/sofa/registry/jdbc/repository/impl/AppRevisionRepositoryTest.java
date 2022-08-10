@@ -35,7 +35,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-
 import org.glassfish.jersey.internal.guava.Sets;
 import org.junit.Assert;
 import org.junit.Before;
@@ -58,17 +57,14 @@ public class AppRevisionRepositoryTest extends AbstractH2DbTestBase {
 
   private List<AppRevision> appRevisionList;
 
-  private static final Integer APP_REVISION_SIZE = 100;
+  private static final int APP_REVISION_SIZE = 100;
   private Set<String> dataCenters = Sets.newHashSet();
-
-  private static final Integer APP_REVISION_SIZE = 100;
 
   @Before
   public void buildAppRevision() {
     ((AppRevisionJdbcRepository) appRevisionJdbcRepository).init();
     ((InterfaceAppsJdbcRepository) interfaceAppsJdbcRepository).init();
     appRevisionList = buildAppRevisions(APP_REVISION_SIZE);
-
 
     dataCenters.add(defaultCommonConfig.getDefaultClusterId());
     appRevisionJdbcRepository.setDataCenters(dataCenters);
@@ -120,7 +116,7 @@ public class AppRevisionRepositoryTest extends AbstractH2DbTestBase {
     queryAndCheck();
 
     LoadingCache<String, AppRevision> cache = repository.getRevisions();
-    Assert.assertEquals(cache.asMap().size(), APP_REVISION_SIZE.intValue());
+    Assert.assertEquals(cache.asMap().size(), APP_REVISION_SIZE);
 
     for (AppRevision appRevisionRegister : appRevisionList) {
       cache.invalidate(appRevisionRegister.getRevision());
@@ -134,7 +130,7 @@ public class AppRevisionRepositoryTest extends AbstractH2DbTestBase {
       Assert.assertEquals(appRevisionRegister.getAppName(), revision.getAppName());
     }
 
-    Assert.assertEquals(cache.asMap().size(), APP_REVISION_SIZE.intValue());
+    Assert.assertEquals(cache.asMap().size(), APP_REVISION_SIZE);
   }
 
   class HeartbeatRunner extends LoopRunnable {
@@ -169,7 +165,8 @@ public class AppRevisionRepositoryTest extends AbstractH2DbTestBase {
     for (AppRevision appRevision : appRevisionList) {
       boolean before = appRevisionJdbcRepository.heartbeat(appRevision.getRevision());
       Assert.assertTrue(before);
-      AppRevisionDomain query = appRevisionMapper.queryRevision(dataCenters, appRevision.getRevision());
+      AppRevisionDomain query =
+          appRevisionMapper.queryRevision(dataCenters, appRevision.getRevision());
       Assert.assertTrue(query != null);
     }
 
@@ -207,6 +204,6 @@ public class AppRevisionRepositoryTest extends AbstractH2DbTestBase {
     register();
     appRevisionJdbcRepository.waitSynced();
     Map<String, Integer> counts = appRevisionJdbcRepository.countByApp();
-    Assert.assertEquals(APP_REVISION_SIZE.intValue(), counts.size());
+    Assert.assertEquals(APP_REVISION_SIZE, counts.size());
   }
 }

@@ -33,24 +33,16 @@ import com.alipay.sofa.registry.store.api.meta.RecoverConfig;
 import com.alipay.sofa.registry.store.api.repository.InterfaceAppsRepository;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
-import com.alipay.sofa.registry.util.NamedThreadFactory;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.google.common.collect.Lists;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
@@ -78,8 +70,7 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository, Rec
 
   final Informer informer = new Informer();
 
-  public InterfaceAppsJdbcRepository() {
-  }
+  public InterfaceAppsJdbcRepository() {}
 
   public InterfaceAppsJdbcRepository(MetadataConfig metadataConfig) {
     this.metadataConfig = metadataConfig;
@@ -148,14 +139,12 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository, Rec
     try {
       for (Future future : futures) {
         future.get(2000, TimeUnit.MILLISECONDS);
-    }
+      }
     } catch (Throwable t) {
       LOG.error("register error, app:{}, interfaceNames:{}", appName, interfaceNames, t);
       throw new RuntimeException(
           StringFormatter.format(
-              "register error, app:{}, interfaceNames:{}, msg:{}",
-              appName,
-              interfaceNames));
+              "register error, app:{}, interfaceNames:{}, msg:{}", appName, interfaceNames));
     }
   }
 
@@ -211,7 +200,7 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository, Rec
   }
 
   @Override
-  public Map<String, InterfaceMapping> allServiceMapping() {
+  public Map<String, Map<String, InterfaceMapping>> allServiceMapping() {
     return informer.getContainer().allServiceMapping();
   }
 

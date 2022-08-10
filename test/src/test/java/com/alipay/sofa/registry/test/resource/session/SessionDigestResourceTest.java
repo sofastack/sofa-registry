@@ -80,7 +80,6 @@ public class SessionDigestResourceTest extends BaseIntegrationTest {
 
   protected MetadataCacheRegistry metadataCacheRegistry;
 
-
   @Before
   public void before() {
     appRevisionHandlerStrategy =
@@ -88,8 +87,7 @@ public class SessionDigestResourceTest extends BaseIntegrationTest {
             "appRevisionHandlerStrategy", AppRevisionHandlerStrategy.class);
 
     metadataCacheRegistry =
-            sessionApplicationContext.getBean(
-                    "metadataCacheRegistry", MetadataCacheRegistry.class);
+        sessionApplicationContext.getBean("metadataCacheRegistry", MetadataCacheRegistry.class);
   }
 
   @BeforeClass
@@ -139,10 +137,14 @@ public class SessionDigestResourceTest extends BaseIntegrationTest {
       Map<String, AppRevisionInterface> interfaceMap = Maps.newHashMap();
       String dataInfo1 =
           DataInfo.toDataInfoId(
-              "SessionDigestResourceTest-func1" + suffix, ValueConstants.DEFAULT_GROUP, ValueConstants.DEFAULT_INSTANCE_ID);
+              "SessionDigestResourceTest-func1" + suffix,
+              ValueConstants.DEFAULT_GROUP,
+              ValueConstants.DEFAULT_INSTANCE_ID);
       String dataInfo2 =
           DataInfo.toDataInfoId(
-              "SessionDigestResourceTest-func2" + suffix, ValueConstants.DEFAULT_GROUP, ValueConstants.DEFAULT_INSTANCE_ID);
+              "SessionDigestResourceTest-func2" + suffix,
+              ValueConstants.DEFAULT_GROUP,
+              ValueConstants.DEFAULT_INSTANCE_ID);
 
       AppRevisionInterface inf1 = new AppRevisionInterface();
       AppRevisionInterface inf2 = new AppRevisionInterface();

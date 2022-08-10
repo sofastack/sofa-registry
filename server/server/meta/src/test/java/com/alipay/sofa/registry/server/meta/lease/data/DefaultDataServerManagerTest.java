@@ -27,6 +27,8 @@ import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.monitor.data.DataServerStats;
 import com.alipay.sofa.registry.server.meta.slot.manager.SimpleSlotManager;
+
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 import org.assertj.core.util.Lists;
@@ -95,7 +97,8 @@ public class DefaultDataServerManagerTest extends AbstractMetaServerTestBase {
                 getDc(),
                 System.currentTimeMillis(),
                 SlotConfig.slotBasicInfo(),
-                slotStatuses)
+                slotStatuses,
+                Collections.EMPTY_MAP)
             .setSlotTable(slotTable);
     dataServerManager.onHeartbeat(heartbeat);
     List<DataServerStats> dataServerStats = dataServerManager.getDataServersStats();

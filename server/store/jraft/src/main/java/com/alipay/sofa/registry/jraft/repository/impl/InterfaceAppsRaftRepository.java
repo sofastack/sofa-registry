@@ -64,7 +64,7 @@ public class InterfaceAppsRaftRepository implements InterfaceAppsRepository {
   }
 
   @Override
-  public Map<String, InterfaceMapping> allServiceMapping() {
+  public Map<String, Map<String, InterfaceMapping>> allServiceMapping() {
     return null;
   }
 

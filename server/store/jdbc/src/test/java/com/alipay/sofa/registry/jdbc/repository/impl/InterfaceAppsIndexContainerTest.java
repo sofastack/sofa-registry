@@ -32,16 +32,20 @@ public class InterfaceAppsIndexContainerTest {
     domain2.setGmtCreate(new Timestamp(20));
     container.onEntry(domain1);
     container.onEntry(domain2);
-    Assert.assertTrue(container.containsName("dc","service1", "app1"));
-    Assert.assertTrue(container.containsName("dc","service1", "app2"));
+    Assert.assertTrue(container.containsName("dc", "service1", "app1"));
+    Assert.assertTrue(container.containsName("dc", "service1", "app2"));
 
     InterfaceAppsIndexDomain domain3 = new InterfaceAppsIndexDomain("dc", "service2", "app1");
     domain3.setGmtCreate(new Timestamp(30));
     Assert.assertEquals(2, container.getAppMapping("service1").get("dc").getApps().size());
     Assert.assertEquals(20000000, container.getAppMapping("service1").get("dc").getNanosVersion());
-    Assert.assertFalse(container.containsName(domain3.getDataCenter(), domain3.getInterfaceName(), domain3.getAppName()));
+    Assert.assertFalse(
+        container.containsName(
+            domain3.getDataCenter(), domain3.getInterfaceName(), domain3.getAppName()));
     container.onEntry(domain3);
-    Assert.assertTrue(container.containsName(domain3.getDataCenter(), domain3.getInterfaceName(), domain3.getAppName()));
+    Assert.assertTrue(
+        container.containsName(
+            domain3.getDataCenter(), domain3.getInterfaceName(), domain3.getAppName()));
     Assert.assertEquals(20000000, container.getAppMapping("service1").get("dc").getNanosVersion());
     Assert.assertEquals(30000000, container.getAppMapping("service2").get("dc").getNanosVersion());
     domain3.setReference(false);

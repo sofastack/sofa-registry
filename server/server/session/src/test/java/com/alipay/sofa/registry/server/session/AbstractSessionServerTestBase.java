@@ -108,10 +108,14 @@ public class AbstractSessionServerTestBase extends AbstractTestBase {
       Map<String, AppRevisionInterface> interfaceMap = Maps.newHashMap();
       String dataInfo1 =
           DataInfo.toDataInfoId(
-                  itfPrefix + "func1" + suffix, ValueConstants.DEFAULT_GROUP, ValueConstants.DEFAULT_INSTANCE_ID);
+              itfPrefix + "func1" + suffix,
+              ValueConstants.DEFAULT_GROUP,
+              ValueConstants.DEFAULT_INSTANCE_ID);
       String dataInfo2 =
           DataInfo.toDataInfoId(
-                  itfPrefix + "func2" + suffix, ValueConstants.DEFAULT_GROUP, ValueConstants.DEFAULT_INSTANCE_ID);
+              itfPrefix + "func2" + suffix,
+              ValueConstants.DEFAULT_GROUP,
+              ValueConstants.DEFAULT_INSTANCE_ID);
 
       AppRevisionInterface inf1 = new AppRevisionInterface();
       AppRevisionInterface inf2 = new AppRevisionInterface();
@@ -818,7 +822,7 @@ public class AbstractSessionServerTestBase extends AbstractTestBase {
     }
 
     @Override
-    public Map<String, InterfaceMapping> allServiceMapping() {
+    public Map<String, Map<String, InterfaceMapping>> allServiceMapping() {
       return Maps.newHashMap(mapping);
     }
   }

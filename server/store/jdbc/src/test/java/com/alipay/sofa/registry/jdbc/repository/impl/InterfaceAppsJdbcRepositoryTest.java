@@ -31,13 +31,12 @@ import com.alipay.sofa.registry.store.api.config.DefaultCommonConfig;
 import com.alipay.sofa.registry.store.api.repository.InterfaceAppsRepository;
 import com.alipay.sofa.registry.util.TimestampUtil;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import com.google.common.collect.Sets;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -94,14 +93,17 @@ public class InterfaceAppsJdbcRepositoryTest extends AbstractH2DbTestBase {
       InterfaceMapping mapping = impl.getAppNames(interfaceName);
       InterfaceAppsIndexDomain domain =
           new InterfaceAppsIndexDomain(
-                  defaultCommonConfig.getDefaultClusterId(), interfaceName, mapping.getApps().stream().findFirst().get());
+              defaultCommonConfig.getDefaultClusterId(),
+              interfaceName,
+              mapping.getApps().stream().findFirst().get());
       domain.setGmtCreate(TimestampUtil.fromNanosLong(mapping.getNanosVersion() - 1));
       c1.onEntry(domain);
     }
     impl.informer.preList(impl.informer.getContainer());
     Assert.assertEquals(conflictCount.getAndSet(0), 0);
     impl.informer.preList(c1);
-    Assert.assertEquals(conflictCount.getAndSet(0), impl.informer.getContainer().interfaces().size());
+    Assert.assertEquals(
+        conflictCount.getAndSet(0), impl.informer.getContainer().interfaces().size());
     impl.getDataVersion();
   }
 

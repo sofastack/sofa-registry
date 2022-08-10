@@ -21,12 +21,11 @@ import com.alipay.sofa.registry.common.model.console.PersistenceDataBuilder;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.jdbc.AbstractH2DbTestBase;
 import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
-import org.junit.Assert;
-import org.junit.Test;
-
-import javax.annotation.Resource;
 import java.sql.SQLException;
 import java.util.Map;
+import javax.annotation.Resource;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class ProvideDataJdbcRepositoryTest extends AbstractH2DbTestBase {
 

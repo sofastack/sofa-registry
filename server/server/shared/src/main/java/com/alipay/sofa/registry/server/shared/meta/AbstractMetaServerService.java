@@ -56,9 +56,9 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
     implements MetaServerService {
   protected final Logger RENEWER_LOGGER = LoggerFactory.getLogger("META-RENEW");
 
-  @Autowired protected MetaLeaderExchanger metaLeaderExchanger;
+  @Autowired private MetaLeaderExchanger metaLeaderExchanger;
 
-  @Autowired protected CommonConfig commonConfig;
+  @Autowired private CommonConfig commonConfig;
 
   protected volatile State state = State.NULL;
 
@@ -334,7 +334,11 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
 
   public String getMetaServerLeader() {
     String localDataCenter = commonConfig.getLocalDataCenter();
-    return metaLeaderExchanger.getLeader(localDataCenter).getLeader();
+    LeaderInfo leader = metaLeaderExchanger.getLeader(localDataCenter);
+    if (leader == null) {
+      throw new RuntimeException("localDataCenter meta leader is null.");
+    }
+    return leader.getLeader();
   }
 
   public List<String> getSessionServerList(String zonename) {
@@ -402,8 +406,18 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
    *
    * @param metaLeaderExchanger value to be assigned to property metaLeaderExchanger
    */
-  @VisibleForTesting
-  public void setMetaLeaderExchanger(MetaLeaderExchanger metaLeaderExchanger) {
+  public AbstractMetaServerService setMetaLeaderExchanger(MetaLeaderExchanger metaLeaderExchanger) {
     this.metaLeaderExchanger = metaLeaderExchanger;
+    return this;
+  }
+
+  /**
+   * Setter method for property <tt>commonConfig</tt>.
+   *
+   * @param commonConfig value to be assigned to property commonConfig
+   */
+  public AbstractMetaServerService setCommonConfig(CommonConfig commonConfig) {
+    this.commonConfig = commonConfig;
+    return this;
   }
 }
