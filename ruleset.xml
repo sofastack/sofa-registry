@@ -22,4 +22,7 @@
     <rule ref="rulesets/java/ali-orm.xml"/>
     <rule ref="rulesets/java/ali-other.xml"/>
     <rule ref="rulesets/java/ali-set.xml"/>
+    <rule ref="rulesets/java/unusedcode.xml">
+        <priority>2</priority>
+    </rule>
 </ruleset>
