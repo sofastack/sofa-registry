@@ -6,11 +6,7 @@
     <parent>
         <groupId>com.alipay.sofa</groupId>
         <artifactId>registry-server-parent</artifactId>
-<<<<<<< HEAD
         <version>6.2.0-SNAPSHOT</version>
-=======
-        <version>6.1.6</version>
->>>>>>> sofastack/master
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>

@@ -41,6 +41,7 @@ import com.alipay.sofa.registry.server.meta.monitor.session.SessionMessageListen
 import com.alipay.sofa.registry.server.meta.multi.cluster.DefaultMultiClusterSlotTableSyncer.RemoteClusterSlotState;
 import com.alipay.sofa.registry.server.meta.multi.cluster.MultiClusterSlotTableSyncer;
 import com.alipay.sofa.registry.server.shared.slot.SlotTableUtils;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import java.util.List;
 import java.util.Map;
@@ -363,6 +364,7 @@ public class HeartbeatRequestHandler extends BaseMetaServerHandler<HeartbeatRequ
    * @param currentDcMetaServer the current dc meta server
    * @return the set current dc meta server
    */
+  @VisibleForTesting
   public HeartbeatRequestHandler setCurrentDcMetaServer(
       DefaultCurrentDcMetaServer currentDcMetaServer) {
     this.currentDcMetaServer = currentDcMetaServer;
@@ -375,6 +377,7 @@ public class HeartbeatRequestHandler extends BaseMetaServerHandler<HeartbeatRequ
    * @param nodeConfig the node config
    * @return the set node config
    */
+  @VisibleForTesting
   public HeartbeatRequestHandler setNodeConfig(NodeConfig nodeConfig) {
     this.nodeConfig = nodeConfig;
     return this;
@@ -386,8 +389,21 @@ public class HeartbeatRequestHandler extends BaseMetaServerHandler<HeartbeatRequ
    * @param metaLeaderElector the meta leader elector
    * @return the set meta leader elector
    */
+  @VisibleForTesting
   public HeartbeatRequestHandler setMetaLeaderElector(MetaLeaderService metaLeaderElector) {
     this.metaLeaderService = metaLeaderElector;
+    return this;
+  }
+
+  /**
+   * Setter method for property <tt>multiClusterSlotTableSyncer</tt>.
+   *
+   * @param multiClusterSlotTableSyncer value to be assigned to property multiClusterSlotTableSyncer
+   */
+  @VisibleForTesting
+  public HeartbeatRequestHandler setMultiClusterSlotTableSyncer(
+      MultiClusterSlotTableSyncer multiClusterSlotTableSyncer) {
+    this.multiClusterSlotTableSyncer = multiClusterSlotTableSyncer;
     return this;
   }
 }

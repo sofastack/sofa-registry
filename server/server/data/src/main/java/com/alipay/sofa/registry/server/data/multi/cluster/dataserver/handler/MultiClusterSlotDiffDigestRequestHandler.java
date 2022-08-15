@@ -56,7 +56,7 @@ public class MultiClusterSlotDiffDigestRequestHandler extends BaseSlotDiffDigest
   }
 
   private boolean doCheck(DataSlotDiffDigestRequest request) {
-    if (!slotAccessor.isLeader(dataServerConfig.getLocalDataCenter(), request.getSlotId())) {
+    if (!slotManager.isLeader(dataServerConfig.getLocalDataCenter(), request.getSlotId())) {
       LOGGER.warn(
           "sync slot request from {}, not leader of {}",
           request.getLocalDataCenter(),
@@ -65,7 +65,7 @@ public class MultiClusterSlotDiffDigestRequestHandler extends BaseSlotDiffDigest
     }
 
     SlotAccess slotAccess =
-        slotAccessor.checkSlotAccess(
+        slotManager.checkSlotAccess(
             dataServerConfig.getLocalDataCenter(),
             request.getSlotId(),
             request.getSlotTableEpoch(),

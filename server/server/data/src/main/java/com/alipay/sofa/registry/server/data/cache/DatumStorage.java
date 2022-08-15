@@ -101,4 +101,10 @@ public interface DatumStorage {
   DatumVersion updateVersion(String dataCenter, String dataInfoId);
 
   void foreach(String dataCenter, int slotId, BiConsumer<String, PublisherGroup> f);
+
+  boolean removeStorage(String dataCenter);
+
+  DatumVersion clearPublishers(String dataCenter, String dataInfoId);
+
+  Map<String, DatumVersion> clearGroupPublishers(String dataCenter, String group);
 }

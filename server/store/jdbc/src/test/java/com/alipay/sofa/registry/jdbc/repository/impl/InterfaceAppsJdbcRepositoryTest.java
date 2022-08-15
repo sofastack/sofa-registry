@@ -120,7 +120,7 @@ public class InterfaceAppsJdbcRepositoryTest extends AbstractH2DbTestBase {
     DefaultCommonConfig defaultCommonConfig = mock(DefaultCommonConfig.class);
     when(defaultCommonConfig.getClusterId(anyString())).thenReturn("DEFAULT_DATACENTER");
 
-    InterfaceAppsJdbcRepository impl = new InterfaceAppsJdbcRepository(metadataConfig);
+    InterfaceAppsJdbcRepository impl = new InterfaceAppsJdbcRepository();
     impl.setInterfaceAppsIndexMapper(mapper).setDefaultCommonConfig(defaultCommonConfig);
 
     String app1 = "app1";
@@ -153,7 +153,7 @@ public class InterfaceAppsJdbcRepositoryTest extends AbstractH2DbTestBase {
     DefaultCommonConfig defaultCommonConfig = mock(DefaultCommonConfig.class);
     when(defaultCommonConfig.getClusterId(anyString())).thenReturn("DEFAULT_DATACENTER");
 
-    InterfaceAppsJdbcRepository impl = new InterfaceAppsJdbcRepository(metadataConfig);
+    InterfaceAppsJdbcRepository impl = new InterfaceAppsJdbcRepository();
     impl.setInterfaceAppsIndexMapper(mapper).setDefaultCommonConfig(defaultCommonConfig);
 
     String app1 = "app1";

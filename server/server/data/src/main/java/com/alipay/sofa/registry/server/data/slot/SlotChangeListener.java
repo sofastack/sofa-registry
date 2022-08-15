@@ -23,8 +23,7 @@ import com.alipay.sofa.registry.common.model.slot.Slot;
  * @version v 0.1 2020-10-30 10:46 yuzhi.lyz Exp $
  */
 public interface SlotChangeListener {
-  void onSlotAdd(
-      String dataCenter, long slotTableEpoch, int slotId, long slotLeaderEpoch, Slot.Role role);
+  void onSlotAdd(String dataCenter, int slotId, Slot.Role role);
 
   void onSlotRemove(String dataCenter, int slotId, Slot.Role role);
 }

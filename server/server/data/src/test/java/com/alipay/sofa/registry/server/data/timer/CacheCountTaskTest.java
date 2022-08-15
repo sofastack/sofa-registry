@@ -34,7 +34,7 @@ public class CacheCountTaskTest {
     // npe
     Assert.assertFalse(task.count());
 
-    DatumStorageDelegate datumStorageDelegate = TestBaseUtils.newLocalDatumCache("testDc", true);
+    DatumStorageDelegate datumStorageDelegate = TestBaseUtils.newLocalDatumDelegate("testDc", true);
     task.setDatumCache(datumStorageDelegate);
 
     cfg.setCacheCountIntervalSecs(0);
@@ -45,7 +45,7 @@ public class CacheCountTaskTest {
 
     cfg.setCacheCountIntervalSecs(1);
     Publisher pub = TestBaseUtils.createTestPublisher("testDataId");
-    datumStorageDelegate.getLocalDatumStorage().put(pub);
+    datumStorageDelegate.getLocalDatumStorage().putPublisher("testDc", pub);
     // has item
     Assert.assertTrue(task.count());
     Assert.assertTrue(task.init());

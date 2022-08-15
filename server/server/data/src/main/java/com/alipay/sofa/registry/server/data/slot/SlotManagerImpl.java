@@ -298,7 +298,7 @@ public final class SlotManagerImpl implements SlotManager {
   private void updateSlotState(SlotTable updating) {
     for (Slot s : updating.getSlots()) {
       SlotState state = slotTableStates.slotStates.get(s.getId());
-      listenAddUpdate(updating.getEpoch(), s);
+      listenAddUpdate(s);
       if (state != null) {
         state.update(s);
       } else {
@@ -601,12 +601,6 @@ public final class SlotManagerImpl implements SlotManager {
     final Map<String, Map<String, DatumSummary>> datumSummary =
         Maps.newHashMapWithExpectedSize(doSyncSet.size());
 
-    if (CollectionUtils.isEmpty(datumSummary)) {
-      for (String sessionIp : sessions) {
-        datumSummary.put(sessionIp, Collections.emptyMap());
-      }
-      return;
-    }
     datumStorageDelegate.foreach(
         dataServerConfig.getLocalDataCenter(),
         slotState.slotId,
@@ -948,17 +942,12 @@ public final class SlotManagerImpl implements SlotManager {
     return localIsLeader(s) ? Slot.Role.Leader : Slot.Role.Follower;
   }
 
-  private void listenAddUpdate(long slotTableEpoch, Slot s) {
+  private void listenAddUpdate(Slot s) {
     slotChangeListenerManager
         .localUpdateListeners()
         .forEach(
             listener ->
-                listener.onSlotAdd(
-                    dataServerConfig.getLocalDataCenter(),
-                    slotTableEpoch,
-                    s.getId(),
-                    s.getLeaderEpoch(),
-                    getRole(s)));
+                listener.onSlotAdd(dataServerConfig.getLocalDataCenter(), s.getId(), getRole(s)));
   }
 
   private void listenRemoveUpdate(long slotTableEpoch, Slot s) {
@@ -992,6 +981,36 @@ public final class SlotManagerImpl implements SlotManager {
   @VisibleForTesting
   void setSessionLeaseManager(SessionLeaseManager sessionLeaseManager) {
     this.sessionLeaseManager = sessionLeaseManager;
+  }
+
+  /**
+   * Setter method for property <tt>datumStorageDelegate</tt>.
+   *
+   * @param datumStorageDelegate value to be assigned to property datumStorageDelegate
+   */
+  @VisibleForTesting
+  public void setDatumStorageDelegate(DatumStorageDelegate datumStorageDelegate) {
+    this.datumStorageDelegate = datumStorageDelegate;
+  }
+
+  /**
+   * Setter method for property <tt>syncSlotAcceptAllManager</tt>.
+   *
+   * @param syncSlotAcceptAllManager value to be assigned to property syncSlotAcceptAllManager
+   */
+  @VisibleForTesting
+  public void setSyncSlotAcceptAllManager(SyncSlotAcceptorManager syncSlotAcceptAllManager) {
+    this.syncSlotAcceptAllManager = syncSlotAcceptAllManager;
+  }
+
+  /**
+   * Setter method for property <tt>slotChangeListenerManager</tt>.
+   *
+   * @param slotChangeListenerManager value to be assigned to property slotChangeListenerManager
+   */
+  @VisibleForTesting
+  public void setSlotChangeListenerManager(SlotChangeListenerManager slotChangeListenerManager) {
+    this.slotChangeListenerManager = slotChangeListenerManager;
   }
 
   @VisibleForTesting

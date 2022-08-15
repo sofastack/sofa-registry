@@ -29,6 +29,7 @@ import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfigBean;
 import com.alipay.sofa.registry.server.session.providedata.FetchStopPushService;
 import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
+import com.alipay.sofa.registry.server.shared.config.CommonConfig;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.net.InetSocketAddress;

@@ -129,23 +129,38 @@ public class MetaServerServiceImpl extends AbstractMetaServerService<BaseHeartBe
   }
 
   @VisibleForTesting
-  void setSlotManager(SlotManager slotManager) {
+  MetaServerServiceImpl setSlotManager(SlotManager slotManager) {
     this.slotManager = slotManager;
+    return this;
   }
 
   @VisibleForTesting
-  void setDataNodeExchanger(DataNodeExchanger dataNodeExchanger) {
+  MetaServerServiceImpl setDataNodeExchanger(DataNodeExchanger dataNodeExchanger) {
     this.dataNodeExchanger = dataNodeExchanger;
+    return this;
   }
 
   @VisibleForTesting
-  void setSessionNodeExchanger(SessionNodeExchanger sessionNodeExchanger) {
+  MetaServerServiceImpl setSessionNodeExchanger(SessionNodeExchanger sessionNodeExchanger) {
     this.sessionNodeExchanger = sessionNodeExchanger;
+    return this;
   }
 
   @VisibleForTesting
-  void setDataServerConfig(DataServerConfig dataServerConfig) {
+  MetaServerServiceImpl setDataServerConfig(DataServerConfig dataServerConfig) {
     this.dataServerConfig = dataServerConfig;
+    return this;
+  }
+
+  /**
+   * Setter method for property <tt>multiClusterSlotManager</tt>.
+   *
+   * @param multiClusterSlotManager value to be assigned to property multiClusterSlotManager
+   */
+  MetaServerServiceImpl setMultiClusterSlotManager(
+      MultiClusterSlotManager multiClusterSlotManager) {
+    this.multiClusterSlotManager = multiClusterSlotManager;
+    return this;
   }
 
   @Override

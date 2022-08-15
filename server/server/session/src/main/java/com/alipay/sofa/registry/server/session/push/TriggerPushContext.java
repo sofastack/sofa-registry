@@ -17,8 +17,8 @@
 package com.alipay.sofa.registry.server.session.push;
 
 import com.alipay.sofa.registry.common.model.TraceTimes;
+import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.alipay.sofa.registry.util.StringFormatter;
-import com.google.common.collect.Sets;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -70,7 +70,7 @@ public final class TriggerPushContext {
     this.lastTraceTimes = traceTimes;
   }
 
-  public Set<String> dataCenters() {
+  public synchronized Set<String> dataCenters() {
     if (CollectionUtils.isEmpty(expectDatumVersion)) {
       return Collections.emptySet();
     }
@@ -94,11 +94,11 @@ public final class TriggerPushContext {
     }
   }
 
-  public Map<String, Long> getExpectDatumVersion() {
+  public synchronized Map<String, Long> getExpectDatumVersion() {
     return expectDatumVersion;
   }
 
-  public void setExpectDatumVersion(Map<String, Long> expectDatumVersion) {
+  public synchronized void setExpectDatumVersion(Map<String, Long> expectDatumVersion) {
     this.expectDatumVersion = expectDatumVersion;
   }
 
@@ -121,17 +121,15 @@ public final class TriggerPushContext {
   /**
    * return true when this all datacenter version are smaller than changeCtx
    *
-   * @param changeCtx
+   * @param existCtx
    * @return
    */
-  public boolean smallerThan(TriggerPushContext changeCtx) {
-    Set<String> difference =
-        Sets.difference(this.expectDatumVersion.keySet(), changeCtx.expectDatumVersion.keySet());
-    if (difference.size() > 0) {
-      return false;
-    }
+  public synchronized boolean smallerThan(TriggerPushContext existCtx) {
+    ParaCheckUtil.checkEquals(
+        expectDatumVersion.keySet(), existCtx.dataCenters(), "pushChangeCtx.dataCenters");
+
     for (Entry<String, Long> entry : this.expectDatumVersion.entrySet()) {
-      Long ctxVersion = changeCtx.expectDatumVersion.get(entry.getKey());
+      Long ctxVersion = existCtx.expectDatumVersion.get(entry.getKey());
       if (ctxVersion == null || entry.getValue() > ctxVersion) {
         return false;
       }
@@ -139,20 +137,17 @@ public final class TriggerPushContext {
     return true;
   }
 
-  public int mergeVersion(TriggerPushContext changeCtx) {
+  public synchronized int mergeVersion(TriggerPushContext existCtx) {
+    ParaCheckUtil.checkEquals(
+        expectDatumVersion.keySet(), existCtx.dataCenters(), "pushChangeCtx.dataCenters");
     int merge = 0;
-    Set<String> difference =
-        Sets.difference(changeCtx.expectDatumVersion.keySet(), this.expectDatumVersion.keySet());
-    for (Entry<String, Long> entry : expectDatumVersion.entrySet()) {
-      Long ctxVersion = changeCtx.expectDatumVersion.get(entry.getKey());
-      if (ctxVersion != null || entry.getValue() < ctxVersion) {
-        entry.setValue(ctxVersion);
+
+    for (Entry<String, Long> existEntry : existCtx.expectDatumVersion.entrySet()) {
+      Long updateVersion = expectDatumVersion.get(existEntry.getKey());
+      if (updateVersion == null || updateVersion < existEntry.getValue()) {
+        expectDatumVersion.put(existEntry.getKey(), existEntry.getValue());
         merge++;
       }
-    }
-    for (String key : difference) {
-      expectDatumVersion.put(key, changeCtx.expectDatumVersion.get(key));
-      merge++;
     }
     return merge;
   }

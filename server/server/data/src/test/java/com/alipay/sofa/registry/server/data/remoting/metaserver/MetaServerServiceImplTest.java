@@ -31,6 +31,7 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.data.TestBaseUtils;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
+import com.alipay.sofa.registry.server.data.multi.cluster.slot.MultiClusterSlotManager;
 import com.alipay.sofa.registry.server.data.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.server.data.remoting.SessionNodeExchanger;
 import com.alipay.sofa.registry.server.data.slot.SlotManager;
@@ -49,6 +50,7 @@ public class MetaServerServiceImplTest {
   private MetaServerServiceImpl impl;
   private DataServerConfig dataServerConfig;
   private SlotManager slotManager;
+  private MultiClusterSlotManager multiClusterSlotManager;
 
   @Before
   public void beforeMetaServerServiceImplTest() {
@@ -66,6 +68,7 @@ public class MetaServerServiceImplTest {
 
     List<BaseSlotStatus> list = Lists.newArrayList(leaderSlotStatus, followerSlotStatus);
     when(slotManager.getSlotTableEpochAndStatuses()).thenReturn(Tuple.of(100L, list));
+    when(multiClusterSlotManager.getSlotTableEpoch()).thenReturn(Collections.emptyMap());
 
     Assert.assertEquals(impl.getCurrentSlotTableEpoch(), slotManager.getSlotTableEpoch());
     final long now = System.currentTimeMillis();
@@ -106,7 +109,8 @@ public class MetaServerServiceImplTest {
             null,
             new VersionedList(10, Collections.emptyList()),
             "xxx",
-            100);
+            100,
+            Collections.emptyMap());
 
     impl.handleRenewResult(resp);
     Assert.assertEquals(sessionNodeExchanger.getServerIps(), impl.getSessionServerList());
@@ -121,7 +125,8 @@ public class MetaServerServiceImplTest {
             slotTable,
             new VersionedList(10, Collections.emptyList()),
             "xxx",
-            100);
+            100,
+            Collections.emptyMap());
 
     impl.handleRenewResult(resp);
     Mockito.verify(slotManager, Mockito.times(1)).updateSlotTable(Mockito.anyObject());
@@ -131,6 +136,8 @@ public class MetaServerServiceImplTest {
   public void testNotifySlotTable() {
     when(slotManager.getSlotTableEpochAndStatuses())
         .thenReturn(new Tuple<>(1L, Lists.newArrayList()));
+    when(multiClusterSlotManager.getSlotTableEpoch()).thenReturn(Collections.emptyMap());
+
     impl.record(new SlotTable(1L, Lists.newArrayList()));
     long slotTableEpoch = impl.createRequest().getSlotTableEpoch();
     Assert.assertEquals(1L, slotTableEpoch);
@@ -146,6 +153,8 @@ public class MetaServerServiceImplTest {
         impl.getRenewIntervalSecs(), dataServerConfig.getSchedulerHeartbeatIntervalSecs());
 
     slotManager = Mockito.mock(SlotManager.class);
-    impl.setSlotManager(slotManager);
+    multiClusterSlotManager = Mockito.mock(MultiClusterSlotManager.class);
+
+    impl.setSlotManager(slotManager).setMultiClusterSlotManager(multiClusterSlotManager);
   }
 }

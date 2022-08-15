@@ -39,9 +39,9 @@ public class DefaultMetaLeaderElectorTest extends AbstractMetaServerTestBase {
 
   @Mock private MetaServerConfig metaServerConfig;
 
-  protected LeaderInfo leaderInfo = new LeaderInfo(System.currentTimeMillis(),
-          ServerEnv.IP,
-          System.currentTimeMillis() + 20 * 1000);
+  protected LeaderInfo leaderInfo =
+      new LeaderInfo(
+          System.currentTimeMillis(), ServerEnv.IP, System.currentTimeMillis() + 20 * 1000);
 
   @Before
   public void beforeDefaultMetaLeaderElectorTest() {

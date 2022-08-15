@@ -17,12 +17,14 @@
 package com.alipay.sofa.registry.server.session.cache;
 
 import com.alipay.sofa.registry.common.model.store.MultiSubDatum;
+import com.alipay.sofa.registry.common.model.store.SubDatum;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.node.service.DataNodeService;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
 
 /**
  * @author shangyu.wh
@@ -46,9 +48,16 @@ public class DatumCacheGenerator implements CacheGenerator {
       final long now = System.currentTimeMillis();
       MultiSubDatum datum = dataNodeService.fetch(dataInfoId, dataCenters);
       final long span = System.currentTimeMillis() - now;
-      if (datum == null) {
+      if (datum == null || CollectionUtils.isEmpty(datum.getDatumMap())) {
         LOGGER.info("loadNil,{},{},span={}", dataInfoId, dataCenters, span);
       } else {
+        for (String dataCenter : dataCenters) {
+          SubDatum subDatum = datum.getSubDatum(dataCenter);
+          // some datacenter datum not exist
+          if (subDatum == null) {
+            LOGGER.info("loadNil,{},{},span={}", dataInfoId, dataCenter, span);
+          }
+        }
         LOGGER.info(
             "loadD,{},{},{},{},{},span={}",
             dataInfoId,

@@ -38,13 +38,13 @@ public class DatumBiConsumer {
       Map<String, Map<String, DatumSummary>> summaries,
       Set<String> sessions,
       SyncSlotAcceptorManager syncSlotAcceptorManager) {
+    for (String sessionIp : sessions) {
+      summaries.computeIfAbsent(sessionIp, v -> Maps.newHashMapWithExpectedSize(64));
+    }
+
     return (dataInfoId, publisherGroup) -> {
       Map<String /*sessionIp*/, Map<String /*registerId*/, RegisterVersion>> publisherVersions =
           Maps.newHashMapWithExpectedSize(sessions.size());
-      for (String sessionIp : sessions) {
-        summaries.computeIfAbsent(sessionIp, v -> Maps.newHashMapWithExpectedSize(64));
-        publisherVersions.computeIfAbsent(sessionIp, k -> Maps.newHashMapWithExpectedSize(64));
-      }
 
       if (!syncSlotAcceptorManager.accept(SyncAcceptorRequest.buildRequest(dataInfoId))) {
         return;
@@ -68,10 +68,14 @@ public class DatumBiConsumer {
     };
   }
 
-  private static BiConsumer<String, PublisherEnvelope> publisherGroupBiConsumer(
+  public static BiConsumer<String, PublisherEnvelope> publisherGroupBiConsumer(
       Map<String, Map<String, RegisterVersion>> publisherVersions,
       Set<String> sessions,
       SyncSlotAcceptorManager syncSlotAcceptorManager) {
+
+    for (String sessionIp : sessions) {
+      publisherVersions.computeIfAbsent(sessionIp, k -> Maps.newHashMapWithExpectedSize(64));
+    }
 
     return (registerId, envelope) -> {
       RegisterVersion v = envelope.getVersionIfPub();

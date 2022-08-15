@@ -29,7 +29,7 @@ import com.alipay.sofa.registry.remoting.bolt.BoltChannel;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.CleanContinues;
-import com.alipay.sofa.registry.server.data.cache.DatumStorage;
+import com.alipay.sofa.registry.server.data.cache.DatumStorageDelegate;
 import com.alipay.sofa.registry.server.data.change.DataChangeEventCenter;
 import com.alipay.sofa.registry.server.data.change.DataChangeType;
 import com.alipay.sofa.registry.server.data.slot.SlotManager;
@@ -61,7 +61,7 @@ public final class SessionLeaseManager {
   private static final int MIN_LEASE_SEC = 5;
 
   @Autowired DataServerConfig dataServerConfig;
-  @Resource DatumStorage localDatumStorage;
+  @Resource DatumStorageDelegate datumStorageDelegate;
 
   @Autowired Exchange boltExchange;
 
@@ -137,7 +137,7 @@ public final class SessionLeaseManager {
   void cleanStorage() {
     // make sure the existing processId be clean
     Set<ProcessId> stores =
-        localDatumStorage.getSessionProcessIds(dataServerConfig.getLocalDataCenter());
+        datumStorageDelegate.getSessionProcessIds(dataServerConfig.getLocalDataCenter());
     final int deadlineMillis = dataServerConfig.getSessionLeaseCleanDeadlineSecs() * 1000;
     for (int i = 0; i < SlotConfig.SLOT_NUM; i++) {
       if (slotManager.isFollower(dataServerConfig.getLocalDataCenter(), i)) {
@@ -161,7 +161,7 @@ public final class SessionLeaseManager {
             final long deadlineTimestamp = start + deadlineMillis;
             CleanLeaseContinues continues = new CleanLeaseContinues(deadlineTimestamp);
             Map<String, DatumVersion> versionMap =
-                localDatumStorage.cleanBySessionId(
+                datumStorageDelegate.cleanBySessionId(
                     dataServerConfig.getLocalDataCenter(), i, p, continues);
             if (!versionMap.isEmpty()) {
               dataChangeEventCenter.onChange(
@@ -265,7 +265,7 @@ public final class SessionLeaseManager {
     long tombstoneTimestamp =
         System.currentTimeMillis() - dataServerConfig.getDatumCompactDelaySecs() * 1000;
     Map<String, Integer> compacted =
-        localDatumStorage.compact(dataServerConfig.getLocalDataCenter(), tombstoneTimestamp);
+        datumStorageDelegate.compact(dataServerConfig.getLocalDataCenter(), tombstoneTimestamp);
     COMPACT_LOGGER.info("compact datum, {}", compacted);
   }
 }

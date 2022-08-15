@@ -23,7 +23,7 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.bootstrap.ExecutorManager;
 import com.alipay.sofa.registry.server.session.bootstrap.MultiClusterSessionServerConfig;
-import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
+import com.alipay.sofa.registry.store.api.config.DefaultCommonConfig;
 import com.alipay.sofa.registry.store.api.meta.MultiClusterSyncRepository;
 import com.alipay.sofa.registry.store.api.repository.AppRevisionRepository;
 import com.alipay.sofa.registry.store.api.repository.InterfaceAppsRepository;
@@ -54,7 +54,7 @@ public class MetadataCacheRegistry {
 
   @Autowired private MultiClusterSyncRepository multiClusterSyncRepository;
 
-  @Autowired private SessionServerConfig sessionServerConfig;
+  @Autowired private DefaultCommonConfig defaultCommonConfig;
 
   @Autowired private MultiClusterSessionServerConfig multiClusterSessionServerConfig;
 
@@ -77,7 +77,7 @@ public class MetadataCacheRegistry {
 
   private Set<String> getMetadataDataCenters() {
     Set<String> dataCenters = getSyncDataCenters();
-    dataCenters.add(sessionServerConfig.getSessionServerDataCenter());
+    dataCenters.add(defaultCommonConfig.getDefaultClusterId());
     dataCenters.addAll(getSyncDataCenters());
     return dataCenters;
   }
@@ -228,6 +228,42 @@ public class MetadataCacheRegistry {
   @VisibleForTesting
   public MetadataCacheRegistry setExecutorManager(ExecutorManager executorManager) {
     this.executorManager = executorManager;
+    return this;
+  }
+
+  /**
+   * Setter method for property <tt>multiClusterSyncRepository</tt>.
+   *
+   * @param multiClusterSyncRepository value to be assigned to property multiClusterSyncRepository
+   */
+  @VisibleForTesting
+  public MetadataCacheRegistry setMultiClusterSyncRepository(
+      MultiClusterSyncRepository multiClusterSyncRepository) {
+    this.multiClusterSyncRepository = multiClusterSyncRepository;
+    return this;
+  }
+
+  /**
+   * Setter method for property <tt>defaultCommonConfig</tt>.
+   *
+   * @param defaultCommonConfig value to be assigned to property defaultCommonConfig
+   */
+  @VisibleForTesting
+  public MetadataCacheRegistry setDefaultCommonConfig(DefaultCommonConfig defaultCommonConfig) {
+    this.defaultCommonConfig = defaultCommonConfig;
+    return this;
+  }
+
+  /**
+   * Setter method for property <tt>multiClusterSessionServerConfig</tt>.
+   *
+   * @param multiClusterSessionServerConfig value to be assigned to property
+   *     multiClusterSessionServerConfig
+   */
+  @VisibleForTesting
+  public MetadataCacheRegistry setMultiClusterSessionServerConfig(
+      MultiClusterSessionServerConfig multiClusterSessionServerConfig) {
+    this.multiClusterSessionServerConfig = multiClusterSessionServerConfig;
     return this;
   }
 }

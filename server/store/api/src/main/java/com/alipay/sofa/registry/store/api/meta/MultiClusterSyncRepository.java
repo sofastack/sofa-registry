@@ -51,4 +51,6 @@ public interface MultiClusterSyncRepository {
    * @param dataVersion
    */
   public int remove(String remoteDataCenter, long dataVersion);
+
+  MultiClusterSyncInfo query(String remoteDataCenter);
 }

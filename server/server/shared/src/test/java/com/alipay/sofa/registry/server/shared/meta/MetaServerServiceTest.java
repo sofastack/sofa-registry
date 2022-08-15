@@ -16,6 +16,10 @@
  */
 package com.alipay.sofa.registry.server.shared.meta;
 
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.ProcessId;
@@ -42,21 +46,15 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
-
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class MetaServerServiceTest {
   private static final String TEST_DATA_CENTER = "testDC";
 
-  @Mock
-  private CommonConfig commonConfig;
+  @Mock private CommonConfig commonConfig;
 
   @Before
   public void init() {
@@ -66,8 +64,9 @@ public class MetaServerServiceTest {
   @Test
   public void testCheckFailCounter() {
     MockServerService mockServerService = new MockServerService();
-    mockServerService.setMetaLeaderExchanger(mock(MetaLeaderExchanger.class))
-            .setCommonConfig(commonConfig);
+    mockServerService
+        .setMetaLeaderExchanger(mock(MetaLeaderExchanger.class))
+        .setCommonConfig(commonConfig);
 
     Assert.assertFalse(mockServerService.checkRenewFailCounter());
     mockServerService.renewFailCounter.set(mockServerService.MAX_RENEW_FAIL_COUNT - 1);
@@ -81,8 +80,7 @@ public class MetaServerServiceTest {
   public void testHandleHeartbeatResp() {
     MockServerService mockServerService = new MockServerService();
     MetaLeaderExchanger metaLeaderExchanger = mock(MetaLeaderExchanger.class);
-    mockServerService.setMetaLeaderExchanger(metaLeaderExchanger)
-            .setCommonConfig(commonConfig);
+    mockServerService.setMetaLeaderExchanger(metaLeaderExchanger).setCommonConfig(commonConfig);
 
     TestUtils.assertRunException(
         RuntimeException.class,
@@ -104,8 +102,7 @@ public class MetaServerServiceTest {
     // not leader
     GenericResponse<BaseHeartBeatResponse> resp = new GenericResponse<>();
     BaseHeartBeatResponse heartBeatResponse =
-        new BaseHeartBeatResponse(
-            false, VersionedList.EMPTY, null, "test", 100);
+        new BaseHeartBeatResponse(false, VersionedList.EMPTY, null, "test", 100);
     resp.setData(heartBeatResponse);
     TestUtils.assertRunException(
         RuntimeException.class, () -> mockServerService.handleHeartbeatResponse(resp));
@@ -126,7 +123,7 @@ public class MetaServerServiceTest {
                         new URL("192.168.1.3"), "zoneB", new ProcessId("test", 1, 1, 1)))),
             "test",
             100,
-                Collections.emptyMap());
+            Collections.emptyMap());
     resp.setData(heartBeatResponse);
     TestUtils.assertRunException(
         RuntimeException.class, () -> mockServerService.handleHeartbeatResponse(resp));
@@ -178,16 +175,15 @@ public class MetaServerServiceTest {
   public void testFetchData() {
     MockServerService mockServerService = new MockServerService();
     MetaLeaderExchanger metaLeaderExchanger = mock(MetaLeaderExchanger.class);
-    mockServerService.setMetaLeaderExchanger(metaLeaderExchanger)
-            .setCommonConfig(commonConfig);
+    mockServerService.setMetaLeaderExchanger(metaLeaderExchanger).setCommonConfig(commonConfig);
 
     TestUtils.assertRunException(
         RuntimeException.class, () -> mockServerService.fetchData("testDataId"));
 
-    when(metaLeaderExchanger.getLeader(anyString())).thenReturn(new LeaderInfo(System.currentTimeMillis(), "127.0.0.1"));
+    when(metaLeaderExchanger.getLeader(anyString()))
+        .thenReturn(new LeaderInfo(System.currentTimeMillis(), "127.0.0.1"));
     TestUtils.assertRunException(
-            RuntimeException.class, () -> mockServerService.fetchData("testDataId"));
-
+        RuntimeException.class, () -> mockServerService.fetchData("testDataId"));
 
     Response response =
         new Response() {

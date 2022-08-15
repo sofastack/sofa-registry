@@ -28,7 +28,6 @@ import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import com.google.common.collect.Maps;
 import java.util.Map;
 import java.util.Set;
-import javax.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
@@ -45,7 +44,7 @@ public class FetchMultiSyncService implements ApplicationListener<ContextRefresh
 
   @Autowired private MultiClusterSyncRepository multiClusterSyncRepository;
 
-  @Resource private MultiSyncDataAcceptorManager multiSyncDataAcceptorManager;
+  @Autowired private MultiSyncDataAcceptorManager multiSyncDataAcceptorManager;
 
   private final Worker worker = new Worker();
 

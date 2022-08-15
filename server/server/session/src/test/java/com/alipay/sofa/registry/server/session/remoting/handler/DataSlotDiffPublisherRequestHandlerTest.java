@@ -25,6 +25,8 @@ import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
 import com.alipay.sofa.registry.common.model.slot.DataSlotDiffPublisherRequest;
 import com.alipay.sofa.registry.common.model.slot.DataSlotDiffPublisherResult;
+import com.alipay.sofa.registry.common.model.slot.filter.SyncSlotAcceptAllManager;
+import com.alipay.sofa.registry.common.model.slot.filter.SyncSlotAcceptorManager;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.server.session.TestUtils;
 import com.alipay.sofa.registry.server.session.bootstrap.ExecutorManager;
@@ -36,6 +38,9 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class DataSlotDiffPublisherRequestHandlerTest {
+
+  private static final SyncSlotAcceptorManager ACCEPT_ALL = new SyncSlotAcceptAllManager();
+
   @Test
   public void testCheckParam() {
     DataSlotDiffPublisherRequestHandler handler = newHandler();
@@ -46,6 +51,8 @@ public class DataSlotDiffPublisherRequestHandlerTest {
   private DataSlotDiffPublisherRequestHandler newHandler() {
     DataSlotDiffPublisherRequestHandler handler = new DataSlotDiffPublisherRequestHandler();
     handler.executorManager = new ExecutorManager(TestUtils.newSessionConfig("testDc"));
+    handler.syncSlotAcceptAllManager = ACCEPT_ALL;
+
     Assert.assertNotNull(handler.getExecutor());
     Assert.assertEquals(handler.interest(), DataSlotDiffPublisherRequest.class);
     Assert.assertEquals(handler.getConnectNodeType(), Node.NodeType.DATA);
@@ -81,6 +88,6 @@ public class DataSlotDiffPublisherRequestHandlerTest {
   }
 
   private static DataSlotDiffPublisherRequest request(int slotId, List<DatumSummary> summaries) {
-    return new DataSlotDiffPublisherRequest(1, slotId, summaries);
+    return new DataSlotDiffPublisherRequest("testDc", 1, slotId, ACCEPT_ALL, summaries);
   }
 }

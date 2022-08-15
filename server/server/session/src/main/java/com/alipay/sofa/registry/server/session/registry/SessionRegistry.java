@@ -523,5 +523,32 @@ public class SessionRegistry implements Registry {
       this.toPushEmpty = toPushEmpty;
       this.toRegisterMulti = toRegisterMulti;
     }
+
+    /**
+     * Getter method for property <tt>versions</tt>.
+     *
+     * @return property value of versions
+     */
+    public Map<String, Map<String, DatumVersion>> getVersions() {
+      return versions;
+    }
+
+    /**
+     * Getter method for property <tt>toPushEmpty</tt>.
+     *
+     * @return property value of toPushEmpty
+     */
+    public Map<String, List<Subscriber>> getToPushEmpty() {
+      return toPushEmpty;
+    }
+
+    /**
+     * Getter method for property <tt>toRegisterMulti</tt>.
+     *
+     * @return property value of toRegisterMulti
+     */
+    public List<Subscriber> getToRegisterMulti() {
+      return toRegisterMulti;
+    }
   }
 }

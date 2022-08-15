@@ -99,7 +99,9 @@ public class CircuitBreakerServiceTest extends AbstractSessionServerTestBase {
 
     Subscriber subscriber = TestUtils.newZoneSubscriber(DATA_INFO_ID, TEST_CELL);
     circuitBreakerService.onPushSuccess(
-        TEST_DATA_CENTER, PUSH_VERSION.incrementAndGet(), 1, subscriber);
+        Collections.singletonMap(TEST_DATA_CENTER, PUSH_VERSION.incrementAndGet()),
+        Collections.singletonMap(TEST_DATA_CENTER, 1),
+        subscriber);
 
     // 1.init switch
     boolean ret = fetchCircuitBreakerService.start();
@@ -110,51 +112,56 @@ public class CircuitBreakerServiceTest extends AbstractSessionServerTestBase {
     Assert.assertFalse(ret);
 
     // 2.subscriber circuit breaker
-    ret = circuitBreakerService.pushCircuitBreaker(subscriber.getStatistic(TEST_DATA_CENTER), true);
+    ret = circuitBreakerService.pushCircuitBreaker(subscriber.getStatistic(), true);
     Assert.assertFalse(ret);
     verify(sessionServerConfig, times(0)).getPushAddressCircuitBreakerThreshold();
 
     for (int i = 0; i < CIRCUIT_BREAKER_THRESHOLD; i++) {
       circuitBreakerService.onPushFail(
-          TEST_DATA_CENTER, PUSH_VERSION.incrementAndGet(), subscriber);
+          Collections.singletonMap(TEST_DATA_CENTER, PUSH_VERSION.incrementAndGet()), subscriber);
     }
-    ret = circuitBreakerService.pushCircuitBreaker(subscriber.getStatistic(TEST_DATA_CENTER), true);
+    ret = circuitBreakerService.pushCircuitBreaker(subscriber.getStatistic(), true);
     Assert.assertFalse(ret);
     verify(sessionServerConfig, times(0)).getPushAddressCircuitBreakerThreshold();
 
-    circuitBreakerService.onPushFail(TEST_DATA_CENTER, PUSH_VERSION.incrementAndGet(), subscriber);
-    ret = circuitBreakerService.pushCircuitBreaker(subscriber.getStatistic(TEST_DATA_CENTER), true);
+    circuitBreakerService.onPushFail(
+        Collections.singletonMap(TEST_DATA_CENTER, PUSH_VERSION.incrementAndGet()), subscriber);
+    ret = circuitBreakerService.pushCircuitBreaker(subscriber.getStatistic(), true);
     Assert.assertTrue(ret);
     verify(sessionServerConfig, times(0)).getPushAddressCircuitBreakerThreshold();
 
     // 3.after circuit breaker silence
     ConcurrentUtils.sleepUninterruptibly(PUSH_CIRCUIT_BREAKER_SLEEP_MILLIS, TimeUnit.MILLISECONDS);
-    ret = circuitBreakerService.pushCircuitBreaker(subscriber.getStatistic(TEST_DATA_CENTER), true);
+    ret = circuitBreakerService.pushCircuitBreaker(subscriber.getStatistic(), true);
     Assert.assertFalse(ret);
     verify(sessionServerConfig, times(0)).getPushAddressCircuitBreakerThreshold();
 
     // 4.subscriber circuit breaker
-    circuitBreakerService.onPushFail(TEST_DATA_CENTER, PUSH_VERSION.incrementAndGet(), subscriber);
-    ret = circuitBreakerService.pushCircuitBreaker(subscriber.getStatistic(TEST_DATA_CENTER), true);
+    circuitBreakerService.onPushFail(
+        Collections.singletonMap(TEST_DATA_CENTER, PUSH_VERSION.incrementAndGet()), subscriber);
+    ret = circuitBreakerService.pushCircuitBreaker(subscriber.getStatistic(), true);
     Assert.assertTrue(ret);
     verify(sessionServerConfig, times(0)).getPushAddressCircuitBreakerThreshold();
 
     // 5.after success
     circuitBreakerService.onPushSuccess(
-        TEST_DATA_CENTER, PUSH_VERSION.incrementAndGet(), 1, subscriber);
+        Collections.singletonMap(TEST_DATA_CENTER, PUSH_VERSION.incrementAndGet()),
+        Collections.singletonMap(TEST_DATA_CENTER, 1),
+        subscriber);
     for (int i = 0; i < CIRCUIT_BREAKER_THRESHOLD; i++) {
       ret =
           circuitBreakerService.onPushFail(
-              TEST_DATA_CENTER, PUSH_VERSION.incrementAndGet(), subscriber);
+              Collections.singletonMap(TEST_DATA_CENTER, PUSH_VERSION.incrementAndGet()),
+              subscriber);
       Assert.assertTrue(ret);
-      ret =
-          circuitBreakerService.pushCircuitBreaker(subscriber.getStatistic(TEST_DATA_CENTER), true);
+      ret = circuitBreakerService.pushCircuitBreaker(subscriber.getStatistic(), true);
       Assert.assertFalse(ret);
       verify(sessionServerConfig, times(0)).getPushAddressCircuitBreakerThreshold();
     }
 
-    circuitBreakerService.onPushFail(TEST_DATA_CENTER, PUSH_VERSION.incrementAndGet(), subscriber);
-    ret = circuitBreakerService.pushCircuitBreaker(subscriber.getStatistic(TEST_DATA_CENTER), true);
+    circuitBreakerService.onPushFail(
+        Collections.singletonMap(TEST_DATA_CENTER, PUSH_VERSION.incrementAndGet()), subscriber);
+    ret = circuitBreakerService.pushCircuitBreaker(subscriber.getStatistic(), true);
     Assert.assertTrue(ret);
     verify(sessionServerConfig, times(0)).getPushAddressCircuitBreakerThreshold();
   }
@@ -181,9 +188,11 @@ public class CircuitBreakerServiceTest extends AbstractSessionServerTestBase {
 
     Subscriber subscriber = TestUtils.newZoneSubscriber(DATA_INFO_ID, TEST_CELL);
     circuitBreakerService.onPushSuccess(
-        TEST_DATA_CENTER, PUSH_VERSION.incrementAndGet(), 1, subscriber);
+        Collections.singletonMap(TEST_DATA_CENTER, PUSH_VERSION.incrementAndGet()),
+        Collections.singletonMap(TEST_DATA_CENTER, 1),
+        subscriber);
 
-    ret = circuitBreakerService.pushCircuitBreaker(subscriber.getStatistic(TEST_DATA_CENTER), true);
+    ret = circuitBreakerService.pushCircuitBreaker(subscriber.getStatistic(), true);
     Assert.assertFalse(ret);
 
     // 2.set circuit address
@@ -199,7 +208,7 @@ public class CircuitBreakerServiceTest extends AbstractSessionServerTestBase {
     waitConditionUntilTimeOut(
         () -> address.equals(fetchCircuitBreakerService.getStopPushCircuitBreaker()), MAX_WAIT);
 
-    ret = circuitBreakerService.pushCircuitBreaker(subscriber.getStatistic(TEST_DATA_CENTER), true);
+    ret = circuitBreakerService.pushCircuitBreaker(subscriber.getStatistic(), true);
     Assert.assertTrue(ret);
 
     // 3.remove address
@@ -214,7 +223,7 @@ public class CircuitBreakerServiceTest extends AbstractSessionServerTestBase {
     waitConditionUntilTimeOut(
         () -> CollectionUtils.isEmpty(fetchCircuitBreakerService.getStopPushCircuitBreaker()),
         MAX_WAIT);
-    ret = circuitBreakerService.pushCircuitBreaker(subscriber.getStatistic(TEST_DATA_CENTER), true);
+    ret = circuitBreakerService.pushCircuitBreaker(subscriber.getStatistic(), true);
     Assert.assertFalse(ret);
   }
 
@@ -242,28 +251,30 @@ public class CircuitBreakerServiceTest extends AbstractSessionServerTestBase {
     Subscriber subscriber2 = TestUtils.newZoneSubscriber(DATA_INFO_ID, TEST_CELL);
 
     circuitBreakerService.onPushSuccess(
-        TEST_DATA_CENTER, PUSH_VERSION.incrementAndGet(), 1, subscriber1);
+        Collections.singletonMap(TEST_DATA_CENTER, PUSH_VERSION.incrementAndGet()),
+        Collections.singletonMap(TEST_DATA_CENTER, 1),
+        subscriber1);
     circuitBreakerService.onPushSuccess(
-        TEST_DATA_CENTER, PUSH_VERSION.incrementAndGet(), 1, subscriber2);
+        Collections.singletonMap(TEST_DATA_CENTER, PUSH_VERSION.incrementAndGet()),
+        Collections.singletonMap(TEST_DATA_CENTER, 1),
+        subscriber2);
 
     // 2.su1 fail and sub2 fail, address fail count = CIRCUIT_BREAKER_THRESHOLD
     for (int i = 0; i < CIRCUIT_BREAKER_THRESHOLD / 2; i++) {
       ret =
           circuitBreakerService.onPushFail(
-              TEST_DATA_CENTER, PUSH_VERSION.incrementAndGet(), subscriber1);
+              Collections.singletonMap(TEST_DATA_CENTER, PUSH_VERSION.incrementAndGet()),
+              subscriber1);
       Assert.assertTrue(ret);
-      ret =
-          circuitBreakerService.pushCircuitBreaker(
-              subscriber1.getStatistic(TEST_DATA_CENTER), true);
+      ret = circuitBreakerService.pushCircuitBreaker(subscriber1.getStatistic(), true);
       Assert.assertFalse(ret);
 
       ret =
           circuitBreakerService.onPushFail(
-              TEST_DATA_CENTER, PUSH_VERSION.incrementAndGet(), subscriber2);
+              Collections.singletonMap(TEST_DATA_CENTER, PUSH_VERSION.incrementAndGet()),
+              subscriber2);
       Assert.assertTrue(ret);
-      ret =
-          circuitBreakerService.pushCircuitBreaker(
-              subscriber2.getStatistic(TEST_DATA_CENTER), true);
+      ret = circuitBreakerService.pushCircuitBreaker(subscriber2.getStatistic(), true);
       Assert.assertFalse(ret);
     }
 
@@ -271,15 +282,12 @@ public class CircuitBreakerServiceTest extends AbstractSessionServerTestBase {
     for (int i = 0; i < CIRCUIT_BREAKER_THRESHOLD / 2; i++) {
       ret =
           circuitBreakerService.onPushFail(
-              TEST_DATA_CENTER, PUSH_VERSION.incrementAndGet(), subscriber2);
+              Collections.singletonMap(TEST_DATA_CENTER, PUSH_VERSION.incrementAndGet()),
+              subscriber2);
       Assert.assertTrue(ret);
-      ret =
-          circuitBreakerService.pushCircuitBreaker(
-              subscriber1.getStatistic(TEST_DATA_CENTER), true);
+      ret = circuitBreakerService.pushCircuitBreaker(subscriber1.getStatistic(), true);
       Assert.assertFalse(ret);
-      ret =
-          circuitBreakerService.pushCircuitBreaker(
-              subscriber2.getStatistic(TEST_DATA_CENTER), true);
+      ret = circuitBreakerService.pushCircuitBreaker(subscriber2.getStatistic(), true);
       Assert.assertFalse(ret);
     }
 
@@ -287,75 +295,66 @@ public class CircuitBreakerServiceTest extends AbstractSessionServerTestBase {
     for (int i = 0; i < CIRCUIT_BREAKER_THRESHOLD / 2; i++) {
       ret =
           circuitBreakerService.onPushFail(
-              TEST_DATA_CENTER, PUSH_VERSION.incrementAndGet(), subscriber2);
+              Collections.singletonMap(TEST_DATA_CENTER, PUSH_VERSION.incrementAndGet()),
+              subscriber2);
       Assert.assertTrue(ret);
-      ret =
-          circuitBreakerService.pushCircuitBreaker(
-              subscriber1.getStatistic(TEST_DATA_CENTER), true);
+      ret = circuitBreakerService.pushCircuitBreaker(subscriber1.getStatistic(), true);
       Assert.assertFalse(ret);
-      ret =
-          circuitBreakerService.pushCircuitBreaker(
-              subscriber2.getStatistic(TEST_DATA_CENTER), true);
+      ret = circuitBreakerService.pushCircuitBreaker(subscriber2.getStatistic(), true);
       Assert.assertTrue(ret);
     }
 
     // 5.sub1 fail, address fail count = CIRCUIT_BREAKER_THRESHOLD * 2 + 1; exceed threshold
     ret =
         circuitBreakerService.onPushFail(
-            TEST_DATA_CENTER, PUSH_VERSION.incrementAndGet(), subscriber1);
+            Collections.singletonMap(TEST_DATA_CENTER, PUSH_VERSION.incrementAndGet()),
+            subscriber1);
     Assert.assertTrue(ret);
-    ret =
-        circuitBreakerService.pushCircuitBreaker(subscriber1.getStatistic(TEST_DATA_CENTER), true);
+    ret = circuitBreakerService.pushCircuitBreaker(subscriber1.getStatistic(), true);
     Assert.assertTrue(ret);
-    ret =
-        circuitBreakerService.pushCircuitBreaker(subscriber2.getStatistic(TEST_DATA_CENTER), true);
+    ret = circuitBreakerService.pushCircuitBreaker(subscriber2.getStatistic(), true);
     Assert.assertTrue(ret);
 
     // 6.after circuit breaker silence
     ConcurrentUtils.sleepUninterruptibly(PUSH_CIRCUIT_BREAKER_SLEEP_MILLIS, TimeUnit.MILLISECONDS);
-    ret =
-        circuitBreakerService.pushCircuitBreaker(subscriber1.getStatistic(TEST_DATA_CENTER), true);
+    ret = circuitBreakerService.pushCircuitBreaker(subscriber1.getStatistic(), true);
     Assert.assertFalse(ret);
-    ret =
-        circuitBreakerService.pushCircuitBreaker(subscriber2.getStatistic(TEST_DATA_CENTER), true);
+    ret = circuitBreakerService.pushCircuitBreaker(subscriber2.getStatistic(), true);
     Assert.assertFalse(ret);
 
     // 7.sub1 fail, address fail count = CIRCUIT_BREAKER_THRESHOLD * 2 + 2; exceed threshold
     ret =
         circuitBreakerService.onPushFail(
-            TEST_DATA_CENTER, PUSH_VERSION.incrementAndGet(), subscriber1);
+            Collections.singletonMap(TEST_DATA_CENTER, PUSH_VERSION.incrementAndGet()),
+            subscriber1);
     Assert.assertTrue(ret);
-    ret =
-        circuitBreakerService.pushCircuitBreaker(subscriber1.getStatistic(TEST_DATA_CENTER), true);
+    ret = circuitBreakerService.pushCircuitBreaker(subscriber1.getStatistic(), true);
     Assert.assertTrue(ret);
-    ret =
-        circuitBreakerService.pushCircuitBreaker(subscriber2.getStatistic(TEST_DATA_CENTER), true);
+    ret = circuitBreakerService.pushCircuitBreaker(subscriber2.getStatistic(), true);
     Assert.assertTrue(ret);
 
     // 8.sub1 consecutive success, address fail count = 0;
     for (int i = 0; i < PUSH_CONSECUTIVE_SUCCESS - 1; i++) {
       ret =
           circuitBreakerService.onPushSuccess(
-              TEST_DATA_CENTER, PUSH_VERSION.incrementAndGet(), 1, subscriber1);
+              Collections.singletonMap(TEST_DATA_CENTER, PUSH_VERSION.incrementAndGet()),
+              Collections.singletonMap(TEST_DATA_CENTER, 1),
+              subscriber1);
       Assert.assertTrue(ret);
-      ret =
-          circuitBreakerService.pushCircuitBreaker(
-              subscriber1.getStatistic(TEST_DATA_CENTER), true);
+      ret = circuitBreakerService.pushCircuitBreaker(subscriber1.getStatistic(), true);
       Assert.assertTrue(ret);
-      ret =
-          circuitBreakerService.pushCircuitBreaker(
-              subscriber2.getStatistic(TEST_DATA_CENTER), true);
+      ret = circuitBreakerService.pushCircuitBreaker(subscriber2.getStatistic(), true);
       Assert.assertTrue(ret);
     }
     ret =
         circuitBreakerService.onPushSuccess(
-            TEST_DATA_CENTER, PUSH_VERSION.incrementAndGet(), 1, subscriber1);
+            Collections.singletonMap(TEST_DATA_CENTER, PUSH_VERSION.incrementAndGet()),
+            Collections.singletonMap(TEST_DATA_CENTER, 1),
+            subscriber1);
     Assert.assertTrue(ret);
-    ret =
-        circuitBreakerService.pushCircuitBreaker(subscriber1.getStatistic(TEST_DATA_CENTER), true);
+    ret = circuitBreakerService.pushCircuitBreaker(subscriber1.getStatistic(), true);
     Assert.assertFalse(ret);
-    ret =
-        circuitBreakerService.pushCircuitBreaker(subscriber2.getStatistic(TEST_DATA_CENTER), true);
+    ret = circuitBreakerService.pushCircuitBreaker(subscriber2.getStatistic(), true);
     Assert.assertFalse(ret);
   }
 }

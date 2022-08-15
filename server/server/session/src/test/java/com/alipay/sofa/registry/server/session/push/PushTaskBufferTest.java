@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.push;
 
+import com.alipay.sofa.registry.common.model.store.MultiSubDatum;
 import com.alipay.sofa.registry.common.model.store.PushData;
 import com.alipay.sofa.registry.common.model.store.SubDatum;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
@@ -39,7 +40,10 @@ public class PushTaskBufferTest {
 
     MockTask task =
         new MockTask(
-            new PushCause(null, PushType.Sub, System.currentTimeMillis()),
+            new PushCause(
+                null,
+                PushType.Sub,
+                Collections.singletonMap(datum.getDataCenter(), System.currentTimeMillis())),
             NetUtil.getLocalSocketAddress(),
             Collections.singletonMap(subscriber.getRegisterId(), subscriber),
             datum);
@@ -49,7 +53,10 @@ public class PushTaskBufferTest {
     datum = TestUtils.newSubDatum(subscriber.getDataId(), 101, Collections.emptyList());
     MockTask task1 =
         new MockTask(
-            new PushCause(null, PushType.Sub, System.currentTimeMillis() + 1),
+            new PushCause(
+                null,
+                PushType.Sub,
+                Collections.singletonMap(datum.getDataCenter(), System.currentTimeMillis() + 1)),
             NetUtil.getLocalSocketAddress(),
             Collections.singletonMap(subscriber.getRegisterId(), subscriber),
             datum);
@@ -64,7 +71,7 @@ public class PushTaskBufferTest {
         InetSocketAddress addr,
         Map<String, Subscriber> subscriberMap,
         SubDatum datum) {
-      super(pushCause, addr, subscriberMap, datum);
+      super(pushCause, addr, subscriberMap, MultiSubDatum.of(datum));
     }
 
     @Override

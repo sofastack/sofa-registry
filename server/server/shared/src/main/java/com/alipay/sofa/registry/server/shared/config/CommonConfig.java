@@ -35,7 +35,9 @@ public class CommonConfig {
   @Value("${nodes.localDataCenter:DefaultDataCenter}")
   private String localDataCenter;
 
-  public static final String LOCAL_REGION = System.getProperty("nodes.localRegion");
+  /** server local region, get from System Property example: nodes.localRegion=DEFAULT_ZONE */
+  @Value("${nodes.localRegion}")
+  private String localRegion;
 
   @Value(
       "#{PropertySplitter.mapOfKeyList('${nodes.localDataCenter:DefaultDataCenter}', '${nodes.metaNode:DefaultDataCenter:localhost}')}")
@@ -86,7 +88,7 @@ public class CommonConfig {
    * @return property value of localRegion
    */
   public String getLocalRegion() {
-    return LOCAL_REGION;
+    return localRegion;
   }
 
   @Override

@@ -21,6 +21,7 @@ import com.alipay.sofa.registry.common.model.ProcessId;
 import com.alipay.sofa.registry.common.model.RegisterVersion;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
+import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.google.common.collect.Maps;
@@ -29,6 +30,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
+
+import org.apache.commons.lang.StringUtils;
 import org.glassfish.jersey.internal.guava.Sets;
 import org.springframework.util.CollectionUtils;
 
@@ -192,5 +195,24 @@ public final class PublisherGroups {
   @Override
   public String toString() {
     return StringFormatter.format("PubGroups{{},size={}}", dataCenter, publisherGroupMap.size());
+  }
+
+  public DatumVersion clearPublishers(String dataInfoId) {
+    PublisherGroup publisherGroup = publisherGroupMap.get(dataInfoId);
+    return publisherGroup == null ? null : publisherGroup.clearPublishers();
+  }
+
+  public Map<String, DatumVersion> clearGroupPublishers(String group) {
+    Map<String, DatumVersion> ret = Maps.newHashMapWithExpectedSize(256);
+    for (PublisherGroup publisherGroup : publisherGroupMap.values()) {
+      if (StringUtils.equals(DataInfo.valueOf(publisherGroup.dataInfoId).getGroup(), group)) {
+        continue;
+      }
+      DatumVersion datumVersion = publisherGroup.clearPublishers();
+      if (datumVersion != null) {
+        ret.put(publisherGroup.dataInfoId, datumVersion);
+      }
+    }
+    return ret;
   }
 }

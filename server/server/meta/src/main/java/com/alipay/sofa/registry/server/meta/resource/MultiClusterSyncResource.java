@@ -29,6 +29,9 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+
+import com.alipay.sofa.registry.util.StringFormatter;
+import com.google.common.collect.Sets;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.NumberUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -105,14 +108,20 @@ public class MultiClusterSyncResource {
           "remoteDataCenter, remoteMetaAddress, expectVersion is not allow empty.");
     }
 
-    boolean ret =
-        multiClusterSyncRepository.update(
-            new MultiClusterSyncInfo(
-                remoteDataCenter, remoteMetaAddress, PersistenceDataBuilder.nextVersion()),
-            NumberUtils.toLong(expectVersion));
+    MultiClusterSyncInfo exist = multiClusterSyncRepository.query(remoteDataCenter);
+
+    if (exist == null || exist.getDataVersion() != Long.parseLong(expectVersion)) {
+      return CommonResponse.buildFailedResponse(
+          StringFormatter.format(
+              "remoteDataCenter:{}, expectVersion:{} not exist.", remoteDataCenter, expectVersion));
+    }
+
+    exist.setRemoteMetaAddress(remoteMetaAddress);
+    exist.setDataVersion(PersistenceDataBuilder.nextVersion());
+    boolean ret = multiClusterSyncRepository.update(exist, NumberUtils.toLong(expectVersion));
 
     LOG.info(
-        "[updateConfig]update multi cluster sync config, result:{}, remoteDataCenter:{}, remoteMetaAddress:{}, expectVersion:{}",
+        "[updateMetaAddress]result:{}, remoteDataCenter:{}, remoteMetaAddress:{}, expectVersion:{}",
         ret,
         remoteDataCenter,
         remoteMetaAddress,
@@ -123,7 +132,6 @@ public class MultiClusterSyncResource {
     return response;
   }
 
-  // todo xiaojian.xj remove
   @POST
   @Path("/sync/dataInfoIds/add")
   public CommonResponse addSyncDataInfoIds(
@@ -133,14 +141,42 @@ public class MultiClusterSyncResource {
       @FormParam("expectVersion") String expectVersion) {
     if (!AuthChecker.authCheck(token)) {
       LOG.error(
-          "update multi cluster syncs config, remoteDataCenter={}, remoteMetaAddress={}, auth check={} fail!",
+          "add sync dataInfoIds, remoteDataCenter={}, dataInfoIds={}, auth check={} fail!",
           remoteDataCenter,
           dataInfoIds,
           token);
       return GenericResponse.buildFailedResponse("auth check fail");
     }
 
-    return null;
+    if (StringUtils.isBlank(remoteDataCenter)
+        || StringUtils.isBlank(dataInfoIds)
+        || StringUtils.isBlank(expectVersion)) {
+      return CommonResponse.buildFailedResponse(
+          "remoteDataCenter, dataInfoIds, expectVersion is not allow empty.");
+    }
+
+    MultiClusterSyncInfo exist = multiClusterSyncRepository.query(remoteDataCenter);
+
+    if (exist == null || exist.getDataVersion() != Long.parseLong(expectVersion)) {
+      return CommonResponse.buildFailedResponse(
+          StringFormatter.format(
+              "remoteDataCenter:{}, expectVersion:{} not exist.", remoteDataCenter, expectVersion));
+    }
+
+    exist.getSyncDataInfoIds().addAll(Sets.newHashSet(dataInfoIds.split(",")));
+    exist.setDataVersion(PersistenceDataBuilder.nextVersion());
+    boolean ret = multiClusterSyncRepository.update(exist, NumberUtils.toLong(expectVersion));
+
+    LOG.info(
+        "[addSyncDataInfoIds]result:{}, remoteDataCenter:{}, dataInfoIds:{}, expectVersion:{}",
+        ret,
+        remoteDataCenter,
+        dataInfoIds,
+        expectVersion);
+
+    CommonResponse response = new CommonResponse();
+    response.setSuccess(ret);
+    return response;
   }
 
   @POST
@@ -152,14 +188,41 @@ public class MultiClusterSyncResource {
       @FormParam("expectVersion") String expectVersion) {
     if (!AuthChecker.authCheck(token)) {
       LOG.error(
-          "update multi cluster syncs config, remoteDataCenter={}, remoteMetaAddress={}, auth check={} fail!",
+          "remove sync dataInfoIds, remoteDataCenter={}, dataInfoIds={}, auth check={} fail!",
           remoteDataCenter,
           dataInfoIds,
           token);
       return GenericResponse.buildFailedResponse("auth check fail");
     }
+    if (StringUtils.isBlank(remoteDataCenter)
+        || StringUtils.isBlank(dataInfoIds)
+        || StringUtils.isBlank(expectVersion)) {
+      return CommonResponse.buildFailedResponse(
+          "remoteDataCenter, dataInfoIds, expectVersion is not allow empty.");
+    }
 
-    return null;
+    MultiClusterSyncInfo exist = multiClusterSyncRepository.query(remoteDataCenter);
+
+    if (exist == null || exist.getDataVersion() != Long.parseLong(expectVersion)) {
+      return CommonResponse.buildFailedResponse(
+          StringFormatter.format(
+              "remoteDataCenter:{}, expectVersion:{} not exist.", remoteDataCenter, expectVersion));
+    }
+
+    exist.getSyncDataInfoIds().removeAll(Sets.newHashSet(dataInfoIds.split(",")));
+    exist.setDataVersion(PersistenceDataBuilder.nextVersion());
+    boolean ret = multiClusterSyncRepository.update(exist, NumberUtils.toLong(expectVersion));
+
+    LOG.info(
+        "[removeSyncDataInfoIds]result:{}, remoteDataCenter:{}, dataInfoIds:{}, expectVersion:{}",
+        ret,
+        remoteDataCenter,
+        dataInfoIds,
+        expectVersion);
+
+    CommonResponse response = new CommonResponse();
+    response.setSuccess(ret);
+    return response;
   }
 
   @POST
@@ -171,14 +234,42 @@ public class MultiClusterSyncResource {
       @FormParam("expectVersion") String expectVersion) {
     if (!AuthChecker.authCheck(token)) {
       LOG.error(
-          "update multi cluster syncs config, remoteDataCenter={}, remoteMetaAddress={}, auth check={} fail!",
-          remoteDataCenter,
-          group,
-          token);
+              "add sync group, remoteDataCenter={}, group={}, auth check={} fail!",
+              remoteDataCenter,
+              group,
+              token);
       return GenericResponse.buildFailedResponse("auth check fail");
     }
 
-    return null;
+    if (StringUtils.isBlank(remoteDataCenter)
+            || StringUtils.isBlank(group)
+            || StringUtils.isBlank(expectVersion)) {
+      return CommonResponse.buildFailedResponse(
+              "remoteDataCenter, group, expectVersion is not allow empty.");
+    }
+
+    MultiClusterSyncInfo exist = multiClusterSyncRepository.query(remoteDataCenter);
+
+    if (exist == null || exist.getDataVersion() != Long.parseLong(expectVersion)) {
+      return CommonResponse.buildFailedResponse(
+              StringFormatter.format(
+                      "remoteDataCenter:{}, expectVersion:{} not exist.", remoteDataCenter, expectVersion));
+    }
+
+    exist.getSynPublisherGroups().add(group);
+    exist.setDataVersion(PersistenceDataBuilder.nextVersion());
+    boolean ret = multiClusterSyncRepository.update(exist, NumberUtils.toLong(expectVersion));
+
+    LOG.info(
+            "[addSyncGroup]result:{}, remoteDataCenter:{}, group:{}, expectVersion:{}",
+            ret,
+            remoteDataCenter,
+            group,
+            expectVersion);
+
+    CommonResponse response = new CommonResponse();
+    response.setSuccess(ret);
+    return response;
   }
 
   @POST
@@ -190,14 +281,42 @@ public class MultiClusterSyncResource {
       @FormParam("expectVersion") String expectVersion) {
     if (!AuthChecker.authCheck(token)) {
       LOG.error(
-          "update multi cluster syncs config, remoteDataCenter={}, remoteMetaAddress={}, auth check={} fail!",
-          remoteDataCenter,
-          group,
-          token);
+              "remove sync group, remoteDataCenter={}, group={}, auth check={} fail!",
+              remoteDataCenter,
+              group,
+              token);
       return GenericResponse.buildFailedResponse("auth check fail");
     }
 
-    return null;
+    if (StringUtils.isBlank(remoteDataCenter)
+            || StringUtils.isBlank(group)
+            || StringUtils.isBlank(expectVersion)) {
+      return CommonResponse.buildFailedResponse(
+              "remoteDataCenter, group, expectVersion is not allow empty.");
+    }
+
+    MultiClusterSyncInfo exist = multiClusterSyncRepository.query(remoteDataCenter);
+
+    if (exist == null || exist.getDataVersion() != Long.parseLong(expectVersion)) {
+      return CommonResponse.buildFailedResponse(
+              StringFormatter.format(
+                      "remoteDataCenter:{}, expectVersion:{} not exist.", remoteDataCenter, expectVersion));
+    }
+
+    exist.getSynPublisherGroups().remove(group);
+    exist.setDataVersion(PersistenceDataBuilder.nextVersion());
+    boolean ret = multiClusterSyncRepository.update(exist, NumberUtils.toLong(expectVersion));
+
+    LOG.info(
+            "[removeSyncGroup]result:{}, remoteDataCenter:{}, group:{}, expectVersion:{}",
+            ret,
+            remoteDataCenter,
+            group,
+            expectVersion);
+
+    CommonResponse response = new CommonResponse();
+    response.setSuccess(ret);
+    return response;
   }
 
   @POST
@@ -209,14 +328,42 @@ public class MultiClusterSyncResource {
       @FormParam("expectVersion") String expectVersion) {
     if (!AuthChecker.authCheck(token)) {
       LOG.error(
-          "update multi cluster syncs config, remoteDataCenter={}, remoteMetaAddress={}, auth check={} fail!",
-          remoteDataCenter,
-          dataInfoIds,
-          token);
+              "add ignore dataInfoIds, remoteDataCenter={}, dataInfoIds={}, auth check={} fail!",
+              remoteDataCenter,
+              dataInfoIds,
+              token);
       return GenericResponse.buildFailedResponse("auth check fail");
     }
 
-    return null;
+    if (StringUtils.isBlank(remoteDataCenter)
+            || StringUtils.isBlank(dataInfoIds)
+            || StringUtils.isBlank(expectVersion)) {
+      return CommonResponse.buildFailedResponse(
+              "remoteDataCenter, dataInfoIds, expectVersion is not allow empty.");
+    }
+
+    MultiClusterSyncInfo exist = multiClusterSyncRepository.query(remoteDataCenter);
+
+    if (exist == null || exist.getDataVersion() != Long.parseLong(expectVersion)) {
+      return CommonResponse.buildFailedResponse(
+              StringFormatter.format(
+                      "remoteDataCenter:{}, expectVersion:{} not exist.", remoteDataCenter, expectVersion));
+    }
+
+    exist.getIgnoreDataInfoIds().addAll(Sets.newHashSet(dataInfoIds.split(",")));
+    exist.setDataVersion(PersistenceDataBuilder.nextVersion());
+    boolean ret = multiClusterSyncRepository.update(exist, NumberUtils.toLong(expectVersion));
+
+    LOG.info(
+            "[addIgnoreDataInfoIds]result:{}, remoteDataCenter:{}, dataInfoIds:{}, expectVersion:{}",
+            ret,
+            remoteDataCenter,
+            dataInfoIds,
+            expectVersion);
+
+    CommonResponse response = new CommonResponse();
+    response.setSuccess(ret);
+    return response;
   }
 
   @POST
@@ -228,17 +375,44 @@ public class MultiClusterSyncResource {
       @FormParam("expectVersion") String expectVersion) {
     if (!AuthChecker.authCheck(token)) {
       LOG.error(
-          "update multi cluster syncs config, remoteDataCenter={}, remoteMetaAddress={}, auth check={} fail!",
-          remoteDataCenter,
-          dataInfoIds,
-          token);
+              "remove ignore dataInfoIds, remoteDataCenter={}, dataInfoIds={}, auth check={} fail!",
+              remoteDataCenter,
+              dataInfoIds,
+              token);
       return GenericResponse.buildFailedResponse("auth check fail");
     }
 
-    return null;
+    if (StringUtils.isBlank(remoteDataCenter)
+            || StringUtils.isBlank(dataInfoIds)
+            || StringUtils.isBlank(expectVersion)) {
+      return CommonResponse.buildFailedResponse(
+              "remoteDataCenter, dataInfoIds, expectVersion is not allow empty.");
+    }
+
+    MultiClusterSyncInfo exist = multiClusterSyncRepository.query(remoteDataCenter);
+
+    if (exist == null || exist.getDataVersion() != Long.parseLong(expectVersion)) {
+      return CommonResponse.buildFailedResponse(
+              StringFormatter.format(
+                      "remoteDataCenter:{}, expectVersion:{} not exist.", remoteDataCenter, expectVersion));
+    }
+
+    exist.getIgnoreDataInfoIds().removeAll(Sets.newHashSet(dataInfoIds.split(",")));
+    exist.setDataVersion(PersistenceDataBuilder.nextVersion());
+    boolean ret = multiClusterSyncRepository.update(exist, NumberUtils.toLong(expectVersion));
+
+    LOG.info(
+            "[removeIgnoreDataInfoIds]result:{}, remoteDataCenter:{}, dataInfoIds:{}, expectVersion:{}",
+            ret,
+            remoteDataCenter,
+            dataInfoIds,
+            expectVersion);
+
+    CommonResponse response = new CommonResponse();
+    response.setSuccess(ret);
+    return response;
   }
 
-  // todo xiaojian.xj remove
   @POST
   @Path("/remove")
   public CommonResponse removeConfig(
@@ -247,7 +421,7 @@ public class MultiClusterSyncResource {
       @FormParam("token") String token) {
     if (!AuthChecker.authCheck(token)) {
       LOG.error(
-          "update multi cluster syncs config, remoteDataCenter={}, remoteMetaAddress={}, auth check={} fail!",
+          "remove multi cluster syncs config, remoteDataCenter={}, auth check={} fail!",
           remoteDataCenter,
           token);
       return GenericResponse.buildFailedResponse("auth check fail");
@@ -256,6 +430,18 @@ public class MultiClusterSyncResource {
     if (StringUtils.isBlank(remoteDataCenter) || StringUtils.isBlank(expectVersion)) {
       return CommonResponse.buildFailedResponse(
           "remoteDataCenter, expectVersion is not allow empty.");
+    }
+
+    MultiClusterSyncInfo exist = multiClusterSyncRepository.query(remoteDataCenter);
+
+    if (exist == null || exist.getDataVersion() != Long.parseLong(expectVersion)) {
+      return CommonResponse.buildFailedResponse(
+              StringFormatter.format(
+                      "remoteDataCenter:{}, expectVersion:{} not exist.", remoteDataCenter, expectVersion));
+    }
+    if (exist.isEnableSyncDatum()) {
+      return CommonResponse.buildFailedResponse(
+              StringFormatter.format("remove remoteDataCenter:{} sync config fail when enable sync is true.", remoteDataCenter));
     }
 
     int ret =

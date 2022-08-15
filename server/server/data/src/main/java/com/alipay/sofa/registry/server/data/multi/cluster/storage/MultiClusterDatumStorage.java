@@ -301,11 +301,42 @@ public class MultiClusterDatumStorage implements DatumStorage {
     storage.foreach(slotId, f);
   }
 
+  @Override
+  public boolean removeStorage(String dataCenter) {
+    storageMap.remove(dataCenter);
+    return true;
+  }
+
+  @Override
+  public DatumVersion clearPublishers(String dataCenter, String dataInfoId) {
+    BaseDatumStorage storage = storageMap.get(dataCenter);
+    if (storage == null) {
+      LOGGER.warn(
+              "[nullStorage]clearPublishers dataCenter={}, dataInfoId={}",
+              dataCenter,
+              dataInfoId);
+      return null;
+    }
+    return storage.clearPublishers(dataInfoId);
+  }
+
+  @Override
+  public Map<String, DatumVersion> clearGroupPublishers(String dataCenter, String group) {
+    BaseDatumStorage storage = storageMap.get(dataCenter);
+    if (storage == null) {
+      LOGGER.warn(
+              "[nullStorage]clearGroupPublishers dataCenter={}, group={}",
+              dataCenter,
+              group);
+      return null;
+    }
+    return storage.clearGroupPublishers(group);
+  }
+
   private final class MultiClusterSlotListener implements SlotChangeListener {
 
     @Override
-    public void onSlotAdd(
-        String dataCenter, long slotTableEpoch, int slotId, long slotLeaderEpoch, Slot.Role role) {
+    public void onSlotAdd(String dataCenter, int slotId, Slot.Role role) {
       putPublisherGroups(dataCenter, slotId);
       LOGGER.info("{} add publisherGroup {}, role={},", dataCenter, slotId, role);
     }

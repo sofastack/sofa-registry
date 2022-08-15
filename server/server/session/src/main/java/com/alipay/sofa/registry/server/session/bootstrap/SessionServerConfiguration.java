@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.bootstrap;
 
+import com.alipay.sofa.registry.common.model.slot.filter.SyncSlotAcceptAllManager;
 import com.alipay.sofa.registry.common.model.slot.filter.SyncSlotAcceptorManager;
 import com.alipay.sofa.registry.common.model.wrapper.WrapperInterceptor;
 import com.alipay.sofa.registry.jdbc.config.JdbcConfiguration;
@@ -38,7 +39,6 @@ import com.alipay.sofa.registry.server.session.filter.IPMatchStrategy;
 import com.alipay.sofa.registry.server.session.filter.ProcessFilter;
 import com.alipay.sofa.registry.server.session.filter.blacklist.BlacklistMatchProcessFilter;
 import com.alipay.sofa.registry.server.session.filter.blacklist.DefaultIPMatchStrategy;
-import com.alipay.sofa.registry.server.session.filter.slot.SyncSlotAcceptAllManager;
 import com.alipay.sofa.registry.server.session.limit.AccessLimitService;
 import com.alipay.sofa.registry.server.session.limit.AccessLimitServiceImpl;
 import com.alipay.sofa.registry.server.session.mapper.ConnectionMapper;
@@ -537,8 +537,8 @@ public class SessionServerConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public FirePushService firePushService() {
-      return new FirePushService();
+    public FirePushService firePushService(SessionServerConfig sessionServerConfig) {
+      return new FirePushService(sessionServerConfig);
     }
 
     @Bean

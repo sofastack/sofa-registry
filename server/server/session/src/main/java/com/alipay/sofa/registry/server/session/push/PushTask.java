@@ -22,7 +22,6 @@ import com.alipay.sofa.registry.common.model.SubscriberUtils;
 import com.alipay.sofa.registry.common.model.store.BaseInfo;
 import com.alipay.sofa.registry.common.model.store.MultiSubDatum;
 import com.alipay.sofa.registry.common.model.store.PushData;
-import com.alipay.sofa.registry.common.model.store.SubDatum;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.trace.TraceID;
@@ -33,7 +32,6 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
-import org.springframework.util.CollectionUtils;
 
 public abstract class PushTask {
   protected final TraceID taskID;
@@ -106,20 +104,6 @@ public abstract class PushTask {
       }
     }
     return false;
-  }
-
-  protected Map<String, Long> getMaxPushedVersion() {
-    if (datum == null || CollectionUtils.isEmpty(datum.getDatumMap())) {
-      return Collections.emptyMap();
-    }
-
-    Map<String, Long> ret = Maps.newHashMapWithExpectedSize(datum.getDatumMap().size());
-    for (Entry<String, SubDatum> entry : datum.getDatumMap().entrySet()) {
-      ret.put(
-          entry.getKey(),
-          SubscriberUtils.getMaxPushedVersion(entry.getKey(), subscriberMap.values()));
-    }
-    return ret;
   }
 
   @Override

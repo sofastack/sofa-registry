@@ -25,6 +25,7 @@ import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.multi.cluster.storage.MultiClusterDatumStorage;
 import com.alipay.sofa.registry.server.data.slot.SlotChangeListener;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.util.*;
@@ -202,6 +203,21 @@ public class DatumStorageDelegate implements DatumStorage {
   }
 
   @Override
+  public boolean removeStorage(String dataCenter) {
+    return storageOf(dataCenter).removeStorage(dataCenter);
+  }
+
+  @Override
+  public DatumVersion clearPublishers(String dataCenter, String dataInfoId) {
+    return storageOf(dataCenter).clearPublishers(dataCenter, dataInfoId);
+  }
+
+  @Override
+  public Map<String, DatumVersion> clearGroupPublishers(String dataCenter, String group) {
+    return storageOf(dataCenter).clearGroupPublishers(dataCenter, group);
+  }
+
+  @Override
   public SlotChangeListener getSlotChangeListener(boolean localDataCenter) {
     return localDataCenter
         ? localDatumStorage.getSlotChangeListener(true)
@@ -232,5 +248,15 @@ public class DatumStorageDelegate implements DatumStorage {
     return StringUtils.equalsIgnoreCase(localDataCenter, dataCenter)
         ? localDatumStorage
         : multiClusterDatumStorage;
+  }
+
+  @VisibleForTesting
+  public DatumStorage getLocalDatumStorage() {
+    return localDatumStorage;
+  }
+
+  @VisibleForTesting
+  public DatumStorage getMultiClusterDatumStorage() {
+    return multiClusterDatumStorage;
   }
 }

@@ -176,11 +176,25 @@ public final class LocalDatumStorage implements DatumStorage {
     return storage.updateVersion(dataInfoId);
   }
 
+  @Override
+  public boolean removeStorage(String dataCenter) {
+    throw new UnsupportedOperationException("local datum remove is unsupported");
+  }
+
+  @Override
+  public DatumVersion clearPublishers(String dataCenter, String dataInfoId) {
+    throw new UnsupportedOperationException("local datum clearPublishers is unsupported");
+  }
+
+  @Override
+  public Map<String, DatumVersion> clearGroupPublishers(String dataCenter, String group) {
+    throw new UnsupportedOperationException("local datum clearGroupPublishers is unsupported");
+  }
+
   private final class SlotListener implements SlotChangeListener {
 
     @Override
-    public void onSlotAdd(
-        String dataCenter, long slotTableEpoch, int slotId, long slotLeaderEpoch, Slot.Role role) {
+    public void onSlotAdd(String dataCenter, int slotId, Slot.Role role) {
       putPublisherGroups(dataCenter, slotId);
       LOGGER.info("{} add publisherGroup {}, role={},", dataCenter, slotId, role);
     }

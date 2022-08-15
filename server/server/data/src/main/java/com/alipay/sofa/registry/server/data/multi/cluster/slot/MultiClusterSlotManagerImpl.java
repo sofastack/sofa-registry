@@ -19,6 +19,7 @@ package com.alipay.sofa.registry.server.data.multi.cluster.slot;
 import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.console.MultiSegmentSyncSwitch;
 import com.alipay.sofa.registry.common.model.constants.MultiValueConstants;
+import com.alipay.sofa.registry.common.model.metaserver.MultiClusterSyncInfo;
 import com.alipay.sofa.registry.common.model.multi.cluster.RemoteSlotTableStatus;
 import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.common.model.slot.Slot.Role;
@@ -49,6 +50,7 @@ import com.alipay.sofa.registry.server.data.slot.SyncContinues;
 import com.alipay.sofa.registry.server.data.slot.SyncLeaderTask;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.remoting.ClientSideExchanger;
+import com.alipay.sofa.registry.store.api.meta.MultiClusterSyncRepository;
 import com.alipay.sofa.registry.task.KeyedTask;
 import com.alipay.sofa.registry.util.AtomicSet;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
@@ -64,8 +66,11 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+
+import com.google.common.collect.Sets.SetView;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 
@@ -96,9 +101,11 @@ public class MultiClusterSlotManagerImpl implements MultiClusterSlotManager {
 
   @Autowired private MultiClusterExecutorManager multiClusterExecutorManager;
 
-  @Resource private MultiSyncDataAcceptorManager multiSyncDataAcceptorManager;
+  @Autowired private MultiSyncDataAcceptorManager multiSyncDataAcceptorManager;
 
   @Autowired private FetchMultiSyncService fetchMultiSyncService;
+
+  @Autowired private MultiClusterSyncRepository multiClusterSyncRepository;
 
   private static final Map<String, RemoteSlotTableStorage> slotTableStorageMap =
       Maps.newConcurrentMap();
@@ -206,7 +213,7 @@ public class MultiClusterSlotManagerImpl implements MultiClusterSlotManager {
       writeLock.lock();
       try {
         for (Slot slot : update.getSlots()) {
-          listenAdd(dataCenter, update.getEpoch(), slot);
+          listenAdd(dataCenter, slot);
           RemoteSlotStates state =
               slotStates.computeIfAbsent(
                   slot.getId(),
@@ -263,13 +270,10 @@ public class MultiClusterSlotManagerImpl implements MultiClusterSlotManager {
       return new Tuple<>(table, state);
     }
 
-    private void listenAdd(String dataCenter, long slotTableEpoch, Slot s) {
+    private void listenAdd(String dataCenter, Slot s) {
       slotChangeListenerManager
           .remoteListeners()
-          .forEach(
-              listener ->
-                  listener.onSlotAdd(
-                      dataCenter, slotTableEpoch, s.getId(), s.getLeaderEpoch(), Role.Leader));
+          .forEach(listener -> listener.onSlotAdd(dataCenter, s.getId(), Role.Leader));
     }
 
     private void listenRemove(String dataCenter, Slot s) {
@@ -423,16 +427,15 @@ public class MultiClusterSlotManagerImpl implements MultiClusterSlotManager {
 
   /**
    * 1.add new dataCenter slot table to remoteSlotTableStates 2.update exist dataCenter slot table
-   * 3.important: don't remove slot table which not exist in meta, it should be remove trigger by
-   * other way
+   * 3.important: remove slot table which not exist in meta
    *
    * @param remoteSlotTableStatus
    */
   @Override
   public void updateSlotTable(Map<String, RemoteSlotTableStatus> remoteSlotTableStatus) {
-    if (CollectionUtils.isEmpty(remoteSlotTableStatus)) {
-      return;
-    }
+
+    Set<String> tobeRemove =
+        Sets.difference(slotTableStorageMap.keySet(), remoteSlotTableStatus.keySet());
 
     boolean wakeup = false;
     for (Entry<String, RemoteSlotTableStatus> statusEntry : remoteSlotTableStatus.entrySet()) {
@@ -486,6 +489,31 @@ public class MultiClusterSlotManagerImpl implements MultiClusterSlotManager {
     }
     if (wakeup) {
       watchDog.wakeup();
+    }
+
+    processRemove(tobeRemove);
+  }
+
+  private void processRemove(Set<String> tobeRemove) {
+    if (CollectionUtils.isEmpty(tobeRemove)) {
+      return;
+    }
+    Set<MultiClusterSyncInfo> syncInfos = multiClusterSyncRepository.queryLocalSyncInfos();
+    Set<String> syncing = syncInfos.stream().map(MultiClusterSyncInfo::getRemoteDataCenter).collect(Collectors.toSet());
+    for (String remove : tobeRemove) {
+      if (syncing.contains(remove)) {
+        MULTI_CLUSTER_SLOT_TABLE.error("dataCenter:{} remove is forbidden.", remove);
+        continue;
+      }
+
+      MULTI_CLUSTER_SLOT_TABLE.info("start to remove dataCenter:{} datum and slotTable.", remove);
+      boolean removeSuccess = datumStorageDelegate.removeStorage(remove);
+      if (!removeSuccess) {
+        MULTI_CLUSTER_SLOT_TABLE.error("dataCenter:{} remove storage fail.", remove);
+        continue;
+      }
+      slotTableStorageMap.remove(remove);
+      MULTI_CLUSTER_SLOT_TABLE.info("remove dataCenter:{} datum and slotTable success.", remove);
     }
   }
 

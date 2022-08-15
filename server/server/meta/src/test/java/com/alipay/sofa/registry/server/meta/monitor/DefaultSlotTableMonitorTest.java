@@ -26,7 +26,6 @@ import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfigBea
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.monitor.impl.DefaultSlotTableMonitor;
 import com.alipay.sofa.registry.server.meta.slot.manager.SimpleSlotManager;
-
 import java.util.Collections;
 import java.util.List;
 import org.assertj.core.util.Lists;
@@ -119,7 +118,7 @@ public class DefaultSlotTableMonitorTest extends AbstractMetaServerTestBase {
               new SlotConfig.SlotBasicInfo(
                   SlotConfig.SLOT_NUM, SlotConfig.SLOT_REPLICAS, SlotConfig.FUNC),
               slotStatuses,
-                  Collections.EMPTY_MAP));
+              Collections.EMPTY_MAP));
     }
     Assert.assertTrue(monitor.isStableTableStable());
 
@@ -168,7 +167,8 @@ public class DefaultSlotTableMonitorTest extends AbstractMetaServerTestBase {
               System.currentTimeMillis(),
               new SlotConfig.SlotBasicInfo(
                   SlotConfig.SLOT_NUM, SlotConfig.SLOT_REPLICAS, SlotConfig.FUNC),
-              slotStatuses, Collections.EMPTY_MAP));
+              slotStatuses,
+              Collections.EMPTY_MAP));
     }
     Assert.assertFalse(monitor.isStableTableStable());
   }
@@ -200,7 +200,8 @@ public class DefaultSlotTableMonitorTest extends AbstractMetaServerTestBase {
               System.currentTimeMillis(),
               new SlotConfig.SlotBasicInfo(
                   SlotConfig.SLOT_NUM, SlotConfig.SLOT_REPLICAS, SlotConfig.FUNC),
-              slotStatuses, Collections.EMPTY_MAP));
+              slotStatuses,
+              Collections.EMPTY_MAP));
     }
     Assert.assertFalse(monitor.isStableTableStable());
   }
@@ -244,7 +245,8 @@ public class DefaultSlotTableMonitorTest extends AbstractMetaServerTestBase {
               System.currentTimeMillis(),
               new SlotConfig.SlotBasicInfo(
                   SlotConfig.SLOT_NUM, SlotConfig.SLOT_REPLICAS, SlotConfig.FUNC),
-              slotStatuses, Collections.EMPTY_MAP));
+              slotStatuses,
+              Collections.EMPTY_MAP));
     }
     Assert.assertTrue(monitor.isStableTableStable());
 
@@ -264,7 +266,8 @@ public class DefaultSlotTableMonitorTest extends AbstractMetaServerTestBase {
             System.currentTimeMillis(),
             new SlotConfig.SlotBasicInfo(
                 SlotConfig.SLOT_NUM, SlotConfig.SLOT_REPLICAS, SlotConfig.FUNC),
-            Lists.newArrayList(), Collections.EMPTY_MAP));
+            Lists.newArrayList(),
+            Collections.EMPTY_MAP));
     monitor.onHeartbeat(
         new HeartbeatRequest<DataNode>(
             new DataNode(randomURL(ip), getDc()),
@@ -273,7 +276,8 @@ public class DefaultSlotTableMonitorTest extends AbstractMetaServerTestBase {
             System.currentTimeMillis(),
             new SlotConfig.SlotBasicInfo(
                 SlotConfig.SLOT_NUM, SlotConfig.SLOT_REPLICAS, SlotConfig.FUNC),
-            Lists.newArrayList(), Collections.EMPTY_MAP));
+            Lists.newArrayList(),
+            Collections.EMPTY_MAP));
     Assert.assertTrue(Metrics.DataSlot.getDataServerSlotLagTimes(ip) > 1);
   }
 
@@ -291,7 +295,8 @@ public class DefaultSlotTableMonitorTest extends AbstractMetaServerTestBase {
             System.currentTimeMillis(),
             new SlotConfig.SlotBasicInfo(
                 SlotConfig.SLOT_NUM, SlotConfig.SLOT_REPLICAS, SlotConfig.FUNC),
-            Lists.newArrayList(), Collections.EMPTY_MAP));
+            Lists.newArrayList(),
+            Collections.EMPTY_MAP));
     verify(slotTableStats, never()).checkSlotStatuses(any(), any());
   }
 

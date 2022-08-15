@@ -20,6 +20,7 @@ import com.alipay.sofa.registry.common.model.console.PersistenceData;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.server.shared.util.PersistenceDataParser;
 import com.alipay.sofa.registry.store.api.DBResponse;
+import com.google.common.annotations.VisibleForTesting;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -34,5 +35,16 @@ public class FetchStopPushService {
     DBResponse<PersistenceData> stopPushResp =
         provideDataService.queryProvideData(ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID);
     return PersistenceDataParser.parse2BoolIgnoreCase(stopPushResp, false);
+  }
+
+  /**
+   * Setter method for property <tt>provideDataService</tt>.
+   *
+   * @param provideDataService value to be assigned to property provideDataService
+   */
+  @VisibleForTesting
+  public FetchStopPushService setProvideDataService(ProvideDataService provideDataService) {
+    this.provideDataService = provideDataService;
+    return this;
   }
 }

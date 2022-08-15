@@ -17,6 +17,8 @@
 package com.alipay.sofa.registry.common.model.metaserver;
 
 import com.google.common.base.Objects;
+import org.glassfish.jersey.internal.guava.Sets;
+
 import java.util.Collections;
 import java.util.Set;
 
@@ -39,13 +41,13 @@ public class MultiClusterSyncInfo {
   private boolean enableSyncDatum;
 
   /** allow sync multi group */
-  private Set<String> synPublisherGroups = Collections.EMPTY_SET;
+  private Set<String> synPublisherGroups = Sets.newHashSet();
 
   /** allow sync multi dataInfoId */
-  private Set<String> syncDataInfoIds = Collections.EMPTY_SET;
+  private Set<String> syncDataInfoIds = Sets.newHashSet();
 
   /** dataInfoId will not multi sync, this priority is higher than syncGroups and syncDataInfoIds */
-  private Set<String> ignoreDataInfoIds = Collections.EMPTY_SET;
+  private Set<String> ignoreDataInfoIds = Sets.newHashSet();
 
   /** data version */
   private long dataVersion;

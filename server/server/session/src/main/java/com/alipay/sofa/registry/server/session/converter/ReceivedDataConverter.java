@@ -235,7 +235,7 @@ public final class ReceivedDataConverter {
 
     ParaCheckUtil.checkEquals(
         unzipDatum.dataCenters(),
-        Collections.singletonList(localDataCenter),
+        Collections.singleton(localDataCenter),
         "fillRegionDatas.dataCenter");
     SubDatum subDatum = unzipDatum.getSubDatum(localDataCenter);
     receivedData.setSegment(localDataCenter);
@@ -254,12 +254,11 @@ public final class ReceivedDataConverter {
     }
 
     receivedData.setDataCount(pushDataCount);
-
     DataCenterPushInfo dataCenterPushInfo =
         new DataCenterPushInfo(
+            localDataCenter,
             subDatum.getVersion(),
-            Collections.singletonMap(
-                localDataCenter, new SegmentPushInfo(localDataCenter, dataCount)));
+            new SegmentPushInfo(localDataCenter, dataCount));
     return dataCenterPushInfo;
   }
 

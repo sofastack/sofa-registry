@@ -101,7 +101,9 @@ public class AbstractMetaServerTestBase extends AbstractTestBase {
 
   private BalancePolicy balancePolicy = new NaiveBalancePolicy();
 
-  protected LeaderInfo leaderInfo = new LeaderInfo(System.currentTimeMillis(), "127.0.0.1", System.currentTimeMillis() + 10 * 1000);
+  protected LeaderInfo leaderInfo =
+      new LeaderInfo(
+          System.currentTimeMillis(), "127.0.0.1", System.currentTimeMillis() + 10 * 1000);
 
   protected PersistenceData mockPersistenceData() {
     String dataInfoId =

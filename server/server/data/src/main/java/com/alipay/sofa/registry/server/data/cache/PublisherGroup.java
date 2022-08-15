@@ -426,4 +426,17 @@ public final class PublisherGroup {
     return StringFormatter.format(
         "PubGroup{{},size={},ver={}}", dataInfoId, pubMap.size(), version);
   }
+
+  public DatumVersion clearPublishers() {
+    lock.writeLock().lock();
+    try {
+      if (pubSize() > 0) {
+        pubMap.clear();
+        return updateVersion();
+      }
+      return null;
+    } finally {
+      lock.writeLock().unlock();
+    }
+  }
 }

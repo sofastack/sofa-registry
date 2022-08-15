@@ -355,6 +355,10 @@ public class DataChangeEventCenter {
 
   boolean handleChanges(List<DataChangeEvent> events, NodeType nodeType, int notifyPort) {
 
+    if (org.springframework.util.CollectionUtils.isEmpty(events)) {
+      return false;
+    }
+
     Server server = boltExchange.getServer(notifyPort);
     Map<String, List<Channel>> channelsMap = server.selectAllAvailableChannelsForHostAddress();
 
@@ -364,7 +368,7 @@ public class DataChangeEventCenter {
     }
     for (DataChangeEvent event : events) {
       final String dataCenter = event.getDataCenter();
-      if (!dataServerConfig.isLocalDataCenter(dataCenter) && nodeType == NodeType.DATA) {
+      if (nodeType == NodeType.DATA && !dataServerConfig.isLocalDataCenter(dataCenter)) {
         LOGGER.info(
             "[skip]dataCenter={}, dataInfoIds={} change skip to notify remote data.",
             dataCenter,
@@ -457,9 +461,6 @@ public class DataChangeEventCenter {
         // first clean the event
         final int maxItems = dataServerConfig.getNotifyMaxItems();
         final List<DataChangeEvent> events = transferChangeEvent(maxItems);
-        if (events.isEmpty()) {
-          return;
-        }
 
         // notify local session
         handleChanges(events, NodeType.SESSION, dataServerConfig.getNotifyPort());
@@ -498,7 +499,7 @@ public class DataChangeEventCenter {
   }
 
   @VisibleForTesting
-  void setDatumCache(DatumStorageDelegate datumStorageDelegate) {
+  void setDatumDelegate(DatumStorageDelegate datumStorageDelegate) {
     this.datumStorageDelegate = datumStorageDelegate;
   }
 
@@ -526,5 +527,16 @@ public class DataChangeEventCenter {
   @VisibleForTesting
   void setNotifyTempExecutor(KeyedThreadPoolExecutor notifyTempExecutor) {
     this.notifyTempExecutor = notifyTempExecutor;
+  }
+
+  /**
+   * Setter method for property <tt>multiClusterDataServerConfig</tt>.
+   *
+   * @param multiClusterDataServerConfig value to be assigned to property
+   *     multiClusterDataServerConfig
+   */
+  @VisibleForTesting
+  void setMultiClusterDataServerConfig(MultiClusterDataServerConfig multiClusterDataServerConfig) {
+    this.multiClusterDataServerConfig = multiClusterDataServerConfig;
   }
 }

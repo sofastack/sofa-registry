@@ -34,6 +34,7 @@ import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.alipay.sofa.registry.util.StringFormatter;
+import com.google.common.annotations.VisibleForTesting;
 import java.util.Map;
 import java.util.concurrent.Executor;
 import javax.annotation.Resource;
@@ -110,5 +111,50 @@ public class DataSlotDiffDigestRequestHandler
   @Override
   public Class interest() {
     return DataSlotDiffDigestRequest.class;
+  }
+
+  /**
+   * Setter method for property <tt>executorManager</tt>.
+   *
+   * @param executorManager value to be assigned to property executorManager
+   */
+  @VisibleForTesting
+  public DataSlotDiffDigestRequestHandler setExecutorManager(ExecutorManager executorManager) {
+    this.executorManager = executorManager;
+    return this;
+  }
+
+  /**
+   * Setter method for property <tt>sessionDataStore</tt>.
+   *
+   * @param sessionDataStore value to be assigned to property sessionDataStore
+   */
+  @VisibleForTesting
+  public DataSlotDiffDigestRequestHandler setSessionDataStore(DataStore sessionDataStore) {
+    this.sessionDataStore = sessionDataStore;
+    return this;
+  }
+
+  /**
+   * Setter method for property <tt>slotTableCache</tt>.
+   *
+   * @param slotTableCache value to be assigned to property slotTableCache
+   */
+  @VisibleForTesting
+  public DataSlotDiffDigestRequestHandler setSlotTableCache(SlotTableCache slotTableCache) {
+    this.slotTableCache = slotTableCache;
+    return this;
+  }
+
+  /**
+   * Setter method for property <tt>syncSlotAcceptAllManager</tt>.
+   *
+   * @param syncSlotAcceptAllManager value to be assigned to property syncSlotAcceptAllManager
+   */
+  @VisibleForTesting
+  public DataSlotDiffDigestRequestHandler setSyncSlotAcceptAllManager(
+      SyncSlotAcceptorManager syncSlotAcceptAllManager) {
+    this.syncSlotAcceptAllManager = syncSlotAcceptAllManager;
+    return this;
   }
 }

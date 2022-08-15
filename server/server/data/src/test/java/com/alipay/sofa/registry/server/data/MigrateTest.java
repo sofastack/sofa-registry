@@ -20,6 +20,7 @@ import com.alipay.remoting.serialization.HessianSerializer;
 import com.alipay.sofa.registry.common.model.RegisterVersion;
 import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
 import com.alipay.sofa.registry.common.model.slot.DataSlotDiffPublisherRequest;
+import com.alipay.sofa.registry.common.model.slot.filter.SyncSlotAcceptorManager;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.io.BufferedOutputStream;
@@ -34,6 +35,8 @@ import org.junit.Test;
  * @version v 0.1 2020-11-18 14:09 yuzhi.lyz Exp $
  */
 public class MigrateTest {
+  private static final SyncSlotAcceptorManager ACCEPT_ALL = request -> true;
+
   @Test
   public void testBody() throws Exception {
     HessianSerializer s = new HessianSerializer();
@@ -47,7 +50,8 @@ public class MigrateTest {
       DatumSummary summary = new DatumSummary("app" + System.currentTimeMillis(), publisherMap);
       list.add(summary);
     }
-    DataSlotDiffPublisherRequest request = new DataSlotDiffPublisherRequest(100, 200, list);
+    DataSlotDiffPublisherRequest request =
+        new DataSlotDiffPublisherRequest("testdc", 100, 200, ACCEPT_ALL, list);
     byte[] bs = s.serialize(request);
     ByteArrayOutputStream b = new ByteArrayOutputStream();
     GZIPOutputStream zip = new GZIPOutputStream(b);

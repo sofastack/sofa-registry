@@ -22,7 +22,6 @@ import com.google.common.collect.Lists;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
-import java.util.function.BiConsumer;
 
 /**
  * @author yuzhi.lyz
@@ -37,11 +36,6 @@ public class DataSlotDiffPublisherRequest implements Serializable {
   private final int slotId;
 
   private final SyncSlotAcceptorManager acceptorManager;
-
-  private final BiConsumer<String, String> f =
-      (zone, value) -> {
-        zone = "localDataCenter";
-      };
 
   public DataSlotDiffPublisherRequest(
       String localDataCenter,

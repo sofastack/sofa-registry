@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.server.data.bootstrap;
 
+import com.alipay.sofa.registry.common.model.slot.filter.SyncSlotAcceptAllManager;
+import com.alipay.sofa.registry.common.model.slot.filter.SyncSlotAcceptorManager;
 import com.alipay.sofa.registry.jdbc.config.JdbcConfiguration;
 import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
@@ -33,6 +35,7 @@ import com.alipay.sofa.registry.server.data.remoting.dataserver.handler.SlotFoll
 import com.alipay.sofa.registry.server.data.remoting.dataserver.handler.SlotFollowerDiffPublisherRequestHandler;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.MetaServerServiceImpl;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.handler.NotifyProvideDataChangeHandler;
+import com.alipay.sofa.registry.server.data.remoting.metaserver.handler.RemoteDatumClearEventHandler;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.provideData.ProvideDataProcessorManager;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.provideData.processor.SessionLeaseProvideDataProcessor;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.*;
@@ -40,7 +43,6 @@ import com.alipay.sofa.registry.server.data.resource.DataDigestResource;
 import com.alipay.sofa.registry.server.data.resource.DatumApiResource;
 import com.alipay.sofa.registry.server.data.resource.HealthResource;
 import com.alipay.sofa.registry.server.data.resource.SlotTableStatusResource;
-import com.alipay.sofa.registry.server.data.slot.SlotAccessor;
 import com.alipay.sofa.registry.server.data.slot.SlotAccessorDelegate;
 import com.alipay.sofa.registry.server.data.slot.SlotChangeListenerManager;
 import com.alipay.sofa.registry.server.data.slot.SlotManager;
@@ -139,8 +141,13 @@ public class DataServerBeanConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public SlotAccessor slotAccessor() {
+    public SlotAccessorDelegate slotAccessorDelegate() {
       return new SlotAccessorDelegate();
+    }
+
+    @Bean
+    public SyncSlotAcceptorManager syncSlotAcceptAllManager() {
+      return new SyncSlotAcceptAllManager();
     }
 
     @Bean
@@ -215,6 +222,7 @@ public class DataServerBeanConfiguration {
       Collection<AbstractClientHandler> list = new ArrayList<>();
       list.add(notifyProvideDataChangeHandler());
       list.add(slotTableChangeEventHandler());
+      list.add(remoteDatumClearEventHandler());
       return list;
     }
 
@@ -256,6 +264,11 @@ public class DataServerBeanConfiguration {
     @Bean
     public SlotTableChangeEventHandler slotTableChangeEventHandler() {
       return new SlotTableChangeEventHandler();
+    }
+
+    @Bean
+    public RemoteDatumClearEventHandler remoteDatumClearEventHandler() {
+      return new RemoteDatumClearEventHandler();
     }
   }
 

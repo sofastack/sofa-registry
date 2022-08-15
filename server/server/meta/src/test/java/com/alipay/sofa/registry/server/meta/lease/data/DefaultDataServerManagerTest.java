@@ -27,7 +27,6 @@ import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.monitor.data.DataServerStats;
 import com.alipay.sofa.registry.server.meta.slot.manager.SimpleSlotManager;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeoutException;

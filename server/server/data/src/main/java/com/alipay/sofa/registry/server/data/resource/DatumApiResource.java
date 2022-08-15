@@ -30,7 +30,6 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.DatumStorageDelegate;
-import com.alipay.sofa.registry.server.data.slot.SlotAccessor;
 import com.alipay.sofa.registry.server.data.slot.SlotManager;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
@@ -64,8 +63,6 @@ public class DatumApiResource {
   @Autowired AbstractServerHandler batchPutDataHandler;
 
   @Autowired SlotManager slotManager;
-
-  @Autowired private SlotAccessor slotAccessor;
 
   /**
    * curl -i -d '{"dataInfoId":"testDataId#@#DEFAULT_INSTANCE_ID#@#DEFAULT_GROUP"}' -H
@@ -155,8 +152,8 @@ public class DatumApiResource {
       Publisher publisher = buildPublisher(datum, datumParam);
 
       // build request and invoke
-      final int slotId = slotAccessor.slotOf(publisher.getDataInfoId());
-      final Slot slot = slotAccessor.getSlot(dataServerConfig.getLocalDataCenter(), slotId);
+      final int slotId = slotManager.slotOf(publisher.getDataInfoId());
+      final Slot slot = slotManager.getSlot(dataServerConfig.getLocalDataCenter(), slotId);
       BatchRequest batchRequest =
           new BatchRequest(
               publisher.getSessionProcessId(), slotId, Collections.singletonList(publisher));
@@ -195,7 +192,7 @@ public class DatumApiResource {
 
       // build request and invoke
       final int slotId = slotManager.slotOf(publisher.getDataInfoId());
-      final Slot slot = slotAccessor.getSlot(dataServerConfig.getLocalDataCenter(), slotId);
+      final Slot slot = slotManager.getSlot(dataServerConfig.getLocalDataCenter(), slotId);
       BatchRequest batchRequest =
           new BatchRequest(
               publisher.getSessionProcessId(), slotId, Collections.singletonList(publisher));

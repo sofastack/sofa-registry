@@ -51,15 +51,15 @@ public class DataSlotDiffPublisherRequestHandler
   private static final Logger LOGGER =
       LoggerFactory.getLogger(DataSlotDiffPublisherRequestHandler.class);
 
-  @Autowired private SessionServerConfig sessionServerConfig;
+  @Autowired SessionServerConfig sessionServerConfig;
 
-  @Autowired private ExecutorManager executorManager;
+  @Autowired ExecutorManager executorManager;
 
-  @Autowired private DataStore sessionDataStore;
+  @Autowired DataStore sessionDataStore;
 
-  @Autowired private SlotTableCache slotTableCache;
+  @Autowired SlotTableCache slotTableCache;
 
-  @Resource private SyncSlotAcceptorManager syncSlotAcceptAllManager;
+  @Resource SyncSlotAcceptorManager syncSlotAcceptAllManager;
 
   @Override
   public void checkParam(DataSlotDiffPublisherRequest request) {

@@ -16,19 +16,26 @@
  */
 package com.alipay.sofa.registry.server.session.multi.cluster;
 
+import com.alipay.sofa.registry.common.model.metaserver.MultiClusterSyncInfo;
 import com.alipay.sofa.registry.common.model.multi.cluster.DataCenterMetadata;
 import com.alipay.sofa.registry.common.model.multi.cluster.RemoteSlotTableStatus;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.providedata.FetchStopPushService;
+import com.alipay.sofa.registry.store.api.meta.MultiClusterSyncRepository;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
+
+import com.google.common.collect.Sets;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -43,7 +50,9 @@ public class DataCenterMetadataCacheImpl implements DataCenterMetadataCache {
 
   @Autowired private SessionServerConfig sessionServerConfig;
 
-  @Autowired private FetchStopPushService fetchStopPushService;
+  @Resource private FetchStopPushService fetchStopPushService;
+
+  @Autowired private MultiClusterSyncRepository multiClusterSyncRepository;
 
   private Map<String, DataCenterMetadata> metadataCache = Maps.newConcurrentMap();
 
@@ -105,6 +114,9 @@ public class DataCenterMetadataCacheImpl implements DataCenterMetadataCache {
   @Override
   public boolean saveDataCenterZones(Map<String, RemoteSlotTableStatus> remoteSlotTableStatus) {
 
+    Set<String> tobeRemove =
+            Sets.difference(metadataCache.keySet(), remoteSlotTableStatus.keySet());
+
     boolean success = true;
     for (Entry<String, RemoteSlotTableStatus> entry :
         Optional.ofNullable(remoteSlotTableStatus).orElse(Maps.newHashMap()).entrySet()) {
@@ -122,7 +134,25 @@ public class DataCenterMetadataCacheImpl implements DataCenterMetadataCache {
       }
       metadataCache.put(entry.getKey(), value.getDataCenterMetadata());
     }
+
+    processRemove(tobeRemove);
     return success;
+  }
+
+  private void processRemove(Set<String> tobeRemove) {
+    if (CollectionUtils.isEmpty(tobeRemove)) {
+      return;
+    }
+    Set<MultiClusterSyncInfo> syncInfos = multiClusterSyncRepository.queryLocalSyncInfos();
+    Set<String> syncing = syncInfos.stream().map(MultiClusterSyncInfo::getRemoteDataCenter).collect(Collectors.toSet());
+    for (String remove : tobeRemove) {
+      if (syncing.contains(remove)) {
+        LOGGER.error("dataCenter:{} remove is forbidden.", remove);
+        continue;
+      }
+      metadataCache.remove(remove);
+      LOGGER.info("remove dataCenter:{} datum and slotTable success.", remove);
+    }
   }
 
   @Override
@@ -138,5 +168,29 @@ public class DataCenterMetadataCacheImpl implements DataCenterMetadataCache {
   @Override
   public Set<String> getSyncDataCenters() {
     return metadataCache.keySet();
+  }
+
+  /**
+   * Setter method for property <tt>sessionServerConfig</tt>.
+   *
+   * @param sessionServerConfig value to be assigned to property sessionServerConfig
+   */
+  @VisibleForTesting
+  public DataCenterMetadataCacheImpl setSessionServerConfig(
+      SessionServerConfig sessionServerConfig) {
+    this.sessionServerConfig = sessionServerConfig;
+    return this;
+  }
+
+  /**
+   * Setter method for property <tt>fetchStopPushService</tt>.
+   *
+   * @param fetchStopPushService value to be assigned to property fetchStopPushService
+   */
+  @VisibleForTesting
+  public DataCenterMetadataCacheImpl setFetchStopPushService(
+      FetchStopPushService fetchStopPushService) {
+    this.fetchStopPushService = fetchStopPushService;
+    return this;
   }
 }

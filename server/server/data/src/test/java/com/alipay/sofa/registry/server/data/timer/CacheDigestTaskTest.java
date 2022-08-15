@@ -33,7 +33,7 @@ public class CacheDigestTaskTest {
     // npe error
     Assert.assertFalse(task.dump());
 
-    DatumStorageDelegate datumStorageDelegate = TestBaseUtils.newLocalDatumCache("testDc", true);
+    DatumStorageDelegate datumStorageDelegate = TestBaseUtils.newLocalDatumDelegate("testDc", true);
     task.setDatumCache(datumStorageDelegate);
 
     cfg.setCacheDigestIntervalMinutes(0);
@@ -44,7 +44,7 @@ public class CacheDigestTaskTest {
 
     cfg.setCacheDigestIntervalMinutes(1);
     Publisher pub = TestBaseUtils.createTestPublisher("testDataId");
-    datumStorageDelegate.getLocalDatumStorage().put(pub);
+    datumStorageDelegate.getLocalDatumStorage().putPublisher("testDc", pub);
     // has item
     Assert.assertTrue(task.dump());
     Assert.assertTrue(task.init());

@@ -29,8 +29,14 @@ import com.alipay.sofa.registry.core.model.BaseRegister;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.remoting.bolt.BoltChannel;
 import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
+import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfigBean;
+import com.alipay.sofa.registry.server.session.multi.cluster.DataCenterMetadataCacheImpl;
+import com.alipay.sofa.registry.server.session.providedata.FetchGrayPushSwitchService;
+import com.alipay.sofa.registry.server.session.providedata.FetchStopPushService;
+import com.alipay.sofa.registry.server.session.push.PushSwitchService;
 import com.alipay.sofa.registry.server.session.remoting.console.SessionConsoleExchanger;
+import com.alipay.sofa.registry.server.shared.config.CommonConfig;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.google.common.collect.Lists;
@@ -143,6 +149,57 @@ public class TestUtils {
     }
   }
 
+  public static DataCenterMetadataCacheImpl newDataCenterMetaCache(SessionServerConfig config) {
+    DataCenterMetadataCacheImpl dataCenterMetadataCache = new DataCenterMetadataCacheImpl();
+    dataCenterMetadataCache
+        .setSessionServerConfig(config)
+        .setFetchStopPushService(new FetchStopPushService());
+
+    return dataCenterMetadataCache;
+  }
+
+  public static DataCenterMetadataCacheImpl newDataCenterMetaCache(String dataCenter) {
+    DataCenterMetadataCacheImpl dataCenterMetadataCache = new DataCenterMetadataCacheImpl();
+    dataCenterMetadataCache
+        .setSessionServerConfig(newSessionConfig(dataCenter))
+        .setFetchStopPushService(new FetchStopPushService());
+
+    return dataCenterMetadataCache;
+  }
+
+  public static PushSwitchService newPushSwitchService(SessionServerConfigBean serverConfigBean) {
+    PushSwitchService pushSwitchService = new PushSwitchService();
+    pushSwitchService
+        .setFetchGrayPushSwitchService(new FetchGrayPushSwitchService())
+        .setSessionServerConfig(serverConfigBean)
+        .setDataCenterMetadataCache(newDataCenterMetaCache(serverConfigBean));
+
+    return pushSwitchService;
+  }
+
+  public static PushSwitchService newPushSwitchService(String testDc) {
+    SessionServerConfigBean sessionServerConfigBean = newSessionConfig(testDc);
+    PushSwitchService pushSwitchService = new PushSwitchService();
+    pushSwitchService
+        .setFetchGrayPushSwitchService(new FetchGrayPushSwitchService())
+        .setSessionServerConfig(sessionServerConfigBean)
+        .setDataCenterMetadataCache(newDataCenterMetaCache(sessionServerConfigBean));
+
+    return pushSwitchService;
+  }
+
+  public static MultiSubDatum newMultiSubDatum(
+      String dataCenter, String dataId, long version, List<SubPublisher> publishers) {
+    SubDatum subDatum = TestUtils.newSubDatum(dataCenter, dataId, version, publishers);
+    return MultiSubDatum.of(subDatum);
+  }
+
+  public static MultiSubDatum newMultiSubDatum(
+      String dataId, long version, List<SubPublisher> publishers) {
+    SubDatum subDatum = TestUtils.newSubDatum(dataId, version, publishers);
+    return MultiSubDatum.of(subDatum);
+  }
+
   public interface RunError {
     void run() throws Exception;
   }
@@ -228,12 +285,22 @@ public class TestUtils {
     return publisher;
   }
 
+  public static String newDataInfoId(String dataId) {
+    String dataInfoId = DataInfo.toDataInfoId(dataId, INSTANCE, GROUP);
+    return dataInfoId;
+  }
+
   public static SubDatum newSubDatum(String dataId, long version, List<SubPublisher> publishers) {
+    return newSubDatum("dataCenter", dataId, version, publishers);
+  }
+
+  public static SubDatum newSubDatum(
+      String dataCenter, String dataId, long version, List<SubPublisher> publishers) {
     String dataInfo = DataInfo.toDataInfoId(dataId, INSTANCE, GROUP);
     SubDatum subDatum =
         SubDatum.normalOf(
             dataInfo,
-            "dataCenter",
+            dataCenter,
             version,
             publishers,
             dataId,

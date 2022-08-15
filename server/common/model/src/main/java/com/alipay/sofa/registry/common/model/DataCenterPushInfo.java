@@ -38,6 +38,11 @@ public class DataCenterPushInfo {
     this.pushVersion = pushVersion;
   }
 
+  public DataCenterPushInfo(String dataCenter, long pushVersion, SegmentPushInfo segmentPushInfo) {
+    this.pushVersion = pushVersion;
+    segmentPushInfos.put(dataCenter, segmentPushInfo);
+  }
+
   public DataCenterPushInfo(long pushVersion, Map<String, SegmentPushInfo> segmentPushInfos) {
     this.pushVersion = pushVersion;
     this.segmentPushInfos = segmentPushInfos;

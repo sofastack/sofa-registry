@@ -44,6 +44,7 @@ import com.alipay.sofa.registry.util.DatumVersionUtil;
 import com.alipay.sofa.registry.util.JsonUtils;
 import com.alipay.sofa.registry.util.ObjectFactory;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -62,6 +63,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.rules.TestName;
+import org.springframework.util.CollectionUtils;
 
 /**
  * @author chen.zhu
@@ -648,15 +650,30 @@ public class AbstractSessionServerTestBase extends AbstractTestBase {
       return false;
     }
 
+    /**
+     * statistic when push success
+     *
+     * @param versions dataCenter -> version
+     * @param pushNums dataCenter -> pushNum
+     * @param subscriber
+     * @return
+     */
     @Override
     public boolean onPushSuccess(
-        String dataCenter, long pushVersion, int pushNum, Subscriber subscriber) {
-      return subscriber.checkAndUpdateCtx(dataCenter, pushVersion, pushNum);
+        Map<String, Long> versions, Map<String, Integer> pushNums, Subscriber subscriber) {
+      return subscriber.checkAndUpdateCtx(versions, pushNums);
     }
 
+    /**
+     * statistic when push fail
+     *
+     * @param versions
+     * @param subscriber
+     * @return
+     */
     @Override
-    public boolean onPushFail(String dataCenter, long pushVersion, Subscriber subscriber) {
-      return subscriber.onPushFail(dataCenter, pushVersion);
+    public boolean onPushFail(Map<String, Long> versions, Subscriber subscriber) {
+      return subscriber.onPushFail(versions);
     }
   }
 
@@ -703,6 +720,8 @@ public class AbstractSessionServerTestBase extends AbstractTestBase {
   public static class InMemoryAppRevisionRepository implements AppRevisionRepository {
 
     private static final Map<String, AppRevision> revisions = Maps.newConcurrentMap();
+
+    private Set<String> dataCenters = Sets.newHashSet();
 
     private InterfaceAppsRepository interfaceAppsRepository;
 
@@ -754,6 +773,9 @@ public class AbstractSessionServerTestBase extends AbstractTestBase {
     }
 
     @Override
+    public void startSynced() {}
+
+    @Override
     public void waitSynced() {}
 
     @Override
@@ -785,11 +807,25 @@ public class AbstractSessionServerTestBase extends AbstractTestBase {
     public Set<String> allRevisionIds() {
       return revisions.keySet();
     }
+
+    @Override
+    public Set<String> dataCenters() {
+      return dataCenters;
+    }
+
+    @Override
+    public void setDataCenters(Set<String> dataCenters) {
+      this.dataCenters = dataCenters;
+    }
   }
 
   public static class InMemoryInterfaceAppsRepository implements InterfaceAppsRepository {
+    public static final String LOCAL_DATACENTER = "LOCAL_DATACENTER";
 
-    private static final Map<String, InterfaceMapping> mapping = Maps.newHashMap();
+    private Set<String> dataCenters = Sets.newHashSet();
+
+    // <dataInfoId, <dataCenter, InterfaceMapping>>
+    private static final Map<String, Map<String, InterfaceMapping>> mapping = Maps.newHashMap();
     /**
      * get revisions by interfaceName
      *
@@ -798,20 +834,41 @@ public class AbstractSessionServerTestBase extends AbstractTestBase {
      */
     @Override
     public synchronized InterfaceMapping getAppNames(String dataInfoId) {
-      return mapping.get(dataInfoId);
+      Map<String, InterfaceMapping> mappings = mapping.get(dataInfoId);
+
+      if (CollectionUtils.isEmpty(mappings)) {
+        return new InterfaceMapping(-1);
+      }
+
+      long maxVersion = -1L;
+      Set<String> apps = Sets.newHashSet();
+      for (InterfaceMapping value : mappings.values()) {
+        if (value.getNanosVersion() > maxVersion) {
+          maxVersion = value.getNanosVersion();
+        }
+        apps.addAll(value.getApps());
+      }
+      InterfaceMapping ret = new InterfaceMapping(maxVersion, apps);
+      return ret;
     }
 
     @Override
     public synchronized void register(String appName, Set<String> interfaceNames) {
       for (String interfaceName : interfaceNames) {
+        Map<String, InterfaceMapping> map =
+            mapping.computeIfAbsent(interfaceName, k -> Maps.newHashMap());
+
         InterfaceMapping interfaceMapping =
-            mapping.computeIfAbsent(interfaceName, k -> new InterfaceMapping(System.nanoTime()));
-        mapping.put(interfaceName, interfaceMapping.addApp(System.nanoTime(), appName));
+            map.computeIfAbsent(LOCAL_DATACENTER, k -> new InterfaceMapping(System.nanoTime()));
+        map.put(LOCAL_DATACENTER, interfaceMapping.addApp(System.nanoTime(), appName));
       }
     }
 
     @Override
     public void renew(String interfaceName, String appName) {}
+
+    @Override
+    public void startSynced() {}
 
     @Override
     public void waitSynced() {}
@@ -824,6 +881,16 @@ public class AbstractSessionServerTestBase extends AbstractTestBase {
     @Override
     public Map<String, Map<String, InterfaceMapping>> allServiceMapping() {
       return Maps.newHashMap(mapping);
+    }
+
+    @Override
+    public Set<String> dataCenters() {
+      return dataCenters;
+    }
+
+    @Override
+    public void setDataCenters(Set<String> dataCenters) {
+      this.dataCenters = dataCenters;
     }
   }
 }

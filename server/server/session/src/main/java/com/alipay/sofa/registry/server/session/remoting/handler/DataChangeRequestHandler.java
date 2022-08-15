@@ -70,19 +70,23 @@ public class DataChangeRequestHandler extends AbstractClientHandler<DataChangeRe
 
   @Override
   public void checkParam(DataChangeRequest request) {
+    ParaCheckUtil.checkNotNull(request, "DataChangeRequest");
     ParaCheckUtil.checkNotBlank(request.getDataCenter(), "request.dataCenter");
     ParaCheckUtil.checkNotNull(request.getDataInfoIds(), "request.dataInfoIds");
   }
 
   @Override
   public Object doHandle(Channel channel, DataChangeRequest dataChangeRequest) {
+    if (!pushSwitchService.canLocalDataCenterPush()) {
+      return null;
+    }
     final String dataNode = RemotingHelper.getRemoteHostAddress(channel);
     final String dataCenter = dataChangeRequest.getDataCenter();
     final long changeTimestamp = System.currentTimeMillis();
     for (Map.Entry<String, DatumVersion> e : dataChangeRequest.getDataInfoIds().entrySet()) {
 
       final String dataInfoId = e.getKey();
-      if (!pushSwitchService.canPushMulti(dataInfoId, Collections.singleton(dataCenter))) {
+      if (!pushSwitchService.canPushMulti(Collections.singleton(dataCenter))) {
         continue;
       }
       final DatumVersion version = e.getValue();

@@ -19,7 +19,6 @@ package com.alipay.sofa.registry.server.session.store;
 import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
-import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.registry.SessionRegistry.SelectSubscriber;
@@ -90,6 +89,11 @@ public class SessionInterests extends AbstractDataManager<Subscriber> implements
         Maps.newHashMapWithExpectedSize(dataCenters.size());
     final List<Subscriber> toRegisterMultiSubscribers = Lists.newArrayListWithCapacity(128);
 
+    for (String dataCenter : dataCenters) {
+      versions.put(dataCenter, Maps.newHashMapWithExpectedSize(dataInfoIdSize));
+      toPushEmptySubscribers.put(dataCenter, Lists.newArrayListWithCapacity(256));
+    }
+
     store.forEach(
         (String dataInfoId, Map<String, Subscriber> subs) -> {
           if (CollectionUtils.isEmpty(subs)) {
@@ -103,16 +107,12 @@ public class SessionInterests extends AbstractDataManager<Subscriber> implements
             }
 
             for (String dataCenter : dataCenters) {
-              Map<String, DatumVersion> vers =
-                  versions.computeIfAbsent(
-                      dataCenter, k -> Maps.newHashMapWithExpectedSize(dataInfoIdSize));
-              List<Subscriber> pushEmpty =
-                  toPushEmptySubscribers.computeIfAbsent(
-                      dataCenter, k -> Lists.newArrayListWithCapacity(256));
+              Map<String, DatumVersion> vers = versions.get(dataCenter);
+              List<Subscriber> pushEmpty = toPushEmptySubscribers.get(dataCenter);
 
               final boolean isLocalDataCenter = localDataCenter.equals(dataCenter);
-              // not global sub and not local dataCenter, not interest the other dataCenter's pub
-              if (sub.getScope() != ScopeEnum.global && !isLocalDataCenter) {
+              // not multi sub and not local dataCenter, not interest the other dataCenter's pub
+              if (!sub.acceptMulti() && !isLocalDataCenter) {
                 continue;
               }
 

@@ -47,11 +47,11 @@ import org.springframework.util.StringUtils;
 
 public class PushDataGenerator {
 
-  @Autowired private SessionServerConfig sessionServerConfig;
+  @Autowired SessionServerConfig sessionServerConfig;
 
-  @Resource private CompressPushService compressPushService;
+  @Resource CompressPushService compressPushService;
 
-  @Autowired private DataCenterMetadataCache dataCenterMetadataCache;
+  @Autowired DataCenterMetadataCache dataCenterMetadataCache;
 
   public PushData createPushData(MultiSubDatum unzipDatum, Map<String, Subscriber> subscriberMap) {
     unzipDatum.mustUnzipped();
@@ -157,8 +157,8 @@ public class PushDataGenerator {
             unzipDatum,
             subscriber.getScope(),
             subscriberRegisterIdList,
-            sessionServerConfig.getSessionServerDataCenter(),
             clientCell,
+            sessionServerConfig.getSessionServerDataCenter(),
             pushDataPredicate);
 
     final Byte serializerIndex = subscriber.getSourceAddress().getSerializerIndex();

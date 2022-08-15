@@ -23,6 +23,7 @@ import com.alipay.sofa.registry.core.model.MultiReceivedData;
 import com.alipay.sofa.registry.core.model.MultiSegmentData;
 import com.alipay.sofa.registry.core.model.ReceivedConfigData;
 import com.alipay.sofa.registry.core.model.ReceivedData;
+import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.alipay.sofa.registry.util.SystemUtils;
 import com.google.protobuf.UnsafeByteOperations;
 import java.util.*;
@@ -151,6 +152,8 @@ public final class ReceivedDataConvertor {
     if (receivedDataJava == null) {
       return null;
     }
+
+    ParaCheckUtil.checkNotNull(compressorGetter, "compressorGetter");
     try {
       Compressor compressor = compressorGetter.get(receivedDataJava.getData());
       String segment = receivedDataJava.getSegment();

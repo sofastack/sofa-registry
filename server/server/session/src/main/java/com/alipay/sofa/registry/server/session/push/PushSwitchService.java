@@ -20,6 +20,7 @@ import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.multi.cluster.DataCenterMetadataCache;
 import com.alipay.sofa.registry.server.session.providedata.FetchGrayPushSwitchService;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
+import com.google.common.annotations.VisibleForTesting;
 import java.util.Set;
 import javax.annotation.Resource;
 import org.apache.commons.collections.CollectionUtils;
@@ -33,8 +34,7 @@ public class PushSwitchService {
 
   @Autowired private DataCenterMetadataCache dataCenterMetadataCache;
 
-  public boolean canPushMulti(String dataInfoId, Set<String> dataCenters) {
-    ParaCheckUtil.checkNotBlank(dataInfoId, "push.dataInfoId");
+  public boolean canPushMulti(Set<String> dataCenters) {
     ParaCheckUtil.checkNotEmpty(dataCenters, "push.dataCenters");
     for (String dataCenter : dataCenters) {
       if (!dataCenterCanPush(dataCenter)) {
@@ -44,13 +44,20 @@ public class PushSwitchService {
     return true;
   }
 
-  public boolean canLocalDataCenterPush() {
-    return dataCenterCanPush(sessionServerConfig.getSessionServerDataCenter())
-        || CollectionUtils.isNotEmpty(fetchGrayPushSwitchService.getOpenIps());
+  private boolean dataCenterCanPush(String dataCenter) {
+    if (sessionServerConfig.isLocalDataCenter(dataCenter)) {
+      return switchCanPush(sessionServerConfig.getSessionServerDataCenter())
+          || CollectionUtils.isNotEmpty(fetchGrayPushSwitchService.getOpenIps());
+    }
+
+    return switchCanPush(dataCenter);
   }
 
-  public boolean canIpPushMulti(String ip, String dataInfoId, Set<String> dataCenters) {
-    ParaCheckUtil.checkNotBlank(dataInfoId, "push.dataInfoId");
+  public boolean canLocalDataCenterPush() {
+    return dataCenterCanPush(sessionServerConfig.getSessionServerDataCenter());
+  }
+
+  public boolean canIpPushMulti(String ip, Set<String> dataCenters) {
     ParaCheckUtil.checkNotBlank(ip, "push.ip");
     ParaCheckUtil.checkNotEmpty(dataCenters, "push.dataCenters");
 
@@ -67,7 +74,7 @@ public class PushSwitchService {
     return dataCenterAndIpCanPush(sessionServerConfig.getSessionServerDataCenter(), ip);
   }
 
-  private boolean dataCenterCanPush(String dataCenter) {
+  private boolean switchCanPush(String dataCenter) {
     Boolean stopPush = dataCenterMetadataCache.isStopPush(dataCenter);
     if (stopPush == null || stopPush) {
       return false;
@@ -82,5 +89,60 @@ public class PushSwitchService {
           && fetchGrayPushSwitchService.getOpenIps().contains(ip);
     }
     return true;
+  }
+
+  /**
+   * Setter method for property <tt>sessionServerConfig</tt>.
+   *
+   * @param sessionServerConfig value to be assigned to property sessionServerConfig
+   */
+  @VisibleForTesting
+  public PushSwitchService setSessionServerConfig(SessionServerConfig sessionServerConfig) {
+    this.sessionServerConfig = sessionServerConfig;
+    return this;
+  }
+
+  /**
+   * Setter method for property <tt>fetchGrayPushSwitchService</tt>.
+   *
+   * @param fetchGrayPushSwitchService value to be assigned to property fetchGrayPushSwitchService
+   */
+  @VisibleForTesting
+  public PushSwitchService setFetchGrayPushSwitchService(
+      FetchGrayPushSwitchService fetchGrayPushSwitchService) {
+    this.fetchGrayPushSwitchService = fetchGrayPushSwitchService;
+    return this;
+  }
+
+  /**
+   * Setter method for property <tt>dataCenterMetadataCache</tt>.
+   *
+   * @param dataCenterMetadataCache value to be assigned to property dataCenterMetadataCache
+   */
+  @VisibleForTesting
+  public PushSwitchService setDataCenterMetadataCache(
+      DataCenterMetadataCache dataCenterMetadataCache) {
+    this.dataCenterMetadataCache = dataCenterMetadataCache;
+    return this;
+  }
+
+  /**
+   * Getter method for property <tt>dataCenterMetadataCache</tt>.
+   *
+   * @return property value of dataCenterMetadataCache
+   */
+  @VisibleForTesting
+  public DataCenterMetadataCache getDataCenterMetadataCache() {
+    return dataCenterMetadataCache;
+  }
+
+  /**
+   * Getter method for property <tt>fetchGrayPushSwitchService</tt>.
+   *
+   * @return property value of fetchGrayPushSwitchService
+   */
+  @VisibleForTesting
+  public FetchGrayPushSwitchService getFetchGrayPushSwitchService() {
+    return fetchGrayPushSwitchService;
   }
 }

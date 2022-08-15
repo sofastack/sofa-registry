@@ -58,6 +58,9 @@ public class MultiSubDatum implements Serializable, Sizer {
     }
     Map<String, SubDatum> datumMap = Maps.newHashMapWithExpectedSize(datum.getDatumMap().size());
     for (Entry<String, SubDatum> entry : datum.datumMap.entrySet()) {
+      if (entry.getValue() == null) {
+        continue;
+      }
       datumMap.put(entry.getKey(), SubDatum.intern(entry.getValue()));
     }
     return new MultiSubDatum(WordCache.getWordCache(datum.dataInfoId), datumMap);

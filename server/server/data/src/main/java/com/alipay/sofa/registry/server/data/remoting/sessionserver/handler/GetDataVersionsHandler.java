@@ -25,9 +25,7 @@ import com.alipay.sofa.registry.common.model.slot.SlotAccessGenericResponse;
 import com.alipay.sofa.registry.common.model.store.WordCache;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.server.data.cache.DatumStorageDelegate;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import java.util.Map;
 import java.util.concurrent.Executor;
@@ -42,7 +40,6 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public class GetDataVersionsHandler extends AbstractDataHandler<GetDataVersionRequest> {
   private static final Logger LOGGER = DataLog.GET_LOGGER;
-  @Autowired private DatumStorageDelegate datumStorageDelegate;
 
   @Autowired private ThreadPoolExecutor getDataProcessorExecutor;
 
@@ -145,10 +142,5 @@ public class GetDataVersionsHandler extends AbstractDataHandler<GetDataVersionRe
   @Override
   public Class interest() {
     return GetDataVersionRequest.class;
-  }
-
-  @VisibleForTesting
-  void setDatumCache(DatumStorageDelegate datumStorageDelegate) {
-    this.datumStorageDelegate = datumStorageDelegate;
   }
 }

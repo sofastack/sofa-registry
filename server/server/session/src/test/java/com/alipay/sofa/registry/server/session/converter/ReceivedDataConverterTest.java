@@ -18,6 +18,7 @@ package com.alipay.sofa.registry.server.session.converter;
 
 import com.alipay.sofa.registry.common.model.ServerDataBox;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
+import com.alipay.sofa.registry.common.model.store.MultiSubDatum;
 import com.alipay.sofa.registry.common.model.store.SubDatum;
 import com.alipay.sofa.registry.common.model.store.SubPublisher;
 import com.alipay.sofa.registry.core.model.DataBox;
@@ -34,6 +35,7 @@ import org.junit.Test;
 
 public class ReceivedDataConverterTest {
   private final String dataId = "testDataId";
+  private final String localDataCenter = "testLocalDataCenter";
   private final String localZone = "testLocalZone";
   private final SubPublisher subPublisher =
       TestUtils.newSubPublisher(1, System.currentTimeMillis());
@@ -41,27 +43,36 @@ public class ReceivedDataConverterTest {
   @Test
   public void testGetReceivedDataMulti() throws Exception {
     Assert.assertNull(
-        ReceivedDataConverter.getReceivedDataMulti(
-                null, ScopeEnum.zone, Collections.emptyList(), null, null)
+        ReceivedDataConverter.getReceivedData(
+                null, ScopeEnum.zone, Collections.emptyList(), null, localDataCenter, null)
             .getPayload());
-    SubDatum subDatum = TestUtils.newSubDatum(dataId, 100, Collections.emptyList());
+    SubDatum subDatum =
+        TestUtils.newSubDatum(localDataCenter, dataId, 100, Collections.emptyList());
     List<String> subIds = Collections.singletonList("testSubId");
     ReceivedData data =
-        ReceivedDataConverter.getReceivedDataMulti(
-                subDatum, ScopeEnum.dataCenter, subIds, localZone, null)
+        ReceivedDataConverter.getReceivedData(
+                MultiSubDatum.of(subDatum),
+                ScopeEnum.dataCenter,
+                subIds,
+                localZone,
+                localDataCenter,
+                null)
             .getPayload();
 
     assertReceivedData(data, subDatum, subIds, localZone);
     Assert.assertEquals(data.getData().size(), 0);
 
     SessionServerConfigBean configBean = TestUtils.newSessionConfig("testDc");
-    subDatum = TestUtils.newSubDatum(dataId, 100, Collections.singletonList(subPublisher));
+    subDatum =
+        TestUtils.newSubDatum(
+            localDataCenter, dataId, 100, Collections.singletonList(subPublisher));
     data =
-        ReceivedDataConverter.getReceivedDataMulti(
-                subDatum,
+        ReceivedDataConverter.getReceivedData(
+                MultiSubDatum.of(subDatum),
                 ScopeEnum.dataCenter,
                 subIds,
                 localZone,
+                localDataCenter,
                 ZonePredicate.pushDataPredicate(
                     subDatum.getDataId(), localZone, ScopeEnum.dataCenter, configBean))
             .getPayload();
@@ -76,7 +87,7 @@ public class ReceivedDataConverterTest {
   @Test
   public void testGetReceivedConfigData() throws Exception {
     ServerDataBox dataBox = new ServerDataBox("testDataBox");
-    SubDatum subDatum = TestUtils.newSubDatum(dataId, 10, Collections.emptyList());
+    SubDatum subDatum = TestUtils.newSubDatum(localDataCenter, dataId, 10, Collections.emptyList());
     DataInfo dataInfo = DataInfo.valueOf(subDatum.getDataInfoId());
     ReceivedConfigData data = ReceivedDataConverter.getReceivedConfigData(dataBox, dataInfo, 100L);
     Assert.assertEquals(data.getDataId(), dataInfo.getDataId());

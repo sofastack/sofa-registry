@@ -110,7 +110,7 @@ public class PushProcessor {
       Map<String, Subscriber> subscriberMap,
       MultiSubDatum datum) {
     if (!pushSwitchService.canIpPushMulti(
-        addr.getAddress().getHostAddress(), datum.getDataInfoId(), datum.dataCenters())) {
+        addr.getAddress().getHostAddress(), datum.dataCenters())) {
       return;
     }
     // most of the time, element size is 1, SingleMap to save the memory
@@ -293,9 +293,7 @@ public class PushProcessor {
 
   boolean doPush(PushTask task) {
     if (!pushSwitchService.canIpPushMulti(
-        task.pushingTaskKey.addr.getAddress().getHostAddress(),
-        task.datum.getDataInfoId(),
-        task.datum.dataCenters())) {
+        task.pushingTaskKey.addr.getAddress().getHostAddress(), task.datum.dataCenters())) {
       return false;
     }
 
@@ -408,9 +406,7 @@ public class PushProcessor {
     protected boolean commit() {
       try {
         if (!pushSwitchService.canIpPushMulti(
-            pushingTaskKey.addr.getAddress().getHostAddress(),
-            datum.getDataInfoId(),
-            datum.dataCenters())) {
+            pushingTaskKey.addr.getAddress().getHostAddress(), datum.dataCenters())) {
           return false;
         }
         // keyed by client.addr && (pushingKey%concurrencyLevel)

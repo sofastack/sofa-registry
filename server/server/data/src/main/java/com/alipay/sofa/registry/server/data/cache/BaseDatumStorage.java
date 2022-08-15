@@ -28,6 +28,8 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import org.springframework.util.CollectionUtils;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -239,5 +241,21 @@ public class BaseDatumStorage {
       count += groups.tombstoneNum();
     }
     return count;
+  }
+
+  public DatumVersion clearPublishers(String dataInfoId) {
+    PublisherGroups groups = getPublisherGroups(dataInfoId);
+    return groups == null ? null : groups.clearPublishers(dataInfoId);
+  }
+
+  public Map<String, DatumVersion> clearGroupPublishers(String group) {
+    Map<String, DatumVersion> ret = Maps.newHashMapWithExpectedSize(1024);
+    for (PublisherGroups publisherGroups : publisherGroupsMap.values()) {
+      Map<String, DatumVersion> datumVersions = publisherGroups.clearGroupPublishers(group);
+      if (!CollectionUtils.isEmpty(datumVersions)) {
+        ret.putAll(datumVersions);
+      }
+    }
+    return ret;
   }
 }

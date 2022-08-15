@@ -27,9 +27,9 @@ import com.alipay.sofa.registry.common.model.store.SubDatum;
 import com.alipay.sofa.registry.compress.CompressUtils;
 import com.alipay.sofa.registry.compress.Compressor;
 import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.server.data.cache.DatumStorageDelegate;
 import com.alipay.sofa.registry.server.data.providedata.CompressDatumService;
 import com.alipay.sofa.registry.server.shared.util.DatumUtils;
+import com.google.common.annotations.VisibleForTesting;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadPoolExecutor;
 import javax.annotation.Resource;
@@ -42,7 +42,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 public abstract class BaseGetDataHandler<T> extends AbstractDataHandler<T> {
 
   private static final Logger LOGGER = DataLog.GET_LOGGER;
-  @Autowired protected DatumStorageDelegate datumStorageDelegate;
 
   @Autowired protected ThreadPoolExecutor getDataProcessorExecutor;
 
@@ -126,5 +125,26 @@ public abstract class BaseGetDataHandler<T> extends AbstractDataHandler<T> {
   private SlotAccessGenericResponse<SubDatum> buildResponse(
       boolean success, SlotAccess slotAccess, SubDatum subDatum, String msg) {
     return new SlotAccessGenericResponse<>(success, msg, slotAccess, subDatum);
+  }
+
+  /**
+   * Getter method for property <tt>compressDatumService</tt>.
+   *
+   * @return property value of compressDatumService
+   */
+  @VisibleForTesting
+  public CompressDatumService getCompressDatumService() {
+    return compressDatumService;
+  }
+
+  /**
+   * Setter method for property <tt>compressDatumService</tt>.
+   *
+   * @param compressDatumService value to be assigned to property compressDatumService
+   */
+  @VisibleForTesting
+  public BaseGetDataHandler setCompressDatumService(CompressDatumService compressDatumService) {
+    this.compressDatumService = compressDatumService;
+    return this;
   }
 }

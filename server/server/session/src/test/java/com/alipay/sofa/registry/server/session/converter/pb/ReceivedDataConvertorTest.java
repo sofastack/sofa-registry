@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.server.session.converter.pb;
 
 import com.alipay.sofa.registry.common.model.client.pb.ReceivedConfigDataPb;
+import com.alipay.sofa.registry.common.model.client.pb.ReceivedDataPb;
 import com.alipay.sofa.registry.compress.CompressConstants;
 import com.alipay.sofa.registry.compress.CompressUtils;
 import com.alipay.sofa.registry.core.model.DataBox;
@@ -30,7 +31,8 @@ import org.junit.Test;
 public class ReceivedDataConvertorTest {
   @Test
   public void testReceivedData() {
-    Assert.assertNull(ReceivedDataConvertor.convert2Pb((ReceivedData) null));
+
+    Assert.assertNull(ReceivedDataConvertor.convert2Pb(null, null));
     Assert.assertNull(ReceivedDataConvertor.convert2Java(null));
 
     ReceivedData registerJava = new ReceivedData();
@@ -45,7 +47,7 @@ public class ReceivedDataConvertorTest {
     registerJava.setData(
         Collections.singletonMap("testZone", Lists.newArrayList(new DataBox("testDataBox"))));
 
-    ReceivedDataPb pb = ReceivedDataConvertor.convert2Pb(registerJava);
+    ReceivedDataPb pb = ReceivedDataConvertor.convert2Pb(registerJava, data -> null);
     ReceivedData convertJava = ReceivedDataConvertor.convert2Java(pb);
     assertReceivedData(registerJava, convertJava);
 
@@ -108,9 +110,11 @@ public class ReceivedDataConvertorTest {
     registerJava.setSubscriberRegistIds(Lists.newArrayList("testRegisterId"));
     registerJava.setData(
         Collections.singletonMap("testZone", Lists.newArrayList(new DataBox("testDataBox"))));
+
     ReceivedDataPb dataPb =
-        ReceivedDataConvertor.convert2CompressedPb(
-            registerJava, CompressUtils.find(new String[] {CompressConstants.encodingZstd}));
+        ReceivedDataConvertor.convert2Pb(
+            registerJava,
+            data -> CompressUtils.find(new String[] {CompressConstants.encodingZstd}));
     Assert.assertEquals(0, dataPb.getDataMap().size());
     Assert.assertNotEquals(0, dataPb.getOriginBodySize());
     Assert.assertNotEquals(0, dataPb.getBody().size());

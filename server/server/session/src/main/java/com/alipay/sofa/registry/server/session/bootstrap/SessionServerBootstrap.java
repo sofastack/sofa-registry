@@ -214,8 +214,8 @@ public class SessionServerBootstrap {
   private void postStart() throws Throwable {
     startupRetryer.call(
         () -> {
-          LOGGER.info("successful start session server, remove self from blacklist");
           metaNodeService.removeSelfFromMetaBlacklist();
+          LOGGER.info("successful start session server, remove self from blacklist");
           return true;
         });
   }

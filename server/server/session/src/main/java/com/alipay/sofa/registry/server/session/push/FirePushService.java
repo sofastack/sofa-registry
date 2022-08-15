@@ -56,7 +56,7 @@ public class FirePushService {
   private static final Logger LOGGER = PushLog.LOGGER;
 
   @Autowired PushSwitchService pushSwitchService;
-  @Autowired SessionServerConfig sessionServerConfig;
+  final SessionServerConfig sessionServerConfig;
 
   @Resource CacheService sessionDatumCacheService;
 
@@ -74,8 +74,12 @@ public class FirePushService {
   RegProcessor regProcessor;
   final ChangeHandler changeHandler = new ChangeHandler();
 
-  private final Set<String> localDataCenter =
-      Collections.singleton(sessionServerConfig.getSessionServerDataCenter());
+  private final Set<String> localDataCenter;
+
+  public FirePushService(SessionServerConfig sessionServerConfig) {
+    this.sessionServerConfig = sessionServerConfig;
+    this.localDataCenter = Collections.singleton(sessionServerConfig.getSessionServerDataCenter());
+  }
 
   @PostConstruct
   public void init() {
@@ -228,7 +232,8 @@ public class FirePushService {
 
   private boolean processPush(
       PushCause pushCause, MultiSubDatum datum, Collection<Subscriber> subscriberList) {
-    if (!pushSwitchService.canPushMulti(datum.getDataInfoId(), datum.dataCenters())) {
+    if (!pushSwitchService.canLocalDataCenterPush()
+        || !pushSwitchService.canPushMulti(datum.dataCenters())) {
       return false;
     }
     if (subscriberList.isEmpty()) {
@@ -302,10 +307,12 @@ public class FirePushService {
       }
 
       if (subscriber.acceptMulti()) {
-        // only Reg will push multi datacenter together
+        // when sub is acceptMulti and has not push,
+        // only PushType.Reg can trigger push multi datacenter together
         if (!subscriber.hasPushed() && pushCause.pushType != PushType.Reg) {
           continue;
         }
+
         // sub accept multi, check multi datacenter version,
         // return true if one of any dataCenter need to update
         if (subscriber.checkVersion(versions)) {
@@ -375,7 +382,7 @@ public class FirePushService {
     }
 
     MultiSubDatum datum = getDatum(dataInfoId, getDatumVersions);
-    if (datum == null) {
+    if (datum == null || CollectionUtils.isEmpty(datum.getDatumMap())) {
       Subscriber first = subscribers.get(0);
       datum =
           DatumUtils.newEmptyMultiSubDatum(

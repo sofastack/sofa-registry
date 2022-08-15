@@ -28,11 +28,11 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.DatumStorageDelegate;
-import com.alipay.sofa.registry.server.data.slot.SlotAccessor;
 import com.alipay.sofa.registry.server.data.slot.SlotManager;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.alipay.sofa.registry.util.StringFormatter;
+import com.google.common.annotations.VisibleForTesting;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Resource;
@@ -53,8 +53,6 @@ public abstract class BaseSlotDiffPublisherRequestHandler
 
   @Autowired private SlotManager slotManager;
 
-  @Autowired private SlotAccessor slotAccessor;
-
   public BaseSlotDiffPublisherRequestHandler(Logger logger) {
     this.logger = logger;
   }
@@ -70,20 +68,16 @@ public abstract class BaseSlotDiffPublisherRequestHandler
     try {
       slotManager.triggerUpdateSlotTable(request.getSlotTableEpoch());
       final int slotId = request.getSlotId();
-      if (!slotAccessor.isLeader(dataServerConfig.getLocalDataCenter(), slotId)) {
+      if (!slotManager.isLeader(dataServerConfig.getLocalDataCenter(), slotId)) {
         logger.warn(
             "sync slot request from {}, not leader of {}", request.getLocalDataCenter(), slotId);
         return new GenericResponse().fillFailed("not leader of " + slotId);
       }
 
-      // not use acceptorManager to filter in getPublishers() method,
-      // because getPublishers() method only loop dataIndoId, will not loop publishers;
       Map<String, Map<String, Publisher>> existingPublishers =
           datumStorageDelegate.getPublishers(
               dataServerConfig.getLocalDataCenter(), request.getSlotId());
 
-      // use acceptorManager in DataSlotDiffUtils.diffDigestResult,
-      // as it will loop publishers once
       DataSlotDiffPublisherResult result =
           calcDiffResult(
               slotId,
@@ -131,5 +125,70 @@ public abstract class BaseSlotDiffPublisherRequestHandler
   @Override
   public Object buildFailedResponse(String msg) {
     return new GenericResponse().fillFailed(msg);
+  }
+
+  /**
+   * Getter method for property <tt>datumStorageDelegate</tt>.
+   *
+   * @return property value of datumStorageDelegate
+   */
+  @VisibleForTesting
+  public DatumStorageDelegate getDatumStorageDelegate() {
+    return datumStorageDelegate;
+  }
+
+  /**
+   * Setter method for property <tt>datumStorageDelegate</tt>.
+   *
+   * @param datumStorageDelegate value to be assigned to property datumStorageDelegate
+   */
+  @VisibleForTesting
+  public BaseSlotDiffPublisherRequestHandler setDatumStorageDelegate(
+      DatumStorageDelegate datumStorageDelegate) {
+    this.datumStorageDelegate = datumStorageDelegate;
+    return this;
+  }
+
+  /**
+   * Getter method for property <tt>dataServerConfig</tt>.
+   *
+   * @return property value of dataServerConfig
+   */
+  @VisibleForTesting
+  public DataServerConfig getDataServerConfig() {
+    return dataServerConfig;
+  }
+
+  /**
+   * Setter method for property <tt>dataServerConfig</tt>.
+   *
+   * @param dataServerConfig value to be assigned to property dataServerConfig
+   */
+  @VisibleForTesting
+  public BaseSlotDiffPublisherRequestHandler setDataServerConfig(
+      DataServerConfig dataServerConfig) {
+    this.dataServerConfig = dataServerConfig;
+    return this;
+  }
+
+  /**
+   * Getter method for property <tt>slotManager</tt>.
+   *
+   * @return property value of slotManager
+   */
+  @VisibleForTesting
+  public SlotManager getSlotManager() {
+    return slotManager;
+  }
+
+  /**
+   * Setter method for property <tt>slotManager</tt>.
+   *
+   * @param slotManager value to be assigned to property slotManager
+   */
+  @VisibleForTesting
+  public BaseSlotDiffPublisherRequestHandler setSlotManager(SlotManager slotManager) {
+    this.slotManager = slotManager;
+    return this;
   }
 }

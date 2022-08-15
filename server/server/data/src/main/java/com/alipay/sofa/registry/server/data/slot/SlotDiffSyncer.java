@@ -37,7 +37,6 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.exchange.RequestException;
 import com.alipay.sofa.registry.remoting.exchange.message.Response;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
-import com.alipay.sofa.registry.server.data.cache.DatumStorage;
 import com.alipay.sofa.registry.server.data.cache.DatumStorageDelegate;
 import com.alipay.sofa.registry.server.data.change.DataChangeEventCenter;
 import com.alipay.sofa.registry.server.data.change.DataChangeType;
@@ -401,8 +400,10 @@ public final class SlotDiffSyncer {
     // summary == null means can not assembly summary before(eg:migrating);
     // can not change to CollectionUtils.isEmpty
     if (summary == null) {
+      // SingletonMap unsupported computeIfAbsent
       final Map<String, Map<String, DatumSummary>> datumSummary =
           Maps.newHashMapWithExpectedSize(1);
+      datumSummary.put(sessionIp, Maps.newHashMapWithExpectedSize(64));
 
       datumStorageDelegate.foreach(
           dataServerConfig.getLocalDataCenter(),
@@ -478,7 +479,7 @@ public final class SlotDiffSyncer {
   }
 
   @VisibleForTesting
-  DatumStorage getDatumStorage() {
+  DatumStorageDelegate getDatumStorageDelegate() {
     return datumStorageDelegate;
   }
 

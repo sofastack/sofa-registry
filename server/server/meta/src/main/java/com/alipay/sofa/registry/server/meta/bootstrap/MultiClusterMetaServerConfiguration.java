@@ -22,6 +22,7 @@ import com.alipay.sofa.registry.server.meta.multi.cluster.DefaultMultiClusterSlo
 import com.alipay.sofa.registry.server.meta.multi.cluster.remote.RemoteClusterMetaExchanger;
 import com.alipay.sofa.registry.server.meta.multi.cluster.remote.RemoteClusterSlotSyncHandler;
 import com.alipay.sofa.registry.server.meta.resource.MultiClusterSyncResource;
+import com.alipay.sofa.registry.server.meta.resource.MultiDatumResource;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -60,6 +61,11 @@ public class MultiClusterMetaServerConfiguration {
     @Bean
     public MultiClusterSyncResource multiClusterSyncResource() {
       return new MultiClusterSyncResource();
+    }
+
+    @Bean
+    public MultiDatumResource multiDatumResource() {
+      return new MultiDatumResource();
     }
   }
 

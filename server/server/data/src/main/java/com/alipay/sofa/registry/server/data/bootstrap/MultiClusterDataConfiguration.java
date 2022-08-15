@@ -23,6 +23,7 @@ import com.alipay.sofa.registry.server.data.multi.cluster.exchanger.RemoteDataNo
 import com.alipay.sofa.registry.server.data.multi.cluster.executor.MultiClusterExecutorManager;
 import com.alipay.sofa.registry.server.data.multi.cluster.slot.MultiClusterSlotManager;
 import com.alipay.sofa.registry.server.data.multi.cluster.slot.MultiClusterSlotManagerImpl;
+import com.alipay.sofa.registry.server.data.multi.cluster.storage.MultiClusterDatumService;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -100,6 +101,11 @@ public class MultiClusterDataConfiguration {
     @Bean
     public MultiSyncDataAcceptorManager multiSyncDataAcceptorManager() {
       return new MultiSyncDataAcceptorManager();
+    }
+
+    @Bean
+    public MultiClusterDatumService multiClusterDatumService() {
+      return new MultiClusterDatumService();
     }
   }
 }

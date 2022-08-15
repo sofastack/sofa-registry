@@ -21,6 +21,7 @@ import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.server.session.AbstractSessionServerTestBase;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import org.junit.Assert;
 import org.junit.Before;
@@ -48,8 +49,10 @@ public class SessionInterestsTest extends AbstractSessionServerTestBase {
 
   @Test
   public void testCheckInterestVersion() {
-    Map<String, DatumVersion> map = interests.selectSubscribers(getDc()).o1;
-    Assert.assertEquals(0, map.size());
+    Map<String, Map<String, DatumVersion>> map =
+        interests.selectSubscribers(Collections.singleton(getDc())).getVersions();
+    Assert.assertEquals(1, map.size());
+    Assert.assertEquals(0, map.get(getDc()).size());
 
     Assert.assertSame(
         Interests.InterestVersionCheck.NoSub,
@@ -65,7 +68,9 @@ public class SessionInterestsTest extends AbstractSessionServerTestBase {
             DataInfo.toDataInfoId(dataInfo, instanceId, "default-group"),
             System.currentTimeMillis() + 100));
 
-    Assert.assertTrue(subscriber.checkAndUpdateCtx(getDc(), 100, 10));
+    Assert.assertTrue(
+        subscriber.checkAndUpdateCtx(
+            Collections.singletonMap(getDc(), 100L), Collections.singletonMap(getDc(), 10)));
     Assert.assertFalse(subscriber.needPushEmpty(getDc()));
     subscriber.markPushEmpty(getDc(), 100);
     Assert.assertTrue(subscriber.needPushEmpty(getDc()));
@@ -85,17 +90,29 @@ public class SessionInterestsTest extends AbstractSessionServerTestBase {
       }
     }
 
-    subscriber2.checkAndUpdateCtx(getDc(), 80, 20);
+    subscriber2.checkAndUpdateCtx(
+        Collections.singletonMap(getDc(), 80L), Collections.singletonMap(getDc(), 20));
 
     // get sub2.dc1
-    map = interests.selectSubscribers(getDc() + "1").o1;
+    map = interests.selectSubscribers(Collections.singleton(getDc() + "1")).getVersions();
     Assert.assertEquals(map.size(), 1);
-    Assert.assertEquals(map.get(subscriber.getDataInfoId()).getValue(), 0);
+    Map<String, DatumVersion> versionMap = map.get(getDc() + "1");
+    Assert.assertEquals(versionMap.size(), 0);
 
     // get sub2
-    map = interests.selectSubscribers(getDc()).o1;
+    map = interests.selectSubscribers(Collections.singleton(getDc())).getVersions();
     Assert.assertEquals(map.size(), 1);
-    Assert.assertEquals(map.get(subscriber.getDataInfoId()).getValue(), 80);
+    versionMap = map.get(getDc());
+    Assert.assertEquals(versionMap.size(), 1);
+    Assert.assertEquals(versionMap.get(subscriber.getDataInfoId()).getValue(), 80);
+
+    // get multi sub2.dc1
+    subscriber2.setAcceptMulti(true);
+    map = interests.selectSubscribers(Collections.singleton(getDc() + "1")).getVersions();
+    Assert.assertEquals(map.size(), 1);
+    versionMap = map.get(getDc() + "1");
+    Assert.assertEquals(versionMap.size(), 1);
+    Assert.assertEquals(versionMap.get(subscriber.getDataInfoId()).getValue(), 0);
   }
 
   @Test

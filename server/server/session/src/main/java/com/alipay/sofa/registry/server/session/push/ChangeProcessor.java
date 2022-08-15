@@ -34,7 +34,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class ChangeProcessor {
   private static final Logger LOGGER = LoggerFactory.getLogger(ChangeProcessor.class);
 
-  @Autowired private SessionServerConfig sessionServerConfig;
+  @Autowired SessionServerConfig sessionServerConfig;
 
   Map<String, Worker[]> dataCenterWorkers = Maps.newConcurrentMap();
 

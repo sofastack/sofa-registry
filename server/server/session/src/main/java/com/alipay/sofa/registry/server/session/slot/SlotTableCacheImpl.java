@@ -27,13 +27,16 @@ import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.shared.slot.SlotTableRecorder;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import javax.annotation.PostConstruct;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
 
 /**
  * @author yuzhi.lyz
@@ -53,6 +56,11 @@ public final class SlotTableCacheImpl implements SlotTableCache {
 
   @Autowired private SessionServerConfig sessionServerConfig;
 
+  @PostConstruct
+  public void init() {
+    slotTableMap.put(sessionServerConfig.getSessionServerDataCenter(), SlotTable.INIT);
+  }
+
   @Override
   public int slotOf(String dataInfoId) {
     return slotFunction.slotOf(dataInfoId);
@@ -66,6 +74,7 @@ public final class SlotTableCacheImpl implements SlotTableCache {
 
   @Override
   public Slot getSlot(String dataCenter, int slotId) {
+    // slotTable will be replace when update, not need to lock when reading
     SlotTable slotTable = slotTableMap.get(dataCenter);
     return slotTable == null ? null : slotTable.getSlot(slotId);
   }
@@ -87,7 +96,13 @@ public final class SlotTableCacheImpl implements SlotTableCache {
     lock.lock();
     final long curEpoch;
     try {
-      curEpoch = slotTableMap.get(sessionServerConfig.getSessionServerDataCenter()).getEpoch();
+      SlotTable exist = slotTableMap.get(sessionServerConfig.getSessionServerDataCenter());
+      if (exist == null) {
+        recordSlotTable(slotTable);
+        slotTableMap.put(sessionServerConfig.getSessionServerDataCenter(), slotTable);
+        return true;
+      }
+      curEpoch = exist.getEpoch();
       if (curEpoch >= slotTable.getEpoch()) {
         LOGGER.info(
             "skip update, dataCenter={}, current={}, update={}",
@@ -170,7 +185,11 @@ public final class SlotTableCacheImpl implements SlotTableCache {
 
   @Override
   public Map<String, Long> getRemoteSlotTableEpoch() {
-    Map<String, Long> ret = Maps.newHashMapWithExpectedSize(slotTableMap.size() - 1);
+    if (CollectionUtils.isEmpty(slotTableMap)) {
+      return Collections.emptyMap();
+    }
+
+    Map<String, Long> ret = Maps.newHashMapWithExpectedSize(slotTableMap.size());
     for (Entry<String, SlotTable> entry : slotTableMap.entrySet()) {
       if (StringUtils.equals(entry.getKey(), sessionServerConfig.getSessionServerDataCenter())) {
         continue;
@@ -183,6 +202,17 @@ public final class SlotTableCacheImpl implements SlotTableCache {
   @VisibleForTesting
   protected SlotTableCacheImpl setRecorders(List<SlotTableRecorder> recorders) {
     this.recorders = recorders;
+    return this;
+  }
+
+  /**
+   * Setter method for property <tt>sessionServerConfig</tt>.
+   *
+   * @param sessionServerConfig value to be assigned to property sessionServerConfig
+   */
+  @VisibleForTesting
+  public SlotTableCacheImpl setSessionServerConfig(SessionServerConfig sessionServerConfig) {
+    this.sessionServerConfig = sessionServerConfig;
     return this;
   }
 }

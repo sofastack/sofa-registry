@@ -29,11 +29,11 @@ public class AtomicMap<K, V> {
   private final ReentrantReadWriteLock.WriteLock writeLock = lock.writeLock();
 
   public V put(K key, V value) {
-    writeLock.lock();
+    readLock.lock();
     try {
       return data.put(key, value);
     } finally {
-      writeLock.unlock();
+      readLock.unlock();
     }
   }
 

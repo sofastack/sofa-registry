@@ -52,4 +52,16 @@ public class FetchStopPushService extends BaseStopPushService {
     this.sessionServerConfig = sessionServerConfig;
     return this;
   }
+
+  /**
+   * Setter method for property <tt>dataCenterMetadataCache</tt>.
+   *
+   * @param dataCenterMetadataCache value to be assigned to property dataCenterMetadataCache
+   */
+  @VisibleForTesting
+  public FetchStopPushService setDataCenterMetadataCache(
+      DataCenterMetadataCache dataCenterMetadataCache) {
+    this.dataCenterMetadataCache = dataCenterMetadataCache;
+    return this;
+  }
 }

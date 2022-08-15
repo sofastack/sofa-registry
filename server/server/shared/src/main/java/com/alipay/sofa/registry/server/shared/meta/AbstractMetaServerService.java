@@ -41,7 +41,6 @@ import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -58,7 +57,7 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
 
   @Autowired private MetaLeaderExchanger metaLeaderExchanger;
 
-  @Autowired private CommonConfig commonConfig;
+  @Autowired protected CommonConfig commonConfig;
 
   protected volatile State state = State.NULL;
 
@@ -111,14 +110,14 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
   public void addSelfToMetaBlacklist() {
     metaLeaderExchanger.sendRequest(
         commonConfig.getLocalDataCenter(),
-        new RegistryForbiddenServerRequest(DataOperation.ADD, nodeType(), cell(), ServerEnv.IP));
+        new RegistryForbiddenServerRequest(DataOperation.ADD, nodeType(), ServerEnv.IP, cell()));
   }
 
   @Override
   public void removeSelfFromMetaBlacklist() {
     metaLeaderExchanger.sendRequest(
         commonConfig.getLocalDataCenter(),
-        new RegistryForbiddenServerRequest(DataOperation.REMOVE, nodeType(), cell(), ServerEnv.IP));
+        new RegistryForbiddenServerRequest(DataOperation.REMOVE, nodeType(), ServerEnv.IP, cell()));
   }
 
   private final class Renewer extends WakeUpLoopRunnable {

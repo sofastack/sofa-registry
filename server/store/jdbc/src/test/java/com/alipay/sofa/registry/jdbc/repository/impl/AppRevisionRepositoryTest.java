@@ -63,7 +63,6 @@ public class AppRevisionRepositoryTest extends AbstractH2DbTestBase {
   @Before
   public void buildAppRevision() {
     ((AppRevisionJdbcRepository) appRevisionJdbcRepository).init();
-    ((InterfaceAppsJdbcRepository) interfaceAppsJdbcRepository).init();
     appRevisionList = buildAppRevisions(APP_REVISION_SIZE);
 
     dataCenters.add(defaultCommonConfig.getDefaultClusterId());

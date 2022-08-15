@@ -44,7 +44,7 @@ public class SlotFollowerDiffDigestRequestHandler extends BaseSlotDiffDigestRequ
 
   @Override
   protected boolean preCheck(DataSlotDiffDigestRequest request) {
-    if (!slotAccessor.isLeader(dataServerConfig.getLocalDataCenter(), request.getSlotId())) {
+    if (!slotManager.isLeader(dataServerConfig.getLocalDataCenter(), request.getSlotId())) {
       LOGGER.warn(
           "sync slot request from {}, not leader of {}",
           request.getLocalDataCenter(),

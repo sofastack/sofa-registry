@@ -314,6 +314,7 @@ public class Subscriber extends BaseInfo {
   }
 
   /** @return */
+  @JsonIgnore
   public synchronized CircuitBreakerStatistic getStatistic() {
     return new CircuitBreakerStatistic(
         getGroup(),

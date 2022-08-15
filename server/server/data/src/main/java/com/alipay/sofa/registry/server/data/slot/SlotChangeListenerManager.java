@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.server.data.slot;
 
 import com.alipay.sofa.registry.server.data.cache.DatumStorageDelegate;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.List;
@@ -48,5 +49,16 @@ public class SlotChangeListenerManager {
 
   public List<SlotChangeListener> remoteListeners() {
     return Lists.newArrayList(remoteSlotChangeListeners);
+  }
+
+  /**
+   * Setter method for property <tt>datumStorageDelegate</tt>.
+   *
+   * @param datumStorageDelegate value to be assigned to property datumStorageDelegate
+   */
+  @VisibleForTesting
+  public void setDatumStorageDelegate(DatumStorageDelegate datumStorageDelegate) {
+    this.datumStorageDelegate = datumStorageDelegate;
+    init();
   }
 }

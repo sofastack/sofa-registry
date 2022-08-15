@@ -28,11 +28,11 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.DatumStorageDelegate;
-import com.alipay.sofa.registry.server.data.slot.SlotAccessor;
 import com.alipay.sofa.registry.server.data.slot.SlotManager;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.alipay.sofa.registry.util.StringFormatter;
+import com.google.common.annotations.VisibleForTesting;
 import java.util.Map;
 import javax.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,9 +48,7 @@ public abstract class BaseSlotDiffDigestRequestHandler
 
   @Resource private DatumStorageDelegate datumStorageDelegate;
 
-  @Autowired private SlotManager slotManager;
-
-  @Autowired protected SlotAccessor slotAccessor;
+  @Autowired protected SlotManager slotManager;
 
   @Autowired protected DataServerConfig dataServerConfig;
 
@@ -130,5 +128,69 @@ public abstract class BaseSlotDiffDigestRequestHandler
   @Override
   public Object buildFailedResponse(String msg) {
     return new GenericResponse().fillFailed(msg);
+  }
+
+  /**
+   * Setter method for property <tt>datumStorageDelegate</tt>.
+   *
+   * @param datumStorageDelegate value to be assigned to property datumStorageDelegate
+   */
+  @VisibleForTesting
+  public BaseSlotDiffDigestRequestHandler setDatumStorageDelegate(
+      DatumStorageDelegate datumStorageDelegate) {
+    this.datumStorageDelegate = datumStorageDelegate;
+    return this;
+  }
+
+  /**
+   * Setter method for property <tt>slotManager</tt>.
+   *
+   * @param slotManager value to be assigned to property slotManager
+   */
+  @VisibleForTesting
+  public BaseSlotDiffDigestRequestHandler setSlotManager(SlotManager slotManager) {
+    this.slotManager = slotManager;
+    return this;
+  }
+
+  /**
+   * Setter method for property <tt>dataServerConfig</tt>.
+   *
+   * @param dataServerConfig value to be assigned to property dataServerConfig
+   */
+  @VisibleForTesting
+  public BaseSlotDiffDigestRequestHandler setDataServerConfig(DataServerConfig dataServerConfig) {
+    this.dataServerConfig = dataServerConfig;
+    return this;
+  }
+
+  /**
+   * Getter method for property <tt>datumStorageDelegate</tt>.
+   *
+   * @return property value of datumStorageDelegate
+   */
+  @VisibleForTesting
+  public DatumStorageDelegate getDatumStorageDelegate() {
+    return datumStorageDelegate;
+  }
+
+  /**
+   * Getter method for property <tt>slotManager</tt>.
+   *
+   * @return property value of slotManager
+   */
+  @VisibleForTesting
+  public SlotManager getSlotManager() {
+    return slotManager;
+  }
+
+  /**
+   * Getter method for property <tt>dataServerConfig</tt>.
+   *
+   * @return property value of dataServerConfig
+   */
+  @VisibleForTesting
+  public DataServerConfig getDataServerConfig() {
+    return dataServerConfig;
   }
 }

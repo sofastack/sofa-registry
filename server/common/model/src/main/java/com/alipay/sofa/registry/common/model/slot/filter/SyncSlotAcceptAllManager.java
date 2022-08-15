@@ -14,6 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.filter.blacklist;
+package com.alipay.sofa.registry.common.model.slot.filter;
 
-public class DefaultDataIdMatchStrategyTest {}
+/**
+ * @author xiaojian.xj
+ * @version : SyncSlotAcceptAllManager.java, v 0.1 2022年07月20日 20:06 xiaojian.xj Exp $
+ */
+public class SyncSlotAcceptAllManager implements SyncSlotAcceptorManager {
+
+  @Override
+  public boolean accept(SyncAcceptorRequest request) {
+    return true;
+  }
+}

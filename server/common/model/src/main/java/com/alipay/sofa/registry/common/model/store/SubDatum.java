@@ -204,6 +204,10 @@ public final class SubDatum implements Serializable, Sizer {
   }
 
   public static SubDatum intern(SubDatum datum) {
+    if (datum == null) {
+      return null;
+    }
+
     final String dataInfoId = WordCache.getWordCache(datum.dataInfoId);
     final String dataCenter = WordCache.getWordCache(datum.dataCenter);
 

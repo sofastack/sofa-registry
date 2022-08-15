@@ -126,4 +126,14 @@ public class MetaServerServiceImpl extends AbstractMetaServerService<BaseHeartBe
   void setDataNodeNotifyExchanger(DataNodeNotifyExchanger dataNodeNotifyExchanger) {
     this.dataNodeNotifyExchanger = dataNodeNotifyExchanger;
   }
+
+  /**
+   * Setter method for property <tt>dataCenterMetadataCache</tt>.
+   *
+   * @param dataCenterMetadataCache value to be assigned to property dataCenterMetadataCache
+   */
+  @VisibleForTesting
+  void setDataCenterMetadataCache(DataCenterMetadataCache dataCenterMetadataCache) {
+    this.dataCenterMetadataCache = dataCenterMetadataCache;
+  }
 }
