@@ -16,13 +16,22 @@
  */
 package com.alipay.sofa.registry.jdbc.repository.impl;
 
+import static org.mockito.Matchers.anyObject;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import com.alipay.sofa.registry.common.model.appmeta.InterfaceMapping;
+import com.alipay.sofa.registry.exception.SofaRegistryRuntimeException;
 import com.alipay.sofa.registry.jdbc.AbstractH2DbTestBase;
 import com.alipay.sofa.registry.jdbc.domain.InterfaceAppsIndexDomain;
-import com.alipay.sofa.registry.store.api.repository.AppRevisionRepository;
+import com.alipay.sofa.registry.jdbc.mapper.InterfaceAppsIndexMapper;
+import com.alipay.sofa.registry.store.api.config.DefaultCommonConfig;
 import com.alipay.sofa.registry.store.api.repository.InterfaceAppsRepository;
 import com.alipay.sofa.registry.util.TimestampUtil;
+import com.google.common.collect.Lists;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.Assert;
@@ -35,7 +44,6 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public class InterfaceAppsJdbcRepositoryTest extends AbstractH2DbTestBase {
 
-  @Autowired private AppRevisionRepository appRevisionJdbcRepository;
   @Autowired private InterfaceAppsRepository interfaceAppsJdbcRepository;
 
   @Test
@@ -50,8 +58,8 @@ public class InterfaceAppsJdbcRepositoryTest extends AbstractH2DbTestBase {
       services.add(service);
     }
     for (String service : services) {
-      impl.register(service, app1);
-      impl.register(service, app2);
+      impl.register(app1, Collections.singleton(service));
+      impl.register(app2, Collections.singleton(service));
     }
     impl.waitSynced();
     for (String service : services) {
@@ -79,5 +87,26 @@ public class InterfaceAppsJdbcRepositoryTest extends AbstractH2DbTestBase {
     impl.informer.preList(c1);
     Assert.assertEquals(conflictCount.getAndSet(0), 100);
     impl.getDataVersion();
+  }
+
+  @Test(expected = RuntimeException.class)
+  public void testRuntimeException() {
+    InterfaceAppsIndexMapper mapper = mock(InterfaceAppsIndexMapper.class);
+    when(mapper.update(anyObject()))
+        .thenThrow(new SofaRegistryRuntimeException("expect exception."));
+
+    DefaultCommonConfig defaultCommonConfig = mock(DefaultCommonConfig.class);
+    when(defaultCommonConfig.getClusterId(anyString())).thenReturn("DEFAULT_DATACENTER");
+
+    InterfaceAppsJdbcRepository impl = new InterfaceAppsJdbcRepository();
+    impl.setInterfaceAppsIndexMapper(mapper).setDefaultCommonConfig(defaultCommonConfig);
+
+    String app1 = "app1";
+    List<String> services =
+        Lists.newArrayList("testException-service-" + System.currentTimeMillis());
+
+    for (String service : services) {
+      impl.register(app1, Collections.singleton(service));
+    }
   }
 }

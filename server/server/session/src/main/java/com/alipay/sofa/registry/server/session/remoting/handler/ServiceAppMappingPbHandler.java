@@ -21,6 +21,7 @@ import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.shared.remoting.RemotingHelper;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import java.util.List;
+import org.apache.commons.lang.StringUtils;
 
 /**
  * @author xiaojian.xj
@@ -38,7 +39,13 @@ public class ServiceAppMappingPbHandler
   @Override
   public Object doHandle(Channel channel, ServiceAppMappingRequest request) {
     List<String> services = request.getServiceIdsList();
-    return appRevisionHandlerStrategy.queryApps(services);
+    String remoteIp = StringUtils.EMPTY;
+    if (channel != null
+        && channel.getRemoteAddress() != null
+        && channel.getRemoteAddress().getAddress() != null) {
+      remoteIp = channel.getRemoteAddress().getAddress().getHostAddress();
+    }
+    return appRevisionHandlerStrategy.queryApps(services, remoteIp);
   }
 
   @Override

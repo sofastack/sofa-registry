@@ -14,33 +14,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.store.api.repository;
+package com.alipay.sofa.registry.util;
 
-import com.alipay.sofa.registry.common.model.appmeta.InterfaceMapping;
+import com.google.common.collect.Maps;
 import java.util.Map;
-import java.util.Set;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-/**
- * @author xiaojian.xj
- * @version $Id: InterfaceAppsRepository.java, v 0.1 2021年01月24日 19:33 xiaojian.xj Exp $
- */
-public interface InterfaceAppsRepository {
+public class AtomicMap<K, V> {
 
-  /**
-   * get revisions by interfaceName
-   *
-   * @param dataInfoId
-   * @return return <appName, revisions>
-   */
-  InterfaceMapping getAppNames(String dataInfoId);
+  private Map<K, V> data = Maps.newConcurrentMap();
 
-  void register(String appName, Set<String> interfaceNames);
+  private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+  private final ReentrantReadWriteLock.ReadLock readLock = lock.readLock();
+  private final ReentrantReadWriteLock.WriteLock writeLock = lock.writeLock();
 
-  void renew(String interfaceName, String appName);
+  public V put(K key, V value) {
+    readLock.lock();
+    try {
+      return data.put(key, value);
+    } finally {
+      readLock.unlock();
+    }
+  }
 
-  void waitSynced();
-
-  long getDataVersion();
-
-  Map<String, InterfaceMapping> allServiceMapping();
+  public Map<K, V> getAndReset() {
+    writeLock.lock();
+    try {
+      Map<K, V> ret = data;
+      data = Maps.newConcurrentMap();
+      return ret;
+    } finally {
+      writeLock.unlock();
+    }
+  }
 }

@@ -35,13 +35,13 @@
     </insert>
 
     <select id="queryAfterThanByLimit" resultMap="clientManagerAddressResultMap">
-        select /*+ QUERY_TIMEOUT(3000000) */ *, UNIX_TIMESTAMP(gmt_create)*1000000000 as gmt_create_unixnanos from client_manager_address where data_center = #{dataCenter} and id > #{maxId}
+        select /*+ QUERY_TIMEOUT(3000000),read_consistency(weak) */ *, UNIX_TIMESTAMP(gmt_create)*1000000000 as gmt_create_unixnanos from client_manager_address where data_center = #{dataCenter} and id > #{maxId}
         order by id limit #{limit}
     </select>
 
     <select id="getExpireAddress" resultType="java.lang.String">
         <![CDATA[
-            select /*+ QUERY_TIMEOUT(3000000) */ address from client_manager_address where data_center=#{dataCenter} and gmt_modified < #{expireDate}
+            select /*+ QUERY_TIMEOUT(3000000),read_consistency(weak) */ address from client_manager_address where data_center=#{dataCenter} and gmt_modified < #{expireDate}
             and operation in ('clientOpen','reduce')
             limit #{limit}
         ]]>
@@ -49,7 +49,7 @@
 
     <select id="getClientOffSizeBefore" resultType="java.lang.Integer">
         <![CDATA[
-            select /*+ QUERY_TIMEOUT(3000000) */ count(1) from client_manager_address where data_center=#{dataCenter} and gmt_modified < #{expireDate} and operation='clientOff'
+            select /*+ QUERY_TIMEOUT(3000000),read_consistency(weak) */ count(1) from client_manager_address where data_center=#{dataCenter} and gmt_modified < #{expireDate} and operation='clientOff'
         ]]>
     </select>
 

@@ -18,7 +18,6 @@ package com.alipay.sofa.registry.server.session.bootstrap;
 
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.server.session.metadata.AppRevisionHeartbeatRegistry;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.task.MetricsableThreadPoolExecutor;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
@@ -26,6 +25,7 @@ import com.alipay.sofa.registry.util.OsUtils;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -55,7 +55,7 @@ public class ExecutorManager {
 
   @Autowired protected MetaServerService metaServerService;
 
-  @Autowired protected AppRevisionHeartbeatRegistry appRevisionHeartbeatRegistry;
+  private final ThreadPoolExecutor appRevisionRegisterExecutor;
 
   private Map<String, ThreadPoolExecutor> reportExecutors = new HashMap<>();
 
@@ -74,6 +74,8 @@ public class ExecutorManager {
   private static final String ZONE_SDK_EXECUTOR = "ZoneSdkExecutor";
 
   private static final String CLIENT_MANAGER_CHECK_EXECUTOR = "ClientManagerCheckExecutor";
+
+  private static final String APP_REVISION_REGISTER_EXECUTOR = "AppRevisionRegisterExecutor";
 
   public ExecutorManager(SessionServerConfig sessionServerConfig) {
     scheduler =
@@ -191,6 +193,21 @@ public class ExecutorManager {
                     OsUtils.getCpuCount() * 5,
                     100,
                     new ThreadPoolExecutor.CallerRunsPolicy()));
+
+    appRevisionRegisterExecutor =
+        reportExecutors.computeIfAbsent(
+            APP_REVISION_REGISTER_EXECUTOR,
+            k ->
+                new MetricsableThreadPoolExecutor(
+                    APP_REVISION_REGISTER_EXECUTOR,
+                    sessionServerConfig.getMetadataRegisterExecutorPoolSize(),
+                    sessionServerConfig.getMetadataRegisterExecutorPoolSize(),
+                    60,
+                    TimeUnit.SECONDS,
+                    new ArrayBlockingQueue<>(
+                        sessionServerConfig.getMetadataRegisterExecutorQueueSize()),
+                    new NamedThreadFactory(APP_REVISION_REGISTER_EXECUTOR, true),
+                    new ThreadPoolExecutor.CallerRunsPolicy()));
   }
 
   public void startScheduler() {}
@@ -244,5 +261,9 @@ public class ExecutorManager {
    */
   public ThreadPoolExecutor getClientManagerCheckExecutor() {
     return clientManagerCheckExecutor;
+  }
+
+  public ExecutorService getAppRevisionRegisterExecutor() {
+    return appRevisionRegisterExecutor;
   }
 }

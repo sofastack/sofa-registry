@@ -194,4 +194,8 @@ public interface SessionServerConfig extends ServerShareConfig {
   int getPushAddressCircuitBreakerThreshold();
 
   int getPushConsecutiveSuccess();
+
+  int getMetadataRegisterExecutorPoolSize();
+
+  int getMetadataRegisterExecutorQueueSize();
 }

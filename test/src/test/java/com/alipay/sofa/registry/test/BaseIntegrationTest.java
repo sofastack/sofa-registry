@@ -62,6 +62,7 @@ import com.alipay.sofa.registry.util.StringFormatter;
 import java.io.*;
 import java.lang.reflect.Field;
 import java.util.*;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
@@ -115,6 +116,7 @@ public class BaseIntegrationTest extends AbstractTest {
   protected static volatile SessionConsoleExchanger sessionConsoleExchanger;
 
   protected static volatile SessionServerConfigBean sessionServerConfig;
+
   protected static int sessionPort = 9603;
   protected static int consolePort = 9604;
   protected static int metaPort = 9615;
@@ -281,7 +283,7 @@ public class BaseIntegrationTest extends AbstractTest {
     ParaCheckUtil.checkNotNull(metaChannel.getWebTarget(), "metaChannel");
   }
 
-  protected static void openPush() {
+  protected static void openPush() throws InterruptedException, TimeoutException {
     Result result =
         metaChannel.getWebTarget().path("/stopPushDataSwitch/close").request().get(Result.class);
     Assert.assertTrue(result.isSuccess());

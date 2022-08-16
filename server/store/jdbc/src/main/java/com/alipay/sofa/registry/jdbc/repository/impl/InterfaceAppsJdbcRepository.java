@@ -31,7 +31,10 @@ import com.alipay.sofa.registry.store.api.meta.RecoverConfig;
 import com.alipay.sofa.registry.store.api.repository.InterfaceAppsRepository;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.google.common.annotations.VisibleForTesting;
-import java.util.*;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -75,14 +78,16 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository, Rec
   }
 
   @Override
-  public void register(String interfaceName, String appName) {
+  public void register(String appName, Set<String> interfaceNames) {
+    String localDataCenter = defaultCommonConfig.getClusterId(tableName());
     InterfaceAppsIndexContainer c = informer.getContainer();
-    if (c.containsName(interfaceName, appName)) {
-      return;
+
+    for (String interfaceName : interfaceNames) {
+      if (c.containsName(interfaceName, appName)) {
+        continue;
+      }
+      refreshEntryToStorage(new InterfaceAppsIndexDomain(localDataCenter, interfaceName, appName));
     }
-    refreshEntryToStorage(
-        new InterfaceAppsIndexDomain(
-            defaultCommonConfig.getClusterId(tableName()), interfaceName, appName));
   }
 
   @Override
@@ -186,5 +191,29 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository, Rec
 
   interface ConflictCallback {
     void callback(InterfaceAppsIndexContainer current, InterfaceAppsIndexContainer newContainer);
+  }
+
+  /**
+   * Setter method for property <tt>interfaceAppsIndexMapper</tt>.
+   *
+   * @param interfaceAppsIndexMapper value to be assigned to property interfaceAppsIndexMapper
+   */
+  @VisibleForTesting
+  public InterfaceAppsJdbcRepository setInterfaceAppsIndexMapper(
+      InterfaceAppsIndexMapper interfaceAppsIndexMapper) {
+    this.interfaceAppsIndexMapper = interfaceAppsIndexMapper;
+    return this;
+  }
+
+  /**
+   * Setter method for property <tt>defaultCommonConfig</tt>.
+   *
+   * @param defaultCommonConfig value to be assigned to property defaultCommonConfig
+   */
+  @VisibleForTesting
+  public InterfaceAppsJdbcRepository setDefaultCommonConfig(
+      DefaultCommonConfig defaultCommonConfig) {
+    this.defaultCommonConfig = defaultCommonConfig;
+    return this;
   }
 }

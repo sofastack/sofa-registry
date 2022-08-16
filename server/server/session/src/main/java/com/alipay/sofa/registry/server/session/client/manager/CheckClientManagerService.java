@@ -42,6 +42,7 @@ import java.util.Map.Entry;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import javax.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -54,7 +55,7 @@ public class CheckClientManagerService {
   private static final long NO_NEED_CHECK = 0L;
   @Autowired private ExecutorManager executorManager;
 
-  @Autowired private FetchClientOffAddressService fetchClientOffAddressService;
+  @Resource private FetchClientOffAddressService fetchClientOffAddressService;
 
   @Autowired private ClientManagerAddressRepository clientManagerAddressRepository;
 
