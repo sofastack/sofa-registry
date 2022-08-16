@@ -2,9 +2,9 @@
 
 <!-- Logback config -->
 <configuration>
-    <property scope="local" name="LOG_HOME" dataValue="${logging.path}/registry"/>
-    <property scope="local" name="LOG_LEVEL" dataValue="${com.alipay.sofa.registry.client.log.level}"/>
-    <property scope="local" name="LOG_ENCODE" dataValue="${com.alipay.sofa.registry.client.log.encode}"/>
+    <property scope="local" name="LOG_HOME" value="${logging.path}/registry"/>
+    <property scope="local" name="LOG_LEVEL" value="${com.alipay.sofa.registry.client.log.level}"/>
+    <property scope="local" name="LOG_ENCODE" value="${com.alipay.sofa.registry.client.log.encode}"/>
 
     <!-- appenders -->
     <appender name="ERROR-APPENDER" class="ch.qos.logback.core.rolling.RollingFileAppender">
