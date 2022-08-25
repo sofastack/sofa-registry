@@ -246,6 +246,7 @@ public class Subscriber extends BaseInfo {
     subscriber.setGroup(subscriber.getGroup());
     subscriber.setDataId(subscriber.getDataId());
     subscriber.setCell(subscriber.getCell());
+    subscriber.setIp(subscriber.getIp());
     subscriber.setProcessId(subscriber.getProcessId());
     subscriber.setAppName(subscriber.getAppName());
 

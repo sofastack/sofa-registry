@@ -77,6 +77,7 @@ public final class PublisherUtils {
     newPub.setAttributes(publisher.getAttributes());
     newPub.setClientVersion(publisher.getClientVersion());
 
+    newPub.setIp(publisher.getIp());
     newPub.setDataList(publisher.getDataList());
     newPub.setPublishType(publisher.getPublishType());
     newPub.setPublishSource(publisher.getPublishSource());

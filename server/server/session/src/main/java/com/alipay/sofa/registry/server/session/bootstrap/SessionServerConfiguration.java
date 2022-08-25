@@ -39,7 +39,6 @@ import com.alipay.sofa.registry.server.session.filter.blacklist.BlacklistMatchPr
 import com.alipay.sofa.registry.server.session.filter.blacklist.DefaultIPMatchStrategy;
 import com.alipay.sofa.registry.server.session.limit.AccessLimitService;
 import com.alipay.sofa.registry.server.session.limit.AccessLimitServiceImpl;
-import com.alipay.sofa.registry.server.session.mapper.ConnectionMapper;
 import com.alipay.sofa.registry.server.session.metadata.MetadataCacheRegistry;
 import com.alipay.sofa.registry.server.session.node.service.*;
 import com.alipay.sofa.registry.server.session.providedata.*;
@@ -693,6 +692,7 @@ public class SessionServerConfiguration {
       mgr.addInterceptor(blacklistWrapperInterceptor());
       mgr.addInterceptor(accessLimitWrapperInterceptor());
       mgr.addInterceptor(clientOffWrapperInterceptor());
+      mgr.addInterceptor(clientIpWrapperInterceptor());
       return mgr;
     }
 
@@ -715,6 +715,11 @@ public class SessionServerConfiguration {
     public WrapperInterceptor accessLimitWrapperInterceptor() {
       return new AccessLimitWrapperInterceptor();
     }
+
+    @Bean
+    public WrapperInterceptor clientIpWrapperInterceptor() {
+      return new ClientIpWrapperInterceptor();
+    }
   }
 
   @Configuration
@@ -731,11 +736,6 @@ public class SessionServerConfiguration {
     @Bean
     public ConnectionsService connectionsService() {
       return new ConnectionsService();
-    }
-
-    @Bean
-    public ConnectionMapper connectionMapper() {
-      return new ConnectionMapper();
     }
   }
 

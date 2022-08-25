@@ -147,11 +147,11 @@ public class JdbcConfiguration {
           PROP_USERNAME,
           SystemUtils.getSystem(
               JdbcDriverConfigBean.PRE_FIX + "." + PROP_USERNAME, jdbcDriverConfig.getUsername()));
+
       props.put(
           PROP_PASSWORD,
           SystemUtils.getSystem(
               JdbcDriverConfigBean.PRE_FIX + "." + PROP_PASSWORD, jdbcDriverConfig.getPassword()));
-
       // todo connection pool config
       props.put(PROP_MINIDLE, jdbcDriverConfig.getMinIdle() + "");
       props.put(PROP_MAXACTIVE, jdbcDriverConfig.getMaxActive() + "");

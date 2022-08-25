@@ -32,6 +32,7 @@ import com.alipay.sofa.registry.server.session.push.FirePushService;
 import com.alipay.sofa.registry.server.session.registry.SessionRegistry;
 import com.alipay.sofa.registry.server.shared.remoting.RemotingHelper;
 import javax.annotation.Resource;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -59,7 +60,15 @@ public class ClientOffWrapperInterceptor
 
     URL url = storeData.getSourceAddress();
 
-    AddressVersion address = fetchClientOffAddressService.getAddress(url.getIpAddress());
+    String socketIp = url.getIpAddress();
+    String ip = storeData.getIp();
+    if (StringUtils.isBlank(ip)) {
+      ip = socketIp;
+    }
+    AddressVersion address = null;
+    if (ip != null) {
+      address = fetchClientOffAddressService.getAddress(ip);
+    }
     if (address != null) {
       markChannel(registerInvokeData.getChannel());
       LOGGER.info(

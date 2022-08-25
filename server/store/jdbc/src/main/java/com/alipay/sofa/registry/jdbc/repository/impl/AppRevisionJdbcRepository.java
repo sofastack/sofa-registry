@@ -141,6 +141,7 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository, Recover
 
   /**
    * check if revisionId exist
+   *
    * @param revisionId
    * @return
    */

@@ -175,6 +175,4 @@ public class ValueConstants {
   public static final String CLIENT_OPEN = "clientOpen";
 
   public static final String REDUCE = "reduce";
-
-  public static final String BLOCKED_REQUEST_KEY = "!Blocked";
 }

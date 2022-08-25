@@ -336,8 +336,7 @@ public class TestUtils {
     Assert.assertEquals(left.getTimestamp().longValue(), right.getClientRegisterTimestamp());
     Assert.assertEquals(left.getZone(), right.getCell());
     Assert.assertEquals(left.getAttributes(), right.getAttributes());
-    Assert.assertEquals(left.getIp(), right.getSourceAddress().getIpAddress());
-    Assert.assertEquals(left.getPort().intValue(), right.getSourceAddress().getPort());
+    Assert.assertEquals(left.getIp(), right.getIp());
     Assert.assertEquals(right.getClientVersion(), BaseInfo.ClientVersion.StoreData);
   }
 

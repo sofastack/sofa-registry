@@ -25,7 +25,6 @@ import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress;
 import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress.AddressVersion;
 import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.bolt.BoltChannel;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
@@ -45,10 +44,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.PostConstruct;
@@ -270,12 +266,12 @@ public class FetchClientOffAddressService
     if (CollectionUtils.isEmpty(conIds)) {
       return;
     }
-    LOGGER.info("clientOff conIds: {}", conIds.toString());
+    LOGGER.info("clientOff conIds: {},ips: {}", conIds.toString(), ipSet);
     sessionRegistry.clientOff(conIds);
   }
 
   private void doTrafficOn(Set<String> ipSet) {
-    List<String> connections = connectionsService.closeIpConnects(Lists.newArrayList(ipSet));
+    List<ConnectId> connections = connectionsService.closeIpConnects(Lists.newArrayList(ipSet));
     if (CollectionUtils.isNotEmpty(connections)) {
       ClientManagerMetric.CLIENT_OPEN_COUNTER.inc(connections.size());
       LOGGER.info("clientOpen conIds: {}", connections);
@@ -304,9 +300,8 @@ public class FetchClientOffAddressService
 
     Set<String> retryClientOpen = Sets.newHashSetWithExpectedSize(8);
     for (Channel channel : channels) {
-      String key = NetUtil.toAddressString(channel.getRemoteAddress());
-      String ip = connectionsService.getIpFromConnectId(key);
 
+      String ip = channel.getClientIP();
       BoltChannel boltChannel = (BoltChannel) channel;
       Object value = boltChannel.getConnAttribute(CLIENT_OFF);
       if (Boolean.TRUE.equals(value) && !clientOffAddress.containsKey(ip)) {

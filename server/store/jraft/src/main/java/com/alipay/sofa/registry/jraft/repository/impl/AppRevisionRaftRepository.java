@@ -44,6 +44,7 @@ public class AppRevisionRaftRepository implements AppRevisionRepository {
 
   /**
    * check if revisionId exist
+   *
    * @param revisionId
    * @return
    */
