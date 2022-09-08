@@ -144,6 +144,16 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository, Recover
     refreshEntryToStorage(domain);
   }
 
+  /**
+   * check if revisionId exist
+   * @param revisionId
+   * @return
+   */
+  @Override
+  public boolean exist(String revisionId) {
+    return informer.getContainer().containsRevisionId(revisionId);
+  }
+
   @Override
   public AppRevision queryRevision(String revision) {
     AppRevision appRevision;

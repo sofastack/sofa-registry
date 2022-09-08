@@ -42,6 +42,16 @@ public class AppRevisionRaftRepository implements AppRevisionRepository {
     }
   }
 
+  /**
+   * check if revisionId exist
+   * @param revisionId
+   * @return
+   */
+  @Override
+  public boolean exist(String revisionId) {
+    return false;
+  }
+
   @Override
   public AppRevision queryRevision(String revision) {
     return registry.get(revision);
