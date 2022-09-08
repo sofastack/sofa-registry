@@ -31,7 +31,7 @@ import com.alipay.sofa.registry.server.meta.slot.SlotManager;
 import com.alipay.sofa.registry.server.meta.slot.arrange.ScheduledSlotArranger;
 import com.alipay.sofa.registry.server.meta.slot.status.SlotTableStatusService;
 import com.alipay.sofa.registry.server.meta.slot.tasks.BalanceTask;
-
+import java.util.Map;
 import javax.annotation.Resource;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
@@ -39,8 +39,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.Map;
 
 /**
  * @author chen.zhu
@@ -61,8 +59,7 @@ public class SlotTableResource {
 
   @Autowired private SlotTableStatusService slotTableStatusService;
 
-  @Resource
-  private MultiClusterSlotTableSyncer multiClusterSlotTableSyncer;
+  @Resource private MultiClusterSlotTableSyncer multiClusterSlotTableSyncer;
 
   @PUT
   @Path("force/refresh")
@@ -181,7 +178,8 @@ public class SlotTableResource {
   public GenericResponse<Object> getMultiSlottable() {
     logger.info("[getSyncSlottableStatus] begin");
     try {
-      Map<String, RemoteClusterSlotState> multiClusterSlotTable = multiClusterSlotTableSyncer.getMultiClusterSlotTable();
+      Map<String, RemoteClusterSlotState> multiClusterSlotTable =
+          multiClusterSlotTableSyncer.getMultiClusterSlotTable();
       return new GenericResponse<>().fillSucceed(multiClusterSlotTable);
     } catch (Throwable th) {
       logger.error("[getSyncSlottableStatus]", th);

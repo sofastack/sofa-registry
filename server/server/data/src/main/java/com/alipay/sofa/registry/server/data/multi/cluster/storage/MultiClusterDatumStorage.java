@@ -312,9 +312,7 @@ public class MultiClusterDatumStorage implements DatumStorage {
     BaseDatumStorage storage = storageMap.get(dataCenter);
     if (storage == null) {
       LOGGER.warn(
-              "[nullStorage]clearPublishers dataCenter={}, dataInfoId={}",
-              dataCenter,
-              dataInfoId);
+          "[nullStorage]clearPublishers dataCenter={}, dataInfoId={}", dataCenter, dataInfoId);
       return null;
     }
     return storage.clearPublishers(dataInfoId);
@@ -324,10 +322,7 @@ public class MultiClusterDatumStorage implements DatumStorage {
   public Map<String, DatumVersion> clearGroupPublishers(String dataCenter, String group) {
     BaseDatumStorage storage = storageMap.get(dataCenter);
     if (storage == null) {
-      LOGGER.warn(
-              "[nullStorage]clearGroupPublishers dataCenter={}, group={}",
-              dataCenter,
-              group);
+      LOGGER.warn("[nullStorage]clearGroupPublishers dataCenter={}, group={}", dataCenter, group);
       return null;
     }
     return storage.clearGroupPublishers(group);

@@ -28,14 +28,13 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import org.springframework.util.CollectionUtils;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
+import org.springframework.util.CollectionUtils;
 
 /**
  * @author xiaojian.xj

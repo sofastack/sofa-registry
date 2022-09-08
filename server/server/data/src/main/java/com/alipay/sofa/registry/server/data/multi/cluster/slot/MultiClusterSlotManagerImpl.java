@@ -497,7 +497,10 @@ public class MultiClusterSlotManagerImpl implements MultiClusterSlotManager {
       return;
     }
     Set<MultiClusterSyncInfo> syncInfos = multiClusterSyncRepository.queryLocalSyncInfos();
-    Set<String> syncing = syncInfos.stream().map(MultiClusterSyncInfo::getRemoteDataCenter).collect(Collectors.toSet());
+    Set<String> syncing =
+        syncInfos.stream()
+            .map(MultiClusterSyncInfo::getRemoteDataCenter)
+            .collect(Collectors.toSet());
     for (String remove : tobeRemove) {
       if (syncing.contains(remove)) {
         MULTI_CLUSTER_SLOT_TABLE.error("dataCenter:{} remove is forbidden.", remove);

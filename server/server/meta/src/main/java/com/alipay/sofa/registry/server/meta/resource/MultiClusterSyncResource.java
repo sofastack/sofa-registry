@@ -24,14 +24,13 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.shared.resource.AuthChecker;
 import com.alipay.sofa.registry.store.api.meta.MultiClusterSyncRepository;
+import com.alipay.sofa.registry.util.StringFormatter;
+import com.google.common.collect.Sets;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-
-import com.alipay.sofa.registry.util.StringFormatter;
-import com.google.common.collect.Sets;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.NumberUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -234,26 +233,26 @@ public class MultiClusterSyncResource {
       @FormParam("expectVersion") String expectVersion) {
     if (!AuthChecker.authCheck(token)) {
       LOG.error(
-              "add sync group, remoteDataCenter={}, group={}, auth check={} fail!",
-              remoteDataCenter,
-              group,
-              token);
+          "add sync group, remoteDataCenter={}, group={}, auth check={} fail!",
+          remoteDataCenter,
+          group,
+          token);
       return GenericResponse.buildFailedResponse("auth check fail");
     }
 
     if (StringUtils.isBlank(remoteDataCenter)
-            || StringUtils.isBlank(group)
-            || StringUtils.isBlank(expectVersion)) {
+        || StringUtils.isBlank(group)
+        || StringUtils.isBlank(expectVersion)) {
       return CommonResponse.buildFailedResponse(
-              "remoteDataCenter, group, expectVersion is not allow empty.");
+          "remoteDataCenter, group, expectVersion is not allow empty.");
     }
 
     MultiClusterSyncInfo exist = multiClusterSyncRepository.query(remoteDataCenter);
 
     if (exist == null || exist.getDataVersion() != Long.parseLong(expectVersion)) {
       return CommonResponse.buildFailedResponse(
-              StringFormatter.format(
-                      "remoteDataCenter:{}, expectVersion:{} not exist.", remoteDataCenter, expectVersion));
+          StringFormatter.format(
+              "remoteDataCenter:{}, expectVersion:{} not exist.", remoteDataCenter, expectVersion));
     }
 
     exist.getSynPublisherGroups().add(group);
@@ -261,11 +260,11 @@ public class MultiClusterSyncResource {
     boolean ret = multiClusterSyncRepository.update(exist, NumberUtils.toLong(expectVersion));
 
     LOG.info(
-            "[addSyncGroup]result:{}, remoteDataCenter:{}, group:{}, expectVersion:{}",
-            ret,
-            remoteDataCenter,
-            group,
-            expectVersion);
+        "[addSyncGroup]result:{}, remoteDataCenter:{}, group:{}, expectVersion:{}",
+        ret,
+        remoteDataCenter,
+        group,
+        expectVersion);
 
     CommonResponse response = new CommonResponse();
     response.setSuccess(ret);
@@ -281,26 +280,26 @@ public class MultiClusterSyncResource {
       @FormParam("expectVersion") String expectVersion) {
     if (!AuthChecker.authCheck(token)) {
       LOG.error(
-              "remove sync group, remoteDataCenter={}, group={}, auth check={} fail!",
-              remoteDataCenter,
-              group,
-              token);
+          "remove sync group, remoteDataCenter={}, group={}, auth check={} fail!",
+          remoteDataCenter,
+          group,
+          token);
       return GenericResponse.buildFailedResponse("auth check fail");
     }
 
     if (StringUtils.isBlank(remoteDataCenter)
-            || StringUtils.isBlank(group)
-            || StringUtils.isBlank(expectVersion)) {
+        || StringUtils.isBlank(group)
+        || StringUtils.isBlank(expectVersion)) {
       return CommonResponse.buildFailedResponse(
-              "remoteDataCenter, group, expectVersion is not allow empty.");
+          "remoteDataCenter, group, expectVersion is not allow empty.");
     }
 
     MultiClusterSyncInfo exist = multiClusterSyncRepository.query(remoteDataCenter);
 
     if (exist == null || exist.getDataVersion() != Long.parseLong(expectVersion)) {
       return CommonResponse.buildFailedResponse(
-              StringFormatter.format(
-                      "remoteDataCenter:{}, expectVersion:{} not exist.", remoteDataCenter, expectVersion));
+          StringFormatter.format(
+              "remoteDataCenter:{}, expectVersion:{} not exist.", remoteDataCenter, expectVersion));
     }
 
     exist.getSynPublisherGroups().remove(group);
@@ -308,11 +307,11 @@ public class MultiClusterSyncResource {
     boolean ret = multiClusterSyncRepository.update(exist, NumberUtils.toLong(expectVersion));
 
     LOG.info(
-            "[removeSyncGroup]result:{}, remoteDataCenter:{}, group:{}, expectVersion:{}",
-            ret,
-            remoteDataCenter,
-            group,
-            expectVersion);
+        "[removeSyncGroup]result:{}, remoteDataCenter:{}, group:{}, expectVersion:{}",
+        ret,
+        remoteDataCenter,
+        group,
+        expectVersion);
 
     CommonResponse response = new CommonResponse();
     response.setSuccess(ret);
@@ -328,26 +327,26 @@ public class MultiClusterSyncResource {
       @FormParam("expectVersion") String expectVersion) {
     if (!AuthChecker.authCheck(token)) {
       LOG.error(
-              "add ignore dataInfoIds, remoteDataCenter={}, dataInfoIds={}, auth check={} fail!",
-              remoteDataCenter,
-              dataInfoIds,
-              token);
+          "add ignore dataInfoIds, remoteDataCenter={}, dataInfoIds={}, auth check={} fail!",
+          remoteDataCenter,
+          dataInfoIds,
+          token);
       return GenericResponse.buildFailedResponse("auth check fail");
     }
 
     if (StringUtils.isBlank(remoteDataCenter)
-            || StringUtils.isBlank(dataInfoIds)
-            || StringUtils.isBlank(expectVersion)) {
+        || StringUtils.isBlank(dataInfoIds)
+        || StringUtils.isBlank(expectVersion)) {
       return CommonResponse.buildFailedResponse(
-              "remoteDataCenter, dataInfoIds, expectVersion is not allow empty.");
+          "remoteDataCenter, dataInfoIds, expectVersion is not allow empty.");
     }
 
     MultiClusterSyncInfo exist = multiClusterSyncRepository.query(remoteDataCenter);
 
     if (exist == null || exist.getDataVersion() != Long.parseLong(expectVersion)) {
       return CommonResponse.buildFailedResponse(
-              StringFormatter.format(
-                      "remoteDataCenter:{}, expectVersion:{} not exist.", remoteDataCenter, expectVersion));
+          StringFormatter.format(
+              "remoteDataCenter:{}, expectVersion:{} not exist.", remoteDataCenter, expectVersion));
     }
 
     exist.getIgnoreDataInfoIds().addAll(Sets.newHashSet(dataInfoIds.split(",")));
@@ -355,11 +354,11 @@ public class MultiClusterSyncResource {
     boolean ret = multiClusterSyncRepository.update(exist, NumberUtils.toLong(expectVersion));
 
     LOG.info(
-            "[addIgnoreDataInfoIds]result:{}, remoteDataCenter:{}, dataInfoIds:{}, expectVersion:{}",
-            ret,
-            remoteDataCenter,
-            dataInfoIds,
-            expectVersion);
+        "[addIgnoreDataInfoIds]result:{}, remoteDataCenter:{}, dataInfoIds:{}, expectVersion:{}",
+        ret,
+        remoteDataCenter,
+        dataInfoIds,
+        expectVersion);
 
     CommonResponse response = new CommonResponse();
     response.setSuccess(ret);
@@ -375,26 +374,26 @@ public class MultiClusterSyncResource {
       @FormParam("expectVersion") String expectVersion) {
     if (!AuthChecker.authCheck(token)) {
       LOG.error(
-              "remove ignore dataInfoIds, remoteDataCenter={}, dataInfoIds={}, auth check={} fail!",
-              remoteDataCenter,
-              dataInfoIds,
-              token);
+          "remove ignore dataInfoIds, remoteDataCenter={}, dataInfoIds={}, auth check={} fail!",
+          remoteDataCenter,
+          dataInfoIds,
+          token);
       return GenericResponse.buildFailedResponse("auth check fail");
     }
 
     if (StringUtils.isBlank(remoteDataCenter)
-            || StringUtils.isBlank(dataInfoIds)
-            || StringUtils.isBlank(expectVersion)) {
+        || StringUtils.isBlank(dataInfoIds)
+        || StringUtils.isBlank(expectVersion)) {
       return CommonResponse.buildFailedResponse(
-              "remoteDataCenter, dataInfoIds, expectVersion is not allow empty.");
+          "remoteDataCenter, dataInfoIds, expectVersion is not allow empty.");
     }
 
     MultiClusterSyncInfo exist = multiClusterSyncRepository.query(remoteDataCenter);
 
     if (exist == null || exist.getDataVersion() != Long.parseLong(expectVersion)) {
       return CommonResponse.buildFailedResponse(
-              StringFormatter.format(
-                      "remoteDataCenter:{}, expectVersion:{} not exist.", remoteDataCenter, expectVersion));
+          StringFormatter.format(
+              "remoteDataCenter:{}, expectVersion:{} not exist.", remoteDataCenter, expectVersion));
     }
 
     exist.getIgnoreDataInfoIds().removeAll(Sets.newHashSet(dataInfoIds.split(",")));
@@ -402,11 +401,11 @@ public class MultiClusterSyncResource {
     boolean ret = multiClusterSyncRepository.update(exist, NumberUtils.toLong(expectVersion));
 
     LOG.info(
-            "[removeIgnoreDataInfoIds]result:{}, remoteDataCenter:{}, dataInfoIds:{}, expectVersion:{}",
-            ret,
-            remoteDataCenter,
-            dataInfoIds,
-            expectVersion);
+        "[removeIgnoreDataInfoIds]result:{}, remoteDataCenter:{}, dataInfoIds:{}, expectVersion:{}",
+        ret,
+        remoteDataCenter,
+        dataInfoIds,
+        expectVersion);
 
     CommonResponse response = new CommonResponse();
     response.setSuccess(ret);
@@ -436,12 +435,14 @@ public class MultiClusterSyncResource {
 
     if (exist == null || exist.getDataVersion() != Long.parseLong(expectVersion)) {
       return CommonResponse.buildFailedResponse(
-              StringFormatter.format(
-                      "remoteDataCenter:{}, expectVersion:{} not exist.", remoteDataCenter, expectVersion));
+          StringFormatter.format(
+              "remoteDataCenter:{}, expectVersion:{} not exist.", remoteDataCenter, expectVersion));
     }
     if (exist.isEnableSyncDatum()) {
       return CommonResponse.buildFailedResponse(
-              StringFormatter.format("remove remoteDataCenter:{} sync config fail when enable sync is true.", remoteDataCenter));
+          StringFormatter.format(
+              "remove remoteDataCenter:{} sync config fail when enable sync is true.",
+              remoteDataCenter));
     }
 
     int ret =

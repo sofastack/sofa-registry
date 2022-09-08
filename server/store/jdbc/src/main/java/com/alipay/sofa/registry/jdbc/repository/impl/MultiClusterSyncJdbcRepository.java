@@ -115,7 +115,9 @@ public class MultiClusterSyncJdbcRepository implements MultiClusterSyncRepositor
 
   @Override
   public MultiClusterSyncInfo query(String remoteDataCenter) {
-    MultiClusterSyncDomain query = multiClusterSyncMapper.query(defaultCommonConfig.getClusterId(tableName()), remoteDataCenter);
+    MultiClusterSyncDomain query =
+        multiClusterSyncMapper.query(
+            defaultCommonConfig.getClusterId(tableName()), remoteDataCenter);
     return MultiClusterSyncConvertor.convert2Info(query);
   }
 

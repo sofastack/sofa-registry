@@ -26,6 +26,7 @@ import com.alipay.sofa.registry.server.session.providedata.FetchStopPushService;
 import com.alipay.sofa.registry.store.api.meta.MultiClusterSyncRepository;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -34,8 +35,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-
-import com.google.common.collect.Sets;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -115,7 +114,7 @@ public class DataCenterMetadataCacheImpl implements DataCenterMetadataCache {
   public boolean saveDataCenterZones(Map<String, RemoteSlotTableStatus> remoteSlotTableStatus) {
 
     Set<String> tobeRemove =
-            Sets.difference(metadataCache.keySet(), remoteSlotTableStatus.keySet());
+        Sets.difference(metadataCache.keySet(), remoteSlotTableStatus.keySet());
 
     boolean success = true;
     for (Entry<String, RemoteSlotTableStatus> entry :
@@ -144,7 +143,10 @@ public class DataCenterMetadataCacheImpl implements DataCenterMetadataCache {
       return;
     }
     Set<MultiClusterSyncInfo> syncInfos = multiClusterSyncRepository.queryLocalSyncInfos();
-    Set<String> syncing = syncInfos.stream().map(MultiClusterSyncInfo::getRemoteDataCenter).collect(Collectors.toSet());
+    Set<String> syncing =
+        syncInfos.stream()
+            .map(MultiClusterSyncInfo::getRemoteDataCenter)
+            .collect(Collectors.toSet());
     for (String remove : tobeRemove) {
       if (syncing.contains(remove)) {
         LOGGER.error("dataCenter:{} remove is forbidden.", remove);

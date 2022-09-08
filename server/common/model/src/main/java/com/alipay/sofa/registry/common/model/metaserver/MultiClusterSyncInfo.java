@@ -17,10 +17,8 @@
 package com.alipay.sofa.registry.common.model.metaserver;
 
 import com.google.common.base.Objects;
-import org.glassfish.jersey.internal.guava.Sets;
-
-import java.util.Collections;
 import java.util.Set;
+import org.glassfish.jersey.internal.guava.Sets;
 
 /**
  * @author xiaojian.xj
