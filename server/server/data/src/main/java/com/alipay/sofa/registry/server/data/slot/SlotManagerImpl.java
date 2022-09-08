@@ -315,7 +315,7 @@ public final class SlotManagerImpl implements SlotManager {
         final Slot slot = e.getValue().slot;
         it.remove();
         // important, first remove the slot for GetData Access check, then clean the data
-        listenRemoveUpdate(updating.getEpoch(), slot);
+        listenRemoveUpdate(slot);
         observeLeaderMigratingFinish(slot.getId());
         LOGGER.info("remove slot, slot={}", slot);
       }
@@ -950,7 +950,7 @@ public final class SlotManagerImpl implements SlotManager {
                 listener.onSlotAdd(dataServerConfig.getLocalDataCenter(), s.getId(), getRole(s)));
   }
 
-  private void listenRemoveUpdate(long slotTableEpoch, Slot s) {
+  private void listenRemoveUpdate(Slot s) {
     slotChangeListenerManager
         .localUpdateListeners()
         .forEach(

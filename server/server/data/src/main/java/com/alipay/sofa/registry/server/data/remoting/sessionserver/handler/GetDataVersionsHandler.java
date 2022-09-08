@@ -75,7 +75,6 @@ public class GetDataVersionsHandler extends AbstractDataHandler<GetDataVersionRe
       return SlotAccessGenericResponse.failedResponse(
           slotAccessAfter, "slotLeaderEpoch has change, prev=" + slotAccessBefore);
     }
-    final boolean localDataCenter = dataServerConfig.isLocalDataCenter(dataCenter);
     Map<String, DatumVersion> ret = Maps.newHashMapWithExpectedSize(64);
     for (Map.Entry<String, DatumVersion> e : interests.entrySet()) {
       final String dataInfoId = e.getKey();

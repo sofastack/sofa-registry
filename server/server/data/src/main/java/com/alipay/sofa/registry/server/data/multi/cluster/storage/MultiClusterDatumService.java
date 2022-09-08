@@ -5,8 +5,6 @@ import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.metaserver.MultiClusterSyncInfo;
 import com.alipay.sofa.registry.common.model.metaserver.RemoteDatumClearEvent;
 import com.alipay.sofa.registry.common.model.metaserver.RemoteDatumClearEvent.DatumType;
-import com.alipay.sofa.registry.common.model.slot.func.SlotFunction;
-import com.alipay.sofa.registry.common.model.slot.func.SlotFunctionRegistry;
 import com.alipay.sofa.registry.exception.SofaRegistryRuntimeException;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
