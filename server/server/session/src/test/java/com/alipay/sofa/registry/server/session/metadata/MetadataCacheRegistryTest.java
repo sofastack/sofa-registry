@@ -169,6 +169,11 @@ public class MetadataCacheRegistryTest extends AbstractSessionServerTestBase {
               public int remove(String remoteDataCenter, long dataVersion) {
                 return 0;
               }
+
+              @Override
+              public MultiClusterSyncInfo query(String remoteDataCenter) {
+                return new MultiClusterSyncInfo();
+              }
             });
 
     metadataCacheRegistry.init();

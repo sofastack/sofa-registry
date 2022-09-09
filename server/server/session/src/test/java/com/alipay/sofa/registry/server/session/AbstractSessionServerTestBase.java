@@ -747,6 +747,17 @@ public class AbstractSessionServerTestBase extends AbstractTestBase {
     }
 
     /**
+     * check if revisionId exist
+     *
+     * @param revisionId
+     * @return
+     */
+    @Override
+    public boolean exist(String revisionId) {
+      return false;
+    }
+
+    /**
      * get AppRevision
      *
      * @param revision

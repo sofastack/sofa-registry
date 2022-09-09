@@ -84,6 +84,7 @@
         <guava-retrying.version>2.0.0</guava-retrying.version>
         <zstd-jni.version>1.3.6-1</zstd-jni.version>
         <log4j2.version>2.17.0</log4j2.version>
+        <spring.boot.version>2.3.9.RELEASE</spring.boot.version>
         <main.user.dir>${user.dir}</main.user.dir>
         <argLine>-Dnetwork_interface_denylist=docker0</argLine>
         <!-- for linke 添加isSkipUT, isSkipIT参数声明，防止编译时产生错误 -->
@@ -101,7 +102,7 @@
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-starter-parent</artifactId>
-                <version>2.3.9.RELEASE</version>
+                <version>${spring.boot.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -396,12 +397,12 @@
             <dependency>
                 <groupId>org.mybatis</groupId>
                 <artifactId>mybatis</artifactId>
-                <version>3.2.8</version>
+                <version>3.5.9</version>
             </dependency>
             <dependency>
                 <groupId>org.mybatis</groupId>
                 <artifactId>mybatis-spring</artifactId>
-                <version>1.2.2</version>
+                <version>2.0.6</version>
             </dependency>
 
             <!-- mysql -->
@@ -455,6 +456,15 @@
     </dependencyManagement>
 
     <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-maven-plugin</artifactId>
+                    <version>${spring.boot.version}</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
         <plugins>
 <!--            <plugin>-->
 <!--                <groupId>org.apache.maven.plugins</groupId>-->
@@ -526,45 +536,45 @@
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>com.diffplug.spotless</groupId>
-                <artifactId>spotless-maven-plugin</artifactId>
-                <version>1.20.0</version>
+              <groupId>com.diffplug.spotless</groupId>
+              <artifactId>spotless-maven-plugin</artifactId>
+              <version>1.20.0</version>
                 <executions>
-                    <execution>
-                        <goals>
-                            <goal>apply</goal>
-                        </goals>
-                        <phase>compile</phase>
-                    </execution>
+                  <execution>
+                    <goals>
+                      <goal>apply</goal>
+                    </goals>
+                    <phase>compile</phase>
+                  </execution>
                 </executions>
-                <configuration>
-                    <formats>
-                        <format>
-                            <!-- define the files to apply to -->
-                            <includes>
-                                <include>.xml</include>
-                                <include>.gitignore</include>
-                                <include>.properties</include>
-                            </includes>
-                            <trimTrailingWhitespace/>
-                            <endWithNewline/>
-                        </format>
-                    </formats>
-                    <java>
-                        <!-- include all java files in "java" folders under "src" -->
-                        <includes>
-                            <include>src/**/java/**/*.java</include>
-                        </includes>
-                        <removeUnusedImports/>
-                        <googleJavaFormat>
-                            <version>1.7</version>
-                            <style>GOOGLE</style>
-                        </googleJavaFormat>
-                        <licenseHeader>
-                            <file>${user.dir}/tools/codestyle/HEADER</file>
-                        </licenseHeader>
-                    </java>
-                </configuration>
+              <configuration>
+               <formats>
+                    <format>
+                      <!-- define the files to apply to -->
+                      <includes>
+                        <include>.xml</include>
+                        <include>.gitignore</include>
+                        <include>.properties</include>
+                      </includes>
+                      <trimTrailingWhitespace/>
+                      <endWithNewline/>
+                    </format>
+              </formats>
+                <java>
+                  <!-- include all java files in "java" folders under "src" -->
+                  <includes>
+                    <include>src/**/java/**/*.java</include>
+                  </includes>
+                  <removeUnusedImports />
+                  <googleJavaFormat>
+                    <version>1.7</version>
+                    <style>GOOGLE</style>
+                  </googleJavaFormat>
+                  <licenseHeader>
+                     <file>${user.dir}/tools/codestyle/HEADER</file>
+                  </licenseHeader>
+                </java>
+              </configuration>
             </plugin>
             <plugin>
                 <groupId>org.jacoco</groupId>
@@ -609,7 +619,7 @@
                     </includes>
                     <excludes>
                         <!-- 这里需要根据自己的需要指定要排除单元测试 -->
-                        <!--                        <exclude>com/alipay/**/*.java</exclude>-->
+<!--                        <exclude>com/alipay/**/*.java</exclude>-->
                     </excludes>
                     <!-- 如无特殊需求，将forkMode设置为once -->
                     <forkMode>once</forkMode>
@@ -621,143 +631,100 @@
 
     <profiles>
         <profile>
-            <id>dev</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <repositories>
-                <repository>
-                    <id>maven-snapshot</id>
-                    <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-                    <releases>
-                        <enabled>false</enabled>
-                    </releases>
-                    <snapshots>
-                        <enabled>true</enabled>
-                    </snapshots>
-                </repository>
-                <repository>
-                    <id>central_prod</id>
-                    <url>http://mvn.test.alipay.net/artifactory/content/groups/public/</url>
-                    <snapshots>
-                        <enabled>true</enabled>
-                    </snapshots>
-                </repository>
-                <repository>
-                    <id>central</id>
-                    <url>http://mvn.dev.alipay.net/artifactory/content/groups/public/</url>
-                    <snapshots>
-                        <enabled>true</enabled>
-                    </snapshots>
-                </repository>
-            </repositories>
-            <pluginRepositories>
-                <pluginRepository>
-                    <id>maven-snapshot</id>
-                    <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-                    <releases>
-                        <enabled>false</enabled>
-                    </releases>
-                    <snapshots>
-                        <enabled>true</enabled>
-                    </snapshots>
-                </pluginRepository>
-                <pluginRepository>
-                    <id>central_prod</id>
-                    <url>http://mvn.test.alipay.net/artifactory/content/groups/public/</url>
-                    <snapshots>
-                        <enabled>true</enabled>
-                    </snapshots>
-                </pluginRepository>
-                <pluginRepository>
-                    <id>central</id>
-                    <url>http://mvn.dev.alipay.net/artifactory/content/groups/public/</url>
-                    <snapshots>
-                        <enabled>true</enabled>
-                    </snapshots>
-                </pluginRepository>
-            </pluginRepositories>
-        </profile>
-        <profile>
-            <id>test</id>
-            <repositories>
-                <repository>
-                    <id>maven-snapshot</id>
-                    <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-                    <releases>
-                        <enabled>false</enabled>
-                    </releases>
-                    <snapshots>
-                        <enabled>true</enabled>
-                    </snapshots>
-                </repository>
-                <repository>
-                    <id>central_prod</id>
-                    <url>http://mvn.test.alipay.net/artifactory/content/groups/public/</url>
-                    <snapshots>
-                        <enabled>true</enabled>
-                    </snapshots>
-                </repository>
-            </repositories>
-            <pluginRepositories>
-                <pluginRepository>
-                    <id>maven-snapshot</id>
-                    <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-                    <releases>
-                        <enabled>false</enabled>
-                    </releases>
-                    <snapshots>
-                        <enabled>true</enabled>
-                    </snapshots>
-                </pluginRepository>
-                <pluginRepository>
-                    <id>central_prod</id>
-                    <url>http://mvn.test.alipay.net/artifactory/content/groups/public/</url>
-                    <snapshots>
-                        <enabled>true</enabled>
-                    </snapshots>
-                </pluginRepository>
-            </pluginRepositories>
-        </profile>
-        <!-- antcode release jar -->
-        <profile>
-            <id>antcode-release</id>
-            <distributionManagement>
-                <repository>
-                    <id>maven-release</id>
-                    <name>antcode maven release</name>
-                    <url>http://mvn.test.alipay.net/artifactory/content/repositories/maven-release/</url>
-                </repository>
-                <snapshotRepository>
-                    <id>maven-release</id>
-                    <name>antcode maven snapshot</name>
-                    <url>http://mvn.test.alipay.net/artifactory/content/repositories/maven-snapshot/</url>
-                </snapshotRepository>
-            </distributionManagement>
-        </profile>
-        <!-- 以下内容是配置jar包发布指定的mvn库，与上面配置不冲突 -->
-        <profile>
             <id>alipay-dev</id>
-            <distributionManagement>
+            <repositories>
                 <repository>
-                    <id>nexus-server@alipay-dev</id>
-                    <name>alipay dev Repository</name>
-                    <url>http://mvn.dev.alipay.net/artifactory/content/repositories/middleware</url>
+                    <id>maven-snapshot</id>
+                    <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+                    <releases>
+                        <enabled>false</enabled>
+                    </releases>
+                    <snapshots>
+                        <enabled>true</enabled>
+                    </snapshots>
                 </repository>
-            </distributionManagement>
+                <repository>
+                    <id>central_prod</id>
+                    <url>http://mvn.test.alipay.net/artifactory/content/groups/public/</url>
+                    <snapshots>
+                        <enabled>true</enabled>
+                    </snapshots>
+                </repository>
+                <repository>
+                    <id>central</id>
+                    <url>http://mvn.dev.alipay.net/artifactory/content/groups/public/</url>
+                    <snapshots>
+                        <enabled>true</enabled>
+                    </snapshots>
+                </repository>
+            </repositories>
+            <pluginRepositories>
+                <pluginRepository>
+                    <id>maven-snapshot</id>
+                    <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+                    <releases>
+                        <enabled>false</enabled>
+                    </releases>
+                    <snapshots>
+                        <enabled>true</enabled>
+                    </snapshots>
+                </pluginRepository>
+                <pluginRepository>
+                    <id>central_prod</id>
+                    <url>http://mvn.test.alipay.net/artifactory/content/groups/public/</url>
+                    <snapshots>
+                        <enabled>true</enabled>
+                    </snapshots>
+                </pluginRepository>
+                <pluginRepository>
+                    <id>central</id>
+                    <url>http://mvn.dev.alipay.net/artifactory/content/groups/public/</url>
+                    <snapshots>
+                        <enabled>true</enabled>
+                    </snapshots>
+                </pluginRepository>
+            </pluginRepositories>
         </profile>
-
         <profile>
-            <id>alipay-release</id>
-            <distributionManagement>
+            <id>alipay-test</id>
+            <repositories>
                 <repository>
-                    <id>nexus-server@alipay-release</id>
-                    <name>alipay release Repository</name>
-                    <url>http://mvn.test.alipay.net/artifactory/content/repositories/middleware</url>
+                    <id>maven-snapshot</id>
+                    <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+                    <releases>
+                        <enabled>false</enabled>
+                    </releases>
+                    <snapshots>
+                        <enabled>true</enabled>
+                    </snapshots>
                 </repository>
-            </distributionManagement>
+                <repository>
+                    <id>central_prod</id>
+                    <url>http://mvn.test.alipay.net/artifactory/content/groups/public/</url>
+                    <snapshots>
+                        <enabled>true</enabled>
+                    </snapshots>
+                </repository>
+            </repositories>
+            <pluginRepositories>
+                <pluginRepository>
+                    <id>maven-snapshot</id>
+                    <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+                    <releases>
+                        <enabled>false</enabled>
+                    </releases>
+                    <snapshots>
+                        <enabled>true</enabled>
+                    </snapshots>
+                </pluginRepository>
+                <pluginRepository>
+                    <id>central_prod</id>
+                    <url>http://mvn.test.alipay.net/artifactory/content/groups/public/</url>
+                    <snapshots>
+                        <enabled>true</enabled>
+                    </snapshots>
+                </pluginRepository>
+            </pluginRepositories>
         </profile>
-
     </profiles>
-
 </project>

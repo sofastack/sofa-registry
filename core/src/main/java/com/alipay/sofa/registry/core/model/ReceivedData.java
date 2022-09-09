@@ -49,7 +49,7 @@ public class ReceivedData implements Serializable {
 
   private String localZone;
 
-  private Map<String, Integer> dataCount = new HashMap<>();
+  private Map<String, Integer> dataCount = new HashMap<String, Integer>();
 
   /** Instantiates a new Received data multi. */
   public ReceivedData() {}

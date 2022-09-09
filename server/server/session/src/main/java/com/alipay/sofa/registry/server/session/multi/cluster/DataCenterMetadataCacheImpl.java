@@ -113,8 +113,10 @@ public class DataCenterMetadataCacheImpl implements DataCenterMetadataCache {
   @Override
   public boolean saveDataCenterZones(Map<String, RemoteSlotTableStatus> remoteSlotTableStatus) {
 
+    Set<String> set = Sets.newHashSet(remoteSlotTableStatus.keySet());
+    set.add(sessionServerConfig.getSessionServerDataCenter());
     Set<String> tobeRemove =
-        Sets.difference(metadataCache.keySet(), remoteSlotTableStatus.keySet());
+        Sets.difference(metadataCache.keySet(), set);
 
     boolean success = true;
     for (Entry<String, RemoteSlotTableStatus> entry :
