@@ -33,7 +33,7 @@ public class MultiSegmentData implements Serializable {
 
   private byte[] zipData;
 
-  private Map<String /*zone*/, List<DataBox>> unzipData = new HashMap<String,  List<DataBox>>();
+  private Map<String /*zone*/, List<DataBox>> unzipData = new HashMap<String, List<DataBox>>();
 
   private String encoding;
 

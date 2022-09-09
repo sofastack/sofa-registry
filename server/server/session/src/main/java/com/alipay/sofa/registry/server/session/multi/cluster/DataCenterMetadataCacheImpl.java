@@ -115,8 +115,7 @@ public class DataCenterMetadataCacheImpl implements DataCenterMetadataCache {
 
     Set<String> set = Sets.newHashSet(remoteSlotTableStatus.keySet());
     set.add(sessionServerConfig.getSessionServerDataCenter());
-    Set<String> tobeRemove =
-        Sets.difference(metadataCache.keySet(), set);
+    Set<String> tobeRemove = Sets.difference(metadataCache.keySet(), set);
 
     boolean success = true;
     for (Entry<String, RemoteSlotTableStatus> entry :

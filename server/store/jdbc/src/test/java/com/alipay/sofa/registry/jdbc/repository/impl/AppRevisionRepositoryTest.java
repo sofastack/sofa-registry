@@ -70,6 +70,7 @@ public class AppRevisionRepositoryTest extends AbstractH2DbTestBase {
     interfaceAppsJdbcRepository.setDataCenters(dataCenters);
 
     appRevisionJdbcRepository.startSynced();
+    interfaceAppsJdbcRepository.startSynced();
   }
 
   private void register() throws Exception {
@@ -86,7 +87,6 @@ public class AppRevisionRepositoryTest extends AbstractH2DbTestBase {
           appRevisionJdbcRepository.queryRevision(appRevisionRegister.getRevision());
       Assert.assertEquals(appRevisionRegister.getAppName(), revision.getAppName());
     }
-
     interfaceAppsJdbcRepository.waitSynced();
     // query by interface
     for (AppRevision appRevisionRegister : appRevisionList) {

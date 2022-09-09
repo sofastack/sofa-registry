@@ -40,7 +40,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -76,6 +75,7 @@ public class InterfaceAppsJdbcRepositoryTest extends AbstractH2DbTestBase {
       impl.register(app1, Collections.singleton(service));
       impl.register(app2, Collections.singleton(service));
     }
+    impl.startSynced();
     impl.waitSynced();
     for (String service : services) {
       InterfaceMapping appNames = impl.getAppNames(service);
@@ -112,39 +112,6 @@ public class InterfaceAppsJdbcRepositoryTest extends AbstractH2DbTestBase {
     InterfaceAppsIndexMapper mapper = mock(InterfaceAppsIndexMapper.class);
     when(mapper.update(anyObject()))
         .thenThrow(new SofaRegistryRuntimeException("expect exception."));
-
-    MetadataConfig metadataConfig = mock(MetadataConfig.class);
-    when(metadataConfig.getInterfaceAppsExecutorPoolSize()).thenReturn(1);
-    when(metadataConfig.getInterfaceAppsExecutorQueueSize()).thenReturn(1);
-
-    DefaultCommonConfig defaultCommonConfig = mock(DefaultCommonConfig.class);
-    when(defaultCommonConfig.getClusterId(anyString())).thenReturn("DEFAULT_DATACENTER");
-
-    InterfaceAppsJdbcRepository impl = new InterfaceAppsJdbcRepository();
-    impl.setInterfaceAppsIndexMapper(mapper).setDefaultCommonConfig(defaultCommonConfig);
-
-    String app1 = "app1";
-    List<String> services =
-        Lists.newArrayList("testException-service-" + System.currentTimeMillis());
-
-    for (String service : services) {
-      impl.register(app1, Collections.singleton(service));
-    }
-  }
-
-  @Test(expected = RuntimeException.class)
-  public void testTimeoutException() {
-    InterfaceAppsIndexMapper mapper = mock(InterfaceAppsIndexMapper.class);
-    when(mapper.update(anyObject()))
-        .thenAnswer(
-            (Answer)
-                invocation -> {
-                  try {
-                    Thread.sleep(2000);
-                  } catch (InterruptedException ie) {
-                  }
-                  return null;
-                });
 
     MetadataConfig metadataConfig = mock(MetadataConfig.class);
     when(metadataConfig.getInterfaceAppsExecutorPoolSize()).thenReturn(1);
