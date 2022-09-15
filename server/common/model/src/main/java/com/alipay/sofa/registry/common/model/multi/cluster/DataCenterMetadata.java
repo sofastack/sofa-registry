@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.common.model.multi.cluster;
 
+import com.google.common.base.Objects;
 import java.io.Serializable;
 import java.util.Set;
 
@@ -58,6 +59,25 @@ public class DataCenterMetadata implements Serializable {
    */
   public Set<String> getZones() {
     return zones;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    DataCenterMetadata that = (DataCenterMetadata) o;
+    return stopPush == that.stopPush
+        && Objects.equal(dataCenter, that.dataCenter)
+        && Objects.equal(zones, that.zones);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(dataCenter, stopPush, zones);
   }
 
   @Override

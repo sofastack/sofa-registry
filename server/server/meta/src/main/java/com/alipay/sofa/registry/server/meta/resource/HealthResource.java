@@ -89,6 +89,10 @@ public class HealthResource {
     ret = ret && start;
     sb.append(", httpServerStart:").append(start);
 
+    start = metaServerBootstrap.isRpcServerForRemoteMetaStarted();
+    ret = ret && start;
+    sb.append(", remoteMetaRegisterServerStart:").append(start);
+
     boolean leaderNotEmpty = StringUtil.isNotBlank(metaLeaderService.getLeader());
     ret = ret && leaderNotEmpty;
 

@@ -157,6 +157,7 @@ public class DefaultMultiClusterSlotTableSyncer implements MultiClusterSlotTable
         if (needSync(slotState.task)) {
           SlotSyncTask syncTask = new SlotSyncTask(dataCenter, slotState.slotTable.getEpoch());
           slotState.task = remoteSlotSyncerExecutor.execute(dataCenter, syncTask);
+          LOGGER.info("commit sync task:{}", syncTask);
         }
       }
     }
@@ -210,7 +211,7 @@ public class DefaultMultiClusterSlotTableSyncer implements MultiClusterSlotTable
       this.dataCenterMetadata = dataCenterMetadata;
     }
 
-    public synchronized void update(SlotTable update, DataCenterMetadata dataCenterMetadata) {
+    public synchronized void updateSlotTable(SlotTable update) {
 
       SlotTable prev = slotTable;
       if (slotTable.getEpoch() < update.getEpoch()) {
@@ -218,7 +219,13 @@ public class DefaultMultiClusterSlotTableSyncer implements MultiClusterSlotTable
         LOGGER.info(
             "slotTable update from {} to {}, data: {}", prev.getEpoch(), update.getEpoch(), update);
       }
-      this.dataCenterMetadata = dataCenterMetadata;
+    }
+
+    public synchronized void updateMetadata(DataCenterMetadata metadata) {
+      if (metadata != null && !metadata.equals(this.dataCenterMetadata)) {
+        LOGGER.info("dataCenterMetadata update from {} to {}", this.dataCenterMetadata, metadata);
+        this.dataCenterMetadata = metadata;
+      }
     }
 
     public long incrementAndGetFailCount() {
@@ -282,7 +289,7 @@ public class DefaultMultiClusterSlotTableSyncer implements MultiClusterSlotTable
         Response response = remoteClusterMetaExchanger.sendRequest(dataCenter, request);
 
         // learn latest meta leader and slot table
-        handleSyncResponse(request, response);
+        handleSyncResponse(request, response.getResult());
         success = true;
       } catch (Throwable t) {
         handleSyncFail(request, t);
@@ -295,6 +302,19 @@ public class DefaultMultiClusterSlotTableSyncer implements MultiClusterSlotTable
             System.currentTimeMillis() - startTimestamp);
       }
     }
+
+    @Override
+    public String toString() {
+      return "SlotSyncTask{"
+          + "startTimestamp="
+          + startTimestamp
+          + ", dataCenter='"
+          + dataCenter
+          + '\''
+          + ", slotTableEpoch="
+          + slotTableEpoch
+          + '}';
+    }
   }
 
   private void handleSyncFail(RemoteClusterSlotSyncRequest request, Throwable t) {
@@ -303,7 +323,7 @@ public class DefaultMultiClusterSlotTableSyncer implements MultiClusterSlotTable
     LOGGER.error("[syncRemoteMeta]sync request: {} error.", request, t);
   }
 
-  private void handleSyncResponse(RemoteClusterSlotSyncRequest request, Response response) {
+  private void handleSyncResponse(RemoteClusterSlotSyncRequest request, Object response) {
     RemoteClusterSlotState state = slotStateMap.get(request.getDataCenter());
     if (!(response instanceof GenericResponse)) {
       state.incrementAndGetFailCount();
@@ -311,7 +331,7 @@ public class DefaultMultiClusterSlotTableSyncer implements MultiClusterSlotTable
           StringFormatter.format("sync request: {} fail, resp: {}", request, response));
     }
     GenericResponse<RemoteClusterSlotSyncResponse> syncRest =
-        (GenericResponse<RemoteClusterSlotSyncResponse>) response.getResult();
+        (GenericResponse<RemoteClusterSlotSyncResponse>) response;
     RemoteClusterSlotSyncResponse data = syncRest.getData();
 
     if (syncRest.isSuccess()) {
@@ -367,7 +387,10 @@ public class DefaultMultiClusterSlotTableSyncer implements MultiClusterSlotTable
   private void handleSyncResult(RemoteClusterSlotState state, RemoteClusterSlotSyncResponse data) {
 
     if (data.isSlotTableUpgrade()) {
-      state.update(data.getSlotTable(), data.getDataCenterMetadata());
+      LOGGER.info("slotTable data upgrade:{}", data);
+      state.updateSlotTable(data.getSlotTable());
     }
+
+    state.updateMetadata(data.getDataCenterMetadata());
   }
 }

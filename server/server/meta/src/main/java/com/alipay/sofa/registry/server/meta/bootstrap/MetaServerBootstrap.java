@@ -28,6 +28,7 @@ import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
+import com.alipay.sofa.registry.server.meta.bootstrap.config.MultiClusterMetaServerConfig;
 import com.alipay.sofa.registry.server.meta.remoting.meta.LocalMetaExchanger;
 import com.alipay.sofa.registry.server.meta.remoting.meta.MetaServerRenewService;
 import com.alipay.sofa.registry.server.shared.client.manager.ClientManagerService;
@@ -65,6 +66,8 @@ public class MetaServerBootstrap {
 
   @Autowired private MetaServerConfig metaServerConfig;
 
+  @Autowired private MultiClusterMetaServerConfig multiClusterMetaServerConfig;
+
   @Autowired private Exchange boltExchange;
 
   @Autowired private Exchange jerseyExchange;
@@ -79,6 +82,9 @@ public class MetaServerBootstrap {
 
   @Resource(name = "metaServerHandlers")
   private Collection<AbstractServerHandler> metaServerHandlers;
+
+  @Resource(name = "remoteMetaServerHandlers")
+  private Collection<AbstractServerHandler> remoteMetaServerHandlers;
 
   @Autowired private ResourceConfig jerseyResourceConfig;
 
@@ -102,6 +108,8 @@ public class MetaServerBootstrap {
 
   private Server httpServer;
 
+  private Server remoteMetaServer;
+
   private final AtomicBoolean rpcServerForSessionStarted = new AtomicBoolean(false);
 
   private final AtomicBoolean rpcServerForDataStarted = new AtomicBoolean(false);
@@ -109,6 +117,8 @@ public class MetaServerBootstrap {
   private final AtomicBoolean rpcServerForMetaStarted = new AtomicBoolean(false);
 
   private final AtomicBoolean httpServerStarted = new AtomicBoolean(false);
+
+  private final AtomicBoolean rpcServerForRemoteMetaStarted = new AtomicBoolean(false);
 
   private final AtomicBoolean schedulerStart = new AtomicBoolean(false);
 
@@ -141,6 +151,8 @@ public class MetaServerBootstrap {
       openMetaRegisterServer();
 
       openHttpServer();
+
+      openRemoteMetaServer();
 
       // meta start loop to elector leader
       startElectorLoop();
@@ -306,6 +318,31 @@ public class MetaServerBootstrap {
     }
   }
 
+  private void openRemoteMetaServer() {
+    try {
+      if (rpcServerForRemoteMetaStarted.compareAndSet(false, true)) {
+        remoteMetaServer =
+            boltExchange.open(
+                new URL(
+                    NetUtil.getLocalAddress().getHostAddress(),
+                    multiClusterMetaServerConfig.getRemoteMetaServerPort()),
+                remoteMetaServerHandlers.toArray(
+                    new ChannelHandler[remoteMetaServerHandlers.size()]));
+
+        LOGGER.info(
+            "Open remote meta server port {} success!",
+            multiClusterMetaServerConfig.getRemoteMetaServerPort());
+      }
+    } catch (Exception e) {
+      rpcServerForRemoteMetaStarted.set(false);
+      LOGGER.error(
+          "Open remote meta server port {} error!",
+          multiClusterMetaServerConfig.getRemoteMetaServerPort(),
+          e);
+      throw new RuntimeException("Open remote meta server error!", e);
+    }
+  }
+
   private void bindResourceConfig() {
     registerInstances(Path.class);
     registerInstances(Provider.class);
@@ -330,6 +367,10 @@ public class MetaServerBootstrap {
     }
     if (httpServer != null && httpServer.isOpen()) {
       httpServer.close();
+    }
+
+    if (remoteMetaServer != null && remoteMetaServer.isOpen()) {
+      remoteMetaServer.isOpen();
     }
   }
 
@@ -367,5 +408,9 @@ public class MetaServerBootstrap {
    */
   public boolean isHttpServerStarted() {
     return httpServerStarted.get();
+  }
+
+  public boolean isRpcServerForRemoteMetaStarted() {
+    return rpcServerForRemoteMetaStarted.get();
   }
 }

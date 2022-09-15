@@ -56,7 +56,7 @@ public class MultiClusterSyncDomain implements DbEntry, ConfigEntry {
   private Date gmtCreate;
 
   /** last update time */
-  private Date gmtModify;
+  private Date gmtModified;
 
   @Override
   public long getId() {
@@ -234,21 +234,21 @@ public class MultiClusterSyncDomain implements DbEntry, ConfigEntry {
   }
 
   /**
-   * Getter method for property <tt>gmtModify</tt>.
+   * Getter method for property <tt>gmtModified</tt>.
    *
-   * @return property value of gmtModify
+   * @return property value of gmtModified
    */
-  public Date getGmtModify() {
-    return gmtModify;
+  public Date getGmtModified() {
+    return gmtModified;
   }
 
   /**
-   * Setter method for property <tt>gmtModify</tt>.
+   * Setter method for property <tt>gmtModified</tt>.
    *
-   * @param gmtModify value to be assigned to property gmtModify
+   * @param gmtModified value to be assigned to property gmtModified
    */
-  public void setGmtModify(Date gmtModify) {
-    this.gmtModify = gmtModify;
+  public void setGmtModified(Date gmtModified) {
+    this.gmtModified = gmtModified;
   }
 
   /**

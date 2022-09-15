@@ -101,6 +101,7 @@ public class RemoteClusterMetaExchanger extends AbstractMetaLeaderExchanger {
     synchronized (this) {
       for (MultiClusterSyncInfo update : updates) {
         syncConfigMap.put(update.getRemoteDataCenter(), update);
+        MULTI_CLUSTER_CONFIG_LOGGER.info("[refreshClusterInfos]update remote: {} config.", update);
       }
 
       for (String remove : removes) {

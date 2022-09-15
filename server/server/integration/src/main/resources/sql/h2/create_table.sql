@@ -91,6 +91,7 @@ CREATE TABLE `multi_cluster_sync_info` (
   `sync_datainfoids` MEDIUMTEXT NOT NULL COMMENT '同步的dataInfoId名单',
   `syn_publisher_groups` varchar(4096) NOT NULL COMMENT '同步的group名单',
   `ignore_datainfoids` MEDIUMTEXT NOT NULL COMMENT '忽略同步的dataInfoId',
+  `data_version` bigint(20) NOT NULL DEFAULT '0' COMMENT '版本号',
   `gmt_create` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `gmt_modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
   PRIMARY KEY (`id`),

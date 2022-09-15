@@ -172,16 +172,16 @@ public final class SlotTable implements Serializable {
     return new SlotTable(epoch, slotMap);
   }
 
-  public SlotTable filterLeader(String ip) {
+  public SlotTable filterLeaderInfo() {
     if (slots.isEmpty()) {
       return this;
     }
     final Map<Integer, Slot> slotMap = Maps.newHashMapWithExpectedSize(slots.size());
     slots.forEach(
         (k, v) -> {
-          if (v.getLeader().equals(ip)) {
-            slotMap.put(k, v);
-          }
+          // filter followers
+          slotMap.put(
+              k, new Slot(v.getId(), v.getLeader(), v.getLeaderEpoch(), Collections.emptyList()));
         });
     return new SlotTable(epoch, slotMap);
   }

@@ -28,7 +28,6 @@ import com.alipay.sofa.registry.server.meta.bootstrap.ExecutorManager;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.metaserver.CurrentDcMetaServer;
 import com.alipay.sofa.registry.server.meta.provide.data.FetchStopPushService;
-import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.alipay.sofa.registry.server.shared.slot.SlotTableUtils;
 import com.alipay.sofa.registry.store.api.config.DefaultCommonConfig;
@@ -119,19 +118,20 @@ public class RemoteClusterSlotSyncHandler
                       fetchStopPushService.isStopPush(),
                       metaServerConfig.getLocalDataCenterZones())));
     } else {
+      SlotTable resp = slotTable.filterLeaderInfo();
       LOGGER.info(
           "sync request epoch:{} < newSlotTableEpoch:{}, leader:{}, leaderEpoch:{}, slotTable upgrade: {}",
           request,
           slotTable.getEpoch(),
           leaderInfo.getLeader(),
           leaderInfo.getEpoch(),
-          slotTable);
+          resp);
       return new GenericResponse<RemoteClusterSlotSyncResponse>()
           .fillSucceed(
               RemoteClusterSlotSyncResponse.upgrade(
                   leaderInfo.getLeader(),
                   leaderInfo.getEpoch(),
-                  slotTable.filterLeader(ServerEnv.IP),
+                  resp,
                   new DataCenterMetadata(
                       clusterId,
                       fetchStopPushService.isStopPush(),
