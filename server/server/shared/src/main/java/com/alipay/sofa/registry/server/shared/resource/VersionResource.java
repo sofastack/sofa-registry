@@ -27,6 +27,6 @@ public class VersionResource {
   @Path("version")
   public String version() {
     return StringFormatter.format(
-        "release properties: \t\t {}", ServerEnv.getReleaseProps("git.properties"));
+        "release properties: \t\t {}", ServerEnv.getReleaseProps(ServerEnv.GIT_PROPS_FILE));
   }
 }

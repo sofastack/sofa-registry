@@ -94,7 +94,7 @@ public class AppRevisionCleanerTest extends AbstractMetaServerTestBase {
     mocked.renewer.getWaitingMillis();
     mocked.renew();
     mocked.renewer.runUnthrowable();
-    verify(mocked.appRevisionRepository, times(6)).heartbeat(anyString());
+    verify(mocked.appRevisionRepository, times(6)).heartbeatDB(anyString());
     mocked.init();
     mocked.start();
     mocked.renewer.close();
