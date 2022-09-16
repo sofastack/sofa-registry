@@ -141,6 +141,7 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository, Recover
 
   /**
    * check if revisionId exist
+   *
    * @param revisionId
    * @return
    */
@@ -174,6 +175,16 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository, Recover
   public boolean heartbeat(String revision) {
     localRevisions.put(revision, true);
     return informer.getContainer().containsRevisionId(revision);
+  }
+
+  @Override
+  public boolean heartbeatDB(String revision) {
+    int effect =
+        appRevisionMapper.heartbeat(defaultCommonConfig.getClusterId(tableName()), revision);
+    if (effect == 0) {
+      LOG.error("revision: {} heartbeat fail.", revision);
+    }
+    return effect > 0;
   }
 
   @VisibleForTesting

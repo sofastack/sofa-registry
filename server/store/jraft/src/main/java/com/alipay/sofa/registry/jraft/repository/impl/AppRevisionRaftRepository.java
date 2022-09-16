@@ -63,6 +63,11 @@ public class AppRevisionRaftRepository implements AppRevisionRepository {
   }
 
   @Override
+  public boolean heartbeatDB(String revision) {
+    return false;
+  }
+
+  @Override
   public void waitSynced() {}
 
   @Override
