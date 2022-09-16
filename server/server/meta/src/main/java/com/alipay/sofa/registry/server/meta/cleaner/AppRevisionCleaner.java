@@ -115,7 +115,7 @@ public class AppRevisionCleaner
         slices.add((AppRevisionSlice) result);
       }
       for (String revision : AppRevisionSlice.merge(slices).getRevisions()) {
-        appRevisionRepository.heartbeat(revision);
+        appRevisionRepository.heartbeatDB(revision);
         ConcurrentUtils.sleepUninterruptibly(10, TimeUnit.MILLISECONDS);
       }
       consecutiveSuccess.success();
