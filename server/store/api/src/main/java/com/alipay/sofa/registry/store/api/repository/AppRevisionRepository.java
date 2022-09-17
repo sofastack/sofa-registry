@@ -54,6 +54,8 @@ public interface AppRevisionRepository extends MultiDataCenterListener {
 
   boolean heartbeat(String revision);
 
+  boolean heartbeatDB(String revision);
+
   Collection<String> availableRevisions();
 
   List<AppRevision> listFromStorage(long start, int limit);

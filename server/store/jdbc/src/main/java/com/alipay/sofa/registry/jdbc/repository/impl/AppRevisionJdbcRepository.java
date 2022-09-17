@@ -182,6 +182,16 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository, Recover
     return informer.getContainer().containsRevisionId(revision);
   }
 
+  @Override
+  public boolean heartbeatDB(String revision) {
+    int effect =
+        appRevisionMapper.heartbeat(defaultCommonConfig.getClusterId(tableName()), revision);
+    if (effect == 0) {
+      LOG.error("revision: {} heartbeat fail.", revision);
+    }
+    return effect > 0;
+  }
+
   @VisibleForTesting
   LoadingCache<String, AppRevision> getRevisions() {
     return registry;

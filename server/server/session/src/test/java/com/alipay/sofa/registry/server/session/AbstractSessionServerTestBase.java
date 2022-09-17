@@ -774,6 +774,11 @@ public class AbstractSessionServerTestBase extends AbstractTestBase {
     }
 
     @Override
+    public boolean heartbeatDB(String revision) {
+      return false;
+    }
+
+    @Override
     public Collection<String> availableRevisions() {
       return revisions.keySet();
     }
