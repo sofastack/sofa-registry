@@ -99,7 +99,7 @@ public class SyncLeaderTask implements Runnable {
       SYNC_DIGEST_LOGGER.info(
           "[syncLeader]{},{},{},{},{},span={}",
           success ? 'Y' : 'N',
-          syncLocalDataCenter ? 'Y' : 'N',
+          syncLocalDataCenter ? 'L' : 'R',
           syncDataCenter,
           slot.getId(),
           slot.getLeader(),

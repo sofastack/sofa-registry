@@ -30,11 +30,14 @@ public class Loggers {
   public static final Logger MULTI_CLUSTER_SRV_LOGGER =
       LoggerFactory.getLogger("MULTI-CLUSTER-SRV");
 
-  public static final Logger MULTI_CLUSTER_CLIENT_LOGGER =
-      LoggerFactory.getLogger("MULTI-CLUSTER-CLIENT");
+  public static final Logger MULTI_CLUSTER_SYNC_DELTA_LOGGER =
+      LoggerFactory.getLogger("MULTI-CLUSTER-SYNC", "[SyncDelta]");
+
+  public static final Logger MULTI_CLUSTER_SYNC_ALL_LOGGER =
+      LoggerFactory.getLogger("MULTI-CLUSTER-SYNC", "[SyncAll]");
 
   public static final Logger MULTI_CLUSTER_SYNC_DIGEST_LOGGER =
-      LoggerFactory.getLogger("MULTI_CLUSTER_SYNC_DIGEST_LOGGER");
+      LoggerFactory.getLogger("MULTI-CLUSTER-SYNC-DIGEST");
 
   public static final Logger MULTI_CLUSTER_SLOT_TABLE =
       LoggerFactory.getLogger("MULTI-CLUSTER-SLOT-TABLE");

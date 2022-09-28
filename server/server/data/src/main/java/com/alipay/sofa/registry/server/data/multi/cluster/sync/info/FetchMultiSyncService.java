@@ -26,11 +26,13 @@ import com.alipay.sofa.registry.store.api.meta.MultiClusterSyncRepository;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import java.util.Map;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.util.CollectionUtils;
 
 /**
  * @author xiaojian.xj
@@ -69,6 +71,10 @@ public class FetchMultiSyncService implements ApplicationListener<ContextRefresh
     this.syncMap = syncMap;
   }
 
+  private synchronized Set<String> syncingDataCenter() {
+    return syncMap.keySet();
+  }
+
   /**
    * Handle an application event.
    *
@@ -90,10 +96,12 @@ public class FetchMultiSyncService implements ApplicationListener<ContextRefresh
       Set<MultiClusterSyncInfo> multiClusterSyncInfos =
           multiClusterSyncRepository.queryLocalSyncInfos();
 
+      boolean change = false;
       Map<String, MultiSegmentSyncSwitch> syncMap =
           Maps.newHashMapWithExpectedSize(multiClusterSyncInfos.size());
       for (MultiClusterSyncInfo multiClusterSyncInfo : multiClusterSyncInfos) {
-        MultiSegmentSyncSwitch exist = syncMap.get(multiClusterSyncInfo.getRemoteDataCenter());
+        MultiSegmentSyncSwitch exist =
+            getMultiSyncSwitch(multiClusterSyncInfo.getRemoteDataCenter());
         if (exist != null && exist.getDataVersion() > multiClusterSyncInfo.getDataVersion()) {
           LOGGER.error(
               "[FetchMultiSyncService]load config error, exist:{}, load:{}",
@@ -101,11 +109,28 @@ public class FetchMultiSyncService implements ApplicationListener<ContextRefresh
               multiClusterSyncInfo);
           return;
         }
-        syncMap.put(multiClusterSyncInfo.getRemoteDataCenter(), from(multiClusterSyncInfo));
+
+        if (exist == null || multiClusterSyncInfo.getDataVersion() > exist.getDataVersion()) {
+          LOGGER.info(
+              "[FetchMultiSyncService.addOrUpdate]dataCenter:{},remoteDataCenter:{}, config update from:{} to {}",
+              multiClusterSyncInfo.getDataCenter(),
+              multiClusterSyncInfo.getRemoteDataCenter(),
+              exist,
+              multiClusterSyncInfo);
+          change = true;
+          syncMap.put(multiClusterSyncInfo.getRemoteDataCenter(), from(multiClusterSyncInfo));
+        }
       }
 
-      multiSyncDataAcceptorManager.updateFrom(syncMap.values());
-      setSyncMap(syncMap);
+      Set<String> remove = Sets.difference(syncingDataCenter(), syncMap.keySet());
+      if (!CollectionUtils.isEmpty(remove)) {
+        change = true;
+        LOGGER.info("[FetchMultiSyncService.remove]remove dataCenters:{}", remove);
+      }
+      if (change) {
+        multiSyncDataAcceptorManager.updateFrom(syncMap.values());
+        setSyncMap(syncMap);
+      }
     }
 
     @Override

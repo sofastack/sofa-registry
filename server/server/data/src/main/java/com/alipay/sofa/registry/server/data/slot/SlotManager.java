@@ -16,10 +16,10 @@
  */
 package com.alipay.sofa.registry.server.data.slot;
 
-import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.slot.BaseSlotStatus;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author yuzhi.lyz
@@ -37,5 +37,5 @@ public interface SlotManager extends SlotAccessor {
 
   void triggerUpdateSlotTable(long epoch);
 
-  Tuple<Long, List<BaseSlotStatus>> getSlotTableEpochAndStatuses();
+  Set<Integer> leaderSlotIds();
 }

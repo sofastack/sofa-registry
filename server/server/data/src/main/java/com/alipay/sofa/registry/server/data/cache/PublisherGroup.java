@@ -313,7 +313,7 @@ public final class PublisherGroup {
         // remove the existing <= removedVer
         if (existing.registerVersion.equals(removedVer)
             || existing.registerVersion.orderThan(removedVer)) {
-          // sync from leader
+          // sync from local-leader/remote-leader
           if (sessionProcessId == null) {
             pubMap.remove(registerId);
             modified = true;

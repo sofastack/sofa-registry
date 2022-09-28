@@ -88,7 +88,8 @@ public class DataChangeEventCenterTest {
         center.handleChanges(
             center.transferChangeEvent(dataServerConfig.getNotifyMaxItems()),
             NodeType.SESSION,
-            dataServerConfig.getNotifyPort()));
+            dataServerConfig.getNotifyPort(),
+            true));
 
     Exchange exchange = Mockito.mock(Exchange.class);
     Server server = Mockito.mock(Server.class);
@@ -101,7 +102,8 @@ public class DataChangeEventCenterTest {
         center.handleChanges(
             center.transferChangeEvent(dataServerConfig.getNotifyMaxItems()),
             NodeType.SESSION,
-            dataServerConfig.getNotifyPort()));
+            dataServerConfig.getNotifyPort(),
+            true));
 
     TestBaseUtils.MockBlotChannel channel = TestBaseUtils.newChannel(9620, "localhost", 1000);
     Mockito.when(server.selectAvailableChannelsForHostAddress())
@@ -122,7 +124,8 @@ public class DataChangeEventCenterTest {
         center.handleChanges(
             center.transferChangeEvent(dataServerConfig.getNotifyMaxItems()),
             NodeType.SESSION,
-            dataServerConfig.getNotifyPort()));
+            dataServerConfig.getNotifyPort(),
+            true));
 
     Publisher pub = TestBaseUtils.createTestPublisher("testDataId");
     center.onChange(Lists.newArrayList(pub.getDataInfoId()), DataChangeType.PUT, DC);
@@ -132,7 +135,8 @@ public class DataChangeEventCenterTest {
         center.handleChanges(
             center.transferChangeEvent(dataServerConfig.getNotifyMaxItems()),
             NodeType.SESSION,
-            dataServerConfig.getNotifyPort()));
+            dataServerConfig.getNotifyPort(),
+            true));
 
     // reject
     center.setNotifyExecutor(TestBaseUtils.rejectExecutor());
@@ -142,7 +146,8 @@ public class DataChangeEventCenterTest {
         center.handleChanges(
             center.transferChangeEvent(dataServerConfig.getNotifyMaxItems()),
             NodeType.SESSION,
-            dataServerConfig.getNotifyPort()));
+            dataServerConfig.getNotifyPort(),
+            true));
     Assert.assertTrue(ChangeMetrics.CHANGE_SKIP_COUNTER.get() == (pre + 1));
   }
 

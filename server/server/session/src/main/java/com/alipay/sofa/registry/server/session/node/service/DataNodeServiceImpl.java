@@ -215,7 +215,6 @@ public class DataNodeServiceImpl implements DataNodeService {
     for (String dataCenter : dataCenters) {
       final Slot slot = getSlot(dataCenter, dataInfoId);
       ParaCheckUtil.checkEquals(slotId, slot.getId(), "slotId");
-      ParaCheckUtil.checkEquals(dataNodeIp, slot.getLeader(), "dataNodeIp");
       slotTableEpochs.put(dataCenter, slotTableCache.getEpoch(dataCenter));
       slotLeaderEpochs.put(dataCenter, slot.getLeaderEpoch());
     }

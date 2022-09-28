@@ -319,40 +319,41 @@ public class HeartbeatRequestHandler extends BaseMetaServerHandler<HeartbeatRequ
    * @return
    */
   private Map<String, RemoteSlotTableStatus> calculateStatus(HeartbeatRequest<Node> heartbeat) {
-    Map<String, RemoteClusterSlotState> remoteState =
+    Map<String, RemoteClusterSlotState> existStateMap =
         multiClusterSlotTableSyncer.getMultiClusterSlotTable();
-    Map<String, Long> dataRemoteSlotTable = heartbeat.getRemoteClusterSlotTableEpoch();
+    Map<String, Long> requestSlotTable = heartbeat.getRemoteClusterSlotTableEpoch();
 
     Map<String, RemoteSlotTableStatus> result = Maps.newHashMap();
-    for (Entry<String, RemoteClusterSlotState> metaEntry : remoteState.entrySet()) {
-      String dataCenter = metaEntry.getKey();
-      RemoteClusterSlotState state = metaEntry.getValue();
-      Long slotTableEpoch = dataRemoteSlotTable.get(dataCenter);
-      SlotTable exist = state.getSlotTable();
-      DataCenterMetadata dataCenterMetadata = metaEntry.getValue().getDataCenterMetadata();
-      if (slotTableEpoch == null || slotTableEpoch < exist.getEpoch()) {
+    for (Entry<String, RemoteClusterSlotState> existEntry : existStateMap.entrySet()) {
+      String remoteDataCenter = existEntry.getKey();
+      RemoteClusterSlotState existState = existEntry.getValue();
+      Long requestSlotTableEpoch = requestSlotTable.get(remoteDataCenter);
+      SlotTable exist = existState.getSlotTable();
+      DataCenterMetadata dataCenterMetadata = existEntry.getValue().getDataCenterMetadata();
+      if (requestSlotTableEpoch == null || requestSlotTableEpoch < exist.getEpoch()) {
         MULTI_CLUSTER_LOGGER.info(
             "[calculateStatus]node:{}, heartbeat request:{}/{}, newSlotTableEpoch:{}/{}, slotTable upgrade: {}",
             heartbeat.getNode(),
-            dataCenter,
-            slotTableEpoch,
-            dataCenter,
+            remoteDataCenter,
+            requestSlotTableEpoch,
+            remoteDataCenter,
             exist.getEpoch(),
             exist);
-        result.put(dataCenter, RemoteSlotTableStatus.upgrade(exist, dataCenterMetadata));
-      } else if (slotTableEpoch > exist.getEpoch()) {
+        result.put(remoteDataCenter, RemoteSlotTableStatus.upgrade(exist, dataCenterMetadata));
+      } else if (requestSlotTableEpoch > exist.getEpoch()) {
         // it should not happen, print error log and return false
         MULTI_CLUSTER_LOGGER.error(
             "[calculateStatus]node:{}, heartbeat request:{}/{}, newSlotTableEpoch:{}/{}, heartbeat error.",
             heartbeat.getNode(),
-            dataCenter,
-            slotTableEpoch,
-            dataCenter,
+            remoteDataCenter,
+            requestSlotTableEpoch,
+            remoteDataCenter,
             exist.getEpoch());
-        result.put(dataCenter, RemoteSlotTableStatus.conflict(exist));
+        result.put(remoteDataCenter, RemoteSlotTableStatus.conflict(exist));
       } else {
         result.put(
-            dataCenter, RemoteSlotTableStatus.notUpgrade(slotTableEpoch, dataCenterMetadata));
+            remoteDataCenter,
+            RemoteSlotTableStatus.notUpgrade(requestSlotTableEpoch, dataCenterMetadata));
       }
     }
     return result;

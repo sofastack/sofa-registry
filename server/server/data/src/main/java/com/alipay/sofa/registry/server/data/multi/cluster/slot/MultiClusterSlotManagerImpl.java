@@ -21,6 +21,8 @@ import com.alipay.sofa.registry.common.model.console.MultiSegmentSyncSwitch;
 import com.alipay.sofa.registry.common.model.constants.MultiValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.MultiClusterSyncInfo;
 import com.alipay.sofa.registry.common.model.multi.cluster.RemoteSlotTableStatus;
+import com.alipay.sofa.registry.common.model.slot.BaseSlotStatus;
+import com.alipay.sofa.registry.common.model.slot.LeaderSlotStatus;
 import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.common.model.slot.Slot.Role;
 import com.alipay.sofa.registry.common.model.slot.SlotAccess;
@@ -44,11 +46,10 @@ import com.alipay.sofa.registry.server.data.multi.cluster.loggers.Loggers;
 import com.alipay.sofa.registry.server.data.multi.cluster.sync.info.FetchMultiSyncService;
 import com.alipay.sofa.registry.server.data.slot.SlotChangeListenerManager;
 import com.alipay.sofa.registry.server.data.slot.SlotDiffSyncer;
-import com.alipay.sofa.registry.server.data.slot.SlotManagerImpl;
+import com.alipay.sofa.registry.server.data.slot.SlotManager;
 import com.alipay.sofa.registry.server.data.slot.SlotManagerImpl.ISlotState;
 import com.alipay.sofa.registry.server.data.slot.SyncContinues;
 import com.alipay.sofa.registry.server.data.slot.SyncLeaderTask;
-import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.remoting.ClientSideExchanger;
 import com.alipay.sofa.registry.store.api.meta.MultiClusterSyncRepository;
 import com.alipay.sofa.registry.task.KeyedTask;
@@ -57,10 +58,13 @@ import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
-import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -80,7 +84,10 @@ public class MultiClusterSlotManagerImpl implements MultiClusterSlotManager {
 
   private static final Logger MULTI_CLUSTER_SLOT_TABLE = Loggers.MULTI_CLUSTER_SLOT_TABLE;
 
-  private static final Logger MULTI_CLUSTER_CLIENT_LOGGER = Loggers.MULTI_CLUSTER_CLIENT_LOGGER;
+  private static final Logger MULTI_CLUSTER_SYNC_DELTA_LOGGER =
+      Loggers.MULTI_CLUSTER_SYNC_DELTA_LOGGER;
+
+  private static final Logger MULTI_CLUSTER_SYNC_ALL_LOGGER = Loggers.MULTI_CLUSTER_SYNC_ALL_LOGGER;
 
   private static final Logger MULTI_CLUSTER_SYNC_DIGEST_LOGGER =
       Loggers.MULTI_CLUSTER_SYNC_DIGEST_LOGGER;
@@ -104,6 +111,8 @@ public class MultiClusterSlotManagerImpl implements MultiClusterSlotManager {
   @Autowired private FetchMultiSyncService fetchMultiSyncService;
 
   @Autowired private MultiClusterSyncRepository multiClusterSyncRepository;
+
+  @Autowired private SlotManager slotManager;
 
   private static final Map<String, RemoteSlotTableStorage> slotTableStorageMap =
       Maps.newConcurrentMap();
@@ -151,11 +160,33 @@ public class MultiClusterSlotManagerImpl implements MultiClusterSlotManager {
     }
     Tuple<SlotTable, RemoteSlotStates> tuple = states.get(slotId);
 
-    return SlotManagerImpl.checkSlotAccess(slotId, tuple.o1.getEpoch(), tuple.o2, srcLeaderEpoch);
+    return checkSlotAccess(slotId, tuple.o1.getEpoch(), tuple.o2, srcLeaderEpoch);
   }
 
-  private static boolean localIsLeader(Slot slot) {
-    return ServerEnv.isLocalServer(slot.getLeader());
+  public SlotAccess checkSlotAccess(
+      int slotId, long currentSlotTableEpoch, ISlotState state, long srcLeaderEpoch) {
+    if (state == null) {
+      return new SlotAccess(slotId, currentSlotTableEpoch, SlotAccess.Status.Moved, -1);
+    }
+    final Slot slot = state.getSlot();
+    if (!localIsLeader(slot)) {
+      return new SlotAccess(
+          slotId, currentSlotTableEpoch, SlotAccess.Status.Moved, slot.getLeaderEpoch());
+    }
+    if (!state.isMigrated()) {
+      return new SlotAccess(
+          slotId, currentSlotTableEpoch, SlotAccess.Status.Migrating, slot.getLeaderEpoch());
+    }
+    if (slot.getLeaderEpoch() != srcLeaderEpoch) {
+      return new SlotAccess(
+          slotId, currentSlotTableEpoch, SlotAccess.Status.MisMatch, slot.getLeaderEpoch());
+    }
+    return new SlotAccess(
+        slotId, currentSlotTableEpoch, SlotAccess.Status.Accept, slot.getLeaderEpoch());
+  }
+
+  private boolean localIsLeader(Slot slot) {
+    return slotManager.isLeader(dataServerConfig.getLocalDataCenter(), slot.getId());
   }
 
   @Override
@@ -179,6 +210,18 @@ public class MultiClusterSlotManagerImpl implements MultiClusterSlotManager {
         StringFormatter.format("MultiClusterSlotManagerImpl.isFollower {}/{}", dataCenter, slotId));
   }
 
+  @Override
+  public Tuple<Long, List<BaseSlotStatus>> getSlotTableEpochAndStatuses(String dataCenter) {
+    RemoteSlotTableStorage storage = slotTableStorageMap.get(dataCenter);
+    if (storage == null) {
+      return new Tuple<>(SlotTable.INIT.getEpoch(), Collections.emptyList());
+    }
+
+    long slotTableEpoch = storage.slotTableStates.getSlotTableEpoch();
+    List<BaseSlotStatus> slotStatuses = storage.slotTableStates.getSlotStatuses();
+    return new Tuple<>(slotTableEpoch, slotStatuses);
+  }
+
   private final class RemoteSlotTableStorage {
     private final RemoteSlotTableStates slotTableStates;
 
@@ -197,7 +240,7 @@ public class MultiClusterSlotManagerImpl implements MultiClusterSlotManager {
     private final ReentrantReadWriteLock.ReadLock readLock = updateLock.readLock();
 
     final String dataCenter;
-    // save only slot belong to us
+    // save all slot
     volatile SlotTable slotTable = SlotTable.INIT;
 
     // map<slotId, RemoteSlotStates>
@@ -208,42 +251,128 @@ public class MultiClusterSlotManagerImpl implements MultiClusterSlotManager {
     }
 
     boolean updateSlotState(SlotTable update) {
+
+      // filter slot belong to me
+      SlotTable mySlots = update.filter(slotManager.leaderSlotIds());
       writeLock.lock();
       try {
-        for (Slot slot : update.getSlots()) {
-          listenAdd(dataCenter, slot);
+        for (Slot slot : mySlots.getSlots()) {
+          listenAdd(dataCenter, slot.getId());
           RemoteSlotStates state =
               slotStates.computeIfAbsent(
                   slot.getId(),
                   k -> {
-                    MULTI_CLUSTER_SLOT_TABLE.info("[updateSlotState]add slot={}", dataCenter, slot);
+                    MULTI_CLUSTER_SLOT_TABLE.info(
+                        "[updateSlotState]add dataCenter={}, slot={}", dataCenter, slot);
                     return new RemoteSlotStates(dataCenter, slot);
                   });
           state.update(slot);
         }
 
-        final Iterator<Entry<Integer, RemoteSlotStates>> it = slotStates.entrySet().iterator();
-        while (it.hasNext()) {
-          Map.Entry<Integer, RemoteSlotStates> e = it.next();
-          if (update.getSlot(e.getKey()) == null) {
-            final Slot slot = e.getValue().slot;
-            it.remove();
-            // first remove the slot for GetData Access check, then clean the data
-            listenRemove(dataCenter, slot);
-            MultiClusterSlotMetrics.observeRemoteLeaderSyncingFinish(dataCenter, slot.getId());
-            MULTI_CLUSTER_SLOT_TABLE.info("dataCenter={} remove slot, slot={}", dataCenter, slot);
-          }
-        }
         this.slotTable = update;
         MultiClusterSlotMetrics.observeRemoteLeaderAssignGauge(
-            dataCenter, this.slotTable.getLeaderNum(ServerEnv.IP));
+            dataCenter, this.slotTable.getSlotNum());
       } catch (Throwable t) {
-        MULTI_CLUSTER_SLOT_TABLE.error("[updateSlotTable]update slot table:{} error.", update, t);
+        MULTI_CLUSTER_SLOT_TABLE.error("[updateSlotState]update slot table:{} error.", update, t);
         return false;
       } finally {
         writeLock.unlock();
       }
       return true;
+    }
+
+    Set<Integer> slotIds() {
+      readLock.lock();
+      try {
+        return slotStates.keySet();
+      } finally {
+        readLock.unlock();
+      }
+    }
+
+    boolean addSlotState(Set<Integer> slotIds) {
+      if (CollectionUtils.isEmpty(slotIds)) {
+        return true;
+      }
+      writeLock.lock();
+      try {
+        for (Integer slotId : slotIds) {
+          Slot slot = slotTable.getSlot(slotId);
+          listenAdd(dataCenter, slotId);
+          slotStates.computeIfAbsent(
+              slotId,
+              k -> {
+                MULTI_CLUSTER_SLOT_TABLE.info(
+                    "[addSlotState]add dataCenter={}, slot={}", dataCenter, slot);
+                return new RemoteSlotStates(dataCenter, slot);
+              });
+        }
+      } catch (Throwable t) {
+        MULTI_CLUSTER_SLOT_TABLE.error(
+            "[addSlotState]add dataCenter={}, slotIds={} error.", dataCenter, slotIds, t);
+        return false;
+      } finally {
+        writeLock.unlock();
+      }
+      return true;
+    }
+
+    boolean removeSlotState(Set<Integer> slotIds) {
+      if (CollectionUtils.isEmpty(slotIds)) {
+        return true;
+      }
+      writeLock.lock();
+      try {
+        for (Integer slotId : slotIds) {
+          slotStates.remove(slotId);
+          // first remove the slot for GetData Access check, then clean the data
+          listenRemove(dataCenter, slotId);
+          MultiClusterSlotMetrics.observeRemoteLeaderSyncingFinish(dataCenter, slotId);
+          MULTI_CLUSTER_SLOT_TABLE.info(
+              "[removeSlotState]dataCenter={} remove slot, slotId={}", dataCenter, slotId);
+        }
+      } catch (Throwable t) {
+        MULTI_CLUSTER_SLOT_TABLE.error(
+            "[removeSlotState]remove dataCenter={}, slotIds={} error.", dataCenter, slotIds, t);
+        return false;
+      } finally {
+        writeLock.unlock();
+      }
+      return true;
+    }
+
+    long getSlotTableEpoch() {
+      readLock.lock();
+      try {
+        return slotTable.getEpoch();
+      } finally {
+        readLock.unlock();
+      }
+    }
+
+    List<BaseSlotStatus> getSlotStatuses() {
+      List<BaseSlotStatus> slotStatuses = Lists.newArrayListWithCapacity(slotStates.size());
+      updateLock.readLock().lock();
+      try {
+        for (Map.Entry<Integer, RemoteSlotStates> entry : slotStates.entrySet()) {
+          int slotId = entry.getKey();
+          RemoteSlotStates slotState = entry.getValue();
+          LeaderSlotStatus status =
+              new LeaderSlotStatus(
+                  slotId,
+                  slotState.slot.getLeaderEpoch(),
+                  slotState.slot.getLeader(),
+                  slotState.synced
+                      ? BaseSlotStatus.LeaderStatus.HEALTHY
+                      : BaseSlotStatus.LeaderStatus.UNHEALTHY);
+          slotStatuses.add(status);
+        }
+
+        Collections.sort(slotStatuses, Comparator.comparingInt(s -> s.getSlotId()));
+        return slotStatuses;
+      } finally {
+        updateLock.readLock().unlock();
+      }
     }
 
     RemoteSlotStates getSlotStates(int slotId) {
@@ -268,16 +397,16 @@ public class MultiClusterSlotManagerImpl implements MultiClusterSlotManager {
       return new Tuple<>(table, state);
     }
 
-    private void listenAdd(String dataCenter, Slot s) {
+    private void listenAdd(String dataCenter, int slotId) {
       slotChangeListenerManager
           .remoteListeners()
-          .forEach(listener -> listener.onSlotAdd(dataCenter, s.getId(), Role.Leader));
+          .forEach(listener -> listener.onSlotAdd(dataCenter, slotId, Role.Leader));
     }
 
-    private void listenRemove(String dataCenter, Slot s) {
+    private void listenRemove(String dataCenter, int slotId) {
       slotChangeListenerManager
           .remoteListeners()
-          .forEach(listener -> listener.onSlotRemove(dataCenter, s.getId(), Role.Leader));
+          .forEach(listener -> listener.onSlotRemove(dataCenter, slotId, Role.Leader));
     }
   }
 
@@ -339,9 +468,6 @@ public class MultiClusterSlotManagerImpl implements MultiClusterSlotManager {
 
     void update(Slot update) {
       ParaCheckUtil.checkEquals(slotId, update.getId(), "slot.id");
-      ParaCheckUtil.assertTrue(
-          ServerEnv.isLocalServer(slot.getLeader()),
-          StringFormatter.format("{} is not equal leader={}", ServerEnv.IP, slot.getLeader()));
       if (slot.getLeaderEpoch() != update.getLeaderEpoch()) {
         this.synced = false;
         this.lastSuccessSyncRemoteTime = -1L;
@@ -440,7 +566,7 @@ public class MultiClusterSlotManagerImpl implements MultiClusterSlotManager {
       RemoteSlotTableStatus slotTableStatus = statusEntry.getValue();
       if (slotTableStatus.isSlotTableEpochConflict()) {
         // local.slotTableEpoch > meta.slotTableEpoch
-        // it should noe happen, print error log and restart data server;
+        // it should not happen, print error log and restart data server;
         MULTI_CLUSTER_SLOT_TABLE.error(
             "[updateSlotTable]meta remote slot table status conflict: {}", slotTableStatus);
         continue;
@@ -469,8 +595,7 @@ public class MultiClusterSlotManagerImpl implements MultiClusterSlotManager {
           && updatingSlotTable.getEpoch() >= slotTableStatus.getSlotTableEpoch()) {
         continue;
       }
-      // filter slot belong to me
-      SlotTable toBeUpdate = slotTableStatus.getSlotTable().filter(ServerEnv.IP);
+      SlotTable toBeUpdate = slotTableStatus.getSlotTable();
 
       if (!checkSlot(curSlotTable, updatingSlotTable, toBeUpdate)) {
         continue;
@@ -479,10 +604,10 @@ public class MultiClusterSlotManagerImpl implements MultiClusterSlotManager {
       if (updating.compareAndSet(updatingSlotTable, toBeUpdate)) {
         wakeup = true;
         MULTI_CLUSTER_SLOT_TABLE.info(
-            "updating slot table, dataCenter={}, new={}, current={}",
+            "[updateSlotTable]updating remote slot table, dataCenter={}, prev={}, new={}",
             dataCenter,
-            toBeUpdate,
-            curSlotTable);
+            curSlotTable,
+            toBeUpdate);
       }
     }
     if (wakeup) {
@@ -521,7 +646,7 @@ public class MultiClusterSlotManagerImpl implements MultiClusterSlotManager {
   @Override
   public void dataChangeNotify(String dataCenter, Set<String> dataInfoIds) {
     if (!fetchMultiSyncService.multiSync(dataCenter)) {
-      MULTI_CLUSTER_CLIENT_LOGGER.info(
+      MULTI_CLUSTER_SYNC_DELTA_LOGGER.info(
           "[syncDisable]dataCenter: {} data change:{} notify", dataCenter, dataInfoIds);
       return;
     }
@@ -532,7 +657,7 @@ public class MultiClusterSlotManagerImpl implements MultiClusterSlotManager {
           multiSyncDataAcceptorManager.getSyncSlotAcceptorManager(dataCenter);
       if (syncSlotAcceptorManager == null
           || syncSlotAcceptorManager.accept(SyncAcceptorRequest.buildRequest(dataInfoId))) {
-        MULTI_CLUSTER_CLIENT_LOGGER.info(
+        MULTI_CLUSTER_SYNC_DELTA_LOGGER.info(
             "[NotAccept]dataCenter: {} data change:{} notify", dataCenter, dataInfoId);
         continue;
       }
@@ -544,7 +669,7 @@ public class MultiClusterSlotManagerImpl implements MultiClusterSlotManager {
 
     RemoteSlotTableStorage storage = slotTableStorageMap.get(dataCenter);
     if (storage == null) {
-      MULTI_CLUSTER_CLIENT_LOGGER.info(
+      MULTI_CLUSTER_SYNC_DELTA_LOGGER.info(
           "[skip]dataCenter: {} data change:{} notify", dataCenter, dataInfoIds);
       return;
     }
@@ -552,7 +677,7 @@ public class MultiClusterSlotManagerImpl implements MultiClusterSlotManager {
     for (Entry<Integer, Set<String>> entry : slotDataInfoIds.entrySet()) {
       RemoteSlotStates states = storage.slotTableStates.getSlotStates(entry.getKey());
       if (states == null) {
-        MULTI_CLUSTER_CLIENT_LOGGER.info(
+        MULTI_CLUSTER_SYNC_DELTA_LOGGER.info(
             "[skip]dataCenter: {}, slotId:{},  data change:{} notify",
             dataCenter,
             entry.getKey(),
@@ -560,7 +685,7 @@ public class MultiClusterSlotManagerImpl implements MultiClusterSlotManager {
         continue;
       }
       states.addPending(entry.getValue());
-      MULTI_CLUSTER_CLIENT_LOGGER.info(
+      MULTI_CLUSTER_SYNC_DELTA_LOGGER.info(
           "dataCenter: {}, slotId:{},  data change:{} add to pending.",
           dataCenter,
           entry.getKey(),
@@ -592,10 +717,11 @@ public class MultiClusterSlotManagerImpl implements MultiClusterSlotManager {
     public void runUnthrowable() {
       try {
         doUpdating();
+        doSlotStatesUpdate();
         doSyncRemoteLeader();
 
       } catch (Throwable t) {
-        MULTI_CLUSTER_CLIENT_LOGGER.error("[remoteSyncWatch]failed to do sync watching.", t);
+        MULTI_CLUSTER_SYNC_ALL_LOGGER.error("[remoteSyncWatch]failed to do sync watching.", t);
       }
     }
 
@@ -632,6 +758,26 @@ public class MultiClusterSlotManagerImpl implements MultiClusterSlotManager {
     return true;
   }
 
+  private void doSlotStatesUpdate() {
+    Set<Integer> leaderIds = slotManager.leaderSlotIds();
+    for (Entry<String, RemoteSlotTableStorage> entry : slotTableStorageMap.entrySet()) {
+      RemoteSlotTableStates states = entry.getValue().slotTableStates;
+      Set<Integer> currents = states.slotIds();
+      Set<Integer> adds = Sets.newHashSet(Sets.difference(leaderIds, currents));
+      Set<Integer> removes = Sets.newHashSet(Sets.difference(currents, leaderIds));
+
+      if (!CollectionUtils.isEmpty(adds) || !CollectionUtils.isEmpty(removes)) {
+        states.addSlotState(adds);
+        states.removeSlotState(removes);
+        MULTI_CLUSTER_SLOT_TABLE.info(
+            "[doSlotStatesUpdate]dataCenter={}, adds={}, removes={}",
+            entry.getKey(),
+            adds,
+            removes);
+      }
+    }
+  }
+
   void doSyncRemoteLeader() {
     final int remoteSyncLeaderMs =
         multiClusterDataServerConfig.getSyncRemoteSlotLeaderIntervalSecs() * 1000;
@@ -650,7 +796,7 @@ public class MultiClusterSlotManagerImpl implements MultiClusterSlotManager {
               remoteDataCenter, state, remoteSyncDataIdMs, states.slotTable.getEpoch());
           syncRemote(remoteDataCenter, state, remoteSyncLeaderMs, states.slotTable.getEpoch());
         } catch (Throwable t) {
-          MULTI_CLUSTER_CLIENT_LOGGER.error(
+          MULTI_CLUSTER_SYNC_ALL_LOGGER.error(
               "[syncRemoteLeader]remoteDataCenter={}, slotId={} sync error.",
               entry.getKey(),
               state.slotId,
@@ -713,8 +859,8 @@ public class MultiClusterSlotManagerImpl implements MultiClusterSlotManager {
               null,
               multiSyncDataAcceptorManager
               .new RemoteSyncDataAcceptorManager(acceptors(remoteDataCenter, syncing)),
-              MULTI_CLUSTER_CLIENT_LOGGER);
-      SyncContinues continues = () -> isLeader(slot.getLeader());
+              MULTI_CLUSTER_SYNC_DELTA_LOGGER);
+      SyncContinues continues = () -> localIsLeader(slot);
       SyncDataIdTask task =
           new SyncDataIdTask(
               dataServerConfig.getLocalDataCenter(),
@@ -737,7 +883,7 @@ public class MultiClusterSlotManagerImpl implements MultiClusterSlotManager {
     } else {
       if (System.currentTimeMillis() - syncDataIdTask.getCreateTime() > 1500) {
         // the sync leader is running more than 1500ms, print
-        MULTI_CLUSTER_CLIENT_LOGGER.info(
+        MULTI_CLUSTER_SYNC_DELTA_LOGGER.info(
             "remoteDataCenter={}, slotId={}, dataIds={}, sync-dataid running, {}",
             remoteDataCenter,
             slot.getId(),
@@ -763,8 +909,8 @@ public class MultiClusterSlotManagerImpl implements MultiClusterSlotManager {
               dataChangeEventCenter,
               null,
               multiSyncDataAcceptorManager.getSyncSlotAcceptorManager(remoteDataCenter),
-              MULTI_CLUSTER_CLIENT_LOGGER);
-      SyncContinues continues = () -> isLeader(slot.getLeader());
+              MULTI_CLUSTER_SYNC_ALL_LOGGER);
+      SyncContinues continues = () -> localIsLeader(slot);
       SyncLeaderTask task =
           new SyncLeaderTask(
               dataServerConfig.getLocalDataCenter(),
@@ -786,16 +932,12 @@ public class MultiClusterSlotManagerImpl implements MultiClusterSlotManager {
     } else {
       if (System.currentTimeMillis() - syncRemoteTask.getCreateTime() > 5000) {
         // the sync leader is running more than 5secs, print
-        MULTI_CLUSTER_CLIENT_LOGGER.info(
+        MULTI_CLUSTER_SYNC_ALL_LOGGER.info(
             "remoteDataCenter={}, slotId={}, sync-leader running, {}",
             remoteDataCenter,
             slot.getId(),
             syncRemoteTask);
       }
     }
-  }
-
-  private boolean isLeader(String leader) {
-    return ServerEnv.isLocalServer(leader);
   }
 }

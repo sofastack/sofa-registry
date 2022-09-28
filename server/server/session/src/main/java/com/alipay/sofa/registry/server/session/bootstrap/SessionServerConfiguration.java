@@ -477,6 +477,11 @@ public class SessionServerConfiguration {
     }
 
     @Bean
+    public MetadataCacheResource metadataCacheResource() {
+      return new MetadataCacheResource();
+    }
+
+    @Bean
     public EmergencyApiResource emergencyApiResource() {
       return new EmergencyApiResource();
     }

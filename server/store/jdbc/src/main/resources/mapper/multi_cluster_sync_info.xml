@@ -68,16 +68,16 @@
     <update id="update">
         <![CDATA[
        update multi_cluster_sync_info set
-            remote_meta_address = #{remoteMetaAddress},
-            enable_sync_datum = #{enableSyncDatum},
-            sync_datainfoids = #{syncDataInfoIds},
-            syn_publisher_groups = #{synPublisherGroups},
-            ignore_datainfoids = #{ignoreDataInfoIds},
+            remote_meta_address = #{data.remoteMetaAddress},
+            enable_sync_datum = #{data.enableSyncDatum},
+            sync_datainfoids = #{data.syncDataInfoIds},
+            syn_publisher_groups = #{data.synPublisherGroups},
+            ignore_datainfoids = #{data.ignoreDataInfoIds},
             data_version = #{data.dataVersion},
             gmt_modified = CURRENT_TIMESTAMP
        where
              data_center = #{data.dataCenter}
-         and remote_data_center = #{remoteDataCenter}
+         and remote_data_center = #{data.remoteDataCenter}
          and data_version = #{exceptVersion}
        ]]>
     </update>

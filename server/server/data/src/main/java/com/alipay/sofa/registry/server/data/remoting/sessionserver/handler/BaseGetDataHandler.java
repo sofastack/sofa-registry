@@ -62,7 +62,7 @@ public abstract class BaseGetDataHandler<T> extends AbstractDataHandler<T> {
         checkAccess(dataCenter, dataInfoId, slotTableEpoch, slotLeaderEpoch);
     if (!slotAccessBefore.isAccept()) {
       GET_DATUM_N_COUNTER.inc();
-      return buildResponse(false, slotAccessBefore, null, "");
+      return buildResponse(false, slotAccessBefore, null, "slotAccess not accept.");
     }
 
     final Datum datum = datumStorageDelegate.get(dataCenter, dataInfoId);

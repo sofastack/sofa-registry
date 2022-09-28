@@ -83,4 +83,6 @@ public interface SlotTableCache {
   SlotTable getLocalSlotTable();
 
   Map<String, Long> getRemoteSlotTableEpoch();
+
+  SlotTable getSlotTable(String dataCenter);
 }

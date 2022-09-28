@@ -128,23 +128,35 @@ public final class SlotTableCacheImpl implements SlotTableCache {
     try {
       for (Entry<String, RemoteSlotTableStatus> entry : remoteSlotTableStatus.entrySet()) {
         RemoteSlotTableStatus value = entry.getValue();
-        final long curEpoch = slotTableMap.get(entry.getKey()).getEpoch();
+
+        String remoteDataCenter = entry.getKey();
+        final long curEpoch =
+            slotTableMap.computeIfAbsent(remoteDataCenter, k -> SlotTable.INIT).getEpoch();
 
         if (!value.isSlotTableUpgrade() || value.getSlotTable() == null) {
           LOGGER.info(
-              "skip update, dataCenter={}, current={}, upgrade=false", entry.getKey(), curEpoch);
+              "skip update, dataCenter={}, current={}, upgrade=false", remoteDataCenter, curEpoch);
           continue;
         }
 
         SlotTable slotTable = value.getSlotTable();
 
         if (curEpoch >= slotTable.getEpoch()) {
-          LOGGER.info("skip update, current={}, update={}", curEpoch, slotTable.getEpoch());
-          success = false;
+          LOGGER.warn("skip update, current={}, update={}", curEpoch, slotTable.getEpoch());
+          continue;
         }
         recordSlotTable(slotTable);
-        slotTableMap.put(sessionServerConfig.getSessionServerDataCenter(), slotTable);
+        slotTableMap.put(remoteDataCenter, slotTable);
+        LOGGER.info(
+            "[updateRemoteSlotTable]dataCenter={}, prev.version={}, update.version={}, update={}",
+            remoteDataCenter,
+            curEpoch,
+            slotTable.getEpoch(),
+            slotTable);
       }
+    } catch (Throwable throwable) {
+      LOGGER.error("update remote slot table:{} error.", remoteSlotTableStatus, throwable);
+      success = false;
     } finally {
       lock.unlock();
     }
@@ -197,6 +209,12 @@ public final class SlotTableCacheImpl implements SlotTableCache {
       ret.put(entry.getKey(), entry.getValue().getEpoch());
     }
     return ret;
+  }
+
+  @Override
+  public SlotTable getSlotTable(String dataCenter) {
+    final SlotTable slotTable = slotTableMap.get(dataCenter);
+    return slotTable;
   }
 
   @VisibleForTesting

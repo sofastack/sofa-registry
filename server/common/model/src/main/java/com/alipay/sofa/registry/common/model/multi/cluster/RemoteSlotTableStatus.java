@@ -117,6 +117,8 @@ public class RemoteSlotTableStatus implements Serializable {
         + slotTableUpgrade
         + ", slotTable="
         + slotTable
+        + ", dataCenterMetadata="
+        + dataCenterMetadata
         + '}';
   }
 }

@@ -81,7 +81,7 @@ public class GetMultiDataHandler extends BaseGetDataHandler<GetMultiDataRequest>
     StringBuilder builder = new StringBuilder();
     Map<String, SlotAccess> slotAccessMap = Maps.newHashMapWithExpectedSize(dataCenterSize);
     Map<String, SubDatum> datumMap = Maps.newHashMapWithExpectedSize(dataCenterSize);
-    for (Entry<String, Long> entry : request.getSlotLeaderEpochs().entrySet()) {
+    for (Entry<String, Long> entry : request.getSlotTableEpochs().entrySet()) {
       String dataCenter = entry.getKey();
       SlotAccessGenericResponse<SubDatum> res =
           processSingleDataCenter(

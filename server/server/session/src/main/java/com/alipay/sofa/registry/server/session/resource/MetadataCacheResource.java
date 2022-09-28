@@ -17,13 +17,10 @@
 package com.alipay.sofa.registry.server.session.resource;
 
 import com.alipay.sofa.registry.common.model.GenericResponse;
-import com.alipay.sofa.registry.common.model.slot.SlotTable;
-import com.alipay.sofa.registry.common.model.slot.SlotTableStatusResponse;
+import com.alipay.sofa.registry.common.model.multi.cluster.DataCenterMetadata;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.multi.cluster.DataCenterMetadataCache;
-import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
-import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -35,46 +32,26 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @author chen.zhu
  *     <p>Mar 22, 2021
  */
-@Path("openapi/v1/slot/table")
-public class SlotTableStatusResource {
+@Path("openapi/v1/metadata")
+public class MetadataCacheResource {
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
-
-  @Autowired MetaServerService metaServerService;
-
-  @Autowired SlotTableCache slotTableCache;
 
   @Autowired DataCenterMetadataCache dataCenterMetadataCache;
 
   @GET
-  @Path("/status")
-  @Produces(MediaType.APPLICATION_JSON)
-  public GenericResponse<Object> getSlotTableStatus() {
-    logger.info("[getSlotTableStatus] begin");
-    try {
-      SlotTableStatusResponse slotTableStatus = metaServerService.getSlotTableStatus();
-      return new GenericResponse<>().fillSucceed(slotTableStatus);
-    } catch (Throwable th) {
-      logger.error("[getSlotTableStatus]", th);
-      return new GenericResponse<>().fillFailed(th.getMessage());
-    } finally {
-      logger.info("[getSlotTableStatus] end");
-    }
-  }
-
-  @GET
   @Path("/cache")
   @Produces(MediaType.APPLICATION_JSON)
-  public GenericResponse<Object> getSlotTableCache(@QueryParam("dataCenter") String dataCenter) {
-    logger.info("[getSlotTableCache] begin dataCenter={}", dataCenter);
+  public GenericResponse<Object> getMetadataCache(@QueryParam("dataCenter") String dataCenter) {
+    logger.info("[getMetadataCache] begin dataCenter={}", dataCenter);
     try {
-      SlotTable slotTable = slotTableCache.getSlotTable(dataCenter);
-      return new GenericResponse<>().fillSucceed(slotTable);
+      DataCenterMetadata metadata = dataCenterMetadataCache.metadataOf(dataCenter);
+      return new GenericResponse<>().fillSucceed(metadata);
     } catch (Throwable th) {
-      logger.error("[getSlotTableCache]", th);
+      logger.error("[getMetadataCache]", th);
       return new GenericResponse<>().fillFailed(th.getMessage());
     } finally {
-      logger.info("[getSlotTableCache] end dataCenter={}", dataCenter);
+      logger.info("[getMetadataCache] end dataCenter={}", dataCenter);
     }
   }
 }

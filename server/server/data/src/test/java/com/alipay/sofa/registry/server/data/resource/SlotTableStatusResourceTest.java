@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.server.data.resource;
 
+import static org.mockito.Matchers.anyString;
+
 import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.slot.BaseSlotStatus;
@@ -41,7 +43,7 @@ public class SlotTableStatusResourceTest {
             11, 30, "yyy", System.currentTimeMillis(), System.currentTimeMillis());
 
     List<BaseSlotStatus> list = Lists.newArrayList(leaderSlotStatus, followerSlotStatus);
-    Mockito.when(resource.slotManager.getSlotTableEpochAndStatuses())
+    Mockito.when(resource.slotManager.getSlotTableEpochAndStatuses(anyString()))
         .thenReturn(Tuple.of(100L, list));
 
     GenericResponse resp = resource.getSlotTableSyncTaskStatus();

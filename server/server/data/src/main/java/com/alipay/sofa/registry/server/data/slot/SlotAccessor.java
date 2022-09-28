@@ -16,8 +16,11 @@
  */
 package com.alipay.sofa.registry.server.data.slot;
 
+import com.alipay.sofa.registry.common.model.Tuple;
+import com.alipay.sofa.registry.common.model.slot.BaseSlotStatus;
 import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.common.model.slot.SlotAccess;
+import java.util.List;
 
 /**
  * @author xiaojian.xj
@@ -34,4 +37,6 @@ public interface SlotAccessor {
   boolean isLeader(String dataCenter, int slotId);
 
   boolean isFollower(String dataCenter, int slotId);
+
+  Tuple<Long, List<BaseSlotStatus>> getSlotTableEpochAndStatuses(String dataCenter);
 }

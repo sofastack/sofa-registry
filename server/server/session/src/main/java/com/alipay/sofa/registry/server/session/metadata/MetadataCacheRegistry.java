@@ -90,7 +90,7 @@ public class MetadataCacheRegistry {
   }
 
   public void startSynced() {
-
+    LOG.info("metadata cache enter startSynced.");
     Set<String> dataCenters = getMetadataDataCenters();
 
     appRevisionRepository.setDataCenters(dataCenters);
@@ -98,6 +98,7 @@ public class MetadataCacheRegistry {
 
     interfaceAppsRepository.setDataCenters(dataCenters);
     interfaceAppsRepository.startSynced();
+    LOG.info("metadata cache finish startSynced.");
   }
 
   public void waitSynced() {

@@ -132,7 +132,12 @@ public class DataCenterMetadataCacheImpl implements DataCenterMetadataCache {
         success = false;
         continue;
       }
-      metadataCache.put(entry.getKey(), value.getDataCenterMetadata());
+
+      DataCenterMetadata exist = metadataCache.get(entry.getKey());
+      if (!value.equals(exist)) {
+        metadataCache.put(entry.getKey(), value.getDataCenterMetadata());
+        LOGGER.info("[DataCenterMetadataCache]update from:{} to:{}", exist, value);
+      }
     }
 
     processRemove(tobeRemove);
@@ -171,6 +176,12 @@ public class DataCenterMetadataCacheImpl implements DataCenterMetadataCache {
   @Override
   public Set<String> getSyncDataCenters() {
     return metadataCache.keySet();
+  }
+
+  @Override
+  public DataCenterMetadata metadataOf(String dataCenter) {
+    DataCenterMetadata metadata = metadataCache.get(dataCenter);
+    return metadata;
   }
 
   /**

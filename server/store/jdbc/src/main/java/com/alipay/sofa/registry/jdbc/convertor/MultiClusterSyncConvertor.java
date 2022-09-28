@@ -59,8 +59,8 @@ public class MultiClusterSyncConvertor {
         domain.getRemoteMetaAddress(),
         Boolean.parseBoolean(domain.getEnableSyncDatum()),
         JsonUtils.read(domain.getSyncDataInfoIds(), FORMAT),
-        JsonUtils.read(domain.getSyncDataInfoIds(), FORMAT),
-        JsonUtils.read(domain.getSyncDataInfoIds(), FORMAT),
+        JsonUtils.read(domain.getSynPublisherGroups(), FORMAT),
+        JsonUtils.read(domain.getIgnoreDataInfoIds(), FORMAT),
         domain.getDataVersion());
   }
 

@@ -16,12 +16,15 @@
  */
 package com.alipay.sofa.registry.server.data.slot;
 
+import com.alipay.sofa.registry.common.model.Tuple;
+import com.alipay.sofa.registry.common.model.slot.BaseSlotStatus;
 import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.common.model.slot.SlotAccess;
 import com.alipay.sofa.registry.common.model.slot.func.SlotFunction;
 import com.alipay.sofa.registry.common.model.slot.func.SlotFunctionRegistry;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.multi.cluster.slot.MultiClusterSlotManager;
+import java.util.List;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -63,6 +66,11 @@ public class SlotAccessorDelegate implements SlotAccessor {
   @Override
   public boolean isFollower(String dataCenter, int slotId) {
     return accessOf(dataCenter).isFollower(dataCenter, slotId);
+  }
+
+  @Override
+  public Tuple<Long, List<BaseSlotStatus>> getSlotTableEpochAndStatuses(String dataCenter) {
+    return accessOf(dataCenter).getSlotTableEpochAndStatuses(dataCenter);
   }
 
   private SlotAccessor accessOf(String dataCenter) {

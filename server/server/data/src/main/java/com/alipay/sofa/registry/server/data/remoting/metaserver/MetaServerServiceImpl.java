@@ -26,6 +26,7 @@ import com.alipay.sofa.registry.common.model.slot.SlotConfig;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
+import com.alipay.sofa.registry.server.data.multi.cluster.exchanger.RemoteDataNodeExchanger;
 import com.alipay.sofa.registry.server.data.multi.cluster.slot.MultiClusterSlotManager;
 import com.alipay.sofa.registry.server.data.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.server.data.remoting.SessionNodeExchanger;
@@ -36,8 +37,10 @@ import com.alipay.sofa.registry.server.shared.meta.AbstractMetaServerService;
 import com.alipay.sofa.registry.server.shared.slot.SlotTableRecorder;
 import com.google.common.annotations.VisibleForTesting;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.apache.commons.collections.CollectionUtils;
+import org.glassfish.jersey.internal.guava.Sets;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -58,6 +61,8 @@ public class MetaServerServiceImpl extends AbstractMetaServerService<BaseHeartBe
   @Autowired private CommonConfig commonConfig;
 
   @Autowired private MultiClusterSlotManager multiClusterSlotManager;
+
+  @Autowired private RemoteDataNodeExchanger remoteDataNodeExchanger;
 
   private volatile SlotTable currentSlotTable;
 
@@ -84,6 +89,20 @@ public class MetaServerServiceImpl extends AbstractMetaServerService<BaseHeartBe
       sessionNodeExchanger.setServerIps(sessionServerList);
       sessionNodeExchanger.notifyConnectServerAsync();
     }
+
+    Map<String, Set<String>> remoteDataServers = getRemoteDataServers();
+    if (!org.springframework.util.CollectionUtils.isEmpty(remoteDataServers)) {
+
+      Set<String> dataServers = Sets.newHashSetWithExpectedSize(128);
+      for (Set<String> servers : remoteDataServers.values()) {
+        if (!CollectionUtils.isEmpty(servers)) {
+          dataServers.addAll(servers);
+        }
+      }
+      remoteDataNodeExchanger.setServerIps(dataServers);
+      remoteDataNodeExchanger.notifyConnectServerAsync();
+    }
+
     if (result.getSlotTable() != null
         && result.getSlotTable().getEpoch() != SlotTable.INIT.getEpoch()) {
       slotManager.updateSlotTable(result.getSlotTable());
@@ -98,7 +117,8 @@ public class MetaServerServiceImpl extends AbstractMetaServerService<BaseHeartBe
 
   @Override
   protected HeartbeatRequest createRequest() {
-    Tuple<Long, List<BaseSlotStatus>> tuple = slotManager.getSlotTableEpochAndStatuses();
+    Tuple<Long, List<BaseSlotStatus>> tuple =
+        slotManager.getSlotTableEpochAndStatuses(dataServerConfig.getLocalDataCenter());
     final long slotTableEpoch = tuple.o1;
     final List<BaseSlotStatus> slotStatuses = tuple.o2;
     HeartbeatRequest<DataNode> request =

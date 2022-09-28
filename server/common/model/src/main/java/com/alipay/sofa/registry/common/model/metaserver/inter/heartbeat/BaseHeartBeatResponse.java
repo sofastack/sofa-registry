@@ -21,9 +21,12 @@ import com.alipay.sofa.registry.common.model.metaserver.nodes.MetaNode;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 import com.alipay.sofa.registry.common.model.multi.cluster.RemoteSlotTableStatus;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.io.Serializable;
 import java.util.*;
+import java.util.Map.Entry;
+import org.springframework.util.CollectionUtils;
 
 /**
  * @author chen.zhu
@@ -129,5 +132,21 @@ public class BaseHeartBeatResponse implements Serializable {
    */
   public Map<String, RemoteSlotTableStatus> getRemoteSlotTableStatus() {
     return remoteSlotTableStatus;
+  }
+
+  public Map<String, Set<String>> getRemoteDataServers() {
+
+    if (CollectionUtils.isEmpty(remoteSlotTableStatus)) {
+      return Collections.emptyMap();
+    }
+
+    Map<String, Set<String>> ret = Maps.newHashMapWithExpectedSize(remoteSlotTableStatus.size());
+    for (Entry<String, RemoteSlotTableStatus> entry : remoteSlotTableStatus.entrySet()) {
+      RemoteSlotTableStatus status = entry.getValue();
+      if (status != null && status.isSlotTableUpgrade() && status.getSlotTable() != null) {
+        ret.put(entry.getKey(), status.getSlotTable().getDataServers());
+      }
+    }
+    return ret;
   }
 }

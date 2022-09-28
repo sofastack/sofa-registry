@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.server.data.bootstrap;
 
 import com.alipay.sofa.registry.common.model.slot.filter.MultiSyncDataAcceptorManager;
+import com.alipay.sofa.registry.server.data.multi.cluster.client.handler.RemoteDataChangeNotifyHandler;
 import com.alipay.sofa.registry.server.data.multi.cluster.dataserver.handler.MultiClusterSlotDiffDigestRequestHandler;
 import com.alipay.sofa.registry.server.data.multi.cluster.dataserver.handler.MultiClusterSlotDiffPublisherRequestHandler;
 import com.alipay.sofa.registry.server.data.multi.cluster.exchanger.RemoteDataNodeExchanger;
@@ -24,6 +25,7 @@ import com.alipay.sofa.registry.server.data.multi.cluster.executor.MultiClusterE
 import com.alipay.sofa.registry.server.data.multi.cluster.slot.MultiClusterSlotManager;
 import com.alipay.sofa.registry.server.data.multi.cluster.slot.MultiClusterSlotManagerImpl;
 import com.alipay.sofa.registry.server.data.multi.cluster.storage.MultiClusterDatumService;
+import com.alipay.sofa.registry.server.shared.remoting.AbstractClientHandler;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -72,9 +74,9 @@ public class MultiClusterDataConfiguration {
     }
 
     @Bean(name = "remoteDataClientHandlers")
-    public Collection<AbstractServerHandler> remoteDataClientHandlers() {
-      Collection<AbstractServerHandler> list = new ArrayList<>();
-      list.add(multiClusterSlotDiffDigestRequestHandler());
+    public Collection<AbstractClientHandler> remoteDataClientHandlers() {
+      Collection<AbstractClientHandler> list = new ArrayList<>();
+      list.add(remoteDataChangeNotifyHandler());
       return list;
     }
 
@@ -86,6 +88,11 @@ public class MultiClusterDataConfiguration {
     @Bean
     public AbstractServerHandler multiClusterSlotDiffPublisherRequestHandler() {
       return new MultiClusterSlotDiffPublisherRequestHandler();
+    }
+
+    @Bean
+    public AbstractClientHandler remoteDataChangeNotifyHandler() {
+      return new RemoteDataChangeNotifyHandler();
     }
   }
 

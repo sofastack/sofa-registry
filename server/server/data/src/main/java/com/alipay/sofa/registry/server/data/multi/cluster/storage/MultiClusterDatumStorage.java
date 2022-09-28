@@ -31,6 +31,7 @@ import com.alipay.sofa.registry.server.data.cache.CleanContinues;
 import com.alipay.sofa.registry.server.data.cache.DatumStorage;
 import com.alipay.sofa.registry.server.data.cache.PublisherGroup;
 import com.alipay.sofa.registry.server.data.slot.SlotChangeListener;
+import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.google.common.collect.Maps;
 import java.util.Collection;
 import java.util.Collections;
@@ -225,13 +226,15 @@ public class MultiClusterDatumStorage implements DatumStorage {
       String dataInfoId,
       ProcessId sessionProcessId,
       Map<String, RegisterVersion> removedPublishers) {
-    LOGGER.error(
-        "[MultiClusterDatumStorage]UnExcept removePublishers, dataCenter={}, dataInfoId={}, sessionProcessId={}, removedPublishers={}",
-        dataCenter,
-        dataInfoId,
-        sessionProcessId,
-        removedPublishers);
-    throw new UnSupportOperationException("MultiClusterDatumStorage.removePublishersBySessionId");
+    ParaCheckUtil.checkNull(sessionProcessId, "sessionProcessId");
+
+    BaseDatumStorage storage = storageMap.get(dataCenter);
+    if (storage == null) {
+      LOGGER.warn(
+          "[nullStorage]removePublishers dataCenter={}, dataInfoId={}", dataCenter, dataInfoId);
+      return null;
+    }
+    return storage.removePublishers(dataInfoId, null, removedPublishers);
   }
 
   @Override

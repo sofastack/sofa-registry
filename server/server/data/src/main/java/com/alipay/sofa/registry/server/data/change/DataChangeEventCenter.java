@@ -353,7 +353,11 @@ public class DataChangeEventCenter {
     }
   }
 
-  boolean handleChanges(List<DataChangeEvent> events, NodeType nodeType, int notifyPort) {
+  boolean handleChanges(
+      List<DataChangeEvent> events,
+      NodeType nodeType,
+      int notifyPort,
+      boolean errorWhenChannelEmpty) {
 
     if (org.springframework.util.CollectionUtils.isEmpty(events)) {
       return false;
@@ -363,7 +367,9 @@ public class DataChangeEventCenter {
     Map<String, List<Channel>> channelsMap = server.selectAllAvailableChannelsForHostAddress();
 
     if (channelsMap.isEmpty()) {
-      LOGGER.error("{} conn is empty when change", nodeType);
+      if (errorWhenChannelEmpty) {
+        LOGGER.error("{} conn is empty when change", nodeType);
+      }
       return false;
     }
     for (DataChangeEvent event : events) {
@@ -463,11 +469,14 @@ public class DataChangeEventCenter {
         final List<DataChangeEvent> events = transferChangeEvent(maxItems);
 
         // notify local session
-        handleChanges(events, NodeType.SESSION, dataServerConfig.getNotifyPort());
+        handleChanges(events, NodeType.SESSION, dataServerConfig.getNotifyPort(), true);
 
         // notify remote data
         handleChanges(
-            events, NodeType.DATA, multiClusterDataServerConfig.getSyncRemoteSlotLeaderPort());
+            events,
+            NodeType.DATA,
+            multiClusterDataServerConfig.getSyncRemoteSlotLeaderPort(),
+            false);
         handleExpire();
       } catch (Throwable e) {
         LOGGER.error("failed to merge change", e);

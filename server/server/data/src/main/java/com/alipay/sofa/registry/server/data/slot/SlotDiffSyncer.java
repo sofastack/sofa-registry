@@ -33,7 +33,6 @@ import com.alipay.sofa.registry.common.model.slot.filter.SyncSlotAcceptorManager
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.WordCache;
 import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.exchange.RequestException;
 import com.alipay.sofa.registry.remoting.exchange.message.Response;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
@@ -56,7 +55,6 @@ import java.util.*;
  * @version v 0.1 2020-11-20 13:56 yuzhi.lyz Exp $
  */
 public final class SlotDiffSyncer {
-  private static final Logger LOGGER = LoggerFactory.getLogger(SlotDiffSyncer.class);
   private final Logger DIFF_LOGGER;
   private final DataServerConfig dataServerConfig;
 
@@ -89,7 +87,7 @@ public final class SlotDiffSyncer {
       String targetAddress,
       Map<String, DatumSummary> summaryMap) {
     if (resp == null || !resp.isSuccess()) {
-      LOGGER.error(
+      DIFF_LOGGER.error(
           "DiffPublisherFailed, syncLocal={}, syncDataCenter={}, slotId={} from {}, resp={}",
           syncLocal,
           syncDataCenter,
@@ -177,7 +175,7 @@ public final class SlotDiffSyncer {
     // sync for the existing dataInfoIds.publisher
     while (!summaryMap.isEmpty()) {
       if (!continues.continues()) {
-        LOGGER.info("syncing publishers break, slotId={} from {}", slotId, targetAddress);
+        DIFF_LOGGER.info("syncing publishers break, slotId={} from {}", slotId, targetAddress);
         return true;
       }
       // maybe to many publishers, spit round
@@ -296,7 +294,8 @@ public final class SlotDiffSyncer {
       String targetAddress,
       Map<String, DatumSummary> summaryMap) {
     if (resp == null || !resp.isSuccess()) {
-      LOGGER.error("DiffDigestFailed, slotId={} from {}, resp={}", slotId, targetAddress, resp);
+      DIFF_LOGGER.error(
+          "DiffDigestFailed, slotId={} from {}, resp={}", slotId, targetAddress, resp);
       return null;
     }
     DataSlotDiffDigestResult result = resp.getData();

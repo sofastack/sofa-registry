@@ -43,6 +43,12 @@ public final class ParaCheckUtil {
     }
   }
 
+  public static void checkNull(Object param, String paraName) {
+    if (param != null) {
+      throw new IllegalArgumentException(StringFormatter.format("{} must be null", paraName));
+    }
+  }
+
   public static void assertTrue(boolean expression, String message) {
     if (!expression) {
       throw new IllegalArgumentException(message);

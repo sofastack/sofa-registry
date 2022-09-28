@@ -226,6 +226,13 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
   }
 
   private void updateState(T response) {
+    Map<String, Set<String>> map = response.getRemoteDataServers();
+    Optional.ofNullable(state.remoteDataServers)
+        .orElse(Collections.emptyMap())
+        .forEach(
+            (key, value) -> {
+              map.putIfAbsent(key, value);
+            });
     State s =
         new State(
             response.getDataCentersFromMetaNodes(),
@@ -233,7 +240,8 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
             response.getSlotTable().getDataServers(),
             response.getSessionServerEpoch(),
             response.getMetaLeader(),
-            response.getMetaLeaderEpoch());
+            response.getMetaLeaderEpoch(),
+            map);
     this.state = s;
     RENEWER_LOGGER.info(
         "update MetaStat, sessions={}/{}, datas={}, metaLeader: {}, metaLeaderEpoch: {}",
@@ -331,6 +339,10 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
     return state.dataServers;
   }
 
+  public Map<String, Set<String>> getRemoteDataServers() {
+    return state.remoteDataServers;
+  }
+
   public String getMetaServerLeader() {
     String localDataCenter = commonConfig.getLocalDataCenter();
     LeaderInfo leader = metaLeaderExchanger.getLeader(localDataCenter);
@@ -376,13 +388,20 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
   private static final class State {
     static final State NULL =
         new State(
-            Collections.emptySet(), Collections.emptyMap(), Collections.emptySet(), 0, null, -1L);
+            Collections.emptySet(),
+            Collections.emptyMap(),
+            Collections.emptySet(),
+            0,
+            null,
+            -1L,
+            Collections.emptyMap());
     protected final long sessionServerEpoch;
     protected final Map<String, SessionNode> sessionNodes;
     protected final Set<String> dataServers;
     protected final String metaLeader;
     protected final long metaLeaderEpoch;
     protected final Set<String> dataCenters;
+    protected final Map<String, Set<String>> remoteDataServers;
 
     State(
         Set<String> dataCenters,
@@ -390,13 +409,15 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
         Set<String> dataServers,
         long sessionServerEpoch,
         String metaLeader,
-        long metaLeaderEpoch) {
+        long metaLeaderEpoch,
+        Map<String, Set<String>> remoteDataServers) {
       this.sessionServerEpoch = sessionServerEpoch;
       this.dataCenters = Collections.unmodifiableSet(new TreeSet<>(dataCenters));
       this.sessionNodes = Collections.unmodifiableMap(sessionNodes);
       this.dataServers = Collections.unmodifiableSet(dataServers);
       this.metaLeader = metaLeader;
       this.metaLeaderEpoch = metaLeaderEpoch;
+      this.remoteDataServers = remoteDataServers;
     }
   }
 

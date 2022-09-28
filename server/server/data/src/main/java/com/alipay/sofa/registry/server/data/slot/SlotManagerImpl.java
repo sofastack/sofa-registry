@@ -167,7 +167,7 @@ public final class SlotManagerImpl implements SlotManager {
     return checkSlotAccess(slotId, currentEpoch, state, srcLeaderEpoch);
   }
 
-  public static SlotAccess checkSlotAccess(
+  public SlotAccess checkSlotAccess(
       int slotId, long currentSlotTableEpoch, ISlotState state, long srcLeaderEpoch) {
     if (state == null) {
       return new SlotAccess(slotId, currentSlotTableEpoch, SlotAccess.Status.Moved, -1);
@@ -922,7 +922,24 @@ public final class SlotManagerImpl implements SlotManager {
   }
 
   @Override
-  public Tuple<Long, List<BaseSlotStatus>> getSlotTableEpochAndStatuses() {
+  public Set<Integer> leaderSlotIds() {
+    Set<Integer> ret = Sets.newTreeSet();
+    updateLock.readLock().lock();
+    try {
+      for (SlotState state : slotTableStates.slotStates.values()) {
+        Slot slot = state.slot;
+        if (StringUtils.equals(slot.getLeader(), ServerEnv.IP)) {
+          ret.add(state.slotId);
+        }
+      }
+    } finally {
+      updateLock.readLock().unlock();
+    }
+    return ret;
+  }
+
+  @Override
+  public Tuple<Long, List<BaseSlotStatus>> getSlotTableEpochAndStatuses(String dataCenter) {
     updateLock.readLock().lock();
     try {
       long slotTableEpoch = getSlotTableEpoch();

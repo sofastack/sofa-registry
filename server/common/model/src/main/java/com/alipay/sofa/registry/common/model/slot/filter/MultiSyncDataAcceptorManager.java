@@ -20,6 +20,7 @@ import com.alipay.sofa.registry.common.model.console.MultiSegmentSyncSwitch;
 import com.alipay.sofa.registry.common.model.constants.MultiValueConstants;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
@@ -28,7 +29,9 @@ import java.util.Set;
  * @author xiaojian.xj
  * @version : RemoteSyncSlotAcceptorManager.java, v 0.1 2022年05月13日 20:04 xiaojian.xj Exp $
  */
-public class MultiSyncDataAcceptorManager {
+public class MultiSyncDataAcceptorManager implements Serializable {
+
+  private static final long serialVersionUID = 5218066919220398566L;
 
   private Map<String, RemoteSyncDataAcceptorManager> remoteManagers = Maps.newConcurrentMap();
 

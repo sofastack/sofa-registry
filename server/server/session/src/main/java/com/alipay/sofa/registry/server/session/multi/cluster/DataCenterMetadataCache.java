@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.multi.cluster;
 
+import com.alipay.sofa.registry.common.model.multi.cluster.DataCenterMetadata;
 import com.alipay.sofa.registry.common.model.multi.cluster.RemoteSlotTableStatus;
 import java.util.Map;
 import java.util.Set;
@@ -43,4 +44,6 @@ public interface DataCenterMetadataCache {
   void updateLocalData(boolean stopPush);
 
   Set<String> getSyncDataCenters();
+
+  DataCenterMetadata metadataOf(String dataCenter);
 }

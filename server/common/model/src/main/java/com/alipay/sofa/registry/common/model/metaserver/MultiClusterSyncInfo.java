@@ -71,16 +71,16 @@ public class MultiClusterSyncInfo {
       String remoteDataCenter,
       String remoteMetaAddress,
       boolean enableSyncDatum,
-      Set<String> synPublisherGroups,
       Set<String> syncDataInfoIds,
+      Set<String> synPublisherGroups,
       Set<String> ignoreDataInfoIds,
       long dataVersion) {
     this.dataCenter = dataCenter;
     this.remoteDataCenter = remoteDataCenter;
     this.remoteMetaAddress = remoteMetaAddress;
     this.enableSyncDatum = enableSyncDatum;
-    this.synPublisherGroups = synPublisherGroups;
     this.syncDataInfoIds = syncDataInfoIds;
+    this.synPublisherGroups = synPublisherGroups;
     this.ignoreDataInfoIds = ignoreDataInfoIds;
     this.dataVersion = dataVersion;
   }

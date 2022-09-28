@@ -16,11 +16,13 @@
  */
 package com.alipay.sofa.registry.common.model.slot.filter;
 
+import java.io.Serializable;
+
 /**
  * @author xiaojian.xj
  * @version : SyncSlotAcceptor.java, v 0.1 2022年05月13日 19:51 xiaojian.xj Exp $
  */
-public interface SyncSlotAcceptor {
+public interface SyncSlotAcceptor extends Serializable {
 
   boolean accept(SyncAcceptorRequest request);
 

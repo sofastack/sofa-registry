@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.data.remoting.metaserver;
 
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
 import com.alipay.sofa.registry.common.model.Tuple;
@@ -67,7 +68,7 @@ public class MetaServerServiceImplTest {
     LOGGER.info("leaderStatus={}, followerStatus={}", leaderSlotStatus, followerSlotStatus);
 
     List<BaseSlotStatus> list = Lists.newArrayList(leaderSlotStatus, followerSlotStatus);
-    when(slotManager.getSlotTableEpochAndStatuses()).thenReturn(Tuple.of(100L, list));
+    when(slotManager.getSlotTableEpochAndStatuses(anyString())).thenReturn(Tuple.of(100L, list));
     when(multiClusterSlotManager.getSlotTableEpoch()).thenReturn(Collections.emptyMap());
 
     Assert.assertEquals(impl.getCurrentSlotTableEpoch(), slotManager.getSlotTableEpoch());
@@ -134,7 +135,7 @@ public class MetaServerServiceImplTest {
 
   @Test
   public void testNotifySlotTable() {
-    when(slotManager.getSlotTableEpochAndStatuses())
+    when(slotManager.getSlotTableEpochAndStatuses(anyString()))
         .thenReturn(new Tuple<>(1L, Lists.newArrayList()));
     when(multiClusterSlotManager.getSlotTableEpoch()).thenReturn(Collections.emptyMap());
 
