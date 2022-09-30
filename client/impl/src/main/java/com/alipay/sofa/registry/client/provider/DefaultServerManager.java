@@ -87,6 +87,22 @@ public class DefaultServerManager implements ServerManager {
     return urls.get(random.nextInt(urls.size()));
   }
 
+    public ServerNode consistentHash(String key) {
+        List<ServerNode> urls = getServerList();
+        if (null == urls || urls.size() == 0) {
+            return null;
+        }
+        ConsistentHash consistentHash
+                = new ConsistentHash(urls);
+        String serverName = consistentHash.choose(key);
+        for (ServerNode url : urls) {
+            if (url.getUrl().equals(serverName)) {
+                return url;
+            }
+        }
+        return null;
+    }
+
   private void syncServerList() {
     String url =
         String.format(
