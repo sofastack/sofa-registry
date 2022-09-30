@@ -166,11 +166,12 @@ public class ClientConnection implements Client {
     return client.invokeSync(clientConnection, request, config.getInvokeTimeout());
   }
 
-  private void recycle(Connection connection) {
+  private void recycle(Connection connection) throws InterruptedException {
     if (null == connection) {
       return;
     }
-
+    Random random = new Random();
+    Thread.sleep(random.nextInt(RECONNECTING_DELAY));
     client.closeConnection(connection.getUrl());
   }
 

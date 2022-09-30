@@ -92,8 +92,7 @@ public class DefaultServerManager implements ServerManager {
         if (null == urls || urls.size() == 0) {
             return null;
         }
-        ConsistentHash consistentHash
-                = new ConsistentHash(urls);
+        ConsistentHash consistentHash = new ConsistentHash(urls);
         String serverName = consistentHash.choose(key);
         for (ServerNode url : urls) {
             if (url.getUrl().equals(serverName)) {
