@@ -118,8 +118,8 @@ public class FetchMultiSyncService implements ApplicationListener<ContextRefresh
               exist,
               multiClusterSyncInfo);
           change = true;
-          syncMap.put(multiClusterSyncInfo.getRemoteDataCenter(), from(multiClusterSyncInfo));
         }
+        syncMap.put(multiClusterSyncInfo.getRemoteDataCenter(), from(multiClusterSyncInfo));
       }
 
       Set<String> remove = Sets.difference(syncingDataCenter(), syncMap.keySet());

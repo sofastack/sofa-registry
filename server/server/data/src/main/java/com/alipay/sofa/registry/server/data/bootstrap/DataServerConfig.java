@@ -53,7 +53,7 @@ public class DataServerConfig implements ServerShareConfig {
 
   private int notifyMaxItems = 400;
 
-  private int notifyIntervalMillis = 2000;
+  private int notifyIntervalMillis = 500;
 
   private int notifyRetryTimes = 3;
 

@@ -16,13 +16,9 @@
  */
 package com.alipay.sofa.registry.common.model.constants;
 
-import static com.alipay.sofa.registry.common.model.constants.ValueConstants.SESSION_PROVIDE_DATA_GROUP;
-import static com.alipay.sofa.registry.common.model.constants.ValueConstants.SESSION_PROVIDE_DATA_INSTANCE_ID;
-
 import com.alipay.sofa.registry.common.model.PublishSource;
 import com.alipay.sofa.registry.common.model.slot.filter.SyncPublishSourceAcceptor;
 import com.alipay.sofa.registry.common.model.slot.filter.SyncSlotAcceptor;
-import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.google.common.collect.Sets;
 
 /**
@@ -33,19 +29,7 @@ public final class MultiValueConstants {
 
   private MultiValueConstants() {}
 
-  public static final String SESSION_SERVER_MULTI_PUSH_DATA_ID =
-      DataInfo.toDataInfoId(
-          "session.server.multi.push",
-          SESSION_PROVIDE_DATA_INSTANCE_ID,
-          SESSION_PROVIDE_DATA_GROUP);
-
-  public static final String DATA_SERVER_MULTI_SYNC_DATA_ID =
-      DataInfo.toDataInfoId(
-          "data.server.multi.sync", SESSION_PROVIDE_DATA_INSTANCE_ID, SESSION_PROVIDE_DATA_GROUP);
-
   public static final String SYNC_ACCEPT_ALL = "ACCEPT_ALL";
-
-  public static final String PUSH_ACCEPT_ALL = "ACCEPT_ALL";
 
   public static final SyncSlotAcceptor DATUM_SYNCER_SOURCE_FILTER =
       new SyncPublishSourceAcceptor(Sets.newHashSet(PublishSource.DATUM_SYNCER));

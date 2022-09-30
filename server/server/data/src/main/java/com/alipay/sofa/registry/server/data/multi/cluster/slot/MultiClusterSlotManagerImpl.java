@@ -656,7 +656,7 @@ public class MultiClusterSlotManagerImpl implements MultiClusterSlotManager {
       SyncSlotAcceptorManager syncSlotAcceptorManager =
           multiSyncDataAcceptorManager.getSyncSlotAcceptorManager(dataCenter);
       if (syncSlotAcceptorManager == null
-          || syncSlotAcceptorManager.accept(SyncAcceptorRequest.buildRequest(dataInfoId))) {
+          || !syncSlotAcceptorManager.accept(SyncAcceptorRequest.buildRequest(dataInfoId))) {
         MULTI_CLUSTER_SYNC_DELTA_LOGGER.info(
             "[NotAccept]dataCenter: {} data change:{} notify", dataCenter, dataInfoId);
         continue;
@@ -812,6 +812,8 @@ public class MultiClusterSlotManagerImpl implements MultiClusterSlotManager {
         && syncDataIdTask.isOverAfter(remoteSyncDataIdMs)
         && !syncDataIdTask.isFinished()) {
       // task timeout, pending to retry
+      MULTI_CLUSTER_SYNC_DELTA_LOGGER.error(
+          "getTobeSyncs timeout, syncDataIdTask:{}", syncDataIdTask.getRunnable().getSyncing());
       state.addPending(syncDataIdTask.getRunnable().syncing);
     }
     return state.pendingDataInfoIds.getAndReset();
@@ -850,7 +852,7 @@ public class MultiClusterSlotManagerImpl implements MultiClusterSlotManager {
       if (CollectionUtils.isEmpty(tobeSyncs)) {
         return;
       }
-      Set<String> syncing = state.pendingDataInfoIds.getAndReset();
+      MULTI_CLUSTER_SYNC_DELTA_LOGGER.info("tobeSyncs dataInfoIds:{}", tobeSyncs);
       SlotDiffSyncer syncer =
           new SlotDiffSyncer(
               dataServerConfig,
@@ -858,7 +860,7 @@ public class MultiClusterSlotManagerImpl implements MultiClusterSlotManager {
               dataChangeEventCenter,
               null,
               multiSyncDataAcceptorManager
-              .new RemoteSyncDataAcceptorManager(acceptors(remoteDataCenter, syncing)),
+              .new RemoteSyncDataAcceptorManager(acceptors(remoteDataCenter, tobeSyncs)),
               MULTI_CLUSTER_SYNC_DELTA_LOGGER);
       SyncContinues continues = () -> localIsLeader(slot);
       SyncDataIdTask task =
@@ -868,7 +870,7 @@ public class MultiClusterSlotManagerImpl implements MultiClusterSlotManager {
               slotTableEpoch,
               slot,
               syncer,
-              syncing,
+              tobeSyncs,
               remoteDataNodeExchanger,
               continues,
               MULTI_CLUSTER_SYNC_DIGEST_LOGGER,

@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.server.data.multi.cluster.exchanger;
 
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.data.bootstrap.MultiClusterDataServerConfig;
@@ -30,13 +32,26 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public class RemoteDataNodeExchanger extends ClientSideExchanger {
 
+  private static final Logger LOGGER = LoggerFactory.getLogger(RemoteDataNodeExchanger.class);
+
   @Autowired private MultiClusterDataServerConfig multiClusterDataServerConfig;
 
   @Resource(name = "remoteDataClientHandlers")
   private Collection<ChannelHandler> remoteDataClientHandlers;
 
+  /**
+   * Setter method for property <tt>remoteDataClientHandlers</tt>.
+   *
+   * @param remoteDataClientHandlers value to be assigned to property remoteDataClientHandlers
+   */
+  public void setRemoteDataClientHandlers(Collection<ChannelHandler> remoteDataClientHandlers) {
+    LOGGER.info(
+        "[RemoteDataNodeExchanger]setRemoteDataClientHandlers:{}", remoteDataClientHandlers);
+    this.remoteDataClientHandlers = remoteDataClientHandlers;
+  }
+
   public RemoteDataNodeExchanger() {
-    super(Exchange.DATA_SERVER_TYPE);
+    super(Exchange.REMOTE_DATA_SERVER_TYPE);
   }
 
   @Override
@@ -56,6 +71,7 @@ public class RemoteDataNodeExchanger extends ClientSideExchanger {
 
   @Override
   protected Collection<ChannelHandler> getClientHandlers() {
+    LOGGER.info("[RemoteDataNodeExchanger]remoteDataClientHandlers:{}", remoteDataClientHandlers);
     return remoteDataClientHandlers;
   }
 }
