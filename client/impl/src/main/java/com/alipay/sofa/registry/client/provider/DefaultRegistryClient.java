@@ -262,16 +262,16 @@ public class DefaultRegistryClient implements RegistryClient {
       throwDuplicateException(registration, publisher);
     }
 
+    //初始化一个DefaultPublisher，registrationPublisherMap保证了只会被初始化一次。
     publisher = new DefaultPublisher(registration, workerThread, registryClientConfig);
     ((DefaultPublisher) publisher).setAuthManager(authManager);
-
     Publisher oldPublisher = registrationPublisherMap.putIfAbsent(registration, publisher);
     if (null != oldPublisher) {
       throwDuplicateException(registration, oldPublisher);
     }
-
+    //调用registerCache.addRegister加入缓存，通过uuid唯一
     registerCache.addRegister(publisher);
-
+    //更新发布版本和时间
     publisher.republish(data);
 
     LOGGER.info(

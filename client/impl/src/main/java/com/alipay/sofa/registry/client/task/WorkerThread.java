@@ -111,6 +111,9 @@ public class WorkerThread extends AbstractWorkerThread {
           int sendCount = ev.incSendCount();
 
           // Resent needs delay when task event is not the first time to send.
+          //每个任务有对应的sendcount和triggerTime。这里我们可以学习一下，
+          // 其实就是如果这个任务不是第一次发送的时候，设置一个延迟时间，
+          // 超时之后再重试，避免服务不可用的频发重试。在这个框架中，超时时间随着sendcount正比例叠加。
           if (sendCount != 0 && ev.delayTime() > 0) {
             continue;
           }

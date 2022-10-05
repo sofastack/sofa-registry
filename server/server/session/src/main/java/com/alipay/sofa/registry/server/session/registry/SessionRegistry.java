@@ -112,6 +112,7 @@ public class SessionRegistry implements Registry {
     ConcurrentUtils.createDaemonThread("SessionClientWatchDog", new ClientWatchDog()).start();
   }
 
+  //注册发布者和订阅者
   @Override
   public void register(StoreData storeData, Channel channel) {
 
@@ -125,11 +126,14 @@ public class SessionRegistry implements Registry {
                   case PUBLISHER:
                     Publisher publisher = (Publisher) storeData;
                     publisher.setSessionProcessId(ServerEnv.PROCESS_ID);
+                    //为了后续跟DataServer做检查,将该publisher加入sessionDataStore，底层其实就是map，
+                    // 然后进行了并发控制，如果存在记录，则升级版本。
                     if (!sessionDataStore.add(publisher)) {
                       break;
                     }
                     // All write operations to DataServer (pub/unPub/clientoff/renew/snapshot)
                     // are handed over to WriteDataAcceptor
+                    //写数据到dataserver，这里构造了WriteDataRequest，通过WriteDataAcceptor的accept方法写数据。
                     writeDataAcceptor.accept(
                         new PublisherWriteDataRequest(
                             publisher, WriteDataRequest.WriteDataRequestType.PUBLISHER));

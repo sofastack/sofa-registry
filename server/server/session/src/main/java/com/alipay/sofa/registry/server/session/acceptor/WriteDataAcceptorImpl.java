@@ -32,6 +32,7 @@ public class WriteDataAcceptorImpl implements WriteDataAcceptor {
   public void accept(WriteDataRequest request) {
     ConnectId connectId = request.getConnectId();
     WriteDataProcessor writeDataProcessor = new WriteDataProcessor(connectId, dataNodeService);
+    //每个节点都会生成一个WriteDataProcessor对象，最后调用process方法
     writeDataProcessor.process(request);
   }
 }

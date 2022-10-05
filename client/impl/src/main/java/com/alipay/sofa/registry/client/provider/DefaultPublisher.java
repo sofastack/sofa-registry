@@ -36,6 +36,7 @@ import java.util.UUID;
  * @author zhuoyu.sjw
  * @version $Id : DefaultPublisher.java, v 0.1 2017-11-23 20:45 zhuoyu.sjw Exp $$
  */
+//保存的元数据:
 public class DefaultPublisher extends AbstractInternalRegister implements Publisher {
 
   private final String REGIST_ID;
