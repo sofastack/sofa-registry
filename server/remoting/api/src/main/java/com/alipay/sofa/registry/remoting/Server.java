@@ -25,6 +25,7 @@ import java.util.Map;
  * @author shangyu.wh
  * @version $Id: Server.java, v 0.1 2017-11-20 21:05 shangyu.wh Exp $
  */
+//Server是服务器对应的封装，其基本功能由定义可知，主要是基于Channel发送功能。
 public interface Server extends Endpoint {
 
   /**

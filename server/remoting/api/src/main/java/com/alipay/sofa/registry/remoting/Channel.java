@@ -23,6 +23,7 @@ import javax.ws.rs.client.WebTarget;
  * @author shangyu.wh
  * @version $Id: Channel.java, v 0.1 2017-11-20 20:39 shangyu.wh Exp $
  */
+//其基本功能主要是属性相关功能。
 public interface Channel {
 
   /**
