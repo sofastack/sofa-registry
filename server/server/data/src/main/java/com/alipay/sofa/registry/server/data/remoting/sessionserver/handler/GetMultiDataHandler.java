@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.data.remoting.sessionserver.handler;
 
+import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.dataserver.GetMultiDataRequest;
 import com.alipay.sofa.registry.common.model.slot.MultiSlotAccessGenericResponse;
 import com.alipay.sofa.registry.common.model.slot.SlotAccess;
@@ -101,5 +102,10 @@ public class GetMultiDataHandler extends BaseGetDataHandler<GetMultiDataRequest>
     MultiSubDatum data = new MultiSubDatum(request.getDataInfoId(), datumMap);
 
     return new MultiSlotAccessGenericResponse(success, builder.toString(), data, slotAccessMap);
+  }
+
+  @Override
+  public CommonResponse buildFailedResponse(String msg) {
+    return MultiSlotAccessGenericResponse.failedResponse(msg);
   }
 }

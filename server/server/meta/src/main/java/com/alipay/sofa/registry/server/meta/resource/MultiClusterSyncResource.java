@@ -27,6 +27,7 @@ import com.alipay.sofa.registry.server.shared.resource.AuthChecker;
 import com.alipay.sofa.registry.store.api.meta.MultiClusterSyncRepository;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.google.common.collect.Sets;
+import java.util.Locale;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -327,7 +328,7 @@ public class MultiClusterSyncResource {
               "remoteDataCenter:{}, expectVersion:{} not exist.", remoteDataCenter, expectVersion));
     }
 
-    exist.getSynPublisherGroups().add(group);
+    exist.getSynPublisherGroups().add(group.toUpperCase(Locale.ROOT));
     exist.setDataVersion(PersistenceDataBuilder.nextVersion());
     boolean ret = multiClusterSyncRepository.update(exist, NumberUtils.toLong(expectVersion));
 
@@ -376,7 +377,7 @@ public class MultiClusterSyncResource {
               "remoteDataCenter:{}, expectVersion:{} not exist.", remoteDataCenter, expectVersion));
     }
 
-    exist.getSynPublisherGroups().remove(group);
+    exist.getSynPublisherGroups().remove(group.toUpperCase(Locale.ROOT));
     exist.setDataVersion(PersistenceDataBuilder.nextVersion());
     boolean ret = multiClusterSyncRepository.update(exist, NumberUtils.toLong(expectVersion));
 

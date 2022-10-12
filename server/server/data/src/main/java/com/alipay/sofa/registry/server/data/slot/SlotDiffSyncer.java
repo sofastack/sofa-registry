@@ -295,7 +295,12 @@ public final class SlotDiffSyncer {
       Map<String, DatumSummary> summaryMap) {
     if (resp == null || !resp.isSuccess()) {
       DIFF_LOGGER.error(
-          "DiffDigestFailed, syncLocal={}, syncDataCenter={}, slotId={} from {}, resp={}", syncLocal, syncDataCenter, slotId, targetAddress, resp);
+          "DiffDigestFailed, syncLocal={}, syncDataCenter={}, slotId={} from {}, resp={}",
+          syncLocal,
+          syncDataCenter,
+          slotId,
+          targetAddress,
+          resp);
       return null;
     }
     DataSlotDiffDigestResult result = resp.getData();
@@ -307,7 +312,12 @@ public final class SlotDiffSyncer {
     }
 
     if (result.isEmpty()) {
-      DIFF_LOGGER.info("DiffDigestEmpty, syncLocal={}, syncDataCenter={}, slotId={} from {}", syncLocal, syncDataCenter, slotId, targetAddress);
+      DIFF_LOGGER.info(
+          "DiffDigestEmpty, syncLocal={}, syncDataCenter={}, slotId={} from {}",
+          syncLocal,
+          syncDataCenter,
+          slotId,
+          targetAddress);
       return result;
     }
     // do nothing with added dataInfoId, the added publishers would sync and update by

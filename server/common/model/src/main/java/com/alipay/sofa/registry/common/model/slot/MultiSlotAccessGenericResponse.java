@@ -43,4 +43,8 @@ public class MultiSlotAccessGenericResponse<T> extends GenericResponse<T> {
   public Map<String, SlotAccess> getSlotAccessMap() {
     return slotAccessMap;
   }
+
+  public static <T> MultiSlotAccessGenericResponse<T> failedResponse(String msg) {
+    return new MultiSlotAccessGenericResponse(false, msg, null, null);
+  }
 }
