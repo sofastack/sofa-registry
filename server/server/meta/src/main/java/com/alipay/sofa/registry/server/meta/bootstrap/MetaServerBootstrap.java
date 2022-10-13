@@ -57,6 +57,11 @@ import org.springframework.context.ApplicationContext;
  * @author shangyu.wh
  * @version $Id: MetaServerBootstrap.java, v 0.1 2018-01-16 11:28 shangyu.wh Exp $
  */
+//MetaServerBootstrap是核心启动类，该类主要包含了三类组件：外部节点通信组件、Raft 服务通信组件、定时器组件。
+  //1、外部节点通信组件：在该类中有几个 Server 通信对象，用于和其它外部节点进行通信。
+  //2、Raft 服务：用于集群间的变更和数据同步，raftExchanger 就起到这个作用；
+  //3、定时器组件：例如定时检测节点信息、定时检测数据版本信息；具体可见 ExecutorManager，
+// 这是一个启动各种管理线程的地方。他的启动设置是在 MetaServerBootstrap.initRaft 之中 。
 public class MetaServerBootstrap {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(MetaServerBootstrap.class);
@@ -92,12 +97,16 @@ public class MetaServerBootstrap {
 
   @Autowired private RecoverConfigRepository recoverConfigRepository;
 
+  //主要是处理一些session相关的服务；
   private Server sessionServer;
 
+  //则负责数据相关服务
   private Server dataServer;
 
+  //负责meta server的注册
   private Server metaServer;
 
+  //主要提供一系列 http 接口，用于 dashboard 管理、数据查询等；
   private Server httpServer;
 
   private final AtomicBoolean rpcServerForSessionStarted = new AtomicBoolean(false);

@@ -41,12 +41,7 @@ import com.alipay.sofa.registry.client.event.DefaultEventBus;
 import com.alipay.sofa.registry.client.event.LookoutSubscriber;
 import com.alipay.sofa.registry.client.event.SubscriberProcessEvent;
 import com.alipay.sofa.registry.client.log.LoggerFactory;
-import com.alipay.sofa.registry.client.remoting.ClientConnection;
-import com.alipay.sofa.registry.client.remoting.ClientConnectionCloseEventProcessor;
-import com.alipay.sofa.registry.client.remoting.ClientConnectionOpenEventProcessor;
-import com.alipay.sofa.registry.client.remoting.ReceivedConfigDataProcessor;
-import com.alipay.sofa.registry.client.remoting.ReceivedDataProcessor;
-import com.alipay.sofa.registry.client.remoting.ServerManager;
+import com.alipay.sofa.registry.client.remoting.*;
 import com.alipay.sofa.registry.client.task.ObserverHandler;
 import com.alipay.sofa.registry.client.task.SyncConfigThread;
 import com.alipay.sofa.registry.client.task.TaskEvent;
@@ -84,6 +79,10 @@ public class DefaultRegistryClient implements RegistryClient {
   private WorkerThread workerThread;
 
   private ClientConnection client;
+
+  private PubConnection pubConnection;
+
+  private SubConnection subConnection;
 
   private Map<Class<?>, UserProcessor> userProcessorMap;
 
@@ -150,6 +149,7 @@ public class DefaultRegistryClient implements RegistryClient {
   }
 
   /** Init. */
+  //一系列初始化操作,事件处理器,rpc通信以及协议处理器的初始化
   public void init() {
     if (!init.compareAndSet(false, true)) {
       return;
@@ -255,23 +255,24 @@ public class DefaultRegistryClient implements RegistryClient {
     if (StringUtils.isBlank(registration.getGroup())) {
       registration.setGroup(DEFAULT_GROUP);
     }
-
+    //Publisher都是发布者的一些元数据信息
+    //具体发布数据的时候我们需要从中提取一些信息，比如判断是否需要发布，以及发布的数据，
     Publisher publisher = registrationPublisherMap.get(registration);
 
     if (null != publisher) {
       throwDuplicateException(registration, publisher);
     }
 
-    //初始化一个DefaultPublisher，registrationPublisherMap保证了只会被初始化一次。
+    //1、初始化一个DefaultPublisher，registrationPublisherMap保证了只会被初始化一次。
     publisher = new DefaultPublisher(registration, workerThread, registryClientConfig);
     ((DefaultPublisher) publisher).setAuthManager(authManager);
     Publisher oldPublisher = registrationPublisherMap.putIfAbsent(registration, publisher);
     if (null != oldPublisher) {
       throwDuplicateException(registration, oldPublisher);
     }
-    //调用registerCache.addRegister加入缓存，通过uuid唯一
+    //2、调用registerCache.addRegister加入缓存，通过uuid唯一
     registerCache.addRegister(publisher);
-    //更新发布版本和时间
+    //3、更新发布版本和时间
     publisher.republish(data);
 
     LOGGER.info(

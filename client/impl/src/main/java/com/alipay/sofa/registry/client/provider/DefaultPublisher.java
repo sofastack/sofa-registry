@@ -42,6 +42,7 @@ public class DefaultPublisher extends AbstractInternalRegister implements Publis
   private final String REGIST_ID;
   private PublisherRegistration registration;
   private Worker worker;
+  //发布的数据
   private Collection<String> dataList;
   private RegistryClientConfig config;
 
@@ -82,6 +83,8 @@ public class DefaultPublisher extends AbstractInternalRegister implements Publis
     } finally {
       writeLock.unlock();
     }
+    //4、启动worker发布任务
+    //这里的this就是这个Publisher，每个Publisher都有一个dataList，一个公用的worker。
     this.worker.schedule(new TaskEvent(this));
   }
 

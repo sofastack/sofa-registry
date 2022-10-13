@@ -16,7 +16,7 @@ import java.util.Map;
  * @create 2022-09-30 20:08
  */
 public class PubClientConnection extends ClientConnection {
-    private Connection pubClientConnection;
+    private Connection pubConnection;
 
     /**
      * Instantiates a new Client connection.
@@ -30,5 +30,4 @@ public class PubClientConnection extends ClientConnection {
     public PubClientConnection(ServerManager serverManager, List<UserProcessor> userProcessorList, Map<ConnectionEventType, ConnectionEventProcessor> connectionEventProcessorMap, RegisterCache registerCache, RegistryClientConfig config) {
         super(serverManager, userProcessorList, connectionEventProcessorMap, registerCache, config);
     }
-
 }

@@ -33,7 +33,7 @@ public class RegistryProvider {
         new DefaultRegistryClient(
             new DefaultRegistryClientConfigBuilder()
                 .setRegistryEndpoint("127.0.0.1")
-                .setRegistryEndpointPort(9603)
+                .setRegistryEndpointPort(9603)//用来同步session节点信息的
                 .build());
     registryClient.init();
     // 构造发布者注册表

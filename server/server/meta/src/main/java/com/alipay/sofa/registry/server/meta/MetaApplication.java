@@ -31,6 +31,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableMetaServer
 @SpringBootApplication(exclude = {DataSourceAutoConfiguration.class})
 @EnableScheduling
+//MetaServer程序主体，入口。
 public class MetaApplication {
 
   private static final Logger CRITICAL_LOGGER = LoggerFactory.getLogger("CRITICAL-ERROR");

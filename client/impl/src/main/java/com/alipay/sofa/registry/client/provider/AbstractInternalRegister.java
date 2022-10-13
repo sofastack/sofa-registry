@@ -173,11 +173,13 @@ public abstract class AbstractInternalRegister implements Register {
    *
    * @return the sync task
    */
+  //构造TaskEvent
   public SyncTask assemblySyncTask() {
     readLock.lock();
     try {
       SyncTask syncTask = new SyncTask();
       syncTask.setRequestId(requestId);
+      //assembly是一个模版方法,订阅者发布者有相同的点。所以可以通过模版方法实现。
       syncTask.setRequest(assembly());
       syncTask.setDone(isDone());
       return syncTask;

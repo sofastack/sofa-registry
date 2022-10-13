@@ -113,6 +113,7 @@ public class SessionRegistry implements Registry {
   }
 
   //注册发布者和订阅者
+  //注册新publisher或者subscriber data
   @Override
   public void register(StoreData storeData, Channel channel) {
 
@@ -133,7 +134,8 @@ public class SessionRegistry implements Registry {
                     }
                     // All write operations to DataServer (pub/unPub/clientoff/renew/snapshot)
                     // are handed over to WriteDataAcceptor
-                    //写数据到dataserver，这里构造了WriteDataRequest，通过WriteDataAcceptor的accept方法写数据。
+                    //写数据到dataserver，这里构造了WriteDataRequest，
+                    // 通过WriteDataAcceptor的accept方法写数据。
                     writeDataAcceptor.accept(
                         new PublisherWriteDataRequest(
                             publisher, WriteDataRequest.WriteDataRequestType.PUBLISHER));

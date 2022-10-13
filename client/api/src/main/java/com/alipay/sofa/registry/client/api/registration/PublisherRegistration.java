@@ -22,6 +22,8 @@ package com.alipay.sofa.registry.client.api.registration;
  * @author zhuoyu.sjw
  * @version $Id : PublisherRegistration.java, v 0.1 2017-11-23 15:39 zhuoyu.sjw Exp $$
  */
+//PublisherRegistration 并没有实现equals和hashcode方法，
+// 所以相同的dataId，是可以获取到不同的Publisher（dataInfo和Publisher是1->N）。
 public class PublisherRegistration extends BaseRegistration {
 
   /**

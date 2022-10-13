@@ -25,6 +25,9 @@ import java.util.concurrent.Executor;
  * @author shangyu.wh
  * @version $Id: UserProcessorAdapter.java, v 0.1 2017-11-24 17:10 shangyu.wh Exp $
  */
+//bolt的rpc，处理协议的handler只需要继承SyncUserProcessor即可
+//  SyncUserProcessorAdapter将实现委托给ChannelHandler
+//  为什么这样做，其实还是为了扩展SyncUserProcessor。以及更好的设计代码。
 public class SyncUserProcessorAdapter extends SyncUserProcessor {
 
   private final ChannelHandler userProcessorHandler;

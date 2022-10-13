@@ -82,6 +82,7 @@ import org.springframework.context.annotation.Import;
  */
 @Configuration
 @Import({
+        //MetaServerInitializerConfiguration ： 负责启动
   MetaServerInitializerConfiguration.class,
   StoreApiConfiguration.class,
   JdbcConfiguration.class,
@@ -89,17 +90,20 @@ import org.springframework.context.annotation.Import;
   RaftConfiguration.class
 })
 @EnableConfigurationProperties
+//MetaServerConfiguration ：负责配置
 public class MetaServerConfiguration {
 
   public static final String SHARED_SCHEDULE_EXECUTOR = "sharedScheduleExecutor";
   public static final String GLOBAL_EXECUTOR = "globalExecutor";
 
+  //负责MetaServer启动配置，是核心启动类。
   @Bean
   @ConditionalOnMissingBean
   public MetaServerBootstrap metaServerBootstrap() {
     return new MetaServerBootstrap();
   }
 
+  //负责MetaServer的配置项，比如MetaServerConfig，NodeConfig，PropertySplitter。
   @Configuration
   protected static class MetaServerConfigBeanConfiguration {
     @Bean
@@ -143,6 +147,7 @@ public class MetaServerConfiguration {
     }
   }
 
+  //负责网络相关配置，比如BoltExchange，JerseyExchange，这里随后会重点说明。
   @Configuration
   public static class MetaServerRemotingConfiguration {
 
@@ -156,6 +161,7 @@ public class MetaServerConfiguration {
       return new JerseyExchange();
     }
 
+    //处理 SessionNode 相关的请求；
     @Bean(name = "sessionServerHandlers")
     public Collection<AbstractServerHandler> sessionServerHandlers() {
       Collection<AbstractServerHandler> list = new ArrayList<>();
@@ -167,6 +173,7 @@ public class MetaServerConfiguration {
       return list;
     }
 
+    //处理 DataNode 相关的请求；
     @Bean(name = "dataServerHandlers")
     public Collection<AbstractServerHandler> dataServerHandlers() {
       Collection<AbstractServerHandler> list = new ArrayList<>();
@@ -178,6 +185,7 @@ public class MetaServerConfiguration {
       return list;
     }
 
+    //处理MetaNode相关的请求；
     @Bean(name = "metaServerHandlers")
     public Collection<AbstractServerHandler> metaServerHandlers() {
       Collection<AbstractServerHandler> list = new ArrayList<>();
@@ -185,6 +193,7 @@ public class MetaServerConfiguration {
       return list;
     }
 
+    //连接管理
     @Bean
     public SessionConnectionManager sessionConnectionManager() {
       return new SessionConnectionManager();
@@ -292,6 +301,7 @@ public class MetaServerConfiguration {
     }
   }
 
+  //负责Resource相关配置，比如 jerseyResourceConfig，persistentDataResource。
   @Configuration
   public static class ResourceConfiguration {
 
@@ -406,6 +416,7 @@ public class MetaServerConfiguration {
     }
   }
 
+  //ExecutorManager相关配置。
   @Configuration
   public static class ExecutorConfiguation {
 
