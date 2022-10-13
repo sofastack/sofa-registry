@@ -163,6 +163,7 @@ public class DataNodeServiceImpl implements DataNodeService {
           };
       Request<GetDataVersionRequest> getDataVersionRequestRequest =
           new SimpleRequest<>(request, getUrl(slot), handler);
+      // 节点间通讯
       Response response = dataNodeExchanger.request(getDataVersionRequestRequest);
       Response.ResultStatus result = (Response.ResultStatus) response.getResult();
       if (result != Response.ResultStatus.SUCCESSFUL) {

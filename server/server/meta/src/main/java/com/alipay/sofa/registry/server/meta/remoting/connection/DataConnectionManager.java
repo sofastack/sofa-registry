@@ -24,6 +24,9 @@ import com.alipay.sofa.registry.common.model.Node.NodeType;
  * @author shangyu.wh
  * @version $Id: DataConnectionManager.java, v 0.1 2018-01-24 16:04 shangyu.wh Exp $
  */
+//DataServerConnectionFactory 就是用来对`com.alipay.remoting.Connection`进行连接管理。
+//
+//其核心变量是以ip:port作为key，Connection作为value的一个Map。
 public class DataConnectionManager extends AbstractNodeConnectManager {
 
   @Override

@@ -27,6 +27,7 @@ import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
  * @author zhuoyu.sjw
  * @version $Id: DataApplication.java, v 0.1 2017-11-13 19:04 zhuoyu.sjw Exp $$
  */
+//EnableDataServer这个注解将引入基本配置 DataServerBeanConfiguration。
 @EnableDataServer
 @SpringBootApplication(exclude = {DataSourceAutoConfiguration.class})
 public class DataApplication {

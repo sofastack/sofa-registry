@@ -85,6 +85,8 @@ import org.springframework.context.annotation.Import;
   JdbcConfiguration.class,
 })
 @EnableConfigurationProperties
+//DataServerBeanConfiguration 的作用是构建各种相关配置，从其中可以看出来DataServer相关模块和功能。
+//该配置类主要作用是提供一些 DataServer 服务启动时基本的 Bean
 public class DataServerBeanConfiguration {
 
   @Bean
@@ -93,6 +95,7 @@ public class DataServerBeanConfiguration {
     return new DataServerBootstrap();
   }
 
+  //该配置类主要作用是提供一些 DataServer 服务启动时基本的 Bean，
   @Configuration
   public static class DataServerBootstrapConfigConfiguration {
 
@@ -101,6 +104,7 @@ public class DataServerBeanConfiguration {
       return new CommonConfig();
     }
 
+    //基础配置 Bean
     @Bean
     @ConditionalOnMissingBean
     public DataServerConfig dataServerConfig(CommonConfig commonConfig) {
@@ -115,7 +119,7 @@ public class DataServerBeanConfiguration {
 
   @Configuration
   public static class DataServerStorageConfiguration {
-
+    //缓存 Bean
     @Bean
     @ConditionalOnMissingBean
     public DatumCache datumCache() {
@@ -145,7 +149,7 @@ public class DataServerBeanConfiguration {
       return new DiskSlotTableRecorder();
     }
   }
-
+  //该配置类主要用于提供一些日志处理相关的 Bean
   @Configuration
   public static class LogTaskConfigConfiguration {
 
@@ -160,6 +164,9 @@ public class DataServerBeanConfiguration {
     }
   }
 
+  //该配置类主要作用是提供一些与 SessionServer 相互通信的 Bean，以及连接过程中的一些请求处理 Bean。
+  //比如 BoltExchange、JerseyExchange 等用于启动服务的 Bean，
+  // 还有节点上下线、数据发布等的 Bean，为关键配置类；
   @Configuration
   public static class SessionRemotingConfiguration {
 
@@ -208,6 +215,8 @@ public class DataServerBeanConfiguration {
       return list;
     }
 
+    //该 Handler 主要用于数据的获取，当一个请求过来时，
+    // 会通过请求中的 DataCenter 和 DataInfoId 获取当前 DataServer 节点存储的相应数据。
     @Bean
     public AbstractServerHandler getDataHandler() {
       return new GetDataHandler();
@@ -223,6 +232,7 @@ public class DataServerBeanConfiguration {
       return new SlotFollowerDiffPublisherRequestHandler();
     }
 
+    //获取数据版本号；
     @Bean
     public AbstractServerHandler getDataVersionsHandler() {
       return new GetDataVersionsHandler();
@@ -244,6 +254,8 @@ public class DataServerBeanConfiguration {
     }
   }
 
+  //该配置类中配置的 Bean 主要用于处理与数据节点相关的事件，
+  // 如事件中心 EventCenter、数据变化事件中心 DataChangeEventCenter 等；
   @Configuration
   public static class DataServerEventBeanConfiguration {
 
@@ -253,6 +265,7 @@ public class DataServerBeanConfiguration {
     }
   }
 
+  //该配置类中配置的 Bean 主要用于 DataServer 的连接管理
   @Configuration
   public static class DataServerRemotingBeanConfiguration {
 
@@ -267,6 +280,7 @@ public class DataServerBeanConfiguration {
     }
   }
 
+  //该配置类中配置的 Bean 主要用于提供一些 Rest 接口资源；
   @Configuration
   public static class ResourceConfiguration {
 
@@ -320,6 +334,7 @@ public class DataServerBeanConfiguration {
     }
   }
 
+  //该配置类主要配置一些线程池 Bean，用于执行不同的任务；
   @Configuration
   public static class ExecutorConfiguration {
 

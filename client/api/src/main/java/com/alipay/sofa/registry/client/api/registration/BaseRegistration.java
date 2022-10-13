@@ -23,11 +23,11 @@ package com.alipay.sofa.registry.client.api.registration;
  * @version $Id : BaseRegistration.java, v 0.1 2018-09-04 11:36 yeqing.yq Exp $$
  */
 public class BaseRegistration {
-
+  //数据ID，发布订阅时需要使用相同值，数据唯一标识由 dataId + group + instanceId 组成。
   protected String dataId;
-
+  //数据分组，发布订阅时需要使用相同值，数据唯一标识由 dataId + group + instanceId 组成，默认值 DEFAULT_GROUP。
   protected String group;
-
+  //应用 appName。
   protected String appName;
 
   protected String instanceId;

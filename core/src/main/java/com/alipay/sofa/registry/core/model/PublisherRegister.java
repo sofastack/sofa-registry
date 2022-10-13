@@ -24,6 +24,8 @@ import java.util.List;
  * @author zhuoyu.sjw
  * @version $Id : PublisherRegister.java, v 0.1 2017-11-28 15:39 zhuoyu.sjw Exp $$
  */
+//SOFARegistry 将服务数据 （PublisherRegister） 和 服务发布者 （Publisher） 的连接的生命周期绑定在一起：
+
 public class PublisherRegister extends BaseRegister {
 
   private static final long serialVersionUID = 17084511452627565L;

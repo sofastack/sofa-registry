@@ -24,6 +24,7 @@ import com.alipay.sofa.registry.remoting.Server;
  * @author shangyu.wh
  * @version $Id: Exchanger.java, v 0.1 2017-11-20 21:25 shangyu.wh Exp $
  */
+//Exchange 作为 Client / Server 连接的进一步抽象，负责同类型server之间的连接。
 public interface Exchange<T> {
   String SESSION_SERVER_TYPE = "sessionServer";
   String SESSION_SERVER_CONSOLE_TYPE = "sessionServerConsole";

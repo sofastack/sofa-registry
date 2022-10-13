@@ -25,6 +25,7 @@ import org.springframework.context.SmartLifecycle;
  * @author qian.lqlq
  * @version $Id: DataServerInitializer.java, v 0.1 2018年01月04日 11:08 qian.lqlq Exp $
  */
+//DataServer 模块启动入口类,在启动时由 Spring 框架调用其 start 方法
 public class DataServerInitializer implements SmartLifecycle {
   private static final Logger LOGGER = LoggerFactory.getLogger(DataServerInitializer.class);
 
@@ -46,6 +47,7 @@ public class DataServerInitializer implements SmartLifecycle {
   @Override
   public void start() {
     try {
+      //DataServerBootstrap#start 方法，用于启动一系列的初始化服务。
       dataServerBootstrap.start();
       this.isRunning = true;
     } catch (Throwable ex) {

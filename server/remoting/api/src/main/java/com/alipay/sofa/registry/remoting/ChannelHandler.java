@@ -22,6 +22,9 @@ import java.util.concurrent.Executor;
  * @author shangyu.wh
  * @version $Id: ChannelHandler.java, v 0.1 2017-11-20 20:45 shangyu.wh Exp $
  */
+//在建立连接中，可以设置一系列应对不同任务的 handler (称之为 ChannelHandler)。
+//这些 ChannelHandler 有的作为 Listener 用来处理连接事件，
+// 有的作为 Processor 用来处理各种指定的事件，比如服务信息数据变化、Subscriber 注册等事件。
 public interface ChannelHandler<T> {
 
   /** The enum Handler type. */

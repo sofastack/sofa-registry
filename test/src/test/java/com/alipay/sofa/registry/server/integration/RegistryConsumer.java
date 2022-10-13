@@ -35,6 +35,7 @@ public class RegistryConsumer {
   private static final Logger logger = LoggerFactory.getLogger(RegistryConsumer.class);
 
   public static void main(String[] args) throws InterruptedException {
+      // 构建客户端实例
     DefaultRegistryClient registryClient =
         new DefaultRegistryClient(
             new DefaultRegistryClientConfigBuilder()

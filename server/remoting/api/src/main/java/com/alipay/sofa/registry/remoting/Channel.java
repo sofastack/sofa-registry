@@ -23,6 +23,8 @@ import javax.ws.rs.client.WebTarget;
  * @author shangyu.wh
  * @version $Id: Channel.java, v 0.1 2017-11-20 20:39 shangyu.wh Exp $
  */
+//其基本功能主要是属性相关功能。
+  //Channel用于在字节缓冲区和位于通道另一侧的实体（通常是一个文件或套接字）之间有效地传输数据
 public interface Channel {
 
   /**
