@@ -57,6 +57,10 @@ public class ClientConnection implements Client {
   private Map<ConnectionEventType, ConnectionEventProcessor> connectionEventProcessorMap;
   private RegistryClientConfig config;
   private Connection clientConnection;
+
+  private Connection pubClientConnection;
+
+  private Connection subClientConnection;
   private RegisterCache registerCache;
   private Worker worker;
 
@@ -143,6 +147,9 @@ public class ClientConnection implements Client {
     }
 
     if (null != connection && connection.isFine()) {
+      //todo 区分pub和sub
+//            pubClientConnection=connection;
+//            subClientConnection=connection;
       clientConnection = connection;
       return true;
     }
