@@ -79,7 +79,11 @@ public abstract class BaseSlotDiffDigestRequestHandler
       // as it will loop publishers once
       DataSlotDiffDigestResult result =
           calcDiffResult(
-              slotId, request.getDatumDigest(), existingPublishers, request.getAcceptorManager());
+              request.getLocalDataCenter(),
+              slotId,
+              request.getDatumDigest(),
+              existingPublishers,
+              request.getAcceptorManager());
       result.setSlotTableEpoch(slotManager.getSlotTableEpoch());
 
       if (!postCheck(request)) {
@@ -99,13 +103,14 @@ public abstract class BaseSlotDiffDigestRequestHandler
   }
 
   private DataSlotDiffDigestResult calcDiffResult(
+      String requestDataCenter,
       int targetSlot,
       Map<String, DatumDigest> targetDigestMap,
       Map<String, Map<String, Publisher>> existingPublishers,
       SyncSlotAcceptorManager acceptorManager) {
     DataSlotDiffDigestResult result =
         DataSlotDiffUtils.diffDigestResult(targetDigestMap, existingPublishers, acceptorManager);
-    DataSlotDiffUtils.logDiffResult(result, targetSlot, logger);
+    DataSlotDiffUtils.logDiffResult(requestDataCenter, result, targetSlot, logger);
     return result;
   }
 

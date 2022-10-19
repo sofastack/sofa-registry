@@ -101,8 +101,8 @@ public class PushDataGenerator {
         dataCenterMetadataCache.dataCenterZonesOf(pushDataCenters);
 
     Set<String> metadataDataCenters = segmentZones.keySet();
-    if (unzipDatum.getDatumMap().size() != segmentZones.size()
-        || pushDataCenters.containsAll(metadataDataCenters)) {
+
+    if (!pushDataCenters.equals(metadataDataCenters)) {
       throw new SofaRegistryRuntimeException(
           StringFormatter.format(
               "createMultiReceivePushData error, datum.dataCenters: {}, metadata.dataCenters: {}",

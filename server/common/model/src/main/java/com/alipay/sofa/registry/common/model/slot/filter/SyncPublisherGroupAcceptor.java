@@ -18,6 +18,7 @@ package com.alipay.sofa.registry.common.model.slot.filter;
 
 import com.alipay.sofa.registry.common.model.constants.MultiValueConstants;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
+import com.alipay.sofa.registry.util.ParaCheckUtil;
 import java.util.Set;
 import org.springframework.util.CollectionUtils;
 
@@ -37,6 +38,7 @@ public class SyncPublisherGroupAcceptor implements SyncSlotAcceptor {
 
   @Override
   public boolean accept(SyncAcceptorRequest request) {
+    ParaCheckUtil.checkNotNull(request, "SyncAcceptorRequest");
     if (CollectionUtils.isEmpty(acceptGroups)) {
       return false;
     }
@@ -52,5 +54,10 @@ public class SyncPublisherGroupAcceptor implements SyncSlotAcceptor {
   @Override
   public String name() {
     return NAME;
+  }
+
+  @Override
+  public String toString() {
+    return "SyncPublisherGroupAcceptor{" + ", acceptGroups=" + acceptGroups + '}';
   }
 }

@@ -73,6 +73,7 @@ public class DataSlotDiffPublisherRequestHandler
       final int slotId = request.getSlotId();
       DataSlotDiffPublisherResult result =
           calcDiffResult(
+              request.getLocalDataCenter(),
               slotId,
               request.getDatumSummaries(),
               sessionDataStore.getDataInfoIdPublishers(slotId));
@@ -89,6 +90,7 @@ public class DataSlotDiffPublisherRequestHandler
   }
 
   private DataSlotDiffPublisherResult calcDiffResult(
+      String requestDataCenter,
       int targetSlot,
       List<DatumSummary> datumSummaries,
       Map<String, Map<String, Publisher>> existingPublishers) {
@@ -98,7 +100,7 @@ public class DataSlotDiffPublisherRequestHandler
             existingPublishers,
             sessionServerConfig.getSlotSyncPublisherMaxNum(),
             syncSlotAcceptAllManager);
-    DataSlotDiffUtils.logDiffResult(result, targetSlot, LOGGER);
+    DataSlotDiffUtils.logDiffResult(requestDataCenter, result, targetSlot, LOGGER);
     return result;
   }
 

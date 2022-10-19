@@ -39,9 +39,10 @@ public class SyncAcceptorRequest {
     return new SyncAcceptorRequest(dataInfoId, null);
   }
 
-  public static SyncAcceptorRequest buildRequest(PublishSource source) {
+  public static SyncAcceptorRequest buildRequest(String dataInfoId, PublishSource source) {
+    ParaCheckUtil.checkNotNull(dataInfoId, "dataInfoId");
     ParaCheckUtil.checkNotNull(source, "publishSource");
-    return new SyncAcceptorRequest(null, source);
+    return new SyncAcceptorRequest(dataInfoId, source);
   }
 
   /**

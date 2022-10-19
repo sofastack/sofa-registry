@@ -27,6 +27,8 @@ public class Loggers {
 
   private Loggers() {}
 
+  public static final Logger SYNC_SRV_LOGGER = LoggerFactory.getLogger("SYNC-SRV");
+
   public static final Logger MULTI_CLUSTER_SRV_LOGGER =
       LoggerFactory.getLogger("MULTI-CLUSTER-SRV");
 

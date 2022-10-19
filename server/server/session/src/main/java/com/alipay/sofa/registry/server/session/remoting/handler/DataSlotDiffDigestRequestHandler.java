@@ -68,6 +68,7 @@ public class DataSlotDiffDigestRequestHandler
     try {
       DataSlotDiffDigestResult result =
           calcDiffResult(
+              request.getLocalDataCenter(),
               request.getSlotId(),
               request.getDatumDigest(),
               sessionDataStore.getDataInfoIdPublishers(request.getSlotId()));
@@ -88,13 +89,14 @@ public class DataSlotDiffDigestRequestHandler
   }
 
   private DataSlotDiffDigestResult calcDiffResult(
+      String requestDataCenter,
       int targetSlot,
       Map<String, DatumDigest> digestMap,
       Map<String, Map<String, Publisher>> existingPublishers) {
 
     DataSlotDiffDigestResult result =
         DataSlotDiffUtils.diffDigestResult(digestMap, existingPublishers, syncSlotAcceptAllManager);
-    DataSlotDiffUtils.logDiffResult(result, targetSlot, LOGGER);
+    DataSlotDiffUtils.logDiffResult(requestDataCenter, result, targetSlot, LOGGER);
     return result;
   }
 

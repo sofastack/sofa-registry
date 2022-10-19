@@ -17,10 +17,12 @@
 package com.alipay.sofa.registry.common.model.slot.filter;
 
 import com.alipay.sofa.registry.common.model.constants.MultiValueConstants;
+import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.google.common.base.Objects;
 import java.util.Collections;
 import java.util.Set;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 /**
  * @author xiaojian.xj
@@ -45,7 +47,8 @@ public class SyncSlotDataInfoIdAcceptor implements SyncSlotAcceptor {
 
   @Override
   public boolean accept(SyncAcceptorRequest request) {
-    if (CollectionUtils.isEmpty(accepts)) {
+    ParaCheckUtil.checkNotNull(request, "SyncAcceptorRequest");
+    if (CollectionUtils.isEmpty(accepts) || StringUtils.isEmpty(request.getDataInfoId())) {
       return false;
     }
 
@@ -55,8 +58,9 @@ public class SyncSlotDataInfoIdAcceptor implements SyncSlotAcceptor {
 
   @Override
   public boolean filterOut(SyncAcceptorRequest request) {
+    ParaCheckUtil.checkNotNull(request, "SyncAcceptorRequest");
 
-    if (CollectionUtils.isEmpty(filters)) {
+    if (CollectionUtils.isEmpty(filters) || StringUtils.isEmpty(request.getDataInfoId())) {
       return false;
     }
 
@@ -83,5 +87,10 @@ public class SyncSlotDataInfoIdAcceptor implements SyncSlotAcceptor {
   @Override
   public int hashCode() {
     return Objects.hashCode(NAME);
+  }
+
+  @Override
+  public String toString() {
+    return "SyncSlotDataInfoIdAcceptor{" + "accepts=" + accepts + ", filters=" + filters + '}';
   }
 }

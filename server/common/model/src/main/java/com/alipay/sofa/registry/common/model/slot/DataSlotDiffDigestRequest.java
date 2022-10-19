@@ -114,13 +114,18 @@ public class DataSlotDiffDigestRequest implements Serializable {
 
   @Override
   public String toString() {
-    return "DiffDigest{"
-        + "slotId="
-        + slotId
-        + ", epoch="
+    return "DataSlotDiffDigestRequest{"
+        + "localDataCenter='"
+        + localDataCenter
+        + '\''
+        + ", slotTableEpoch="
         + slotTableEpoch
-        + ", digests="
+        + ", datumDigest="
         + datumDigest.size()
+        + ", slotId="
+        + slotId
+        + ", slotLeaderEpoch="
+        + slotLeaderEpoch
         + '}';
   }
 }

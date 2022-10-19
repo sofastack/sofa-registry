@@ -18,7 +18,7 @@ package com.alipay.sofa.registry.server.data.remoting.dataserver.handler;
 
 import com.alipay.sofa.registry.common.model.slot.DataSlotDiffDigestRequest;
 import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.server.data.multi.cluster.loggers.Loggers;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadPoolExecutor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,8 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @version v 0.1 2020-11-06 15:41 yuzhi.lyz Exp $
  */
 public class SlotFollowerDiffDigestRequestHandler extends BaseSlotDiffDigestRequestHandler {
-  private static final Logger LOGGER =
-      LoggerFactory.getLogger(SlotFollowerDiffDigestRequestHandler.class);
+  private static final Logger LOGGER = Loggers.SYNC_SRV_LOGGER;
 
   @Autowired private ThreadPoolExecutor slotSyncRequestProcessorExecutor;
 

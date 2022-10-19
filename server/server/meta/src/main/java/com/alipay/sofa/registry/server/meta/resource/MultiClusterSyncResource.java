@@ -22,16 +22,17 @@ import com.alipay.sofa.registry.common.model.console.PersistenceDataBuilder;
 import com.alipay.sofa.registry.common.model.metaserver.MultiClusterSyncInfo;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.server.meta.resource.filter.LeaderAwareRestController;
 import com.alipay.sofa.registry.server.shared.resource.AuthChecker;
 import com.alipay.sofa.registry.store.api.meta.MultiClusterSyncRepository;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.google.common.collect.Sets;
 import java.util.Locale;
 import javax.ws.rs.FormParam;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.NumberUtils;
@@ -50,10 +51,24 @@ public class MultiClusterSyncResource {
 
   @Autowired private MultiClusterSyncRepository multiClusterSyncRepository;
 
+  @GET
+  @Path("query")
+  @Produces(MediaType.APPLICATION_JSON)
+  public GenericResponse<MultiClusterSyncInfo> query(
+      @QueryParam("remoteDataCenter") String remoteDataCenter) {
+    GenericResponse<MultiClusterSyncInfo> response = new GenericResponse();
+    if (StringUtils.isBlank(remoteDataCenter)) {
+      LOG.error("[query]remoteDataCenter is not allow empty.");
+      return response.fillFailed("remoteDataCenter is not allow empty.");
+    }
+    MultiClusterSyncInfo query = multiClusterSyncRepository.query(remoteDataCenter);
+    response.fillSucceed(query);
+    return response;
+  }
+
   @POST
   @Path("/save")
   @Produces(MediaType.APPLICATION_JSON)
-  @LeaderAwareRestController
   public CommonResponse saveConfig(
       @FormParam("remoteDataCenter") String remoteDataCenter,
       @FormParam("remoteMetaAddress") String remoteMetaAddress,
@@ -66,7 +81,6 @@ public class MultiClusterSyncResource {
           token);
       return GenericResponse.buildFailedResponse("auth check fail");
     }
-
     if (StringUtils.isBlank(remoteDataCenter) || StringUtils.isBlank(remoteMetaAddress)) {
       return CommonResponse.buildFailedResponse(
           "remoteDataCenter, remoteMetaAddress is not allow empty.");
@@ -92,7 +106,6 @@ public class MultiClusterSyncResource {
   @POST
   @Path("/sync/enable")
   @Produces(MediaType.APPLICATION_JSON)
-  @LeaderAwareRestController
   public CommonResponse syncEnable(
       @FormParam("remoteDataCenter") String remoteDataCenter,
       @FormParam("expectVersion") String expectVersion,
@@ -103,7 +116,6 @@ public class MultiClusterSyncResource {
   @POST
   @Path("/sync/disable")
   @Produces(MediaType.APPLICATION_JSON)
-  @LeaderAwareRestController
   public CommonResponse syncDisable(
       @FormParam("remoteDataCenter") String remoteDataCenter,
       @FormParam("expectVersion") String expectVersion,
@@ -152,7 +164,6 @@ public class MultiClusterSyncResource {
   @POST
   @Path("/updateMetaAddress")
   @Produces(MediaType.APPLICATION_JSON)
-  @LeaderAwareRestController
   public CommonResponse updateMetaAddress(
       @FormParam("remoteDataCenter") String remoteDataCenter,
       @FormParam("remoteMetaAddress") String remoteMetaAddress,
@@ -201,7 +212,6 @@ public class MultiClusterSyncResource {
   @POST
   @Path("/sync/dataInfoIds/add")
   @Produces(MediaType.APPLICATION_JSON)
-  @LeaderAwareRestController
   public CommonResponse addSyncDataInfoIds(
       @FormParam("remoteDataCenter") String remoteDataCenter,
       @FormParam("dataInfoIds") String dataInfoIds,
@@ -250,7 +260,6 @@ public class MultiClusterSyncResource {
   @POST
   @Path("/sync/dataInfoIds/remove")
   @Produces(MediaType.APPLICATION_JSON)
-  @LeaderAwareRestController
   public CommonResponse removeSyncDataInfoIds(
       @FormParam("remoteDataCenter") String remoteDataCenter,
       @FormParam("dataInfoIds") String dataInfoIds,
@@ -298,7 +307,6 @@ public class MultiClusterSyncResource {
   @POST
   @Path("/sync/group/add")
   @Produces(MediaType.APPLICATION_JSON)
-  @LeaderAwareRestController
   public CommonResponse addSyncGroup(
       @FormParam("remoteDataCenter") String remoteDataCenter,
       @FormParam("group") String group,
@@ -347,7 +355,6 @@ public class MultiClusterSyncResource {
   @POST
   @Path("/sync/group/remove")
   @Produces(MediaType.APPLICATION_JSON)
-  @LeaderAwareRestController
   public CommonResponse removeSyncGroup(
       @FormParam("remoteDataCenter") String remoteDataCenter,
       @FormParam("group") String group,
@@ -396,7 +403,6 @@ public class MultiClusterSyncResource {
   @POST
   @Path("/ignore/dataInfoIds/add")
   @Produces(MediaType.APPLICATION_JSON)
-  @LeaderAwareRestController
   public CommonResponse addIgnoreDataInfoIds(
       @FormParam("remoteDataCenter") String remoteDataCenter,
       @FormParam("dataInfoIds") String dataInfoIds,
@@ -445,7 +451,6 @@ public class MultiClusterSyncResource {
   @POST
   @Path("/ignore/dataInfoIds/remove")
   @Produces(MediaType.APPLICATION_JSON)
-  @LeaderAwareRestController
   public CommonResponse removeIgnoreDataInfoIds(
       @FormParam("remoteDataCenter") String remoteDataCenter,
       @FormParam("dataInfoIds") String dataInfoIds,
@@ -494,7 +499,6 @@ public class MultiClusterSyncResource {
   @POST
   @Path("/remove")
   @Produces(MediaType.APPLICATION_JSON)
-  @LeaderAwareRestController
   public CommonResponse removeConfig(
       @FormParam("remoteDataCenter") String remoteDataCenter,
       @FormParam("expectVersion") String expectVersion,

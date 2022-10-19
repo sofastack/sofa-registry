@@ -97,7 +97,7 @@ public class DataSlotDiffSyncResultTest {
     // delete "c"
     Assert.assertTrue(result.getRemovedDataInfoIds().size() == 1);
     Assert.assertTrue(result.getRemovedDataInfoIds().contains("c"));
-    DataSlotDiffUtils.logDiffResult(result, 10, LOG);
+    DataSlotDiffUtils.logDiffResult("testDC", result, 10, LOG);
   }
 
   @Test
@@ -180,7 +180,7 @@ public class DataSlotDiffSyncResultTest {
     Assert.assertEquals(result.getUpdatedPublishers().get("c").get(0), modifyC);
     Assert.assertEquals(result.getUpdatedPublishers().get("d").get(0), addD);
 
-    DataSlotDiffUtils.logDiffResult(result, 10, LOG);
+    DataSlotDiffUtils.logDiffResult("testDC", result, 10, LOG);
 
     // reach max
     result = DataSlotDiffUtils.diffPublishersResult(summaryMap.values(), publishers, 1, ACCEPT_ALL);
@@ -203,7 +203,7 @@ public class DataSlotDiffSyncResultTest {
       Assert.assertEquals(result.getUpdatedPublishers().get("d").size(), 1);
       Assert.assertEquals(result.getUpdatedPublishers().get("d").get(0), addD);
     }
-    DataSlotDiffUtils.logDiffResult(result, 10, LOG);
+    DataSlotDiffUtils.logDiffResult("testDC", result, 10, LOG);
   }
 
   private static void checkAddedPublisher(

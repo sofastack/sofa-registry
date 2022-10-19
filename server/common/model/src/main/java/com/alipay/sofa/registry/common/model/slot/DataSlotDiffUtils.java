@@ -106,7 +106,7 @@ public final class DataSlotDiffUtils {
 
         // filter publishers
         if (!acceptorManager.accept(
-            SyncAcceptorRequest.buildRequest(p.getValue().getPublishSource()))) {
+            SyncAcceptorRequest.buildRequest(dataInfoId, p.getValue().getPublishSource()))) {
           continue;
         }
         final String registerId = p.getKey();
@@ -137,11 +137,13 @@ public final class DataSlotDiffUtils {
     return result;
   }
 
-  public static void logDiffResult(DataSlotDiffPublisherResult result, int slotId, Logger logger) {
+  public static void logDiffResult(
+      String requestDataCenter, DataSlotDiffPublisherResult result, int slotId, Logger logger) {
     if (!result.isEmpty()) {
 
       logger.info(
-          "DiffPublisher, slotId={}, remain={}, update={}/{}, remove={}/{}, removes={}",
+          "DiffPublisher, requestDataCenter={}, slotId={}, remain={}, update={}/{}, remove={}/{}, removes={}",
+          requestDataCenter,
           slotId,
           result.isHasRemain(),
           result.getUpdatedPublishers().size(),
@@ -152,10 +154,12 @@ public final class DataSlotDiffUtils {
     }
   }
 
-  public static void logDiffResult(DataSlotDiffDigestResult result, int slotId, Logger logger) {
+  public static void logDiffResult(
+      String requestDataCenter, DataSlotDiffDigestResult result, int slotId, Logger logger) {
     if (!result.isEmpty()) {
       logger.info(
-          "DiffDigest, slotId={}, update={}, add={}, remove={}, adds={}, removes={}",
+          "DiffDigest, requestDataCenter={}, slotId={}, update={}, add={}, remove={}, adds={}, removes={}",
+          requestDataCenter,
           slotId,
           result.getUpdatedDataInfoIds().size(),
           result.getAddedDataInfoIds().size(),

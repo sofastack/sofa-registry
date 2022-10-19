@@ -51,7 +51,8 @@ public class DatumBiConsumer {
       }
 
       publisherGroup.foreach(
-          publisherGroupBiConsumer(publisherVersions, sessions, syncSlotAcceptorManager));
+          publisherGroupBiConsumer(
+              dataInfoId, publisherVersions, sessions, syncSlotAcceptorManager));
       Map<String, DatumSummary> sessionSummary = Maps.newHashMapWithExpectedSize(sessions.size());
 
       for (Entry<String, Map<String, RegisterVersion>> entry : publisherVersions.entrySet()) {
@@ -69,6 +70,7 @@ public class DatumBiConsumer {
   }
 
   public static BiConsumer<String, PublisherEnvelope> publisherGroupBiConsumer(
+      String dataInfoId,
       Map<String, Map<String, RegisterVersion>> publisherVersions,
       Set<String> sessions,
       SyncSlotAcceptorManager syncSlotAcceptorManager) {
@@ -82,7 +84,8 @@ public class DatumBiConsumer {
       // v = null when envelope is unpub
       if (v == null
           || !syncSlotAcceptorManager.accept(
-              SyncAcceptorRequest.buildRequest(envelope.getPublisher().getPublishSource()))) {
+              SyncAcceptorRequest.buildRequest(
+                  dataInfoId, envelope.getPublisher().getPublishSource()))) {
         return;
       }
 
@@ -101,7 +104,8 @@ public class DatumBiConsumer {
 
       Map<String /*registerId*/, RegisterVersion> publisherVersions =
           Maps.newHashMapWithExpectedSize(publisherGroup.pubSize());
-      publisherGroup.foreach(publisherGroupBiConsumer(publisherVersions, syncSlotAcceptorManager));
+      publisherGroup.foreach(
+          publisherGroupBiConsumer(dataInfoId, publisherVersions, syncSlotAcceptorManager));
       DatumSummary summary = new DatumSummary(dataInfoId, publisherVersions);
       if (!summary.isEmpty()) {
         summaries.put(dataInfoId, summary);
@@ -110,6 +114,7 @@ public class DatumBiConsumer {
   }
 
   public static BiConsumer<String, PublisherEnvelope> publisherGroupBiConsumer(
+      String dataInfoId,
       Map<String, RegisterVersion> publisherVersions,
       SyncSlotAcceptorManager syncSlotAcceptorManager) {
     return (registerId, envelope) -> {
@@ -117,7 +122,8 @@ public class DatumBiConsumer {
       // v = null when envelope is unpub
       if (v == null
           || !syncSlotAcceptorManager.accept(
-              SyncAcceptorRequest.buildRequest(envelope.getPublisher().getPublishSource()))) {
+              SyncAcceptorRequest.buildRequest(
+                  dataInfoId, envelope.getPublisher().getPublishSource()))) {
         return;
       }
       publisherVersions.put(registerId, v);

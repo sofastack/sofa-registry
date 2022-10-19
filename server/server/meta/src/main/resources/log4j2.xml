@@ -511,6 +511,7 @@
             <ThresholdFilter level="ERROR" onMatch="DENY" onMismatch="NEUTRAL"/>
             <Policies>
                 <TimeBasedTriggeringPolicy/>
+                <SizeBasedTriggeringPolicy size="256MB"/>
             </Policies>
             <DefaultRolloverStrategy max="3">
                 <Delete basePath="${META_LOG_HOME}" maxDepth="2">
@@ -526,6 +527,7 @@
             <ThresholdFilter level="ERROR" onMatch="DENY" onMismatch="NEUTRAL"/>
             <Policies>
                 <TimeBasedTriggeringPolicy/>
+                <SizeBasedTriggeringPolicy size="256MB"/>
             </Policies>
             <DefaultRolloverStrategy max="3">
                 <Delete basePath="${META_LOG_HOME}" maxDepth="2">
@@ -541,6 +543,7 @@
             <ThresholdFilter level="ERROR" onMatch="DENY" onMismatch="NEUTRAL"/>
             <Policies>
                 <TimeBasedTriggeringPolicy/>
+                <SizeBasedTriggeringPolicy size="256MB"/>
             </Policies>
             <DefaultRolloverStrategy max="3">
                 <Delete basePath="${META_LOG_HOME}" maxDepth="2">

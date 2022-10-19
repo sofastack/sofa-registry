@@ -27,6 +27,8 @@ public class SubscriberRegister extends BaseRegister {
 
   private String acceptEncoding;
 
+  private boolean acceptMulti;
+
   /**
    * Getter method for property <tt>scope</tt>.
    *
@@ -45,14 +47,32 @@ public class SubscriberRegister extends BaseRegister {
     this.scope = scope;
   }
 
+  public boolean acceptMulti() {
+    return this.acceptMulti;
+  }
+
   /**
-   * To string string.
+   * Setter method for property <tt>acceptMulti</tt>.
    *
-   * @return the string
+   * @param acceptMulti value to be assigned to property acceptMulti
    */
+  public void setAcceptMulti(boolean acceptMulti) {
+    this.acceptMulti = acceptMulti;
+  }
+
   @Override
   public String toString() {
-    return "SubscriberRegister{" + "scope='" + scope + '\'' + '}' + super.toString();
+    return "SubscriberRegister{"
+        + "scope='"
+        + scope
+        + '\''
+        + ", acceptEncoding='"
+        + acceptEncoding
+        + '\''
+        + ", acceptMulti="
+        + acceptMulti
+        + '}'
+        + super.toString();
   }
 
   public String getAcceptEncoding() {

@@ -112,6 +112,7 @@ public final class ReceivedDataConverter {
     receivedData.setSubscriberRegistIds(subscriberRegisterIdList);
     receivedData.setScope(scope.name());
     receivedData.setLocalZone(regionLocal);
+    receivedData.setLocalSegment(localDataCenter);
 
     Map<String, DataCenterPushInfo> dataCenterPushInfo =
         fillMultiRegionData(
@@ -140,7 +141,7 @@ public final class ReceivedDataConverter {
               subDatum,
               pushdataPredicate,
               segmentZones.get(pushDataCenter));
-      if (CollectionUtils.isEmpty(multiDatas)) {
+      if (CollectionUtils.isEmpty(multiSegmentDatas)) {
         continue;
       }
 

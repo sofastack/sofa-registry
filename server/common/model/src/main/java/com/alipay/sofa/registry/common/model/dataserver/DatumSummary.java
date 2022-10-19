@@ -53,7 +53,7 @@ public class DatumSummary implements Serializable {
     for (Map.Entry<String, Publisher> e : publisherMap.entrySet()) {
       // filter publisher
       if (!acceptorManager.accept(
-          SyncAcceptorRequest.buildRequest(e.getValue().getPublishSource()))) {
+          SyncAcceptorRequest.buildRequest(dataInfoId, e.getValue().getPublishSource()))) {
         continue;
       }
 

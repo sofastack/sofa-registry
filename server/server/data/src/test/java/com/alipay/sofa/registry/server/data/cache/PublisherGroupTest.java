@@ -288,7 +288,7 @@ public class PublisherGroupTest {
 
     group.foreach(
         DatumBiConsumer.publisherGroupBiConsumer(
-            sessionPubVersions, Sets.newHashSet(sessionIp), ACCEPT_ALL));
+            publisher.getDataInfoId(), sessionPubVersions, Sets.newHashSet(sessionIp), ACCEPT_ALL));
     for (Entry<String, Map<String, RegisterVersion>> entry : sessionPubVersions.entrySet()) {
       sessionSummary.put(entry.getKey(), new DatumSummary(group.dataInfoId, entry.getValue()));
     }
@@ -305,7 +305,7 @@ public class PublisherGroupTest {
     sessionPubVersions = Maps.newHashMap();
     group.foreach(
         DatumBiConsumer.publisherGroupBiConsumer(
-            sessionPubVersions, Sets.newHashSet(sessionIp), ACCEPT_ALL));
+            publisher.getDataInfoId(), sessionPubVersions, Sets.newHashSet(sessionIp), ACCEPT_ALL));
     for (Entry<String, Map<String, RegisterVersion>> entry : sessionPubVersions.entrySet()) {
       sessionSummary.put(entry.getKey(), new DatumSummary(group.dataInfoId, entry.getValue()));
     }
@@ -331,7 +331,7 @@ public class PublisherGroupTest {
     sessionPubVersions = Maps.newHashMap();
     group.foreach(
         DatumBiConsumer.publisherGroupBiConsumer(
-            sessionPubVersions, Sets.newHashSet(sessionIp), ACCEPT_ALL));
+            publisher.getDataInfoId(), sessionPubVersions, Sets.newHashSet(sessionIp), ACCEPT_ALL));
     for (Entry<String, Map<String, RegisterVersion>> entry : sessionPubVersions.entrySet()) {
       sessionSummary.put(entry.getKey(), new DatumSummary(group.dataInfoId, entry.getValue()));
     }
@@ -339,7 +339,9 @@ public class PublisherGroupTest {
     Assert.assertEquals(summary.getPublisherVersions().size(), 2);
 
     Map<String, RegisterVersion> publisherVersions = Maps.newHashMap();
-    group.foreach(DatumBiConsumer.publisherGroupBiConsumer(publisherVersions, ACCEPT_ALL));
+    group.foreach(
+        DatumBiConsumer.publisherGroupBiConsumer(
+            publisher.getDataInfoId(), publisherVersions, ACCEPT_ALL));
     summary = new DatumSummary(group.dataInfoId, publisherVersions);
 
     Assert.assertEquals(summary.getPublisherVersions().size(), 2);
@@ -371,7 +373,7 @@ public class PublisherGroupTest {
     sessionPubVersions = Maps.newHashMap();
     group.foreach(
         DatumBiConsumer.publisherGroupBiConsumer(
-            sessionPubVersions, Sets.newHashSet(sessionIp), ACCEPT_ALL));
+            publisher.getDataInfoId(), sessionPubVersions, Sets.newHashSet(sessionIp), ACCEPT_ALL));
     for (Entry<String, Map<String, RegisterVersion>> entry : sessionPubVersions.entrySet()) {
       sessionSummary.put(entry.getKey(), new DatumSummary(dataId, entry.getValue()));
     }

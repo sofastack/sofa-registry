@@ -19,17 +19,27 @@ package com.alipay.sofa.registry.server.session.converter;
 import com.alipay.sofa.registry.common.model.ServerDataBox;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.common.model.store.MultiSubDatum;
+import com.alipay.sofa.registry.common.model.store.PushData;
 import com.alipay.sofa.registry.common.model.store.SubDatum;
 import com.alipay.sofa.registry.common.model.store.SubPublisher;
 import com.alipay.sofa.registry.core.model.DataBox;
+import com.alipay.sofa.registry.core.model.MultiReceivedData;
+import com.alipay.sofa.registry.core.model.MultiSegmentData;
 import com.alipay.sofa.registry.core.model.ReceivedConfigData;
 import com.alipay.sofa.registry.core.model.ReceivedData;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.server.session.TestUtils;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfigBean;
 import com.alipay.sofa.registry.server.session.predicate.ZonePredicate;
+import com.alipay.sofa.registry.util.ParaCheckUtil;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.function.Predicate;
+import org.apache.commons.lang.StringUtils;
+import org.assertj.core.util.Sets;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -95,6 +105,82 @@ public class ReceivedDataConverterTest {
     Assert.assertEquals(data.getInstanceId(), dataInfo.getInstanceId());
     Assert.assertEquals(data.getVersion().longValue(), 100);
     Assert.assertEquals(data.getDataBox().getData(), dataBox.extract());
+  }
+
+  @Test
+  public void testGetMultiReceivedData() {
+    MultiSubDatum multiSubDatum = TestUtils.newMultiSubDatum("testGetMultiReceivedData", 3, 3);
+    Entry<String, SubDatum> first =
+        multiSubDatum.getDatumMap().entrySet().stream().findFirst().get();
+    String localDataCenter = first.getKey();
+    String localZone = "localZone";
+
+    String invalidForeverZones =
+        first.getValue().mustGetPublishers().stream().findFirst().get().getCell();
+    SessionServerConfigBean sessionServerConfig =
+        TestUtils.newSessionConfig(localDataCenter, localZone);
+
+    Predicate<String> pushDataPredicate =
+        ZonePredicate.pushDataPredicate(
+            multiSubDatum.getDataId(), localZone, ScopeEnum.global, sessionServerConfig);
+    Map<String, Set<String>> segmentZones = com.google.common.collect.Maps.newHashMap();
+    for (Entry<String, SubDatum> entry : multiSubDatum.getDatumMap().entrySet()) {
+      Set<String> cells = Sets.newHashSet();
+      for (SubPublisher pub : entry.getValue().mustGetPublishers()) {
+        cells.add(pub.getCell());
+      }
+      segmentZones.put(entry.getKey(), cells);
+    }
+
+    PushData<MultiReceivedData> pushData =
+        ReceivedDataConverter.getMultiReceivedData(
+            multiSubDatum,
+            ScopeEnum.global,
+            com.google.common.collect.Lists.newArrayList("aaa"),
+            localZone,
+            localDataCenter,
+            pushDataPredicate,
+            segmentZones);
+
+    Assert.assertEquals(7, pushData.getPayload().getMultiData().size());
+    for (Entry<String, MultiSegmentData> entry : pushData.getPayload().getMultiData().entrySet()) {
+      if (StringUtils.equals(entry.getKey(), localDataCenter)) {
+        ParaCheckUtil.checkEquals(entry.getValue().getDataCount().size(), 3, "zoneCount");
+        entry
+            .getValue()
+            .getDataCount()
+            .values()
+            .forEach(count -> ParaCheckUtil.checkEquals(count, 1, "pubCount"));
+      } else {
+        ParaCheckUtil.checkEquals(entry.getValue().getDataCount().size(), 1, "zoneCount");
+        ParaCheckUtil.checkEquals(
+            entry.getValue().getDataCount().values().stream().findFirst().get(), 1, "pubCount");
+      }
+    }
+  }
+
+  @Test
+  public void testGetMultiReceivedDataWithInvalidForeverZone() {
+
+    PushData<MultiReceivedData> pushData =
+        TestUtils.createPushData("testGetMultiReceivedDataWithInvalidForeverZone", 3, 3);
+    String localDataCenter = pushData.getPayload().getLocalSegment();
+
+    Assert.assertEquals(8, pushData.getPayload().getMultiData().size());
+    for (Entry<String, MultiSegmentData> entry : pushData.getPayload().getMultiData().entrySet()) {
+      if (StringUtils.equals(entry.getKey(), localDataCenter)) {
+        ParaCheckUtil.checkEquals(entry.getValue().getDataCount().size(), 2, "zoneCount");
+        entry
+            .getValue()
+            .getDataCount()
+            .values()
+            .forEach(count -> ParaCheckUtil.checkEquals(count, 1, "pubCount"));
+      } else {
+        ParaCheckUtil.checkEquals(entry.getValue().getDataCount().size(), 1, "zoneCount");
+        ParaCheckUtil.checkEquals(
+            entry.getValue().getDataCount().values().stream().findFirst().get(), 1, "pubCount");
+      }
+    }
   }
 
   private void assertReceivedData(
