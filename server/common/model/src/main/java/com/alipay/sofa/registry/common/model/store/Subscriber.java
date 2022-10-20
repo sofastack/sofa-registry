@@ -82,6 +82,15 @@ public class Subscriber extends BaseInfo {
   }
 
   /**
+   * Getter method for property <tt>lastPushContexts</tt>.
+   *
+   * @return property value of lastPushContexts
+   */
+  public Map<String, PushContext> getLastPushContexts() {
+    return lastPushContexts;
+  }
+
+  /**
    * Setter method for property <tt>acceptMulti</tt>.
    *
    * @param acceptMulti value to be assigned to property acceptMulti
@@ -385,6 +394,51 @@ public class Subscriber extends BaseInfo {
           lastMaxPushVersion,
           pushedNum,
           emptyVersion);
+    }
+
+    /**
+     * Getter method for property <tt>pushedVersion</tt>.
+     *
+     * @return property value of pushedVersion
+     */
+    public long getPushedVersion() {
+      return pushedVersion;
+    }
+
+    /**
+     * Getter method for property <tt>lastMaxPushVersion</tt>.
+     *
+     * @return property value of lastMaxPushVersion
+     */
+    public long getLastMaxPushVersion() {
+      return lastMaxPushVersion;
+    }
+
+    /**
+     * Getter method for property <tt>lastPushVersion</tt>.
+     *
+     * @return property value of lastPushVersion
+     */
+    public long getLastPushVersion() {
+      return lastPushVersion;
+    }
+
+    /**
+     * Getter method for property <tt>emptyVersion</tt>.
+     *
+     * @return property value of emptyVersion
+     */
+    public long getEmptyVersion() {
+      return emptyVersion;
+    }
+
+    /**
+     * Getter method for property <tt>pushedNum</tt>.
+     *
+     * @return property value of pushedNum
+     */
+    public int getPushedNum() {
+      return pushedNum;
     }
   }
 }

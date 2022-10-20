@@ -400,7 +400,8 @@ public class SessionRegistry implements Registry {
                       Map<String, DatumVersion> vers = selectSubscriber.versions.get(dataCenter);
                       List<Subscriber> pushEmpty = selectSubscriber.toPushEmpty.get(dataCenter);
                       SCAN_VER_LOGGER.info(
-                          "[scan]round={}, interestSize={}, pushEmptySize={}",
+                          "[scan]dataCenter={}, round={}, interestSize={}, pushEmptySize={}",
+                          dataCenter,
                           round,
                           vers.size(),
                           pushEmpty.size(),

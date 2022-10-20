@@ -163,8 +163,9 @@ public class DataNodeServiceImpl implements DataNodeService {
               return callbackExecutor;
             }
           };
+      final Slot localSlot = getSlot(sessionServerConfig.getSessionServerDataCenter(), slotId);
       Request<GetDataVersionRequest> getDataVersionRequestRequest =
-          new SimpleRequest<>(request, getUrl(slot), handler);
+          new SimpleRequest<>(request, getUrl(localSlot), handler);
       Response response = dataNodeExchanger.request(getDataVersionRequestRequest);
       Response.ResultStatus result = (Response.ResultStatus) response.getResult();
       if (result != Response.ResultStatus.SUCCESSFUL) {

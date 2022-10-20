@@ -16,8 +16,21 @@
  */
 package com.alipay.sofa.registry.util;
 
+import org.junit.Assert;
+import org.junit.Test;
+
 /**
  * @author xiaojian.xj
  * @version : AtomicMapTest.java, v 0.1 2022年08月03日 17:50 xiaojian.xj Exp $
  */
-public class AtomicMapTest {}
+public class AtomicMapTest {
+  @Test
+  public void test() {
+    AtomicMap<String, String> map = new AtomicMap();
+    map.put("a", "1");
+    map.put("b", "2");
+
+    Assert.assertEquals(2, map.getAndReset().size());
+    Assert.assertEquals(0, map.getAndReset().size());
+  }
+}

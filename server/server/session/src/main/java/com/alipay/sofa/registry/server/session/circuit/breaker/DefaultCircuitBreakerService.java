@@ -158,14 +158,20 @@ public class DefaultCircuitBreakerService implements CircuitBreakerService {
       }
     }
 
-    if (!subscriber.checkAndUpdateCtx(versions, pushNums)) {
+    if (subscriber.checkAndUpdateCtx(versions, pushNums)) {
+      LOGGER.info(
+          "PushY, checkAndUpdateCtx onPushSuccess, {}, {}, versions={}",
+          subscriber.getDataInfoId(),
+          address,
+          versions);
+      return true;
+    } else {
       LOGGER.info(
           "PushN, failed to checkAndUpdateCtx onPushSuccess, {}, {}",
           subscriber.getDataInfoId(),
           address);
       return false;
     }
-    return true;
   }
 
   /**
