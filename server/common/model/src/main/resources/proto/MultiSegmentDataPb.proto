@@ -7,11 +7,10 @@ import "DataBoxesPb.proto";
 
 message MultiSegmentDataPb {
 
-    string segment = 1;
-    bytes zipData = 2;
-    map<string, DataBoxesPb> unzipData = 3;
-    string encoding = 4;
-    int64 version = 5;
-    map<string, int32> pushDataCount = 6;
+  string segment = 1;
+  bytes zipData = 2;
+  map<string, DataBoxesPb> unzipData = 3;
+  string encoding = 4;
+  int64 version = 5;
+  map<string, int32> pushDataCount = 6;
 }
-

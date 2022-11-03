@@ -25,9 +25,11 @@ import com.alipay.sofa.registry.core.model.ReceivedConfigData;
 import com.alipay.sofa.registry.core.model.ReceivedData;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.alipay.sofa.registry.util.SystemUtils;
+import com.google.common.collect.Maps;
 import com.google.protobuf.UnsafeByteOperations;
 import java.util.*;
 import java.util.Map.Entry;
+import org.springframework.util.CollectionUtils;
 
 /**
  * @author bystander
@@ -63,6 +65,43 @@ public final class ReceivedDataConvertor {
     receivedData.setVersion(receivedDataPb.getVersion());
 
     return receivedData;
+  }
+
+  public static MultiReceivedData convert2MultiJava(MultiReceivedDataPb multiReceivedDataPb) {
+    if (multiReceivedDataPb == null) {
+      return null;
+    }
+    MultiReceivedData multiReceivedData = new MultiReceivedData();
+    multiReceivedData.setDataId(multiReceivedDataPb.getDataId());
+    multiReceivedData.setInstanceId(multiReceivedDataPb.getInstanceId());
+    multiReceivedData.setGroup(multiReceivedDataPb.getGroup());
+    multiReceivedData.setScope(multiReceivedDataPb.getScope());
+    multiReceivedData.setSubscriberRegistIds(
+        ListStringConvertor.convert2Java(multiReceivedDataPb.getSubscriberRegistIdsList()));
+    multiReceivedData.setLocalSegment(multiReceivedDataPb.getLocalSegment());
+    multiReceivedData.setLocalZone(multiReceivedDataPb.getLocalZone());
+
+    if (CollectionUtils.isEmpty(multiReceivedDataPb.getMultiDataMap())) {
+      multiReceivedData.setMultiData(Collections.EMPTY_MAP);
+    } else {
+      Map<String, MultiSegmentData> multiData =
+          Maps.newHashMapWithExpectedSize(multiReceivedDataPb.getMultiDataMap().size());
+      for (Entry<String, MultiSegmentDataPb> entry :
+          multiReceivedDataPb.getMultiDataMap().entrySet()) {
+        MultiSegmentDataPb multiSegmentDataPb = entry.getValue();
+        MultiSegmentData multiSegmentData = new MultiSegmentData();
+        multiSegmentData.setSegment(multiSegmentDataPb.getSegment());
+        multiSegmentData.setUnzipData(
+            DataBoxConvertor.convert2JavaMaps(multiSegmentDataPb.getUnzipDataMap()));
+        multiSegmentData.setEncoding(multiSegmentDataPb.getEncoding());
+        multiSegmentData.setVersion(multiSegmentDataPb.getVersion());
+        multiSegmentData.setDataCount(multiSegmentDataPb.getPushDataCountMap());
+        multiData.put(entry.getKey(), multiSegmentData);
+      }
+
+      multiReceivedData.setMultiData(multiData);
+    }
+    return multiReceivedData;
   }
 
   public static MultiReceivedDataPb convert2MultiPb(

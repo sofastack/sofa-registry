@@ -6,15 +6,15 @@ option go_package = "proto";
 import "MultiSegmentDataPb.proto";
 
 message MultiReceivedDataPb {
-    string dataId = 1;
-    string group = 2;
-    string instanceId = 3;
-    string scope = 4;
-    repeated string subscriberRegistIds = 5;
+  string dataId = 1;
+  string group = 2;
+  string instanceId = 3;
+  string scope = 4;
+  repeated string subscriberRegistIds = 5;
 
-    string localSegment = 6;
-    string localZone = 7;
+  string localSegment = 6;
+  string localZone = 7;
 
-    map<string, MultiSegmentDataPb> multiData = 8;
+  map<string, MultiSegmentDataPb> multiData = 8;
 }
 

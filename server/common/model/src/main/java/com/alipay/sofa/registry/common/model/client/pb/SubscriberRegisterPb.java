@@ -261,13 +261,13 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
 
   @java.lang.Override
   public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
-    if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(scope_)) {
+    if (!getScopeBytes().isEmpty()) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 1, scope_);
     }
     if (baseRegister_ != null) {
       output.writeMessage(2, getBaseRegister());
     }
-    if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(acceptEncoding_)) {
+    if (!getAcceptEncodingBytes().isEmpty()) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 3, acceptEncoding_);
     }
     if (acceptMulti_ != false) {
@@ -282,13 +282,13 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
     if (size != -1) return size;
 
     size = 0;
-    if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(scope_)) {
+    if (!getScopeBytes().isEmpty()) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, scope_);
     }
     if (baseRegister_ != null) {
       size += com.google.protobuf.CodedOutputStream.computeMessageSize(2, getBaseRegister());
     }
-    if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(acceptEncoding_)) {
+    if (!getAcceptEncodingBytes().isEmpty()) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, acceptEncoding_);
     }
     if (acceptMulti_ != false) {

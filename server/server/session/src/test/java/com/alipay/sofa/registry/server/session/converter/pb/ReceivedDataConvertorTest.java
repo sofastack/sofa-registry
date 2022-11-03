@@ -128,6 +128,17 @@ public class ReceivedDataConvertorTest {
   }
 
   @Test
+  public void testMultiReceivedData() {
+    PushData<MultiReceivedData> pushData = TestUtils.createPushData("testConvert2MultiPb", 3, 3);
+    MultiReceivedData receivedDataJava = pushData.getPayload();
+    MultiReceivedDataPb multiReceivedDataPb =
+        ReceivedDataConvertor.convert2MultiPb(receivedDataJava, data -> null);
+    MultiReceivedData convertJava = ReceivedDataConvertor.convert2MultiJava(multiReceivedDataPb);
+
+    assertMultiReceivedData(receivedDataJava, convertJava);
+  }
+
+  @Test
   public void testConvert2MultiPb() {
 
     PushData<MultiReceivedData> pushData = TestUtils.createPushData("testConvert2MultiPb", 3, 3);
@@ -172,6 +183,27 @@ public class ReceivedDataConvertorTest {
       Assert.assertEquals(multiSegmentData.getVersion(), multiSegmentDataPb.getVersion());
       Assert.assertEquals(
           multiSegmentData.getDataCount(), multiSegmentDataPb.getPushDataCountMap());
+    }
+  }
+
+  private void assertMultiReceivedData(
+      MultiReceivedData receivedData, MultiReceivedData convertJava) {
+    Assert.assertEquals(receivedData.getMultiData().size(), convertJava.getMultiData().size());
+    Assert.assertEquals(receivedData.getDataId(), convertJava.getDataId());
+    Assert.assertEquals(receivedData.getGroup(), convertJava.getGroup());
+    Assert.assertEquals(receivedData.getScope(), convertJava.getScope());
+    Assert.assertEquals(receivedData.getInstanceId(), convertJava.getInstanceId());
+    Assert.assertEquals(receivedData.getLocalZone(), convertJava.getLocalZone());
+    Assert.assertEquals(receivedData.getLocalSegment(), convertJava.getLocalSegment());
+    Assert.assertEquals(
+        receivedData.getSubscriberRegistIds().size(), convertJava.getSubscriberRegistIds().size());
+
+    for (Entry<String, MultiSegmentData> entry : convertJava.getMultiData().entrySet()) {
+      MultiSegmentData convertSegmentData = entry.getValue();
+      MultiSegmentData multiSegmentData = receivedData.getMultiData().get(entry.getKey());
+      Assert.assertEquals(convertSegmentData.getSegment(), multiSegmentData.getSegment());
+      Assert.assertEquals(convertSegmentData.getVersion(), multiSegmentData.getVersion());
+      Assert.assertEquals(convertSegmentData.getDataCount(), multiSegmentData.getDataCount());
     }
   }
 }

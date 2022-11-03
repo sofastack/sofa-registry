@@ -486,7 +486,7 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
   @java.lang.Override
   public boolean containsData(java.lang.String key) {
     if (key == null) {
-      throw new NullPointerException("map key");
+      throw new java.lang.NullPointerException();
     }
     return internalGetData().getMap().containsKey(key);
   }
@@ -511,7 +511,7 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
       java.lang.String key,
       com.alipay.sofa.registry.common.model.client.pb.DataBoxesPb defaultValue) {
     if (key == null) {
-      throw new NullPointerException("map key");
+      throw new java.lang.NullPointerException();
     }
     java.util.Map<java.lang.String, com.alipay.sofa.registry.common.model.client.pb.DataBoxesPb>
         map = internalGetData().getMap();
@@ -522,7 +522,7 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
   public com.alipay.sofa.registry.common.model.client.pb.DataBoxesPb getDataOrThrow(
       java.lang.String key) {
     if (key == null) {
-      throw new NullPointerException("map key");
+      throw new java.lang.NullPointerException();
     }
     java.util.Map<java.lang.String, com.alipay.sofa.registry.common.model.client.pb.DataBoxesPb>
         map = internalGetData().getMap();
@@ -673,7 +673,7 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
   @java.lang.Override
   public boolean containsPushDataCount(java.lang.String key) {
     if (key == null) {
-      throw new NullPointerException("map key");
+      throw new java.lang.NullPointerException();
     }
     return internalGetPushDataCount().getMap().containsKey(key);
   }
@@ -692,7 +692,7 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
   @java.lang.Override
   public int getPushDataCountOrDefault(java.lang.String key, int defaultValue) {
     if (key == null) {
-      throw new NullPointerException("map key");
+      throw new java.lang.NullPointerException();
     }
     java.util.Map<java.lang.String, java.lang.Integer> map = internalGetPushDataCount().getMap();
     return map.containsKey(key) ? map.get(key) : defaultValue;
@@ -701,7 +701,7 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
   @java.lang.Override
   public int getPushDataCountOrThrow(java.lang.String key) {
     if (key == null) {
-      throw new NullPointerException("map key");
+      throw new java.lang.NullPointerException();
     }
     java.util.Map<java.lang.String, java.lang.Integer> map = internalGetPushDataCount().getMap();
     if (!map.containsKey(key)) {
@@ -724,19 +724,19 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
 
   @java.lang.Override
   public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
-    if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(dataId_)) {
+    if (!getDataIdBytes().isEmpty()) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 1, dataId_);
     }
-    if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(group_)) {
+    if (!getGroupBytes().isEmpty()) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 2, group_);
     }
-    if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(instanceId_)) {
+    if (!getInstanceIdBytes().isEmpty()) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 3, instanceId_);
     }
-    if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(segment_)) {
+    if (!getSegmentBytes().isEmpty()) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 4, segment_);
     }
-    if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(scope_)) {
+    if (!getScopeBytes().isEmpty()) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 5, scope_);
     }
     for (int i = 0; i < subscriberRegistIds_.size(); i++) {
@@ -747,10 +747,10 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
     if (version_ != 0L) {
       output.writeInt64(8, version_);
     }
-    if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(localZone_)) {
+    if (!getLocalZoneBytes().isEmpty()) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 9, localZone_);
     }
-    if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(encoding_)) {
+    if (!getEncodingBytes().isEmpty()) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 10, encoding_);
     }
     if (!body_.isEmpty()) {
@@ -770,19 +770,19 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
     if (size != -1) return size;
 
     size = 0;
-    if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(dataId_)) {
+    if (!getDataIdBytes().isEmpty()) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, dataId_);
     }
-    if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(group_)) {
+    if (!getGroupBytes().isEmpty()) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, group_);
     }
-    if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(instanceId_)) {
+    if (!getInstanceIdBytes().isEmpty()) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, instanceId_);
     }
-    if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(segment_)) {
+    if (!getSegmentBytes().isEmpty()) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, segment_);
     }
-    if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(scope_)) {
+    if (!getScopeBytes().isEmpty()) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(5, scope_);
     }
     {
@@ -809,10 +809,10 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
     if (version_ != 0L) {
       size += com.google.protobuf.CodedOutputStream.computeInt64Size(8, version_);
     }
-    if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(localZone_)) {
+    if (!getLocalZoneBytes().isEmpty()) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(9, localZone_);
     }
-    if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(encoding_)) {
+    if (!getEncodingBytes().isEmpty()) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(10, encoding_);
     }
     if (!body_.isEmpty()) {
@@ -1798,7 +1798,7 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
     @java.lang.Override
     public boolean containsData(java.lang.String key) {
       if (key == null) {
-        throw new NullPointerException("map key");
+        throw new java.lang.NullPointerException();
       }
       return internalGetData().getMap().containsKey(key);
     }
@@ -1823,7 +1823,7 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
         java.lang.String key,
         com.alipay.sofa.registry.common.model.client.pb.DataBoxesPb defaultValue) {
       if (key == null) {
-        throw new NullPointerException("map key");
+        throw new java.lang.NullPointerException();
       }
       java.util.Map<java.lang.String, com.alipay.sofa.registry.common.model.client.pb.DataBoxesPb>
           map = internalGetData().getMap();
@@ -1834,7 +1834,7 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
     public com.alipay.sofa.registry.common.model.client.pb.DataBoxesPb getDataOrThrow(
         java.lang.String key) {
       if (key == null) {
-        throw new NullPointerException("map key");
+        throw new java.lang.NullPointerException();
       }
       java.util.Map<java.lang.String, com.alipay.sofa.registry.common.model.client.pb.DataBoxesPb>
           map = internalGetData().getMap();
@@ -1851,7 +1851,7 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
     /** <code>map&lt;string, .DataBoxesPb&gt; data = 7;</code> */
     public Builder removeData(java.lang.String key) {
       if (key == null) {
-        throw new NullPointerException("map key");
+        throw new java.lang.NullPointerException();
       }
       internalGetMutableData().getMutableMap().remove(key);
       return this;
@@ -1867,12 +1867,11 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
     public Builder putData(
         java.lang.String key, com.alipay.sofa.registry.common.model.client.pb.DataBoxesPb value) {
       if (key == null) {
-        throw new NullPointerException("map key");
+        throw new java.lang.NullPointerException();
       }
       if (value == null) {
-        throw new NullPointerException("map value");
+        throw new java.lang.NullPointerException();
       }
-
       internalGetMutableData().getMutableMap().put(key, value);
       return this;
     }
@@ -2173,7 +2172,7 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
     @java.lang.Override
     public boolean containsPushDataCount(java.lang.String key) {
       if (key == null) {
-        throw new NullPointerException("map key");
+        throw new java.lang.NullPointerException();
       }
       return internalGetPushDataCount().getMap().containsKey(key);
     }
@@ -2192,7 +2191,7 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
     @java.lang.Override
     public int getPushDataCountOrDefault(java.lang.String key, int defaultValue) {
       if (key == null) {
-        throw new NullPointerException("map key");
+        throw new java.lang.NullPointerException();
       }
       java.util.Map<java.lang.String, java.lang.Integer> map = internalGetPushDataCount().getMap();
       return map.containsKey(key) ? map.get(key) : defaultValue;
@@ -2201,7 +2200,7 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
     @java.lang.Override
     public int getPushDataCountOrThrow(java.lang.String key) {
       if (key == null) {
-        throw new NullPointerException("map key");
+        throw new java.lang.NullPointerException();
       }
       java.util.Map<java.lang.String, java.lang.Integer> map = internalGetPushDataCount().getMap();
       if (!map.containsKey(key)) {
@@ -2217,7 +2216,7 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
     /** <code>map&lt;string, int32&gt; pushDataCount = 13;</code> */
     public Builder removePushDataCount(java.lang.String key) {
       if (key == null) {
-        throw new NullPointerException("map key");
+        throw new java.lang.NullPointerException();
       }
       internalGetMutablePushDataCount().getMutableMap().remove(key);
       return this;
@@ -2230,7 +2229,7 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
     /** <code>map&lt;string, int32&gt; pushDataCount = 13;</code> */
     public Builder putPushDataCount(java.lang.String key, int value) {
       if (key == null) {
-        throw new NullPointerException("map key");
+        throw new java.lang.NullPointerException();
       }
 
       internalGetMutablePushDataCount().getMutableMap().put(key, value);

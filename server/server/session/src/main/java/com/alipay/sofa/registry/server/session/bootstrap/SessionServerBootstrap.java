@@ -411,6 +411,8 @@ public class SessionServerBootstrap {
     CustomSerializerManager.registerCustomSerializer(
         ReceivedConfigDataPb.class.getName(), serializer);
 
+    CustomSerializerManager.registerCustomSerializer(
+        MultiReceivedDataPb.class.getName(), serializer);
     SerializerManager.addSerializer(
         ProtobufSerializer.PROTOCOL_PROTOBUF, ProtobufSerializer.getInstance());
   }

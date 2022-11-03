@@ -484,7 +484,7 @@ public final class MultiReceivedDataPb extends com.google.protobuf.GeneratedMess
   @java.lang.Override
   public boolean containsMultiData(java.lang.String key) {
     if (key == null) {
-      throw new NullPointerException("map key");
+      throw new java.lang.NullPointerException();
     }
     return internalGetMultiData().getMap().containsKey(key);
   }
@@ -509,7 +509,7 @@ public final class MultiReceivedDataPb extends com.google.protobuf.GeneratedMess
       java.lang.String key,
       com.alipay.sofa.registry.common.model.client.pb.MultiSegmentDataPb defaultValue) {
     if (key == null) {
-      throw new NullPointerException("map key");
+      throw new java.lang.NullPointerException();
     }
     java.util.Map<
             java.lang.String, com.alipay.sofa.registry.common.model.client.pb.MultiSegmentDataPb>
@@ -521,7 +521,7 @@ public final class MultiReceivedDataPb extends com.google.protobuf.GeneratedMess
   public com.alipay.sofa.registry.common.model.client.pb.MultiSegmentDataPb getMultiDataOrThrow(
       java.lang.String key) {
     if (key == null) {
-      throw new NullPointerException("map key");
+      throw new java.lang.NullPointerException();
     }
     java.util.Map<
             java.lang.String, com.alipay.sofa.registry.common.model.client.pb.MultiSegmentDataPb>
@@ -546,25 +546,25 @@ public final class MultiReceivedDataPb extends com.google.protobuf.GeneratedMess
 
   @java.lang.Override
   public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
-    if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(dataId_)) {
+    if (!getDataIdBytes().isEmpty()) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 1, dataId_);
     }
-    if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(group_)) {
+    if (!getGroupBytes().isEmpty()) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 2, group_);
     }
-    if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(instanceId_)) {
+    if (!getInstanceIdBytes().isEmpty()) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 3, instanceId_);
     }
-    if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(scope_)) {
+    if (!getScopeBytes().isEmpty()) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 4, scope_);
     }
     for (int i = 0; i < subscriberRegistIds_.size(); i++) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 5, subscriberRegistIds_.getRaw(i));
     }
-    if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(localSegment_)) {
+    if (!getLocalSegmentBytes().isEmpty()) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 6, localSegment_);
     }
-    if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(localZone_)) {
+    if (!getLocalZoneBytes().isEmpty()) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 7, localZone_);
     }
     com.google.protobuf.GeneratedMessageV3.serializeStringMapTo(
@@ -578,16 +578,16 @@ public final class MultiReceivedDataPb extends com.google.protobuf.GeneratedMess
     if (size != -1) return size;
 
     size = 0;
-    if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(dataId_)) {
+    if (!getDataIdBytes().isEmpty()) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, dataId_);
     }
-    if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(group_)) {
+    if (!getGroupBytes().isEmpty()) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, group_);
     }
-    if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(instanceId_)) {
+    if (!getInstanceIdBytes().isEmpty()) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, instanceId_);
     }
-    if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(scope_)) {
+    if (!getScopeBytes().isEmpty()) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, scope_);
     }
     {
@@ -598,10 +598,10 @@ public final class MultiReceivedDataPb extends com.google.protobuf.GeneratedMess
       size += dataSize;
       size += 1 * getSubscriberRegistIdsList().size();
     }
-    if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(localSegment_)) {
+    if (!getLocalSegmentBytes().isEmpty()) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(6, localSegment_);
     }
-    if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(localZone_)) {
+    if (!getLocalZoneBytes().isEmpty()) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(7, localZone_);
     }
     for (java.util.Map.Entry<
@@ -1616,7 +1616,7 @@ public final class MultiReceivedDataPb extends com.google.protobuf.GeneratedMess
     @java.lang.Override
     public boolean containsMultiData(java.lang.String key) {
       if (key == null) {
-        throw new NullPointerException("map key");
+        throw new java.lang.NullPointerException();
       }
       return internalGetMultiData().getMap().containsKey(key);
     }
@@ -1641,7 +1641,7 @@ public final class MultiReceivedDataPb extends com.google.protobuf.GeneratedMess
         java.lang.String key,
         com.alipay.sofa.registry.common.model.client.pb.MultiSegmentDataPb defaultValue) {
       if (key == null) {
-        throw new NullPointerException("map key");
+        throw new java.lang.NullPointerException();
       }
       java.util.Map<
               java.lang.String, com.alipay.sofa.registry.common.model.client.pb.MultiSegmentDataPb>
@@ -1653,7 +1653,7 @@ public final class MultiReceivedDataPb extends com.google.protobuf.GeneratedMess
     public com.alipay.sofa.registry.common.model.client.pb.MultiSegmentDataPb getMultiDataOrThrow(
         java.lang.String key) {
       if (key == null) {
-        throw new NullPointerException("map key");
+        throw new java.lang.NullPointerException();
       }
       java.util.Map<
               java.lang.String, com.alipay.sofa.registry.common.model.client.pb.MultiSegmentDataPb>
@@ -1671,7 +1671,7 @@ public final class MultiReceivedDataPb extends com.google.protobuf.GeneratedMess
     /** <code>map&lt;string, .MultiSegmentDataPb&gt; multiData = 8;</code> */
     public Builder removeMultiData(java.lang.String key) {
       if (key == null) {
-        throw new NullPointerException("map key");
+        throw new java.lang.NullPointerException();
       }
       internalGetMutableMultiData().getMutableMap().remove(key);
       return this;
@@ -1688,12 +1688,11 @@ public final class MultiReceivedDataPb extends com.google.protobuf.GeneratedMess
         java.lang.String key,
         com.alipay.sofa.registry.common.model.client.pb.MultiSegmentDataPb value) {
       if (key == null) {
-        throw new NullPointerException("map key");
+        throw new java.lang.NullPointerException();
       }
       if (value == null) {
-        throw new NullPointerException("map value");
+        throw new java.lang.NullPointerException();
       }
-
       internalGetMutableMultiData().getMutableMap().put(key, value);
       return this;
     }

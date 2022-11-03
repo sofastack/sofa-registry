@@ -255,7 +255,7 @@ public final class MultiSegmentDataPb extends com.google.protobuf.GeneratedMessa
   @java.lang.Override
   public boolean containsUnzipData(java.lang.String key) {
     if (key == null) {
-      throw new NullPointerException("map key");
+      throw new java.lang.NullPointerException();
     }
     return internalGetUnzipData().getMap().containsKey(key);
   }
@@ -280,7 +280,7 @@ public final class MultiSegmentDataPb extends com.google.protobuf.GeneratedMessa
       java.lang.String key,
       com.alipay.sofa.registry.common.model.client.pb.DataBoxesPb defaultValue) {
     if (key == null) {
-      throw new NullPointerException("map key");
+      throw new java.lang.NullPointerException();
     }
     java.util.Map<java.lang.String, com.alipay.sofa.registry.common.model.client.pb.DataBoxesPb>
         map = internalGetUnzipData().getMap();
@@ -291,7 +291,7 @@ public final class MultiSegmentDataPb extends com.google.protobuf.GeneratedMessa
   public com.alipay.sofa.registry.common.model.client.pb.DataBoxesPb getUnzipDataOrThrow(
       java.lang.String key) {
     if (key == null) {
-      throw new NullPointerException("map key");
+      throw new java.lang.NullPointerException();
     }
     java.util.Map<java.lang.String, com.alipay.sofa.registry.common.model.client.pb.DataBoxesPb>
         map = internalGetUnzipData().getMap();
@@ -381,7 +381,7 @@ public final class MultiSegmentDataPb extends com.google.protobuf.GeneratedMessa
   @java.lang.Override
   public boolean containsPushDataCount(java.lang.String key) {
     if (key == null) {
-      throw new NullPointerException("map key");
+      throw new java.lang.NullPointerException();
     }
     return internalGetPushDataCount().getMap().containsKey(key);
   }
@@ -400,7 +400,7 @@ public final class MultiSegmentDataPb extends com.google.protobuf.GeneratedMessa
   @java.lang.Override
   public int getPushDataCountOrDefault(java.lang.String key, int defaultValue) {
     if (key == null) {
-      throw new NullPointerException("map key");
+      throw new java.lang.NullPointerException();
     }
     java.util.Map<java.lang.String, java.lang.Integer> map = internalGetPushDataCount().getMap();
     return map.containsKey(key) ? map.get(key) : defaultValue;
@@ -409,7 +409,7 @@ public final class MultiSegmentDataPb extends com.google.protobuf.GeneratedMessa
   @java.lang.Override
   public int getPushDataCountOrThrow(java.lang.String key) {
     if (key == null) {
-      throw new NullPointerException("map key");
+      throw new java.lang.NullPointerException();
     }
     java.util.Map<java.lang.String, java.lang.Integer> map = internalGetPushDataCount().getMap();
     if (!map.containsKey(key)) {
@@ -432,7 +432,7 @@ public final class MultiSegmentDataPb extends com.google.protobuf.GeneratedMessa
 
   @java.lang.Override
   public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
-    if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(segment_)) {
+    if (!getSegmentBytes().isEmpty()) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 1, segment_);
     }
     if (!zipData_.isEmpty()) {
@@ -440,7 +440,7 @@ public final class MultiSegmentDataPb extends com.google.protobuf.GeneratedMessa
     }
     com.google.protobuf.GeneratedMessageV3.serializeStringMapTo(
         output, internalGetUnzipData(), UnzipDataDefaultEntryHolder.defaultEntry, 3);
-    if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(encoding_)) {
+    if (!getEncodingBytes().isEmpty()) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 4, encoding_);
     }
     if (version_ != 0L) {
@@ -457,7 +457,7 @@ public final class MultiSegmentDataPb extends com.google.protobuf.GeneratedMessa
     if (size != -1) return size;
 
     size = 0;
-    if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(segment_)) {
+    if (!getSegmentBytes().isEmpty()) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, segment_);
     }
     if (!zipData_.isEmpty()) {
@@ -476,7 +476,7 @@ public final class MultiSegmentDataPb extends com.google.protobuf.GeneratedMessa
                   .build();
       size += com.google.protobuf.CodedOutputStream.computeMessageSize(3, unzipData__);
     }
-    if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(encoding_)) {
+    if (!getEncodingBytes().isEmpty()) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, encoding_);
     }
     if (version_ != 0L) {
@@ -1003,7 +1003,7 @@ public final class MultiSegmentDataPb extends com.google.protobuf.GeneratedMessa
     @java.lang.Override
     public boolean containsUnzipData(java.lang.String key) {
       if (key == null) {
-        throw new NullPointerException("map key");
+        throw new java.lang.NullPointerException();
       }
       return internalGetUnzipData().getMap().containsKey(key);
     }
@@ -1028,7 +1028,7 @@ public final class MultiSegmentDataPb extends com.google.protobuf.GeneratedMessa
         java.lang.String key,
         com.alipay.sofa.registry.common.model.client.pb.DataBoxesPb defaultValue) {
       if (key == null) {
-        throw new NullPointerException("map key");
+        throw new java.lang.NullPointerException();
       }
       java.util.Map<java.lang.String, com.alipay.sofa.registry.common.model.client.pb.DataBoxesPb>
           map = internalGetUnzipData().getMap();
@@ -1039,7 +1039,7 @@ public final class MultiSegmentDataPb extends com.google.protobuf.GeneratedMessa
     public com.alipay.sofa.registry.common.model.client.pb.DataBoxesPb getUnzipDataOrThrow(
         java.lang.String key) {
       if (key == null) {
-        throw new NullPointerException("map key");
+        throw new java.lang.NullPointerException();
       }
       java.util.Map<java.lang.String, com.alipay.sofa.registry.common.model.client.pb.DataBoxesPb>
           map = internalGetUnzipData().getMap();
@@ -1056,7 +1056,7 @@ public final class MultiSegmentDataPb extends com.google.protobuf.GeneratedMessa
     /** <code>map&lt;string, .DataBoxesPb&gt; unzipData = 3;</code> */
     public Builder removeUnzipData(java.lang.String key) {
       if (key == null) {
-        throw new NullPointerException("map key");
+        throw new java.lang.NullPointerException();
       }
       internalGetMutableUnzipData().getMutableMap().remove(key);
       return this;
@@ -1072,12 +1072,11 @@ public final class MultiSegmentDataPb extends com.google.protobuf.GeneratedMessa
     public Builder putUnzipData(
         java.lang.String key, com.alipay.sofa.registry.common.model.client.pb.DataBoxesPb value) {
       if (key == null) {
-        throw new NullPointerException("map key");
+        throw new java.lang.NullPointerException();
       }
       if (value == null) {
-        throw new NullPointerException("map value");
+        throw new java.lang.NullPointerException();
       }
-
       internalGetMutableUnzipData().getMutableMap().put(key, value);
       return this;
     }
@@ -1231,7 +1230,7 @@ public final class MultiSegmentDataPb extends com.google.protobuf.GeneratedMessa
     @java.lang.Override
     public boolean containsPushDataCount(java.lang.String key) {
       if (key == null) {
-        throw new NullPointerException("map key");
+        throw new java.lang.NullPointerException();
       }
       return internalGetPushDataCount().getMap().containsKey(key);
     }
@@ -1250,7 +1249,7 @@ public final class MultiSegmentDataPb extends com.google.protobuf.GeneratedMessa
     @java.lang.Override
     public int getPushDataCountOrDefault(java.lang.String key, int defaultValue) {
       if (key == null) {
-        throw new NullPointerException("map key");
+        throw new java.lang.NullPointerException();
       }
       java.util.Map<java.lang.String, java.lang.Integer> map = internalGetPushDataCount().getMap();
       return map.containsKey(key) ? map.get(key) : defaultValue;
@@ -1259,7 +1258,7 @@ public final class MultiSegmentDataPb extends com.google.protobuf.GeneratedMessa
     @java.lang.Override
     public int getPushDataCountOrThrow(java.lang.String key) {
       if (key == null) {
-        throw new NullPointerException("map key");
+        throw new java.lang.NullPointerException();
       }
       java.util.Map<java.lang.String, java.lang.Integer> map = internalGetPushDataCount().getMap();
       if (!map.containsKey(key)) {
@@ -1275,7 +1274,7 @@ public final class MultiSegmentDataPb extends com.google.protobuf.GeneratedMessa
     /** <code>map&lt;string, int32&gt; pushDataCount = 6;</code> */
     public Builder removePushDataCount(java.lang.String key) {
       if (key == null) {
-        throw new NullPointerException("map key");
+        throw new java.lang.NullPointerException();
       }
       internalGetMutablePushDataCount().getMutableMap().remove(key);
       return this;
@@ -1288,7 +1287,7 @@ public final class MultiSegmentDataPb extends com.google.protobuf.GeneratedMessa
     /** <code>map&lt;string, int32&gt; pushDataCount = 6;</code> */
     public Builder putPushDataCount(java.lang.String key, int value) {
       if (key == null) {
-        throw new NullPointerException("map key");
+        throw new java.lang.NullPointerException();
       }
 
       internalGetMutablePushDataCount().getMutableMap().put(key, value);
