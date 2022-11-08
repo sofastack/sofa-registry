@@ -137,7 +137,7 @@ public class BaseHeartBeatResponse implements Serializable {
   public Map<String, Set<String>> getRemoteDataServers() {
 
     if (CollectionUtils.isEmpty(remoteSlotTableStatus)) {
-      return Collections.emptyMap();
+      return Maps.newHashMap();
     }
 
     Map<String, Set<String>> ret = Maps.newHashMapWithExpectedSize(remoteSlotTableStatus.size());

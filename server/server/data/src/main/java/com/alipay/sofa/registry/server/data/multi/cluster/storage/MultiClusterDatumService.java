@@ -75,6 +75,7 @@ public class MultiClusterDatumService {
       throw new SofaRegistryRuntimeException("illegal request datumType:" + request.getDatumType());
     }
 
+    LOG.info("[ClearMultiDatum]req: {}, datumVersionMap:{}", request, datumVersionMap);
     if (!CollectionUtils.isEmpty(datumVersionMap)) {
       dataChangeEventCenter.onChange(
           datumVersionMap.keySet(), DataChangeType.CLEAR, request.getRemoteDataCenter());

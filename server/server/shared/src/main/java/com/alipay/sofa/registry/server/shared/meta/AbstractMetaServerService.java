@@ -36,6 +36,7 @@ import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.exchange.message.Response;
+import com.alipay.sofa.registry.remoting.exchange.message.SimpleRequest;
 import com.alipay.sofa.registry.server.shared.config.CommonConfig;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
@@ -43,9 +44,11 @@ import com.alipay.sofa.registry.util.StringFormatter;
 import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import com.google.common.collect.Sets;
 import java.util.*;
+import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
 
 /**
  * @author yuzhi.lyz
@@ -227,12 +230,11 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
 
   private void updateState(T response) {
     Map<String, Set<String>> map = response.getRemoteDataServers();
-    Optional.ofNullable(state.remoteDataServers)
-        .orElse(Collections.emptyMap())
-        .forEach(
-            (key, value) -> {
-              map.putIfAbsent(key, value);
-            });
+    if (!CollectionUtils.isEmpty(state.remoteDataServers)) {
+      for (Entry<String, Set<String>> entry : state.remoteDataServers.entrySet()) {
+        map.putIfAbsent(entry.getKey(), entry.getValue());
+      }
+    }
     State s =
         new State(
             response.getDataCentersFromMetaNodes(),
@@ -439,5 +441,15 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
   public AbstractMetaServerService setCommonConfig(CommonConfig commonConfig) {
     this.commonConfig = commonConfig;
     return this;
+  }
+
+  public static void main(String[] args) {
+    Map<String, String> map = null;
+    Optional.ofNullable(map)
+            .orElse(Collections.emptyMap())
+            .forEach(
+                    (key, value) -> {
+                      map.putIfAbsent(key, value);
+                    });
   }
 }

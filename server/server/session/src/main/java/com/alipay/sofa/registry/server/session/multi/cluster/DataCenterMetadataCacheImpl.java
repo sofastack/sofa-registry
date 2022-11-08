@@ -155,11 +155,11 @@ public class DataCenterMetadataCacheImpl implements DataCenterMetadataCache {
             .collect(Collectors.toSet());
     for (String remove : tobeRemove) {
       if (syncing.contains(remove)) {
-        LOGGER.error("dataCenter:{} remove is forbidden.", remove);
+        LOGGER.error("dataCenter:{} remove metadata is forbidden.", remove);
         continue;
       }
       metadataCache.remove(remove);
-      LOGGER.info("remove dataCenter:{} datum and slotTable success.", remove);
+      LOGGER.info("remove dataCenter:{} metadata success.", remove);
     }
   }
 

@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.slot;
 
+import com.alipay.sofa.registry.common.model.metaserver.MultiClusterSyncInfo;
 import com.alipay.sofa.registry.common.model.multi.cluster.RemoteSlotTableStatus;
 import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
@@ -25,14 +26,19 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.shared.slot.SlotTableRecorder;
+import com.alipay.sofa.registry.store.api.meta.MultiClusterSyncRepository;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,6 +59,8 @@ public final class SlotTableCacheImpl implements SlotTableCache {
 
   @Autowired(required = false)
   private List<SlotTableRecorder> recorders;
+
+  @Autowired private MultiClusterSyncRepository multiClusterSyncRepository;
 
   @Autowired private SessionServerConfig sessionServerConfig;
 
@@ -125,6 +133,10 @@ public final class SlotTableCacheImpl implements SlotTableCache {
 
     boolean success = true;
     lock.lock();
+    Set<String> difference = Sets.difference(slotTableMap.keySet(), remoteSlotTableStatus.keySet());
+    Set<String> toBeRemove = new HashSet<>(difference);
+    toBeRemove.remove(sessionServerConfig.getSessionServerDataCenter());
+
     try {
       for (Entry<String, RemoteSlotTableStatus> entry : remoteSlotTableStatus.entrySet()) {
         RemoteSlotTableStatus value = entry.getValue();
@@ -154,6 +166,7 @@ public final class SlotTableCacheImpl implements SlotTableCache {
             slotTable.getEpoch(),
             slotTable);
       }
+      processRemove(toBeRemove);
     } catch (Throwable throwable) {
       LOGGER.error("update remote slot table:{} error.", remoteSlotTableStatus, throwable);
       success = false;
@@ -162,6 +175,29 @@ public final class SlotTableCacheImpl implements SlotTableCache {
     }
 
     return success;
+  }
+
+  private void processRemove(Set<String> tobeRemove) {
+    if (CollectionUtils.isEmpty(tobeRemove)) {
+      return;
+    }
+    Set<MultiClusterSyncInfo> syncInfos = multiClusterSyncRepository.queryLocalSyncInfos();
+    Set<String> syncing =
+        syncInfos.stream()
+            .map(MultiClusterSyncInfo::getRemoteDataCenter)
+            .collect(Collectors.toSet());
+    for (String remove : tobeRemove) {
+      if (StringUtils.equals(remove, sessionServerConfig.getSessionServerDataCenter())) {
+        continue;
+      }
+
+      if (syncing.contains(remove)) {
+        LOGGER.error("dataCenter:{} remove slot table is forbidden.", remove);
+        continue;
+      }
+      slotTableMap.remove(remove);
+      LOGGER.info("remove dataCenter:{} slot table success.", remove);
+    }
   }
 
   private void recordSlotTable(SlotTable slotTable) {

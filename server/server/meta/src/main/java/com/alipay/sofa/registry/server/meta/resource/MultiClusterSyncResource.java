@@ -534,7 +534,7 @@ public class MultiClusterSyncResource {
         multiClusterSyncRepository.remove(remoteDataCenter, NumberUtils.toLong(expectVersion));
 
     LOG.info(
-        "[removeConfig]update multi cluster sync config, result:{}, remoteDataCenter:{}, expectVersion:{}",
+        "[removeConfig]remove multi cluster sync config, result:{}, remoteDataCenter:{}, expectVersion:{}",
         ret,
         remoteDataCenter,
         expectVersion);
