@@ -36,7 +36,6 @@ import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.exchange.message.Response;
-import com.alipay.sofa.registry.remoting.exchange.message.SimpleRequest;
 import com.alipay.sofa.registry.server.shared.config.CommonConfig;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
@@ -446,10 +445,10 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
   public static void main(String[] args) {
     Map<String, String> map = null;
     Optional.ofNullable(map)
-            .orElse(Collections.emptyMap())
-            .forEach(
-                    (key, value) -> {
-                      map.putIfAbsent(key, value);
-                    });
+        .orElse(Collections.emptyMap())
+        .forEach(
+            (key, value) -> {
+              map.putIfAbsent(key, value);
+            });
   }
 }
