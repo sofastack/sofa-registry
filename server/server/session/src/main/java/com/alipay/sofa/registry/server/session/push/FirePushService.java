@@ -31,6 +31,7 @@ import com.alipay.sofa.registry.server.session.cache.DatumKey;
 import com.alipay.sofa.registry.server.session.cache.Key;
 import com.alipay.sofa.registry.server.session.cache.Value;
 import com.alipay.sofa.registry.server.session.circuit.breaker.CircuitBreakerService;
+import com.alipay.sofa.registry.server.session.metadata.MetadataCacheRegistry;
 import com.alipay.sofa.registry.server.session.multi.cluster.DataCenterMetadataCache;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.shared.util.DatumUtils;
@@ -40,6 +41,7 @@ import com.alipay.sofa.registry.util.DatumVersionUtil;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.Collections;
@@ -63,6 +65,8 @@ public class FirePushService {
   @Autowired Interests sessionInterests;
 
   @Autowired CircuitBreakerService circuitBreakerService;
+
+  @Autowired MetadataCacheRegistry metadataCacheRegistry;
 
   private KeyedThreadPoolExecutor watchPushExecutor;
 
@@ -355,9 +359,18 @@ public class FirePushService {
 
     Map<Boolean, List<Subscriber>> acceptMultiMap = SubscriberUtils.groupByMulti(subscribers);
 
+    Set<String> syncEnableDataCenters = metadataCacheRegistry.getSyncEnableDataCenters();
+    Set<String> getDatumDataCenters =
+        Sets.newHashSetWithExpectedSize(syncEnableDataCenters.size() + 1);
+    getDatumDataCenters.add(sessionServerConfig.getSessionServerDataCenter());
+    for (String remote : dataCenterMetadataCache.getSyncDataCenters()) {
+      if (syncEnableDataCenters.contains(remote)) {
+        getDatumDataCenters.add(remote);
+      }
+    }
+
     // accept multi sub register
-    doExecuteOnReg(
-        dataInfoId, acceptMultiMap.get(true), dataCenterMetadataCache.getSyncDataCenters());
+    doExecuteOnReg(dataInfoId, acceptMultiMap.get(true), getDatumDataCenters);
 
     // not accept multi sub register
     doExecuteOnReg(

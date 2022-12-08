@@ -53,6 +53,7 @@ import java.util.concurrent.TimeUnit;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
 
 /**
  * @author xiaojian.xj
@@ -97,12 +98,17 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository, Recover
                     ParaCheckUtil.checkNotEmpty(dataCenters, "dataCenters");
 
                     REVISION_CACHE_MISS_COUNTER.inc();
-                    AppRevisionDomain revisionDomain =
+                    List<AppRevisionDomain> revisionDomains =
                         appRevisionMapper.queryRevision(dataCenters, revision);
-                    if (revisionDomain == null || revisionDomain.isDeleted()) {
+                    if (CollectionUtils.isEmpty(revisionDomains)) {
                       throw new RevisionNotExistException(revision);
                     }
-                    return AppRevisionDomainConvertor.convert2Revision(revisionDomain);
+                    for (AppRevisionDomain revisionDomain : revisionDomains) {
+                      if (!revisionDomain.isDeleted()) {
+                        return AppRevisionDomainConvertor.convert2Revision(revisionDomain);
+                      }
+                    }
+                    throw new RevisionNotExistException(revision);
                   }
                 });
     CacheCleaner.autoClean(localRevisions, 1000 * 60 * 10);

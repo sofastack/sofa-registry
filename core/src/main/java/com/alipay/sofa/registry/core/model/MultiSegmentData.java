@@ -43,8 +43,9 @@ public class MultiSegmentData implements Serializable {
 
   public MultiSegmentData() {}
 
-  public MultiSegmentData(String segment) {
+  public MultiSegmentData(String segment, long version) {
     this.segment = segment;
+    this.version = version;
   }
 
   /**

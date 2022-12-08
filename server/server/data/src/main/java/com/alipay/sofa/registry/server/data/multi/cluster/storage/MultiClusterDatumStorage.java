@@ -73,7 +73,11 @@ public class MultiClusterDatumStorage implements DatumStorage {
       LOGGER.warn("[nullStorage]dataCenter={},dataInfoId={}", dataCenter, dataInfoId);
       return null;
     }
-    return storage.get(dataInfoId);
+    Datum datum = storage.get(dataInfoId);
+    if (datum == null) {
+      LOGGER.warn("[nullDatum]dataCenter={},dataInfoId={}", dataCenter, dataInfoId);
+    }
+    return datum;
   }
 
   @Override

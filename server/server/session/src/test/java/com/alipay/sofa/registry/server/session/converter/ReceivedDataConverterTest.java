@@ -115,8 +115,6 @@ public class ReceivedDataConverterTest {
     String localDataCenter = first.getKey();
     String localZone = "localZone";
 
-    String invalidForeverZones =
-        first.getValue().mustGetPublishers().stream().findFirst().get().getCell();
     SessionServerConfigBean sessionServerConfig =
         TestUtils.newSessionConfig(localDataCenter, localZone);
 
@@ -124,10 +122,13 @@ public class ReceivedDataConverterTest {
         ZonePredicate.pushDataPredicate(
             multiSubDatum.getDataId(), localZone, ScopeEnum.global, sessionServerConfig);
     Map<String, Set<String>> segmentZones = com.google.common.collect.Maps.newHashMap();
+    Map<String, String> zone2DataCenter = com.google.common.collect.Maps.newHashMap();
+
     for (Entry<String, SubDatum> entry : multiSubDatum.getDatumMap().entrySet()) {
       Set<String> cells = Sets.newHashSet();
       for (SubPublisher pub : entry.getValue().mustGetPublishers()) {
         cells.add(pub.getCell());
+        zone2DataCenter.put(pub.getCell(), entry.getKey());
       }
       segmentZones.put(entry.getKey(), cells);
     }
@@ -146,6 +147,8 @@ public class ReceivedDataConverterTest {
     for (Entry<String, MultiSegmentData> entry : pushData.getPayload().getMultiData().entrySet()) {
       if (StringUtils.equals(entry.getKey(), localDataCenter)) {
         ParaCheckUtil.checkEquals(entry.getValue().getDataCount().size(), 3, "zoneCount");
+
+        ParaCheckUtil.checkEquals(entry.getValue().getVersion(), multiSubDatum.getDatumMap().get(entry.getKey()).getVersion(), "datum.version");
         entry
             .getValue()
             .getDataCount()
@@ -155,6 +158,9 @@ public class ReceivedDataConverterTest {
         ParaCheckUtil.checkEquals(entry.getValue().getDataCount().size(), 1, "zoneCount");
         ParaCheckUtil.checkEquals(
             entry.getValue().getDataCount().values().stream().findFirst().get(), 1, "pubCount");
+        String dataCenter = zone2DataCenter.get(entry.getKey());
+        ParaCheckUtil.checkEquals(entry.getValue().getVersion(), multiSubDatum.getDatumMap().get(dataCenter).getVersion(), "datum.version");
+
       }
     }
   }

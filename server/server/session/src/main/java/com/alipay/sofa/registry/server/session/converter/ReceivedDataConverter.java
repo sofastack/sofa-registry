@@ -198,7 +198,8 @@ public final class ReceivedDataConverter {
 
     Map<String, SegmentDataCounter> ret = Maps.newHashMapWithExpectedSize(segmentZones.size());
     for (String zone : segmentZones) {
-      SegmentDataCounter counter = new SegmentDataCounter(new MultiSegmentData(zone));
+      SegmentDataCounter counter =
+          new SegmentDataCounter(new MultiSegmentData(zone, subDatum.getVersion()));
       counter.put(zone, pushData.get(zone));
       ret.put(zone, counter);
     }
@@ -224,7 +225,7 @@ public final class ReceivedDataConverter {
     }
 
     LocalDataCenterPushData localDataCenterPushData = new LocalDataCenterPushData();
-    localDataCenterPushData.from(pushData, localDataCenter, pushdataPredicate, segmentZones);
+    localDataCenterPushData.from(pushData, localDataCenter, subDatum.getVersion(), pushdataPredicate, segmentZones);
     return localDataCenterPushData;
   }
 

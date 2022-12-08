@@ -37,16 +37,17 @@ public class LocalDataCenterPushData {
   public void from(
       Map<String, List<DataBox>> pushData,
       String localDataCenter,
+      long pushVersion,
       Predicate<String> pushdataPredicate,
       Set<String> segmentZones) {
 
-    SegmentDataCounter local = new SegmentDataCounter(new MultiSegmentData(localDataCenter));
+    SegmentDataCounter local = new SegmentDataCounter(new MultiSegmentData(localDataCenter, pushVersion));
     Map<String, SegmentDataCounter> remotes = Maps.newHashMap();
 
     for (String zone : segmentZones) {
       if (pushdataPredicate.test(zone)) {
         SegmentDataCounter counter =
-            remotes.computeIfAbsent(zone, k -> new SegmentDataCounter(new MultiSegmentData(zone)));
+            remotes.computeIfAbsent(zone, k -> new SegmentDataCounter(new MultiSegmentData(zone, pushVersion)));
         counter.put(zone, pushData.get(zone));
       } else {
         local.put(zone, pushData.get(zone));

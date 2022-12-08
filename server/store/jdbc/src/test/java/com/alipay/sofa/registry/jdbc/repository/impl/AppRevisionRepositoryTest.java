@@ -40,6 +40,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
 
 /**
  * @author xiaojian.xj
@@ -164,9 +165,9 @@ public class AppRevisionRepositoryTest extends AbstractH2DbTestBase {
     for (AppRevision appRevision : appRevisionList) {
       boolean before = appRevisionJdbcRepository.heartbeat(appRevision.getRevision());
       Assert.assertTrue(before);
-      AppRevisionDomain query =
+      List<AppRevisionDomain> querys =
           appRevisionMapper.queryRevision(dataCenters, appRevision.getRevision());
-      Assert.assertTrue(query != null);
+      Assert.assertTrue(!CollectionUtils.isEmpty(querys));
     }
 
     for (AppRevision appRevision : appRevisionList) {

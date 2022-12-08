@@ -55,6 +55,12 @@ public final class ParaCheckUtil {
     }
   }
 
+  public static void assertFalse(boolean expression, String message) {
+    if (expression) {
+      throw new IllegalArgumentException(message);
+    }
+  }
+
   public static void checkEquals(Object actual, Object expect, String paraName) {
     if (!Objects.equals(actual, expect)) {
       throw new IllegalArgumentException(

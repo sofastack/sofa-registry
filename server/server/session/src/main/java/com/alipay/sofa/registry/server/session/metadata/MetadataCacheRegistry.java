@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.metadata;
 
+import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.appmeta.InterfaceMapping;
 import com.alipay.sofa.registry.common.model.metaserver.MultiClusterSyncInfo;
 import com.alipay.sofa.registry.common.model.store.AppRevision;
@@ -34,12 +35,13 @@ import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.Futures;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
+import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
@@ -62,6 +64,8 @@ public class MetadataCacheRegistry {
 
   private AtomicMap<String, AppRevision> registerTask = new AtomicMap<>();
 
+  private AtomicReference<Set<String>> syncEnableSet = new AtomicReference<>();
+
   private final MetadataRegisterWorker registerWorker = new MetadataRegisterWorker();
   private final MultiSyncInfoReloadWorker syncInfoReloadWorker = new MultiSyncInfoReloadWorker();
 
@@ -71,33 +75,46 @@ public class MetadataCacheRegistry {
     ConcurrentUtils.createDaemonThread("MultiSyncInfoReloadWorker", syncInfoReloadWorker).start();
   }
 
+  public Set<String> getSyncEnableDataCenters() {
+    return syncEnableSet.get();
+  }
+
   public void register(AppRevision appRevision) {
     registerTask.put(appRevision.getRevision(), appRevision);
   }
 
-  private Set<String> getMetadataDataCenters() {
-    Set<String> dataCenters = getSyncDataCenters();
-    dataCenters.add(defaultCommonConfig.getDefaultClusterId());
-    dataCenters.addAll(getSyncDataCenters());
-    return dataCenters;
+  private Tuple<Set<String>, Set<String>> getMetadataDataCenters() {
+    Set<MultiClusterSyncInfo> multiClusterSyncInfoSet = getSyncDataCenters();
+
+    Set<String> syncDataCenters = new HashSet<>();
+    Set<String> syncEnableDataCenters = new HashSet<>();
+    syncDataCenters.add(defaultCommonConfig.getDefaultClusterId());
+
+    for (MultiClusterSyncInfo info : multiClusterSyncInfoSet) {
+      syncDataCenters.add(info.getRemoteDataCenter());
+      if (info.isEnableSyncDatum()) {
+        syncEnableDataCenters.add(info.getRemoteDataCenter());
+      }
+    }
+    return new Tuple<>(syncDataCenters, syncEnableDataCenters);
   }
 
-  private Set<String> getSyncDataCenters() {
-    Set<MultiClusterSyncInfo> syncInfos = multiClusterSyncRepository.queryLocalSyncInfos();
-    return syncInfos.stream()
-        .map(MultiClusterSyncInfo::getRemoteDataCenter)
-        .collect(Collectors.toSet());
+  private Set<MultiClusterSyncInfo> getSyncDataCenters() {
+
+    return multiClusterSyncRepository.queryLocalSyncInfos();
   }
 
   public void startSynced() {
     LOG.info("metadata cache enter startSynced.");
-    Set<String> dataCenters = getMetadataDataCenters();
+    Tuple<Set<String>, Set<String>> tuple = getMetadataDataCenters();
 
-    appRevisionRepository.setDataCenters(dataCenters);
+    appRevisionRepository.setDataCenters(tuple.o1);
     appRevisionRepository.startSynced();
 
-    interfaceAppsRepository.setDataCenters(dataCenters);
+    interfaceAppsRepository.setDataCenters(tuple.o1);
     interfaceAppsRepository.startSynced();
+
+    syncEnableSet.set(tuple.o2);
     LOG.info("metadata cache finish startSynced.");
   }
 
@@ -185,9 +202,11 @@ public class MetadataCacheRegistry {
 
     @Override
     public void runUnthrowable() {
-      Set<String> dataCenters = getMetadataDataCenters();
-      appRevisionRepository.setDataCenters(dataCenters);
-      interfaceAppsRepository.setDataCenters(dataCenters);
+      Tuple<Set<String>, Set<String>> tuple = getMetadataDataCenters();
+      appRevisionRepository.setDataCenters(tuple.o1);
+      interfaceAppsRepository.setDataCenters(tuple.o1);
+
+      syncEnableSet.set(tuple.o2);
     }
 
     @Override
