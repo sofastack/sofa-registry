@@ -36,6 +36,8 @@ import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.task.FastRejectedExecutionException;
 import com.google.common.collect.Lists;
 import java.util.Collections;
+import java.util.HashSet;
+
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -134,7 +136,6 @@ public class FirePushServiceTest {
     svc.pushSwitchService = Mockito.mock(PushSwitchService.class);
     svc.circuitBreakerService = Mockito.mock(CircuitBreakerService.class);
     svc.dataCenterMetadataCache = Mockito.mock(DataCenterMetadataCache.class);
-    //svc.metadataCacheRegistry = Mockito.mock(MetadataCacheRegistry.class);
     return svc;
   }
 
@@ -195,6 +196,9 @@ public class FirePushServiceTest {
     subscriber.checkAndUpdateCtx(
         Collections.singletonMap("testDc", 100L), Collections.singletonMap("testDc", 10));
     subscriber.setDataInfoId(TestUtils.newDataInfoId("testOnSubscriber"));
+    MetadataCacheRegistry mockMetadataCacheRegistry = Mockito.mock(MetadataCacheRegistry.class);
+    when(mockMetadataCacheRegistry.getPushEnableDataCenters()).thenReturn(new HashSet<>());
+    svc.metadataCacheRegistry = mockMetadataCacheRegistry;
 
     Assert.assertTrue(svc.doExecuteOnReg("testDc", Lists.newArrayList(subscriber)));
   }
