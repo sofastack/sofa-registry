@@ -36,7 +36,7 @@ public class SlotTableStatusResourceTest {
   public void test() {
     SlotTableStatusResource resource = new SlotTableStatusResource();
     resource.slotAccessorDelegate = Mockito.mock(SlotAccessorDelegate.class);
-    //resource.dataServerConfig = Mockito.mock(DataServerConfig.class);
+    resource.dataServerConfig = Mockito.mock(DataServerConfig.class);
 
     LeaderSlotStatus leaderSlotStatus =
         new LeaderSlotStatus(10, 20, "xxx", BaseSlotStatus.LeaderStatus.UNHEALTHY);
