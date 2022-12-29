@@ -38,6 +38,9 @@ public class MultiClusterSyncInfo {
   /** multi sync switch */
   private boolean enableSyncDatum;
 
+  /** push switch */
+  private boolean enablePush;
+
   /** allow sync multi group */
   private Set<String> synPublisherGroups = Sets.newHashSet();
 
@@ -71,6 +74,7 @@ public class MultiClusterSyncInfo {
       String remoteDataCenter,
       String remoteMetaAddress,
       boolean enableSyncDatum,
+      boolean enablePush,
       Set<String> syncDataInfoIds,
       Set<String> synPublisherGroups,
       Set<String> ignoreDataInfoIds,
@@ -79,6 +83,7 @@ public class MultiClusterSyncInfo {
     this.remoteDataCenter = remoteDataCenter;
     this.remoteMetaAddress = remoteMetaAddress;
     this.enableSyncDatum = enableSyncDatum;
+    this.enablePush = enablePush;
     this.syncDataInfoIds = syncDataInfoIds;
     this.synPublisherGroups = synPublisherGroups;
     this.ignoreDataInfoIds = ignoreDataInfoIds;
@@ -170,6 +175,19 @@ public class MultiClusterSyncInfo {
     this.enableSyncDatum = enableSyncDatum;
   }
 
+  public boolean isEnablePush() {
+    return this.enablePush;
+  }
+
+  /**
+   * Setter method for property <tt>enablePush</tt>.
+   *
+   * @param enablePush value to be assigned to property enablePush
+   */
+  public void setEnablePush(boolean enablePush) {
+    this.enablePush = enablePush;
+  }
+
   /**
    * Getter method for property <tt>synPublisherGroups</tt>.
    *
@@ -256,6 +274,12 @@ public class MultiClusterSyncInfo {
         + '\''
         + ", enableSyncDatum="
         + enableSyncDatum
+        + '\''
+        + ", enablePush="
+        + enablePush
+        + '\''
+        + ", enablePush="
+        + enablePush
         + ", synPublisherGroups="
         + synPublisherGroups
         + ", syncDataInfoIds="

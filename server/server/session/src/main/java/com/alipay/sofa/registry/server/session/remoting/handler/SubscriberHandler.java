@@ -21,8 +21,6 @@ import com.alipay.sofa.registry.core.model.SubscriberRegister;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.session.strategy.SubscriberHandlerStrategy;
 import java.util.concurrent.Executor;
-
-import com.alipay.sofa.registry.util.ParaCheckUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**

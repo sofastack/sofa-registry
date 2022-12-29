@@ -26,6 +26,7 @@
         <result property="remoteDataCenter" column="remote_data_center" javaType="java.lang.String" jdbcType="VARCHAR"/>
         <result property="remoteMetaAddress" column="remote_meta_address" javaType="java.lang.String" jdbcType="VARCHAR"/>
         <result property="enableSyncDatum" column="enable_sync_datum" javaType="java.lang.String" jdbcType="VARCHAR"/>
+        <result property="enablePush" column="enable_push" javaType="java.lang.String" jdbcType="VARCHAR"/>
         <result property="syncDataInfoIds" column="sync_datainfoids" javaType="java.lang.String" jdbcType="LONGVARCHAR"/>
         <result property="synPublisherGroups" column="syn_publisher_groups" javaType="java.lang.String" jdbcType="VARCHAR"/>
         <result property="ignoreDataInfoIds" column="ignore_datainfoids" javaType="java.lang.String" jdbcType="LONGVARCHAR"/>
@@ -42,6 +43,7 @@
             remote_data_center,
             remote_meta_address,
             enable_sync_datum,
+            enable_push,
             sync_datainfoids,
             syn_publisher_groups,
             ignore_datainfoids,
@@ -55,6 +57,7 @@
             #{remoteDataCenter},
             #{remoteMetaAddress},
             #{enableSyncDatum},
+            #{enablePush},
             #{syncDataInfoIds},
             #{synPublisherGroups},
             #{ignoreDataInfoIds},
@@ -70,6 +73,7 @@
         update multi_cluster_sync_info set
            remote_meta_address = #{data.remoteMetaAddress},
            enable_sync_datum = #{data.enableSyncDatum},
+           enable_push = #{data.enablePush},
            sync_datainfoids = #{data.syncDataInfoIds},
            syn_publisher_groups = #{data.synPublisherGroups},
            ignore_datainfoids = #{data.ignoreDataInfoIds},

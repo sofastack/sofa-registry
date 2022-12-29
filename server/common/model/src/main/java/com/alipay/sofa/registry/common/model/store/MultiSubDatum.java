@@ -185,4 +185,8 @@ public class MultiSubDatum implements Serializable, Sizer {
     }
     return subDatum.getRecentVersions();
   }
+
+  public void putDatum(String dataCenter, SubDatum subDatum) {
+    datumMap.put(dataCenter, subDatum);
+  }
 }

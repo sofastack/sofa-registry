@@ -64,7 +64,7 @@ public class MetadataCacheRegistry {
 
   private AtomicMap<String, AppRevision> registerTask = new AtomicMap<>();
 
-  private AtomicReference<Set<String>> syncEnableSet = new AtomicReference<>();
+  private AtomicReference<Set<String>> pushEnableSet = new AtomicReference<>();
 
   private final MetadataRegisterWorker registerWorker = new MetadataRegisterWorker();
   private final MultiSyncInfoReloadWorker syncInfoReloadWorker = new MultiSyncInfoReloadWorker();
@@ -75,8 +75,8 @@ public class MetadataCacheRegistry {
     ConcurrentUtils.createDaemonThread("MultiSyncInfoReloadWorker", syncInfoReloadWorker).start();
   }
 
-  public Set<String> getSyncEnableDataCenters() {
-    return syncEnableSet.get();
+  public Set<String> getPushEnableDataCenters() {
+    return pushEnableSet.get();
   }
 
   public void register(AppRevision appRevision) {
@@ -92,7 +92,7 @@ public class MetadataCacheRegistry {
 
     for (MultiClusterSyncInfo info : multiClusterSyncInfoSet) {
       syncDataCenters.add(info.getRemoteDataCenter());
-      if (info.isEnableSyncDatum()) {
+      if (info.isEnablePush()) {
         syncEnableDataCenters.add(info.getRemoteDataCenter());
       }
     }
@@ -114,7 +114,7 @@ public class MetadataCacheRegistry {
     interfaceAppsRepository.setDataCenters(tuple.o1);
     interfaceAppsRepository.startSynced();
 
-    syncEnableSet.set(tuple.o2);
+    pushEnableSet.set(tuple.o2);
     LOG.info("metadata cache finish startSynced.");
   }
 
@@ -206,7 +206,7 @@ public class MetadataCacheRegistry {
       appRevisionRepository.setDataCenters(tuple.o1);
       interfaceAppsRepository.setDataCenters(tuple.o1);
 
-      syncEnableSet.set(tuple.o2);
+      pushEnableSet.set(tuple.o2);
     }
 
     @Override

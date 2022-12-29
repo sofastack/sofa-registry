@@ -34,6 +34,6 @@ public class SubscriberRegisterConvertorTest {
     SubscriberRegister convertJava = SubscriberRegisterConvertor.convert2Java(pb);
     TestUtils.assertEquals(registerJava, convertJava);
     Assert.assertEquals(registerJava.getScope(), convertJava.getScope());
-    Assert.assertEquals(registerJava.toString(), convertJava.toString());
+    Assert.assertEquals(registerJava.acceptMulti(), convertJava.acceptMulti());
   }
 }

@@ -90,6 +90,7 @@ public class MultiClusterSyncResource {
         new MultiClusterSyncInfo(
             remoteDataCenter, remoteMetaAddress, PersistenceDataBuilder.nextVersion());
     multiClusterSyncInfo.setEnableSyncDatum(true);
+    multiClusterSyncInfo.setEnablePush(false);
     boolean ret = multiClusterSyncRepository.insert(multiClusterSyncInfo);
 
     LOG.info(
@@ -151,7 +152,76 @@ public class MultiClusterSyncResource {
     boolean ret = multiClusterSyncRepository.update(exist, NumberUtils.toLong(expectVersion));
 
     LOG.info(
-        "[syncDisable]result:{}, remoteDataCenter:{}, remoteMetaAddress:{}, expectVersion:{}",
+        "[syncSwitch]result:{}, remoteDataCenter:{}, remoteMetaAddress:{}, expectVersion:{}",
+        ret,
+        remoteDataCenter,
+        expectVersion);
+
+    CommonResponse response = new CommonResponse();
+    response.setSuccess(ret);
+    return response;
+  }
+
+  @POST
+  @Path("/push/enable")
+  @Produces(MediaType.APPLICATION_JSON)
+  public CommonResponse pushEnable(
+      @FormParam("remoteDataCenter") String remoteDataCenter,
+      @FormParam("expectVersion") String expectVersion,
+      @FormParam("token") String token) {
+    return updatePushSwitch(token, remoteDataCenter, expectVersion, true);
+  }
+
+  @POST
+  @Path("/push/disable")
+  @Produces(MediaType.APPLICATION_JSON)
+  public CommonResponse pushDisable(
+      @FormParam("remoteDataCenter") String remoteDataCenter,
+      @FormParam("expectVersion") String expectVersion,
+      @FormParam("token") String token) {
+    return updatePushSwitch(token, remoteDataCenter, expectVersion, false);
+  }
+
+  private CommonResponse updatePushSwitch(
+      String token, String remoteDataCenter, String expectVersion, boolean pushEnable) {
+    if (!AuthChecker.authCheck(token)) {
+      LOG.error(
+          "update multi cluster push switch, remoteDataCenter={}, auth check={} fail!",
+          remoteDataCenter,
+          token);
+      return GenericResponse.buildFailedResponse("auth check fail");
+    }
+
+    if (StringUtils.isBlank(remoteDataCenter) || StringUtils.isBlank(expectVersion)) {
+      return CommonResponse.buildFailedResponse(
+          "remoteDataCenter, expectVersion is not allow empty.");
+    }
+
+    MultiClusterSyncInfo exist = multiClusterSyncRepository.query(remoteDataCenter);
+
+    if (exist == null || exist.getDataVersion() != Long.parseLong(expectVersion)) {
+      return CommonResponse.buildFailedResponse(
+          StringFormatter.format(
+              "remoteDataCenter:{}, expectVersion:{} not exist.", remoteDataCenter, expectVersion));
+    }
+
+    if (!exist.isEnableSyncDatum() && pushEnable) {
+      LOG.error(
+          "update multi cluster push switch, remoteDataCenter={}, exist={}, not allow set pushEnable=true when syncEnable is false",
+          remoteDataCenter,
+          exist);
+      return CommonResponse.buildFailedResponse(
+          StringFormatter.format(
+              "remoteDataCenter={}, not allow set pushEnable=true when syncEnable is false",
+              remoteDataCenter));
+    }
+
+    exist.setEnablePush(pushEnable);
+    exist.setDataVersion(PersistenceDataBuilder.nextVersion());
+    boolean ret = multiClusterSyncRepository.update(exist, NumberUtils.toLong(expectVersion));
+
+    LOG.info(
+        "[pushSwitch]result:{}, remoteDataCenter:{}, remoteMetaAddress:{}, expectVersion:{}",
         ret,
         remoteDataCenter,
         expectVersion);
@@ -393,102 +463,6 @@ public class MultiClusterSyncResource {
         ret,
         remoteDataCenter,
         group,
-        expectVersion);
-
-    CommonResponse response = new CommonResponse();
-    response.setSuccess(ret);
-    return response;
-  }
-
-  @POST
-  @Path("/ignore/dataInfoIds/add")
-  @Produces(MediaType.APPLICATION_JSON)
-  public CommonResponse addIgnoreDataInfoIds(
-      @FormParam("remoteDataCenter") String remoteDataCenter,
-      @FormParam("dataInfoIds") String dataInfoIds,
-      @FormParam("token") String token,
-      @FormParam("expectVersion") String expectVersion) {
-    if (!AuthChecker.authCheck(token)) {
-      LOG.error(
-          "add ignore dataInfoIds, remoteDataCenter={}, dataInfoIds={}, auth check={} fail!",
-          remoteDataCenter,
-          dataInfoIds,
-          token);
-      return GenericResponse.buildFailedResponse("auth check fail");
-    }
-
-    if (StringUtils.isBlank(remoteDataCenter)
-        || StringUtils.isBlank(dataInfoIds)
-        || StringUtils.isBlank(expectVersion)) {
-      return CommonResponse.buildFailedResponse(
-          "remoteDataCenter, dataInfoIds, expectVersion is not allow empty.");
-    }
-
-    MultiClusterSyncInfo exist = multiClusterSyncRepository.query(remoteDataCenter);
-
-    if (exist == null || exist.getDataVersion() != Long.parseLong(expectVersion)) {
-      return CommonResponse.buildFailedResponse(
-          StringFormatter.format(
-              "remoteDataCenter:{}, expectVersion:{} not exist.", remoteDataCenter, expectVersion));
-    }
-
-    exist.getIgnoreDataInfoIds().addAll(Sets.newHashSet(dataInfoIds.split(",")));
-    exist.setDataVersion(PersistenceDataBuilder.nextVersion());
-    boolean ret = multiClusterSyncRepository.update(exist, NumberUtils.toLong(expectVersion));
-
-    LOG.info(
-        "[addIgnoreDataInfoIds]result:{}, remoteDataCenter:{}, dataInfoIds:{}, expectVersion:{}",
-        ret,
-        remoteDataCenter,
-        dataInfoIds,
-        expectVersion);
-
-    CommonResponse response = new CommonResponse();
-    response.setSuccess(ret);
-    return response;
-  }
-
-  @POST
-  @Path("/ignore/dataInfoIds/remove")
-  @Produces(MediaType.APPLICATION_JSON)
-  public CommonResponse removeIgnoreDataInfoIds(
-      @FormParam("remoteDataCenter") String remoteDataCenter,
-      @FormParam("dataInfoIds") String dataInfoIds,
-      @FormParam("token") String token,
-      @FormParam("expectVersion") String expectVersion) {
-    if (!AuthChecker.authCheck(token)) {
-      LOG.error(
-          "remove ignore dataInfoIds, remoteDataCenter={}, dataInfoIds={}, auth check={} fail!",
-          remoteDataCenter,
-          dataInfoIds,
-          token);
-      return GenericResponse.buildFailedResponse("auth check fail");
-    }
-
-    if (StringUtils.isBlank(remoteDataCenter)
-        || StringUtils.isBlank(dataInfoIds)
-        || StringUtils.isBlank(expectVersion)) {
-      return CommonResponse.buildFailedResponse(
-          "remoteDataCenter, dataInfoIds, expectVersion is not allow empty.");
-    }
-
-    MultiClusterSyncInfo exist = multiClusterSyncRepository.query(remoteDataCenter);
-
-    if (exist == null || exist.getDataVersion() != Long.parseLong(expectVersion)) {
-      return CommonResponse.buildFailedResponse(
-          StringFormatter.format(
-              "remoteDataCenter:{}, expectVersion:{} not exist.", remoteDataCenter, expectVersion));
-    }
-
-    exist.getIgnoreDataInfoIds().removeAll(Sets.newHashSet(dataInfoIds.split(",")));
-    exist.setDataVersion(PersistenceDataBuilder.nextVersion());
-    boolean ret = multiClusterSyncRepository.update(exist, NumberUtils.toLong(expectVersion));
-
-    LOG.info(
-        "[removeIgnoreDataInfoIds]result:{}, remoteDataCenter:{}, dataInfoIds:{}, expectVersion:{}",
-        ret,
-        remoteDataCenter,
-        dataInfoIds,
         expectVersion);
 
     CommonResponse response = new CommonResponse();

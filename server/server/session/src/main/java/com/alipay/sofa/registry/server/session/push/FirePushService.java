@@ -359,7 +359,7 @@ public class FirePushService {
 
     Map<Boolean, List<Subscriber>> acceptMultiMap = SubscriberUtils.groupByMulti(subscribers);
 
-    Set<String> syncEnableDataCenters = metadataCacheRegistry.getSyncEnableDataCenters();
+    Set<String> syncEnableDataCenters = metadataCacheRegistry.getPushEnableDataCenters();
     Set<String> getDatumDataCenters =
         Sets.newHashSetWithExpectedSize(syncEnableDataCenters.size() + 1);
     getDatumDataCenters.add(sessionServerConfig.getSessionServerDataCenter());
@@ -406,6 +406,21 @@ public class FirePushService {
           dataCenters,
           subscribers.size(),
           first.shortDesc());
+    } else if (!getDatumVersions.keySet().equals(datum.dataCenters())) {
+      Set<String> tobeAdd = Sets.difference(getDatumVersions.keySet(), datum.dataCenters());
+      Subscriber first = subscribers.get(0);
+      for (String dataCenter : tobeAdd) {
+        LOGGER.warn(
+            "[registerLakeDatumPush]{},{},subNum={},{}",
+            dataInfoId,
+            dataCenters,
+            subscribers.size(),
+            first.shortDesc());
+        datum.putDatum(
+            dataCenter,
+            DatumUtils.newEmptySubDatum(
+                first, dataCenter, ValueConstants.DEFAULT_NO_DATUM_VERSION));
+      }
     }
     TriggerPushContext pushCtx =
         new TriggerPushContext(

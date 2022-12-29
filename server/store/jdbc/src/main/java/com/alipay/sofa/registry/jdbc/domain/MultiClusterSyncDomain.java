@@ -40,6 +40,9 @@ public class MultiClusterSyncDomain implements DbEntry, ConfigEntry {
   /** true/false */
   private String enableSyncDatum;
 
+  /** true/false */
+  private String enablePush;
+
   /** sync dataInfoIds */
   private String syncDataInfoIds;
 
@@ -75,6 +78,7 @@ public class MultiClusterSyncDomain implements DbEntry, ConfigEntry {
       String remoteDataCenter,
       String remoteMetaAddress,
       String enableSyncDatum,
+      String enablePush,
       String syncDataInfoIds,
       String synPublisherGroups,
       String ignoreDataInfoIds,
@@ -83,6 +87,7 @@ public class MultiClusterSyncDomain implements DbEntry, ConfigEntry {
     this.remoteDataCenter = remoteDataCenter;
     this.remoteMetaAddress = remoteMetaAddress;
     this.enableSyncDatum = enableSyncDatum;
+    this.enablePush = enablePush;
     this.syncDataInfoIds = syncDataInfoIds;
     this.synPublisherGroups = synPublisherGroups;
     this.ignoreDataInfoIds = ignoreDataInfoIds;
@@ -168,6 +173,24 @@ public class MultiClusterSyncDomain implements DbEntry, ConfigEntry {
    */
   public void setEnableSyncDatum(String enableSyncDatum) {
     this.enableSyncDatum = enableSyncDatum;
+  }
+
+  /**
+   * Getter method for property <tt>enablePush</tt>.
+   *
+   * @return property value of enablePush
+   */
+  public String getEnablePush() {
+    return enablePush;
+  }
+
+  /**
+   * Setter method for property <tt>enablePush</tt>.
+   *
+   * @param enablePush value to be assigned to property enablePush
+   */
+  public void setEnablePush(String enablePush) {
+    this.enablePush = enablePush;
   }
 
   /**

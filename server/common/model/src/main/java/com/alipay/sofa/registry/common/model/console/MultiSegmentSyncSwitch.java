@@ -27,6 +27,9 @@ public class MultiSegmentSyncSwitch {
   /** multi sync switch */
   private final boolean multiSync;
 
+  /** multi sync switch */
+  private final boolean multiPush;
+
   /** remote dataCenter */
   private final String remoteDataCenter;
 
@@ -43,6 +46,10 @@ public class MultiSegmentSyncSwitch {
 
   public boolean isMultiSync() {
     return this.multiSync;
+  }
+
+  public boolean isMultiPush() {
+    return this.multiPush;
   }
 
   /**
@@ -92,12 +99,14 @@ public class MultiSegmentSyncSwitch {
 
   public MultiSegmentSyncSwitch(
       boolean multiSync,
+      boolean multiPush,
       String remoteDataCenter,
       Set<String> synPublisherGroups,
       Set<String> syncDataInfoIds,
       Set<String> ignoreDataInfoIds,
       long dataVersion) {
     this.multiSync = multiSync;
+    this.multiPush = multiPush;
     this.remoteDataCenter = remoteDataCenter;
     this.synPublisherGroups = synPublisherGroups;
     this.syncDataInfoIds = syncDataInfoIds;
@@ -110,6 +119,8 @@ public class MultiSegmentSyncSwitch {
     return "MultiSegmentSyncSwitch{"
         + "multiSync="
         + multiSync
+        + ", multiPush="
+        + multiPush
         + ", remoteDataCenter='"
         + remoteDataCenter
         + '\''

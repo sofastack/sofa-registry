@@ -16,11 +16,17 @@
  */
 package com.alipay.sofa.registry.server.session.bootstrap;
 
+import org.springframework.boot.context.properties.ConfigurationProperties;
+
 /**
  * @author xiaojian.xj
  * @version : MultiClusterSessionServerConfigBean.java, v 0.1 2022年07月29日 17:13 xiaojian.xj Exp $
  */
+@ConfigurationProperties(prefix = MultiClusterSessionServerConfigBean.PREFIX)
 public class MultiClusterSessionServerConfigBean implements MultiClusterSessionServerConfig {
+
+  /** The constant PREFIX. */
+  public static final String PREFIX = "session.remote.server";
 
   private volatile int multiClusterConfigReloadSecs = 60;
 

@@ -105,9 +105,13 @@ public class DatumStorageDelegate implements DatumStorage {
   }
 
   // get without datum.version, it's more efficient than getDatum
-  public Map<String, Map<String, List<Publisher>>> getLocalAllPublisher() {
+  public Map<String, Map<String, List<Publisher>>> getAllPublisher() {
     Map<String, Map<String, List<Publisher>>> datumMap = new HashMap<>();
     datumMap.put(localDataCenter, localDatumStorage.getAllPublisher(localDataCenter));
+
+    for (String dataCenter : multiClusterDatumStorage.allDataCenters()) {
+      datumMap.put(dataCenter, multiClusterDatumStorage.getAllPublisher(dataCenter));
+    }
     return datumMap;
   }
 

@@ -93,6 +93,7 @@ CREATE TABLE IF NOT EXISTS `multi_cluster_sync_info`
     `remote_data_center`   varchar(512)  NOT NULL COMMENT '同步的集群名称',
     `remote_meta_address`  varchar(1024) NOT NULL COMMENT '同步的集群地址',
     `enable_sync_datum`    varchar(16)   NOT NULL COMMENT 'datum同步的开关是否开启',
+    `enable_push`          varchar(16)   NOT NULL COMMENT '同步的数据是否允许推送',
     `sync_datainfoids`     MEDIUMTEXT    NOT NULL COMMENT '同步的dataInfoId名单',
     `syn_publisher_groups` varchar(4096) NOT NULL COMMENT '同步的group名单',
     `ignore_datainfoids`   MEDIUMTEXT    NOT NULL COMMENT '忽略同步的dataInfoId',

@@ -107,9 +107,7 @@ public class DatumBiConsumer {
       publisherGroup.foreach(
           publisherGroupBiConsumer(dataInfoId, publisherVersions, syncSlotAcceptorManager));
       DatumSummary summary = new DatumSummary(dataInfoId, publisherVersions);
-      if (!summary.isEmpty()) {
-        summaries.put(dataInfoId, summary);
-      }
+      summaries.put(dataInfoId, summary);
     };
   }
 

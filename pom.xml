@@ -466,39 +466,6 @@
             </plugins>
         </pluginManagement>
         <plugins>
-<!--            <plugin>-->
-<!--                <groupId>org.apache.maven.plugins</groupId>-->
-<!--                <artifactId>maven-pmd-plugin</artifactId>-->
-<!--                <version>3.11.0</version>-->
-<!--                <configuration>-->
-<!--                    <sourceEncoding>${project.build.sourceEncoding}</sourceEncoding>-->
-<!--                    <targetJdk>${maven.compiler.target}</targetJdk>-->
-<!--                    <printFailingErrors>true</printFailingErrors>-->
-<!--                    <rulesets>-->
-<!--                        <ruleset>${main.user.dir}/ruleset.xml</ruleset>-->
-<!--                    </rulesets>-->
-<!--                    <excludes>-->
-<!--                        <exclude>**/client/pb/*.*</exclude>-->
-<!--                    </excludes>-->
-<!--                    &lt;!&ndash;   todo xiaojian.xj                 &ndash;&gt;-->
-<!--                    <failurePriority>1</failurePriority>-->
-<!--                </configuration>-->
-<!--                <executions>-->
-<!--                    <execution>-->
-<!--                        <phase>verify</phase>-->
-<!--                        <goals>-->
-<!--                            <goal>check</goal>-->
-<!--                        </goals>-->
-<!--                    </execution>-->
-<!--                </executions>-->
-<!--                <dependencies>-->
-<!--                    <dependency>-->
-<!--                        <groupId>com.alibaba.p3c</groupId>-->
-<!--                        <artifactId>p3c-pmd</artifactId>-->
-<!--                        <version>2.0.1</version>-->
-<!--                    </dependency>-->
-<!--                </dependencies>-->
-<!--            </plugin>-->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>

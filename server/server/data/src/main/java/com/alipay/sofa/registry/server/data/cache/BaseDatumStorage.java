@@ -124,13 +124,16 @@ public class BaseDatumStorage {
       final String dataInfoId = publishers.getKey();
 
       final List<Publisher> list = publishers.getValue();
+
+      if (list.isEmpty()) {
+        logger.warn(
+            "[emptyPubs]dataCenter={},slotId={},dataInfoId={}", dataCenter, slotId, dataInfoId);
+      }
       // only copy the non empty publishers
-      if (!list.isEmpty()) {
-        Map<String, Publisher> map =
-            ret.computeIfAbsent(dataInfoId, k -> Maps.newHashMapWithExpectedSize(list.size()));
-        for (Publisher p : list) {
-          map.put(p.getRegisterId(), p);
-        }
+      Map<String, Publisher> map =
+          ret.computeIfAbsent(dataInfoId, k -> Maps.newHashMapWithExpectedSize(list.size()));
+      for (Publisher p : list) {
+        map.put(p.getRegisterId(), p);
       }
     }
     return ret;

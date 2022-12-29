@@ -225,7 +225,8 @@ public final class ReceivedDataConverter {
     }
 
     LocalDataCenterPushData localDataCenterPushData = new LocalDataCenterPushData();
-    localDataCenterPushData.from(pushData, localDataCenter, subDatum.getVersion(), pushdataPredicate, segmentZones);
+    localDataCenterPushData.from(
+        pushData, localDataCenter, subDatum.getVersion(), pushdataPredicate, segmentZones);
     return localDataCenterPushData;
   }
 

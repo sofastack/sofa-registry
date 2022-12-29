@@ -27,7 +27,6 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.slot.SlotAccessorDelegate;
-import com.alipay.sofa.registry.server.data.slot.SlotManager;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import java.util.List;
 import javax.ws.rs.GET;
@@ -50,8 +49,6 @@ public class SlotTableStatusResource {
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   @Autowired DataServerConfig dataServerConfig;
-
-  @Autowired SlotManager slotManager;
 
   @Autowired SlotAccessorDelegate slotAccessorDelegate;
 

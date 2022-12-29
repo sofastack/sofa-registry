@@ -148,7 +148,10 @@ public class ReceivedDataConverterTest {
       if (StringUtils.equals(entry.getKey(), localDataCenter)) {
         ParaCheckUtil.checkEquals(entry.getValue().getDataCount().size(), 3, "zoneCount");
 
-        ParaCheckUtil.checkEquals(entry.getValue().getVersion(), multiSubDatum.getDatumMap().get(entry.getKey()).getVersion(), "datum.version");
+        ParaCheckUtil.checkEquals(
+            entry.getValue().getVersion(),
+            multiSubDatum.getDatumMap().get(entry.getKey()).getVersion(),
+            "datum.version");
         entry
             .getValue()
             .getDataCount()
@@ -159,8 +162,10 @@ public class ReceivedDataConverterTest {
         ParaCheckUtil.checkEquals(
             entry.getValue().getDataCount().values().stream().findFirst().get(), 1, "pubCount");
         String dataCenter = zone2DataCenter.get(entry.getKey());
-        ParaCheckUtil.checkEquals(entry.getValue().getVersion(), multiSubDatum.getDatumMap().get(dataCenter).getVersion(), "datum.version");
-
+        ParaCheckUtil.checkEquals(
+            entry.getValue().getVersion(),
+            multiSubDatum.getDatumMap().get(dataCenter).getVersion(),
+            "datum.version");
       }
     }
   }

@@ -30,6 +30,7 @@ import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfigBean
 import com.alipay.sofa.registry.server.session.cache.CacheService;
 import com.alipay.sofa.registry.server.session.cache.Value;
 import com.alipay.sofa.registry.server.session.circuit.breaker.CircuitBreakerService;
+import com.alipay.sofa.registry.server.session.metadata.MetadataCacheRegistry;
 import com.alipay.sofa.registry.server.session.multi.cluster.DataCenterMetadataCache;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.task.FastRejectedExecutionException;
@@ -38,6 +39,7 @@ import java.util.Collections;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 
 public class FirePushServiceTest {
   private String zone = "testZone";
@@ -51,6 +53,7 @@ public class FirePushServiceTest {
     svc.sessionInterests = Mockito.mock(Interests.class);
     svc.pushProcessor = Mockito.mock(PushProcessor.class);
     svc.circuitBreakerService = Mockito.mock(CircuitBreakerService.class);
+    svc.metadataCacheRegistry = Mockito.mock(MetadataCacheRegistry.class);
     svc.dataCenterMetadataCache = svc.pushSwitchService.getDataCenterMetadataCache();
 
     TriggerPushContext ctx =
@@ -131,6 +134,7 @@ public class FirePushServiceTest {
     svc.pushSwitchService = Mockito.mock(PushSwitchService.class);
     svc.circuitBreakerService = Mockito.mock(CircuitBreakerService.class);
     svc.dataCenterMetadataCache = Mockito.mock(DataCenterMetadataCache.class);
+    svc.metadataCacheRegistry = Mockito.mock(MetadataCacheRegistry.class);
     return svc;
   }
 

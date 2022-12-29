@@ -63,6 +63,15 @@ public class FetchMultiSyncService implements ApplicationListener<ContextRefresh
     return multiSegmentSyncSwitch.isMultiSync();
   }
 
+  public synchronized boolean multiPush(String dataCenter) {
+    MultiSegmentSyncSwitch multiSegmentSyncSwitch = syncMap.get(dataCenter);
+    if (multiSegmentSyncSwitch == null) {
+      return INIT;
+    }
+
+    return multiSegmentSyncSwitch.isMultiPush();
+  }
+
   public synchronized MultiSegmentSyncSwitch getMultiSyncSwitch(String dataCenter) {
     return syncMap.get(dataCenter);
   }
@@ -143,6 +152,7 @@ public class FetchMultiSyncService implements ApplicationListener<ContextRefresh
 
     return new MultiSegmentSyncSwitch(
         multiClusterSyncInfo.isEnableSyncDatum(),
+        multiClusterSyncInfo.isEnablePush(),
         multiClusterSyncInfo.getRemoteDataCenter(),
         multiClusterSyncInfo.getSynPublisherGroups(),
         multiClusterSyncInfo.getSyncDataInfoIds(),

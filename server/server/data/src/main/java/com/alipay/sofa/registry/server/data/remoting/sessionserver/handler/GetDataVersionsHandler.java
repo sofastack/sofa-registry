@@ -75,7 +75,6 @@ public class GetDataVersionsHandler extends AbstractDataHandler<GetDataVersionRe
       return SlotAccessGenericResponse.failedResponse(
           slotAccessAfter, "slotLeaderEpoch has change, prev=" + slotAccessBefore);
     }
-    final boolean localDataCenter = dataServerConfig.isLocalDataCenter(dataCenter);
     Map<String, DatumVersion> ret = Maps.newHashMapWithExpectedSize(64);
     for (Map.Entry<String, DatumVersion> e : interests.entrySet()) {
       final String dataInfoId = e.getKey();
@@ -116,25 +115,23 @@ public class GetDataVersionsHandler extends AbstractDataHandler<GetDataVersionRe
         // if equals, do not return the version to reduce network overhead
       } else {
         // todo xiaojian.xj
-        if (localDataCenter) {
-          // no datum in data node, this maybe happens an empty datum occurs migrating
-          // there is subscriber subs the dataId. we create a empty datum to trace the version
-          // the version will trigger the push after session.scan
-          // cache the dataInfoId
-          final String cacheDataInfoId = WordCache.getWordCache(dataInfoId);
-          final DatumVersion v =
-              datumStorageDelegate.createEmptyDatumIfAbsent(dataCenter, cacheDataInfoId);
-          if (v != null) {
-            ret.put(dataInfoId, v);
-          }
-          LOGGER.info(
-              "createV,{},{},{},interestVer={},createV={}",
-              slotId,
-              dataInfoId,
-              dataCenter,
-              interestVer,
-              v);
+        // no datum in data node, this maybe happens an empty datum occurs migrating
+        // there is subscriber subs the dataId. we create a empty datum to trace the version
+        // the version will trigger the push after session.scan
+        // cache the dataInfoId
+        final String cacheDataInfoId = WordCache.getWordCache(dataInfoId);
+        final DatumVersion v =
+            datumStorageDelegate.createEmptyDatumIfAbsent(dataCenter, cacheDataInfoId);
+        if (v != null) {
+          ret.put(dataInfoId, v);
         }
+        LOGGER.info(
+            "createV,{},{},{},interestVer={},createV={}",
+            slotId,
+            dataInfoId,
+            dataCenter,
+            interestVer,
+            v);
       }
     }
     LOGGER.info("getV,{},{},gets={},rets={}", slotId, dataCenter, getVersions.size(), ret.size());

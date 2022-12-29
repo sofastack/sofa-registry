@@ -47,7 +47,7 @@ public class DatumStorageDelegateTest {
     Map<String, Map<String, Datum>> datumMap = cache.getLocalAll();
     TestBaseUtils.assertEquals(datumMap.get(testDc).get(publisher.getDataInfoId()), publisher);
 
-    Map<String, Map<String, List<Publisher>>> publisherMaps = cache.getLocalAllPublisher();
+    Map<String, Map<String, List<Publisher>>> publisherMaps = cache.getAllPublisher();
     Assert.assertTrue(publisherMaps.get(testDc).get(publisher.getDataInfoId()).contains(publisher));
 
     Map<String, Map<String, Integer>> summary = cache.getLocalPubCount();

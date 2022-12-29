@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.server.session.push;
 
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
+import com.alipay.sofa.registry.server.session.metadata.MetadataCacheRegistry;
 import com.alipay.sofa.registry.server.session.multi.cluster.DataCenterMetadataCache;
 import com.alipay.sofa.registry.server.session.providedata.FetchGrayPushSwitchService;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
@@ -33,6 +34,8 @@ public class PushSwitchService {
   @Resource private FetchGrayPushSwitchService fetchGrayPushSwitchService;
 
   @Autowired private DataCenterMetadataCache dataCenterMetadataCache;
+
+  @Autowired private MetadataCacheRegistry metadataCacheRegistry;
 
   public boolean canPushMulti(Set<String> dataCenters) {
     ParaCheckUtil.checkNotEmpty(dataCenters, "push.dataCenters");
@@ -75,20 +78,33 @@ public class PushSwitchService {
   }
 
   private boolean switchCanPush(String dataCenter) {
+    // stop_push
     Boolean stopPush = dataCenterMetadataCache.isStopPush(dataCenter);
     if (stopPush == null || stopPush) {
       return false;
     }
-    return true;
+    // push_enable in multi_sync_info
+    return pushEnable(dataCenter);
+  }
+
+  private boolean pushEnable(String dataCenter) {
+    if (sessionServerConfig.isLocalDataCenter(dataCenter)) {
+      // local datacenter not need to check
+      return true;
+    }
+
+    return metadataCacheRegistry.getPushEnableDataCenters().contains(dataCenter);
   }
 
   private boolean dataCenterAndIpCanPush(String dataCenter, String ip) {
+    // stop_push
     Boolean stopPush = dataCenterMetadataCache.isStopPush(dataCenter);
     if (stopPush == null || stopPush) {
       return sessionServerConfig.isLocalDataCenter(dataCenter)
           && fetchGrayPushSwitchService.getOpenIps().contains(ip);
     }
-    return true;
+    // push_enable in multi_sync_info
+    return pushEnable(dataCenter);
   }
 
   /**
