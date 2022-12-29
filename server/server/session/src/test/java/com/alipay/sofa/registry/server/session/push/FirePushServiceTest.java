@@ -134,7 +134,7 @@ public class FirePushServiceTest {
     svc.pushSwitchService = Mockito.mock(PushSwitchService.class);
     svc.circuitBreakerService = Mockito.mock(CircuitBreakerService.class);
     svc.dataCenterMetadataCache = Mockito.mock(DataCenterMetadataCache.class);
-    svc.metadataCacheRegistry = Mockito.mock(MetadataCacheRegistry.class);
+    //svc.metadataCacheRegistry = Mockito.mock(MetadataCacheRegistry.class);
     return svc;
   }
 

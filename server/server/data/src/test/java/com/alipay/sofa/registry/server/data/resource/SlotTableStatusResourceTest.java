@@ -25,7 +25,6 @@ import com.alipay.sofa.registry.common.model.slot.FollowerSlotStatus;
 import com.alipay.sofa.registry.common.model.slot.LeaderSlotStatus;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.slot.SlotAccessorDelegate;
-import com.alipay.sofa.registry.server.data.slot.SlotManager;
 import com.google.common.collect.Lists;
 import java.util.List;
 import org.junit.Assert;
@@ -37,7 +36,7 @@ public class SlotTableStatusResourceTest {
   public void test() {
     SlotTableStatusResource resource = new SlotTableStatusResource();
     resource.slotAccessorDelegate = Mockito.mock(SlotAccessorDelegate.class);
-    resource.dataServerConfig = Mockito.mock(DataServerConfig.class);
+    //resource.dataServerConfig = Mockito.mock(DataServerConfig.class);
 
     LeaderSlotStatus leaderSlotStatus =
         new LeaderSlotStatus(10, 20, "xxx", BaseSlotStatus.LeaderStatus.UNHEALTHY);
