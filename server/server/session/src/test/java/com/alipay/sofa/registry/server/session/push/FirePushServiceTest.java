@@ -55,7 +55,6 @@ public class FirePushServiceTest {
     svc.sessionInterests = Mockito.mock(Interests.class);
     svc.pushProcessor = Mockito.mock(PushProcessor.class);
     svc.circuitBreakerService = Mockito.mock(CircuitBreakerService.class);
-    svc.metadataCacheRegistry = Mockito.mock(MetadataCacheRegistry.class);
     svc.dataCenterMetadataCache = svc.pushSwitchService.getDataCenterMetadataCache();
 
     TriggerPushContext ctx =
@@ -187,19 +186,5 @@ public class FirePushServiceTest {
     Value v = new Value((Sizer) datum);
     when(svc.sessionDatumCacheService.getValueIfPresent(Mockito.anyObject())).thenReturn(v);
     Assert.assertTrue(svc.changeHandler.onChange("testDataId", ctx));
-  }
-
-  @Test
-  public void testOnSubscriber() {
-    FirePushService svc = mockFirePushService();
-    Subscriber subscriber = TestUtils.newZoneSubscriber("testZone");
-    subscriber.checkAndUpdateCtx(
-        Collections.singletonMap("testDc", 100L), Collections.singletonMap("testDc", 10));
-    subscriber.setDataInfoId(TestUtils.newDataInfoId("testOnSubscriber"));
-    MetadataCacheRegistry mockMetadataCacheRegistry = Mockito.mock(MetadataCacheRegistry.class);
-    when(mockMetadataCacheRegistry.getPushEnableDataCenters()).thenReturn(new HashSet<>());
-    svc.metadataCacheRegistry = mockMetadataCacheRegistry;
-
-    Assert.assertTrue(svc.doExecuteOnReg("testDc", Lists.newArrayList(subscriber)));
   }
 }
