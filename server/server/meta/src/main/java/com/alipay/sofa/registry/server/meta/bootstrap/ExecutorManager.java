@@ -42,8 +42,6 @@ public class ExecutorManager {
   private final ThreadPoolExecutor multiClusterConfigReloadExecutor;
   private final ThreadPoolExecutor remoteClusterHandlerExecutor;
 
-  private final ThreadPoolExecutor clientManagerExecutor;
-
   private static final String MULTI_CLUSTER_CONFIG_RELOAD_EXECUTOR =
       "MULTI_CLUSTER_CONFIG_RELOAD_EXECUTOR";
 

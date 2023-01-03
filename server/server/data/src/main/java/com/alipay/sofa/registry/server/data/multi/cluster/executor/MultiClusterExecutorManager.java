@@ -33,7 +33,6 @@ import java.util.concurrent.TimeUnit;
  * @version : MultiClusterExecutorManager.java, v 0.1 2022年05月10日 20:47 xiaojian.xj Exp $
  */
 public class MultiClusterExecutorManager {
-  private static final Logger LOGGER = LoggerFactory.getLogger(MultiClusterExecutorManager.class);
 
   private final KeyedThreadPoolExecutor remoteSyncLeaderExecutor;
 
