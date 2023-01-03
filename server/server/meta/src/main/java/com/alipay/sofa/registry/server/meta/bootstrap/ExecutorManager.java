@@ -42,13 +42,10 @@ public class ExecutorManager {
   private final ThreadPoolExecutor multiClusterConfigReloadExecutor;
   private final ThreadPoolExecutor remoteClusterHandlerExecutor;
 
-
   private static final String MULTI_CLUSTER_CONFIG_RELOAD_EXECUTOR =
       "MULTI_CLUSTER_CONFIG_RELOAD_EXECUTOR";
 
   private static final String REMOTE_CLUSTER_HANDLER_EXECUTOR = "REMOTE_CLUSTER_HANDLER_EXECUTOR";
-
-  private static final String CLIENT_MANAGER_EXECUTOR = "CLIENT_MANAGER_EXECUTOR";
 
   private Map<String, ThreadPoolExecutor> reportExecutors = new HashMap<>();
 
