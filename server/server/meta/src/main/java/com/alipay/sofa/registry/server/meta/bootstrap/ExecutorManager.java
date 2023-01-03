@@ -42,6 +42,7 @@ public class ExecutorManager {
   private final ThreadPoolExecutor multiClusterConfigReloadExecutor;
   private final ThreadPoolExecutor remoteClusterHandlerExecutor;
 
+
   private static final String MULTI_CLUSTER_CONFIG_RELOAD_EXECUTOR =
       "MULTI_CLUSTER_CONFIG_RELOAD_EXECUTOR";
 
@@ -92,20 +93,6 @@ public class ExecutorManager {
                     new ArrayBlockingQueue<>(
                         multiClusterMetaServerConfig.getRemoteClusterHandlerMaxBufferSize()),
                     new NamedThreadFactory(REMOTE_CLUSTER_HANDLER_EXECUTOR, true)));
-
-    clientManagerExecutor =
-        reportExecutors.computeIfAbsent(
-            CLIENT_MANAGER_EXECUTOR,
-            k ->
-                new MetricsableThreadPoolExecutor(
-                    CLIENT_MANAGER_EXECUTOR,
-                    multiClusterMetaServerConfig.getClientManagerCoreSize(),
-                    multiClusterMetaServerConfig.getClientManagerMaxSize(),
-                    60,
-                    TimeUnit.SECONDS,
-                    new ArrayBlockingQueue<>(
-                        multiClusterMetaServerConfig.getClientManagerMaxBufferSize()),
-                    new NamedThreadFactory(CLIENT_MANAGER_EXECUTOR, true)));
   }
 
   public void startScheduler() {}
