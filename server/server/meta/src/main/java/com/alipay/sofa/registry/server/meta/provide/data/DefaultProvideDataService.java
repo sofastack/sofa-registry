@@ -16,14 +16,19 @@
  */
 package com.alipay.sofa.registry.server.meta.provide.data;
 
+import com.alipay.remoting.util.StringUtils;
 import com.alipay.sofa.registry.common.model.console.PersistenceData;
 import com.alipay.sofa.registry.common.model.console.PersistenceDataBuilder;
+import com.alipay.sofa.registry.common.model.constants.ValueConstants;
+import com.alipay.sofa.registry.jdbc.convertor.AppRevisionDomainConvertor;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.MetaLeaderService;
 import com.alipay.sofa.registry.store.api.DBResponse;
+import com.alipay.sofa.registry.store.api.OperationStatus;
 import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
+import com.alipay.sofa.registry.util.JsonUtils;
 import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -82,10 +87,42 @@ public class DefaultProvideDataService implements ProvideDataService {
     lock.writeLock().lock();
     try {
       provideDataCache = provideDatas;
+      appRevisionSwitchRefresh();
     } catch (Throwable t) {
       LOGGER.error("refresh provide data error.", t);
     } finally {
       lock.writeLock().unlock();
+    }
+  }
+
+  private void appRevisionSwitchRefresh() {
+    DBResponse<PersistenceData> ret =
+        queryProvideData(ValueConstants.APP_REVISION_WRITE_SWITCH_DATA_ID);
+    AppRevisionDomainConvertor.EnableConfig enableConfig = null;
+    if (ret.getOperationStatus() == OperationStatus.SUCCESS) {
+      PersistenceData data = ret.getEntity();
+      String switchString = data.getData();
+      if (StringUtils.isNotBlank(switchString)) {
+        try {
+          enableConfig =
+              JsonUtils.read(switchString, AppRevisionDomainConvertor.EnableConfig.class);
+        } catch (Throwable e) {
+          LOGGER.error("Decode appRevision write switch failed", e);
+        }
+      }
+    }
+    if (enableConfig != null
+        && !AppRevisionDomainConvertor.getEnableConfig().equals(enableConfig)) {
+
+      AppRevisionDomainConvertor.setEnableConfig(enableConfig);
+      LOGGER.info(
+          "appRevisionSwitch prev={}/{}",
+          AppRevisionDomainConvertor.getEnableConfig().isServiceParams(),
+          AppRevisionDomainConvertor.getEnableConfig().isServiceParamsLarge());
+      LOGGER.info(
+          "appRevisionSwitch update={}/{}",
+          enableConfig.isServiceParams(),
+          enableConfig.isServiceParamsLarge());
     }
   }
 

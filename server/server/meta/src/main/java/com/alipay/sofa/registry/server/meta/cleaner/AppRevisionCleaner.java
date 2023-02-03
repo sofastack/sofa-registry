@@ -145,9 +145,13 @@ public class AppRevisionCleaner
             metaServerConfig.getAppRevisionMaxRemove());
     for (AppRevision revision : expired) {
       revision.setDeleted(true);
-      appRevisionRepository.replace(revision);
-      LOG.info("mark deleted revision: {}", revision.getRevision());
-      ConcurrentUtils.sleepUninterruptibly(10, TimeUnit.MILLISECONDS);
+      try {
+        appRevisionRepository.replace(revision);
+        LOG.info("mark deleted revision: {}", revision.getRevision());
+        ConcurrentUtils.sleepUninterruptibly(10, TimeUnit.MILLISECONDS);
+      } catch (Throwable e) {
+        LOG.error("mark deleted revision failed: {}", revision.getRevision(), e);
+      }
     }
   }
 
