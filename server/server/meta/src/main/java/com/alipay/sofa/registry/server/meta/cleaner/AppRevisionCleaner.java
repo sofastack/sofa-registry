@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.meta.cleaner;
 
+import com.alipay.remoting.util.StringUtils;
 import com.alipay.sofa.registry.cache.ConsecutiveSuccess;
 import com.alipay.sofa.registry.common.model.console.PersistenceData;
 import com.alipay.sofa.registry.common.model.console.PersistenceDataBuilder;
@@ -24,6 +25,7 @@ import com.alipay.sofa.registry.common.model.metaserver.cleaner.AppRevisionSlice
 import com.alipay.sofa.registry.common.model.metaserver.cleaner.AppRevisionSliceRequest;
 import com.alipay.sofa.registry.common.model.store.AppRevision;
 import com.alipay.sofa.registry.jdbc.config.MetadataConfig;
+import com.alipay.sofa.registry.jdbc.convertor.AppRevisionDomainConvertor;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.MetaLeaderService;
@@ -35,6 +37,7 @@ import com.alipay.sofa.registry.store.api.OperationStatus;
 import com.alipay.sofa.registry.store.api.date.DateNowRepository;
 import com.alipay.sofa.registry.store.api.repository.AppRevisionRepository;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
+import com.alipay.sofa.registry.util.JsonUtils;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import com.google.common.collect.Lists;
@@ -143,11 +146,46 @@ public class AppRevisionCleaner
         appRevisionRepository.getExpired(
             dateBeforeNow(metadataConfig.getRevisionRenewIntervalMinutes() * 5),
             metaServerConfig.getAppRevisionMaxRemove());
+    // before markDeleted refresh app revision switch
+    appRevisionSwitchRefresh();
     for (AppRevision revision : expired) {
       revision.setDeleted(true);
-      appRevisionRepository.replace(revision);
-      LOG.info("mark deleted revision: {}", revision.getRevision());
-      ConcurrentUtils.sleepUninterruptibly(10, TimeUnit.MILLISECONDS);
+      try {
+        appRevisionRepository.replace(revision);
+        LOG.info("mark deleted revision: {}", revision.getRevision());
+        ConcurrentUtils.sleepUninterruptibly(10, TimeUnit.MILLISECONDS);
+      } catch (Throwable e) {
+        LOG.error("mark deleted revision failed: {}", revision.getRevision(), e);
+      }
+    }
+  }
+
+  private void appRevisionSwitchRefresh() {
+    DBResponse<PersistenceData> ret =
+            provideDataService.queryProvideData(ValueConstants.APP_REVISION_WRITE_SWITCH_DATA_ID);
+    AppRevisionDomainConvertor.EnableConfig enableConfig = null;
+    if (ret.getOperationStatus() == OperationStatus.SUCCESS) {
+      PersistenceData data = ret.getEntity();
+      String switchString = data.getData();
+      if (StringUtils.isNotBlank(switchString)) {
+        try {
+          enableConfig =
+                  JsonUtils.read(switchString, AppRevisionDomainConvertor.EnableConfig.class);
+        } catch (Throwable e) {
+          LOG.error("Decode appRevision write switch failed", e);
+        }
+      }
+    }
+    if (enableConfig != null) {
+      LOG.info(
+              "appRevisionSwitch prev={}/{}",
+              AppRevisionDomainConvertor.getEnableConfig().isServiceParams(),
+              AppRevisionDomainConvertor.getEnableConfig().isServiceParamsLarge());
+      AppRevisionDomainConvertor.setEnableConfig(enableConfig);
+      LOG.info(
+              "appRevisionSwitch update={}/{}",
+              enableConfig.isServiceParams(),
+              enableConfig.isServiceParamsLarge());
     }
   }
 
