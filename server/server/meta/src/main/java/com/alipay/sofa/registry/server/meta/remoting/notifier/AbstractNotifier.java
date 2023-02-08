@@ -19,6 +19,7 @@ package com.alipay.sofa.registry.server.meta.remoting.notifier;
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideDataChangeEvent;
+import com.alipay.sofa.registry.common.model.metaserver.RemoteDatumClearEvent;
 import com.alipay.sofa.registry.common.model.metaserver.SlotTableChangeEvent;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.common.model.store.URL;
@@ -75,6 +76,13 @@ public abstract class AbstractNotifier<T extends Node> implements Notifier {
   @Override
   public void notifyProvideDataChange(ProvideDataChangeEvent event) {
     new NotifyTemplate<ProvideDataChangeEvent>().broadcast(event);
+  }
+
+  @Override
+  public void notifyRemoteDatumClear(RemoteDatumClearEvent event) {
+    if (metaLeaderService.amIStableAsLeader()) {
+      new NotifyTemplate<RemoteDatumClearEvent>().broadcast(event);
+    }
   }
 
   public Map<String, Object> broadcastInvoke(Object request, int timeout) throws Exception {

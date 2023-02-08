@@ -61,15 +61,19 @@ public class DataServerBootstrapTest {
 
   @Mock private DataChangeEventCenter dataChangeEventCenter;
 
-  //    @Mock private SessionLeaseManager sessionLeaseManager;
+  @Mock private MultiClusterDataServerConfig multiClusterDataServerConfig;
+
+  @Mock private SystemPropertyProcessorManager systemPropertyProcessorManager;
 
   @InjectMocks private DataServerBootstrap bootstrap = spy(new DataServerBootstrap());
 
   @Before
   public void beforeDataServerBootstrapTest() {
     MockitoAnnotations.initMocks(this);
-    bootstrap.setServerHandlers(Lists.newArrayList()).setServerSyncHandlers(Lists.newArrayList());
-    bootstrap.setSystemPropertyProcessorManager(mock(SystemPropertyProcessorManager.class));
+    bootstrap
+        .setServerHandlers(Lists.newArrayList())
+        .setServerSyncHandlers(Lists.newArrayList())
+        .setRemoteDataServerHandlers(Lists.newArrayList());
   }
 
   @Test

@@ -26,10 +26,7 @@ import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.store.DataStore;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
-import com.alipay.sofa.registry.util.NamedThreadFactory;
 import java.util.*;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
@@ -50,9 +47,6 @@ public class SessionCacheDigestTask {
 
   @Autowired SessionServerConfig sessionServerConfig;
 
-  private final ScheduledExecutorService executorService =
-      new ScheduledThreadPoolExecutor(1, new NamedThreadFactory("CacheDigestTask"));
-
   @PostConstruct
   public boolean init() {
     final int intervalMinutes = sessionServerConfig.getCacheDigestIntervalMinutes();
@@ -64,9 +58,15 @@ public class SessionCacheDigestTask {
     firstDate = DateUtils.round(firstDate, Calendar.MINUTE);
     firstDate.setMinutes(
         firstDate.getMinutes() / intervalMinutes * intervalMinutes + intervalMinutes);
-    long firstDelay = firstDate.getTime() - System.currentTimeMillis();
-    executorService.scheduleAtFixedRate(
-        this::dump, firstDelay, (long) intervalMinutes * 60 * 1000, TimeUnit.MILLISECONDS);
+    Timer timer = new Timer("CacheDigestTask", true);
+    TimerTask task =
+        new TimerTask() {
+          @Override
+          public void run() {
+            dump();
+          }
+        };
+    timer.scheduleAtFixedRate(task, firstDate, intervalMinutes * 60 * 1000);
     return true;
   }
 

@@ -2,11 +2,12 @@
 <project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-   
+
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.alipay.sofa</groupId>
     <artifactId>registry-parent</artifactId>
-    <version>6.1.9</version>
+    <version>6.2.0</version>
+
     <packaging>pom</packaging>
 
     <name>${project.groupId}:${project.artifactId}</name>
@@ -70,7 +71,7 @@
         <sofa.hessian.version>3.3.12</sofa.hessian.version>
         <netty.version>4.1.25.Final</netty.version>
         <jersey.version>2.26</jersey.version>
-        <protobuf.version>3.5.1</protobuf.version>
+        <protobuf.version>3.17.3</protobuf.version>
         <slf4j.version>1.7.21</slf4j.version>
         <lookout.version>1.5.2</lookout.version>
         <mockito.version>1.10.19</mockito.version>
@@ -467,38 +468,6 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-pmd-plugin</artifactId>
-                <version>3.11.0</version>
-                <configuration>
-                    <sourceEncoding>${project.build.sourceEncoding}</sourceEncoding>
-                    <targetJdk>${maven.compiler.target}</targetJdk>
-                    <printFailingErrors>true</printFailingErrors>
-                    <rulesets>
-                        <ruleset>${main.user.dir}/ruleset.xml</ruleset>
-                    </rulesets>
-                    <excludes>
-                        <exclude>**/client/pb/*.*</exclude>
-                    </excludes>
-                    <failurePriority>2</failurePriority>
-                </configuration>
-                <executions>
-                    <execution>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <dependencies>
-                    <dependency>
-                        <groupId>com.alibaba.p3c</groupId>
-                        <artifactId>p3c-pmd</artifactId>
-                        <version>2.0.1</version>
-                    </dependency>
-                </dependencies>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
                 <version>3.0.1</version>
                 <executions>
@@ -525,7 +494,7 @@
                 </executions>
                 <configuration>
                     <generateGitPropertiesFile>true</generateGitPropertiesFile>
-                    <generateGitPropertiesFilename>${project.build.outputDirectory}/sofaregistry.git.properties</generateGitPropertiesFilename>
+                    <generateGitPropertiesFilename>${project.build.outputDirectory}/git.properties</generateGitPropertiesFilename>
                     <includeOnlyProperties>
                         <includeOnlyProperty>^git.build.(time|version)$</includeOnlyProperty>
                         <includeOnlyProperty>^git.commit.id.(abbrev|full)$</includeOnlyProperty>

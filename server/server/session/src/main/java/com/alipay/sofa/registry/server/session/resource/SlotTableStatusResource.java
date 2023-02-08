@@ -17,13 +17,17 @@
 package com.alipay.sofa.registry.server.session.resource;
 
 import com.alipay.sofa.registry.common.model.GenericResponse;
+import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.common.model.slot.SlotTableStatusResponse;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.server.session.multi.cluster.DataCenterMetadataCache;
+import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -38,6 +42,10 @@ public class SlotTableStatusResource {
 
   @Autowired MetaServerService metaServerService;
 
+  @Autowired SlotTableCache slotTableCache;
+
+  @Autowired DataCenterMetadataCache dataCenterMetadataCache;
+
   @GET
   @Path("/status")
   @Produces(MediaType.APPLICATION_JSON)
@@ -51,6 +59,22 @@ public class SlotTableStatusResource {
       return new GenericResponse<>().fillFailed(th.getMessage());
     } finally {
       logger.info("[getSlotTableStatus] end");
+    }
+  }
+
+  @GET
+  @Path("/cache")
+  @Produces(MediaType.APPLICATION_JSON)
+  public GenericResponse<Object> getSlotTableCache(@QueryParam("dataCenter") String dataCenter) {
+    logger.info("[getSlotTableCache] begin dataCenter={}", dataCenter);
+    try {
+      SlotTable slotTable = slotTableCache.getSlotTable(dataCenter);
+      return new GenericResponse<>().fillSucceed(slotTable);
+    } catch (Throwable th) {
+      logger.error("[getSlotTableCache]", th);
+      return new GenericResponse<>().fillFailed(th.getMessage());
+    } finally {
+      logger.info("[getSlotTableCache] end dataCenter={}", dataCenter);
     }
   }
 }

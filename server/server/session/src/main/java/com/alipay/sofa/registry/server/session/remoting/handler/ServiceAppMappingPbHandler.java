@@ -39,11 +39,13 @@ public class ServiceAppMappingPbHandler
   @Override
   public Object doHandle(Channel channel, ServiceAppMappingRequest request) {
     List<String> services = request.getServiceIdsList();
-    String remoteIp = StringUtils.EMPTY;
+    String remoteIp;
     if (channel != null
         && channel.getRemoteAddress() != null
         && channel.getRemoteAddress().getAddress() != null) {
       remoteIp = channel.getRemoteAddress().getAddress().getHostAddress();
+    } else {
+      remoteIp = StringUtils.EMPTY;
     }
     return appRevisionHandlerStrategy.queryApps(services, remoteIp);
   }

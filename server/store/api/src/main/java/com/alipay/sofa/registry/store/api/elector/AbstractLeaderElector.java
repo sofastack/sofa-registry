@@ -165,22 +165,12 @@ public abstract class AbstractLeaderElector implements LeaderElector {
    * @return the get elector
    */
   @Override
-  public String getLeader() {
+  public LeaderInfo getLeaderInfo() {
 
     if (leaderNotExpired()) {
-      return leaderInfo.leader;
+      return leaderInfo;
     }
-    return LeaderInfo.HAS_NO_LEADER.leader;
-  }
-
-  /**
-   * Gets get elector epoch.
-   *
-   * @return the get elector epoch
-   */
-  @Override
-  public long getLeaderEpoch() {
-    return leaderInfo.epoch;
+    return LeaderInfo.HAS_NO_LEADER;
   }
 
   /** notify when change to elector */

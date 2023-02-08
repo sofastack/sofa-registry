@@ -24,8 +24,8 @@ import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 import com.alipay.sofa.registry.common.model.slot.SlotConfig;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.common.model.store.URL;
-import com.alipay.sofa.registry.server.session.bootstrap.CommonConfig;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
+import com.alipay.sofa.registry.server.session.multi.cluster.DataCenterMetadataCache;
 import com.alipay.sofa.registry.server.session.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.server.session.remoting.DataNodeNotifyExchanger;
 import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
@@ -45,15 +45,15 @@ public class MetaServerServiceImpl extends AbstractMetaServerService<BaseHeartBe
 
   @Autowired private SlotTableCache slotTableCache;
 
+  @Autowired private DataCenterMetadataCache dataCenterMetadataCache;
+
   @Autowired private DataNodeExchanger dataNodeExchanger;
 
   @Autowired private DataNodeNotifyExchanger dataNodeNotifyExchanger;
 
-  @Autowired private CommonConfig commonConfig;
-
   @Override
   protected long getCurrentSlotTableEpoch() {
-    return slotTableCache.getEpoch();
+    return slotTableCache.getEpoch(sessionServerConfig.getSessionServerDataCenter());
   }
 
   @Override
@@ -71,21 +71,25 @@ public class MetaServerServiceImpl extends AbstractMetaServerService<BaseHeartBe
       dataNodeExchanger.notifyConnectServerAsync();
     }
     if (result.getSlotTable() != null && result.getSlotTable() != SlotTable.INIT) {
-      slotTableCache.updateSlotTable(result.getSlotTable());
+      slotTableCache.updateLocalSlotTable(result.getSlotTable());
     } else {
       RENEWER_LOGGER.warn("[handleRenewResult] no slot table result");
     }
+
+    slotTableCache.updateRemoteSlotTable(result.getRemoteSlotTableStatus());
+    dataCenterMetadataCache.saveDataCenterZones(result.getRemoteSlotTableStatus());
   }
 
   @Override
   protected HeartbeatRequest createRequest() {
     return new HeartbeatRequest(
             createNode(),
-            slotTableCache.getEpoch(),
+            slotTableCache.getEpoch(sessionServerConfig.getSessionServerDataCenter()),
             sessionServerConfig.getSessionServerDataCenter(),
             System.currentTimeMillis(),
-            SlotConfig.slotBasicInfo())
-        .setSlotTable(slotTableCache.getCurrentSlotTable());
+            SlotConfig.slotBasicInfo(),
+            slotTableCache.getRemoteSlotTableEpoch())
+        .setSlotTable(slotTableCache.getLocalSlotTable());
   }
 
   @Override
@@ -121,5 +125,15 @@ public class MetaServerServiceImpl extends AbstractMetaServerService<BaseHeartBe
   @VisibleForTesting
   void setDataNodeNotifyExchanger(DataNodeNotifyExchanger dataNodeNotifyExchanger) {
     this.dataNodeNotifyExchanger = dataNodeNotifyExchanger;
+  }
+
+  /**
+   * Setter method for property <tt>dataCenterMetadataCache</tt>.
+   *
+   * @param dataCenterMetadataCache value to be assigned to property dataCenterMetadataCache
+   */
+  @VisibleForTesting
+  void setDataCenterMetadataCache(DataCenterMetadataCache dataCenterMetadataCache) {
+    this.dataCenterMetadataCache = dataCenterMetadataCache;
   }
 }

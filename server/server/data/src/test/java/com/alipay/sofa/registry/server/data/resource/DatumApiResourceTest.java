@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.server.data.resource;
 
+import static org.mockito.Matchers.anyString;
+
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
@@ -24,7 +26,7 @@ import com.alipay.sofa.registry.common.model.slot.SlotConfig;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.server.data.TestBaseUtils;
 import com.alipay.sofa.registry.server.data.cache.CleanContinues;
-import com.alipay.sofa.registry.server.data.cache.DatumCache;
+import com.alipay.sofa.registry.server.data.cache.DatumStorageDelegate;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.BatchPutDataHandler;
 import com.alipay.sofa.registry.server.data.slot.SlotManager;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
@@ -41,9 +43,8 @@ public class DatumApiResourceTest {
   private DatumApiResource newResource() {
     DatumApiResource resource = new DatumApiResource();
     resource.dataServerConfig = TestBaseUtils.newDataConfig("testDc");
-    DatumCache datumCache = TestBaseUtils.newLocalDatumCache("testDc", true);
-    resource.datumCache = datumCache;
-    resource.localDatumStorage = datumCache.getLocalDatumStorage();
+    DatumStorageDelegate datumStorageDelegate = TestBaseUtils.newLocalDatumDelegate("testDc", true);
+    resource.datumStorageDelegate = datumStorageDelegate;
     resource.slotManager = Mockito.mock(SlotManager.class);
     resource.batchPutDataHandler = Mockito.mock(BatchPutDataHandler.class);
     return resource;
@@ -62,13 +63,14 @@ public class DatumApiResourceTest {
 
   @Test
   public void testGetNotEmpty() {
+    String datacenter = "testdc";
     DatumApiResource resource = newResource();
-    Mockito.when(resource.slotManager.slotOf(Mockito.anyString())).thenReturn(10);
-    Mockito.when(resource.slotManager.getSlot(Mockito.anyInt()))
+    Mockito.when(resource.slotManager.slotOf(anyString())).thenReturn(10);
+    Mockito.when(resource.slotManager.getSlot(anyString(), Mockito.anyInt()))
         .thenReturn(new Slot(10, "xxx", 1, Collections.emptyList()));
 
     Publisher pub = TestBaseUtils.createTestPublishers(10, 1).get(0);
-    DatumVersion v = resource.localDatumStorage.put(pub);
+    DatumVersion v = resource.datumStorageDelegate.putPublisher(datacenter, pub);
 
     DatumParam param = new DatumParam();
     param.setDataCenter("testDc");
@@ -89,16 +91,18 @@ public class DatumApiResourceTest {
 
   @Test
   public void testAddDelete() {
+    String datacenter = "testdc";
+
     final DatumApiResource resource = newResource();
-    Mockito.when(resource.slotManager.slotOf(Mockito.anyString())).thenReturn(10);
-    Mockito.when(resource.slotManager.getSlot(Mockito.anyInt()))
+    Mockito.when(resource.slotManager.slotOf(anyString())).thenReturn(10);
+    Mockito.when(resource.slotManager.getSlot(anyString(), Mockito.anyInt()))
         .thenReturn(new Slot(10, "xxx", 1, Collections.emptyList()));
 
     Publisher pub = TestBaseUtils.createTestPublishers(10, 1).get(0);
-    resource.localDatumStorage.put(pub);
+    resource.datumStorageDelegate.putPublisher(datacenter, pub);
 
     DatumParam param = newParam(pub.getDataInfoId());
-    Datum datum = resource.localDatumStorage.get(pub.getDataInfoId());
+    Datum datum = resource.datumStorageDelegate.get(datacenter, pub.getDataInfoId());
     Publisher pubAdd = resource.buildPublisher(datum, param);
 
     CommonResponse response = resource.get(param);
@@ -110,7 +114,7 @@ public class DatumApiResourceTest {
 
     resource.dataServerConfig.setEnableTestApi(true);
     // batchHandler is mock, put the pub directly
-    resource.localDatumStorage.put(pubAdd);
+    resource.datumStorageDelegate.putPublisher(datacenter, pubAdd);
     response = resource.addPub(param);
     Assert.assertTrue(response.isSuccess());
     Assert.assertTrue(response.getMessage(), response.getMessage().contains("size=2"));
@@ -138,7 +142,7 @@ public class DatumApiResourceTest {
     Assert.assertTrue(response.getMessage().contains("not found"));
 
     param.setDataInfoId(pub.getDataInfoId());
-    resource.localDatumStorage.put(pub);
+    resource.datumStorageDelegate.putPublisher(datacenter, pub);
     response = resource.deletePub(param);
     Assert.assertFalse(response.isSuccess());
     Assert.assertTrue(response.getMessage(), response.getMessage().contains("No pub of"));
@@ -154,7 +158,8 @@ public class DatumApiResourceTest {
             new Answer<Object>() {
               public Object answer(InvocationOnMock var1) throws Throwable {
                 for (int i = 0; i < SlotConfig.SLOT_NUM; i++) {
-                  resource.localDatumStorage.clean(i, ServerEnv.PROCESS_ID, CleanContinues.ALWAYS);
+                  resource.datumStorageDelegate.cleanBySessionId(
+                      datacenter, i, ServerEnv.PROCESS_ID, CleanContinues.ALWAYS);
                 }
                 return null;
               }

@@ -16,7 +16,7 @@
  */
 package com.alipay.sofa.registry.jdbc.mapper;
 
-import com.alipay.sofa.registry.jdbc.domain.DistributeLockDomain;
+import com.alipay.sofa.registry.common.model.elector.DistributeLockInfo;
 import com.alipay.sofa.registry.jdbc.domain.FollowCompeteLockDomain;
 import org.apache.ibatis.annotations.Param;
 
@@ -33,7 +33,7 @@ public interface DistributeLockMapper {
    * @param lockName
    * @return
    */
-  public DistributeLockDomain queryDistLock(
+  public DistributeLockInfo queryDistLock(
       @Param("dataCenter") String dataCenter, @Param("lockName") String lockName);
 
   /**
@@ -41,7 +41,7 @@ public interface DistributeLockMapper {
    *
    * @param lock
    */
-  public void competeLockOnInsert(DistributeLockDomain lock) throws Exception;
+  public void competeLockOnInsert(DistributeLockInfo lock) throws Exception;
 
   /**
    * compete lock with cas
@@ -52,8 +52,8 @@ public interface DistributeLockMapper {
   public void competeLockOnUpdate(FollowCompeteLockDomain competeLock);
 
   /** renew lock last update time */
-  public void ownerHeartbeat(DistributeLockDomain lock);
+  public void ownerHeartbeat(DistributeLockInfo lock);
 
   /** force reset owner and duration */
-  public void forceRefresh(DistributeLockDomain lock);
+  public void forceRefresh(DistributeLockInfo lock);
 }

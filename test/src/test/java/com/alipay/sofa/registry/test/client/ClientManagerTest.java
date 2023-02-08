@@ -81,7 +81,9 @@ public class ClientManagerTest extends BaseIntegrationTest {
 
     // check data
     Assert.assertTrue(
-        isExist(localDatumStorage.getAllPublisher().get(dataInfo.getDataInfoId()), localAddress));
+        isExist(
+            datumStorageDelegate.getAllPublisher(LOCAL_DATACENTER).get(dataInfo.getDataInfoId()),
+            localAddress));
 
     /** client off */
     CommonResponse response = clientManagerResource.clientOff(CLIENT_OFF_STR);
@@ -108,7 +110,9 @@ public class ClientManagerTest extends BaseIntegrationTest {
     Assert.assertFalse(isExist(sessionDataStore.getDatas(dataInfo.getDataInfoId()), localAddress));
     // check data publisher
     Assert.assertFalse(
-        isExist(localDatumStorage.getAllPublisher().get(dataInfo.getDataInfoId()), localAddress));
+        isExist(
+            datumStorageDelegate.getAllPublisher(LOCAL_DATACENTER).get(dataInfo.getDataInfoId()),
+            localAddress));
 
     register.republish(value);
     Thread.sleep(2000L);
@@ -117,7 +121,9 @@ public class ClientManagerTest extends BaseIntegrationTest {
     Assert.assertFalse(isExist(sessionDataStore.getDatas(dataInfo.getDataInfoId()), localAddress));
     // check data publisher
     Assert.assertFalse(
-        isExist(localDatumStorage.getAllPublisher().get(dataInfo.getDataInfoId()), localAddress));
+        isExist(
+            datumStorageDelegate.getAllPublisher(LOCAL_DATACENTER).get(dataInfo.getDataInfoId()),
+            localAddress));
 
     /** client open */
     response = clientManagerResource.clientOpen(CLIENT_OPEN_STR);
@@ -143,7 +149,9 @@ public class ClientManagerTest extends BaseIntegrationTest {
     // check session local cache
     Assert.assertTrue(isExist(sessionDataStore.getDatas(dataInfo.getDataInfoId()), localAddress));
     Assert.assertTrue(
-        isExist(localDatumStorage.getAllPublisher().get(dataInfo.getDataInfoId()), localAddress));
+        isExist(
+            datumStorageDelegate.getAllPublisher(LOCAL_DATACENTER).get(dataInfo.getDataInfoId()),
+            localAddress));
   }
 
   @Test
@@ -228,7 +236,9 @@ public class ClientManagerTest extends BaseIntegrationTest {
 
     // check data
     Assert.assertTrue(
-        isExist(localDatumStorage.getAllPublisher().get(dataInfo.getDataInfoId()), localAddress));
+        isExist(
+            datumStorageDelegate.getAllPublisher(LOCAL_DATACENTER).get(dataInfo.getDataInfoId()),
+            localAddress));
 
     /** client off */
     CommonResponse response = clientManagerResource.clientOff(CLIENT_OFF_STR);
@@ -255,7 +265,9 @@ public class ClientManagerTest extends BaseIntegrationTest {
     Assert.assertFalse(isExist(sessionDataStore.getDatas(dataInfo.getDataInfoId()), localAddress));
     // check data publisher
     Assert.assertFalse(
-        isExist(localDatumStorage.getAllPublisher().get(dataInfo.getDataInfoId()), localAddress));
+        isExist(
+            datumStorageDelegate.getAllPublisher(LOCAL_DATACENTER).get(dataInfo.getDataInfoId()),
+            localAddress));
 
     register.republish(value);
     Thread.sleep(2000L);
@@ -264,7 +276,9 @@ public class ClientManagerTest extends BaseIntegrationTest {
     Assert.assertFalse(isExist(sessionDataStore.getDatas(dataInfo.getDataInfoId()), localAddress));
     // check data publisher
     Assert.assertFalse(
-        isExist(localDatumStorage.getAllPublisher().get(dataInfo.getDataInfoId()), localAddress));
+        isExist(
+            datumStorageDelegate.getAllPublisher(LOCAL_DATACENTER).get(dataInfo.getDataInfoId()),
+            localAddress));
 
     /** reduce */
     response = clientManagerResource.reduce(CLIENT_OPEN_STR);
@@ -290,7 +304,9 @@ public class ClientManagerTest extends BaseIntegrationTest {
     // check session local cache
     Assert.assertFalse(isExist(sessionDataStore.getDatas(dataInfo.getDataInfoId()), localAddress));
     Assert.assertFalse(
-        isExist(localDatumStorage.getAllPublisher().get(dataInfo.getDataInfoId()), localAddress));
+        isExist(
+            datumStorageDelegate.getAllPublisher(LOCAL_DATACENTER).get(dataInfo.getDataInfoId()),
+            localAddress));
 
     register.republish(value);
     Thread.sleep(2000L);
@@ -299,7 +315,9 @@ public class ClientManagerTest extends BaseIntegrationTest {
     Assert.assertTrue(isExist(sessionDataStore.getDatas(dataInfo.getDataInfoId()), localAddress));
     // check data publisher
     Assert.assertTrue(
-        isExist(localDatumStorage.getAllPublisher().get(dataInfo.getDataInfoId()), localAddress));
+        isExist(
+            datumStorageDelegate.getAllPublisher(LOCAL_DATACENTER).get(dataInfo.getDataInfoId()),
+            localAddress));
   }
 
   @Test

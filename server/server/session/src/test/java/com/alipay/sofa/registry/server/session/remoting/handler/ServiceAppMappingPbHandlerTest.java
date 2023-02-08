@@ -64,12 +64,12 @@ public class ServiceAppMappingPbHandlerTest {
   @Test
   public void testStopPush() {
     PushSwitchService pushSwitchService = mock(PushSwitchService.class);
-    when(pushSwitchService.canIpPush(anyString())).thenReturn(false);
+    when(pushSwitchService.canIpPushLocal(anyString())).thenReturn(false);
     DefaultAppRevisionHandlerStrategy strategy = new DefaultAppRevisionHandlerStrategy();
     strategy.setPushSwitchService(pushSwitchService);
 
     ServiceAppMappingResponse response = strategy.queryApps(Lists.newArrayList("123"), "");
-    Assert.assertEquals(ValueConstants.METADATA_STATUS_METHOD_NOT_ALLOW, response.getStatusCode());
+    Assert.assertEquals(ValueConstants.METADATA_STATUS_DATA_NOT_FOUND, response.getStatusCode());
   }
 
   private static ServiceAppMappingRequest request() {

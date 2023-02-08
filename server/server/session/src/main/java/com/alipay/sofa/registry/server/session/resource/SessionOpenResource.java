@@ -96,6 +96,6 @@ public class SessionOpenResource {
   @Produces(MediaType.APPLICATION_JSON)
   public Slot getSlot(@QueryParam("dataInfoId") String dataInfoId) {
     ParaCheckUtil.checkNotBlank(dataInfoId, "dataInfoId");
-    return slotTableCache.getSlot(dataInfoId);
+    return slotTableCache.getSlot(sessionServerConfig.getSessionServerDataCenter(), dataInfoId);
   }
 }

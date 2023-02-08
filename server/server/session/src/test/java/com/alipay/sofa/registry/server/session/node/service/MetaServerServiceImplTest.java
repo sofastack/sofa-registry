@@ -62,7 +62,9 @@ public class MetaServerServiceImplTest {
   public void testCreateRequest() {
     init();
 
-    Assert.assertEquals(impl.getCurrentSlotTableEpoch(), slotTableCache.getEpoch());
+    Assert.assertEquals(
+        impl.getCurrentSlotTableEpoch(),
+        slotTableCache.getEpoch(sessionServerConfigBean.getSessionServerDataCenter()));
     final long now = System.currentTimeMillis();
     HeartbeatRequest heartbeatRequest = impl.createRequest();
     LOGGER.info("hb={}", heartbeatRequest);
@@ -103,16 +105,17 @@ public class MetaServerServiceImplTest {
             null,
             new VersionedList(10, Collections.emptyList()),
             "xxx",
-            100);
+            100,
+            Collections.emptyMap());
 
-    SlotTable slotTable = slotTableCache.getCurrentSlotTable();
+    SlotTable slotTable = slotTableCache.getLocalSlotTable();
     // resp table is null, not modify the cache.table
     impl.handleRenewResult(resp);
 
     Assert.assertEquals(dataNodeNotifyExchanger.getServerIps(), impl.getDataServerList());
     Assert.assertEquals(dataNodeExchanger.getServerIps(), impl.getDataServerList());
     Assert.assertEquals(dataNodeExchanger.getServerIps(), impl.getDataServerList());
-    Assert.assertEquals(slotTable, slotTableCache.getCurrentSlotTable());
+    Assert.assertEquals(slotTable, slotTableCache.getLocalSlotTable());
 
     slotTable = new SlotTable(20, Collections.emptyList());
     resp =
@@ -122,10 +125,11 @@ public class MetaServerServiceImplTest {
             slotTable,
             new VersionedList(10, Collections.emptyList()),
             "xxx",
-            100);
+            100,
+            Collections.emptyMap());
 
     impl.handleRenewResult(resp);
-    Assert.assertEquals(slotTable, slotTableCache.getCurrentSlotTable());
+    Assert.assertEquals(slotTable, slotTableCache.getLocalSlotTable());
   }
 
   private void init() {
@@ -136,10 +140,13 @@ public class MetaServerServiceImplTest {
     Assert.assertEquals(
         impl.getRenewIntervalSecs(), sessionServerConfigBean.getSchedulerHeartbeatIntervalSecs());
     slotTableCache = new SlotTableCacheImpl();
+
+    slotTableCache.setSessionServerConfig(sessionServerConfigBean);
     SlotTable slotTable = new SlotTable(10, Collections.emptyList());
     SlotGenericResource slotGenericResource = new SlotGenericResource();
     slotGenericResource.record(slotTable);
-    slotTableCache.updateSlotTable(slotTable);
+    slotTableCache.updateLocalSlotTable(slotTable);
     impl.setSlotTableCache(slotTableCache);
+    impl.setDataCenterMetadataCache(TestUtils.newDataCenterMetaCache(sessionServerConfigBean));
   }
 }

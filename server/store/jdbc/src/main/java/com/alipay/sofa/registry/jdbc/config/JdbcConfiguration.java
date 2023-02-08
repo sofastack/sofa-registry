@@ -36,12 +36,16 @@ import com.alibaba.druid.pool.DruidDataSourceFactory;
 import com.alipay.sofa.registry.jdbc.repository.impl.AppRevisionJdbcRepository;
 import com.alipay.sofa.registry.jdbc.repository.impl.ClientManagerAddressJdbcRepository;
 import com.alipay.sofa.registry.jdbc.repository.impl.DateNowJdbcRepository;
+import com.alipay.sofa.registry.jdbc.repository.impl.DistributeLockJdbcRepository;
 import com.alipay.sofa.registry.jdbc.repository.impl.InterfaceAppsJdbcRepository;
+import com.alipay.sofa.registry.jdbc.repository.impl.MultiClusterSyncJdbcRepository;
 import com.alipay.sofa.registry.jdbc.repository.impl.ProvideDataJdbcRepository;
 import com.alipay.sofa.registry.jdbc.repository.impl.RecoverConfigJdbcRepository;
 import com.alipay.sofa.registry.store.api.config.StoreApiConfiguration;
 import com.alipay.sofa.registry.store.api.date.DateNowRepository;
+import com.alipay.sofa.registry.store.api.elector.DistributeLockRepository;
 import com.alipay.sofa.registry.store.api.meta.ClientManagerAddressRepository;
+import com.alipay.sofa.registry.store.api.meta.MultiClusterSyncRepository;
 import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
 import com.alipay.sofa.registry.store.api.meta.RecoverConfigRepository;
 import com.alipay.sofa.registry.store.api.repository.AppRevisionRepository;
@@ -262,6 +266,11 @@ public class JdbcConfiguration {
     }
 
     @Bean
+    public DistributeLockRepository distributeLockRepository() {
+      return new DistributeLockJdbcRepository();
+    }
+
+    @Bean
     public RecoverConfigRepository recoverConfigJdbcRepository() {
       return new RecoverConfigJdbcRepository();
     }
@@ -269,6 +278,11 @@ public class JdbcConfiguration {
     @Bean
     public DateNowRepository dateNowJdbcRepository() {
       return new DateNowJdbcRepository();
+    }
+
+    @Bean
+    public MultiClusterSyncRepository multiClusterSyncRepository() {
+      return new MultiClusterSyncJdbcRepository();
     }
   }
 }

@@ -29,6 +29,7 @@ import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.slot.SlotManager;
 import com.alipay.sofa.registry.server.meta.slot.manager.SimpleSlotManager;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 import org.assertj.core.util.Lists;
@@ -151,7 +152,8 @@ public class DefaultSessionServerManagerTest extends AbstractMetaServerTestBase 
                 slotTable.getEpoch(),
                 getDc(),
                 System.currentTimeMillis(),
-                SlotConfig.slotBasicInfo())
+                SlotConfig.slotBasicInfo(),
+                Collections.emptyMap())
             .setSlotTable(slotTable));
     Assert.assertNotEquals(SlotTable.INIT, slotManager.getSlotTable());
   }

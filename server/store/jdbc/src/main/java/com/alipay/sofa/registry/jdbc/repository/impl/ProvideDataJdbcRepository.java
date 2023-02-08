@@ -25,6 +25,8 @@ import com.alipay.sofa.registry.jdbc.constant.TableEnum;
 import com.alipay.sofa.registry.jdbc.convertor.ProvideDataDomainConvertor;
 import com.alipay.sofa.registry.jdbc.domain.ProvideDataDomain;
 import com.alipay.sofa.registry.jdbc.mapper.ProvideDataMapper;
+import com.alipay.sofa.registry.jdbc.repository.impl.MultiClusterSyncJdbcRepository.Configer;
+import com.alipay.sofa.registry.jdbc.version.config.BaseConfigRepository;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.store.api.config.DefaultCommonConfig;
@@ -56,83 +58,60 @@ public class ProvideDataJdbcRepository implements ProvideDataRepository, Recover
 
   private static final Integer batchQuerySize = 1000;
 
+  private Configer configer;
+
+  public ProvideDataJdbcRepository() {
+    configer = new Configer();
+  }
+
   @PostConstruct
   public void init() {
     recoverConfigRepository.registerCallback(this);
   }
 
+  class Configer extends BaseConfigRepository<ProvideDataDomain> {
+    public Configer() {
+      super("ProvideData", LOG);
+    }
+
+    @Override
+    protected ProvideDataDomain queryExistVersion(ProvideDataDomain entry) {
+      return provideDataMapper.query(entry.getDataCenter(), entry.getDataKey());
+    }
+
+    @Override
+    protected long insert(ProvideDataDomain entry) {
+      return provideDataMapper.save(entry);
+    }
+
+    @Override
+    protected int updateWithExpectVersion(ProvideDataDomain entry, long exist) {
+      return provideDataMapper.update(entry, exist);
+    }
+  }
+
   @Override
   public boolean put(PersistenceData persistenceData) {
+    PROVIDE_DATA_QUERY_COUNTER.inc();
+
     String dataInfoId = PersistenceDataBuilder.getDataInfoId(persistenceData);
     String clusterId = defaultCommonConfig.getClusterId(tableName(), dataInfoId);
 
     ProvideDataDomain domain =
         ProvideDataDomainConvertor.convert2ProvideData(persistenceData, clusterId);
-    return insertOrUpdate(domain);
+    return configer.put(domain);
   }
 
   @Override
   public boolean put(PersistenceData persistenceData, long expectVersion) {
+    PROVIDE_DATA_QUERY_COUNTER.inc();
 
     String dataInfoId = PersistenceDataBuilder.getDataInfoId(persistenceData);
     String clusterId = defaultCommonConfig.getClusterId(tableName(), dataInfoId);
-    ProvideDataDomain exist = provideDataMapper.query(clusterId, dataInfoId);
-
     ProvideDataDomain domain =
         ProvideDataDomainConvertor.convert2ProvideData(persistenceData, clusterId);
-    if (exist != null && exist.getDataVersion() != expectVersion) {
-      LOG.error(
-          "save provideData: {}, expectVersion: {}, exist: {}",
-          persistenceData,
-          expectVersion,
-          exist);
-      return false;
-    }
-    return insertOrUpdate(domain, exist);
-  }
 
-  protected boolean insertOrUpdate(ProvideDataDomain domain) {
-    PROVIDE_DATA_QUERY_COUNTER.inc();
-
-    ProvideDataDomain exist = provideDataMapper.query(domain.getDataCenter(), domain.getDataKey());
-    return insertOrUpdate(domain, exist);
-  }
-
-  protected boolean insertOrUpdate(ProvideDataDomain domain, ProvideDataDomain exist) {
-    int affect;
-    try {
-      if (exist == null) {
-        affect = provideDataMapper.save(domain);
-        if (LOG.isInfoEnabled()) {
-          LOG.info("save provideData: {}, affect rows: {}", domain, affect);
-        }
-      } else {
-        affect = provideDataMapper.update(domain, exist.getDataVersion());
-        if (LOG.isInfoEnabled()) {
-          LOG.info(
-              "update provideData: {}, expectVersion: {}, affect rows: {}",
-              domain,
-              exist.getDataVersion(),
-              affect);
-        }
-      }
-      PROVIDE_DATA_UPDATE_COUNTER.inc();
-
-      if (affect == 0) {
-        PersistenceData query = get(domain.getDataKey());
-        LOG.error(
-            "put provideData fail, query: {}, update: {}, expectVersion: {}",
-            query,
-            domain,
-            exist.getDataVersion());
-      }
-
-    } catch (Throwable t) {
-      LOG.error("put provideData: {} error.", domain, t);
-      return false;
-    }
-
-    return affect > 0;
+    return configer.put(domain, expectVersion);
   }
 
   @Override

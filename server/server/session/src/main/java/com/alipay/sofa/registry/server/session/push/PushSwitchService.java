@@ -16,42 +16,106 @@
  */
 package com.alipay.sofa.registry.server.session.push;
 
+import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
+import com.alipay.sofa.registry.server.session.metadata.MetadataCacheRegistry;
+import com.alipay.sofa.registry.server.session.multi.cluster.DataCenterMetadataCache;
 import com.alipay.sofa.registry.server.session.providedata.FetchGrayPushSwitchService;
-import com.alipay.sofa.registry.server.session.providedata.FetchStopPushService;
+import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.google.common.annotations.VisibleForTesting;
+import java.util.Set;
 import javax.annotation.Resource;
 import org.apache.commons.collections.CollectionUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 
 public class PushSwitchService {
 
-  @Resource FetchStopPushService fetchStopPushService;
+  @Autowired private SessionServerConfig sessionServerConfig;
 
-  @Resource FetchGrayPushSwitchService fetchGrayPushSwitchService;
+  @Resource private FetchGrayPushSwitchService fetchGrayPushSwitchService;
 
-  public PushSwitchService() {}
+  @Autowired private DataCenterMetadataCache dataCenterMetadataCache;
 
-  public boolean isGlobalPushSwitchStopped() {
-    return fetchStopPushService.isStopPushSwitch();
+  @Autowired private MetadataCacheRegistry metadataCacheRegistry;
+
+  public boolean canPushMulti(Set<String> dataCenters) {
+    ParaCheckUtil.checkNotEmpty(dataCenters, "push.dataCenters");
+    for (String dataCenter : dataCenters) {
+      if (!dataCenterCanPush(dataCenter)) {
+        return false;
+      }
+    }
+    return true;
   }
 
-  public boolean canPush() {
-    return !fetchStopPushService.isStopPushSwitch()
-        || CollectionUtils.isNotEmpty(fetchGrayPushSwitchService.getOpenIps());
+  private boolean dataCenterCanPush(String dataCenter) {
+    if (sessionServerConfig.isLocalDataCenter(dataCenter)) {
+      return switchCanPush(sessionServerConfig.getSessionServerDataCenter())
+          || CollectionUtils.isNotEmpty(fetchGrayPushSwitchService.getOpenIps());
+    }
+
+    return switchCanPush(dataCenter);
   }
 
-  public boolean canIpPush(String ip) {
-    return !fetchStopPushService.isStopPushSwitch()
-        || fetchGrayPushSwitchService.getOpenIps().contains(ip);
+  public boolean canLocalDataCenterPush() {
+    return dataCenterCanPush(sessionServerConfig.getSessionServerDataCenter());
+  }
+
+  public boolean canIpPushMulti(String ip, Set<String> dataCenters) {
+    ParaCheckUtil.checkNotBlank(ip, "push.ip");
+    ParaCheckUtil.checkNotEmpty(dataCenters, "push.dataCenters");
+
+    for (String dataCenter : dataCenters) {
+      if (!dataCenterAndIpCanPush(dataCenter, ip)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  public boolean canIpPushLocal(String ip) {
+    ParaCheckUtil.checkNotBlank(ip, "push.ip");
+    return dataCenterAndIpCanPush(sessionServerConfig.getSessionServerDataCenter(), ip);
+  }
+
+  private boolean switchCanPush(String dataCenter) {
+    // stop_push
+    Boolean stopPush = dataCenterMetadataCache.isStopPush(dataCenter);
+    if (stopPush == null || stopPush) {
+      return false;
+    }
+    // push_enable in multi_sync_info
+    return pushEnable(dataCenter);
+  }
+
+  private boolean pushEnable(String dataCenter) {
+    if (sessionServerConfig.isLocalDataCenter(dataCenter)) {
+      // local datacenter not need to check
+      return true;
+    }
+
+    return metadataCacheRegistry.getPushEnableDataCenters().contains(dataCenter);
+  }
+
+  private boolean dataCenterAndIpCanPush(String dataCenter, String ip) {
+    // stop_push
+    Boolean stopPush = dataCenterMetadataCache.isStopPush(dataCenter);
+    if (stopPush == null || stopPush) {
+      return sessionServerConfig.isLocalDataCenter(dataCenter)
+          && fetchGrayPushSwitchService.getOpenIps().contains(ip);
+    }
+    // push_enable in multi_sync_info
+    return pushEnable(dataCenter);
   }
 
   /**
-   * Setter method for property <tt>fetchStopPushService</tt>.
+   * Setter method for property <tt>sessionServerConfig</tt>.
    *
-   * @param fetchStopPushService value to be assigned to property fetchStopPushService
+   * @param sessionServerConfig value to be assigned to property sessionServerConfig
    */
   @VisibleForTesting
-  public void setFetchStopPushService(FetchStopPushService fetchStopPushService) {
-    this.fetchStopPushService = fetchStopPushService;
+  public PushSwitchService setSessionServerConfig(SessionServerConfig sessionServerConfig) {
+    this.sessionServerConfig = sessionServerConfig;
+    return this;
   }
 
   /**
@@ -60,18 +124,32 @@ public class PushSwitchService {
    * @param fetchGrayPushSwitchService value to be assigned to property fetchGrayPushSwitchService
    */
   @VisibleForTesting
-  public void setFetchGrayPushSwitchService(FetchGrayPushSwitchService fetchGrayPushSwitchService) {
+  public PushSwitchService setFetchGrayPushSwitchService(
+      FetchGrayPushSwitchService fetchGrayPushSwitchService) {
     this.fetchGrayPushSwitchService = fetchGrayPushSwitchService;
+    return this;
   }
 
   /**
-   * Getter method for property <tt>fetchStopPushService</tt>.
+   * Setter method for property <tt>dataCenterMetadataCache</tt>.
    *
-   * @return property value of fetchStopPushService
+   * @param dataCenterMetadataCache value to be assigned to property dataCenterMetadataCache
    */
   @VisibleForTesting
-  public FetchStopPushService getFetchStopPushService() {
-    return fetchStopPushService;
+  public PushSwitchService setDataCenterMetadataCache(
+      DataCenterMetadataCache dataCenterMetadataCache) {
+    this.dataCenterMetadataCache = dataCenterMetadataCache;
+    return this;
+  }
+
+  /**
+   * Getter method for property <tt>dataCenterMetadataCache</tt>.
+   *
+   * @return property value of dataCenterMetadataCache
+   */
+  @VisibleForTesting
+  public DataCenterMetadataCache getDataCenterMetadataCache() {
+    return dataCenterMetadataCache;
   }
 
   /**

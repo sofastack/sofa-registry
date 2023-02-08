@@ -29,6 +29,7 @@ import com.alipay.sofa.registry.server.shared.providedata.SystemDataStorage;
 import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
 import com.alipay.sofa.registry.util.JsonUtils;
 import com.google.common.annotations.VisibleForTesting;
+import javax.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -42,7 +43,7 @@ public class FetchShutdownService
 
   @Autowired private SessionServerConfig sessionServerConfig;
 
-  @Autowired private FetchStopPushService fetchStopPushService;
+  @Resource private FetchStopPushService fetchStopPushService;
 
   @Autowired private SessionServerBootstrap sessionServerBootstrap;
 

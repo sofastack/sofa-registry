@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.push;
 
+import com.alipay.sofa.registry.common.model.store.MultiSubDatum;
 import com.alipay.sofa.registry.common.model.store.PushData;
 import com.alipay.sofa.registry.common.model.store.SubDatum;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
@@ -29,7 +30,7 @@ import org.junit.Test;
 
 public class PushTaskBufferTest {
   @Test
-  public void test() {
+  public void test() throws InterruptedException {
     PushTaskBuffer buffer = new PushTaskBuffer(2);
     Assert.assertEquals(2, buffer.workers.length);
 
@@ -39,25 +40,28 @@ public class PushTaskBufferTest {
 
     MockTask task =
         new MockTask(
-            new PushCause(null, PushType.Sub, System.currentTimeMillis()),
+            new PushCause(
+                null,
+                PushType.Sub,
+                Collections.singletonMap(datum.getDataCenter(), System.currentTimeMillis())),
             NetUtil.getLocalSocketAddress(),
             Collections.singletonMap(subscriber.getRegisterId(), subscriber),
             datum);
     task.expireTimestamp = 1;
     Assert.assertTrue(buffer.buffer(task));
 
-    Assert.assertFalse(buffer.buffer(task));
-
     datum = TestUtils.newSubDatum(subscriber.getDataId(), 101, Collections.emptyList());
     MockTask task1 =
         new MockTask(
-            new PushCause(null, PushType.Sub, System.currentTimeMillis() + 1),
+            new PushCause(
+                null,
+                PushType.Sub,
+                Collections.singletonMap(datum.getDataCenter(), System.currentTimeMillis() + 1)),
             NetUtil.getLocalSocketAddress(),
             Collections.singletonMap(subscriber.getRegisterId(), subscriber),
             datum);
     task1.expireTimestamp = 2;
     Assert.assertTrue(buffer.buffer(task1));
-    Assert.assertEquals(task1.expireTimestamp, 1);
   }
 
   private static final class MockTask extends PushTask {
@@ -67,7 +71,7 @@ public class PushTaskBufferTest {
         InetSocketAddress addr,
         Map<String, Subscriber> subscriberMap,
         SubDatum datum) {
-      super(pushCause, addr, subscriberMap, datum);
+      super(pushCause, addr, subscriberMap, MultiSubDatum.of(datum));
     }
 
     @Override

@@ -50,7 +50,7 @@ public class AppRevisionCleanerTest extends AbstractMetaServerTestBase {
   public void beforeTest() throws Exception {
     makeMetaLeader();
     appRevisionCleaner = new AppRevisionCleaner(metaLeaderService);
-    appRevisionCleaner.metaServerConfig = new MetaServerConfigBean();
+    appRevisionCleaner.metaServerConfig = new MetaServerConfigBean(commonConfig);
     appRevisionCleaner.dateNowRepository = mock(DateNowJdbcRepository.class);
     appRevisionCleaner.appRevisionRepository = mock(AppRevisionJdbcRepository.class);
     appRevisionCleaner.sessionServerService = mock(DefaultSessionServerService.class);

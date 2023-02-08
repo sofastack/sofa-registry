@@ -18,6 +18,7 @@ package com.alipay.sofa.registry.server.data.remoting.sessionserver.handler;
 
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyLong;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -28,10 +29,10 @@ import com.alipay.sofa.registry.common.model.slot.SlotAccessGenericResponse;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.server.data.TestBaseUtils;
-import com.alipay.sofa.registry.server.data.cache.DatumCache;
+import com.alipay.sofa.registry.server.data.cache.DatumStorageDelegate;
 import com.alipay.sofa.registry.server.data.change.DataChangeEventCenter;
 import com.alipay.sofa.registry.server.data.lease.SessionLeaseManager;
-import com.alipay.sofa.registry.server.data.slot.SlotManager;
+import com.alipay.sofa.registry.server.data.slot.SlotAccessorDelegate;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
 import java.util.Collections;
@@ -62,18 +63,21 @@ public class GetDataVersionsHandlerTest {
         (SlotAccessGenericResponse) handler.buildFailedResponse("msg");
     Assert.assertFalse(failed.isSuccess());
     handler.sessionLeaseManager = new SessionLeaseManager();
-    SlotManager slotManager = mock(SlotManager.class);
-    handler.slotManager = slotManager;
-    DatumCache datumCache = TestBaseUtils.newLocalDatumCache("testDc", true);
-    handler.setDatumCache(datumCache);
-    handler.localDatumStorage = datumCache.getLocalDatumStorage();
-    handler.dataChangeEventCenter = new DataChangeEventCenter();
-    handler.dataServerConfig = TestBaseUtils.newDataConfig("testDc");
+    SlotAccessorDelegate slotManager = mock(SlotAccessorDelegate.class);
+    DatumStorageDelegate datumStorageDelegate = TestBaseUtils.newLocalDatumDelegate("testDc", true);
+
+    handler
+        .setSlotAccessor(slotManager)
+        .setDatumStorageDelegate(datumStorageDelegate)
+        .setDataChangeEventCenter(new DataChangeEventCenter())
+        .setDataServerConfig(TestBaseUtils.newDataConfig("testDc"));
+
     return handler;
   }
 
   @Test
   public void testHandle() {
+
     GetDataVersionsHandler handler = newHandler();
     TestBaseUtils.MockBlotChannel channel = TestBaseUtils.newChannel(9620, "localhost", 8888);
 
@@ -83,14 +87,18 @@ public class GetDataVersionsHandlerTest {
         request(Collections.singletonMap(pub.getDataInfoId() + 1, v), 10);
 
     // get status change
-    when(handler.slotManager.checkSlotAccess(anyInt(), anyLong(), anyLong()))
+    when(handler
+            .getSlotAccessorDelegate()
+            .checkSlotAccess(anyString(), anyInt(), anyLong(), anyLong()))
         .thenReturn(TestBaseUtils.accept(), TestBaseUtils.migrating(1, 10, 10));
 
     SlotAccessGenericResponse resp = (SlotAccessGenericResponse) handler.doHandle(channel, request);
     Assert.assertFalse(resp.isSuccess());
 
     // get not exist
-    when(handler.slotManager.checkSlotAccess(anyInt(), anyLong(), anyLong()))
+    when(handler
+            .getSlotAccessorDelegate()
+            .checkSlotAccess(anyString(), anyInt(), anyLong(), anyLong()))
         .thenReturn(TestBaseUtils.accept(), TestBaseUtils.accept());
 
     resp = (SlotAccessGenericResponse) handler.doHandle(channel, request);
@@ -101,11 +109,12 @@ public class GetDataVersionsHandlerTest {
     DatumVersion retV = ret.get(pub.getDataInfoId() + 1);
     Assert.assertTrue(retV.getValue() > v.getValue());
     Assert.assertEquals(
-        handler.localDatumStorage.get(pub.getDataInfoId() + 1).getPubMap().size(), 0);
+        handler.getDatumStorageDelegate().get("testDc", pub.getDataInfoId() + 1).getPubMap().size(),
+        0);
 
     // get less than store's version
-    handler.localDatumStorage.put(pub);
-    long putV = handler.localDatumStorage.get(pub.getDataInfoId()).getVersion();
+    handler.getDatumStorageDelegate().putPublisher("testDc", pub);
+    long putV = handler.getDatumStorageDelegate().get("testDc", pub.getDataInfoId()).getVersion();
     request = request(Collections.singletonMap(pub.getDataInfoId(), v), 10);
     resp = (SlotAccessGenericResponse) handler.doHandle(channel, request);
     Assert.assertTrue(resp.isSuccess());
@@ -126,7 +135,7 @@ public class GetDataVersionsHandlerTest {
     retV = ret.get(pub.getDataInfoId());
     Assert.assertTrue(retV.getValue() > putV);
     Assert.assertTrue(retV.getValue() > v.getValue());
-    putV = handler.localDatumStorage.get(pub.getDataInfoId()).getVersion();
+    putV = handler.getDatumStorageDelegate().get("testDc", pub.getDataInfoId()).getVersion();
     Assert.assertEquals(retV.getValue(), putV);
   }
 
@@ -137,19 +146,25 @@ public class GetDataVersionsHandlerTest {
 
     GetDataVersionRequest request = request(Collections.emptyMap(), 1);
 
-    when(handler.slotManager.checkSlotAccess(anyInt(), anyLong(), anyLong()))
+    when(handler
+            .getSlotAccessorDelegate()
+            .checkSlotAccess(anyString(), anyInt(), anyLong(), anyLong()))
         .thenReturn(TestBaseUtils.moved());
     SlotAccessGenericResponse resp = (SlotAccessGenericResponse) handler.doHandle(channel, request);
     Assert.assertFalse(resp.isSuccess());
     Assert.assertEquals(resp.getSlotAccess().getStatus(), TestBaseUtils.moved().getStatus());
 
-    when(handler.slotManager.checkSlotAccess(anyInt(), anyLong(), anyLong()))
+    when(handler
+            .getSlotAccessorDelegate()
+            .checkSlotAccess(anyString(), anyInt(), anyLong(), anyLong()))
         .thenReturn(TestBaseUtils.misMatch());
     resp = (SlotAccessGenericResponse) handler.doHandle(channel, request);
     Assert.assertFalse(resp.isSuccess());
     Assert.assertEquals(resp.getSlotAccess().getStatus(), TestBaseUtils.misMatch().getStatus());
 
-    when(handler.slotManager.checkSlotAccess(anyInt(), anyLong(), anyLong()))
+    when(handler
+            .getSlotAccessorDelegate()
+            .checkSlotAccess(anyString(), anyInt(), anyLong(), anyLong()))
         .thenReturn(TestBaseUtils.migrating());
     resp = (SlotAccessGenericResponse) handler.doHandle(channel, request);
     Assert.assertFalse(resp.isSuccess());

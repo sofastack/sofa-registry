@@ -29,6 +29,11 @@ public class BatchRequest extends AbstractSlotRequest {
     this.request = Lists.newArrayList(request);
   }
 
+  public BatchRequest(int slotId, long slotTableEpoch, long slotLeaderEpoc, List<Object> request) {
+    super(slotId, null, slotTableEpoch, slotLeaderEpoc);
+    this.request = Lists.newArrayList(request);
+  }
+
   public List<Object> getRequest() {
     return request;
   }

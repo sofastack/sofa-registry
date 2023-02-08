@@ -47,6 +47,17 @@ public final class PublisherDigestUtil {
     long publisherIdSign = 0;
     long publisherVerSign = 0;
     long publisherTimestampSign = 0;
+
+    if (summary.isEmpty()) {
+      return new DatumDigest(
+          publisherNum,
+          publisherIdSign,
+          publisherVerSign,
+          publisherTimestampSign,
+          (short) 0,
+          (short) 0);
+    }
+
     final TreeMap<String, RegisterVersion> sorted = new TreeMap<>(summary.getPublisherVersions());
     long maxTimestamp = 0;
     long minTimestamp = Long.MAX_VALUE;

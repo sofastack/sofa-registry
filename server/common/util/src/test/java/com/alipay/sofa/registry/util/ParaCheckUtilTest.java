@@ -21,6 +21,7 @@ import static junit.framework.TestCase.fail;
 import com.google.common.collect.Sets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -65,7 +66,7 @@ public class ParaCheckUtilTest {
     }
 
     try {
-      ParaCheckUtil.checkNotEmpty(null, "names");
+      ParaCheckUtil.checkNotEmpty(Collections.EMPTY_SET, "names");
       fail("cannot access here.");
     } catch (Exception e) {
       Assert.assertTrue(e instanceof RuntimeException);

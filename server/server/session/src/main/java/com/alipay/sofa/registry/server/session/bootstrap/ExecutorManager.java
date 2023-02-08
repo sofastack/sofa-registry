@@ -25,7 +25,6 @@ import com.alipay.sofa.registry.util.OsUtils;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -50,8 +49,7 @@ public class ExecutorManager {
   private final ThreadPoolExecutor consoleExecutor;
   private final ThreadPoolExecutor zoneSdkExecutor;
   private final ThreadPoolExecutor clientManagerCheckExecutor;
-
-  @Autowired protected SessionServerConfig sessionServerConfig;
+  private final ThreadPoolExecutor scanExecutor;
 
   @Autowired protected MetaServerService metaServerService;
 
@@ -76,6 +74,8 @@ public class ExecutorManager {
   private static final String CLIENT_MANAGER_CHECK_EXECUTOR = "ClientManagerCheckExecutor";
 
   private static final String APP_REVISION_REGISTER_EXECUTOR = "AppRevisionRegisterExecutor";
+
+  private static final String SCAN_EXECUTOR = "ScanExecutor";
 
   public ExecutorManager(SessionServerConfig sessionServerConfig) {
     scheduler =
@@ -208,6 +208,20 @@ public class ExecutorManager {
                         sessionServerConfig.getMetadataRegisterExecutorQueueSize()),
                     new NamedThreadFactory(APP_REVISION_REGISTER_EXECUTOR, true),
                     new ThreadPoolExecutor.CallerRunsPolicy()));
+
+    scanExecutor =
+        reportExecutors.computeIfAbsent(
+            SCAN_EXECUTOR,
+            k ->
+                new MetricsableThreadPoolExecutor(
+                    SCAN_EXECUTOR,
+                    sessionServerConfig.getScanExecutorPoolSize(),
+                    sessionServerConfig.getScanExecutorPoolSize(),
+                    60,
+                    TimeUnit.SECONDS,
+                    new ArrayBlockingQueue<>(sessionServerConfig.getScanExecutorQueueSize()),
+                    new NamedThreadFactory(SCAN_EXECUTOR, true),
+                    new ThreadPoolExecutor.CallerRunsPolicy()));
   }
 
   public void startScheduler() {}
@@ -255,6 +269,15 @@ public class ExecutorManager {
   }
 
   /**
+   * Getter method for property <tt>appRevisionRegisterExecutor</tt>.
+   *
+   * @return property value of appRevisionRegisterExecutor
+   */
+  public ThreadPoolExecutor getAppRevisionRegisterExecutor() {
+    return appRevisionRegisterExecutor;
+  }
+
+  /**
    * Getter method for property <tt>clientManagerCheckExecutor</tt>.
    *
    * @return property value of clientManagerCheckExecutor
@@ -263,7 +286,7 @@ public class ExecutorManager {
     return clientManagerCheckExecutor;
   }
 
-  public ExecutorService getAppRevisionRegisterExecutor() {
-    return appRevisionRegisterExecutor;
+  public ThreadPoolExecutor getScanExecutor() {
+    return scanExecutor;
   }
 }

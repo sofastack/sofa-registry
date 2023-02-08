@@ -21,7 +21,7 @@ import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
 import com.alipay.sofa.registry.server.data.TestBaseUtils;
-import com.alipay.sofa.registry.server.data.cache.DatumCache;
+import com.alipay.sofa.registry.server.data.cache.DatumStorageDelegate;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.MetaServerServiceImpl;
 import java.util.Collections;
 import java.util.List;
@@ -32,11 +32,13 @@ import org.mockito.Mockito;
 
 public class DataDigestResourceTest {
 
+  private final String datacenter = "testdc";
+
   private DataDigestResource newResource() {
     DataDigestResource resource = new DataDigestResource();
     resource.dataServerConfig = TestBaseUtils.newDataConfig("testDc");
-    DatumCache datumCache = TestBaseUtils.newLocalDatumCache("testDc", true);
-    resource.datumCache = datumCache;
+    DatumStorageDelegate datumStorageDelegate = TestBaseUtils.newLocalDatumDelegate("testDc", true);
+    resource.datumStorageDelegate = datumStorageDelegate;
     resource.boltExchange = Mockito.mock(BoltExchange.class);
     resource.metaServerService = Mockito.mock(MetaServerServiceImpl.class);
     return resource;
@@ -49,7 +51,7 @@ public class DataDigestResourceTest {
     Assert.assertTrue(count, count.contains("is 0"));
 
     Publisher pub = TestBaseUtils.createTestPublishers(10, 1).get(0);
-    resource.datumCache.getLocalDatumStorage().put(pub);
+    resource.datumStorageDelegate.getLocalDatumStorage().putPublisher(datacenter, pub);
 
     Map<String, Datum> map =
         resource.getDatumByDataInfoId(
@@ -75,7 +77,7 @@ public class DataDigestResourceTest {
     count = resource.getDatumCount();
     Assert.assertTrue(count, count.contains("is 1"));
 
-    resource.datumCache = null;
+    resource.datumStorageDelegate = null;
     count = resource.getDatumCount();
     Assert.assertTrue(count, count.contains("cache digest error"));
   }
@@ -132,10 +134,10 @@ public class DataDigestResourceTest {
     DataDigestResource resource = newResource();
     Assert.assertEquals(0, resource.getDataInfoIdList().size());
     Publisher pub = TestBaseUtils.createTestPublishers(10, 1).get(0);
-    resource.datumCache.getLocalDatumStorage().put(pub);
+    resource.datumStorageDelegate.getLocalDatumStorage().putPublisher(datacenter, pub);
     Assert.assertEquals(1, resource.getDataInfoIdList().size());
     Assert.assertTrue(resource.getDataInfoIdList().toString().contains(pub.getDataInfoId()));
-    resource.datumCache = null;
+    resource.datumStorageDelegate = null;
     TestBaseUtils.assertException(RuntimeException.class, () -> resource.getDataInfoIdList());
   }
 }

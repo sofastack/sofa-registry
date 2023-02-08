@@ -32,21 +32,27 @@ import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.remoting.bolt.BoltChannel;
-import com.alipay.sofa.registry.server.data.bootstrap.CommonConfig;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
-import com.alipay.sofa.registry.server.data.cache.DatumCache;
+import com.alipay.sofa.registry.server.data.bootstrap.MultiClusterDataServerConfig;
+import com.alipay.sofa.registry.server.data.bootstrap.MultiClusterDataServerConfigBean;
+import com.alipay.sofa.registry.server.data.cache.DatumStorage;
+import com.alipay.sofa.registry.server.data.cache.DatumStorageDelegate;
 import com.alipay.sofa.registry.server.data.cache.LocalDatumStorage;
+import com.alipay.sofa.registry.server.data.slot.SlotChangeListenerManager;
+import com.alipay.sofa.registry.server.shared.config.CommonConfig;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.task.FastRejectedExecutionException;
 import com.alipay.sofa.registry.task.KeyedThreadPoolExecutor;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import io.netty.channel.Channel;
 import io.netty.util.Attribute;
 import io.netty.util.AttributeKey;
 import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import org.junit.Assert;
@@ -114,15 +120,20 @@ public final class TestBaseUtils {
   }
 
   public static LocalDatumStorage newLocalStorage(String dataCenter, boolean init) {
-    DataServerConfig dataServerConfig = newDataConfig(dataCenter);
-    LocalDatumStorage storage = new LocalDatumStorage();
-    storage.setDataServerConfig(dataServerConfig);
+    LocalDatumStorage storage = new LocalDatumStorage(dataCenter);
     if (init) {
-      for (int i = 0; i < SlotConfig.SLOT_NUM; i++) {
-        storage.getSlotChangeListener().onSlotAdd(i, Slot.Role.Leader);
-      }
+      initStorage(true, storage, Sets.newHashSet(dataCenter));
     }
     return storage;
+  }
+
+  public static void initStorage(boolean isLocal, DatumStorage storage, Set<String> dataCenters) {
+    for (int i = 0; i < SlotConfig.SLOT_NUM; i++) {
+      for (String dataCenter : dataCenters) {
+        storage.getSlotChangeListener(isLocal).onSlotAdd(dataCenter, i, Slot.Role.Leader);
+      }
+    }
+    return;
   }
 
   public static DataServerConfig newDataConfig(String dataCenter) {
@@ -131,17 +142,27 @@ public final class TestBaseUtils {
     return new DataServerConfig(commonConfig);
   }
 
-  public static DatumCache newLocalDatumCache(String localDataCenter, boolean init) {
-    DatumCache cache = new DatumCache();
-    LocalDatumStorage storage = TestBaseUtils.newLocalStorage(localDataCenter, init);
-    cache.setLocalDatumStorage(storage);
-    cache.setDataServerConfig(storage.getDataServerConfig());
-    return cache;
+  public static MultiClusterDataServerConfig newMultiDataConfig() {
+    return new MultiClusterDataServerConfigBean();
+  }
+
+  public static DatumStorageDelegate newLocalDatumDelegate(String localDataCenter, boolean init) {
+    DataServerConfig dataServerConfig = newDataConfig(localDataCenter);
+    DatumStorageDelegate delegate = new DatumStorageDelegate(dataServerConfig);
+
+    initStorage(true, delegate.getLocalDatumStorage(), Sets.newHashSet(localDataCenter));
+    return delegate;
   }
 
   public static DatumSummary newDatumSummary(int pubCount) {
     final String dataId = TEST_DATA_ID + "-" + DATA_ID_SEQ.incrementAndGet();
     return newDatumSummary(pubCount, dataId);
+  }
+
+  public static SlotChangeListenerManager newSlotChangeListener(String localDataCenter) {
+    SlotChangeListenerManager listener = new SlotChangeListenerManager();
+    listener.setDatumStorageDelegate(newLocalDatumDelegate(localDataCenter, true));
+    return listener;
   }
 
   public static DatumSummary newDatumSummary(int pubCount, String dataInfoId) {

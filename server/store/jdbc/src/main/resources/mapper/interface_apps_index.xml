@@ -29,27 +29,16 @@
         ]]>
     </insert>
 
-    <select id="batchQueryByInterface" resultMap="interfaceAppsResultMap">
-        select /*+ QUERY_TIMEOUT(5000000),read_consistency(weak) */ * from interface_apps_index where data_center = #{dataCenter}
-        <if test="interfaceNames != null and interfaceNames.size() > 0">
-            and interface_name in
-            <foreach collection="interfaceNames" index="index" item="item" open="(" separator="," close=")">
+    <select id="queryLargeThan" resultMap="interfaceAppsResultMap">
+
+        select /*+ QUERY_TIMEOUT(3000000),read_consistency(weak) */ * from interface_apps_index where id > #{maxId}
+        <if test="dataCenters != null and dataCenters.size() > 0">
+            and data_center in
+            <foreach collection="dataCenters" index="index" item="item" open="(" separator="," close=")">
                 #{item}
             </foreach>
         </if>
+        order by id limit #{limitCount}
     </select>
 
-
-    <select id="queryLargeThan" resultMap="interfaceAppsResultMap">
-    <![CDATA[
-        select /*+ QUERY_TIMEOUT(3000000),read_consistency(weak) */ * from interface_apps_index where data_center = #{dataCenter} and id > #{maxId} order by id limit #{limitCount}
-    ]]>
-    </select>
-
-    <select id="getExpired" resultMap="interfaceAppsResultMap">
-<![CDATA[
-        select /*+ QUERY_TIMEOUT(3000000),read_consistency(weak) */ * from interface_apps_index where data_center = #{dataCenter} and gmt_modified < #{beforeTime}
-        and reference=true limit #{limit}
-]]>
-    </select>
 </mapper>

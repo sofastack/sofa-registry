@@ -145,7 +145,7 @@ public class SessionDigestResource {
   @GET
   @Path("/metadata/allServiceMapping")
   @Produces(MediaType.APPLICATION_JSON)
-  public Map<String, InterfaceMapping> allServiceMapping() {
+  public Map<String, Map<String, InterfaceMapping>> allServiceMapping() {
     return interfaceAppsRepository.allServiceMapping();
   }
 

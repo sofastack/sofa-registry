@@ -75,7 +75,7 @@ public class DefaultSessionRegistryStrategy implements SessionRegistryStrategy {
 
   @Override
   public void afterSubscriberRegister(Subscriber subscriber) {
-    if (pushSwitchService.canIpPush(subscriber.getSourceAddress().getIpAddress())) {
+    if (pushSwitchService.canIpPushLocal(subscriber.getSourceAddress().getIpAddress())) {
       firePushService.fireOnRegister(subscriber);
     }
   }
@@ -96,7 +96,7 @@ public class DefaultSessionRegistryStrategy implements SessionRegistryStrategy {
     if (sessionServerConfig.isWatchConfigEnable()) {
       configProvideDataWatcher.watch(watcher.getDataInfoId());
     }
-    if (!pushSwitchService.canIpPush(watcher.getSourceAddress().getIpAddress())) {
+    if (!pushSwitchService.canIpPushLocal(watcher.getSourceAddress().getIpAddress())) {
       return;
     }
     ProvideData provideData = null;

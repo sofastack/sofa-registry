@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.server.data.lease;
 
+import static org.mockito.Matchers.anyString;
+
 import com.alipay.sofa.registry.common.model.ProcessId;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.store.Publisher;
@@ -25,7 +27,7 @@ import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.data.TestBaseUtils;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.CleanContinues;
-import com.alipay.sofa.registry.server.data.cache.LocalDatumStorage;
+import com.alipay.sofa.registry.server.data.cache.DatumStorageDelegate;
 import com.alipay.sofa.registry.server.data.change.DataChangeEventCenter;
 import com.alipay.sofa.registry.server.data.slot.SlotManager;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
@@ -39,6 +41,8 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 public class SessionLeaseManagerTest {
+  private static final String DATACENTER = "testDc";
+
   @Test(expected = IllegalArgumentException.class)
   public void testValidate() {
     SessionLeaseManager slm = new SessionLeaseManager();
@@ -48,7 +52,7 @@ public class SessionLeaseManagerTest {
   @Test
   public void test() throws Exception {
     SessionLeaseManager slm = new SessionLeaseManager();
-    DataServerConfig cfg = TestBaseUtils.newDataConfig("testDc");
+    DataServerConfig cfg = TestBaseUtils.newDataConfig(DATACENTER);
     slm.dataServerConfig = cfg;
     slm.metaServerService = Mockito.mock(MetaServerService.class);
     slm.slotManager = mockSM();
@@ -69,9 +73,9 @@ public class SessionLeaseManagerTest {
     Assert.assertEquals(processIds.size(), 1);
     Assert.assertTrue(processIds.contains(ServerEnv.PROCESS_ID));
 
-    LocalDatumStorage storage = TestBaseUtils.newLocalStorage("testDc", true);
-    slm.localDatumStorage = storage;
-    DataServerConfig config = storage.getDataServerConfig();
+    DatumStorageDelegate delegate = TestBaseUtils.newLocalDatumDelegate(DATACENTER, true);
+    slm.datumStorageDelegate = delegate;
+    DataServerConfig config = TestBaseUtils.newDataConfig(DATACENTER);
     config.setSessionLeaseCheckIntervalSecs(1);
     config.setDatumCompactDelaySecs(1);
     config.setSessionLeaseSecs(1);
@@ -79,34 +83,36 @@ public class SessionLeaseManagerTest {
     slm.renewSession(ServerEnv.PROCESS_ID);
     Assert.assertTrue(slm.contains(ServerEnv.PROCESS_ID));
     Publisher p = TestBaseUtils.createTestPublisher("dataId");
-    storage.put(p);
-    Assert.assertEquals(storage.get(p.getDataInfoId()).getPubMap().get(p.getRegisterId()), p);
+    delegate.putPublisher(DATACENTER, p);
+    Assert.assertEquals(
+        delegate.get(DATACENTER, p.getDataInfoId()).getPubMap().get(p.getRegisterId()), p);
     // wait to clean, but connection remains
     Thread.sleep(1500);
     slm.clean();
     Assert.assertTrue(slm.contains(ServerEnv.PROCESS_ID));
-    Assert.assertEquals(storage.tombstoneNum(), 0);
-    Assert.assertEquals(storage.get(p.getDataInfoId()).getPubMap().get(p.getRegisterId()), p);
+    Assert.assertEquals(delegate.tombstoneNum(DATACENTER), 0);
+    Assert.assertEquals(
+        delegate.get(DATACENTER, p.getDataInfoId()).getPubMap().get(p.getRegisterId()), p);
     Mockito.verify(slm.dataChangeEventCenter, Mockito.times(0))
-        .onChange(Mockito.anyCollection(), Mockito.any(), Mockito.anyString());
+        .onChange(Mockito.anyCollection(), Mockito.any(), anyString());
     // reset the connections
     Mockito.when(server.getChannels()).thenReturn(Collections.emptyList());
     Thread.sleep(1500);
     // wait to clean
     slm.clean();
     Assert.assertFalse(slm.contains(ServerEnv.PROCESS_ID));
-    Assert.assertEquals(storage.tombstoneNum(), 0);
-    Assert.assertEquals(storage.get(p.getDataInfoId()).publisherSize(), 0);
+    Assert.assertEquals(delegate.tombstoneNum(DATACENTER), 0);
+    Assert.assertEquals(delegate.get(DATACENTER, p.getDataInfoId()).publisherSize(), 0);
     Mockito.verify(slm.dataChangeEventCenter, Mockito.times(1))
-        .onChange(Mockito.anyCollection(), Mockito.any(), Mockito.anyString());
+        .onChange(Mockito.anyCollection(), Mockito.any(), anyString());
 
     // wait to compact
     Thread.sleep(1500);
     slm.clean();
-    Assert.assertEquals(storage.tombstoneNum(), 0);
-    Assert.assertEquals(storage.get(p.getDataInfoId()).publisherSize(), 0);
+    Assert.assertEquals(delegate.tombstoneNum(DATACENTER), 0);
+    Assert.assertEquals(delegate.get(DATACENTER, p.getDataInfoId()).publisherSize(), 0);
     Mockito.verify(slm.dataChangeEventCenter, Mockito.times(1))
-        .onChange(Mockito.anyCollection(), Mockito.any(), Mockito.anyString());
+        .onChange(Mockito.anyCollection(), Mockito.any(), anyString());
   }
 
   @Test
@@ -123,9 +129,9 @@ public class SessionLeaseManagerTest {
     Mockito.when(boltExchange.getServer(Mockito.anyInt())).thenReturn(server);
     Mockito.when(server.getChannels()).thenReturn(Collections.emptyList());
 
-    LocalDatumStorage storage = TestBaseUtils.newLocalStorage("testDc", true);
-    slm.localDatumStorage = storage;
-    DataServerConfig config = storage.getDataServerConfig();
+    DatumStorageDelegate delegate = TestBaseUtils.newLocalDatumDelegate(DATACENTER, true);
+    slm.datumStorageDelegate = delegate;
+    DataServerConfig config = TestBaseUtils.newDataConfig(DATACENTER);
     config.setSessionLeaseCheckIntervalSecs(1);
     config.setDatumCompactDelaySecs(1);
     config.setSessionLeaseSecs(5);
@@ -134,25 +140,26 @@ public class SessionLeaseManagerTest {
     slm.renewSession(ServerEnv.PROCESS_ID);
     Assert.assertTrue(slm.contains(ServerEnv.PROCESS_ID));
     Publisher p = TestBaseUtils.createTestPublisher("dataId");
-    storage.put(p);
-    Assert.assertEquals(storage.get(p.getDataInfoId()).getPubMap().get(p.getRegisterId()), p);
+    delegate.putPublisher(DATACENTER, p);
+    Assert.assertEquals(
+        delegate.get(DATACENTER, p.getDataInfoId()).getPubMap().get(p.getRegisterId()), p);
     // wait to clean
     config.setSessionLeaseSecs(1);
     Thread.sleep(2000);
-    Assert.assertEquals(storage.tombstoneNum(), 0);
-    Assert.assertEquals(storage.get(p.getDataInfoId()).publisherSize(), 0);
+    Assert.assertEquals(delegate.tombstoneNum(DATACENTER), 0);
+    Assert.assertEquals(delegate.get(DATACENTER, p.getDataInfoId()).publisherSize(), 0);
     Mockito.verify(slm.dataChangeEventCenter, Mockito.times(1))
-        .onChange(Mockito.anyCollection(), Mockito.any(), Mockito.anyString());
+        .onChange(Mockito.anyCollection(), Mockito.any(), anyString());
     // put again
-    storage.put(p);
-    Assert.assertEquals(storage.get(p.getDataInfoId()).publisherSize(), 1);
+    delegate.putPublisher(DATACENTER, p);
+    Assert.assertEquals(delegate.get(DATACENTER, p.getDataInfoId()).publisherSize(), 1);
     Mockito.when(slm.metaServerService.getSessionProcessIds())
         .thenReturn(Sets.newHashSet(ServerEnv.PROCESS_ID));
     // could not clean
     slm.cleanStorage();
     Mockito.verify(slm.dataChangeEventCenter, Mockito.times(1))
-        .onChange(Mockito.anyCollection(), Mockito.any(), Mockito.anyString());
-    Assert.assertEquals(storage.get(p.getDataInfoId()).publisherSize(), 1);
+        .onChange(Mockito.anyCollection(), Mockito.any(), anyString());
+    Assert.assertEquals(delegate.get(DATACENTER, p.getDataInfoId()).publisherSize(), 1);
   }
 
   @Test
@@ -173,7 +180,7 @@ public class SessionLeaseManagerTest {
 
   private SlotManager mockSM() {
     SlotManager slotManager = Mockito.mock(SlotManager.class);
-    Mockito.when(slotManager.isLeader(Mockito.anyInt())).thenReturn(true);
+    Mockito.when(slotManager.isLeader(anyString(), Mockito.anyInt())).thenReturn(true);
     return slotManager;
   }
 }

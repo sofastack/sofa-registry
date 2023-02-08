@@ -66,7 +66,7 @@ public class DataPushRequestHandler extends AbstractClientHandler<DataPushReques
 
   @Override
   public Object doHandle(Channel channel, DataPushRequest request) {
-    if (!pushSwitchService.canPush()) {
+    if (!pushSwitchService.canLocalDataCenterPush()) {
       return null;
     }
     try {

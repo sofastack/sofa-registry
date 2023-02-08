@@ -17,6 +17,8 @@
 package com.alipay.sofa.registry.common.model;
 
 import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
+import com.alipay.sofa.registry.common.model.slot.filter.SyncAcceptorRequest;
+import com.alipay.sofa.registry.common.model.slot.filter.SyncSlotAcceptorManager;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.google.common.collect.Maps;
 import java.util.*;
@@ -48,11 +50,18 @@ public final class PublisherUtils {
   }
 
   public static Map<String, DatumSummary> getDatumSummary(
-      Map<String, Map<String, Publisher>> publisherMap) {
+      Map<String, Map<String, Publisher>> publisherMap, SyncSlotAcceptorManager acceptorManager) {
     Map<String, DatumSummary> sourceSummaryMap =
         Maps.newHashMapWithExpectedSize(publisherMap.size());
     for (Map.Entry<String, Map<String, Publisher>> e : publisherMap.entrySet()) {
-      sourceSummaryMap.put(e.getKey(), DatumSummary.of(e.getKey(), e.getValue()));
+
+      // filter dataInfoId
+      if (!acceptorManager.accept(SyncAcceptorRequest.buildRequest(e.getKey()))) {
+        continue;
+      }
+
+      // filter publisher
+      sourceSummaryMap.put(e.getKey(), DatumSummary.of(e.getKey(), e.getValue(), acceptorManager));
     }
     return sourceSummaryMap;
   }

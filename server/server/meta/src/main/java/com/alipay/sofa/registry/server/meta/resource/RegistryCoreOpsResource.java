@@ -18,15 +18,22 @@ package com.alipay.sofa.registry.server.meta.resource;
 
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.GenericResponse;
+import com.alipay.sofa.registry.common.model.Node.NodeType;
+import com.alipay.sofa.registry.common.model.metaserver.DataOperation;
+import com.alipay.sofa.registry.common.model.metaserver.blacklist.RegistryForbiddenServerRequest;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.server.meta.lease.filter.RegistryForbiddenServerManager;
 import com.alipay.sofa.registry.server.meta.resource.filter.LeaderAwareRestController;
+import com.google.common.annotations.VisibleForTesting;
+import javax.ws.rs.FormParam;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import sun.net.util.IPAddressUtil;
 
 /**
@@ -38,43 +45,97 @@ public class RegistryCoreOpsResource {
 
   private final Logger LOGGER = LoggerFactory.getLogger(RegistryCoreOpsResource.class);
 
-  /**
-   * use /opsapi/v2 instead
-   *
-   * @param ip
-   * @return
-   */
+  @Autowired private RegistryForbiddenServerManager registryForbiddenServerManager;
+
   @PUT
   @Path("/server/group/quit/{ip}")
   @Produces(MediaType.APPLICATION_JSON)
   @LeaderAwareRestController
-  @Deprecated
-  public CommonResponse kickoffServer(@PathParam(value = "ip") String ip) {
-    LOGGER.warn("[kickoffServer][begin] server [{}], use opsapi/v2 instead", ip);
+  public CommonResponse kickoffServer(
+      @FormParam(value = "cell") String cell,
+      @FormParam(value = "nodeType") String nodeType,
+      @PathParam(value = "ip") String ip) {
+    LOGGER.info("[kickoffServer][begin] server [{}][{}][{}]", cell, nodeType, ip);
+
+    // first time deploy, session and data script not contains cell and app,
+    // default return true, let shutdown trigger quit and join
+    if (StringUtils.isBlank(cell) || StringUtils.isBlank(nodeType)) {
+      return GenericResponse.buildSuccessResponse();
+    }
+    NodeType nodeTypeEnum = NodeType.codeOf(nodeType);
+    if (nodeTypeEnum == null) {
+      return GenericResponse.buildFailedResponse("invalid nodeType: " + nodeType);
+    }
+
     if (StringUtils.isBlank(ip) || !IPAddressUtil.isIPv4LiteralAddress(ip)) {
       LOGGER.error("[kickoffServer]invalid ip: {}", ip);
       return GenericResponse.buildFailedResponse("invalid ip address: " + ip);
     }
-    return GenericResponse.buildSuccessResponse("use opsapi/v2 instead");
+    try {
+      boolean success =
+          registryForbiddenServerManager.addToBlacklist(
+              new RegistryForbiddenServerRequest(DataOperation.ADD, nodeTypeEnum, ip, cell));
+
+      if (!success) {
+        LOGGER.error("[kickoffServer] add ip: {} to blacklist fail.", ip);
+      }
+      return success
+          ? GenericResponse.buildSuccessResponse()
+          : GenericResponse.buildFailedResponse("kickoffServer: " + ip + " fail.");
+    } catch (Throwable th) {
+      LOGGER.error("[kickoffServer]", th);
+      return GenericResponse.buildFailedResponse(th.getMessage());
+    } finally {
+      LOGGER.info("[kickoffServer][end] server [{}]", ip);
+    }
   }
 
-  /**
-   * use /opsapi/v2 instead
-   *
-   * @param ip
-   * @return
-   */
   @PUT
   @Path("/server/group/join/{ip}")
   @Produces(MediaType.APPLICATION_JSON)
   @LeaderAwareRestController
-  @Deprecated
-  public CommonResponse rejoinServerGroup(@PathParam(value = "ip") String ip) {
-    LOGGER.warn("[rejoinServerGroup][begin] server [{}], use opsapi/v2 instead", ip);
+  public CommonResponse rejoinServerGroup(
+      @FormParam(value = "cell") String cell,
+      @FormParam(value = "nodeType") String nodeType,
+      @PathParam(value = "ip") String ip) {
+    LOGGER.info("[rejoinServerGroup][begin] server [{}][{}][{}]", cell, nodeType, ip);
+
+    // first time deploy, session and data script not contains cell and app,
+    // default return true, let shutdown trigger quit and join
+    if (StringUtils.isBlank(cell) || StringUtils.isBlank(nodeType)) {
+      return GenericResponse.buildSuccessResponse();
+    }
+    NodeType nodeTypeEnum = NodeType.codeOf(nodeType);
+    if (nodeType == null) {
+      return GenericResponse.buildFailedResponse("invalid nodeType: " + nodeType);
+    }
+
     if (StringUtils.isBlank(ip) || !IPAddressUtil.isIPv4LiteralAddress(ip)) {
       LOGGER.error("[rejoinServerGroup]invalid ip: {}", ip);
       return GenericResponse.buildFailedResponse("invalid ip address: " + ip);
     }
-    return GenericResponse.buildSuccessResponse("use opsapi/v2 instead");
+    try {
+      boolean success =
+          registryForbiddenServerManager.removeFromBlacklist(
+              new RegistryForbiddenServerRequest(DataOperation.REMOVE, nodeTypeEnum, ip, cell));
+      if (!success) {
+        LOGGER.error("[rejoinServerGroup] remove ip: {} to blacklist fail.", ip);
+      }
+      return success
+          ? GenericResponse.buildSuccessResponse()
+          : GenericResponse.buildFailedResponse("rejoinServerGroup: " + ip + " fail.");
+    } catch (Throwable th) {
+      LOGGER.error("[rejoinServerGroup]", th);
+      return GenericResponse.buildFailedResponse(th.getMessage());
+    } finally {
+      LOGGER.info("[rejoinServerGroup][end] server [{}]", ip);
+    }
+  }
+
+  @VisibleForTesting
+  protected RegistryCoreOpsResource setRegistryForbiddenServerManager(
+      RegistryForbiddenServerManager registryForbiddenServerManager) {
+    this.registryForbiddenServerManager = registryForbiddenServerManager;
+    return this;
   }
 }

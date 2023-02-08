@@ -54,17 +54,17 @@ public class RegistryCoreOpsResourceTest extends AbstractMetaServerTestBase {
 
   @Mock private LeaderElector leaderElector;
 
-  private RegistryCoreOpsV2Resource resource;
+  private RegistryCoreOpsResource resource;
 
   @Before
   public void before() {
     MockitoAnnotations.initMocks(RegistryForbiddenServerManager.class);
     MockitoAnnotations.initMocks(NodeOperatingService.class);
 
-    when(leaderElector.getLeader()).thenReturn("127.0.0.1");
+    when(leaderElector.getLeaderInfo()).thenReturn(leaderInfo);
 
     resource =
-        new RegistryCoreOpsV2Resource()
+        new RegistryCoreOpsResource()
             .setRegistryForbiddenServerManager(registryForbiddenServerManager);
     nodeOperatingService.setProvideDataService(provideDataService);
   }
@@ -87,7 +87,7 @@ public class RegistryCoreOpsResourceTest extends AbstractMetaServerTestBase {
     registryForbiddenServerManager =
         new DefaultForbiddenServerManager(provideDataService, nodeOperatingService);
     resource =
-        new RegistryCoreOpsV2Resource()
+        new RegistryCoreOpsResource()
             .setRegistryForbiddenServerManager(registryForbiddenServerManager);
 
     when(provideDataService.queryProvideData(ValueConstants.REGISTRY_SERVER_BLACK_LIST_DATA_ID))

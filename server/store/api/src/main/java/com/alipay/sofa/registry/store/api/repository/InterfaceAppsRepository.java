@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.store.api.repository;
 
 import com.alipay.sofa.registry.common.model.appmeta.InterfaceMapping;
+import com.alipay.sofa.registry.store.api.multi.MultiDataCenterListener;
 import java.util.Map;
 import java.util.Set;
 
@@ -24,7 +25,7 @@ import java.util.Set;
  * @author xiaojian.xj
  * @version $Id: InterfaceAppsRepository.java, v 0.1 2021年01月24日 19:33 xiaojian.xj Exp $
  */
-public interface InterfaceAppsRepository {
+public interface InterfaceAppsRepository extends MultiDataCenterListener {
 
   /**
    * get revisions by interfaceName
@@ -38,9 +39,11 @@ public interface InterfaceAppsRepository {
 
   void renew(String interfaceName, String appName);
 
+  void startSynced();
+
   void waitSynced();
 
   long getDataVersion();
 
-  Map<String, InterfaceMapping> allServiceMapping();
+  Map<String, Map<String, InterfaceMapping>> allServiceMapping();
 }
