@@ -20,20 +20,19 @@ import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.store.*;
-import com.alipay.sofa.registry.common.model.wrapper.Wrapper;
-import com.alipay.sofa.registry.common.model.wrapper.WrapperInvocation;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.remoting.exchange.ExchangeCallback;
-import com.alipay.sofa.registry.remoting.exchange.RequestChannelClosedException;
 import com.alipay.sofa.registry.server.session.acceptor.ClientOffWriteDataRequest;
 import com.alipay.sofa.registry.server.session.acceptor.PublisherWriteDataRequest;
 import com.alipay.sofa.registry.server.session.acceptor.WriteDataAcceptor;
 import com.alipay.sofa.registry.server.session.acceptor.WriteDataRequest;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
+import com.alipay.sofa.registry.server.session.interceptor.OrderedInterceptorManager;
+import com.alipay.sofa.registry.server.session.interceptor.RegisterInvokeData;
 import com.alipay.sofa.registry.server.session.loggers.Loggers;
 import com.alipay.sofa.registry.server.session.node.service.DataNodeService;
 import com.alipay.sofa.registry.server.session.providedata.ConfigProvideDataWatcher;
@@ -45,8 +44,6 @@ import com.alipay.sofa.registry.server.session.store.DataStore;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.session.store.Watchers;
 import com.alipay.sofa.registry.server.session.strategy.SessionRegistryStrategy;
-import com.alipay.sofa.registry.server.session.wrapper.RegisterInvokeData;
-import com.alipay.sofa.registry.server.session.wrapper.WrapperInterceptorManager;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.LoopRunnable;
@@ -58,7 +55,6 @@ import com.google.common.collect.Sets;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
 import javax.annotation.PostConstruct;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -94,7 +90,7 @@ public class SessionRegistry implements Registry {
 
   @Autowired protected SessionRegistryStrategy sessionRegistryStrategy;
 
-  @Autowired protected WrapperInterceptorManager wrapperInterceptorManager;
+  @Autowired protected OrderedInterceptorManager orderedInterceptorManager;
 
   @Autowired protected WriteDataAcceptor writeDataAcceptor;
 
@@ -114,63 +110,55 @@ public class SessionRegistry implements Registry {
 
   @Override
   public void register(StoreData storeData, Channel channel) {
-
-    WrapperInvocation<RegisterInvokeData, Boolean> wrapperInvocation =
-        new WrapperInvocation(
-            new Wrapper<RegisterInvokeData, Boolean>() {
-              @Override
-              public Boolean call() {
-
-                switch (storeData.getDataType()) {
-                  case PUBLISHER:
-                    Publisher publisher = (Publisher) storeData;
-                    publisher.setSessionProcessId(ServerEnv.PROCESS_ID);
-                    if (!sessionDataStore.add(publisher)) {
-                      break;
-                    }
-                    // All write operations to DataServer (pub/unPub/clientoff/renew/snapshot)
-                    // are handed over to WriteDataAcceptor
-                    writeDataAcceptor.accept(
-                        new PublisherWriteDataRequest(
-                            publisher, WriteDataRequest.WriteDataRequestType.PUBLISHER));
-
-                    sessionRegistryStrategy.afterPublisherRegister(publisher);
-                    break;
-                  case SUBSCRIBER:
-                    Subscriber subscriber = (Subscriber) storeData;
-
-                    if (!sessionInterests.add(subscriber)) {
-                      break;
-                    }
-
-                    sessionRegistryStrategy.afterSubscriberRegister(subscriber);
-                    break;
-                  case WATCHER:
-                    Watcher watcher = (Watcher) storeData;
-
-                    if (!sessionWatchers.add(watcher)) {
-                      break;
-                    }
-
-                    sessionRegistryStrategy.afterWatcherRegister(watcher);
-                    break;
-                  default:
-                    break;
-                }
-                return null;
-              }
-
-              @Override
-              public Supplier<RegisterInvokeData> getParameterSupplier() {
-                return () -> new RegisterInvokeData(storeData, channel);
-              }
-            },
-            wrapperInterceptorManager.getInterceptorChain());
+    RegisterInvokeData registerInvokeData = new RegisterInvokeData(storeData, channel);
 
     try {
-      wrapperInvocation.proceed();
-    } catch (RequestChannelClosedException e) {
-      throw e;
+      orderedInterceptorManager.executeInterceptors(registerInvokeData);
+    } catch (Exception e) {
+      LOGGER.error(
+          "interceptors process data(dataId={}) encountered an unexpected exception",
+          registerInvokeData.getStoreData().getId(),
+          e);
+      throw new RuntimeException("Proceed register error!", e);
+    }
+
+    try {
+      switch (storeData.getDataType()) {
+        case PUBLISHER:
+          Publisher publisher = (Publisher) storeData;
+          publisher.setSessionProcessId(ServerEnv.PROCESS_ID);
+          if (!sessionDataStore.add(publisher)) {
+            break;
+          }
+          // All write operations to DataServer (pub/unPub/clientoff/renew/snapshot)
+          // are handed over to WriteDataAcceptor
+          writeDataAcceptor.accept(
+              new PublisherWriteDataRequest(
+                  publisher, WriteDataRequest.WriteDataRequestType.PUBLISHER));
+
+          sessionRegistryStrategy.afterPublisherRegister(publisher);
+          break;
+        case SUBSCRIBER:
+          Subscriber subscriber = (Subscriber) storeData;
+
+          if (!sessionInterests.add(subscriber)) {
+            break;
+          }
+
+          sessionRegistryStrategy.afterSubscriberRegister(subscriber);
+          break;
+        case WATCHER:
+          Watcher watcher = (Watcher) storeData;
+
+          if (!sessionWatchers.add(watcher)) {
+            break;
+          }
+
+          sessionRegistryStrategy.afterWatcherRegister(watcher);
+          break;
+        default:
+          break;
+      }
     } catch (Exception e) {
       throw new RuntimeException("Proceed register error!", e);
     }

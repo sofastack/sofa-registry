@@ -14,15 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.wrapper;
+package com.alipay.sofa.registry.server.session.interceptor;
 
 import static com.alipay.sofa.registry.common.model.constants.ValueConstants.CLIENT_OFF;
 
-import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress.AddressVersion;
-import com.alipay.sofa.registry.common.model.store.*;
-import com.alipay.sofa.registry.common.model.store.StoreData.DataType;
-import com.alipay.sofa.registry.common.model.wrapper.WrapperInterceptor;
-import com.alipay.sofa.registry.common.model.wrapper.WrapperInvocation;
+import com.alipay.sofa.registry.common.model.metaserver.ClientManagerAddress;
+import com.alipay.sofa.registry.common.model.store.BaseInfo;
+import com.alipay.sofa.registry.common.model.store.StoreData;
+import com.alipay.sofa.registry.common.model.store.Subscriber;
+import com.alipay.sofa.registry.common.model.store.URL;
+import com.alipay.sofa.registry.exception.InterceptorExecutionException;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.bolt.BoltChannel;
@@ -34,12 +35,8 @@ import com.alipay.sofa.registry.server.shared.remoting.RemotingHelper;
 import javax.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 
-/**
- * @author xiaojian.xj
- * @version $Id: ClientOffWrapperInterceptor.java, v 0.1 2021年05月28日 21:18 xiaojian.xj Exp $
- */
-public class ClientOffWrapperInterceptor
-    implements WrapperInterceptor<RegisterInvokeData, Boolean> {
+/** Client off interceptor impl. */
+public class ClientOffInterceptor implements Interceptor {
 
   private static final Logger LOGGER = Loggers.CLIENT_OFF_LOG;
 
@@ -49,24 +46,22 @@ public class ClientOffWrapperInterceptor
 
   @Resource private FetchClientOffAddressService fetchClientOffAddressService;
 
-  @Autowired protected SessionRegistry sessionRegistry;
+  @Autowired private SessionRegistry sessionRegistry;
 
   @Override
-  public Boolean invokeCodeWrapper(WrapperInvocation<RegisterInvokeData, Boolean> invocation)
-      throws Exception {
-    RegisterInvokeData registerInvokeData = invocation.getParameterSupplier().get();
+  public boolean process(RegisterInvokeData registerInvokeData)
+      throws InterceptorExecutionException {
     BaseInfo storeData = (BaseInfo) registerInvokeData.getStoreData();
-
     URL url = storeData.getSourceAddress();
-
-    AddressVersion address = fetchClientOffAddressService.getAddress(url.getIpAddress());
+    ClientManagerAddress.AddressVersion address =
+        fetchClientOffAddressService.getAddress(url.getIpAddress());
     if (address != null) {
       markChannel(registerInvokeData.getChannel());
       LOGGER.info(
           "dataInfoId:{} ,url:{} match clientOff ips.",
           storeData.getDataInfoId(),
           url.getIpAddress());
-      if (DataType.PUBLISHER == storeData.getDataType()) {
+      if (StoreData.DataType.PUBLISHER == storeData.getDataType()) {
         // match client off pub, do unpub to data, make sure the publisher remove
         try {
           sessionRegistry.unRegister(storeData);
@@ -77,7 +72,7 @@ public class ClientOffWrapperInterceptor
         return true;
       }
 
-      if (DataType.SUBSCRIBER == storeData.getDataType()) {
+      if (StoreData.DataType.SUBSCRIBER == storeData.getDataType()) {
         // in some case, need to push empty to new subscriber, and stop sub
         // else, filter not stop sub
         if (sessionRegistry.isPushEmpty((Subscriber) storeData) && address.isSub()) {
@@ -92,7 +87,7 @@ public class ClientOffWrapperInterceptor
         }
       }
     }
-    return invocation.proceed();
+    return true;
   }
 
   private void markChannel(Channel channel) {
@@ -107,7 +102,7 @@ public class ClientOffWrapperInterceptor
   }
 
   @Override
-  public int getOrder() {
+  public int order() {
     return 300;
   }
 }

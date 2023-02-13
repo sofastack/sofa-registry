@@ -14,11 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.wrapper;
+package com.alipay.sofa.registry.server.session.interceptor;
 
 import com.alipay.sofa.registry.common.model.store.BaseInfo;
-import com.alipay.sofa.registry.common.model.wrapper.WrapperInterceptor;
-import com.alipay.sofa.registry.common.model.wrapper.WrapperInvocation;
+import com.alipay.sofa.registry.exception.InterceptorExecutionException;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
@@ -26,39 +25,28 @@ import com.alipay.sofa.registry.remoting.exchange.RequestChannelClosedException;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 
-/**
- * check connect already existed
- *
- * @author shangyu.wh
- * @version 1.0: ClientCheckWrapperInterceptor.java, v 0.1 2019-06-18 13:53 shangyu.wh Exp $
- */
-public class ClientCheckWrapperInterceptor
-    implements WrapperInterceptor<RegisterInvokeData, Boolean> {
+/** Client check interceptor impl. */
+public class ClientCheckInterceptor implements Interceptor {
 
   @Autowired private SessionServerConfig sessionServerConfig;
 
   @Autowired private Exchange boltExchange;
 
   @Override
-  public Boolean invokeCodeWrapper(WrapperInvocation<RegisterInvokeData, Boolean> invocation)
-      throws Exception {
-
-    RegisterInvokeData registerInvokeData = invocation.getParameterSupplier().get();
+  public boolean process(RegisterInvokeData registerInvokeData)
+      throws InterceptorExecutionException {
     BaseInfo baseInfo = (BaseInfo) registerInvokeData.getStoreData();
-
     Server sessionServer = boltExchange.getServer(sessionServerConfig.getServerPort());
-
     Channel channel = sessionServer.getChannel(baseInfo.getSourceAddress());
-
     if (channel == null) {
       throw new RequestChannelClosedException(
-          String.format("Register address %s  channel closed", baseInfo.getSourceAddress()));
+          "Register address " + baseInfo.getSourceAddress() + " channel closed");
     }
-    return invocation.proceed();
+    return true;
   }
 
   @Override
-  public int getOrder() {
+  public int order() {
     return 100;
   }
 }

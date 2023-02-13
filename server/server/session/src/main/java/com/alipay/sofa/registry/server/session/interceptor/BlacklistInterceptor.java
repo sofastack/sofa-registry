@@ -14,14 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.wrapper;
+package com.alipay.sofa.registry.server.session.interceptor;
 
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.store.BaseInfo;
-import com.alipay.sofa.registry.common.model.store.StoreData.DataType;
+import com.alipay.sofa.registry.common.model.store.StoreData;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
-import com.alipay.sofa.registry.common.model.wrapper.WrapperInterceptor;
-import com.alipay.sofa.registry.common.model.wrapper.WrapperInvocation;
+import com.alipay.sofa.registry.exception.InterceptorExecutionException;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.server.session.filter.ProcessFilter;
 import com.alipay.sofa.registry.server.session.loggers.Loggers;
@@ -31,15 +30,11 @@ import com.alipay.sofa.registry.server.shared.remoting.RemotingHelper;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 
-/**
- * blacklist filter
- *
- * @author shangyu.wh
- * @version 1.0: BlacklistWrapperInterceptor.java, v 0.1 2019-06-18 22:26 shangyu.wh Exp $
- */
-public class BlacklistWrapperInterceptor
-    implements WrapperInterceptor<RegisterInvokeData, Boolean> {
+/** Blacklist interceptor impl. */
+public class BlacklistInterceptor implements Interceptor {
+
   private static final Logger LOGGER = Loggers.BLACK_LIST_LOG;
+
   @Autowired protected SessionRegistry sessionRegistry;
 
   @Autowired protected FirePushService firePushService;
@@ -47,23 +42,21 @@ public class BlacklistWrapperInterceptor
   @Autowired protected ProcessFilter<BaseInfo> processFilter;
 
   @Override
-  public Boolean invokeCodeWrapper(WrapperInvocation<RegisterInvokeData, Boolean> invocation)
-      throws Exception {
-
-    RegisterInvokeData registerInvokeData = invocation.getParameterSupplier().get();
+  public boolean process(RegisterInvokeData registerInvokeData)
+      throws InterceptorExecutionException {
     BaseInfo storeData = (BaseInfo) registerInvokeData.getStoreData();
     if (Strings.isNotBlank(storeData.attributeOf(ValueConstants.BLOCKED_REQUEST_KEY))
         || processFilter.match(storeData)) {
-      if (DataType.PUBLISHER == storeData.getDataType()) {
+      if (StoreData.DataType.PUBLISHER == storeData.getDataType()) {
         // match blacklist stop pub.
         LOGGER.info(
             "[pub],{},{}",
             storeData.getDataInfoId(),
             RemotingHelper.getAddressString(storeData.getSourceAddress()));
-        return true;
+        return false;
       }
 
-      if (DataType.SUBSCRIBER == storeData.getDataType()) {
+      if (StoreData.DataType.SUBSCRIBER == storeData.getDataType()) {
         // in some case, need to push empty to new subscriber, and stop sub
         // else, filter not stop sub
         if (sessionRegistry.isPushEmpty((Subscriber) storeData)) {
@@ -73,15 +66,15 @@ public class BlacklistWrapperInterceptor
               "[sub],{},{}",
               storeData.getDataInfoId(),
               RemotingHelper.getAddressString(storeData.getSourceAddress()));
-          return true;
+          return false;
         }
       }
     }
-    return invocation.proceed();
+    return true;
   }
 
   @Override
-  public int getOrder() {
+  public int order() {
     return 200;
   }
 }

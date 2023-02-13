@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.wrapper;
+package com.alipay.sofa.registry.server.session.interceptor;
 
 import com.alipay.sofa.registry.common.model.store.StoreData;
 import com.alipay.sofa.registry.remoting.Channel;

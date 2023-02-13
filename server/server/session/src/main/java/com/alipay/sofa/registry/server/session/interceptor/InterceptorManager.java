@@ -14,27 +14,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.common.model.wrapper;
+package com.alipay.sofa.registry.server.session.interceptor;
 
-/**
- * @author shangyu.wh
- * @version 1.0: WrapperInterceptor.java, v 0.1 2019-06-18 11:45 shangyu.wh Exp $
- */
-public interface WrapperInterceptor<T, R> {
+import com.alipay.sofa.registry.exception.InterceptorExecutionException;
 
-  /**
-   * invoke inside function
-   *
-   * @param invocation
-   * @return
-   * @throws Exception
-   */
-  R invokeCodeWrapper(WrapperInvocation<T, R> invocation) throws Exception;
+/** Manage all interceptor. */
+public interface InterceptorManager {
 
   /**
-   * Interceptor order
+   * Add a new interceptor according to the execution priority of the interceptor.
    *
-   * @return
+   * @param interceptor target interceptor
    */
-  int getOrder();
+  void addInterceptor(Interceptor interceptor);
+
+  /**
+   * Execute all interceptors in order.
+   *
+   * @param registerInvokeData data
+   * @throws InterceptorExecutionException throw when any interceptor encounters an exception, and
+   *     stop executing subsequent interceptors
+   */
+  void executeInterceptors(RegisterInvokeData registerInvokeData)
+      throws InterceptorExecutionException;
 }
