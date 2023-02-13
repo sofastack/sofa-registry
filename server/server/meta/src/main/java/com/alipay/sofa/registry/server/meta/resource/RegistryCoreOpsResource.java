@@ -27,7 +27,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import org.apache.commons.lang.StringUtils;
-import sun.net.util.IPAddressUtil;
+import org.glassfish.jersey.internal.guava.InetAddresses;
 
 /**
  * @author chen.zhu
@@ -51,7 +51,7 @@ public class RegistryCoreOpsResource {
   @Deprecated
   public CommonResponse kickoffServer(@PathParam(value = "ip") String ip) {
     LOGGER.warn("[kickoffServer][begin] server [{}], use opsapi/v2 instead", ip);
-    if (StringUtils.isBlank(ip) || !IPAddressUtil.isIPv4LiteralAddress(ip)) {
+    if (StringUtils.isBlank(ip) || !InetAddresses.isUriInetAddress(ip)) {
       LOGGER.error("[kickoffServer]invalid ip: {}", ip);
       return GenericResponse.buildFailedResponse("invalid ip address: " + ip);
     }
@@ -71,7 +71,7 @@ public class RegistryCoreOpsResource {
   @Deprecated
   public CommonResponse rejoinServerGroup(@PathParam(value = "ip") String ip) {
     LOGGER.warn("[rejoinServerGroup][begin] server [{}], use opsapi/v2 instead", ip);
-    if (StringUtils.isBlank(ip) || !IPAddressUtil.isIPv4LiteralAddress(ip)) {
+    if (StringUtils.isBlank(ip) || !InetAddresses.isUriInetAddress(ip)) {
       LOGGER.error("[rejoinServerGroup]invalid ip: {}", ip);
       return GenericResponse.buildFailedResponse("invalid ip address: " + ip);
     }
