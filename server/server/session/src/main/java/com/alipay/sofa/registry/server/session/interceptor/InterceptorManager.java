@@ -32,9 +32,10 @@ public interface InterceptorManager {
    * Execute all interceptors in order.
    *
    * @param registerInvokeData data
+   * @return true if all interceptors executed successful
    * @throws InterceptorExecutionException throw when any interceptor encounters an exception, and
    *     stop executing subsequent interceptors
    */
-  void executeInterceptors(RegisterInvokeData registerInvokeData)
+  boolean executeInterceptors(RegisterInvokeData registerInvokeData)
       throws InterceptorExecutionException;
 }

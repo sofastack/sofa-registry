@@ -42,10 +42,10 @@ public class OrderedInterceptorManager implements InterceptorManager {
   }
 
   @Override
-  public void executeInterceptors(RegisterInvokeData registerInvokeData)
+  public boolean executeInterceptors(RegisterInvokeData registerInvokeData)
       throws InterceptorExecutionException {
     if (interceptors.size() == 0) {
-      return;
+      return true;
     }
 
     for (Interceptor interceptor : interceptors) {
@@ -53,7 +53,7 @@ public class OrderedInterceptorManager implements InterceptorManager {
         boolean result = interceptor.process(registerInvokeData);
         if (!result) {
           LOGGER.warn("interceptor({}) return false, skip all subsequent interceptors");
-          break;
+          return false;
         }
       } catch (InterceptorExecutionException e) {
         LOGGER.error(
@@ -77,5 +77,6 @@ public class OrderedInterceptorManager implements InterceptorManager {
             cause);
       }
     }
+    return true;
   }
 }

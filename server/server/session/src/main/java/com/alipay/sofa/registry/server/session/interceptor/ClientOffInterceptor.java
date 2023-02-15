@@ -69,7 +69,7 @@ public class ClientOffInterceptor implements Interceptor {
           LOGGER.error(
               "failed to unRegister publisher {}, source={}", storeData.getDataInfoId(), url, e);
         }
-        return true;
+        return false;
       }
 
       if (StoreData.DataType.SUBSCRIBER == storeData.getDataType()) {
