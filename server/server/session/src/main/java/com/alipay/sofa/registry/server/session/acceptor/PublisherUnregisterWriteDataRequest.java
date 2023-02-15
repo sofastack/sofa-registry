@@ -16,37 +16,30 @@
  */
 package com.alipay.sofa.registry.server.session.acceptor;
 
-import com.alipay.sofa.registry.common.model.ClientOffPublishers;
 import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.store.Publisher;
-import java.util.List;
 
-/**
- * @author yuzhi.lyz
- * @version v 0.1 2020-12-12 15:20 yuzhi.lyz Exp $
- */
-public final class ClientOffWriteDataRequest implements WriteDataRequest<ClientOffPublishers> {
+/** WriteDataRequest of publisher unregister. */
+public final class PublisherUnregisterWriteDataRequest implements WriteDataRequest<Publisher> {
 
-  private final ConnectId connectId;
-  private final ClientOffPublishers requestBody;
+  private final Publisher publisher;
 
-  public ClientOffWriteDataRequest(ConnectId connectId, List<Publisher> publishers) {
-    this.connectId = connectId;
-    this.requestBody = new ClientOffPublishers(connectId, publishers);
+  public PublisherUnregisterWriteDataRequest(Publisher publisher) {
+    this.publisher = publisher;
   }
 
   @Override
-  public ClientOffPublishers getRequestBody() {
-    return requestBody;
+  public Publisher getRequestBody() {
+    return publisher;
   }
 
   @Override
   public WriteDataRequestType getRequestType() {
-    return WriteDataRequestType.CLIENT_OFF;
+    return WriteDataRequestType.UN_PUBLISHER;
   }
 
   @Override
   public ConnectId getConnectId() {
-    return connectId;
+    return publisher.connectId();
   }
 }

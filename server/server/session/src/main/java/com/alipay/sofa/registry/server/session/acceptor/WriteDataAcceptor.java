@@ -26,7 +26,7 @@ public interface WriteDataAcceptor {
   /**
    * accept all write data request
    *
-   * @param request
+   * @param request {@link WriteDataRequest}
    */
-  void accept(WriteDataRequest request);
+  void accept(WriteDataRequest<?> request);
 }
