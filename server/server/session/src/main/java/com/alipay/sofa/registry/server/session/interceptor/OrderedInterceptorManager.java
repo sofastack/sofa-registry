@@ -52,7 +52,7 @@ public class OrderedInterceptorManager implements InterceptorManager {
       try {
         boolean result = interceptor.process(registerInvokeData);
         if (!result) {
-          LOGGER.info("interceptor({}) return false, skip all subsequent interceptors");
+          LOGGER.warn("interceptor({}) return false, skip all subsequent interceptors");
           break;
         }
       } catch (InterceptorExecutionException e) {
@@ -62,19 +62,19 @@ public class OrderedInterceptorManager implements InterceptorManager {
             registerInvokeData.getStoreData().getId(),
             e);
         throw e;
-      } catch (Exception e) {
+      } catch (Throwable cause) {
         LOGGER.error(
             "interceptor({}) process data(dataId={}) encountered an unexpected exception",
             interceptor.getName(),
             registerInvokeData.getStoreData().getId(),
-            e);
+            cause);
         throw new InterceptorExecutionException(
             "interceptor("
                 + interceptor.getName()
                 + ") process data(dataId="
                 + registerInvokeData.getStoreData().getId()
                 + ") encountered an unexpected exception",
-            e);
+            cause);
       }
     }
   }

@@ -140,7 +140,6 @@ public class SessionRegistry implements Registry {
           break;
         case SUBSCRIBER:
           Subscriber subscriber = (Subscriber) storeData;
-
           if (!sessionInterests.add(subscriber)) {
             break;
           }
@@ -149,7 +148,6 @@ public class SessionRegistry implements Registry {
           break;
         case WATCHER:
           Watcher watcher = (Watcher) storeData;
-
           if (!sessionWatchers.add(watcher)) {
             break;
           }
