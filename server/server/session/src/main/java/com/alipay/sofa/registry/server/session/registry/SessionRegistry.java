@@ -112,8 +112,9 @@ public class SessionRegistry implements Registry {
   public void register(StoreData storeData, Channel channel) {
     RegisterInvokeData registerInvokeData = new RegisterInvokeData(storeData, channel);
 
+    boolean allInterceptorsSuccess = true;
     try {
-      orderedInterceptorManager.executeInterceptors(registerInvokeData);
+      allInterceptorsSuccess = orderedInterceptorManager.executeInterceptors(registerInvokeData);
     } catch (Exception e) {
       LOGGER.error(
           "interceptors process data(dataId={}) encountered an unexpected exception",
@@ -122,41 +123,43 @@ public class SessionRegistry implements Registry {
       throw new RuntimeException("Proceed register error!", e);
     }
 
-    try {
-      switch (storeData.getDataType()) {
-        case PUBLISHER:
-          Publisher publisher = (Publisher) storeData;
-          publisher.setSessionProcessId(ServerEnv.PROCESS_ID);
-          if (!sessionDataStore.add(publisher)) {
-            break;
-          }
-          // All write operations to DataServer (pub/unPub/clientoff/renew/snapshot)
-          // are handed over to WriteDataAcceptor
-          writeDataAcceptor.accept(new PublisherRegisterWriteDataRequest(publisher));
+    if (allInterceptorsSuccess) {
+      try {
+        switch (storeData.getDataType()) {
+          case PUBLISHER:
+            Publisher publisher = (Publisher) storeData;
+            publisher.setSessionProcessId(ServerEnv.PROCESS_ID);
+            if (!sessionDataStore.add(publisher)) {
+              break;
+            }
+            // All write operations to DataServer (pub/unPub/clientoff/renew/snapshot)
+            // are handed over to WriteDataAcceptor
+            writeDataAcceptor.accept(new PublisherRegisterWriteDataRequest(publisher));
 
-          sessionRegistryStrategy.afterPublisherRegister(publisher);
-          break;
-        case SUBSCRIBER:
-          Subscriber subscriber = (Subscriber) storeData;
-          if (!sessionInterests.add(subscriber)) {
+            sessionRegistryStrategy.afterPublisherRegister(publisher);
             break;
-          }
+          case SUBSCRIBER:
+            Subscriber subscriber = (Subscriber) storeData;
+            if (!sessionInterests.add(subscriber)) {
+              break;
+            }
 
-          sessionRegistryStrategy.afterSubscriberRegister(subscriber);
-          break;
-        case WATCHER:
-          Watcher watcher = (Watcher) storeData;
-          if (!sessionWatchers.add(watcher)) {
+            sessionRegistryStrategy.afterSubscriberRegister(subscriber);
             break;
-          }
+          case WATCHER:
+            Watcher watcher = (Watcher) storeData;
+            if (!sessionWatchers.add(watcher)) {
+              break;
+            }
 
-          sessionRegistryStrategy.afterWatcherRegister(watcher);
-          break;
-        default:
-          break;
+            sessionRegistryStrategy.afterWatcherRegister(watcher);
+            break;
+          default:
+            break;
+        }
+      } catch (Exception e) {
+        throw new RuntimeException("Proceed register error!", e);
       }
-    } catch (Exception e) {
-      throw new RuntimeException("Proceed register error!", e);
     }
   }
 
