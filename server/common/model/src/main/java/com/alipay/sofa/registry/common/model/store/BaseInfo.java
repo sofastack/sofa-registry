@@ -18,6 +18,7 @@ package com.alipay.sofa.registry.common.model.store;
 
 import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.RegisterVersion;
+import com.alipay.sofa.registry.common.model.dataserver.DataServerReq;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.Maps;
 import java.io.Serializable;
@@ -30,7 +31,7 @@ import org.springframework.util.CollectionUtils;
  * @author shangyu.wh
  * @version $Id: BaseInfo.java, v 0.1 2017-11-30 16:31 shangyu.wh Exp $
  */
-public abstract class BaseInfo implements Serializable, StoreData<String> {
+public abstract class BaseInfo implements Serializable, StoreData<String>, DataServerReq {
 
   private static final long serialVersionUID = -6263388188316303789L;
 
