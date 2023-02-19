@@ -274,14 +274,4 @@ public class DataNodeServiceImpl implements DataNodeService {
     }
     return ret;
   }
-
-  private static final class Req {
-    final int slotId;
-    final Object req;
-
-    Req(int slotId, Object req) {
-      this.slotId = slotId;
-      this.req = req;
-    }
-  }
 }
