@@ -19,17 +19,13 @@ package com.alipay.sofa.registry.server.session.acceptor;
 import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 
-/**
- * @author yuzhi.lyz
- * @version v 0.1 2020-12-12 15:14 yuzhi.lyz Exp $
- */
-public final class PublisherWriteDataRequest implements WriteDataRequest<Publisher> {
-  private final Publisher publisher;
-  private final WriteDataRequestType type;
+/** WriteDataRequest of publisher unregister. */
+public final class PublisherUnregisterWriteDataRequest implements WriteDataRequest<Publisher> {
 
-  public PublisherWriteDataRequest(Publisher publisher, WriteDataRequestType type) {
+  private final Publisher publisher;
+
+  public PublisherUnregisterWriteDataRequest(Publisher publisher) {
     this.publisher = publisher;
-    this.type = type;
   }
 
   @Override
@@ -39,7 +35,7 @@ public final class PublisherWriteDataRequest implements WriteDataRequest<Publish
 
   @Override
   public WriteDataRequestType getRequestType() {
-    return type;
+    return WriteDataRequestType.UN_PUBLISHER;
   }
 
   @Override

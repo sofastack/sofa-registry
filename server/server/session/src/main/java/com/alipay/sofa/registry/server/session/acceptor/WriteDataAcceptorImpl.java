@@ -17,6 +17,8 @@
 package com.alipay.sofa.registry.server.session.acceptor;
 
 import com.alipay.sofa.registry.common.model.ConnectId;
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.node.service.DataNodeService;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -27,11 +29,43 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public class WriteDataAcceptorImpl implements WriteDataAcceptor {
 
+  private static final Logger LOGGER = LoggerFactory.getLogger(WriteDataAcceptorImpl.class);
+
   @Autowired DataNodeService dataNodeService;
 
-  public void accept(WriteDataRequest request) {
+  public void accept(WriteDataRequest<?> request) {
     ConnectId connectId = request.getConnectId();
-    WriteDataProcessor writeDataProcessor = new WriteDataProcessor(connectId, dataNodeService);
-    writeDataProcessor.process(request);
+    switch (request.getRequestType()) {
+      case PUBLISHER:
+        doPublishAsync(request);
+        return;
+      case UN_PUBLISHER:
+        doUnPublishAsync(request);
+        return;
+      case CLIENT_OFF:
+        doClientOffAsync(request);
+        return;
+      default:
+        LOGGER.error(
+            "Unknown request type, connectId={}, requestType={}, requestBody={}",
+            connectId,
+            request.getRequestType(),
+            request.getRequestBody());
+    }
+  }
+
+  private void doClientOffAsync(WriteDataRequest<?> request) {
+    ClientOffWriteDataRequest req = (ClientOffWriteDataRequest) request;
+    dataNodeService.clientOff(req.getRequestBody());
+  }
+
+  private void doUnPublishAsync(WriteDataRequest<?> request) {
+    PublisherUnregisterWriteDataRequest req = (PublisherUnregisterWriteDataRequest) request;
+    dataNodeService.unregister(req.getRequestBody());
+  }
+
+  private void doPublishAsync(WriteDataRequest<?> request) {
+    PublisherRegisterWriteDataRequest req = (PublisherRegisterWriteDataRequest) request;
+    dataNodeService.register(req.getRequestBody());
   }
 }

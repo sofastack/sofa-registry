@@ -27,9 +27,9 @@ import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.remoting.exchange.ExchangeCallback;
 import com.alipay.sofa.registry.server.session.acceptor.ClientOffWriteDataRequest;
-import com.alipay.sofa.registry.server.session.acceptor.PublisherWriteDataRequest;
+import com.alipay.sofa.registry.server.session.acceptor.PublisherRegisterWriteDataRequest;
+import com.alipay.sofa.registry.server.session.acceptor.PublisherUnregisterWriteDataRequest;
 import com.alipay.sofa.registry.server.session.acceptor.WriteDataAcceptor;
-import com.alipay.sofa.registry.server.session.acceptor.WriteDataRequest;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.interceptor.OrderedInterceptorManager;
 import com.alipay.sofa.registry.server.session.interceptor.RegisterInvokeData;
@@ -134,9 +134,7 @@ public class SessionRegistry implements Registry {
             }
             // All write operations to DataServer (pub/unPub/clientoff/renew/snapshot)
             // are handed over to WriteDataAcceptor
-            writeDataAcceptor.accept(
-                new PublisherWriteDataRequest(
-                    publisher, WriteDataRequest.WriteDataRequestType.PUBLISHER));
+            writeDataAcceptor.accept(new PublisherRegisterWriteDataRequest(publisher));
 
             sessionRegistryStrategy.afterPublisherRegister(publisher);
             break;
@@ -176,9 +174,7 @@ public class SessionRegistry implements Registry {
         sessionDataStore.deleteById(storeData.getId(), publisher.getDataInfoId());
         // All write operations to DataServer (pub/unPub/clientoff)
         // are handed over to WriteDataAcceptor
-        writeDataAcceptor.accept(
-            new PublisherWriteDataRequest(
-                publisher, WriteDataRequest.WriteDataRequestType.UN_PUBLISHER));
+        writeDataAcceptor.accept(new PublisherUnregisterWriteDataRequest(publisher));
 
         sessionRegistryStrategy.afterPublisherUnRegister(publisher);
         break;
