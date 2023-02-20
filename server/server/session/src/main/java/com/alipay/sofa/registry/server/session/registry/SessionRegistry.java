@@ -134,9 +134,7 @@ public class SessionRegistry implements Registry {
             }
             // All write operations to DataServer (pub/unPub/clientoff/renew/snapshot)
             // are handed over to WriteDataAcceptor
-            writeDataAcceptor.accept(
-                new PublisherWriteDataRequest(
-                    publisher, WriteDataRequest.WriteDataRequestType.PUBLISHER));
+            writeDataAcceptor.accept(new PublisherRegisterWriteDataRequest(publisher));
 
             sessionRegistryStrategy.afterPublisherRegister(publisher);
             break;
