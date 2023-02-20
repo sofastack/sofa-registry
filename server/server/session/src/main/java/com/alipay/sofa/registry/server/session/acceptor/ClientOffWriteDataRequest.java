@@ -26,8 +26,8 @@ import java.util.List;
  * @version v 0.1 2020-12-12 15:20 yuzhi.lyz Exp $
  */
 public final class ClientOffWriteDataRequest implements WriteDataRequest<ClientOffPublishers> {
-  private final ConnectId connectId;
 
+  private final ConnectId connectId;
   private final ClientOffPublishers requestBody;
 
   public ClientOffWriteDataRequest(ConnectId connectId, List<Publisher> publishers) {

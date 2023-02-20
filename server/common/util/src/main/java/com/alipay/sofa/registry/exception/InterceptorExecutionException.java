@@ -14,17 +14,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.common.model.wrapper;
+package com.alipay.sofa.registry.exception;
 
-import java.util.function.Supplier;
+/** Interceptor exception */
+public class InterceptorExecutionException extends RuntimeException {
 
-/**
- * @author shangyu.wh
- * @version 1.0: Wrapper.java, v 0.1 2019-06-18 19:33 shangyu.wh Exp $
- */
-public interface Wrapper<T, R> {
+  private static final long serialVersionUID = -6793552645172892864L;
 
-  R call();
+  public InterceptorExecutionException(String message) {
+    super(message);
+  }
 
-  Supplier<T> getParameterSupplier();
+  public InterceptorExecutionException(String message, Throwable cause) {
+    super(message, cause);
+  }
 }

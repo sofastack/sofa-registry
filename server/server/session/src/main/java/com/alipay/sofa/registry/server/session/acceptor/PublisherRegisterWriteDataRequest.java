@@ -14,27 +14,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.common.model.wrapper;
+package com.alipay.sofa.registry.server.session.acceptor;
 
-/**
- * @author shangyu.wh
- * @version 1.0: WrapperInterceptor.java, v 0.1 2019-06-18 11:45 shangyu.wh Exp $
- */
-public interface WrapperInterceptor<T, R> {
+import com.alipay.sofa.registry.common.model.ConnectId;
+import com.alipay.sofa.registry.common.model.store.Publisher;
 
-  /**
-   * invoke inside function
-   *
-   * @param invocation
-   * @return
-   * @throws Exception
-   */
-  R invokeCodeWrapper(WrapperInvocation<T, R> invocation) throws Exception;
+/** WriteDataRequest of publisher register. */
+public final class PublisherRegisterWriteDataRequest implements WriteDataRequest<Publisher> {
 
-  /**
-   * Interceptor order
-   *
-   * @return
-   */
-  int getOrder();
+  private final Publisher publisher;
+
+  public PublisherRegisterWriteDataRequest(Publisher publisher) {
+    this.publisher = publisher;
+  }
+
+  @Override
+  public Publisher getRequestBody() {
+    return publisher;
+  }
+
+  @Override
+  public WriteDataRequestType getRequestType() {
+    return WriteDataRequestType.PUBLISHER;
+  }
+
+  @Override
+  public ConnectId getConnectId() {
+    return publisher.connectId();
+  }
 }

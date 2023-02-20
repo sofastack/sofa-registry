@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.registry.server.session.bootstrap;
 
-import com.alipay.sofa.registry.common.model.wrapper.WrapperInterceptor;
 import com.alipay.sofa.registry.jdbc.config.JdbcConfiguration;
 import com.alipay.sofa.registry.jraft.config.RaftConfiguration;
 import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
@@ -37,6 +36,7 @@ import com.alipay.sofa.registry.server.session.filter.IPMatchStrategy;
 import com.alipay.sofa.registry.server.session.filter.ProcessFilter;
 import com.alipay.sofa.registry.server.session.filter.blacklist.BlacklistMatchProcessFilter;
 import com.alipay.sofa.registry.server.session.filter.blacklist.DefaultIPMatchStrategy;
+import com.alipay.sofa.registry.server.session.interceptor.*;
 import com.alipay.sofa.registry.server.session.limit.AccessLimitService;
 import com.alipay.sofa.registry.server.session.limit.AccessLimitServiceImpl;
 import com.alipay.sofa.registry.server.session.mapper.ConnectionMapper;
@@ -61,7 +61,6 @@ import com.alipay.sofa.registry.server.session.slot.SlotTableCacheImpl;
 import com.alipay.sofa.registry.server.session.store.*;
 import com.alipay.sofa.registry.server.session.strategy.*;
 import com.alipay.sofa.registry.server.session.strategy.impl.*;
-import com.alipay.sofa.registry.server.session.wrapper.*;
 import com.alipay.sofa.registry.server.shared.client.manager.BaseClientManagerService;
 import com.alipay.sofa.registry.server.shared.client.manager.ClientManagerService;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerManager;
@@ -687,33 +686,33 @@ public class SessionServerConfiguration {
     }
 
     @Bean
-    public WrapperInterceptorManager wrapperInterceptorManager() {
-      WrapperInterceptorManager mgr = new WrapperInterceptorManager();
-      mgr.addInterceptor(clientCheckWrapperInterceptor());
-      mgr.addInterceptor(blacklistWrapperInterceptor());
-      mgr.addInterceptor(accessLimitWrapperInterceptor());
-      mgr.addInterceptor(clientOffWrapperInterceptor());
-      return mgr;
+    public OrderedInterceptorManager orderedInterceptorManager() {
+      OrderedInterceptorManager orderedInterceptorManager = new OrderedInterceptorManager();
+      orderedInterceptorManager.addInterceptor(clientCheckInterceptor());
+      orderedInterceptorManager.addInterceptor(blacklistInterceptor());
+      orderedInterceptorManager.addInterceptor(accessLimitInterceptor());
+      orderedInterceptorManager.addInterceptor(clientOffInterceptor());
+      return orderedInterceptorManager;
     }
 
     @Bean
-    public WrapperInterceptor clientCheckWrapperInterceptor() {
-      return new ClientCheckWrapperInterceptor();
+    public Interceptor clientCheckInterceptor() {
+      return new ClientCheckInterceptor();
     }
 
     @Bean
-    public WrapperInterceptor blacklistWrapperInterceptor() {
-      return new BlacklistWrapperInterceptor();
+    public Interceptor blacklistInterceptor() {
+      return new BlacklistInterceptor();
     }
 
     @Bean
-    public WrapperInterceptor clientOffWrapperInterceptor() {
-      return new ClientOffWrapperInterceptor();
+    public Interceptor clientOffInterceptor() {
+      return new ClientOffInterceptor();
     }
 
     @Bean
-    public WrapperInterceptor accessLimitWrapperInterceptor() {
-      return new AccessLimitWrapperInterceptor();
+    public Interceptor accessLimitInterceptor() {
+      return new AccessLimitInterceptor();
     }
   }
 

@@ -14,42 +14,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.acceptor;
+package com.alipay.sofa.registry.server.session.interceptor;
 
-import com.alipay.sofa.registry.common.model.ConnectId;
+import com.alipay.sofa.registry.exception.InterceptorExecutionException;
 
-/**
- * @author kezhu.wukz
- * @author shangyu.wh
- * @version 1.0: WriteDataRequest.java, v 0.1 2019-06-06 18:42 shangyu.wh Exp $
- */
-public interface WriteDataRequest<T> {
+/** Manage all interceptor. */
+public interface InterceptorManager {
 
   /**
-   * ConnectId.
+   * Add a new interceptor according to the execution priority of the interceptor.
    *
-   * @return ConnectId
+   * @param interceptor target interceptor
    */
-  ConnectId getConnectId();
+  void addInterceptor(Interceptor interceptor);
 
   /**
-   * Type of the request.
+   * Execute all interceptors in order.
    *
-   * @return WriteDataRequestType
+   * @param registerInvokeData data
+   * @return true if all interceptors executed successful
+   * @throws InterceptorExecutionException throw when any interceptor encounters an exception, and
+   *     stop executing subsequent interceptors
    */
-  WriteDataRequestType getRequestType();
-
-  /**
-   * Gets request body.
-   *
-   * @return the request body
-   */
-  T getRequestBody();
-
-  /** The enum for request type. */
-  enum WriteDataRequestType {
-    PUBLISHER,
-    UN_PUBLISHER,
-    CLIENT_OFF
-  }
+  boolean executeInterceptors(RegisterInvokeData registerInvokeData)
+      throws InterceptorExecutionException;
 }

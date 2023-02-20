@@ -14,42 +14,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.wrapper;
+package com.alipay.sofa.registry.server.session.interceptor;
 
 import com.alipay.sofa.registry.common.model.store.BaseInfo;
-import com.alipay.sofa.registry.common.model.wrapper.WrapperInterceptor;
-import com.alipay.sofa.registry.common.model.wrapper.WrapperInvocation;
+import com.alipay.sofa.registry.exception.InterceptorExecutionException;
 import com.alipay.sofa.registry.server.session.limit.AccessLimitService;
 import org.springframework.beans.factory.annotation.Autowired;
 
-/**
- * @author shangyu.wh
- * @version 1.0: AccessLimitWrapperInterceptor.java, v 0.1 2019-08-26 20:29 shangyu.wh Exp $
- */
-public class AccessLimitWrapperInterceptor
-    implements WrapperInterceptor<RegisterInvokeData, Boolean> {
+/** Access limit interceptor impl. */
+public class AccessLimitInterceptor implements Interceptor {
 
   @Autowired private AccessLimitService accessLimitService;
 
   @Override
-  public Boolean invokeCodeWrapper(WrapperInvocation<RegisterInvokeData, Boolean> invocation)
-      throws Exception {
-
-    RegisterInvokeData registerInvokeData = invocation.getParameterSupplier().get();
+  public boolean process(RegisterInvokeData registerInvokeData)
+      throws InterceptorExecutionException {
     BaseInfo baseInfo = (BaseInfo) registerInvokeData.getStoreData();
-
     if (!accessLimitService.tryAcquire()) {
-      throw new RuntimeException(
-          String.format(
-              "Register access limit for session server!dataInfoId=%s,connectId=%s",
-              baseInfo.getDataInfoId(), baseInfo.getSourceAddress()));
+      throw new InterceptorExecutionException(
+          "Register access limit for session server!dataInfoId="
+              + baseInfo.getDataInfoId()
+              + ",connectId="
+              + baseInfo.getSourceAddress());
     }
 
-    return invocation.proceed();
+    return true;
   }
 
   @Override
-  public int getOrder() {
+  public int order() {
     return 0;
   }
 }

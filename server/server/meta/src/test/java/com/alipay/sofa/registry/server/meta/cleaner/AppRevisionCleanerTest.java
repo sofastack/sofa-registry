@@ -69,11 +69,12 @@ public class AppRevisionCleanerTest extends AbstractMetaServerTestBase {
     // doReturn(new DateNowDomain(new Date())).when(appRevisionCleaner.appRevisionMapper).getNow();
     doReturn(
             new DBResponse<>(
-                    PersistenceDataBuilder.createPersistenceData(
-                            ValueConstants.APP_REVISION_WRITE_SWITCH_DATA_ID, "{\"serviceParams\":false,\"serviceParamsLarge\":true}"),
-                    OperationStatus.SUCCESS))
-            .when(appRevisionCleaner.provideDataService)
-            .queryProvideData(anyString());
+                PersistenceDataBuilder.createPersistenceData(
+                    ValueConstants.APP_REVISION_WRITE_SWITCH_DATA_ID,
+                    "{\"serviceParams\":false,\"serviceParamsLarge\":true}"),
+                OperationStatus.SUCCESS))
+        .when(appRevisionCleaner.provideDataService)
+        .queryProvideData(anyString());
   }
 
   @After
