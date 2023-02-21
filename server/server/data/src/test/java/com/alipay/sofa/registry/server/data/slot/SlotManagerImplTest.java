@@ -300,7 +300,7 @@ public class SlotManagerImplTest {
     Assert.assertFalse(sm.hasSlot());
   }
 
-  static void slotEquals(SlotTable table, SlotManagerImpl sm) {
+  public static void slotEquals(SlotTable table, SlotManagerImpl sm) {
     Map<Integer, Slot> slotMap = table.getSlotMap();
     for (Slot slot : slotMap.values()) {
       Slot s = sm.getSlot(DATACENTER, slot.getId());
@@ -337,7 +337,8 @@ public class SlotManagerImplTest {
     return new SlotTable(tableEpoch, Lists.newArrayList(slot1, slot2));
   }
 
-  static Mock mockSM(int slotId, boolean initSync, boolean initExecutor, Set<String> sessions) {
+  public static Mock mockSM(
+      int slotId, boolean initSync, boolean initExecutor, Set<String> sessions) {
     SlotDiffSyncerTest.MockSync mockSync =
         SlotDiffSyncerTest.mockSync(slotId, DATACENTER, initSync);
     SlotDiffSyncer syncer = mockSync.syncer;
@@ -365,8 +366,8 @@ public class SlotManagerImplTest {
     return mock;
   }
 
-  static final class Mock {
-    SlotDiffSyncerTest.MockSync mockSync;
-    SlotManagerImpl slotManager;
+  public static final class Mock {
+    public SlotDiffSyncerTest.MockSync mockSync;
+    public SlotManagerImpl slotManager;
   }
 }

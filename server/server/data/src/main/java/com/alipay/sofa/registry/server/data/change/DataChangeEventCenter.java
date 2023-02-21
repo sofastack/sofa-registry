@@ -36,6 +36,7 @@ import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.bootstrap.MultiClusterDataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.DatumStorageDelegate;
 import com.alipay.sofa.registry.server.shared.util.DatumUtils;
+import com.alipay.sofa.registry.store.api.config.DefaultCommonConfig;
 import com.alipay.sofa.registry.task.FastRejectedExecutionException;
 import com.alipay.sofa.registry.task.KeyedThreadPoolExecutor;
 import com.alipay.sofa.registry.util.CollectionUtils;
@@ -66,6 +67,8 @@ public class DataChangeEventCenter {
   @Autowired private DatumStorageDelegate datumStorageDelegate;
 
   @Autowired private Exchange boltExchange;
+
+  @Autowired private DefaultCommonConfig defaultCommonConfig;
 
   private final Map<String, DataChangeMerger> dataCenter2Changes = Maps.newConcurrentMap();
   private final ReadWriteLock lock = new ReentrantReadWriteLock();
@@ -373,13 +376,21 @@ public class DataChangeEventCenter {
       return false;
     }
     for (DataChangeEvent event : events) {
-      final String dataCenter = event.getDataCenter();
-      if (nodeType == NodeType.DATA && !dataServerConfig.isLocalDataCenter(dataCenter)) {
-        LOGGER.info(
-            "[skip]dataCenter={}, dataInfoIds={} change skip to notify remote data.",
-            dataCenter,
-            event.getDataInfoIds());
-        continue;
+      String dataCenter = event.getDataCenter();
+      if (nodeType == NodeType.DATA) {
+        if (dataServerConfig.isLocalDataCenter(dataCenter)) {
+          dataCenter = defaultCommonConfig.getDefaultClusterId();
+          LOGGER.info(
+              "[Notify]dataCenter={}, dataInfoIds={} notify local dataChange to remote.",
+              dataCenter,
+              event.getDataInfoIds());
+        } else {
+          LOGGER.info(
+              "[skip]dataCenter={}, dataInfoIds={} change skip to notify remote data.",
+              dataCenter,
+              event.getDataInfoIds());
+          continue;
+        }
       }
 
       final Map<String, DatumVersion> changes =
@@ -547,5 +558,15 @@ public class DataChangeEventCenter {
   @VisibleForTesting
   void setMultiClusterDataServerConfig(MultiClusterDataServerConfig multiClusterDataServerConfig) {
     this.multiClusterDataServerConfig = multiClusterDataServerConfig;
+  }
+
+  /**
+   * Setter method for property <tt>defaultCommonConfig</tt>.
+   *
+   * @param defaultCommonConfig value to be assigned to property defaultCommonConfig
+   */
+  @VisibleForTesting
+  public void setDefaultCommonConfig(DefaultCommonConfig defaultCommonConfig) {
+    this.defaultCommonConfig = defaultCommonConfig;
   }
 }

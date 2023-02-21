@@ -577,15 +577,15 @@ public class SlotDiffSyncerTest {
     return resp;
   }
 
-  static final class MockSync {
-    SlotDiffSyncer syncer;
-    List<Publisher> p1;
-    List<Publisher> p2;
-    List<Publisher> p3;
-    List<Publisher> p4;
+  public static final class MockSync {
+    public SlotDiffSyncer syncer;
+    public List<Publisher> p1;
+    public List<Publisher> p2;
+    public List<Publisher> p3;
+    public List<Publisher> p4;
   }
 
-  static MockSync mockSync(int slotId, String dc, boolean init) {
+  public static MockSync mockSync(int slotId, String dc, boolean init) {
     SlotDiffSyncer syncer = newSyncer(init);
     MockSync ms = new MockSync();
     if (init) {

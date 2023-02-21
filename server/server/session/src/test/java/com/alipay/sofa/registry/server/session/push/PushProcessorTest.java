@@ -120,10 +120,16 @@ public class PushProcessorTest {
     Assert.assertTrue(replaceTask.toString(), replaceTask.toString().contains(dataId));
 
     // now there is one pending task with delay
-    processor.pushSwitchService.getDataCenterMetadataCache().updateLocalData(true);
+    processor
+        .pushSwitchService
+        .getFetchStopPushService()
+        .setStopPushSwitch(System.currentTimeMillis(), true);
     Assert.assertEquals(processor.taskBuffer.watchBuffer(worker), 0);
 
-    processor.pushSwitchService.getDataCenterMetadataCache().updateLocalData(false);
+    processor
+        .pushSwitchService
+        .getFetchStopPushService()
+        .setStopPushSwitch(System.currentTimeMillis(), false);
     // task clean
     worker.bufferMap.clear();
     // first suspend, avoid run watchdog
@@ -239,10 +245,16 @@ public class PushProcessorTest {
     PushTask task = worker.bufferMap.values().iterator().next();
     worker.bufferMap.clear();
 
-    processor.pushSwitchService.getDataCenterMetadataCache().updateLocalData(true);
+    processor
+        .pushSwitchService
+        .getFetchStopPushService()
+        .setStopPushSwitch(System.currentTimeMillis(), true);
     Assert.assertFalse(processor.doPush(task));
 
-    processor.pushSwitchService.getDataCenterMetadataCache().updateLocalData(false);
+    processor
+        .pushSwitchService
+        .getFetchStopPushService()
+        .setStopPushSwitch(System.currentTimeMillis(), false);
     // clientNodeService is null
     processor.clientNodeService = null;
     Assert.assertFalse(processor.doPush(task));
@@ -405,7 +417,10 @@ public class PushProcessorTest {
     processor.clientNodeService = mock(ClientNodeService.class);
     processor.pushSwitchService = TestUtils.newPushSwitchService(config);
 
-    processor.pushSwitchService.getDataCenterMetadataCache().updateLocalData(false);
+    processor
+        .pushSwitchService
+        .getFetchStopPushService()
+        .setStopPushSwitch(System.currentTimeMillis(), false);
     CircuitBreakerService circuitBreakerService = spy(InMemoryCircuitBreakerService.class);
     processor.circuitBreakerService = circuitBreakerService;
     processor.pushDataGenerator = new PushDataGenerator();

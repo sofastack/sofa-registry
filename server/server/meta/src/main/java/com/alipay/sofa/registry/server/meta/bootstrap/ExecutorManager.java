@@ -20,6 +20,7 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MultiClusterMetaServerConfig;
+import com.alipay.sofa.registry.task.KeyedThreadPoolExecutor;
 import com.alipay.sofa.registry.task.MetricsableThreadPoolExecutor;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
 import java.util.HashMap;
@@ -42,12 +43,18 @@ public class ExecutorManager {
   private final ThreadPoolExecutor multiClusterConfigReloadExecutor;
   private final ThreadPoolExecutor remoteClusterHandlerExecutor;
 
+  private final KeyedThreadPoolExecutor remoteSlotSyncerExecutor;
+
   private static final String MULTI_CLUSTER_CONFIG_RELOAD_EXECUTOR =
       "MULTI_CLUSTER_CONFIG_RELOAD_EXECUTOR";
+
+  private static final String REMOTE_SLOT_SYNCER_EXECUTOR = "REMOTE_SLOT_SYNCER_EXECUTOR";
 
   private static final String REMOTE_CLUSTER_HANDLER_EXECUTOR = "REMOTE_CLUSTER_HANDLER_EXECUTOR";
 
   private Map<String, ThreadPoolExecutor> reportExecutors = new HashMap<>();
+
+  private Map<String, KeyedThreadPoolExecutor> keyExecutors = new HashMap<>();
 
   public ExecutorManager(
       MetaServerConfig metaServerConfig,
@@ -76,6 +83,15 @@ public class ExecutorManager {
                               r.getClass(), r, executor);
                       LOGGER.error(msg);
                     }));
+
+    remoteSlotSyncerExecutor =
+        keyExecutors.computeIfAbsent(
+            REMOTE_SLOT_SYNCER_EXECUTOR,
+            k ->
+                new KeyedThreadPoolExecutor(
+                    REMOTE_SLOT_SYNCER_EXECUTOR,
+                    multiClusterMetaServerConfig.getRemoteSlotSyncerExecutorPoolSize(),
+                    multiClusterMetaServerConfig.getRemoteSlotSyncerExecutorQueueSize()));
 
     remoteClusterHandlerExecutor =
         reportExecutors.computeIfAbsent(
@@ -107,6 +123,15 @@ public class ExecutorManager {
    */
   public ThreadPoolExecutor getMultiClusterConfigReloadExecutor() {
     return multiClusterConfigReloadExecutor;
+  }
+
+  /**
+   * Getter method for property <tt>remoteSlotSyncerExecutor</tt>.
+   *
+   * @return property value of remoteSlotSyncerExecutor
+   */
+  public KeyedThreadPoolExecutor getRemoteSlotSyncerExecutor() {
+    return remoteSlotSyncerExecutor;
   }
 
   /**

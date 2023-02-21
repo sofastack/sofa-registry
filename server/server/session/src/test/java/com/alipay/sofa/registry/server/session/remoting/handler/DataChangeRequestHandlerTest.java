@@ -60,12 +60,18 @@ public class DataChangeRequestHandlerTest {
     handler.firePushService = mock(FirePushService.class);
     handler.sessionInterests = mock(Interests.class);
 
-    handler.pushSwitchService.getDataCenterMetadataCache().updateLocalData(true);
+    handler
+        .pushSwitchService
+        .getFetchStopPushService()
+        .setStopPushSwitch(System.currentTimeMillis(), true);
     // no npe, stopPush skip the handle
     Object obj = handler.doHandle(null, null);
     Assert.assertNull(obj);
 
-    handler.pushSwitchService.getDataCenterMetadataCache().updateLocalData(false);
+    handler
+        .pushSwitchService
+        .getFetchStopPushService()
+        .setStopPushSwitch(System.currentTimeMillis(), false);
     when(handler.sessionInterests.checkInterestVersion(anyString(), anyString(), anyLong()))
         .thenReturn(Interests.InterestVersionCheck.Obsolete);
     obj = handler.doHandle(null, request());

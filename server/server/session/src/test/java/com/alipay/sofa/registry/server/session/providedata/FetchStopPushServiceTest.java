@@ -32,8 +32,7 @@ public class FetchStopPushServiceTest extends FetchStopPushService {
   public void beforeFetchStopPushServiceTest() {
     SessionServerConfig sessionServerConfig = TestUtils.newSessionConfig("testdc");
 
-    this.setSessionServerConfig(sessionServerConfig)
-        .setDataCenterMetadataCache(TestUtils.newDataCenterMetaCache(sessionServerConfig));
+    this.setSessionServerConfig(sessionServerConfig);
   }
 
   @Test

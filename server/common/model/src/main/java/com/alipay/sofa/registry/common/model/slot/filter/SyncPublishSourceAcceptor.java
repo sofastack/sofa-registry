@@ -49,7 +49,7 @@ public class SyncPublishSourceAcceptor implements SyncSlotAcceptor {
       return false;
     }
 
-    return filters.contains(request.getDataInfoId());
+    return filters.contains(request.getSource());
   }
 
   @Override

@@ -33,7 +33,7 @@ public class RemoteDatumClearEvent implements Serializable {
 
   private final String group;
 
-  public RemoteDatumClearEvent(
+  private RemoteDatumClearEvent(
       String remoteDataCenter, DatumType datumType, String dataInfoId, String group) {
     this.remoteDataCenter = remoteDataCenter;
     this.datumType = datumType;

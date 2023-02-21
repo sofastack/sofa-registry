@@ -39,7 +39,9 @@ public class BaseSyncSlotAcceptorManager implements SyncSlotAcceptorManager {
       if (acceptor.filterOut(request)) {
         return false;
       }
-
+    }
+    for (SyncSlotAcceptor acceptor :
+        Optional.ofNullable(acceptors).orElse(Collections.emptySet())) {
       if (acceptor.accept(request)) {
         return true;
       }

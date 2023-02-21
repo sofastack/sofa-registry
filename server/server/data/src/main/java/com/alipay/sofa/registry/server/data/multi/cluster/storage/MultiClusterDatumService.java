@@ -43,11 +43,11 @@ public class MultiClusterDatumService {
 
   @Autowired private DatumStorageDelegate datumStorageDelegate;
 
-  @Autowired protected SlotAccessorDelegate slotAccessorDelegate;
+  @Autowired private SlotAccessorDelegate slotAccessorDelegate;
 
   @Autowired private MultiClusterSyncRepository multiClusterSyncRepository;
 
-  @Autowired protected DataChangeEventCenter dataChangeEventCenter;
+  @Autowired private DataChangeEventCenter dataChangeEventCenter;
 
   public void clear(RemoteDatumClearEvent request) {
 
@@ -66,7 +66,9 @@ public class MultiClusterDatumService {
       DatumVersion datumVersion =
           datumStorageDelegate.clearPublishers(
               request.getRemoteDataCenter(), request.getDataInfoId());
-      datumVersionMap.put(request.getDataInfoId(), datumVersion);
+      if (datumVersion != null) {
+        datumVersionMap.put(request.getDataInfoId(), datumVersion);
+      }
     } else if (request.getDatumType() == DatumType.GROUP) {
       datumVersionMap =
           datumStorageDelegate.clearGroupPublishers(

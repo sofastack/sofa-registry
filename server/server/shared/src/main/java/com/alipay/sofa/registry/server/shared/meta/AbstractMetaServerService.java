@@ -441,14 +441,4 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
     this.commonConfig = commonConfig;
     return this;
   }
-
-  public static void main(String[] args) {
-    Map<String, String> map = null;
-    Optional.ofNullable(map)
-        .orElse(Collections.emptyMap())
-        .forEach(
-            (key, value) -> {
-              map.putIfAbsent(key, value);
-            });
-  }
 }

@@ -18,6 +18,7 @@ package com.alipay.sofa.registry.server.data.multi.cluster.loggers;
 
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import org.apache.logging.log4j.core.async.Hack;
 
 /**
  * @author xiaojian.xj
@@ -43,4 +44,7 @@ public class Loggers {
 
   public static final Logger MULTI_CLUSTER_SLOT_TABLE =
       LoggerFactory.getLogger("MULTI-CLUSTER-SLOT-TABLE");
+
+  public static final Logger MULTI_PUT_LOGGER =
+      Hack.hackLoggerDisruptor(LoggerFactory.getLogger("MULTI-PUT"));
 }

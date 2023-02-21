@@ -33,6 +33,7 @@ import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfigBean;
 import com.alipay.sofa.registry.server.session.converter.ReceivedDataConverter;
+import com.alipay.sofa.registry.server.session.metadata.MetadataCacheRegistry;
 import com.alipay.sofa.registry.server.session.multi.cluster.DataCenterMetadataCacheImpl;
 import com.alipay.sofa.registry.server.session.predicate.ZonePredicate;
 import com.alipay.sofa.registry.server.session.providedata.FetchGrayPushSwitchService;
@@ -160,18 +161,14 @@ public class TestUtils {
 
   public static DataCenterMetadataCacheImpl newDataCenterMetaCache(SessionServerConfig config) {
     DataCenterMetadataCacheImpl dataCenterMetadataCache = new DataCenterMetadataCacheImpl();
-    dataCenterMetadataCache
-        .setSessionServerConfig(config)
-        .setFetchStopPushService(new FetchStopPushService());
+    dataCenterMetadataCache.setSessionServerConfig(config);
 
     return dataCenterMetadataCache;
   }
 
   public static DataCenterMetadataCacheImpl newDataCenterMetaCache(String dataCenter) {
     DataCenterMetadataCacheImpl dataCenterMetadataCache = new DataCenterMetadataCacheImpl();
-    dataCenterMetadataCache
-        .setSessionServerConfig(newSessionConfig(dataCenter))
-        .setFetchStopPushService(new FetchStopPushService());
+    dataCenterMetadataCache.setSessionServerConfig(newSessionConfig(dataCenter));
 
     return dataCenterMetadataCache;
   }
@@ -181,7 +178,8 @@ public class TestUtils {
     pushSwitchService
         .setFetchGrayPushSwitchService(new FetchGrayPushSwitchService())
         .setSessionServerConfig(serverConfigBean)
-        .setDataCenterMetadataCache(newDataCenterMetaCache(serverConfigBean));
+        .setFetchStopPushService(new FetchStopPushService())
+        .setMetadataCacheRegistry(new MetadataCacheRegistry());
 
     return pushSwitchService;
   }
@@ -192,7 +190,8 @@ public class TestUtils {
     pushSwitchService
         .setFetchGrayPushSwitchService(new FetchGrayPushSwitchService())
         .setSessionServerConfig(sessionServerConfigBean)
-        .setDataCenterMetadataCache(newDataCenterMetaCache(sessionServerConfigBean));
+        .setFetchStopPushService(new FetchStopPushService())
+        .setMetadataCacheRegistry(new MetadataCacheRegistry());
 
     return pushSwitchService;
   }

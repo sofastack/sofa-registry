@@ -50,7 +50,7 @@ public class SessionMetaServerManager extends AbstractMetaLeaderExchanger {
     if (defaultCommonConfig.isJdbc()) {
       return MetaLeaderLearnModeEnum.JDBC;
     } else {
-      return MetaLeaderLearnModeEnum.SLB;
+      return MetaLeaderLearnModeEnum.LOADBALANCER;
     }
   }
 

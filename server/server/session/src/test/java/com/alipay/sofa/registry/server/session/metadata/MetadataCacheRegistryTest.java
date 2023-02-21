@@ -196,6 +196,7 @@ public class MetadataCacheRegistryTest extends AbstractSessionServerTestBase {
       }
     }
 
+    Thread.sleep(3000);
     metadataCacheRegistry.setAppRevisionRepository(appRevisionRepository);
 
     waitConditionUntilTimeOut(MetadataCacheRegistryTest::check, 3000);

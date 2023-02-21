@@ -22,11 +22,13 @@ import static org.mockito.Mockito.when;
 import com.alipay.remoting.Connection;
 import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.RegisterVersion;
+import com.alipay.sofa.registry.common.model.console.MultiSegmentSyncSwitch;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
 import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.common.model.slot.SlotAccess;
 import com.alipay.sofa.registry.common.model.slot.SlotConfig;
+import com.alipay.sofa.registry.common.model.slot.filter.MultiSyncDataAcceptorManager;
 import com.alipay.sofa.registry.common.model.slot.func.SlotFunctionRegistry;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.common.model.store.Publisher;
@@ -38,9 +40,12 @@ import com.alipay.sofa.registry.server.data.bootstrap.MultiClusterDataServerConf
 import com.alipay.sofa.registry.server.data.cache.DatumStorage;
 import com.alipay.sofa.registry.server.data.cache.DatumStorageDelegate;
 import com.alipay.sofa.registry.server.data.cache.LocalDatumStorage;
+import com.alipay.sofa.registry.server.data.multi.cluster.storage.MultiClusterDatumStorage;
 import com.alipay.sofa.registry.server.data.slot.SlotChangeListenerManager;
 import com.alipay.sofa.registry.server.shared.config.CommonConfig;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
+import com.alipay.sofa.registry.store.api.config.DefaultCommonConfig;
+import com.alipay.sofa.registry.store.api.config.DefaultCommonConfigBean;
 import com.alipay.sofa.registry.task.FastRejectedExecutionException;
 import com.alipay.sofa.registry.task.KeyedThreadPoolExecutor;
 import com.google.common.collect.Lists;
@@ -77,6 +82,26 @@ public final class TestBaseUtils {
   }
 
   private TestBaseUtils() {}
+
+  public static Publisher createTestPublisher(String dataId, String instanceId, String group) {
+    Publisher publisher = new Publisher();
+    DataInfo dataInfo = DataInfo.valueOf(DataInfo.toDataInfoId(dataId, instanceId, group));
+    publisher.setDataInfoId(dataInfo.getDataInfoId());
+    publisher.setDataId(dataInfo.getDataId());
+    publisher.setInstanceId(dataInfo.getInstanceId());
+    publisher.setGroup(dataInfo.getGroup());
+    publisher.setRegisterId(TEST_REGISTER_ID + REGISTER_ID_SEQ.incrementAndGet());
+    publisher.setSessionProcessId(ServerEnv.PROCESS_ID);
+    publisher.setRegisterTimestamp(System.currentTimeMillis());
+    publisher.setVersion(100 + CLIENT_VERSION.incrementAndGet());
+    ConnectId connectId =
+        ConnectId.of(
+            ServerEnv.PROCESS_ID.getHostAddress() + ":9999",
+            ServerEnv.PROCESS_ID.getHostAddress() + ":9998");
+    publisher.setSourceAddress(URL.valueOf(connectId.clientAddress()));
+    publisher.setTargetAddress(URL.valueOf(connectId.sessionAddress()));
+    return publisher;
+  }
 
   public static Publisher createTestPublisher(String dataId) {
     Publisher publisher = new Publisher();
@@ -117,6 +142,16 @@ public final class TestBaseUtils {
 
   public static ConnectId notExistConnectId() {
     return ConnectId.of("notExist:9999", "notExist:9998");
+  }
+
+  public static MultiClusterDatumStorage newMultiStorage(Set<String> dataCenters, boolean init) {
+    MultiClusterDatumStorage storage = new MultiClusterDatumStorage();
+    if (init) {
+      for (String dataCenter : dataCenters) {
+        initStorage(false, storage, Sets.newHashSet(dataCenter));
+      }
+    }
+    return storage;
   }
 
   public static LocalDatumStorage newLocalStorage(String dataCenter, boolean init) {
@@ -194,8 +229,30 @@ public final class TestBaseUtils {
     return list;
   }
 
+  public static Set<String> createTestDataInfoIds(int slotId, int count) {
+    Set<String> ret = Sets.newHashSetWithExpectedSize(count);
+    for (int i = 0; i < Integer.MAX_VALUE; i++) {
+      String dataInfoId = TEST_DATA_ID + "-" + DATA_ID_SEQ.incrementAndGet() + "-" + i;
+      int id = SlotFunctionRegistry.getFunc().slotOf(dataInfoId);
+      if (id == slotId) {
+        // find the slotId
+        ret.add(dataInfoId);
+        if (ret.size() == count) {
+          break;
+        }
+      }
+    }
+    return ret;
+  }
+
   public static MockBlotChannel newChannel(int localPort, String remoteAddress, int remotePort) {
     return new MockBlotChannel(localPort, remoteAddress, remotePort);
+  }
+
+  public static DefaultCommonConfig newDefaultCommonConfig(String clusterId) {
+    DefaultCommonConfigBean config = new DefaultCommonConfigBean();
+    config.setClusterId(clusterId);
+    return config;
   }
 
   public static final class MockBlotChannel extends BoltChannel {
@@ -249,6 +306,31 @@ public final class TestBaseUtils {
     }
   }
 
+  public static Map<String, Map<String, Publisher>> randPublishers(
+      Map<String, Integer> publishers) {
+    Map<String, Map<String, Publisher>> m = Maps.newHashMap();
+    publishers.forEach(
+        (k, i) -> {
+          Map<String, Publisher> publisherMap = Maps.newHashMap();
+          for (int j = 0; j < i; j++) {
+            Publisher p = randPublisher();
+            publisherMap.put(p.getRegisterId(), p);
+          }
+          m.put(k, publisherMap);
+        });
+    return m;
+  }
+
+  private static final AtomicLong SEQ = new AtomicLong();
+
+  public static Publisher randPublisher() {
+    Publisher p = new Publisher();
+    p.setRegisterTimestamp(System.nanoTime());
+    p.setRegisterId(System.currentTimeMillis() + "_" + SEQ.incrementAndGet());
+    p.setVersion(1L);
+    return p;
+  }
+
   public static SlotAccess moved() {
     return new SlotAccess(1, 1, SlotAccess.Status.Moved, 1);
   }
@@ -287,5 +369,45 @@ public final class TestBaseUtils {
     Mockito.when(executor.execute(Mockito.anyObject(), Mockito.anyObject()))
         .thenThrow(new FastRejectedExecutionException("reject"));
     return executor;
+  }
+
+  public static MultiSyncDataAcceptorManager newMultiSyncDataAcceptorManager(
+      String dc, Set<String> groups) {
+    return newMultiSyncDataAcceptorManager(newMultiSegmentSyncSwitchWithGroups(dc, groups));
+  }
+
+  public static MultiSegmentSyncSwitch newMultiSegmentSyncSwitchWithDataInfoIds(
+      String dc, Set<String> dataInfoIds) {
+    MultiSegmentSyncSwitch syncSwitch =
+        new MultiSegmentSyncSwitch(
+            true,
+            true,
+            dc,
+            Sets.newHashSet(),
+            dataInfoIds,
+            Sets.newHashSet(),
+            System.currentTimeMillis());
+    return syncSwitch;
+  }
+
+  public static MultiSegmentSyncSwitch newMultiSegmentSyncSwitchWithGroups(
+      String dc, Set<String> groups) {
+    MultiSegmentSyncSwitch syncSwitch =
+        new MultiSegmentSyncSwitch(
+            true,
+            true,
+            dc,
+            groups,
+            Sets.newHashSet(),
+            Sets.newHashSet(),
+            System.currentTimeMillis());
+    return syncSwitch;
+  }
+
+  public static MultiSyncDataAcceptorManager newMultiSyncDataAcceptorManager(
+      MultiSegmentSyncSwitch syncSwitch) {
+    MultiSyncDataAcceptorManager multiSyncDataAcceptorManager = new MultiSyncDataAcceptorManager();
+    multiSyncDataAcceptorManager.updateFrom(Lists.newArrayList(syncSwitch));
+    return multiSyncDataAcceptorManager;
   }
 }

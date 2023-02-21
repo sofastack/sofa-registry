@@ -66,7 +66,7 @@ public class RemoteDataChangeNotifyHandler extends AbstractClientHandler<DataCha
   @Override
   public void checkParam(DataChangeRequest request) {
     ParaCheckUtil.checkNotBlank(request.getDataCenter(), "request.dataCenter");
-    ParaCheckUtil.checkNotNull(request.getDataInfoIds(), "request.dataInfoIds");
+    ParaCheckUtil.checkNotEmpty(request.getDataInfoIds(), "request.dataInfoIds");
   }
 
   /**

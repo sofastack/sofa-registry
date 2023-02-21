@@ -173,7 +173,7 @@ public abstract class AbstractMetaLeaderExchanger extends ClientSideExchanger
     MetaLeaderLearnModeEnum mode = getMode();
     if (mode == MetaLeaderLearnModeEnum.JDBC) {
       leader = queryLeaderFromDb();
-    } else if (mode == MetaLeaderLearnModeEnum.SLB) {
+    } else if (mode == MetaLeaderLearnModeEnum.LOADBALANCER) {
       leader = queryLeaderFromRest(dataCenter);
     }
 
@@ -259,38 +259,10 @@ public abstract class AbstractMetaLeaderExchanger extends ClientSideExchanger
       String url = String.format(ValueConstants.META_LEADER_QUERY_URL, metaDomain);
       try {
         javax.ws.rs.core.Response resp = client.target(url).request().buildGet().invoke();
-        if (resp.getStatus() != javax.ws.rs.core.Response.Status.OK.getStatusCode()) {
-          LOGGER.error(
-              "[resetLeaderFromRestServer] dataCenter:{} failed to query from url: {}, resp status: {}",
-              dataCenter,
-              url,
-              resp.getStatus());
-          continue;
+        LeaderInfo ret = handleResp(dataCenter, url, resp);
+        if (ret != null) {
+          return ret;
         }
-        GenericResponse genericResponse = new GenericResponse<>();
-        genericResponse = resp.readEntity(genericResponse.getClass());
-
-        if (!genericResponse.isSuccess() || genericResponse.getData() == null) {
-          LOGGER.error(
-              "[resetLeaderFromRestServer] dataCenter:{} failed to query from url: {}, resp: {}",
-              dataCenter,
-              url,
-              JsonUtils.writeValueAsString(genericResponse));
-          continue;
-        }
-        Map data = (Map) genericResponse.getData();
-        Long epoch = (Long) data.get(EPOCH_KEY);
-        String leader = (String) data.get(LEADER_KEY);
-        if (StringUtils.isBlank(leader)) {
-          continue;
-        }
-        LeaderInfo query = new LeaderInfo(epoch, leader);
-        LOGGER.info(
-            "[resetLeaderFromRestServer] dataCenter:{} query from url: {}, meta leader:{}",
-            dataCenter,
-            url,
-            query);
-        return query;
       } catch (Throwable e) {
         LOGGER.error(
             "[resetLeaderFromRestServer] dataCenter:{} failed to query from url: {}",
@@ -300,6 +272,41 @@ public abstract class AbstractMetaLeaderExchanger extends ClientSideExchanger
       }
     }
     return null;
+  }
+
+  protected LeaderInfo handleResp(String dataCenter, String url, javax.ws.rs.core.Response resp) {
+    if (resp.getStatus() != javax.ws.rs.core.Response.Status.OK.getStatusCode()) {
+      LOGGER.error(
+          "[resetLeaderFromRestServer] dataCenter:{} failed to query from url: {}, resp status: {}",
+          dataCenter,
+          url,
+          resp.getStatus());
+      return null;
+    }
+    GenericResponse genericResponse = new GenericResponse<>();
+    genericResponse = resp.readEntity(genericResponse.getClass());
+
+    if (!genericResponse.isSuccess() || genericResponse.getData() == null) {
+      LOGGER.error(
+          "[resetLeaderFromRestServer] dataCenter:{} failed to query from url: {}, resp: {}",
+          dataCenter,
+          url,
+          JsonUtils.writeValueAsString(genericResponse));
+      return null;
+    }
+    Map data = (Map) genericResponse.getData();
+    Long epoch = (Long) data.get(EPOCH_KEY);
+    String leader = (String) data.get(LEADER_KEY);
+    if (StringUtils.isBlank(leader)) {
+      return null;
+    }
+    LeaderInfo query = new LeaderInfo(epoch, leader);
+    LOGGER.info(
+        "[resetLeaderFromRestServer] dataCenter:{} query from url: {}, meta leader:{}",
+        dataCenter,
+        url,
+        query);
+    return query;
   }
 
   protected abstract Collection<String> getMetaServerDomains(String dataCenter);

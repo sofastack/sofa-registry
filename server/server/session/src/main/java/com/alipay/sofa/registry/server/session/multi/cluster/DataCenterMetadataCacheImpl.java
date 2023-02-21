@@ -22,7 +22,6 @@ import com.alipay.sofa.registry.common.model.multi.cluster.RemoteSlotTableStatus
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import com.alipay.sofa.registry.server.session.providedata.FetchStopPushService;
 import com.alipay.sofa.registry.store.api.meta.MultiClusterSyncRepository;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
@@ -34,7 +33,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -49,8 +47,6 @@ public class DataCenterMetadataCacheImpl implements DataCenterMetadataCache {
 
   @Autowired private SessionServerConfig sessionServerConfig;
 
-  @Resource private FetchStopPushService fetchStopPushService;
-
   @Autowired private MultiClusterSyncRepository multiClusterSyncRepository;
 
   private Map<String, DataCenterMetadata> metadataCache = Maps.newConcurrentMap();
@@ -62,7 +58,6 @@ public class DataCenterMetadataCacheImpl implements DataCenterMetadataCache {
         sessionServerConfig.getSessionServerDataCenter(),
         new DataCenterMetadata(
             sessionServerConfig.getSessionServerDataCenter(),
-            fetchStopPushService.isStopPushSwitch(),
             sessionServerConfig.getLocalDataCenterZones()));
   }
 
@@ -80,16 +75,6 @@ public class DataCenterMetadataCacheImpl implements DataCenterMetadataCache {
       return null;
     }
     return metadata.getZones();
-  }
-
-  @Override
-  public Boolean isStopPush(String dataCenter) {
-    DataCenterMetadata metadata = metadataCache.get(dataCenter);
-
-    if (metadata == null) {
-      return null;
-    }
-    return metadata.isStopPush();
   }
 
   @Override
@@ -164,16 +149,6 @@ public class DataCenterMetadataCacheImpl implements DataCenterMetadataCache {
   }
 
   @Override
-  public void updateLocalData(boolean stopPush) {
-    metadataCache.put(
-        sessionServerConfig.getSessionServerDataCenter(),
-        new DataCenterMetadata(
-            sessionServerConfig.getSessionServerDataCenter(),
-            stopPush,
-            sessionServerConfig.getLocalDataCenterZones()));
-  }
-
-  @Override
   public Set<String> getSyncDataCenters() {
     return metadataCache.keySet();
   }
@@ -193,18 +168,6 @@ public class DataCenterMetadataCacheImpl implements DataCenterMetadataCache {
   public DataCenterMetadataCacheImpl setSessionServerConfig(
       SessionServerConfig sessionServerConfig) {
     this.sessionServerConfig = sessionServerConfig;
-    return this;
-  }
-
-  /**
-   * Setter method for property <tt>fetchStopPushService</tt>.
-   *
-   * @param fetchStopPushService value to be assigned to property fetchStopPushService
-   */
-  @VisibleForTesting
-  public DataCenterMetadataCacheImpl setFetchStopPushService(
-      FetchStopPushService fetchStopPushService) {
-    this.fetchStopPushService = fetchStopPushService;
     return this;
   }
 }

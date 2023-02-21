@@ -59,7 +59,7 @@ public class RemoteClusterMetaExchanger extends AbstractMetaLeaderExchanger {
 
   @Override
   protected MetaLeaderLearnModeEnum getMode() {
-    return MetaLeaderLearnModeEnum.SLB;
+    return MetaLeaderLearnModeEnum.LOADBALANCER;
   }
 
   @Override

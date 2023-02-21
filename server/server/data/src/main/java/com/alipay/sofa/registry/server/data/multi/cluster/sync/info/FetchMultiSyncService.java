@@ -76,7 +76,7 @@ public class FetchMultiSyncService implements ApplicationListener<ContextRefresh
     return syncMap.get(dataCenter);
   }
 
-  private synchronized void setSyncMap(Map<String, MultiSegmentSyncSwitch> syncMap) {
+  public synchronized void setSyncMap(Map<String, MultiSegmentSyncSwitch> syncMap) {
     this.syncMap = syncMap;
   }
 

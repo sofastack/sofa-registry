@@ -71,8 +71,6 @@ public class ClientManagerAddressJdbcRepositoryTest extends AbstractH2DbTestBase
   public static final Set<AddressVersion> difference =
       Sets.newHashSet(new AddressVersion("1.1.1.1", true));
 
-  private ClientManagerAddressMapper mapper = mock(ClientManagerAddressMapper.class);
-
   @Test
   public void testClientManagerWithSub() throws InterruptedException {
     ClientManagerResult clientOff =
@@ -134,6 +132,33 @@ public class ClientManagerAddressJdbcRepositoryTest extends AbstractH2DbTestBase
             ClientManagerAddressJdbcRepositoryTest.clientOffSet);
     Assert.assertTrue(clientOpen.isSuccess());
     Assert.assertTrue(clientOpen.getVersion() > 0);
+  }
+
+  @Test
+  public void testReduce() throws InterruptedException {
+    clientManagerAddressJdbcRepository.clientOff(
+        ClientManagerAddressJdbcRepositoryTest.clientOffSet);
+    TimeUnit.SECONDS.sleep(3);
+    Set<String> clientOff =
+        clientManagerAddressJdbcRepository.queryClientOffData().getClientOffAddress().keySet();
+
+    for (AddressVersion addressVersion : ClientManagerAddressJdbcRepositoryTest.clientOffSet) {
+      Assert.assertTrue(clientOff.contains(addressVersion.getAddress()));
+    }
+
+    ClientManagerResult reduce =
+        clientManagerAddressJdbcRepository.reduce(
+            ClientManagerAddressJdbcRepositoryTest.clientOffSet);
+    Assert.assertTrue(reduce.isSuccess());
+    Assert.assertTrue(reduce.getVersion() > 0);
+
+    TimeUnit.SECONDS.sleep(3);
+    ClientManagerAddress query = clientManagerAddressJdbcRepository.queryClientOffData();
+    clientOff = query.getClientOffAddress().keySet();
+    for (AddressVersion addressVersion : ClientManagerAddressJdbcRepositoryTest.clientOffSet) {
+      Assert.assertFalse(clientOff.contains(addressVersion.getAddress()));
+      Assert.assertTrue(query.getReduces().contains(addressVersion.getAddress()));
+    }
   }
 
   @Test

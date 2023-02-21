@@ -34,7 +34,7 @@ import com.alipay.sofa.registry.server.session.acceptor.WriteDataRequest;
 import com.alipay.sofa.registry.server.session.bootstrap.ExecutorManager;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.loggers.Loggers;
-import com.alipay.sofa.registry.server.session.multi.cluster.DataCenterMetadataCache;
+import com.alipay.sofa.registry.server.session.metadata.MetadataCacheRegistry;
 import com.alipay.sofa.registry.server.session.providedata.ConfigProvideDataWatcher;
 import com.alipay.sofa.registry.server.session.push.FirePushService;
 import com.alipay.sofa.registry.server.session.push.PushSwitchService;
@@ -98,7 +98,7 @@ public class SessionRegistry implements Registry {
 
   @Autowired private RegistryScanCallable registryScanCallable;
 
-  @Autowired private DataCenterMetadataCache dataCenterMetadataCache;
+  @Autowired private MetadataCacheRegistry metadataCacheRegistry;
 
   @Autowired private ExecutorManager executorManager;
 
@@ -377,7 +377,9 @@ public class SessionRegistry implements Registry {
   private void scanSubscribers(long round) {
 
     Set<String> dataCenters = Sets.newLinkedHashSet();
-    dataCenters.addAll(dataCenterMetadataCache.getSyncDataCenters());
+
+    dataCenters.add(sessionServerConfig.getSessionServerDataCenter());
+    dataCenters.addAll(metadataCacheRegistry.getPushEnableDataCenters());
 
     final long start = System.currentTimeMillis();
     SelectSubscriber selectSubscriber = sessionInterests.selectSubscribers(dataCenters);

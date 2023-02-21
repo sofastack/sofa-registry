@@ -19,6 +19,7 @@ package com.alipay.sofa.registry.common.model.slot.filter;
 import com.alipay.sofa.registry.common.model.constants.MultiValueConstants;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
+import com.google.common.base.Objects;
 import java.util.Set;
 import org.springframework.util.CollectionUtils;
 
@@ -54,6 +55,23 @@ public class SyncPublisherGroupAcceptor implements SyncSlotAcceptor {
   @Override
   public String name() {
     return NAME;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    SyncPublisherGroupAcceptor that = (SyncPublisherGroupAcceptor) o;
+    return Objects.equal(NAME, that.NAME);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(NAME);
   }
 
   @Override

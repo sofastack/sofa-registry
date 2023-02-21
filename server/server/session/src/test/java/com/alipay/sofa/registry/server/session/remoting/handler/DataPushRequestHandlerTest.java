@@ -61,12 +61,18 @@ public class DataPushRequestHandlerTest {
 
     Assert.assertNotNull(handler.getExecutor());
 
-    handler.pushSwitchService.getDataCenterMetadataCache().updateLocalData(true);
+    handler
+        .pushSwitchService
+        .getFetchStopPushService()
+        .setStopPushSwitch(System.currentTimeMillis(), true);
     // no npe, stopPush skip the handle
     Object obj = handler.doHandle(null, null);
     Assert.assertNull(obj);
 
-    handler.pushSwitchService.getDataCenterMetadataCache().updateLocalData(false);
+    handler
+        .pushSwitchService
+        .getFetchStopPushService()
+        .setStopPushSwitch(System.currentTimeMillis(), false);
     // npe
     TestUtils.assertRunException(RuntimeException.class, () -> handler.doHandle(null, request()));
     handler.firePushService = mock(FirePushService.class);

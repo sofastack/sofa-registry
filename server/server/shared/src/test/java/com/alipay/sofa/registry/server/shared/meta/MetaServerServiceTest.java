@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.shared.meta;
 
+import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -23,7 +24,9 @@ import static org.mockito.Mockito.when;
 import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.ProcessId;
+import com.alipay.sofa.registry.common.model.ServerDataBox;
 import com.alipay.sofa.registry.common.model.elector.LeaderInfo;
+import com.alipay.sofa.registry.common.model.metaserver.FetchSystemPropertyResult;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.common.model.metaserver.cluster.VersionedList;
 import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.BaseHeartBeatResponse;
@@ -208,6 +211,92 @@ public class MetaServerServiceTest {
         .thenReturn(response);
     ProvideData got = mockServerService.fetchData("testDataId");
     Assert.assertEquals(provideData, got);
+  }
+
+  @Test
+  public void testBlacklist() {
+    MockServerService mockServerService = new MockServerService();
+    mockServerService
+        .setMetaLeaderExchanger(mock(MetaLeaderExchanger.class))
+        .setCommonConfig(commonConfig);
+
+    mockServerService.addSelfToMetaBlacklist();
+    mockServerService.removeSelfFromMetaBlacklist();
+  }
+
+  @Test
+  public void testRenewNode() {
+    GenericResponse<BaseHeartBeatResponse> resp = new GenericResponse<>();
+    BaseHeartBeatResponse heartBeatResponse =
+        new BaseHeartBeatResponse(
+            true,
+            new VersionedList(2, Lists.newArrayList(new MetaNode(new URL("192.168.1.1"), "dc1"))),
+            new SlotTable(10, Collections.emptyList()),
+            new VersionedList(
+                1,
+                Lists.newArrayList(
+                    new SessionNode(new URL("192.168.1.2"), "zoneA", ServerEnv.PROCESS_ID),
+                    new SessionNode(
+                        new URL("192.168.1.3"), "zoneB", new ProcessId("test", 1, 1, 1)))),
+            "test",
+            100,
+            Collections.emptyMap());
+    resp.setSuccess(true);
+    resp.setData(heartBeatResponse);
+
+    MockServerService mockServerService = new MockServerService();
+    MetaLeaderExchanger mockMetaExchange = mock(MetaLeaderExchanger.class);
+    when(mockMetaExchange.getLeader(commonConfig.getLocalDataCenter()))
+        .thenReturn(new LeaderInfo(System.currentTimeMillis(), "1.1.1.1"));
+    when(mockMetaExchange.sendRequest(anyString(), anyObject())).thenReturn(() -> resp);
+
+    mockServerService.setMetaLeaderExchanger(mockMetaExchange).setCommonConfig(commonConfig);
+
+    boolean renewNode = mockServerService.renewNode();
+    Assert.assertTrue(renewNode);
+
+    Mockito.verify(mockMetaExchange, Mockito.times(1))
+        .learn(Mockito.anyString(), Mockito.anyObject());
+    Assert.assertEquals(mockServerService.renewFailCounter.get(), 0);
+    Assert.assertEquals(1, mockServerService.getSessionServerEpoch());
+    Assert.assertEquals(
+        mockServerService.getSessionServerList(), Sets.newHashSet("192.168.1.2", "192.168.1.3"));
+    Assert.assertEquals(mockServerService.getDataCenters(), Sets.newHashSet("dc1"));
+    Map<String, SessionNode> sessionNodeMap = mockServerService.getSessionNodes();
+    Assert.assertEquals(sessionNodeMap.size(), 2);
+    Assert.assertEquals(sessionNodeMap.keySet(), mockServerService.getSessionServerList());
+    List<String> zones = mockServerService.getSessionServerList("");
+    Assert.assertEquals(zones.size(), 2);
+    Assert.assertTrue(zones.contains("192.168.1.2"));
+    Assert.assertTrue(zones.contains("192.168.1.3"));
+
+    Assert.assertEquals(2, mockServerService.getSessionProcessIds().size());
+    Assert.assertTrue(mockServerService.getSessionProcessIds().contains(ServerEnv.PROCESS_ID));
+    zones = mockServerService.getSessionServerList("zoneC");
+    Assert.assertEquals(zones.size(), 0);
+
+    zones = mockServerService.getSessionServerList("zoneA");
+    Assert.assertEquals(zones.size(), 1);
+    Assert.assertTrue(zones.contains("192.168.1.2"));
+  }
+
+  @Test
+  public void testFetchSystemProperty() {
+    MockServerService mockServerService = new MockServerService();
+    MetaLeaderExchanger mockMetaExchange = mock(MetaLeaderExchanger.class);
+    when(mockMetaExchange.getLeader(commonConfig.getLocalDataCenter()))
+        .thenReturn(new LeaderInfo(System.currentTimeMillis(), "1.1.1.1"));
+
+    mockServerService.setMetaLeaderExchanger(mockMetaExchange).setCommonConfig(commonConfig);
+
+    long version = System.currentTimeMillis();
+    FetchSystemPropertyResult result =
+        new FetchSystemPropertyResult(
+            true, new ProvideData(new ServerDataBox("aaa"), "testDataId", version));
+    when(mockMetaExchange.sendRequest(anyString(), anyObject())).thenReturn(() -> result);
+
+    FetchSystemPropertyResult fetch = mockServerService.fetchSystemProperty("testDataId", version);
+    Assert.assertEquals(result, fetch);
   }
 
   private static final class MockServerService

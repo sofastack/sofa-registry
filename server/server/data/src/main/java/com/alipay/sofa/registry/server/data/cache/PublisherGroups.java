@@ -204,7 +204,7 @@ public final class PublisherGroups {
   public Map<String, DatumVersion> clearGroupPublishers(String group) {
     Map<String, DatumVersion> ret = Maps.newHashMapWithExpectedSize(256);
     for (PublisherGroup publisherGroup : publisherGroupMap.values()) {
-      if (StringUtils.equals(DataInfo.valueOf(publisherGroup.dataInfoId).getGroup(), group)) {
+      if (!StringUtils.equals(DataInfo.valueOf(publisherGroup.dataInfoId).getGroup(), group)) {
         continue;
       }
       DatumVersion datumVersion = publisherGroup.clearPublishers();

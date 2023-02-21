@@ -17,7 +17,6 @@
 package com.alipay.sofa.registry.server.session.providedata;
 
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import com.alipay.sofa.registry.server.session.multi.cluster.DataCenterMetadataCache;
 import com.alipay.sofa.registry.server.shared.providedata.BaseStopPushService;
 import com.google.common.annotations.VisibleForTesting;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,17 +29,13 @@ public class FetchStopPushService extends BaseStopPushService {
 
   @Autowired private SessionServerConfig sessionServerConfig;
 
-  @Autowired private DataCenterMetadataCache dataCenterMetadataCache;
-
   @Override
   protected int getSystemPropertyIntervalMillis() {
     return sessionServerConfig.getSystemPropertyIntervalMillis();
   }
 
   @Override
-  protected void afterProcess(StopPushStorage storage) {
-    dataCenterMetadataCache.updateLocalData(storage.isStopPush());
-  }
+  protected void afterProcess(StopPushStorage storage) {}
 
   /**
    * Setter method for property <tt>sessionServerConfig</tt>.
@@ -50,18 +45,6 @@ public class FetchStopPushService extends BaseStopPushService {
   @VisibleForTesting
   protected FetchStopPushService setSessionServerConfig(SessionServerConfig sessionServerConfig) {
     this.sessionServerConfig = sessionServerConfig;
-    return this;
-  }
-
-  /**
-   * Setter method for property <tt>dataCenterMetadataCache</tt>.
-   *
-   * @param dataCenterMetadataCache value to be assigned to property dataCenterMetadataCache
-   */
-  @VisibleForTesting
-  public FetchStopPushService setDataCenterMetadataCache(
-      DataCenterMetadataCache dataCenterMetadataCache) {
-    this.dataCenterMetadataCache = dataCenterMetadataCache;
     return this;
   }
 }

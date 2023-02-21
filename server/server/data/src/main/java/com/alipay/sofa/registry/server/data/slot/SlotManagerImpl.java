@@ -331,7 +331,7 @@ public final class SlotManagerImpl implements SlotManager {
     final Map<Integer, SlotState> slotStates = Maps.newConcurrentMap();
   }
 
-  boolean processUpdating() {
+  public boolean processUpdating() {
     final SlotTable updating = updatingSlotTable.getAndSet(null);
     if (updating != null) {
       if (updating.getEpoch() > slotTableStates.table.getEpoch()) {

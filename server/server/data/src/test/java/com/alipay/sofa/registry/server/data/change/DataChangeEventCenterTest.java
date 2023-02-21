@@ -30,6 +30,7 @@ import com.alipay.sofa.registry.server.data.TestBaseUtils;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.bootstrap.MultiClusterDataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.DatumStorageDelegate;
+import com.alipay.sofa.registry.store.api.config.DefaultCommonConfig;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -47,15 +48,18 @@ public class DataChangeEventCenterTest {
   private DataServerConfig dataServerConfig;
   private DatumStorageDelegate datumStorageDelegate;
   private MultiClusterDataServerConfig multiClusterDataServerConfig;
+  private DefaultCommonConfig defaultCommonConfig;
 
   private void setCenter() {
     this.center = new DataChangeEventCenter();
     this.dataServerConfig = TestBaseUtils.newDataConfig(DC);
     this.multiClusterDataServerConfig = TestBaseUtils.newMultiDataConfig();
     this.datumStorageDelegate = TestBaseUtils.newLocalDatumDelegate(DC, true);
+    this.defaultCommonConfig = TestBaseUtils.newDefaultCommonConfig(DC);
     center.setDataServerConfig(dataServerConfig);
     center.setDatumDelegate(datumStorageDelegate);
     center.setMultiClusterDataServerConfig(multiClusterDataServerConfig);
+    center.setDefaultCommonConfig(defaultCommonConfig);
     dataServerConfig.setNotifyIntervalMillis(100);
   }
 

@@ -25,6 +25,7 @@ import com.alipay.sofa.registry.common.model.PublisherDigestUtil;
 import com.alipay.sofa.registry.common.model.RegisterVersion;
 import com.alipay.sofa.registry.common.model.dataserver.DatumDigest;
 import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
+import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.slot.DataSlotDiffDigestRequest;
 import com.alipay.sofa.registry.common.model.slot.DataSlotDiffDigestResult;
 import com.alipay.sofa.registry.common.model.slot.DataSlotDiffPublisherRequest;
@@ -40,6 +41,7 @@ import com.alipay.sofa.registry.server.data.cache.DatumStorageDelegate;
 import com.alipay.sofa.registry.server.data.change.DataChangeEventCenter;
 import com.alipay.sofa.registry.server.data.change.DataChangeType;
 import com.alipay.sofa.registry.server.data.lease.SessionLeaseManager;
+import com.alipay.sofa.registry.server.data.multi.cluster.loggers.Loggers;
 import com.alipay.sofa.registry.server.data.multi.cluster.slot.MultiClusterSlotMetrics.RemoteSyncLeader;
 import com.alipay.sofa.registry.server.data.pubiterator.DatumBiConsumer;
 import com.alipay.sofa.registry.server.shared.remoting.ClientSideExchanger;
@@ -49,6 +51,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.util.*;
+import java.util.Map.Entry;
 
 /**
  * @author yuzhi.lyz
@@ -97,6 +100,7 @@ public final class SlotDiffSyncer {
       return null;
     }
     DataSlotDiffPublisherResult result = resp.getData();
+    final String slotIdStr = String.valueOf(slotId);
 
     // sync from session
     final ProcessId sessionProcessId = result.getSessionProcessId();
@@ -120,8 +124,23 @@ public final class SlotDiffSyncer {
       final String dataInfoId = WordCache.getWordCache(e.getKey());
       final List<Publisher> publishers = e.getValue();
       Publisher.internPublisher(publishers);
-      if (datumStorageDelegate.putPublisher(syncDataCenter, dataInfoId, publishers) != null) {
+      DatumVersion datumVersion =
+          datumStorageDelegate.putPublisher(syncDataCenter, dataInfoId, publishers);
+      if (datumVersion != null) {
         changeDataIds.add(dataInfoId);
+      }
+      if (!syncLocal) {
+        for (Publisher publisher : publishers) {
+          Loggers.MULTI_PUT_LOGGER.info(
+              "pub,{},{},{},{},{},{},{}",
+              syncDataCenter,
+              slotIdStr,
+              publisher.getDataInfoId(),
+              publisher.getRegisterId(),
+              publisher.getVersion(),
+              publisher.getRegisterTimestamp(),
+              datumVersion);
+        }
       }
     }
     // for sync publishers
@@ -137,10 +156,25 @@ public final class SlotDiffSyncer {
                 dataInfoId));
       }
       Map<String, RegisterVersion> versionMap = summary.getPublisherVersions(registerIds);
-      if (datumStorageDelegate.removePublishers(
-              syncDataCenter, dataInfoId, sessionProcessId, versionMap)
-          != null) {
+      DatumVersion datumVersion =
+          datumStorageDelegate.removePublishers(
+              syncDataCenter, dataInfoId, sessionProcessId, versionMap);
+      if (datumVersion != null) {
         changeDataIds.add(dataInfoId);
+      }
+
+      if (!syncLocal) {
+        for (Entry<String, RegisterVersion> entry : versionMap.entrySet()) {
+          Loggers.MULTI_PUT_LOGGER.info(
+              "unpub,{},{},{},{},{},{},{}",
+              syncDataCenter,
+              slotIdStr,
+              dataInfoId,
+              entry.getKey(),
+              entry.getValue().getVersion(),
+              entry.getValue().getRegisterTimestamp(),
+              datumVersion);
+        }
       }
     }
 
@@ -488,12 +522,12 @@ public final class SlotDiffSyncer {
   }
 
   @VisibleForTesting
-  DatumStorageDelegate getDatumStorageDelegate() {
+  public DatumStorageDelegate getDatumStorageDelegate() {
     return datumStorageDelegate;
   }
 
   @VisibleForTesting
-  DataServerConfig getDataServerConfig() {
+  public DataServerConfig getDataServerConfig() {
     return dataServerConfig;
   }
 }

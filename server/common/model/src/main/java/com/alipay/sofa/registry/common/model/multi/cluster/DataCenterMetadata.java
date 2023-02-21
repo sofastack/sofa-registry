@@ -29,18 +29,11 @@ public class DataCenterMetadata implements Serializable {
 
   private final String dataCenter;
 
-  private final boolean stopPush;
-
   private final Set<String> zones;
 
-  public DataCenterMetadata(String dataCenter, boolean stopPush, Set<String> zones) {
+  public DataCenterMetadata(String dataCenter, Set<String> zones) {
     this.dataCenter = dataCenter;
-    this.stopPush = stopPush;
     this.zones = zones;
-  }
-
-  public boolean isStopPush() {
-    return stopPush;
   }
 
   /**
@@ -70,26 +63,16 @@ public class DataCenterMetadata implements Serializable {
       return false;
     }
     DataCenterMetadata that = (DataCenterMetadata) o;
-    return stopPush == that.stopPush
-        && Objects.equal(dataCenter, that.dataCenter)
-        && Objects.equal(zones, that.zones);
+    return Objects.equal(dataCenter, that.dataCenter) && Objects.equal(zones, that.zones);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(dataCenter, stopPush, zones);
+    return Objects.hashCode(dataCenter, zones);
   }
 
   @Override
   public String toString() {
-    return "DataCenterMetadata{"
-        + "dataCenter='"
-        + dataCenter
-        + '\''
-        + ", stopPush="
-        + stopPush
-        + ", zones="
-        + zones
-        + '}';
+    return "DataCenterMetadata{" + "dataCenter='" + dataCenter + '\'' + ", zones=" + zones + '}';
   }
 }

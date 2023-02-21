@@ -162,7 +162,7 @@ public class AppRevisionCleaner
 
   private void appRevisionSwitchRefresh() {
     DBResponse<PersistenceData> ret =
-            provideDataService.queryProvideData(ValueConstants.APP_REVISION_WRITE_SWITCH_DATA_ID);
+        provideDataService.queryProvideData(ValueConstants.APP_REVISION_WRITE_SWITCH_DATA_ID);
     AppRevisionDomainConvertor.EnableConfig enableConfig = null;
     if (ret.getOperationStatus() == OperationStatus.SUCCESS) {
       PersistenceData data = ret.getEntity();
@@ -170,7 +170,7 @@ public class AppRevisionCleaner
       if (StringUtils.isNotBlank(switchString)) {
         try {
           enableConfig =
-                  JsonUtils.read(switchString, AppRevisionDomainConvertor.EnableConfig.class);
+              JsonUtils.read(switchString, AppRevisionDomainConvertor.EnableConfig.class);
         } catch (Throwable e) {
           LOG.error("Decode appRevision write switch failed", e);
         }
@@ -178,14 +178,14 @@ public class AppRevisionCleaner
     }
     if (enableConfig != null) {
       LOG.info(
-              "appRevisionSwitch prev={}/{}",
-              AppRevisionDomainConvertor.getEnableConfig().isServiceParams(),
-              AppRevisionDomainConvertor.getEnableConfig().isServiceParamsLarge());
+          "appRevisionSwitch prev={}/{}",
+          AppRevisionDomainConvertor.getEnableConfig().isServiceParams(),
+          AppRevisionDomainConvertor.getEnableConfig().isServiceParamsLarge());
       AppRevisionDomainConvertor.setEnableConfig(enableConfig);
       LOG.info(
-              "appRevisionSwitch update={}/{}",
-              enableConfig.isServiceParams(),
-              enableConfig.isServiceParamsLarge());
+          "appRevisionSwitch update={}/{}",
+          enableConfig.isServiceParams(),
+          enableConfig.isServiceParamsLarge());
     }
   }
 

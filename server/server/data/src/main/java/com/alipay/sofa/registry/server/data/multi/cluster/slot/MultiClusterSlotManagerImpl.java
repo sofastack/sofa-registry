@@ -58,6 +58,7 @@ import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -84,6 +85,7 @@ public class MultiClusterSlotManagerImpl implements MultiClusterSlotManager {
 
   private static final Logger MULTI_CLUSTER_SLOT_TABLE = Loggers.MULTI_CLUSTER_SLOT_TABLE;
 
+  private static final int MAX_DATAINFOID_SYNCING_FAIL_RETRY_SIZE = 1000;
   private static final Logger MULTI_CLUSTER_SYNC_DELTA_LOGGER =
       Loggers.MULTI_CLUSTER_SYNC_DELTA_LOGGER;
 
@@ -114,8 +116,7 @@ public class MultiClusterSlotManagerImpl implements MultiClusterSlotManager {
 
   @Autowired private SlotManager slotManager;
 
-  private static final Map<String, RemoteSlotTableStorage> slotTableStorageMap =
-      Maps.newConcurrentMap();
+  private final Map<String, RemoteSlotTableStorage> slotTableStorageMap = Maps.newConcurrentMap();
 
   private final SlotFunction slotFunction = SlotFunctionRegistry.getFunc();
 
@@ -222,7 +223,7 @@ public class MultiClusterSlotManagerImpl implements MultiClusterSlotManager {
     return new Tuple<>(slotTableEpoch, slotStatuses);
   }
 
-  private final class RemoteSlotTableStorage {
+  final class RemoteSlotTableStorage {
     private final RemoteSlotTableStates slotTableStates;
 
     private final AtomicReference<SlotTable> updating;
@@ -232,9 +233,19 @@ public class MultiClusterSlotManagerImpl implements MultiClusterSlotManager {
       this.slotTableStates = slotTableStates;
       this.updating = updating;
     }
+
+    /**
+     * Getter method for property <tt>slotTableStates</tt>.
+     *
+     * @return property value of slotTableStates
+     */
+    @VisibleForTesting
+    public RemoteSlotTableStates getSlotTableStates() {
+      return slotTableStates;
+    }
   }
 
-  private final class RemoteSlotTableStates {
+  final class RemoteSlotTableStates {
     private final ReentrantReadWriteLock updateLock = new ReentrantReadWriteLock();
     private final ReentrantReadWriteLock.WriteLock writeLock = updateLock.writeLock();
     private final ReentrantReadWriteLock.ReadLock readLock = updateLock.readLock();
@@ -243,7 +254,7 @@ public class MultiClusterSlotManagerImpl implements MultiClusterSlotManager {
     // save all slot
     volatile SlotTable slotTable = SlotTable.INIT;
 
-    // map<slotId, RemoteSlotStates>
+    // map<slotId, RemoteSlotStates>, slot belong to me
     final Map<Integer, RemoteSlotStates> slotStates = Maps.newConcurrentMap();
 
     public RemoteSlotTableStates(String dataCenter) {
@@ -298,6 +309,15 @@ public class MultiClusterSlotManagerImpl implements MultiClusterSlotManager {
       try {
         for (Integer slotId : slotIds) {
           Slot slot = slotTable.getSlot(slotId);
+          if (slot == null) {
+            MULTI_CLUSTER_SLOT_TABLE.error(
+                "[addSlotState]add dataCenter={}, slotId={} fail, "
+                    + "for slotId not exist in slotTable={}",
+                dataCenter,
+                slotId,
+                slotTable);
+            continue;
+          }
           listenAdd(dataCenter, slotId);
           slotStates.computeIfAbsent(
               slotId,
@@ -410,7 +430,7 @@ public class MultiClusterSlotManagerImpl implements MultiClusterSlotManager {
     }
   }
 
-  private final class SyncDataIdTask extends SyncLeaderTask {
+  final class SyncDataIdTask extends SyncLeaderTask {
 
     private final Set<String> syncing;
 
@@ -448,7 +468,7 @@ public class MultiClusterSlotManagerImpl implements MultiClusterSlotManager {
     }
   }
 
-  private static final class RemoteSlotStates implements ISlotState {
+  static final class RemoteSlotStates implements ISlotState {
     final String remoteDataCenter;
     final int slotId;
     volatile Slot slot;
@@ -498,9 +518,6 @@ public class MultiClusterSlotManagerImpl implements MultiClusterSlotManager {
 
       if (syncRemoteTask.isSuccess()) {
         this.lastSuccessDataInfoIdTime = syncDataIdTask.getEndTime();
-      } else {
-        // sync dataIds fail, pending to sync in next task
-        addPending(syncDataIdTask.getRunnable().getSyncing());
       }
     }
 
@@ -711,13 +728,13 @@ public class MultiClusterSlotManagerImpl implements MultiClusterSlotManager {
     }
   }
 
-  private final class RemoteSyncingWatchDog extends WakeUpLoopRunnable {
+  final class RemoteSyncingWatchDog extends WakeUpLoopRunnable {
 
     @Override
     public void runUnthrowable() {
       try {
         doUpdating();
-        doSlotStatesUpdate();
+        watchLocalSegSlot();
         doSyncRemoteLeader();
 
       } catch (Throwable t) {
@@ -758,7 +775,8 @@ public class MultiClusterSlotManagerImpl implements MultiClusterSlotManager {
     return true;
   }
 
-  private void doSlotStatesUpdate() {
+  // compare with slot manager leader slotId
+  private void watchLocalSegSlot() {
     Set<Integer> leaderIds = slotManager.leaderSlotIds();
     for (Entry<String, RemoteSlotTableStorage> entry : slotTableStorageMap.entrySet()) {
       RemoteSlotTableStates states = entry.getValue().slotTableStates;
@@ -782,7 +800,6 @@ public class MultiClusterSlotManagerImpl implements MultiClusterSlotManager {
     final int remoteSyncLeaderMs =
         multiClusterDataServerConfig.getSyncRemoteSlotLeaderIntervalSecs() * 1000;
 
-    final int remoteSyncDataIdMs = multiClusterDataServerConfig.getSyncRemoteDataIdIntervalMs();
     for (Entry<String, RemoteSlotTableStorage> entry : slotTableStorageMap.entrySet()) {
       String remoteDataCenter = entry.getKey();
       if (!fetchMultiSyncService.multiSync(remoteDataCenter)) {
@@ -792,8 +809,7 @@ public class MultiClusterSlotManagerImpl implements MultiClusterSlotManager {
       RemoteSlotTableStates states = entry.getValue().slotTableStates;
       for (RemoteSlotStates state : states.slotStates.values()) {
         try {
-          syncRemoteDataIds(
-              remoteDataCenter, state, remoteSyncDataIdMs, states.slotTable.getEpoch());
+          syncRemoteDataIds(remoteDataCenter, state, states.slotTable.getEpoch());
           syncRemote(remoteDataCenter, state, remoteSyncLeaderMs, states.slotTable.getEpoch());
         } catch (Throwable t) {
           MULTI_CLUSTER_SYNC_ALL_LOGGER.error(
@@ -807,14 +823,20 @@ public class MultiClusterSlotManagerImpl implements MultiClusterSlotManager {
   }
 
   private Set<String> getTobeSyncs(
-      RemoteSlotStates state, int remoteSyncDataIdMs, KeyedTask<SyncDataIdTask> syncDataIdTask) {
-    if (syncDataIdTask != null
-        && syncDataIdTask.isOverAfter(remoteSyncDataIdMs)
-        && !syncDataIdTask.isFinished()) {
-      // task timeout, pending to retry
-      MULTI_CLUSTER_SYNC_DELTA_LOGGER.error(
-          "getTobeSyncs timeout, syncDataIdTask:{}", syncDataIdTask.getRunnable().getSyncing());
-      state.addPending(syncDataIdTask.getRunnable().syncing);
+      RemoteSlotStates state, KeyedTask<SyncDataIdTask> syncDataIdTask) {
+    if (syncDataIdTask != null && syncDataIdTask.isFailed()) {
+
+      Set<String> syncedFail = syncDataIdTask.getRunnable().syncing;
+      if (syncedFail.size() < MAX_DATAINFOID_SYNCING_FAIL_RETRY_SIZE) {
+        MULTI_CLUSTER_SYNC_DELTA_LOGGER.error(
+            "getTobeSyncs repending syncDataIdTask:{} to retry", syncedFail);
+        state.addPending(syncedFail);
+      } else {
+        MULTI_CLUSTER_SYNC_DELTA_LOGGER.error(
+            "getTobeSyncs syncDataIdTask.size={} > {}",
+            syncedFail.size(),
+            MAX_DATAINFOID_SYNCING_FAIL_RETRY_SIZE);
+      }
     }
     return state.pendingDataInfoIds.getAndReset();
   }
@@ -831,24 +853,20 @@ public class MultiClusterSlotManagerImpl implements MultiClusterSlotManager {
   }
 
   private void syncRemoteDataIds(
-      String remoteDataCenter,
-      RemoteSlotStates state,
-      int remoteSyncDataIdMs,
-      long slotTableEpoch) {
+      String remoteDataCenter, RemoteSlotStates state, long slotTableEpoch) {
     final Slot slot = state.slot;
     final KeyedTask<SyncDataIdTask> syncDataIdTask = state.syncDataIdTask;
 
+    if (syncDataIdTask != null && syncDataIdTask.isFinished()) {
+      state.completeSyncRemoteDataIdTask();
+    }
     // 1.syncDataIdTask == null, state.pending is not empty, execute new task;
-    // 2.syncDataIdTask != null
-    //  2.1 syncDataIdTask.isFinished(), state.pending is not empty, execute new task(200ms to
-    // execute a new task);
-    //  2.2 syncDataIdTask.isNotFinished(), but task is timeout(over remoteSyncDataIdMs),
-    //     repending syncDataIdTask.syncing to execute a new task
-    if (syncDataIdTask == null
-        || syncDataIdTask.isFinished()
-        || syncDataIdTask.isOverAfter(remoteSyncDataIdMs)) {
+    // 2.syncDataIdTask.isFinished(), state.pending is not empty, execute new task(200ms to
+    //   execute a new task);
+    // 3.syncDataIdTask.isNotFinished(), waiting task to finish
+    if (syncDataIdTask == null || syncDataIdTask.isFinished()) {
 
-      Set<String> tobeSyncs = getTobeSyncs(state, remoteSyncDataIdMs, syncDataIdTask);
+      Set<String> tobeSyncs = getTobeSyncs(state, syncDataIdTask);
       if (CollectionUtils.isEmpty(tobeSyncs)) {
         return;
       }
@@ -880,18 +898,14 @@ public class MultiClusterSlotManagerImpl implements MultiClusterSlotManager {
       return;
     }
 
-    if (syncDataIdTask.isFinished()) {
-      state.completeSyncRemoteDataIdTask();
-    } else {
-      if (System.currentTimeMillis() - syncDataIdTask.getCreateTime() > 1500) {
-        // the sync leader is running more than 1500ms, print
-        MULTI_CLUSTER_SYNC_DELTA_LOGGER.info(
-            "remoteDataCenter={}, slotId={}, dataIds={}, sync-dataid running, {}",
-            remoteDataCenter,
-            slot.getId(),
-            syncDataIdTask.getRunnable().syncing,
-            syncDataIdTask);
-      }
+    if (System.currentTimeMillis() - syncDataIdTask.getCreateTime() > 1500) {
+      // the sync leader is running more than 1500ms, print
+      MULTI_CLUSTER_SYNC_DELTA_LOGGER.info(
+          "remoteDataCenter={}, slotId={}, dataIds={}, sync-dataid running, {}",
+          remoteDataCenter,
+          slot.getId(),
+          syncDataIdTask.getRunnable().syncing,
+          syncDataIdTask);
     }
   }
 
@@ -941,5 +955,137 @@ public class MultiClusterSlotManagerImpl implements MultiClusterSlotManager {
             syncRemoteTask);
       }
     }
+  }
+
+  /**
+   * Setter method for property <tt>dataServerConfig</tt>.
+   *
+   * @param dataServerConfig value to be assigned to property dataServerConfig
+   */
+  @VisibleForTesting
+  void setDataServerConfig(DataServerConfig dataServerConfig) {
+    this.dataServerConfig = dataServerConfig;
+  }
+
+  /**
+   * Setter method for property <tt>multiClusterDataServerConfig</tt>.
+   *
+   * @param multiClusterDataServerConfig value to be assigned to property
+   *     multiClusterDataServerConfig
+   */
+  @VisibleForTesting
+  void setMultiClusterDataServerConfig(MultiClusterDataServerConfig multiClusterDataServerConfig) {
+    this.multiClusterDataServerConfig = multiClusterDataServerConfig;
+  }
+
+  /**
+   * Setter method for property <tt>dataChangeEventCenter</tt>.
+   *
+   * @param dataChangeEventCenter value to be assigned to property dataChangeEventCenter
+   */
+  @VisibleForTesting
+  void setDataChangeEventCenter(DataChangeEventCenter dataChangeEventCenter) {
+    this.dataChangeEventCenter = dataChangeEventCenter;
+  }
+
+  /**
+   * Setter method for property <tt>datumStorageDelegate</tt>.
+   *
+   * @param datumStorageDelegate value to be assigned to property datumStorageDelegate
+   */
+  @VisibleForTesting
+  void setDatumStorageDelegate(DatumStorageDelegate datumStorageDelegate) {
+    this.datumStorageDelegate = datumStorageDelegate;
+  }
+
+  /**
+   * Setter method for property <tt>slotChangeListenerManager</tt>.
+   *
+   * @param slotChangeListenerManager value to be assigned to property slotChangeListenerManager
+   */
+  @VisibleForTesting
+  void setSlotChangeListenerManager(SlotChangeListenerManager slotChangeListenerManager) {
+    this.slotChangeListenerManager = slotChangeListenerManager;
+  }
+
+  /**
+   * Setter method for property <tt>remoteDataNodeExchanger</tt>.
+   *
+   * @param remoteDataNodeExchanger value to be assigned to property remoteDataNodeExchanger
+   */
+  @VisibleForTesting
+  void setRemoteDataNodeExchanger(RemoteDataNodeExchanger remoteDataNodeExchanger) {
+    this.remoteDataNodeExchanger = remoteDataNodeExchanger;
+  }
+
+  /**
+   * Setter method for property <tt>multiClusterExecutorManager</tt>.
+   *
+   * @param multiClusterExecutorManager value to be assigned to property multiClusterExecutorManager
+   */
+  @VisibleForTesting
+  void setMultiClusterExecutorManager(MultiClusterExecutorManager multiClusterExecutorManager) {
+    this.multiClusterExecutorManager = multiClusterExecutorManager;
+  }
+
+  /**
+   * Setter method for property <tt>multiSyncDataAcceptorManager</tt>.
+   *
+   * @param multiSyncDataAcceptorManager value to be assigned to property
+   *     multiSyncDataAcceptorManager
+   */
+  @VisibleForTesting
+  void setMultiSyncDataAcceptorManager(MultiSyncDataAcceptorManager multiSyncDataAcceptorManager) {
+    this.multiSyncDataAcceptorManager = multiSyncDataAcceptorManager;
+  }
+
+  /**
+   * Setter method for property <tt>fetchMultiSyncService</tt>.
+   *
+   * @param fetchMultiSyncService value to be assigned to property fetchMultiSyncService
+   */
+  @VisibleForTesting
+  void setFetchMultiSyncService(FetchMultiSyncService fetchMultiSyncService) {
+    this.fetchMultiSyncService = fetchMultiSyncService;
+  }
+
+  /**
+   * Setter method for property <tt>multiClusterSyncRepository</tt>.
+   *
+   * @param multiClusterSyncRepository value to be assigned to property multiClusterSyncRepository
+   */
+  @VisibleForTesting
+  void setMultiClusterSyncRepository(MultiClusterSyncRepository multiClusterSyncRepository) {
+    this.multiClusterSyncRepository = multiClusterSyncRepository;
+  }
+
+  /**
+   * Setter method for property <tt>slotManager</tt>.
+   *
+   * @param slotManager value to be assigned to property slotManager
+   */
+  @VisibleForTesting
+  void setSlotManager(SlotManager slotManager) {
+    this.slotManager = slotManager;
+  }
+
+  /**
+   * Getter method for property <tt>slotTableStorageMap</tt>.
+   *
+   * @return property value of slotTableStorageMap
+   */
+  @VisibleForTesting
+  public RemoteSlotTableStorage getSlotTableStorage(String dataCenter) {
+    return slotTableStorageMap.get(dataCenter);
+  }
+
+  /**
+   * Getter method for property <tt>watchDog</tt>.
+   *
+   * @return property value of watchDog
+   */
+  @VisibleForTesting
+  public RemoteSyncingWatchDog getWatchDog() {
+    return watchDog;
   }
 }

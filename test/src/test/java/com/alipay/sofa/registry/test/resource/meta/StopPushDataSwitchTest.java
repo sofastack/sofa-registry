@@ -150,9 +150,7 @@ public class StopPushDataSwitchTest extends BaseIntegrationTest {
     String dataId = "test-dataId-" + System.currentTimeMillis();
     String value = "test stop publish data switch";
 
-    waitConditionUntilTimeOut(
-        () -> dataCenterMetadataCache.isStopPush(sessionServerConfig.getSessionServerDataCenter()),
-        6000);
+    waitConditionUntilTimeOut(pushSwitchService.getFetchStopPushService()::isStopPushSwitch, 6000);
     waitConditionUntilTimeOut(() -> pushSwitchService.canIpPushLocal(otherAddress), 6000);
     Assert.assertFalse(pushSwitchService.canIpPushLocal(localAddress));
 

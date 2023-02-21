@@ -30,10 +30,10 @@ import com.alipay.sofa.registry.server.meta.multi.cluster.remote.RemoteClusterMe
 import com.alipay.sofa.registry.server.meta.multi.cluster.remote.RemoteClusterSlotSyncRequest;
 import com.alipay.sofa.registry.server.meta.multi.cluster.remote.RemoteClusterSlotSyncResponse;
 import com.alipay.sofa.registry.task.KeyedTask;
-import com.alipay.sofa.registry.task.KeyedThreadPoolExecutor;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
@@ -65,8 +65,6 @@ public class DefaultMultiClusterSlotTableSyncer implements MultiClusterSlotTable
 
   @Autowired private ExecutorManager executorManager;
 
-  private KeyedThreadPoolExecutor remoteSlotSyncerExecutor;
-
   private static volatile long LAST_REFRESH_CONFIG_TS = 0;
 
   static final int MAX_SYNC_FAIL_COUNT = 3;
@@ -76,12 +74,6 @@ public class DefaultMultiClusterSlotTableSyncer implements MultiClusterSlotTable
     remoteClusterMetaExchanger.refreshClusterInfos();
     ConcurrentUtils.createDaemonThread("multi_cluster_slot_table", watcher).start();
     metaLeaderService.registerListener(this);
-
-    remoteSlotSyncerExecutor =
-        new KeyedThreadPoolExecutor(
-            "REMOTE_SLOT_SYNCER_EXECUTOR",
-            multiClusterMetaServerConfig.getRemoteSlotSyncerExecutorPoolSize(),
-            multiClusterMetaServerConfig.getRemoteSlotSyncerExecutorQueueSize());
   }
 
   @Override
@@ -144,19 +136,22 @@ public class DefaultMultiClusterSlotTableSyncer implements MultiClusterSlotTable
 
         // check if exceed max fail count
         if (checkSyncFailCount(slotState.getFailCount())) {
-          remoteSlotSyncerExecutor.execute(
-              dataCenter,
-              () -> {
-                slotState.initFailCount();
-                remoteClusterMetaExchanger.resetLeader(dataCenter);
-              });
+          executorManager
+              .getRemoteSlotSyncerExecutor()
+              .execute(
+                  dataCenter,
+                  () -> {
+                    slotState.initFailCount();
+                    remoteClusterMetaExchanger.resetLeader(dataCenter);
+                  });
           continue;
         }
 
         // check if need to do sync
         if (needSync(slotState.task)) {
           SlotSyncTask syncTask = new SlotSyncTask(dataCenter, slotState.slotTable.getEpoch());
-          slotState.task = remoteSlotSyncerExecutor.execute(dataCenter, syncTask);
+          slotState.task =
+              executorManager.getRemoteSlotSyncerExecutor().execute(dataCenter, syncTask);
           LOGGER.info("commit sync task:{}", syncTask);
         }
       }
@@ -326,7 +321,6 @@ public class DefaultMultiClusterSlotTableSyncer implements MultiClusterSlotTable
   private void handleSyncResponse(RemoteClusterSlotSyncRequest request, Object response) {
     RemoteClusterSlotState state = slotStateMap.get(request.getDataCenter());
     if (!(response instanceof GenericResponse)) {
-      state.incrementAndGetFailCount();
       throw new RuntimeException(
           StringFormatter.format("sync request: {} fail, resp: {}", request, response));
     }
@@ -392,5 +386,10 @@ public class DefaultMultiClusterSlotTableSyncer implements MultiClusterSlotTable
     }
 
     state.updateMetadata(data.getDataCenterMetadata());
+  }
+
+  @VisibleForTesting
+  public Map<String, RemoteClusterSlotState> getRemoteClusterSlotState() {
+    return slotStateMap;
   }
 }

@@ -647,6 +647,21 @@
             </DefaultRolloverStrategy>
         </RollingRandomAccessFile>
 
+        <RollingRandomAccessFile name="MULTI-PUT-APPENDER" fileName="${DATA_LOG_HOME}/registry-multi-put.log"
+                                 filePattern="${DATA_LOG_HOME}/registry-multi-put.log.%d{yyyy-MM-dd}.%i">
+            <PatternLayout pattern="[%d{ISO8601}][%p][%t][%c{0}] [%X{traceID},%X{address}] - %m%n"/>
+            <ThresholdFilter level="ERROR" onMatch="DENY" onMismatch="NEUTRAL"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy/>
+                <SizeBasedTriggeringPolicy size="256MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="30">
+                <Delete basePath="${DATA_LOG_HOME}" maxDepth="2">
+                    <IfFileName glob="registry-multi-put.log.*" />
+                    <IfLastModified age="30d" />
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingRandomAccessFile>
     </appenders>
 
     <loggers>
@@ -867,6 +882,11 @@
 
         <logger name="MULTI-CLUSTER-SRV" level="${LOG_LEVEL}" additivity="false">
             <appender-ref ref="MULTI-CLUSTER-SRV-APPENDER"/>
+            <appender-ref ref="COMMON-ERROR-APPENDER"/>
+        </logger>
+
+        <logger name="MULTI-PUT" level="${LOG_LEVEL}" additivity="false">
+            <appender-ref ref="MULTI-PUT-APPENDER"/>
             <appender-ref ref="COMMON-ERROR-APPENDER"/>
         </logger>
 

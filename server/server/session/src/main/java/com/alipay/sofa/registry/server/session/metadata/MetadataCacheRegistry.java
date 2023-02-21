@@ -35,6 +35,7 @@ import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.Futures;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -76,7 +77,8 @@ public class MetadataCacheRegistry {
   }
 
   public Set<String> getPushEnableDataCenters() {
-    return pushEnableSet.get();
+    Set<String> set = pushEnableSet.get();
+    return set == null ? Collections.EMPTY_SET : set;
   }
 
   public void register(AppRevision appRevision) {

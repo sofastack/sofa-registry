@@ -30,8 +30,6 @@ public class MultiClusterDataServerConfigBean implements MultiClusterDataServerC
 
   private volatile int syncRemoteSlotLeaderIntervalSecs = 6;
 
-  private volatile int syncRemoteDataIdIntervalMs = 2000;
-
   private volatile int syncRemoteSlotLeaderTimeoutMillis = 3000;
 
   private volatile int syncRemoteSlotLeaderPort = 9627;
@@ -205,11 +203,6 @@ public class MultiClusterDataServerConfigBean implements MultiClusterDataServerC
   }
 
   @Override
-  public int getSyncRemoteDataIdIntervalMs() {
-    return syncRemoteDataIdIntervalMs;
-  }
-
-  @Override
   public int getRemoteSyncDataIdExecutorThreadSize() {
     return remoteSyncDataIdExecutorThreadSize;
   }
@@ -232,15 +225,6 @@ public class MultiClusterDataServerConfigBean implements MultiClusterDataServerC
    */
   public void setMultiClusterConfigReloadMillis(int multiClusterConfigReloadMillis) {
     this.multiClusterConfigReloadMillis = multiClusterConfigReloadMillis;
-  }
-
-  /**
-   * Setter method for property <tt>syncRemoteDataIdIntervalMs</tt>.
-   *
-   * @param syncRemoteDataIdIntervalMs value to be assigned to property syncRemoteDataIdIntervalMs
-   */
-  public void setSyncRemoteDataIdIntervalMs(int syncRemoteDataIdIntervalMs) {
-    this.syncRemoteDataIdIntervalMs = syncRemoteDataIdIntervalMs;
   }
 
   /**

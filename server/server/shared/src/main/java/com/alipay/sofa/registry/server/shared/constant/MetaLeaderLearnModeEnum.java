@@ -22,7 +22,7 @@ package com.alipay.sofa.registry.server.shared.constant;
  */
 public enum MetaLeaderLearnModeEnum {
   JDBC("JDBC"),
-  SLB("SLB"),
+  LOADBALANCER("LOADBALANCER"),
   ;
 
   private String code;

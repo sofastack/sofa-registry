@@ -50,7 +50,7 @@ public class FirePushServiceTest {
     svc.sessionInterests = Mockito.mock(Interests.class);
     svc.pushProcessor = Mockito.mock(PushProcessor.class);
     svc.circuitBreakerService = Mockito.mock(CircuitBreakerService.class);
-    svc.dataCenterMetadataCache = svc.pushSwitchService.getDataCenterMetadataCache();
+    svc.dataCenterMetadataCache = TestUtils.newDataCenterMetaCache(config);
 
     TriggerPushContext ctx =
         new TriggerPushContext("testDc", 100, "testDataNode", System.currentTimeMillis());
@@ -62,13 +62,17 @@ public class FirePushServiceTest {
         .fireChange(Mockito.anyString(), Mockito.anyObject(), Mockito.anyObject());
 
     Subscriber subscriber = TestUtils.newZoneSubscriber(dataId, zone);
-    svc.dataCenterMetadataCache.updateLocalData(true);
+    svc.pushSwitchService
+        .getFetchStopPushService()
+        .setStopPushSwitch(System.currentTimeMillis(), true);
     svc.fireOnPushEmpty(subscriber, "testDc");
     Mockito.verify(svc.pushProcessor, Mockito.times(0))
         .firePush(
             Mockito.anyObject(), Mockito.anyObject(), Mockito.anyObject(), Mockito.anyObject());
 
-    svc.dataCenterMetadataCache.updateLocalData(false);
+    svc.pushSwitchService
+        .getFetchStopPushService()
+        .setStopPushSwitch(System.currentTimeMillis(), false);
 
     svc.fireOnPushEmpty(subscriber, "testDc");
     Mockito.verify(svc.pushProcessor, Mockito.times(1))
@@ -153,7 +157,9 @@ public class FirePushServiceTest {
         .thenReturn(Collections.singletonList(subscriber));
     svc.pushSwitchService = TestUtils.newPushSwitchService("testDc");
 
-    svc.pushSwitchService.getDataCenterMetadataCache().updateLocalData(false);
+    svc.pushSwitchService
+        .getFetchStopPushService()
+        .setStopPushSwitch(System.currentTimeMillis(), false);
     svc.circuitBreakerService = Mockito.mock(CircuitBreakerService.class);
     Assert.assertTrue(svc.doExecuteOnChange("testDataId", ctx));
     Mockito.verify(svc.pushProcessor, Mockito.times(1))
