@@ -26,14 +26,13 @@ import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.store.DataStore;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
+import com.alipay.sofa.registry.util.NamedThreadFactory;
 import java.util.*;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
-
-import com.alipay.sofa.registry.util.NamedThreadFactory;
 import org.apache.commons.lang.time.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -52,7 +51,7 @@ public class SessionCacheDigestTask {
   @Autowired SessionServerConfig sessionServerConfig;
 
   private final ScheduledExecutorService executorService =
-          new ScheduledThreadPoolExecutor(1, new NamedThreadFactory("CacheDigestTask"));
+      new ScheduledThreadPoolExecutor(1, new NamedThreadFactory("CacheDigestTask"));
 
   @PostConstruct
   public boolean init() {
@@ -67,7 +66,7 @@ public class SessionCacheDigestTask {
         firstDate.getMinutes() / intervalMinutes * intervalMinutes + intervalMinutes);
     long firstDelay = firstDate.getTime() - System.currentTimeMillis();
     executorService.scheduleAtFixedRate(
-            this::dump, firstDelay, (long) intervalMinutes * 60 * 1000, TimeUnit.MILLISECONDS);
+        this::dump, firstDelay, (long) intervalMinutes * 60 * 1000, TimeUnit.MILLISECONDS);
 
     return true;
   }
