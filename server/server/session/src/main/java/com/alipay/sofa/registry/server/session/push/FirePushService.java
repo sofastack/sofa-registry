@@ -75,6 +75,7 @@ public class FirePushService {
   @Autowired WatchProcessor watchProcessor;
 
   @Autowired DataCenterMetadataCache dataCenterMetadataCache;
+
   RegProcessor regProcessor;
   final ChangeHandler changeHandler = new ChangeHandler();
 
@@ -95,6 +96,10 @@ public class FirePushService {
     this.regProcessor =
         new RegProcessor(
             sessionServerConfig.getSubscriberRegisterTaskWorkerSize(), new RegHandler());
+  }
+
+  public RegProcessor getRegProcessor() {
+    return regProcessor;
   }
 
   public boolean fireOnChange(String dataInfoId, TriggerPushContext changeCtx) {

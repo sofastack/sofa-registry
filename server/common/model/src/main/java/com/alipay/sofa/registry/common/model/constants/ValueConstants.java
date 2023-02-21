@@ -151,6 +151,12 @@ public class ValueConstants {
           SESSION_PROVIDE_DATA_INSTANCE_ID,
           SESSION_PROVIDE_DATA_GROUP);
 
+  public static final String CHANGE_PUSH_TASK_DELAY_CONFIG_DATA_ID =
+      DataInfo.toDataInfoId(
+          "change_push_task.delay.config",
+          SESSION_PROVIDE_DATA_INSTANCE_ID,
+          SESSION_PROVIDE_DATA_GROUP);
+
   public static final String DISABLE_DATA_ID_CASE_SENSITIVE_SWITCH =
       "disable.dataId.case.sensitive";
 

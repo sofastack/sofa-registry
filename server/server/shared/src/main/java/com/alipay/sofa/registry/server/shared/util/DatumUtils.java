@@ -187,7 +187,8 @@ public final class DatumUtils {
 
   public static MultiSubDatum decompressMultiSubDatum(MultiSubDatum multiSubDatum) {
     ParaCheckUtil.checkNotEmpty(multiSubDatum.getDatumMap(), "multiSubDatum.datumMap");
-    Map<String, SubDatum> datumMap = Maps.newHashMapWithExpectedSize(multiSubDatum.getDatumMap().size());
+    Map<String, SubDatum> datumMap =
+        Maps.newHashMapWithExpectedSize(multiSubDatum.getDatumMap().size());
     for (Entry<String, SubDatum> entry : multiSubDatum.getDatumMap().entrySet()) {
       datumMap.put(entry.getKey(), decompressSubDatum(entry.getValue()));
     }

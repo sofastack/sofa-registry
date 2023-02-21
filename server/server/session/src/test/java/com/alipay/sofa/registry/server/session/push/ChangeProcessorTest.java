@@ -22,6 +22,9 @@ import com.alipay.sofa.registry.server.session.TestUtils;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfigBean;
 import com.alipay.sofa.registry.server.session.push.ChangeProcessor.Worker;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -130,5 +133,35 @@ public class ChangeProcessorTest {
     ChangeProcessor.ChangeKey key3 =
         new ChangeProcessor.ChangeKey(Collections.singleton(dataCenter + "1"), dataInfoId);
     Assert.assertNotEquals(key1, key3);
+  }
+
+  @Test
+  public void testChangeSetDelayTime() {
+    ChangeProcessor processor = new ChangeProcessor();
+    SessionServerConfigBean configBean = TestUtils.newSessionConfig("testDc");
+    processor.sessionServerConfig = configBean;
+    configBean.setDataChangeDebouncingMillis(100);
+    configBean.setDataChangeMaxDebouncingMillis(300);
+    processor.init();
+    Worker[] localWorkers =
+            processor.dataCenterWorkers.get(configBean.getSessionServerDataCenter());
+    Assert.assertEquals(
+            localWorkers.length, processor.sessionServerConfig.getDataChangeFetchTaskWorkerSize());
+    ChangeProcessor.Worker worker = localWorkers[0];
+    Assert.assertEquals(
+            worker.changeDebouncingMillis,
+            processor.sessionServerConfig.getDataChangeDebouncingMillis());
+    Assert.assertEquals(
+            worker.changeDebouncingMaxMillis,
+            processor.sessionServerConfig.getDataChangeMaxDebouncingMillis());
+    PushEfficiencyImproveConfig pushEfficiencyImproveConfig = new PushEfficiencyImproveConfig();
+    pushEfficiencyImproveConfig.setChangeDebouncingMillis(10);
+    Set<String> zones = new HashSet<>();
+    zones.add("ALL_ZONE");
+    pushEfficiencyImproveConfig.setZoneSet(zones);
+    processor.setWorkDelayTime(pushEfficiencyImproveConfig);
+    Assert.assertEquals(
+            worker.changeDebouncingMillis,
+            10);
   }
 }
