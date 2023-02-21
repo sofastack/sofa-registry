@@ -24,17 +24,21 @@ import static org.mockito.Mockito.when;
 import com.alipay.sofa.registry.common.model.appmeta.InterfaceMapping;
 import com.alipay.sofa.registry.exception.SofaRegistryRuntimeException;
 import com.alipay.sofa.registry.jdbc.AbstractH2DbTestBase;
+import com.alipay.sofa.registry.jdbc.config.MetadataConfig;
 import com.alipay.sofa.registry.jdbc.domain.InterfaceAppsIndexDomain;
 import com.alipay.sofa.registry.jdbc.mapper.InterfaceAppsIndexMapper;
 import com.alipay.sofa.registry.store.api.config.DefaultCommonConfig;
 import com.alipay.sofa.registry.store.api.repository.InterfaceAppsRepository;
 import com.alipay.sofa.registry.util.TimestampUtil;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -45,6 +49,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class InterfaceAppsJdbcRepositoryTest extends AbstractH2DbTestBase {
 
   @Autowired private InterfaceAppsRepository interfaceAppsJdbcRepository;
+
+  @Autowired private DefaultCommonConfig defaultCommonConfig;
+
+  private Set<String> dataCenters = Sets.newHashSet();
+
+  @Before
+  public void init() {
+    dataCenters.add(defaultCommonConfig.getDefaultClusterId());
+    interfaceAppsJdbcRepository.setDataCenters(dataCenters);
+  }
 
   @Test
   public void batchSaveTest() {
@@ -61,6 +75,7 @@ public class InterfaceAppsJdbcRepositoryTest extends AbstractH2DbTestBase {
       impl.register(app1, Collections.singleton(service));
       impl.register(app2, Collections.singleton(service));
     }
+    impl.startSynced();
     impl.waitSynced();
     for (String service : services) {
       InterfaceMapping appNames = impl.getAppNames(service);
@@ -78,14 +93,17 @@ public class InterfaceAppsJdbcRepositoryTest extends AbstractH2DbTestBase {
       InterfaceMapping mapping = impl.getAppNames(interfaceName);
       InterfaceAppsIndexDomain domain =
           new InterfaceAppsIndexDomain(
-              "", interfaceName, mapping.getApps().stream().findFirst().get());
-      domain.setGmtCreate(TimestampUtil.fromNanosLong(mapping.getNanosVersion()));
+              defaultCommonConfig.getDefaultClusterId(),
+              interfaceName,
+              mapping.getApps().stream().findFirst().get());
+      domain.setGmtCreate(TimestampUtil.fromNanosLong(mapping.getNanosVersion() - 1));
       c1.onEntry(domain);
     }
     impl.informer.preList(impl.informer.getContainer());
     Assert.assertEquals(conflictCount.getAndSet(0), 0);
     impl.informer.preList(c1);
-    Assert.assertEquals(conflictCount.getAndSet(0), 100);
+    Assert.assertEquals(
+        conflictCount.getAndSet(0), impl.informer.getContainer().interfaces().size());
     impl.getDataVersion();
   }
 
@@ -94,6 +112,10 @@ public class InterfaceAppsJdbcRepositoryTest extends AbstractH2DbTestBase {
     InterfaceAppsIndexMapper mapper = mock(InterfaceAppsIndexMapper.class);
     when(mapper.update(anyObject()))
         .thenThrow(new SofaRegistryRuntimeException("expect exception."));
+
+    MetadataConfig metadataConfig = mock(MetadataConfig.class);
+    when(metadataConfig.getInterfaceAppsExecutorPoolSize()).thenReturn(1);
+    when(metadataConfig.getInterfaceAppsExecutorQueueSize()).thenReturn(1);
 
     DefaultCommonConfig defaultCommonConfig = mock(DefaultCommonConfig.class);
     when(defaultCommonConfig.getClusterId(anyString())).thenReturn("DEFAULT_DATACENTER");

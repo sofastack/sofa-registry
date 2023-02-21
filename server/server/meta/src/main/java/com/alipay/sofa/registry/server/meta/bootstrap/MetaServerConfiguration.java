@@ -24,6 +24,7 @@ import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.remoting.jersey.exchange.JerseyExchange;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfigBean;
+import com.alipay.sofa.registry.server.meta.bootstrap.config.MultiClusterMetaServerConfig;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfigBeanProperty;
 import com.alipay.sofa.registry.server.meta.cleaner.AppRevisionCleaner;
@@ -32,6 +33,7 @@ import com.alipay.sofa.registry.server.meta.lease.filter.DefaultForbiddenServerM
 import com.alipay.sofa.registry.server.meta.lease.filter.RegistryForbiddenServerManager;
 import com.alipay.sofa.registry.server.meta.provide.data.DefaultClientManagerService;
 import com.alipay.sofa.registry.server.meta.provide.data.DefaultProvideDataService;
+import com.alipay.sofa.registry.server.meta.provide.data.FetchStopPushService;
 import com.alipay.sofa.registry.server.meta.provide.data.NodeOperatingService;
 import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataService;
 import com.alipay.sofa.registry.server.meta.remoting.DataNodeExchanger;
@@ -45,11 +47,26 @@ import com.alipay.sofa.registry.server.meta.remoting.handler.FetchSystemProperty
 import com.alipay.sofa.registry.server.meta.remoting.handler.GetSlotTableStatusRequestHandler;
 import com.alipay.sofa.registry.server.meta.remoting.handler.HeartbeatRequestHandler;
 import com.alipay.sofa.registry.server.meta.remoting.handler.RegistryForbiddenServerHandler;
-import com.alipay.sofa.registry.server.meta.remoting.meta.MetaNodeExchange;
+import com.alipay.sofa.registry.server.meta.remoting.meta.LocalMetaExchanger;
 import com.alipay.sofa.registry.server.meta.remoting.meta.MetaServerRenewService;
-import com.alipay.sofa.registry.server.meta.resource.*;
+import com.alipay.sofa.registry.server.meta.resource.BlacklistDataResource;
+import com.alipay.sofa.registry.server.meta.resource.CircuitBreakerResources;
+import com.alipay.sofa.registry.server.meta.resource.ClientManagerResource;
+import com.alipay.sofa.registry.server.meta.resource.CompressResource;
+import com.alipay.sofa.registry.server.meta.resource.HealthResource;
+import com.alipay.sofa.registry.server.meta.resource.MetaCenterResource;
+import com.alipay.sofa.registry.server.meta.resource.MetaDigestResource;
+import com.alipay.sofa.registry.server.meta.resource.MetaLeaderResource;
+import com.alipay.sofa.registry.server.meta.resource.ProvideDataResource;
+import com.alipay.sofa.registry.server.meta.resource.RecoverConfigResource;
+import com.alipay.sofa.registry.server.meta.resource.RegistryCoreOpsResource;
+import com.alipay.sofa.registry.server.meta.resource.ShutdownSwitchResource;
+import com.alipay.sofa.registry.server.meta.resource.SlotSyncResource;
+import com.alipay.sofa.registry.server.meta.resource.SlotTableResource;
+import com.alipay.sofa.registry.server.meta.resource.StopPushDataResource;
 import com.alipay.sofa.registry.server.meta.resource.filter.LeaderAwareFilter;
 import com.alipay.sofa.registry.server.meta.slot.status.SlotTableStatusService;
+import com.alipay.sofa.registry.server.shared.config.CommonConfig;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.alipay.sofa.registry.server.shared.resource.MetricsResource;
 import com.alipay.sofa.registry.server.shared.resource.SlotGenericResource;
@@ -102,10 +119,16 @@ public class MetaServerConfiguration {
 
   @Configuration
   protected static class MetaServerConfigBeanConfiguration {
+
+    @Bean
+    public CommonConfig commonConfig() {
+      return new CommonConfig();
+    }
+
     @Bean
     @ConditionalOnMissingBean
-    public MetaServerConfig metaServerConfig() {
-      return new MetaServerConfigBean();
+    public MetaServerConfig metaServerConfig(CommonConfig commonConfig) {
+      return new MetaServerConfigBean(commonConfig);
     }
 
     @Bean
@@ -241,8 +264,8 @@ public class MetaServerConfiguration {
     }
 
     @Bean
-    public MetaNodeExchange metaNodeExchange() {
-      return new MetaNodeExchange();
+    public LocalMetaExchanger localMetaExchanger() {
+      return new LocalMetaExchanger();
     }
 
     @Bean
@@ -289,6 +312,11 @@ public class MetaServerConfiguration {
     @ConditionalOnMissingBean
     public InterfaceAppsIndexCleaner interfaceAppsIndexCleaner() {
       return new InterfaceAppsIndexCleaner();
+    }
+
+    @Bean
+    public FetchStopPushService fetchStopPushService() {
+      return new FetchStopPushService();
     }
   }
 
@@ -399,11 +427,6 @@ public class MetaServerConfiguration {
     public RegistryCoreOpsResource registryCoreOpsResource() {
       return new RegistryCoreOpsResource();
     }
-
-    @Bean
-    public RegistryCoreOpsV2Resource registryCoreOpsV2Resource() {
-      return new RegistryCoreOpsV2Resource();
-    }
   }
 
   @Configuration
@@ -425,8 +448,10 @@ public class MetaServerConfiguration {
     }
 
     @Bean
-    public ExecutorManager executorManager(MetaServerConfig metaServerConfig) {
-      return new ExecutorManager(metaServerConfig);
+    public ExecutorManager executorManager(
+        MetaServerConfig metaServerConfig,
+        MultiClusterMetaServerConfig multiClusterMetaServerConfig) {
+      return new ExecutorManager(metaServerConfig, multiClusterMetaServerConfig);
     }
   }
 }

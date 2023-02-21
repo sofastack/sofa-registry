@@ -28,7 +28,6 @@ import com.alipay.sofa.registry.common.model.sessionserver.GrayOpenPushSwitchReq
 import com.alipay.sofa.registry.core.model.Result;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.net.NetUtil;
-import com.alipay.sofa.registry.server.session.push.PushSwitchService;
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
 import com.alipay.sofa.registry.util.JsonUtils;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
@@ -54,7 +53,7 @@ public class StopPushDataSwitchTest extends BaseIntegrationTest {
 
   @Test
   public void testStopPushDataSwitch() throws Exception {
-    // open stop push switch
+    // stop push
     ParaCheckUtil.checkNotNull(metaChannel, "metaChannel");
     assertTrue(
         getMetaChannel()
@@ -72,14 +71,7 @@ public class StopPushDataSwitchTest extends BaseIntegrationTest {
     String dataId = "test-dataId-" + System.currentTimeMillis();
     String value = "test stop publish data switch";
 
-    LOGGER.info("dataidIn:" + dataId);
-    PushSwitchService pushSwitchService =
-        sessionApplicationContext.getBean(PushSwitchService.class);
-
-    LOGGER.info(
-        "fetchStopPushService.isStopPushSwitch:"
-            + pushSwitchService.getFetchStopPushService().isStopPushSwitch());
-    waitConditionUntilTimeOut(pushSwitchService.getFetchStopPushService()::isStopPushSwitch, 6000);
+    waitConditionUntilTimeOut(BaseIntegrationTest::isClosePush, 6000);
 
     PublisherRegistration registration = new PublisherRegistration(dataId);
     registryClient1.register(registration, value);
@@ -126,6 +118,8 @@ public class StopPushDataSwitchTest extends BaseIntegrationTest {
   @Test
   public void testGrayOpenPushSwitch() throws Exception {
     ParaCheckUtil.checkNotNull(metaChannel, "metaChannel");
+
+    // stop push
     assertTrue(
         getMetaChannel()
             .getWebTarget()
@@ -156,14 +150,9 @@ public class StopPushDataSwitchTest extends BaseIntegrationTest {
     String dataId = "test-dataId-" + System.currentTimeMillis();
     String value = "test stop publish data switch";
 
-    LOGGER.info("dataidIn:" + dataId);
-
-    PushSwitchService pushSwitchService =
-        sessionApplicationContext.getBean(PushSwitchService.class);
-
     waitConditionUntilTimeOut(pushSwitchService.getFetchStopPushService()::isStopPushSwitch, 6000);
-    waitConditionUntilTimeOut(() -> pushSwitchService.canIpPush(otherAddress), 6000);
-    Assert.assertFalse(pushSwitchService.canIpPush(localAddress));
+    waitConditionUntilTimeOut(() -> pushSwitchService.canIpPushLocal(otherAddress), 6000);
+    Assert.assertFalse(pushSwitchService.canIpPushLocal(localAddress));
 
     PublisherRegistration registration = new PublisherRegistration(dataId);
     registryClient1.register(registration, value);
@@ -179,7 +168,7 @@ public class StopPushDataSwitchTest extends BaseIntegrationTest {
             });
     subReg.setScopeEnum(ScopeEnum.dataCenter);
     registryClient1.register(subReg);
-    Thread.sleep(3000L);
+    Thread.sleep(6000L);
     assertNull(dataIdResult.get());
 
     req.setIps(Arrays.asList(localAddress));
@@ -192,6 +181,7 @@ public class StopPushDataSwitchTest extends BaseIntegrationTest {
             .getStatus(),
         200);
 
+    System.out.println("after gray open......");
     waitConditionUntilTimeOut(() -> dataIdResult.get() != null, 6000);
 
     // Subscriber get data, test data
@@ -211,8 +201,7 @@ public class StopPushDataSwitchTest extends BaseIntegrationTest {
             .get(Result.class)
             .isSuccess());
 
-    waitConditionUntilTimeOut(
-        () -> !pushSwitchService.getFetchStopPushService().isStopPushSwitch(), 6000);
+    waitConditionUntilTimeOut(StopPushDataSwitchTest::isOpenPush, 6000);
     // unregister Publisher & Subscriber
     registryClient1.unregister(dataId, DEFAULT_GROUP, RegistryType.SUBSCRIBER);
     registryClient1.unregister(dataId, DEFAULT_GROUP, RegistryType.PUBLISHER);

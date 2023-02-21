@@ -160,30 +160,38 @@ public final class PushTaskBuffer {
 
   BufferTaskKey bufferTaskKey(PushTask task) {
     return new BufferTaskKey(
-        task.datum.getDataCenter(),
+        task.datum.dataCenters(),
         task.pushingTaskKey.addr,
         task.subscriber.getDataInfoId(),
         task.subscriberMap.keySet());
   }
 
   static final class BufferTaskKey {
-    final String dataCenter;
+    final Set<String> dataCenters;
     final String dataInfoId;
     final InetSocketAddress addr;
     final Set<String> subscriberIds;
     final int hashCode;
 
     BufferTaskKey(
-        String dataCenter, InetSocketAddress addr, String dataInfoId, Set<String> subscriberIds) {
-      this.dataCenter = dataCenter;
+        Set<String> dataCenters,
+        InetSocketAddress addr,
+        String dataInfoId,
+        Set<String> subscriberIds) {
+      // all data change push task dataCenters.size=1
+      if (dataCenters.size() > 1) {
+        this.dataCenters = Sets.newTreeSet(dataCenters);
+      } else {
+        this.dataCenters = dataCenters;
+      }
       this.dataInfoId = dataInfoId;
       this.addr = addr;
       this.subscriberIds = subscriberIds;
       if (subscriberIds.size() <= 1) {
-        this.hashCode = Objects.hash(dataCenter, addr, dataInfoId, subscriberIds);
+        this.hashCode = Objects.hash(dataCenters, addr, dataInfoId, subscriberIds);
       } else {
         // sort the subscriberIds
-        this.hashCode = Objects.hash(dataCenter, addr, dataInfoId, Sets.newTreeSet(subscriberIds));
+        this.hashCode = Objects.hash(dataCenters, addr, dataInfoId, Sets.newTreeSet(subscriberIds));
       }
     }
 
@@ -195,7 +203,7 @@ public final class PushTaskBuffer {
       return hashCode == that.hashCode
           && Objects.equals(dataInfoId, that.dataInfoId)
           && Objects.equals(addr, that.addr)
-          && Objects.equals(dataCenter, that.dataCenter)
+          && Objects.equals(dataCenters, that.dataCenters)
           && Objects.equals(subscriberIds, that.subscriberIds);
     }
 
@@ -207,7 +215,7 @@ public final class PushTaskBuffer {
     @Override
     public String toString() {
       return StringFormatter.format(
-          "Pending{{},{},{},subIds={}}", dataInfoId, dataCenter, addr, subscriberIds);
+          "Pending{{},{},{},subIds={}}", dataInfoId, dataCenters, addr, subscriberIds);
     }
   }
 

@@ -26,13 +26,23 @@ import com.alipay.sofa.registry.common.model.ServerDataBox;
 import com.alipay.sofa.registry.common.model.slot.func.SlotFunctionRegistry;
 import com.alipay.sofa.registry.common.model.store.*;
 import com.alipay.sofa.registry.core.model.BaseRegister;
+import com.alipay.sofa.registry.core.model.MultiReceivedData;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.remoting.bolt.BoltChannel;
 import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
-import com.alipay.sofa.registry.server.session.bootstrap.CommonConfig;
+import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfigBean;
+import com.alipay.sofa.registry.server.session.converter.ReceivedDataConverter;
+import com.alipay.sofa.registry.server.session.metadata.MetadataCacheRegistry;
+import com.alipay.sofa.registry.server.session.multi.cluster.DataCenterMetadataCacheImpl;
+import com.alipay.sofa.registry.server.session.predicate.ZonePredicate;
+import com.alipay.sofa.registry.server.session.providedata.FetchGrayPushSwitchService;
+import com.alipay.sofa.registry.server.session.providedata.FetchStopPushService;
+import com.alipay.sofa.registry.server.session.push.PushSwitchService;
 import com.alipay.sofa.registry.server.session.remoting.console.SessionConsoleExchanger;
+import com.alipay.sofa.registry.server.shared.config.CommonConfig;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
+import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.google.common.collect.Lists;
 import io.netty.channel.Channel;
@@ -40,9 +50,14 @@ import io.netty.util.Attribute;
 import io.netty.util.AttributeKey;
 import java.net.InetSocketAddress;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Predicate;
 import org.assertj.core.util.Maps;
+import org.assertj.core.util.Sets;
 import org.junit.Assert;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
@@ -144,6 +159,122 @@ public class TestUtils {
     }
   }
 
+  public static DataCenterMetadataCacheImpl newDataCenterMetaCache(SessionServerConfig config) {
+    DataCenterMetadataCacheImpl dataCenterMetadataCache = new DataCenterMetadataCacheImpl();
+    dataCenterMetadataCache.setSessionServerConfig(config);
+
+    return dataCenterMetadataCache;
+  }
+
+  public static DataCenterMetadataCacheImpl newDataCenterMetaCache(String dataCenter) {
+    DataCenterMetadataCacheImpl dataCenterMetadataCache = new DataCenterMetadataCacheImpl();
+    dataCenterMetadataCache.setSessionServerConfig(newSessionConfig(dataCenter));
+
+    return dataCenterMetadataCache;
+  }
+
+  public static PushSwitchService newPushSwitchService(SessionServerConfigBean serverConfigBean) {
+    PushSwitchService pushSwitchService = new PushSwitchService();
+    pushSwitchService
+        .setFetchGrayPushSwitchService(new FetchGrayPushSwitchService())
+        .setSessionServerConfig(serverConfigBean)
+        .setFetchStopPushService(new FetchStopPushService())
+        .setMetadataCacheRegistry(new MetadataCacheRegistry());
+
+    return pushSwitchService;
+  }
+
+  public static PushSwitchService newPushSwitchService(String testDc) {
+    SessionServerConfigBean sessionServerConfigBean = newSessionConfig(testDc);
+    PushSwitchService pushSwitchService = new PushSwitchService();
+    pushSwitchService
+        .setFetchGrayPushSwitchService(new FetchGrayPushSwitchService())
+        .setSessionServerConfig(sessionServerConfigBean)
+        .setFetchStopPushService(new FetchStopPushService())
+        .setMetadataCacheRegistry(new MetadataCacheRegistry());
+
+    return pushSwitchService;
+  }
+
+  public static MultiSubDatum newMultiSubDatum(
+      String dataCenter, String dataId, long version, List<SubPublisher> publishers) {
+    SubDatum subDatum = TestUtils.newSubDatum(dataCenter, dataId, version, publishers);
+    return MultiSubDatum.of(subDatum);
+  }
+
+  public static MultiSubDatum newMultiSubDatum(
+      String dataId, long version, List<SubPublisher> publishers) {
+    SubDatum subDatum = TestUtils.newSubDatum(dataId, version, publishers);
+    return MultiSubDatum.of(subDatum);
+  }
+
+  public static MultiSubDatum newMultiSubDatum(String dataId, int dataCenterCount, int pubCount) {
+    ParaCheckUtil.assertTrue(dataCenterCount > 0, "dataCenterCount");
+    ParaCheckUtil.assertTrue(pubCount > 0, "pubCount");
+    String dataInfoId = "";
+    Map<String, SubDatum> datumMap =
+        com.google.common.collect.Maps.newHashMapWithExpectedSize(dataCenterCount);
+
+    for (int i = 0; i < dataCenterCount; i++) {
+      String dataCenter = "dataCenter-" + i;
+      List<SubPublisher> publishers = Lists.newArrayListWithExpectedSize(pubCount);
+      for (int j = 0; j < pubCount; j++) {
+        SubPublisher pub =
+            TestUtils.newSubPublisher(
+                System.nanoTime(),
+                System.nanoTime(),
+                dataCenter + StringFormatter.format("-cell-{}", j));
+        publishers.add(pub);
+      }
+
+      SubDatum subDatum = TestUtils.newSubDatum(dataCenter, dataId, System.nanoTime(), publishers);
+      dataInfoId = subDatum.getDataInfoId();
+      datumMap.put(dataCenter, subDatum);
+    }
+
+    MultiSubDatum multiSubDatum = new MultiSubDatum(dataInfoId, datumMap);
+    return multiSubDatum;
+  }
+
+  public static PushData<MultiReceivedData> createPushData(
+      String dataId, int dataCenterCount, int pubCount) {
+    MultiSubDatum multiSubDatum = TestUtils.newMultiSubDatum(dataId, dataCenterCount, pubCount);
+    Entry<String, SubDatum> first =
+        multiSubDatum.getDatumMap().entrySet().stream().findFirst().get();
+    String localDataCenter = first.getKey();
+    String localZone = "localZone";
+
+    String invalidForeverZones =
+        first.getValue().mustGetPublishers().stream().findFirst().get().getCell();
+    SessionServerConfigBean sessionServerConfig =
+        TestUtils.newSessionConfig(localDataCenter, localZone);
+    sessionServerConfig.setInvalidForeverZones(invalidForeverZones);
+    sessionServerConfig.setInvalidIgnoreDataidRegex("^Zone_Servers_xxx$");
+
+    Predicate<String> pushDataPredicate =
+        ZonePredicate.pushDataPredicate(
+            multiSubDatum.getDataId(), localZone, ScopeEnum.global, sessionServerConfig);
+    Map<String, Set<String>> segmentZones = com.google.common.collect.Maps.newHashMap();
+    for (Entry<String, SubDatum> entry : multiSubDatum.getDatumMap().entrySet()) {
+      Set<String> cells = Sets.newHashSet();
+      for (SubPublisher pub : entry.getValue().mustGetPublishers()) {
+        cells.add(pub.getCell());
+      }
+      segmentZones.put(entry.getKey(), cells);
+    }
+
+    PushData<MultiReceivedData> pushData =
+        ReceivedDataConverter.getMultiReceivedData(
+            multiSubDatum,
+            ScopeEnum.global,
+            com.google.common.collect.Lists.newArrayList("aaa"),
+            localZone,
+            localDataCenter,
+            pushDataPredicate,
+            segmentZones);
+    return pushData;
+  }
+
   public interface RunError {
     void run() throws Exception;
   }
@@ -229,12 +360,22 @@ public class TestUtils {
     return publisher;
   }
 
+  public static String newDataInfoId(String dataId) {
+    String dataInfoId = DataInfo.toDataInfoId(dataId, INSTANCE, GROUP);
+    return dataInfoId;
+  }
+
   public static SubDatum newSubDatum(String dataId, long version, List<SubPublisher> publishers) {
+    return newSubDatum("dataCenter", dataId, version, publishers);
+  }
+
+  public static SubDatum newSubDatum(
+      String dataCenter, String dataId, long version, List<SubPublisher> publishers) {
     String dataInfo = DataInfo.toDataInfoId(dataId, INSTANCE, GROUP);
     SubDatum subDatum =
         SubDatum.normalOf(
             dataInfo,
-            "dataCenter",
+            dataCenter,
             version,
             publishers,
             dataId,

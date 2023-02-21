@@ -24,6 +24,7 @@ import com.alipay.sofa.registry.observer.impl.AbstractLifecycleObservable;
 import com.alipay.sofa.registry.server.meta.MetaLeaderService;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.monitor.Metrics;
+import com.alipay.sofa.registry.store.api.elector.AbstractLeaderElector.LeaderInfo;
 import com.alipay.sofa.registry.store.api.elector.LeaderAware;
 import com.alipay.sofa.registry.store.api.elector.LeaderElector;
 import java.util.List;
@@ -88,12 +89,17 @@ public class DefaultMetaLeaderElector extends AbstractLifecycleObservable
 
   @Override
   public String getLeader() {
-    return leaderElector.getLeader();
+    return leaderElector.getLeaderInfo().getLeader();
   }
 
   @Override
   public long getLeaderEpoch() {
-    return leaderElector.getLeaderEpoch();
+    return leaderElector.getLeaderInfo().getEpoch();
+  }
+
+  @Override
+  public LeaderInfo getLeaderInfo() {
+    return leaderElector.getLeaderInfo();
   }
 
   @Override

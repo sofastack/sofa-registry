@@ -61,6 +61,7 @@ public final class SubscriberConverter {
           subscriber.setAttributes(source.getAttributes());
           subscriber.setClientVersion(ClientVersion.StoreData);
           subscriber.internAcceptEncoding(source.getAcceptEncoding());
+          subscriber.setAcceptMulti(source.acceptMulti());
 
           DataInfo dataInfo =
               new DataInfo(source.getInstanceId(), source.getDataId(), source.getGroup());

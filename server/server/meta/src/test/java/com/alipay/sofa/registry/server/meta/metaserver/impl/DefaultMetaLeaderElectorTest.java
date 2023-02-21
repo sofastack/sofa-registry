@@ -22,6 +22,7 @@ import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
 import com.alipay.sofa.registry.server.meta.MetaLeaderService;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
+import com.alipay.sofa.registry.store.api.elector.AbstractLeaderElector.LeaderInfo;
 import com.alipay.sofa.registry.store.api.elector.LeaderElector;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.Assert;
@@ -37,6 +38,10 @@ public class DefaultMetaLeaderElectorTest extends AbstractMetaServerTestBase {
   @Mock private LeaderElector leaderElector;
 
   @Mock private MetaServerConfig metaServerConfig;
+
+  protected LeaderInfo leaderInfo =
+      new LeaderInfo(
+          System.currentTimeMillis(), ServerEnv.IP, System.currentTimeMillis() + 20 * 1000);
 
   @Before
   public void beforeDefaultMetaLeaderElectorTest() {
@@ -66,14 +71,14 @@ public class DefaultMetaLeaderElectorTest extends AbstractMetaServerTestBase {
 
   @Test
   public void testGetLeader() {
-    when(leaderElector.getLeader()).thenReturn(ServerEnv.IP);
+    when(leaderElector.getLeaderInfo()).thenReturn(leaderInfo);
     Assert.assertEquals(ServerEnv.IP, metaLeaderElector.getLeader());
   }
 
   @Test
   public void testGetLeaderEpoch() {
-    when(leaderElector.getLeaderEpoch()).thenReturn(0L);
-    Assert.assertEquals(0L, metaLeaderElector.getLeaderEpoch());
+    when(leaderElector.getLeaderInfo()).thenReturn(leaderInfo);
+    Assert.assertEquals(leaderInfo.getEpoch(), metaLeaderElector.getLeaderEpoch());
   }
 
   @Test

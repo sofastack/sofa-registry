@@ -26,10 +26,7 @@ import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.server.session.TestUtils;
 import com.alipay.sofa.registry.server.session.bootstrap.ExecutorManager;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfigBean;
-import com.alipay.sofa.registry.server.session.providedata.FetchGrayPushSwitchService;
-import com.alipay.sofa.registry.server.session.providedata.FetchStopPushService;
 import com.alipay.sofa.registry.server.session.push.FirePushService;
-import com.alipay.sofa.registry.server.session.push.PushSwitchService;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import java.util.HashMap;
 import java.util.Map;
@@ -37,8 +34,6 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class DataChangeRequestHandlerTest {
-
-  private long init = -1L;
 
   @Test
   public void testCheckParam() {
@@ -60,19 +55,23 @@ public class DataChangeRequestHandlerTest {
     DataChangeRequestHandler handler = newHandler();
     SessionServerConfigBean serverConfigBean = TestUtils.newSessionConfig("testDc");
     handler.sessionServerConfig = serverConfigBean;
-    handler.pushSwitchService = new PushSwitchService();
+    handler.pushSwitchService = TestUtils.newPushSwitchService(serverConfigBean);
     handler.executorManager = new ExecutorManager(serverConfigBean);
     handler.firePushService = mock(FirePushService.class);
     handler.sessionInterests = mock(Interests.class);
-    handler.pushSwitchService.setFetchStopPushService(new FetchStopPushService());
-    handler.pushSwitchService.setFetchGrayPushSwitchService(new FetchGrayPushSwitchService());
 
-    handler.pushSwitchService.getFetchStopPushService().setStopPushSwitch(init, true);
+    handler
+        .pushSwitchService
+        .getFetchStopPushService()
+        .setStopPushSwitch(System.currentTimeMillis(), true);
     // no npe, stopPush skip the handle
     Object obj = handler.doHandle(null, null);
     Assert.assertNull(obj);
 
-    handler.pushSwitchService.getFetchStopPushService().setStopPushSwitch(init, false);
+    handler
+        .pushSwitchService
+        .getFetchStopPushService()
+        .setStopPushSwitch(System.currentTimeMillis(), false);
     when(handler.sessionInterests.checkInterestVersion(anyString(), anyString(), anyLong()))
         .thenReturn(Interests.InterestVersionCheck.Obsolete);
     obj = handler.doHandle(null, request());

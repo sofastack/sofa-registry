@@ -16,14 +16,21 @@
  */
 package com.alipay.sofa.registry.server.session.converter.pb;
 
+import com.alipay.sofa.registry.common.model.client.pb.MultiReceivedDataPb;
+import com.alipay.sofa.registry.common.model.client.pb.MultiSegmentDataPb;
 import com.alipay.sofa.registry.common.model.client.pb.ReceivedConfigDataPb;
 import com.alipay.sofa.registry.common.model.client.pb.ReceivedDataPb;
+import com.alipay.sofa.registry.common.model.store.PushData;
 import com.alipay.sofa.registry.compress.CompressConstants;
 import com.alipay.sofa.registry.compress.CompressUtils;
 import com.alipay.sofa.registry.core.model.DataBox;
+import com.alipay.sofa.registry.core.model.MultiReceivedData;
+import com.alipay.sofa.registry.core.model.MultiSegmentData;
 import com.alipay.sofa.registry.core.model.ReceivedConfigData;
 import com.alipay.sofa.registry.core.model.ReceivedData;
+import com.alipay.sofa.registry.server.session.TestUtils;
 import java.util.Collections;
+import java.util.Map.Entry;
 import org.assertj.core.util.Lists;
 import org.junit.Assert;
 import org.junit.Test;
@@ -31,7 +38,8 @@ import org.junit.Test;
 public class ReceivedDataConvertorTest {
   @Test
   public void testReceivedData() {
-    Assert.assertNull(ReceivedDataConvertor.convert2Pb((ReceivedData) null));
+
+    Assert.assertNull(ReceivedDataConvertor.convert2Pb(null, null));
     Assert.assertNull(ReceivedDataConvertor.convert2Java(null));
 
     ReceivedData registerJava = new ReceivedData();
@@ -46,7 +54,7 @@ public class ReceivedDataConvertorTest {
     registerJava.setData(
         Collections.singletonMap("testZone", Lists.newArrayList(new DataBox("testDataBox"))));
 
-    ReceivedDataPb pb = ReceivedDataConvertor.convert2Pb(registerJava);
+    ReceivedDataPb pb = ReceivedDataConvertor.convert2Pb(registerJava, data -> null);
     ReceivedData convertJava = ReceivedDataConvertor.convert2Java(pb);
     assertReceivedData(registerJava, convertJava);
 
@@ -109,11 +117,93 @@ public class ReceivedDataConvertorTest {
     registerJava.setSubscriberRegistIds(Lists.newArrayList("testRegisterId"));
     registerJava.setData(
         Collections.singletonMap("testZone", Lists.newArrayList(new DataBox("testDataBox"))));
+
     ReceivedDataPb dataPb =
-        ReceivedDataConvertor.convert2CompressedPb(
-            registerJava, CompressUtils.find(new String[] {CompressConstants.encodingZstd}));
+        ReceivedDataConvertor.convert2Pb(
+            registerJava,
+            data -> CompressUtils.find(new String[] {CompressConstants.encodingZstd}));
     Assert.assertEquals(0, dataPb.getDataMap().size());
     Assert.assertNotEquals(0, dataPb.getOriginBodySize());
     Assert.assertNotEquals(0, dataPb.getBody().size());
+  }
+
+  @Test
+  public void testMultiReceivedData() {
+    PushData<MultiReceivedData> pushData = TestUtils.createPushData("testConvert2MultiPb", 3, 3);
+    MultiReceivedData receivedDataJava = pushData.getPayload();
+    MultiReceivedDataPb multiReceivedDataPb =
+        ReceivedDataConvertor.convert2MultiPb(receivedDataJava, data -> null);
+    MultiReceivedData convertJava = ReceivedDataConvertor.convert2MultiJava(multiReceivedDataPb);
+
+    assertMultiReceivedData(receivedDataJava, convertJava);
+  }
+
+  @Test
+  public void testConvert2MultiPb() {
+
+    PushData<MultiReceivedData> pushData = TestUtils.createPushData("testConvert2MultiPb", 3, 3);
+    MultiReceivedData receivedDataJava = pushData.getPayload();
+    MultiReceivedDataPb multiReceivedDataPb =
+        ReceivedDataConvertor.convert2MultiPb(receivedDataJava, data -> null);
+    assertMultiReceivedData(multiReceivedDataPb, receivedDataJava);
+  }
+
+  @Test
+  public void testCompressConvert2MultiPb() {
+
+    PushData<MultiReceivedData> pushData =
+        TestUtils.createPushData("testCompressConvert2MultiPb", 3, 3);
+    MultiReceivedData receivedDataJava = pushData.getPayload();
+    MultiReceivedDataPb multiReceivedDataPb =
+        ReceivedDataConvertor.convert2MultiPb(
+            receivedDataJava,
+            data -> CompressUtils.find(new String[] {CompressConstants.encodingZstd}));
+    assertMultiReceivedData(multiReceivedDataPb, receivedDataJava);
+  }
+
+  private void assertMultiReceivedData(
+      MultiReceivedDataPb multiReceivedDataPb, MultiReceivedData receivedDataJava) {
+    Assert.assertEquals(
+        multiReceivedDataPb.getMultiDataMap().size(), receivedDataJava.getMultiData().size());
+    Assert.assertEquals(multiReceivedDataPb.getDataId(), receivedDataJava.getDataId());
+    Assert.assertEquals(multiReceivedDataPb.getGroup(), receivedDataJava.getGroup());
+    Assert.assertEquals(multiReceivedDataPb.getScope(), receivedDataJava.getScope());
+    Assert.assertEquals(multiReceivedDataPb.getInstanceId(), receivedDataJava.getInstanceId());
+    Assert.assertEquals(multiReceivedDataPb.getLocalZone(), receivedDataJava.getLocalZone());
+    Assert.assertEquals(multiReceivedDataPb.getLocalSegment(), receivedDataJava.getLocalSegment());
+    Assert.assertEquals(
+        multiReceivedDataPb.getSubscriberRegistIdsList().size(),
+        receivedDataJava.getSubscriberRegistIds().size());
+
+    for (Entry<String, MultiSegmentData> entry : receivedDataJava.getMultiData().entrySet()) {
+      MultiSegmentData multiSegmentData = entry.getValue();
+      MultiSegmentDataPb multiSegmentDataPb =
+          multiReceivedDataPb.getMultiDataMap().get(entry.getKey());
+      Assert.assertEquals(multiSegmentData.getSegment(), multiSegmentDataPb.getSegment());
+      Assert.assertEquals(multiSegmentData.getVersion(), multiSegmentDataPb.getVersion());
+      Assert.assertEquals(
+          multiSegmentData.getDataCount(), multiSegmentDataPb.getPushDataCountMap());
+    }
+  }
+
+  private void assertMultiReceivedData(
+      MultiReceivedData receivedData, MultiReceivedData convertJava) {
+    Assert.assertEquals(receivedData.getMultiData().size(), convertJava.getMultiData().size());
+    Assert.assertEquals(receivedData.getDataId(), convertJava.getDataId());
+    Assert.assertEquals(receivedData.getGroup(), convertJava.getGroup());
+    Assert.assertEquals(receivedData.getScope(), convertJava.getScope());
+    Assert.assertEquals(receivedData.getInstanceId(), convertJava.getInstanceId());
+    Assert.assertEquals(receivedData.getLocalZone(), convertJava.getLocalZone());
+    Assert.assertEquals(receivedData.getLocalSegment(), convertJava.getLocalSegment());
+    Assert.assertEquals(
+        receivedData.getSubscriberRegistIds().size(), convertJava.getSubscriberRegistIds().size());
+
+    for (Entry<String, MultiSegmentData> entry : convertJava.getMultiData().entrySet()) {
+      MultiSegmentData convertSegmentData = entry.getValue();
+      MultiSegmentData multiSegmentData = receivedData.getMultiData().get(entry.getKey());
+      Assert.assertEquals(convertSegmentData.getSegment(), multiSegmentData.getSegment());
+      Assert.assertEquals(convertSegmentData.getVersion(), multiSegmentData.getVersion());
+      Assert.assertEquals(convertSegmentData.getDataCount(), multiSegmentData.getDataCount());
+    }
   }
 }

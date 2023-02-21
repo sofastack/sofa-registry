@@ -30,6 +30,8 @@ public interface Exchange<T> {
   String DATA_SERVER_TYPE = "dataServer";
   String DATA_SERVER_NOTIFY_TYPE = "dataServerNotify";
   String META_SERVER_TYPE = "metaServer";
+  String REMOTE_CLUSTER_META = "remoteMetaServer";
+  String REMOTE_DATA_SERVER_TYPE = "remoteDataServer";
 
   /**
    * connect same type server,one server ip one connection such as different server on data

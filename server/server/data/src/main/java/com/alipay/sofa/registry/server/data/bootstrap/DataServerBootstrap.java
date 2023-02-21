@@ -66,6 +66,8 @@ public class DataServerBootstrap {
 
   @Autowired private DataServerConfig dataServerConfig;
 
+  @Autowired private MultiClusterDataServerConfig multiClusterDataServerConfig;
+
   @Autowired private MetaServerService metaServerService;
 
   @Autowired private ApplicationContext applicationContext;
@@ -86,6 +88,9 @@ public class DataServerBootstrap {
   @Resource(name = "serverSyncHandlers")
   private Collection<AbstractServerHandler> serverSyncHandlers;
 
+  @Resource(name = "remoteDataServerHandlers")
+  private Collection<AbstractServerHandler> remoteDataServerHandlers;
+
   @Autowired private SystemPropertyProcessorManager systemPropertyProcessorManager;
 
   @Autowired private SlotManager slotManager;
@@ -98,6 +103,8 @@ public class DataServerBootstrap {
 
   private Server dataSyncServer;
 
+  private Server remoteDataSyncServer;
+
   private Server httpServer;
 
   private final AtomicBoolean httpServerStarted = new AtomicBoolean(false);
@@ -107,6 +114,8 @@ public class DataServerBootstrap {
   private final AtomicBoolean serverForSessionStarted = new AtomicBoolean(false);
 
   private final AtomicBoolean serverForDataSyncStarted = new AtomicBoolean(false);
+
+  private final AtomicBoolean serverForMultiClusterDataSyncStarted = new AtomicBoolean(false);
 
   private final Retryer<Boolean> startupRetryer =
       RetryerBuilder.<Boolean>newBuilder()
@@ -136,6 +145,8 @@ public class DataServerBootstrap {
       openDataServer();
 
       openDataSyncServer();
+
+      openMultiClusterDataSyncServer();
 
       openHttpServer();
 
@@ -215,6 +226,32 @@ public class DataServerBootstrap {
     }
   }
 
+  private void openMultiClusterDataSyncServer() {
+    try {
+      if (serverForMultiClusterDataSyncStarted.compareAndSet(false, true)) {
+        remoteDataSyncServer =
+            boltExchange.open(
+                new URL(
+                    NetUtil.getLocalAddress().getHostAddress(),
+                    multiClusterDataServerConfig.getSyncRemoteSlotLeaderPort()),
+                multiClusterDataServerConfig.getSyncSlotLowWaterMark(),
+                multiClusterDataServerConfig.getSyncSlotHighWaterMark(),
+                remoteDataServerHandlers.toArray(
+                    new ChannelHandler[remoteDataServerHandlers.size()]));
+        LOGGER.info(
+            "Multi cluster data server for sync started! port:{}",
+            multiClusterDataServerConfig.getSyncRemoteSlotLeaderPort());
+      }
+    } catch (Exception e) {
+      serverForMultiClusterDataSyncStarted.set(false);
+      LOGGER.error(
+          "Multi cluster data sync server start error! port:{}",
+          multiClusterDataServerConfig.getSyncRemoteSlotLeaderPort(),
+          e);
+      throw new RuntimeException("Multi cluster data sync server start error!", e);
+    }
+  }
+
   private void openHttpServer() {
     try {
       if (httpServerStarted.compareAndSet(false, true)) {
@@ -286,6 +323,7 @@ public class DataServerBootstrap {
       stopHttpServer();
       stopServer();
       stopDataSyncServer();
+      stopRemoteDataSyncServer();
       stopNotifyServer();
     } catch (Throwable e) {
       LOGGER.error("Shutting down Data Server error!", e);
@@ -345,6 +383,12 @@ public class DataServerBootstrap {
     }
   }
 
+  private void stopRemoteDataSyncServer() {
+    if (remoteDataSyncServer != null && remoteDataSyncServer.isOpen()) {
+      remoteDataSyncServer.close();
+    }
+  }
+
   private void stopNotifyServer() {
     if (notifyServer != null && notifyServer.isOpen()) {
       notifyServer.close();
@@ -380,48 +424,6 @@ public class DataServerBootstrap {
   }
 
   @VisibleForTesting
-  DataServerBootstrap setDataServerConfig(DataServerConfig dataServerConfig) {
-    this.dataServerConfig = dataServerConfig;
-    return this;
-  }
-
-  @VisibleForTesting
-  DataServerBootstrap setMetaServerService(MetaServerService metaServerService) {
-    this.metaServerService = metaServerService;
-    return this;
-  }
-
-  @VisibleForTesting
-  DataServerBootstrap setApplicationContext(ApplicationContext applicationContext) {
-    this.applicationContext = applicationContext;
-    return this;
-  }
-
-  @VisibleForTesting
-  DataServerBootstrap setJerseyResourceConfig(ResourceConfig jerseyResourceConfig) {
-    this.jerseyResourceConfig = jerseyResourceConfig;
-    return this;
-  }
-
-  @VisibleForTesting
-  DataServerBootstrap setJerseyExchange(Exchange jerseyExchange) {
-    this.jerseyExchange = jerseyExchange;
-    return this;
-  }
-
-  @VisibleForTesting
-  DataServerBootstrap setBoltExchange(Exchange boltExchange) {
-    this.boltExchange = boltExchange;
-    return this;
-  }
-
-  @VisibleForTesting
-  DataServerBootstrap setDataChangeEventCenter(DataChangeEventCenter dataChangeEventCenter) {
-    this.dataChangeEventCenter = dataChangeEventCenter;
-    return this;
-  }
-
-  @VisibleForTesting
   DataServerBootstrap setServerHandlers(Collection<AbstractServerHandler> serverHandlers) {
     this.serverHandlers = serverHandlers;
     return this;
@@ -433,9 +435,15 @@ public class DataServerBootstrap {
     return this;
   }
 
+  /**
+   * Setter method for property <tt>remoteDataServerHandlers</tt>.
+   *
+   * @param remoteDataServerHandlers value to be assigned to property remoteDataServerHandlers
+   */
   @VisibleForTesting
-  DataServerBootstrap setSystemPropertyProcessorManager(SystemPropertyProcessorManager manager) {
-    this.systemPropertyProcessorManager = manager;
+  DataServerBootstrap setRemoteDataServerHandlers(
+      Collection<AbstractServerHandler> remoteDataServerHandlers) {
+    this.remoteDataServerHandlers = remoteDataServerHandlers;
     return this;
   }
 }

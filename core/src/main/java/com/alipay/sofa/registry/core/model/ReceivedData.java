@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.core.model;
 
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -47,6 +48,8 @@ public class ReceivedData implements Serializable {
   private Long version;
 
   private String localZone;
+
+  private Map<String, Integer> dataCount = new HashMap<String, Integer>();
 
   /** Instantiates a new Received data multi. */
   public ReceivedData() {}
@@ -242,6 +245,24 @@ public class ReceivedData implements Serializable {
   }
 
   /**
+   * Getter method for property <tt>dataCount</tt>.
+   *
+   * @return property value of dataCount
+   */
+  public Map<String, Integer> getDataCount() {
+    return dataCount;
+  }
+
+  /**
+   * Setter method for property <tt>dataCount</tt>.
+   *
+   * @param dataCount value to be assigned to property dataCount
+   */
+  public void setDataCount(Map<String, Integer> dataCount) {
+    this.dataCount = dataCount;
+  }
+
+  /**
    * To string string.
    *
    * @return the string
@@ -266,11 +287,15 @@ public class ReceivedData implements Serializable {
         + '\''
         + ", subscriberRegistIds="
         + subscriberRegistIds
+        + ", data="
+        + data
         + ", version="
         + version
         + ", localZone='"
         + localZone
         + '\''
+        + ", dataCount="
+        + dataCount
         + '}';
   }
 }

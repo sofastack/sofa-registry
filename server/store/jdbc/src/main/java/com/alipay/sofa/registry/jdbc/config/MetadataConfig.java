@@ -25,6 +25,10 @@ public interface MetadataConfig {
 
   int getInterfaceAppsIndexRenewIntervalMinutes();
 
+  int getInterfaceAppsExecutorPoolSize();
+
+  int getInterfaceAppsExecutorQueueSize();
+
   int getClientManagerExecutorPoolSize();
 
   int getClientManagerExecutorQueueSize();

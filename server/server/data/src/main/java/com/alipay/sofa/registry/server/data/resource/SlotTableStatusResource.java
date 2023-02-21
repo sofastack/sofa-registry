@@ -25,12 +25,14 @@ import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.common.model.slot.SlotTableStatusResponse;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.server.data.slot.SlotManager;
+import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
+import com.alipay.sofa.registry.server.data.slot.SlotAccessorDelegate;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import java.util.List;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -46,7 +48,9 @@ public class SlotTableStatusResource {
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
-  @Autowired SlotManager slotManager;
+  @Autowired DataServerConfig dataServerConfig;
+
+  @Autowired SlotAccessorDelegate slotAccessorDelegate;
 
   @Autowired MetaServerService metaServerService;
 
@@ -54,7 +58,20 @@ public class SlotTableStatusResource {
   @Path("/sync/task/status")
   @Produces(MediaType.APPLICATION_JSON)
   public GenericResponse<Object> getSlotTableSyncTaskStatus() {
-    Tuple<Long, List<BaseSlotStatus>> tuple = slotManager.getSlotTableEpochAndStatuses();
+    return getSlotTableStatus(dataServerConfig.getLocalDataCenter());
+  }
+
+  @GET
+  @Path("/sync/task/status/remote")
+  @Produces(MediaType.APPLICATION_JSON)
+  public GenericResponse<Object> getRemoteSlotTableStatus(
+      @QueryParam("dataCenter") String dataCenter) {
+    return getSlotTableStatus(dataCenter);
+  }
+
+  private GenericResponse<Object> getSlotTableStatus(String dataCenter) {
+    Tuple<Long, List<BaseSlotStatus>> tuple =
+        slotAccessorDelegate.getSlotTableEpochAndStatuses(dataCenter);
     final long epoch = tuple.o1;
     final List<BaseSlotStatus> slotStatuses = tuple.o2;
 

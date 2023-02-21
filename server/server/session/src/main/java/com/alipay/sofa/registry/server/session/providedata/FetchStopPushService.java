@@ -33,6 +33,10 @@ public class FetchStopPushService extends BaseStopPushService {
   protected int getSystemPropertyIntervalMillis() {
     return sessionServerConfig.getSystemPropertyIntervalMillis();
   }
+
+  @Override
+  protected void afterProcess(StopPushStorage storage) {}
+
   /**
    * Setter method for property <tt>sessionServerConfig</tt>.
    *

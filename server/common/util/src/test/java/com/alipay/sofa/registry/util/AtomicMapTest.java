@@ -21,10 +21,9 @@ import org.junit.Test;
 
 /**
  * @author xiaojian.xj
- * @version : AtomicMapTest.java, v 0.1 2022年08月03日 17:54 xiaojian.xj Exp $
+ * @version : AtomicMapTest.java, v 0.1 2022年08月03日 17:50 xiaojian.xj Exp $
  */
 public class AtomicMapTest {
-
   @Test
   public void test() {
     AtomicMap<String, String> map = new AtomicMap();

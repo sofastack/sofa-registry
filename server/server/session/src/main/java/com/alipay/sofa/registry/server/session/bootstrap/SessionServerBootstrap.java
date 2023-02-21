@@ -167,7 +167,9 @@ public class SessionServerBootstrap {
 
       // wait until slot table is get
       startupRetryer.call(
-          () -> slotTableCache.getCurrentSlotTable().getEpoch() != SlotTable.INIT.getEpoch());
+          () -> slotTableCache.getLocalSlotTable().getEpoch() != SlotTable.INIT.getEpoch());
+
+      metadataCacheRegistry.startSynced();
 
       recoverConfigRepository.waitSynced();
       metadataCacheRegistry.waitSynced();
@@ -212,8 +214,8 @@ public class SessionServerBootstrap {
   private void postStart() throws Throwable {
     startupRetryer.call(
         () -> {
-          LOGGER.info("successful start session server, remove self from blacklist");
           metaNodeService.removeSelfFromMetaBlacklist();
+          LOGGER.info("successful start session server, remove self from blacklist");
           return true;
         });
   }
@@ -409,6 +411,8 @@ public class SessionServerBootstrap {
     CustomSerializerManager.registerCustomSerializer(
         ReceivedConfigDataPb.class.getName(), serializer);
 
+    CustomSerializerManager.registerCustomSerializer(
+        MultiReceivedDataPb.class.getName(), serializer);
     SerializerManager.addSerializer(
         ProtobufSerializer.PROTOCOL_PROTOBUF, ProtobufSerializer.getInstance());
   }

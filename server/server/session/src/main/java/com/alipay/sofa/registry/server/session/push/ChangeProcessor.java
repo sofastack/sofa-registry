@@ -25,7 +25,9 @@ import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import com.google.common.collect.Maps;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -34,11 +36,16 @@ public class ChangeProcessor {
 
   @Autowired SessionServerConfig sessionServerConfig;
 
-  Worker[] workers;
+  Map<String, Worker[]> dataCenterWorkers = Maps.newConcurrentMap();
 
   @PostConstruct
   public void init() {
-    this.workers = new Worker[sessionServerConfig.getDataChangeFetchTaskWorkerSize()];
+    Worker[] workers = initWorkers();
+    dataCenterWorkers.putIfAbsent(sessionServerConfig.getSessionServerDataCenter(), workers);
+  }
+
+  private Worker[] initWorkers() {
+    Worker[] workers = new Worker[sessionServerConfig.getDataChangeFetchTaskWorkerSize()];
     for (int i = 0; i < workers.length; i++) {
       workers[i] =
           new Worker(
@@ -46,10 +53,11 @@ public class ChangeProcessor {
               sessionServerConfig.getDataChangeMaxDebouncingMillis());
       ConcurrentUtils.createDaemonThread("ChangeExecutor-" + i, workers[i]).start();
     }
+    return workers;
   }
 
   boolean fireChange(String dataInfoId, ChangeHandler handler, TriggerPushContext changeCtx) {
-    ChangeKey key = new ChangeKey(changeCtx.dataCenter, dataInfoId);
+    ChangeKey key = new ChangeKey(changeCtx.dataCenters(), dataInfoId);
     Worker worker = workerOf(key);
     return worker.commitChange(key, handler, changeCtx);
   }
@@ -119,9 +127,11 @@ public class ChangeProcessor {
           tasks.put(key, task);
           return true;
         }
-        if (task.changeCtx.getExpectDatumVersion() <= exist.changeCtx.getExpectDatumVersion()) {
+
+        if (task.changeCtx.smallerThan(exist.changeCtx)) {
           return false;
         }
+        task.changeCtx.mergeVersion(exist.changeCtx);
         // compare with exist
         if (task.expireTimestamp <= exist.expireDeadlineTimestamp) {
           // not reach deadline, requeue to wait
@@ -135,6 +145,7 @@ public class ChangeProcessor {
           // reach deadline, could not requeue, use exist.expire as newTask.expire
           exist.changeCtx.setExpectDatumVersion(task.changeCtx.getExpectDatumVersion());
         }
+
         return true;
       }
     }
@@ -178,16 +189,16 @@ public class ChangeProcessor {
 
   static final class ChangeKey {
     final String dataInfoId;
-    final String dataCenter;
+    final Set<String> dataCenters;
 
-    ChangeKey(String dataCenter, String dataInfoId) {
-      this.dataCenter = dataCenter;
+    ChangeKey(Set<String> dataCenters, String dataInfoId) {
+      this.dataCenters = dataCenters;
       this.dataInfoId = dataInfoId;
     }
 
     @Override
     public String toString() {
-      return dataInfoId + "@" + dataCenter;
+      return dataInfoId + "@" + dataCenters;
     }
 
     @Override
@@ -196,16 +207,18 @@ public class ChangeProcessor {
       if (o == null || getClass() != o.getClass()) return false;
       ChangeKey changeKey = (ChangeKey) o;
       return Objects.equals(dataInfoId, changeKey.dataInfoId)
-          && Objects.equals(dataCenter, changeKey.dataCenter);
+          && Objects.equals(dataCenters, changeKey.dataCenters);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(dataInfoId, dataCenter);
+      return Objects.hash(dataInfoId, dataCenters);
     }
   }
 
   Worker workerOf(ChangeKey key) {
+    String dataCenter = key.dataCenters.stream().findFirst().get();
+    Worker[] workers = dataCenterWorkers.computeIfAbsent(dataCenter, k -> initWorkers());
     int n = (key.hashCode() & 0x7fffffff) % workers.length;
     return workers[n];
   }

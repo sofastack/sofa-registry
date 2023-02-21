@@ -28,16 +28,17 @@ public class ZonePredicateTest {
   public void test() {
     SessionServerConfigBean configBean = TestUtils.newSessionConfig("testDc");
     Predicate<String> predicate =
-        ZonePredicate.zonePredicate("testDataId", "zoneA", ScopeEnum.zone, configBean);
+        ZonePredicate.pushDataPredicate("testDataId", "zoneA", ScopeEnum.zone, configBean);
     Assert.assertFalse(predicate.test("zoneA"));
     Assert.assertTrue(predicate.test("zoneB"));
 
     predicate =
-        ZonePredicate.zonePredicate("testDataId", "zoneA", ScopeEnum.dataCenter, configBean);
+        ZonePredicate.pushDataPredicate("testDataId", "zoneA", ScopeEnum.dataCenter, configBean);
     Assert.assertFalse(predicate.test("zoneA"));
     Assert.assertFalse(predicate.test("zoneB"));
 
-    predicate = ZonePredicate.zonePredicate("testDataId", "zoneA", ScopeEnum.global, configBean);
+    predicate =
+        ZonePredicate.pushDataPredicate("testDataId", "zoneA", ScopeEnum.global, configBean);
     Assert.assertFalse(predicate.test("zoneA"));
     Assert.assertFalse(predicate.test("zoneB"));
   }

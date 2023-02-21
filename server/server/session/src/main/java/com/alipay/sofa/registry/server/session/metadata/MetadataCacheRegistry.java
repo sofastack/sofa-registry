@@ -16,23 +16,33 @@
  */
 package com.alipay.sofa.registry.server.session.metadata;
 
+import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.appmeta.InterfaceMapping;
+import com.alipay.sofa.registry.common.model.metaserver.MultiClusterSyncInfo;
 import com.alipay.sofa.registry.common.model.store.AppRevision;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.bootstrap.ExecutorManager;
+import com.alipay.sofa.registry.server.session.bootstrap.MultiClusterSessionServerConfig;
+import com.alipay.sofa.registry.store.api.config.DefaultCommonConfig;
+import com.alipay.sofa.registry.store.api.meta.MultiClusterSyncRepository;
 import com.alipay.sofa.registry.store.api.repository.AppRevisionRepository;
 import com.alipay.sofa.registry.store.api.repository.InterfaceAppsRepository;
 import com.alipay.sofa.registry.util.AtomicMap;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
+import com.alipay.sofa.registry.util.LoopRunnable;
 import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.Futures;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
@@ -45,21 +55,69 @@ public class MetadataCacheRegistry {
 
   @Autowired private InterfaceAppsRepository interfaceAppsRepository;
 
+  @Autowired private MultiClusterSyncRepository multiClusterSyncRepository;
+
+  @Autowired private DefaultCommonConfig defaultCommonConfig;
+
+  @Autowired private MultiClusterSessionServerConfig multiClusterSessionServerConfig;
+
   @Autowired private ExecutorManager executorManager;
 
   private AtomicMap<String, AppRevision> registerTask = new AtomicMap<>();
 
+  private AtomicReference<Set<String>> pushEnableSet = new AtomicReference<>();
+
   private final MetadataRegisterWorker registerWorker = new MetadataRegisterWorker();
+  private final MultiSyncInfoReloadWorker syncInfoReloadWorker = new MultiSyncInfoReloadWorker();
 
   @PostConstruct
   public void init() {
     ConcurrentUtils.createDaemonThread("MetadataRegisterWorker", registerWorker).start();
+    ConcurrentUtils.createDaemonThread("MultiSyncInfoReloadWorker", syncInfoReloadWorker).start();
+  }
+
+  public Set<String> getPushEnableDataCenters() {
+    Set<String> set = pushEnableSet.get();
+    return set == null ? Collections.EMPTY_SET : set;
   }
 
   public void register(AppRevision appRevision) {
-    if (!appRevisionRepository.exist(appRevision.getRevision())) {
-      registerTask.put(appRevision.getRevision(), appRevision);
+    registerTask.put(appRevision.getRevision(), appRevision);
+  }
+
+  private Tuple<Set<String>, Set<String>> getMetadataDataCenters() {
+    Set<MultiClusterSyncInfo> multiClusterSyncInfoSet = getSyncDataCenters();
+
+    Set<String> syncDataCenters = new HashSet<>();
+    Set<String> syncEnableDataCenters = new HashSet<>();
+    syncDataCenters.add(defaultCommonConfig.getDefaultClusterId());
+
+    for (MultiClusterSyncInfo info : multiClusterSyncInfoSet) {
+      syncDataCenters.add(info.getRemoteDataCenter());
+      if (info.isEnablePush()) {
+        syncEnableDataCenters.add(info.getRemoteDataCenter());
+      }
     }
+    return new Tuple<>(syncDataCenters, syncEnableDataCenters);
+  }
+
+  private Set<MultiClusterSyncInfo> getSyncDataCenters() {
+
+    return multiClusterSyncRepository.queryLocalSyncInfos();
+  }
+
+  public void startSynced() {
+    LOG.info("metadata cache enter startSynced.");
+    Tuple<Set<String>, Set<String>> tuple = getMetadataDataCenters();
+
+    appRevisionRepository.setDataCenters(tuple.o1);
+    appRevisionRepository.startSynced();
+
+    interfaceAppsRepository.setDataCenters(tuple.o1);
+    interfaceAppsRepository.startSynced();
+
+    pushEnableSet.set(tuple.o2);
+    LOG.info("metadata cache finish startSynced.");
   }
 
   public void waitSynced() {
@@ -88,6 +146,7 @@ public class MetadataCacheRegistry {
       if (CollectionUtils.isEmpty(registers)) {
         return;
       }
+
       Map<String, Future<Boolean>> futures = doRegister(registers);
 
       for (Entry<String, Future<Boolean>> entry : futures.entrySet()) {
@@ -141,6 +200,24 @@ public class MetadataCacheRegistry {
     return futures;
   }
 
+  private class MultiSyncInfoReloadWorker extends LoopRunnable {
+
+    @Override
+    public void runUnthrowable() {
+      Tuple<Set<String>, Set<String>> tuple = getMetadataDataCenters();
+      appRevisionRepository.setDataCenters(tuple.o1);
+      interfaceAppsRepository.setDataCenters(tuple.o1);
+
+      pushEnableSet.set(tuple.o2);
+    }
+
+    @Override
+    public void waitingUnthrowable() {
+      ConcurrentUtils.sleepUninterruptibly(
+          multiClusterSessionServerConfig.getMultiClusterConfigReloadSecs(), TimeUnit.SECONDS);
+    }
+  }
+
   /**
    * Setter method for property <tt>appRevisionRepository</tt>.
    *
@@ -173,6 +250,42 @@ public class MetadataCacheRegistry {
   @VisibleForTesting
   public MetadataCacheRegistry setExecutorManager(ExecutorManager executorManager) {
     this.executorManager = executorManager;
+    return this;
+  }
+
+  /**
+   * Setter method for property <tt>multiClusterSyncRepository</tt>.
+   *
+   * @param multiClusterSyncRepository value to be assigned to property multiClusterSyncRepository
+   */
+  @VisibleForTesting
+  public MetadataCacheRegistry setMultiClusterSyncRepository(
+      MultiClusterSyncRepository multiClusterSyncRepository) {
+    this.multiClusterSyncRepository = multiClusterSyncRepository;
+    return this;
+  }
+
+  /**
+   * Setter method for property <tt>defaultCommonConfig</tt>.
+   *
+   * @param defaultCommonConfig value to be assigned to property defaultCommonConfig
+   */
+  @VisibleForTesting
+  public MetadataCacheRegistry setDefaultCommonConfig(DefaultCommonConfig defaultCommonConfig) {
+    this.defaultCommonConfig = defaultCommonConfig;
+    return this;
+  }
+
+  /**
+   * Setter method for property <tt>multiClusterSessionServerConfig</tt>.
+   *
+   * @param multiClusterSessionServerConfig value to be assigned to property
+   *     multiClusterSessionServerConfig
+   */
+  @VisibleForTesting
+  public MetadataCacheRegistry setMultiClusterSessionServerConfig(
+      MultiClusterSessionServerConfig multiClusterSessionServerConfig) {
+    this.multiClusterSessionServerConfig = multiClusterSessionServerConfig;
     return this;
   }
 }

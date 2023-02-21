@@ -29,8 +29,7 @@ import com.alipay.sofa.registry.common.model.store.UnPublisher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
-import com.alipay.sofa.registry.server.data.cache.DatumCache;
-import com.alipay.sofa.registry.server.data.cache.DatumStorage;
+import com.alipay.sofa.registry.server.data.cache.DatumStorageDelegate;
 import com.alipay.sofa.registry.server.data.slot.SlotManager;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
@@ -59,9 +58,7 @@ public class DatumApiResource {
 
   @Autowired DataServerConfig dataServerConfig;
 
-  @Autowired DatumCache datumCache;
-
-  @Autowired DatumStorage localDatumStorage;
+  @Autowired DatumStorageDelegate datumStorageDelegate;
 
   @Autowired AbstractServerHandler batchPutDataHandler;
 
@@ -82,7 +79,7 @@ public class DatumApiResource {
       return CommonResponse.buildFailedResponse(e.getMessage());
     }
 
-    Datum datum = datumCache.get(datumParam.getDataCenter(), datumParam.getDataInfoId());
+    Datum datum = datumStorageDelegate.get(datumParam.getDataCenter(), datumParam.getDataInfoId());
     if (datum == null) {
       return getNotFoundResponse(datumParam);
     }
@@ -98,7 +95,7 @@ public class DatumApiResource {
       dataCenter = dataServerConfig.getLocalDataCenter();
     }
 
-    Map<String, Map<String, Integer>> pubCount = datumCache.getPubCount();
+    Map<String, Map<String, Integer>> pubCount = datumStorageDelegate.getLocalPubCount();
     return pubCount.get(dataCenter);
   }
 
@@ -118,13 +115,13 @@ public class DatumApiResource {
       return CommonResponse.buildFailedResponse(e.getMessage());
     }
 
-    Datum datum = datumCache.get(datumParam.getDataCenter(), datumParam.getDataInfoId());
+    Datum datum = datumStorageDelegate.get(datumParam.getDataCenter(), datumParam.getDataInfoId());
     if (datum == null) {
       return getNotFoundResponse(datumParam);
     }
-    datumCache.clean(datumParam.getDataCenter(), datumParam.getDataInfoId());
+    datumStorageDelegate.cleanLocal(datumParam.getDataCenter(), datumParam.getDataInfoId());
     // get the newly datum
-    datum = datumCache.get(datumParam.getDataCenter(), datumParam.getDataInfoId());
+    datum = datumStorageDelegate.get(datumParam.getDataCenter(), datumParam.getDataInfoId());
     return createResponse(datum);
   }
 
@@ -147,7 +144,8 @@ public class DatumApiResource {
       validateAndCorrect(datumParam);
 
       // build pub
-      Datum datum = datumCache.get(datumParam.getDataCenter(), datumParam.getDataInfoId());
+      Datum datum =
+          datumStorageDelegate.get(datumParam.getDataCenter(), datumParam.getDataInfoId());
       if (datum == null) {
         return getNotFoundResponse(datumParam);
       }
@@ -155,7 +153,7 @@ public class DatumApiResource {
 
       // build request and invoke
       final int slotId = slotManager.slotOf(publisher.getDataInfoId());
-      final Slot slot = slotManager.getSlot(slotId);
+      final Slot slot = slotManager.getSlot(dataServerConfig.getLocalDataCenter(), slotId);
       BatchRequest batchRequest =
           new BatchRequest(
               publisher.getSessionProcessId(), slotId, Collections.singletonList(publisher));
@@ -163,7 +161,7 @@ public class DatumApiResource {
       batchRequest.setSlotLeaderEpoch(slot.getLeaderEpoch());
       batchPutDataHandler.doHandle(null, batchRequest);
       // get the newly datum
-      datum = datumCache.get(datumParam.getDataCenter(), datumParam.getDataInfoId());
+      datum = datumStorageDelegate.get(datumParam.getDataCenter(), datumParam.getDataInfoId());
       return createResponse(datum);
     } catch (RuntimeException e) {
       LOGGER.error(e.getMessage(), e);
@@ -185,7 +183,8 @@ public class DatumApiResource {
       validateAndCorrect(datumParam);
 
       // build pub
-      Datum datum = datumCache.get(datumParam.getDataCenter(), datumParam.getDataInfoId());
+      Datum datum =
+          datumStorageDelegate.get(datumParam.getDataCenter(), datumParam.getDataInfoId());
       if (datum == null) {
         return getNotFoundResponse(datumParam);
       }
@@ -193,7 +192,7 @@ public class DatumApiResource {
 
       // build request and invoke
       final int slotId = slotManager.slotOf(publisher.getDataInfoId());
-      final Slot slot = slotManager.getSlot(slotId);
+      final Slot slot = slotManager.getSlot(dataServerConfig.getLocalDataCenter(), slotId);
       BatchRequest batchRequest =
           new BatchRequest(
               publisher.getSessionProcessId(), slotId, Collections.singletonList(publisher));
@@ -201,7 +200,7 @@ public class DatumApiResource {
       batchRequest.setSlotLeaderEpoch(slot.getLeaderEpoch());
       batchPutDataHandler.doHandle(null, batchRequest);
       // get the newly datum
-      datum = datumCache.get(datumParam.getDataCenter(), datumParam.getDataInfoId());
+      datum = datumStorageDelegate.get(datumParam.getDataCenter(), datumParam.getDataInfoId());
       return createResponse(datum);
     } catch (RuntimeException e) {
       LOGGER.error(e.getMessage(), e);
@@ -225,7 +224,8 @@ public class DatumApiResource {
   private Map<String, Long> _getDatumVersions(DatumParam datumParam) {
     Map<String, Long> datumVersions = new HashMap<>();
     if (dataServerConfig.isLocalDataCenter(datumParam.getDataCenter())) {
-      Map<String, Datum> localDatums = localDatumStorage.getAll();
+      Map<String, Datum> localDatums =
+          datumStorageDelegate.getAll(dataServerConfig.getLocalDataCenter());
       return DatumUtils.getVersions(localDatums);
     } else {
       // TODO need support remote datecenter
@@ -252,7 +252,8 @@ public class DatumApiResource {
   public Object getDatumSizes() {
     Map<String, Integer> datumSizes = new HashMap<>();
 
-    Map<String, Datum> localDatums = localDatumStorage.getAll();
+    Map<String, Datum> localDatums =
+        datumStorageDelegate.getAll(dataServerConfig.getLocalDataCenter());
     int localDatumSize = localDatums.size();
     datumSizes.put(dataServerConfig.getLocalDataCenter(), localDatumSize);
     // TODO remote cluster
@@ -272,7 +273,8 @@ public class DatumApiResource {
     String dataServer = null;
     Long version = null;
     if (dataServerConfig.isLocalDataCenter(datumParam.getDataCenter())) {
-      Map<String, Datum> localDatums = localDatumStorage.getAll();
+      Map<String, Datum> localDatums =
+          datumStorageDelegate.getAll(dataServerConfig.getLocalDataCenter());
       Datum datum = localDatums.get(datumParam.getDataInfoId());
       if (datum != null) {
         version = datum.getVersion();

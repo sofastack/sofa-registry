@@ -33,6 +33,12 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
   }
 
   @java.lang.Override
+  @SuppressWarnings({"unused"})
+  protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    return new SubscriberRegisterPb();
+  }
+
+  @java.lang.Override
   public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
     return this.unknownFields;
   }
@@ -45,7 +51,6 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
     if (extensionRegistry == null) {
       throw new java.lang.NullPointerException();
     }
-    int mutable_bitField0_ = 0;
     com.google.protobuf.UnknownFieldSet.Builder unknownFields =
         com.google.protobuf.UnknownFieldSet.newBuilder();
     try {
@@ -56,13 +61,6 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
           case 0:
             done = true;
             break;
-          default:
-            {
-              if (!parseUnknownFieldProto3(input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
           case 10:
             {
               java.lang.String s = input.readStringRequireUtf8();
@@ -95,6 +93,18 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
               acceptEncoding_ = s;
               break;
             }
+          case 32:
+            {
+              acceptMulti_ = input.readBool();
+              break;
+            }
+          default:
+            {
+              if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
         }
       }
     } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -112,6 +122,7 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
         .internal_static_SubscriberRegisterPb_descriptor;
   }
 
+  @java.lang.Override
   protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internalGetFieldAccessorTable() {
     return com.alipay.sofa.registry.common.model.client.pb.SubscriberRegisterPbOuterClass
@@ -123,7 +134,12 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
 
   public static final int SCOPE_FIELD_NUMBER = 1;
   private volatile java.lang.Object scope_;
-  /** <code>string scope = 1;</code> */
+  /**
+   * <code>string scope = 1;</code>
+   *
+   * @return The scope.
+   */
+  @java.lang.Override
   public java.lang.String getScope() {
     java.lang.Object ref = scope_;
     if (ref instanceof java.lang.String) {
@@ -135,7 +151,12 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
       return s;
     }
   }
-  /** <code>string scope = 1;</code> */
+  /**
+   * <code>string scope = 1;</code>
+   *
+   * @return The bytes for scope.
+   */
+  @java.lang.Override
   public com.google.protobuf.ByteString getScopeBytes() {
     java.lang.Object ref = scope_;
     if (ref instanceof java.lang.String) {
@@ -150,17 +171,28 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
 
   public static final int BASEREGISTER_FIELD_NUMBER = 2;
   private com.alipay.sofa.registry.common.model.client.pb.BaseRegisterPb baseRegister_;
-  /** <code>.BaseRegisterPb baseRegister = 2;</code> */
+  /**
+   * <code>.BaseRegisterPb baseRegister = 2;</code>
+   *
+   * @return Whether the baseRegister field is set.
+   */
+  @java.lang.Override
   public boolean hasBaseRegister() {
     return baseRegister_ != null;
   }
-  /** <code>.BaseRegisterPb baseRegister = 2;</code> */
+  /**
+   * <code>.BaseRegisterPb baseRegister = 2;</code>
+   *
+   * @return The baseRegister.
+   */
+  @java.lang.Override
   public com.alipay.sofa.registry.common.model.client.pb.BaseRegisterPb getBaseRegister() {
     return baseRegister_ == null
         ? com.alipay.sofa.registry.common.model.client.pb.BaseRegisterPb.getDefaultInstance()
         : baseRegister_;
   }
   /** <code>.BaseRegisterPb baseRegister = 2;</code> */
+  @java.lang.Override
   public com.alipay.sofa.registry.common.model.client.pb.BaseRegisterPbOrBuilder
       getBaseRegisterOrBuilder() {
     return getBaseRegister();
@@ -168,7 +200,12 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
 
   public static final int ACCEPTENCODING_FIELD_NUMBER = 3;
   private volatile java.lang.Object acceptEncoding_;
-  /** <code>string acceptEncoding = 3;</code> */
+  /**
+   * <code>string acceptEncoding = 3;</code>
+   *
+   * @return The acceptEncoding.
+   */
+  @java.lang.Override
   public java.lang.String getAcceptEncoding() {
     java.lang.Object ref = acceptEncoding_;
     if (ref instanceof java.lang.String) {
@@ -180,7 +217,12 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
       return s;
     }
   }
-  /** <code>string acceptEncoding = 3;</code> */
+  /**
+   * <code>string acceptEncoding = 3;</code>
+   *
+   * @return The bytes for acceptEncoding.
+   */
+  @java.lang.Override
   public com.google.protobuf.ByteString getAcceptEncodingBytes() {
     java.lang.Object ref = acceptEncoding_;
     if (ref instanceof java.lang.String) {
@@ -193,8 +235,21 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
     }
   }
 
+  public static final int ACCEPTMULTI_FIELD_NUMBER = 4;
+  private boolean acceptMulti_;
+  /**
+   * <code>bool acceptMulti = 4;</code>
+   *
+   * @return The acceptMulti.
+   */
+  @java.lang.Override
+  public boolean getAcceptMulti() {
+    return acceptMulti_;
+  }
+
   private byte memoizedIsInitialized = -1;
 
+  @java.lang.Override
   public final boolean isInitialized() {
     byte isInitialized = memoizedIsInitialized;
     if (isInitialized == 1) return true;
@@ -204,6 +259,7 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
     return true;
   }
 
+  @java.lang.Override
   public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
     if (!getScopeBytes().isEmpty()) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 1, scope_);
@@ -214,9 +270,13 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
     if (!getAcceptEncodingBytes().isEmpty()) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 3, acceptEncoding_);
     }
+    if (acceptMulti_ != false) {
+      output.writeBool(4, acceptMulti_);
+    }
     unknownFields.writeTo(output);
   }
 
+  @java.lang.Override
   public int getSerializedSize() {
     int size = memoizedSize;
     if (size != -1) return size;
@@ -230,6 +290,9 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
     }
     if (!getAcceptEncodingBytes().isEmpty()) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, acceptEncoding_);
+    }
+    if (acceptMulti_ != false) {
+      size += com.google.protobuf.CodedOutputStream.computeBoolSize(4, acceptMulti_);
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -247,15 +310,15 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
     com.alipay.sofa.registry.common.model.client.pb.SubscriberRegisterPb other =
         (com.alipay.sofa.registry.common.model.client.pb.SubscriberRegisterPb) obj;
 
-    boolean result = true;
-    result = result && getScope().equals(other.getScope());
-    result = result && (hasBaseRegister() == other.hasBaseRegister());
+    if (!getScope().equals(other.getScope())) return false;
+    if (hasBaseRegister() != other.hasBaseRegister()) return false;
     if (hasBaseRegister()) {
-      result = result && getBaseRegister().equals(other.getBaseRegister());
+      if (!getBaseRegister().equals(other.getBaseRegister())) return false;
     }
-    result = result && getAcceptEncoding().equals(other.getAcceptEncoding());
-    result = result && unknownFields.equals(other.unknownFields);
-    return result;
+    if (!getAcceptEncoding().equals(other.getAcceptEncoding())) return false;
+    if (getAcceptMulti() != other.getAcceptMulti()) return false;
+    if (!unknownFields.equals(other.unknownFields)) return false;
+    return true;
   }
 
   @java.lang.Override
@@ -273,6 +336,8 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
     }
     hash = (37 * hash) + ACCEPTENCODING_FIELD_NUMBER;
     hash = (53 * hash) + getAcceptEncoding().hashCode();
+    hash = (37 * hash) + ACCEPTMULTI_FIELD_NUMBER;
+    hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(getAcceptMulti());
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -351,6 +416,7 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
         PARSER, input, extensionRegistry);
   }
 
+  @java.lang.Override
   public Builder newBuilderForType() {
     return newBuilder();
   }
@@ -364,6 +430,7 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
     return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
   }
 
+  @java.lang.Override
   public Builder toBuilder() {
     return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
   }
@@ -383,6 +450,7 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
           .internal_static_SubscriberRegisterPb_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return com.alipay.sofa.registry.common.model.client.pb.SubscriberRegisterPbOuterClass
@@ -407,6 +475,7 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
       if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {}
     }
 
+    @java.lang.Override
     public Builder clear() {
       super.clear();
       scope_ = "";
@@ -419,20 +488,25 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
       }
       acceptEncoding_ = "";
 
+      acceptMulti_ = false;
+
       return this;
     }
 
+    @java.lang.Override
     public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
       return com.alipay.sofa.registry.common.model.client.pb.SubscriberRegisterPbOuterClass
           .internal_static_SubscriberRegisterPb_descriptor;
     }
 
+    @java.lang.Override
     public com.alipay.sofa.registry.common.model.client.pb.SubscriberRegisterPb
         getDefaultInstanceForType() {
       return com.alipay.sofa.registry.common.model.client.pb.SubscriberRegisterPb
           .getDefaultInstance();
     }
 
+    @java.lang.Override
     public com.alipay.sofa.registry.common.model.client.pb.SubscriberRegisterPb build() {
       com.alipay.sofa.registry.common.model.client.pb.SubscriberRegisterPb result = buildPartial();
       if (!result.isInitialized()) {
@@ -441,6 +515,7 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
       return result;
     }
 
+    @java.lang.Override
     public com.alipay.sofa.registry.common.model.client.pb.SubscriberRegisterPb buildPartial() {
       com.alipay.sofa.registry.common.model.client.pb.SubscriberRegisterPb result =
           new com.alipay.sofa.registry.common.model.client.pb.SubscriberRegisterPb(this);
@@ -451,37 +526,45 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
         result.baseRegister_ = baseRegisterBuilder_.build();
       }
       result.acceptEncoding_ = acceptEncoding_;
+      result.acceptMulti_ = acceptMulti_;
       onBuilt();
       return result;
     }
 
+    @java.lang.Override
     public Builder clone() {
-      return (Builder) super.clone();
+      return super.clone();
     }
 
+    @java.lang.Override
     public Builder setField(
         com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
-      return (Builder) super.setField(field, value);
+      return super.setField(field, value);
     }
 
+    @java.lang.Override
     public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
-      return (Builder) super.clearField(field);
+      return super.clearField(field);
     }
 
+    @java.lang.Override
     public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-      return (Builder) super.clearOneof(oneof);
+      return super.clearOneof(oneof);
     }
 
+    @java.lang.Override
     public Builder setRepeatedField(
         com.google.protobuf.Descriptors.FieldDescriptor field, int index, java.lang.Object value) {
-      return (Builder) super.setRepeatedField(field, index, value);
+      return super.setRepeatedField(field, index, value);
     }
 
+    @java.lang.Override
     public Builder addRepeatedField(
         com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
-      return (Builder) super.addRepeatedField(field, value);
+      return super.addRepeatedField(field, value);
     }
 
+    @java.lang.Override
     public Builder mergeFrom(com.google.protobuf.Message other) {
       if (other instanceof com.alipay.sofa.registry.common.model.client.pb.SubscriberRegisterPb) {
         return mergeFrom(
@@ -508,15 +591,20 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
         acceptEncoding_ = other.acceptEncoding_;
         onChanged();
       }
+      if (other.getAcceptMulti() != false) {
+        setAcceptMulti(other.getAcceptMulti());
+      }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
       return this;
     }
 
+    @java.lang.Override
     public final boolean isInitialized() {
       return true;
     }
 
+    @java.lang.Override
     public Builder mergeFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -538,7 +626,11 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
     }
 
     private java.lang.Object scope_ = "";
-    /** <code>string scope = 1;</code> */
+    /**
+     * <code>string scope = 1;</code>
+     *
+     * @return The scope.
+     */
     public java.lang.String getScope() {
       java.lang.Object ref = scope_;
       if (!(ref instanceof java.lang.String)) {
@@ -550,7 +642,11 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
         return (java.lang.String) ref;
       }
     }
-    /** <code>string scope = 1;</code> */
+    /**
+     * <code>string scope = 1;</code>
+     *
+     * @return The bytes for scope.
+     */
     public com.google.protobuf.ByteString getScopeBytes() {
       java.lang.Object ref = scope_;
       if (ref instanceof String) {
@@ -562,7 +658,12 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
         return (com.google.protobuf.ByteString) ref;
       }
     }
-    /** <code>string scope = 1;</code> */
+    /**
+     * <code>string scope = 1;</code>
+     *
+     * @param value The scope to set.
+     * @return This builder for chaining.
+     */
     public Builder setScope(java.lang.String value) {
       if (value == null) {
         throw new NullPointerException();
@@ -572,14 +673,23 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
       onChanged();
       return this;
     }
-    /** <code>string scope = 1;</code> */
+    /**
+     * <code>string scope = 1;</code>
+     *
+     * @return This builder for chaining.
+     */
     public Builder clearScope() {
 
       scope_ = getDefaultInstance().getScope();
       onChanged();
       return this;
     }
-    /** <code>string scope = 1;</code> */
+    /**
+     * <code>string scope = 1;</code>
+     *
+     * @param value The bytes for scope to set.
+     * @return This builder for chaining.
+     */
     public Builder setScopeBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
         throw new NullPointerException();
@@ -591,17 +701,25 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
       return this;
     }
 
-    private com.alipay.sofa.registry.common.model.client.pb.BaseRegisterPb baseRegister_ = null;
+    private com.alipay.sofa.registry.common.model.client.pb.BaseRegisterPb baseRegister_;
     private com.google.protobuf.SingleFieldBuilderV3<
             com.alipay.sofa.registry.common.model.client.pb.BaseRegisterPb,
             com.alipay.sofa.registry.common.model.client.pb.BaseRegisterPb.Builder,
             com.alipay.sofa.registry.common.model.client.pb.BaseRegisterPbOrBuilder>
         baseRegisterBuilder_;
-    /** <code>.BaseRegisterPb baseRegister = 2;</code> */
+    /**
+     * <code>.BaseRegisterPb baseRegister = 2;</code>
+     *
+     * @return Whether the baseRegister field is set.
+     */
     public boolean hasBaseRegister() {
       return baseRegisterBuilder_ != null || baseRegister_ != null;
     }
-    /** <code>.BaseRegisterPb baseRegister = 2;</code> */
+    /**
+     * <code>.BaseRegisterPb baseRegister = 2;</code>
+     *
+     * @return The baseRegister.
+     */
     public com.alipay.sofa.registry.common.model.client.pb.BaseRegisterPb getBaseRegister() {
       if (baseRegisterBuilder_ == null) {
         return baseRegister_ == null
@@ -707,7 +825,11 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
     }
 
     private java.lang.Object acceptEncoding_ = "";
-    /** <code>string acceptEncoding = 3;</code> */
+    /**
+     * <code>string acceptEncoding = 3;</code>
+     *
+     * @return The acceptEncoding.
+     */
     public java.lang.String getAcceptEncoding() {
       java.lang.Object ref = acceptEncoding_;
       if (!(ref instanceof java.lang.String)) {
@@ -719,7 +841,11 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
         return (java.lang.String) ref;
       }
     }
-    /** <code>string acceptEncoding = 3;</code> */
+    /**
+     * <code>string acceptEncoding = 3;</code>
+     *
+     * @return The bytes for acceptEncoding.
+     */
     public com.google.protobuf.ByteString getAcceptEncodingBytes() {
       java.lang.Object ref = acceptEncoding_;
       if (ref instanceof String) {
@@ -731,7 +857,12 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
         return (com.google.protobuf.ByteString) ref;
       }
     }
-    /** <code>string acceptEncoding = 3;</code> */
+    /**
+     * <code>string acceptEncoding = 3;</code>
+     *
+     * @param value The acceptEncoding to set.
+     * @return This builder for chaining.
+     */
     public Builder setAcceptEncoding(java.lang.String value) {
       if (value == null) {
         throw new NullPointerException();
@@ -741,14 +872,23 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
       onChanged();
       return this;
     }
-    /** <code>string acceptEncoding = 3;</code> */
+    /**
+     * <code>string acceptEncoding = 3;</code>
+     *
+     * @return This builder for chaining.
+     */
     public Builder clearAcceptEncoding() {
 
       acceptEncoding_ = getDefaultInstance().getAcceptEncoding();
       onChanged();
       return this;
     }
-    /** <code>string acceptEncoding = 3;</code> */
+    /**
+     * <code>string acceptEncoding = 3;</code>
+     *
+     * @param value The bytes for acceptEncoding to set.
+     * @return This builder for chaining.
+     */
     public Builder setAcceptEncodingBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
         throw new NullPointerException();
@@ -760,10 +900,46 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
       return this;
     }
 
-    public final Builder setUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {
-      return super.setUnknownFieldsProto3(unknownFields);
+    private boolean acceptMulti_;
+    /**
+     * <code>bool acceptMulti = 4;</code>
+     *
+     * @return The acceptMulti.
+     */
+    @java.lang.Override
+    public boolean getAcceptMulti() {
+      return acceptMulti_;
+    }
+    /**
+     * <code>bool acceptMulti = 4;</code>
+     *
+     * @param value The acceptMulti to set.
+     * @return This builder for chaining.
+     */
+    public Builder setAcceptMulti(boolean value) {
+
+      acceptMulti_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>bool acceptMulti = 4;</code>
+     *
+     * @return This builder for chaining.
+     */
+    public Builder clearAcceptMulti() {
+
+      acceptMulti_ = false;
+      onChanged();
+      return this;
     }
 
+    @java.lang.Override
+    public final Builder setUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {
+      return super.setUnknownFields(unknownFields);
+    }
+
+    @java.lang.Override
     public final Builder mergeUnknownFields(
         final com.google.protobuf.UnknownFieldSet unknownFields) {
       return super.mergeUnknownFields(unknownFields);
@@ -787,6 +963,7 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
 
   private static final com.google.protobuf.Parser<SubscriberRegisterPb> PARSER =
       new com.google.protobuf.AbstractParser<SubscriberRegisterPb>() {
+        @java.lang.Override
         public SubscriberRegisterPb parsePartialFrom(
             com.google.protobuf.CodedInputStream input,
             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -804,6 +981,7 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
     return PARSER;
   }
 
+  @java.lang.Override
   public com.alipay.sofa.registry.common.model.client.pb.SubscriberRegisterPb
       getDefaultInstanceForType() {
     return DEFAULT_INSTANCE;

@@ -16,12 +16,15 @@
  */
 package com.alipay.sofa.registry.server.session.cache;
 
+import com.alipay.sofa.registry.common.model.store.MultiSubDatum;
 import com.alipay.sofa.registry.common.model.store.SubDatum;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.node.service.DataNodeService;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
+import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
 
 /**
  * @author shangyu.wh
@@ -38,26 +41,33 @@ public class DatumCacheGenerator implements CacheGenerator {
     if (entityType instanceof DatumKey) {
       DatumKey datumKey = (DatumKey) entityType;
 
-      final String dataCenter = datumKey.getDataCenter();
+      final Set<String> dataCenters = datumKey.getDataCenters();
       final String dataInfoId = datumKey.getDataInfoId();
-      ParaCheckUtil.checkNotBlank(dataCenter, "dataCenter");
+      ParaCheckUtil.checkNotEmpty(dataCenters, "dataCenter");
       ParaCheckUtil.checkNotBlank(dataInfoId, "dataInfoId");
       final long now = System.currentTimeMillis();
-      SubDatum datum = dataNodeService.fetch(dataInfoId, dataCenter);
+      MultiSubDatum datum = dataNodeService.fetch(dataInfoId, dataCenters);
       final long span = System.currentTimeMillis() - now;
-      if (datum == null) {
-        LOGGER.info("loadNil,{},{},span={}", dataInfoId, dataCenter, span);
+      if (datum == null || CollectionUtils.isEmpty(datum.getDatumMap())) {
+        LOGGER.info("loadNil,{},{},span={}", dataInfoId, dataCenters, span);
       } else {
+        for (String dataCenter : dataCenters) {
+          SubDatum subDatum = datum.getSubDatum(dataCenter);
+          // some datacenter datum not exist
+          if (subDatum == null) {
+            LOGGER.info("loadNil,{},{},span={}", dataInfoId, dataCenter, span);
+          }
+        }
         LOGGER.info(
             "loadD,{},{},{},{},{},span={}",
             dataInfoId,
-            dataCenter,
+            dataCenters,
             datum.getPubNum(),
             datum.getDataBoxBytes(),
             datum.getVersion(),
             span);
       }
-      return new Value((SubDatum) datum);
+      return new Value(datum);
     }
     throw new IllegalArgumentException("unsupported key type:" + entityType);
   }

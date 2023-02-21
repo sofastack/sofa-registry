@@ -22,7 +22,7 @@ import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
-import com.alipay.sofa.registry.server.data.cache.DatumCache;
+import com.alipay.sofa.registry.server.data.cache.DatumStorageDelegate;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.LoopRunnable;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
@@ -46,7 +46,7 @@ public class CacheCountTask {
       LoggerFactory.getLogger(CacheCountTask.class, "[CacheCountTask]");
   private static final Logger COUNT_LOGGER = LoggerFactory.getLogger("CACHE-COUNT");
 
-  @Autowired private DatumCache datumCache;
+  @Autowired private DatumStorageDelegate datumStorageDelegate;
 
   @Autowired private DataServerConfig dataServerConfig;
 
@@ -78,40 +78,42 @@ public class CacheCountTask {
     }
   }
 
-  boolean printTotal() {
-    Map<String, Map<String, List<Publisher>>> allMap = datumCache.getAllPublisher();
-    Map<String, List<Publisher>> pubs = allMap.get(dataServerConfig.getLocalDataCenter());
-    if (pubs.isEmpty()) {
-      COUNT_LOGGER.info(
-          "[Total]{},pubs={},dataIds={}", dataServerConfig.getLocalDataCenter(), 0, 0);
-      return false;
+  void printTotal() {
+    Map<String, Map<String, List<Publisher>>> allMap = datumStorageDelegate.getAllPublisher();
+
+    for (Entry<String, Map<String, List<Publisher>>> entry : allMap.entrySet()) {
+      String dataCenter = entry.getKey();
+      Map<String, List<Publisher>> pubs = entry.getValue();
+      if (pubs.isEmpty()) {
+        COUNT_LOGGER.info("[Total]{},pubs={},dataIds={}", dataCenter, 0, 0);
+        continue;
+      }
+      int pubCount = pubs.values().stream().mapToInt(p -> p.size()).sum();
+      COUNT_LOGGER.info("[Total]{},pubs={},dataIds={}", dataCenter, pubCount, pubs.size());
     }
-    int pubCount = pubs.values().stream().mapToInt(p -> p.size()).sum();
-    COUNT_LOGGER.info(
-        "[Total]{},pubs={},dataIds={}",
-        dataServerConfig.getLocalDataCenter(),
-        pubCount,
-        pubs.size());
-    return true;
   }
 
   boolean count() {
     try {
-      Map<String, Map<String, List<Publisher>>> allMap = datumCache.getAllPublisher();
+      Map<String, Map<String, List<Publisher>>> allMap = datumStorageDelegate.getAllPublisher();
       if (!allMap.isEmpty()) {
+        Metrics.PUB_GAUGE.clear();
+        Metrics.PUB_DATA_ID_GAUGE.clear();
         for (Entry<String, Map<String, List<Publisher>>> dataCenterEntry : allMap.entrySet()) {
           final String dataCenter = dataCenterEntry.getKey();
-          List<Publisher> all = new ArrayList<>(512);
+          List<Publisher> pubs = new ArrayList<>(512);
           for (List<Publisher> publishers : dataCenterEntry.getValue().values()) {
-            all.addAll(publishers);
+            pubs.addAll(publishers);
           }
+
+          /** instanceId/group - > {info.count,dataInfoId.count} */
           Map<String, Map<String, Tuple<Integer, Integer>>> groupCounts =
-              DataUtils.countGroupByInstanceIdGroup(all);
-          printGroupCount(dataCenter, groupCounts);
+              DataUtils.countGroupByInstanceIdGroup(pubs);
+          printGroupCount(dataServerConfig.getLocalDataCenter(), dataCenter, groupCounts);
 
           Map<String, Map<String, Map<String, Tuple<Integer, Integer>>>> counts =
-              DataUtils.countGroupByInstanceIdGroupApp(all);
-          printGroupAppCount(dataCenter, counts);
+              DataUtils.countGroupByInstanceIdGroupApp(pubs);
+          printGroupAppCount(dataServerConfig.getLocalDataCenter(), dataCenter, counts);
         }
       } else {
         LOGGER.info("datum cache is empty");
@@ -123,8 +125,11 @@ public class CacheCountTask {
     return false;
   }
 
+  /** instanceId/group - > {info.count,dataInfoId.count} */
   private static void printGroupAppCount(
-      String dataCenter, Map<String, Map<String, Map<String, Tuple<Integer, Integer>>>> counts) {
+      String local,
+      String dataCenter,
+      Map<String, Map<String, Map<String, Tuple<Integer, Integer>>>> counts) {
     for (Entry<String, Map<String, Map<String, Tuple<Integer, Integer>>>> count :
         counts.entrySet()) {
       final String instanceId = count.getKey();
@@ -135,7 +140,8 @@ public class CacheCountTask {
           final String app = apps.getKey();
           Tuple<Integer, Integer> tupleCount = apps.getValue();
           COUNT_LOGGER.info(
-              "[Pub]{},{},{},{},{},{}",
+              "[Pub]local={},{},{},{},{},{},{}",
+              local,
               dataCenter,
               instanceId,
               group,
@@ -148,20 +154,20 @@ public class CacheCountTask {
     }
   }
 
+  /** instanceId/group - > {info.count,dataInfoId.count} */
   private static void printGroupCount(
-      String dataCenter, Map<String, Map<String, Tuple<Integer, Integer>>> counts) {
-    Metrics.PUB_GAUGE.clear();
-    Metrics.PUB_DATA_ID_GAUGE.clear();
+      String local, String dataCenter, Map<String, Map<String, Tuple<Integer, Integer>>> counts) {
     for (Map.Entry<String, Map<String, Tuple<Integer, Integer>>> count : counts.entrySet()) {
       final String instanceId = count.getKey();
       Map<String, Tuple<Integer, Integer>> groupCounts = count.getValue();
       for (Entry<String, Tuple<Integer, Integer>> groupCount : groupCounts.entrySet()) {
         final String group = groupCount.getKey();
         Tuple<Integer, Integer> tupleCount = groupCount.getValue();
-        Metrics.PUB_GAUGE.labels(dataCenter, instanceId, group).set(tupleCount.o1);
-        Metrics.PUB_DATA_ID_GAUGE.labels(dataCenter, instanceId, group).set(tupleCount.o2);
+        Metrics.PUB_GAUGE.labels(local, dataCenter, instanceId, group).set(tupleCount.o1);
+        Metrics.PUB_DATA_ID_GAUGE.labels(local, dataCenter, instanceId, group).set(tupleCount.o2);
         COUNT_LOGGER.info(
-            "[PubGroup]{},{},{},{},{}",
+            "[PubGroup]local={},{},{},{},{},{}",
+            local,
             dataCenter,
             instanceId,
             group,
@@ -172,8 +178,8 @@ public class CacheCountTask {
   }
 
   @VisibleForTesting
-  void setDatumCache(DatumCache datumCache) {
-    this.datumCache = datumCache;
+  void setDatumCache(DatumStorageDelegate datumStorageDelegate) {
+    this.datumStorageDelegate = datumStorageDelegate;
   }
 
   @VisibleForTesting

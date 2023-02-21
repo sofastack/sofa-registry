@@ -39,32 +39,26 @@ public final class SubscriberRegisterPbOuterClass {
   static {
     java.lang.String[] descriptorData = {
       "\n\032SubscriberRegisterPb.proto\032\024BaseRegist"
-          + "erPb.proto\"d\n\024SubscriberRegisterPb\022\r\n\005sc"
+          + "erPb.proto\"y\n\024SubscriberRegisterPb\022\r\n\005sc"
           + "ope\030\001 \001(\t\022%\n\014baseRegister\030\002 \001(\0132\017.BaseRe"
-          + "gisterPb\022\026\n\016acceptEncoding\030\003 \001(\tB:\n/com."
-          + "alipay.sofa.registry.common.model.client"
-          + ".pbP\001Z\005protob\006proto3"
+          + "gisterPb\022\026\n\016acceptEncoding\030\003 \001(\t\022\023\n\013acce"
+          + "ptMulti\030\004 \001(\010B:\n/com.alipay.sofa.registr"
+          + "y.common.model.client.pbP\001Z\005protob\006proto"
+          + "3"
     };
-    com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
-        new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
-          public com.google.protobuf.ExtensionRegistry assignDescriptors(
-              com.google.protobuf.Descriptors.FileDescriptor root) {
-            descriptor = root;
-            return null;
-          }
-        };
-    com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
-        descriptorData,
-        new com.google.protobuf.Descriptors.FileDescriptor[] {
-          com.alipay.sofa.registry.common.model.client.pb.BaseRegisterPbOuterClass.getDescriptor(),
-        },
-        assigner);
+    descriptor =
+        com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
+            descriptorData,
+            new com.google.protobuf.Descriptors.FileDescriptor[] {
+              com.alipay.sofa.registry.common.model.client.pb.BaseRegisterPbOuterClass
+                  .getDescriptor(),
+            });
     internal_static_SubscriberRegisterPb_descriptor = getDescriptor().getMessageTypes().get(0);
     internal_static_SubscriberRegisterPb_fieldAccessorTable =
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_SubscriberRegisterPb_descriptor,
             new java.lang.String[] {
-              "Scope", "BaseRegister", "AcceptEncoding",
+              "Scope", "BaseRegister", "AcceptEncoding", "AcceptMulti",
             });
     com.alipay.sofa.registry.common.model.client.pb.BaseRegisterPbOuterClass.getDescriptor();
   }

@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.common.model.slot;
 
 import com.alipay.sofa.registry.common.model.dataserver.DatumDigest;
+import com.alipay.sofa.registry.common.model.slot.filter.SyncSlotAcceptorManager;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.Map;
@@ -26,16 +27,40 @@ import java.util.Map;
  * @version v 0.1 2020-11-05 14:24 yuzhi.lyz Exp $
  */
 public class DataSlotDiffDigestRequest implements Serializable {
+
+  private final String localDataCenter;
   private final long slotTableEpoch;
   // all dataInfoIds, diff by digest
   private final Map<String, DatumDigest> datumDigest;
   private final int slotId;
+  private final long slotLeaderEpoch;
+
+  private final SyncSlotAcceptorManager acceptorManager;
 
   public DataSlotDiffDigestRequest(
-      long slotTableEpoch, int slotId, Map<String, DatumDigest> datumDigest) {
+      String localDataCenter,
+      long slotTableEpoch,
+      int slotId,
+      long slotLeaderEpoch,
+      Map<String, DatumDigest> datumDigest,
+      SyncSlotAcceptorManager acceptorManager) {
+    this.localDataCenter = localDataCenter;
     this.slotTableEpoch = slotTableEpoch;
     this.slotId = slotId;
+    this.slotLeaderEpoch = slotLeaderEpoch;
     this.datumDigest = datumDigest == null ? Collections.emptyMap() : datumDigest;
+    this.acceptorManager = acceptorManager;
+  }
+
+  public static DataSlotDiffDigestRequest buildRequest(
+      String localDataCenter,
+      long slotTableEpoch,
+      int slotId,
+      long slotLeaderEpoch,
+      Map<String, DatumDigest> datumDigest,
+      SyncSlotAcceptorManager acceptorManager) {
+    return new DataSlotDiffDigestRequest(
+        localDataCenter, slotTableEpoch, slotId, slotLeaderEpoch, datumDigest, acceptorManager);
   }
 
   /**
@@ -45,6 +70,15 @@ public class DataSlotDiffDigestRequest implements Serializable {
    */
   public int getSlotId() {
     return slotId;
+  }
+
+  /**
+   * Getter method for property <tt>slotLeaderEpoch</tt>.
+   *
+   * @return property value of slotLeaderEpoch
+   */
+  public long getSlotLeaderEpoch() {
+    return slotLeaderEpoch;
   }
 
   /**
@@ -60,15 +94,38 @@ public class DataSlotDiffDigestRequest implements Serializable {
     return Collections.unmodifiableMap(datumDigest);
   }
 
+  /**
+   * Getter method for property <tt>acceptorManager</tt>.
+   *
+   * @return property value of acceptorManager
+   */
+  public SyncSlotAcceptorManager getAcceptorManager() {
+    return acceptorManager;
+  }
+
+  /**
+   * Getter method for property <tt>localDataCenter</tt>.
+   *
+   * @return property value of localDataCenter
+   */
+  public String getLocalDataCenter() {
+    return localDataCenter;
+  }
+
   @Override
   public String toString() {
-    return "DiffDigest{"
-        + "slotId="
-        + slotId
-        + ", epoch="
+    return "DataSlotDiffDigestRequest{"
+        + "localDataCenter='"
+        + localDataCenter
+        + '\''
+        + ", slotTableEpoch="
         + slotTableEpoch
-        + ", digests="
+        + ", datumDigest="
         + datumDigest.size()
+        + ", slotId="
+        + slotId
+        + ", slotLeaderEpoch="
+        + slotLeaderEpoch
         + '}';
   }
 }

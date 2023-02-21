@@ -17,9 +17,11 @@
 package com.alipay.sofa.registry.server.session.remoting.handler;
 
 import com.alipay.sofa.registry.core.model.RegisterResponse;
+import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.core.model.SubscriberRegister;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.session.strategy.SubscriberHandlerStrategy;
+import com.alipay.sofa.registry.util.ParaCheckUtil;
 import java.util.concurrent.Executor;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -37,6 +39,13 @@ public class SubscriberHandler extends AbstractClientDataRequestHandler<Subscrib
     subscriberHandlerStrategy.handleSubscriberRegister(
         channel, subscriberRegister, registerResponse);
     return registerResponse;
+  }
+
+  @Override
+  public void checkParam(SubscriberRegister subscriberRegister) {
+    if (subscriberRegister.acceptMulti()) {
+      ParaCheckUtil.checkEquals(subscriberRegister.getScope(), ScopeEnum.global.name(), "scope");
+    }
   }
 
   @Override

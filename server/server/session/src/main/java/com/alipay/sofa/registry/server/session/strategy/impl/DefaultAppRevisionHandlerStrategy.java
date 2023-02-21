@@ -80,8 +80,8 @@ public class DefaultAppRevisionHandlerStrategy implements AppRevisionHandlerStra
     ParaCheckUtil.checkNotEmpty(services, "services");
     ServiceAppMappingResponse.Builder builder = ServiceAppMappingResponse.newBuilder();
 
-    if (!pushSwitchService.canIpPush(remoteIp)) {
-      builder.setStatusCode(ValueConstants.METADATA_STATUS_METHOD_NOT_ALLOW);
+    if (!pushSwitchService.canIpPushLocal(remoteIp)) {
+      builder.setStatusCode(ValueConstants.METADATA_STATUS_DATA_NOT_FOUND);
       return builder.build();
     }
 

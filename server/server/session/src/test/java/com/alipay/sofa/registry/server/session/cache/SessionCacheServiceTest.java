@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.cache;
 
+import com.alipay.sofa.registry.common.model.store.MultiSubDatum;
 import com.alipay.sofa.registry.common.model.store.SubDatum;
 import com.alipay.sofa.registry.server.session.TestUtils;
 import com.alipay.sofa.registry.server.session.node.service.DataNodeService;
@@ -26,12 +27,12 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 public class SessionCacheServiceTest {
-  private final String dataInfoId = "testDataInfoId";
+  private final String dataInfoId = TestUtils.newDataInfoId("testDataInfoId");
   private final String dataCenter = "testDc";
 
   @Test
   public void testGet() {
-    SessionCacheService cacheService = new SessionCacheService();
+    SessionDatumCacheService cacheService = new SessionDatumCacheService();
     cacheService.sessionServerConfig = TestUtils.newSessionConfig(dataCenter);
 
     DatumCacheGenerator generator = new DatumCacheGenerator();
@@ -39,7 +40,7 @@ public class SessionCacheServiceTest {
     generator.dataNodeService = Mockito.mock(DataNodeService.class);
 
     cacheService.init();
-    DatumKey datumKey = new DatumKey(dataInfoId, dataCenter);
+    DatumKey datumKey = new DatumKey(dataInfoId, Collections.singleton(dataCenter));
     Key key = new Key(DatumKey.class.getName(), datumKey);
     Assert.assertEquals(key, new Key(DatumKey.class.getName(), datumKey));
     Assert.assertTrue(key.toString(), key.toString().contains(dataInfoId));
@@ -53,25 +54,27 @@ public class SessionCacheServiceTest {
     value = cacheService.getValue(key);
     Assert.assertNull(value.getPayload());
 
-    SubDatum subDatum =
-        SubDatum.normalOf(
-            dataInfoId,
-            dataCenter,
-            100,
-            Collections.emptyList(),
-            "testDataId",
-            "testInstanceId",
-            "testGroup",
-            Lists.newArrayList(System.currentTimeMillis()));
+    MultiSubDatum multiSubDatum =
+        MultiSubDatum.of(
+            SubDatum.normalOf(
+                dataInfoId,
+                dataCenter,
+                100,
+                Collections.emptyList(),
+                "testDataId",
+                "testInstanceId",
+                "testGroup",
+                Lists.newArrayList(System.currentTimeMillis())));
 
-    Mockito.when(generator.dataNodeService.fetch(Mockito.anyString(), Mockito.anyString()))
-        .thenReturn(subDatum);
+    Mockito.when(
+            generator.dataNodeService.fetch(Mockito.anyString(), Mockito.anySetOf(String.class)))
+        .thenReturn(multiSubDatum);
     // invalidate the null value
     cacheService.invalidate(key);
     value = cacheService.getValue(key);
-    Assert.assertEquals(value.getPayload(), subDatum);
+    Assert.assertEquals(value.getPayload(), multiSubDatum);
     value = cacheService.getValueIfPresent(key);
-    Assert.assertEquals(value.getPayload(), subDatum);
+    Assert.assertEquals(value.getPayload(), multiSubDatum);
     cacheService.invalidate(key);
 
     value = cacheService.getValueIfPresent(key);
@@ -79,7 +82,7 @@ public class SessionCacheServiceTest {
 
     // touch remove listener
     for (int i = 0; i < 1000; i++) {
-      datumKey = new DatumKey(dataInfoId + ":" + i, dataCenter);
+      datumKey = new DatumKey(dataInfoId + ":" + i, Collections.singleton(dataCenter));
       key = new Key(DatumKey.class.getName(), datumKey);
       cacheService.getValue(key);
     }

@@ -44,8 +44,10 @@ import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataService;
 import com.alipay.sofa.registry.server.meta.slot.balance.BalancePolicy;
 import com.alipay.sofa.registry.server.meta.slot.balance.NaiveBalancePolicy;
 import com.alipay.sofa.registry.server.shared.client.manager.ClientManagerService;
+import com.alipay.sofa.registry.server.shared.config.CommonConfig;
 import com.alipay.sofa.registry.store.api.DBResponse;
 import com.alipay.sofa.registry.store.api.OperationStatus;
+import com.alipay.sofa.registry.store.api.elector.AbstractLeaderElector.LeaderInfo;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
 import com.alipay.sofa.registry.util.JsonUtils;
 import com.alipay.sofa.registry.util.MathUtils;
@@ -93,9 +95,15 @@ public class AbstractMetaServerTestBase extends AbstractTestBase {
 
   protected NodeConfig nodeConfig;
 
+  protected CommonConfig commonConfig;
+
   @Rule public TestName name = new TestName();
 
   private BalancePolicy balancePolicy = new NaiveBalancePolicy();
+
+  protected LeaderInfo leaderInfo =
+      new LeaderInfo(
+          System.currentTimeMillis(), "127.0.0.1", System.currentTimeMillis() + 10 * 1000);
 
   protected PersistenceData mockPersistenceData() {
     String dataInfoId =
@@ -106,6 +114,9 @@ public class AbstractMetaServerTestBase extends AbstractTestBase {
 
   @Before
   public void beforeAbstractMetaServerTest() {
+    commonConfig = mock(CommonConfig.class);
+    when(commonConfig.getLocalDataCenter()).thenReturn(getDc());
+
     metaLeaderService = mock(MetaLeaderService.class);
     nodeConfig = mock(NodeConfig.class);
     metaServerConfig = mock(MetaServerConfig.class);

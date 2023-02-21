@@ -34,16 +34,8 @@ SOFARegistry 是蚂蚁金服开源的一个生产级、高时效、高可用的�
 - [运维手册](https://www.sofastack.tech/sofa-registry/docs/Deployment)
 - [发布历史](https://www.sofastack.tech/sofa-registry/docs/ReleaseNotes)
 - [发展路线](https://www.sofastack.tech/sofa-registry/docs/RoadMap)
-- 源码解析
-   - [发布订阅推送](https://www.sofastack.tech/projects/sofa-registry/code-analyze/code-analyze-publish-subscription-push/)
-   - [registry meta 选主](https://www.sofastack.tech/projects/sofa-registry/code-analyze/code-analyze-registry-meta/)
-   - [SlotTable](https://www.sofastack.tech/projects/sofa-registry/code-analyze/code-analyze-slottable/)
-   - [数据倒排索引](https://www.sofastack.tech/projects/sofa-registry/code-analyze/code-analyze-data-inverted-index/)
-   - [数据表监听](https://www.sofastack.tech/projects/sofa-registry/code-analyze/code-analyza-data-table-listening/)
-   - [无损运维](https://www.sofastack.tech/projects/sofa-registry/code-analyze/code-analyze-non-destructive-o-and-m/)
-   - [推送延迟 trace](https://www.sofastack.tech/projects/sofa-registry/code-analyze/code-analyze-push-delay-trace/)
-   - [推送开关](https://www.sofastack.tech/projects/sofa-registry/code-analyze/code-analyze-push-switch/)
-   - [通讯数据压缩](https://www.sofastack.tech/projects/sofa-registry/code-analyze/code-analyze-communication-data-compression/)
+
+
 ## 贡献
 
 [如何参与 SOFARegistry 代码贡献](https://www.sofastack.tech/sofa-registry/docs/Contributing)

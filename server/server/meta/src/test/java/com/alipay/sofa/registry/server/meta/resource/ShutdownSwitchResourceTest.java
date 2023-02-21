@@ -28,6 +28,7 @@ import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.core.model.Result;
 import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
 import com.alipay.sofa.registry.server.meta.provide.data.DefaultProvideDataNotifier;
+import com.alipay.sofa.registry.server.meta.provide.data.FetchStopPushService;
 import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataService;
 import com.alipay.sofa.registry.store.api.DBResponse;
 import com.alipay.sofa.registry.util.JsonUtils;
@@ -49,13 +50,17 @@ public class ShutdownSwitchResourceTest {
   private ProvideDataService provideDataService =
       spy(new AbstractMetaServerTestBase.InMemoryProvideDataRepo());
 
+  private FetchStopPushService fetchStopPushService = new FetchStopPushService();
+
   @Before
   public void beforeStopPushDataResourceTest() {
     dataNotifier = mock(DefaultProvideDataNotifier.class);
+    fetchStopPushService.setProvideDataService(provideDataService);
     shutdownSwitchResource =
         new ShutdownSwitchResource()
             .setProvideDataNotifier(dataNotifier)
-            .setProvideDataService(provideDataService);
+            .setProvideDataService(provideDataService)
+            .setFetchStopPushService(fetchStopPushService);
   }
 
   @Test

@@ -17,41 +17,10 @@
     </resultMap>
 
     <select id="queryRevision" resultMap="appRevisionResultMap">
-        <![CDATA[
-         select * from app_revision
-                          where data_center = #{dataCenter} and revision = #{revision}
-
-        ]]>
-    </select>
-
-    <select id="batchQuery" parameterType="java.util.List" resultMap="appRevisionResultMap">
-        select * from app_revision where data_center = #{dataCenter}
-        <if test="revisions != null and revisions.size() > 0">
-            and revision in
-            <foreach collection="revisions" index="index" item="item" open="(" separator="," close=")">
-                #{item}
-            </foreach>
-        </if>
-    </select>
-
-
-    <update id="batchHeartbeat" parameterType="java.util.List">
-        update app_revision set gmt_modified = CURRENT_TIMESTAMP
-        where data_center=#{dataCenter}
-        <if test="revisions != null and revisions.size() > 0">
-            and revision in
-            <foreach collection="revisions" index="index" item="item" open="(" separator="," close=")">
-                #{item}
-            </foreach>
-        </if>
-    </update>
-
-
-   <select id="batchCheck" parameterType="java.util.List" resultType="java.lang.String">
-        select revision from app_revision where data_center = #{dataCenter}
-        <if test="revisions != null and revisions.size() > 0">
-            and revision in
-            <foreach collection="revisions" index="index" item="item" open="(" separator="," close=")">
+        select * from app_revision where revision = #{revision}
+        <if test="dataCenters != null and dataCenters.size() > 0">
+            and data_center in
+            <foreach collection="dataCenters" index="index" item="item" open="(" separator="," close=")">
                 #{item}
             </foreach>
         </if>
@@ -96,12 +65,14 @@
                CURRENT_TIMESTAMP
         ) on duplicate key update deleted = #{deleted};
     </insert>
+
     <select id="getExpired" resultMap="appRevisionResultMap">
     <![CDATA[
         select * from app_revision where data_center=#{dataCenter} and gmt_modified < #{beforeTime} and deleted='0'
         limit #{limit}
     ]]>
     </select>
+
     <delete id="cleanDeleted">
         <![CDATA[
         delete from app_revision where data_center=#{dataCenter} and gmt_modified < #{beforeTime} and deleted='1'

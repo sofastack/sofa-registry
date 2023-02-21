@@ -17,7 +17,6 @@
 package com.alipay.sofa.registry.compress;
 
 import com.alipay.sofa.registry.core.model.DataBox;
-import com.alipay.sofa.registry.core.model.ReceivedData;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.alipay.sofa.registry.util.StringUtils;
 import java.util.*;
@@ -51,23 +50,22 @@ public class CompressPushKey implements CompressKey {
     this.byteSize = calcSize();
   }
 
-  public static CompressPushKey of(ReceivedData receivedData, String encode) {
-    List<Map.Entry<String, List<DataBox>>> zoneData =
-        new ArrayList<>(receivedData.getData().entrySet());
+  public static CompressPushKey of(
+      String segment,
+      String dataId,
+      String instanceId,
+      String group,
+      long version,
+      Map<String, List<DataBox>> data,
+      String encode) {
+    List<Map.Entry<String, List<DataBox>>> zoneData = new ArrayList<>(data.entrySet());
     zoneData.sort(Map.Entry.comparingByKey());
     ZoneCount[] zoneCounts = new ZoneCount[zoneData.size()];
     for (int i = 0; i < zoneData.size(); i++) {
       Map.Entry<String, List<DataBox>> entry = zoneData.get(i);
       zoneCounts[i] = new ZoneCount(entry.getKey(), entry.getValue().size());
     }
-    return new CompressPushKey(
-        encode,
-        receivedData.getDataId(),
-        receivedData.getInstanceId(),
-        receivedData.getGroup(),
-        receivedData.getSegment(),
-        receivedData.getVersion(),
-        zoneCounts);
+    return new CompressPushKey(encode, dataId, instanceId, group, segment, version, zoneCounts);
   }
 
   @Override

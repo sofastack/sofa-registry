@@ -23,20 +23,21 @@ import com.alipay.sofa.registry.jdbc.constant.TableEnum;
 import com.alipay.sofa.registry.jdbc.domain.InterfaceAppsIndexDomain;
 import com.alipay.sofa.registry.jdbc.informer.BaseInformer;
 import com.alipay.sofa.registry.jdbc.mapper.InterfaceAppsIndexMapper;
+import com.alipay.sofa.registry.jdbc.repository.impl.AppRevisionJdbcRepository.Informer;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.store.api.config.DefaultCommonConfig;
 import com.alipay.sofa.registry.store.api.date.DateNowRepository;
 import com.alipay.sofa.registry.store.api.meta.RecoverConfig;
 import com.alipay.sofa.registry.store.api.repository.InterfaceAppsRepository;
+import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.google.common.annotations.VisibleForTesting;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import javax.annotation.PostConstruct;
+import com.google.common.collect.Sets;
+import java.util.*;
+import java.util.Map.Entry;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
 
 /**
  * @author xiaojian.xj
@@ -61,29 +62,36 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository, Rec
     informer = new Informer();
   }
 
-  @PostConstruct
-  public void init() {
-    informer.setEnabled(true);
-    informer.start();
-  }
+  private Set<String> dataCenters = Sets.newConcurrentHashSet();
 
   @Override
   public InterfaceMapping getAppNames(String dataInfoId) {
     InterfaceAppsIndexContainer index = informer.getContainer();
-    InterfaceMapping mapping = index.getAppMapping(dataInfoId);
-    if (mapping == null) {
+    Map<String, InterfaceMapping> mappings = index.getAppMapping(dataInfoId);
+    if (CollectionUtils.isEmpty(mappings)) {
       return new InterfaceMapping(-1);
     }
-    return mapping;
+
+    long maxVersion = -1L;
+    Set<String> apps = Sets.newHashSet();
+    for (InterfaceMapping value : mappings.values()) {
+      if (value.getNanosVersion() > maxVersion) {
+        maxVersion = value.getNanosVersion();
+      }
+      apps.addAll(value.getApps());
+    }
+    InterfaceMapping ret = new InterfaceMapping(maxVersion, apps);
+
+    return ret;
   }
 
   @Override
   public void register(String appName, Set<String> interfaceNames) {
-    String localDataCenter = defaultCommonConfig.getClusterId(tableName());
+    String localDataCenter = defaultCommonConfig.getDefaultClusterId();
     InterfaceAppsIndexContainer c = informer.getContainer();
 
     for (String interfaceName : interfaceNames) {
-      if (c.containsName(interfaceName, appName)) {
+      if (c.containsName(localDataCenter, interfaceName, appName)) {
         continue;
       }
       refreshEntryToStorage(new InterfaceAppsIndexDomain(localDataCenter, interfaceName, appName));
@@ -94,7 +102,16 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository, Rec
   public void renew(String interfaceName, String appName) {
     refreshEntryToStorage(
         new InterfaceAppsIndexDomain(
-            defaultCommonConfig.getClusterId(tableName()), interfaceName, appName));
+            defaultCommonConfig.getDefaultClusterId(), interfaceName, appName));
+  }
+
+  @Override
+  public void startSynced() {
+    ParaCheckUtil.checkNotEmpty(dataCenters, "dataCenters");
+
+    // after set datacenters
+    informer.setEnabled(true);
+    informer.start();
   }
 
   @Override
@@ -111,9 +128,10 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository, Rec
               interfaceAppsIndexMapper.replace(entry);
             }
             LOG.info(
-                "insert interface app mapping {}=>{} succeed",
+                "insert interface app mapping {}=>{} succeed,entry:{}",
                 entry.getInterfaceName(),
-                entry.getAppName());
+                entry.getAppName(),
+                entry);
             return true;
           });
     } catch (Exception e) {
@@ -133,13 +151,29 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository, Rec
   }
 
   @Override
-  public Map<String, InterfaceMapping> allServiceMapping() {
+  public Map<String, Map<String, InterfaceMapping>> allServiceMapping() {
     return informer.getContainer().allServiceMapping();
   }
 
   @Override
   public String tableName() {
     return TableEnum.INTERFACE_APP_INDEX.getTableName();
+  }
+
+  @Override
+  public Set<String> dataCenters() {
+    return new HashSet<>(dataCenters);
+  }
+
+  @Override
+  public synchronized void setDataCenters(Set<String> dataCenters) {
+
+    if (!this.dataCenters.equals(dataCenters)) {
+      // wakeup list loop to rebuild container
+      LOG.info("dataCenters change from {} to {}", this.dataCenters, dataCenters);
+      this.dataCenters = dataCenters;
+      informer.listWakeup();
+    }
   }
 
   class Informer extends BaseInformer<InterfaceAppsIndexDomain, InterfaceAppsIndexContainer> {
@@ -156,8 +190,15 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository, Rec
 
     @Override
     protected List<InterfaceAppsIndexDomain> listFromStorage(long start, int limit) {
-      return interfaceAppsIndexMapper.queryLargeThan(
-          defaultCommonConfig.getClusterId(tableName()), start, limit);
+      List<InterfaceAppsIndexDomain> res =
+          interfaceAppsIndexMapper.queryLargeThan(dataCenters, start, limit);
+      LOG.info(
+          "query apps by interface, dataCenters:{}, start:{}, limit:{}, res:{}",
+          dataCenters,
+          start,
+          limit,
+          res.size());
+      return res;
     }
 
     @Override
@@ -174,16 +215,24 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository, Rec
     protected void preList(InterfaceAppsIndexContainer newContainer) {
       InterfaceAppsIndexContainer current = this.container;
       for (String interfaceName : current.interfaces()) {
-        InterfaceMapping newMapping = newContainer.getAppMapping(interfaceName);
-        InterfaceMapping currentMapping = current.getAppMapping(interfaceName);
-        if (newMapping == null
-            || newMapping.getNanosVersion() < currentMapping.getNanosVersion()
-            || (newMapping.getNanosVersion() == currentMapping.getNanosVersion()
-                && !newMapping.getApps().equals(currentMapping.getApps()))) {
-          if (conflictCallback != null) {
-            conflictCallback.callback(current, newContainer);
+        Map<String, InterfaceMapping> newMappings = newContainer.getAppMapping(interfaceName);
+        Map<String, InterfaceMapping> currentMappings = current.getAppMapping(interfaceName);
+        for (Entry<String, InterfaceMapping> entry : currentMappings.entrySet()) {
+          InterfaceMapping newMapping = newMappings.get(entry.getKey());
+          InterfaceMapping currentMapping = entry.getValue();
+          if (newMapping == null
+              || newMapping.getNanosVersion() < currentMapping.getNanosVersion()
+              || (newMapping.getNanosVersion() == currentMapping.getNanosVersion()
+                  && !newMapping.getApps().equals(currentMapping.getApps()))) {
+            if (conflictCallback != null) {
+              conflictCallback.callback(current, newContainer);
+            }
+            LOG.error(
+                "version conflict dataCenter: {}, current: {}, new: {}",
+                entry.getKey(),
+                currentMapping,
+                newMapping);
           }
-          LOG.error("version conflict current: {}, new: {}", currentMapping, newMapping);
         }
       }
     }

@@ -41,12 +41,11 @@ public class ValueConstants {
 
   public static final long DEFAULT_NO_DATUM_VERSION = 1L;
 
+  public static final String ALL_DATACENTER = "ALL_DATACENTER";
+
   private static final Integer SYSTEM_RAFT_PORT = Integer.getInteger("RAFT_SERVER_PORT");
 
   public static final int RAFT_SERVER_PORT = SYSTEM_RAFT_PORT != null ? SYSTEM_RAFT_PORT : 9614;
-
-  public static final int CROSS_DC_META_SYNC_INTERVAL_MILLI =
-      Integer.getInteger("CROSS_DC_META_SYNC_INTERVAL_MILLI", 60 * 1000);
 
   private static final String SYSTEM_RAFT_GROUP = System.getProperty("RAFT_SERVER_GROUP");
 
@@ -177,4 +176,6 @@ public class ValueConstants {
   public static final String REDUCE = "reduce";
 
   public static final String BLOCKED_REQUEST_KEY = "!Blocked";
+
+  public static final String META_LEADER_QUERY_URL = "http://%s:9615/meta/leader/query";
 }

@@ -27,7 +27,6 @@ import com.alipay.sofa.registry.core.model.AppRevisionInterface;
 import com.alipay.sofa.registry.core.model.RegisterResponse;
 import com.alipay.sofa.registry.jdbc.mapper.AppRevisionMapper;
 import com.alipay.sofa.registry.server.session.metadata.MetadataCacheRegistry;
-import com.alipay.sofa.registry.server.session.push.PushSwitchService;
 import com.alipay.sofa.registry.server.session.strategy.AppRevisionHandlerStrategy;
 import com.alipay.sofa.registry.store.api.config.DefaultCommonConfig;
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
@@ -68,8 +67,6 @@ public class MetadataTest extends BaseIntegrationTest {
 
   protected DefaultCommonConfig defaultCommonConfig;
 
-  protected static volatile PushSwitchService pushSwitchService;
-
   @Before
   public void buildAppRevision() {
     appRevisionHandlerStrategy =
@@ -81,9 +78,6 @@ public class MetadataTest extends BaseIntegrationTest {
         sessionApplicationContext.getBean("appRevisionMapper", AppRevisionMapper.class);
     defaultCommonConfig =
         sessionApplicationContext.getBean("defaultCommonConfig", DefaultCommonConfig.class);
-
-    pushSwitchService =
-        sessionApplicationContext.getBean("pushSwitchService", PushSwitchService.class);
 
     appRevisionList = new ArrayList<>();
     for (int i = 1; i <= 1; i++) {
@@ -255,24 +249,18 @@ public class MetadataTest extends BaseIntegrationTest {
 
     // close push
     closePush();
-    LOGGER.info(
-        "fetchStopPushService.isStopPushSwitch:"
-            + pushSwitchService.getFetchStopPushService().isStopPushSwitch());
-    waitConditionUntilTimeOut(pushSwitchService.getFetchStopPushService()::isStopPushSwitch, 6000);
+    waitConditionUntilTimeOut(MetadataTest::isClosePush, 6000);
 
     // query by interface when stop push
     for (AppRevision appRevisionRegister : appRevisionList) {
       ServiceAppMappingResponse res =
           appRevisionHandlerStrategy.queryApps(
-              Lists.newArrayList(appRevisionRegister.getInterfaceMap().keySet()), "");
-      Assert.assertEquals(res.getStatusCode(), ValueConstants.METADATA_STATUS_METHOD_NOT_ALLOW);
+              Lists.newArrayList(appRevisionRegister.getInterfaceMap().keySet()), "1.1.1.1");
+      Assert.assertEquals(res.getStatusCode(), ValueConstants.METADATA_STATUS_DATA_NOT_FOUND);
     }
 
     // open push
     openPush();
-    LOGGER.info(
-        "fetchStopPushService.isStopPushSwitch:"
-            + pushSwitchService.getFetchStopPushService().isStopPushSwitch());
     waitConditionUntilTimeOut(MetadataTest::isOpenPush, 6000);
 
     // query by interface
@@ -280,7 +268,7 @@ public class MetadataTest extends BaseIntegrationTest {
 
       ServiceAppMappingResponse res =
           appRevisionHandlerStrategy.queryApps(
-              Lists.newArrayList(appRevisionRegister.getInterfaceMap().keySet()), "");
+              Lists.newArrayList(appRevisionRegister.getInterfaceMap().keySet()), "1.1.1.1");
       Assert.assertEquals(res.getStatusCode(), ValueConstants.METADATA_STATUS_PROCESS_SUCCESS);
 
       for (Map.Entry<String, AppRevisionInterface> entry :
@@ -398,9 +386,5 @@ public class MetadataTest extends BaseIntegrationTest {
         appsFuture.add(submit);
       }
     }
-  }
-
-  private static boolean isOpenPush() {
-    return !pushSwitchService.getFetchStopPushService().isStopPushSwitch();
   }
 }

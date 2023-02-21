@@ -65,6 +65,8 @@ public abstract class BaseStopPushService
             update.stopPushSwitch);
         return false;
       }
+
+      afterProcess(this.storage.get());
       LOGGER.info(
           "Fetch session stopPushSwitch={}, prev={}, current={}",
           update,
@@ -94,7 +96,13 @@ public abstract class BaseStopPushService
       super(version);
       this.stopPushSwitch = stopPushSwitch;
     }
+
+    public boolean isStopPush() {
+      return stopPushSwitch;
+    }
   }
+
+  protected void afterProcess(StopPushStorage storage) {}
 
   /**
    * Setter method for property <tt>stopPushSwitch</tt>.

@@ -53,6 +53,7 @@ public final class SubscriberRegisterConvertor {
     subscriberRegister.setAttributes(subscriberRegisterPb.getBaseRegister().getAttributesMap());
     subscriberRegister.setAcceptEncoding(subscriberRegisterPb.getAcceptEncoding());
     subscriberRegister.setScope(subscriberRegisterPb.getScope());
+    subscriberRegister.setAcceptMulti(subscriberRegisterPb.getAcceptMulti());
     return subscriberRegister;
   }
 

@@ -20,6 +20,7 @@ import static org.mockito.Mockito.*;
 
 import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.server.session.TestUtils;
+import java.util.Collections;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -45,7 +46,8 @@ public class RegProcessorTest {
     Assert.assertEquals(1, w.watchBuffer());
     verify(processor.regHandler, times(1)).onReg(anyString(), anyList());
 
-    sub2.checkAndUpdateCtx("testDc", 100, 10);
+    sub2.checkAndUpdateCtx(
+        Collections.singletonMap("testDc", 100L), Collections.singletonMap("testDc", 10));
     Assert.assertTrue(processor.fireOnReg(sub2));
     Assert.assertEquals(0, w.watchBuffer());
     verify(processor.regHandler, times(1)).onReg(anyString(), anyList());

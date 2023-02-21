@@ -17,13 +17,15 @@
 package com.alipay.sofa.registry.server.session.push;
 
 import com.alipay.sofa.registry.util.StringFormatter;
+import java.util.Map;
 
 public final class PushCause {
   final TriggerPushContext triggerPushCtx;
-  final long datumTimestamp;
+  final Map<String, Long> datumTimestamp;
   final PushType pushType;
 
-  PushCause(TriggerPushContext triggerPushCtx, PushType pushType, long datumTimestamp) {
+  PushCause(
+      TriggerPushContext triggerPushCtx, PushType pushType, Map<String, Long> datumTimestamp) {
     this.pushType = pushType;
     this.datumTimestamp = datumTimestamp;
     this.triggerPushCtx = triggerPushCtx;

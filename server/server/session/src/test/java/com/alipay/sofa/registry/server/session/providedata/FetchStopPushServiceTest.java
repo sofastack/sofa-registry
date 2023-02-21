@@ -16,8 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.providedata;
 
-import static org.mockito.Mockito.mock;
-
+import com.alipay.sofa.registry.server.session.TestUtils;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import org.junit.Assert;
 import org.junit.Before;
@@ -31,7 +30,7 @@ public class FetchStopPushServiceTest extends FetchStopPushService {
 
   @Before
   public void beforeFetchStopPushServiceTest() {
-    SessionServerConfig sessionServerConfig = mock(SessionServerConfig.class);
+    SessionServerConfig sessionServerConfig = TestUtils.newSessionConfig("testdc");
 
     this.setSessionServerConfig(sessionServerConfig);
   }

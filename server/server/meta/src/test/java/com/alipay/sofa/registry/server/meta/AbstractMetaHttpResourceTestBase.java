@@ -21,7 +21,6 @@ import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.meta.bootstrap.MetaServerConfiguration;
-import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -29,7 +28,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.ext.Provider;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.junit.Before;
-import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ApplicationContext;
@@ -55,11 +53,6 @@ public class AbstractMetaHttpResourceTestBase extends AbstractMetaServerTestBase
     SpringApplicationBuilder builder = new SpringApplicationBuilder(MetaServerConfiguration.class);
     builder.run();
     openHttpServer();
-  }
-
-  @Test
-  public void test() throws IOException {
-    waitForAnyKeyToExit();
   }
 
   private void openHttpServer() {

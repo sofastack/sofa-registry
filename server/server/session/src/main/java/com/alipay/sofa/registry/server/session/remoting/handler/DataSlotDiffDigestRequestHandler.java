@@ -22,6 +22,7 @@ import com.alipay.sofa.registry.common.model.dataserver.DatumDigest;
 import com.alipay.sofa.registry.common.model.slot.DataSlotDiffDigestRequest;
 import com.alipay.sofa.registry.common.model.slot.DataSlotDiffDigestResult;
 import com.alipay.sofa.registry.common.model.slot.DataSlotDiffUtils;
+import com.alipay.sofa.registry.common.model.slot.filter.SyncSlotAcceptorManager;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -33,8 +34,10 @@ import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.alipay.sofa.registry.util.StringFormatter;
+import com.google.common.annotations.VisibleForTesting;
 import java.util.Map;
 import java.util.concurrent.Executor;
+import javax.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -46,11 +49,13 @@ public class DataSlotDiffDigestRequestHandler
   private static final Logger LOGGER =
       LoggerFactory.getLogger(DataSlotDiffDigestRequestHandler.class);
 
-  @Autowired ExecutorManager executorManager;
+  @Autowired private ExecutorManager executorManager;
 
-  @Autowired DataStore sessionDataStore;
+  @Autowired private DataStore sessionDataStore;
 
-  @Autowired SlotTableCache slotTableCache;
+  @Autowired private SlotTableCache slotTableCache;
+
+  @Resource private SyncSlotAcceptorManager syncSlotAcceptAllManager;
 
   @Override
   public void checkParam(DataSlotDiffDigestRequest request) {
@@ -63,10 +68,11 @@ public class DataSlotDiffDigestRequestHandler
     try {
       DataSlotDiffDigestResult result =
           calcDiffResult(
+              request.getLocalDataCenter(),
               request.getSlotId(),
               request.getDatumDigest(),
               sessionDataStore.getDataInfoIdPublishers(request.getSlotId()));
-      result.setSlotTableEpoch(slotTableCache.getEpoch());
+      result.setSlotTableEpoch(slotTableCache.getEpoch(request.getLocalDataCenter()));
       result.setSessionProcessId(ServerEnv.PROCESS_ID);
       return new GenericResponse().fillSucceed(result);
     } catch (Throwable e) {
@@ -83,13 +89,14 @@ public class DataSlotDiffDigestRequestHandler
   }
 
   private DataSlotDiffDigestResult calcDiffResult(
+      String requestDataCenter,
       int targetSlot,
       Map<String, DatumDigest> digestMap,
       Map<String, Map<String, Publisher>> existingPublishers) {
 
     DataSlotDiffDigestResult result =
-        DataSlotDiffUtils.diffDigestResult(digestMap, existingPublishers);
-    DataSlotDiffUtils.logDiffResult(result, targetSlot);
+        DataSlotDiffUtils.diffDigestResult(digestMap, existingPublishers, syncSlotAcceptAllManager);
+    DataSlotDiffUtils.logDiffResult(requestDataCenter, result, targetSlot, LOGGER);
     return result;
   }
 
@@ -106,5 +113,50 @@ public class DataSlotDiffDigestRequestHandler
   @Override
   public Class interest() {
     return DataSlotDiffDigestRequest.class;
+  }
+
+  /**
+   * Setter method for property <tt>executorManager</tt>.
+   *
+   * @param executorManager value to be assigned to property executorManager
+   */
+  @VisibleForTesting
+  public DataSlotDiffDigestRequestHandler setExecutorManager(ExecutorManager executorManager) {
+    this.executorManager = executorManager;
+    return this;
+  }
+
+  /**
+   * Setter method for property <tt>sessionDataStore</tt>.
+   *
+   * @param sessionDataStore value to be assigned to property sessionDataStore
+   */
+  @VisibleForTesting
+  public DataSlotDiffDigestRequestHandler setSessionDataStore(DataStore sessionDataStore) {
+    this.sessionDataStore = sessionDataStore;
+    return this;
+  }
+
+  /**
+   * Setter method for property <tt>slotTableCache</tt>.
+   *
+   * @param slotTableCache value to be assigned to property slotTableCache
+   */
+  @VisibleForTesting
+  public DataSlotDiffDigestRequestHandler setSlotTableCache(SlotTableCache slotTableCache) {
+    this.slotTableCache = slotTableCache;
+    return this;
+  }
+
+  /**
+   * Setter method for property <tt>syncSlotAcceptAllManager</tt>.
+   *
+   * @param syncSlotAcceptAllManager value to be assigned to property syncSlotAcceptAllManager
+   */
+  @VisibleForTesting
+  public DataSlotDiffDigestRequestHandler setSyncSlotAcceptAllManager(
+      SyncSlotAcceptorManager syncSlotAcceptAllManager) {
+    this.syncSlotAcceptAllManager = syncSlotAcceptAllManager;
+    return this;
   }
 }

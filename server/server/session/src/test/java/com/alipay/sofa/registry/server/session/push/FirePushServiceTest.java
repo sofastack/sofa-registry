@@ -16,10 +16,12 @@
  */
 package com.alipay.sofa.registry.server.session.push;
 
+import static org.mockito.Matchers.anySetOf;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
 import com.alipay.sofa.registry.cache.Sizer;
+import com.alipay.sofa.registry.common.model.store.MultiSubDatum;
 import com.alipay.sofa.registry.common.model.store.SubDatum;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.common.model.store.Watcher;
@@ -28,11 +30,9 @@ import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfigBean
 import com.alipay.sofa.registry.server.session.cache.CacheService;
 import com.alipay.sofa.registry.server.session.cache.Value;
 import com.alipay.sofa.registry.server.session.circuit.breaker.CircuitBreakerService;
-import com.alipay.sofa.registry.server.session.providedata.FetchGrayPushSwitchService;
-import com.alipay.sofa.registry.server.session.providedata.FetchStopPushService;
+import com.alipay.sofa.registry.server.session.multi.cluster.DataCenterMetadataCache;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.task.FastRejectedExecutionException;
-import com.google.common.collect.Lists;
 import java.util.Collections;
 import org.junit.Assert;
 import org.junit.Test;
@@ -42,20 +42,15 @@ public class FirePushServiceTest {
   private String zone = "testZone";
   private String dataId = "testDataId";
 
-  private long init = -1L;
-
   @Test
   public void testFire() {
-    FirePushService svc = new FirePushService();
     SessionServerConfigBean config = TestUtils.newSessionConfig("testDc");
-    svc.sessionServerConfig = config;
-    FetchStopPushService fetchStopPushService = new FetchStopPushService();
-    svc.pushSwitchService = new PushSwitchService();
+    FirePushService svc = new FirePushService(config);
+    svc.pushSwitchService = TestUtils.newPushSwitchService(config);
     svc.sessionInterests = Mockito.mock(Interests.class);
     svc.pushProcessor = Mockito.mock(PushProcessor.class);
-    svc.pushSwitchService.setFetchStopPushService(fetchStopPushService);
-    svc.pushSwitchService.setFetchGrayPushSwitchService(new FetchGrayPushSwitchService());
     svc.circuitBreakerService = Mockito.mock(CircuitBreakerService.class);
+    svc.dataCenterMetadataCache = TestUtils.newDataCenterMetaCache(config);
 
     TriggerPushContext ctx =
         new TriggerPushContext("testDc", 100, "testDataNode", System.currentTimeMillis());
@@ -67,13 +62,17 @@ public class FirePushServiceTest {
         .fireChange(Mockito.anyString(), Mockito.anyObject(), Mockito.anyObject());
 
     Subscriber subscriber = TestUtils.newZoneSubscriber(dataId, zone);
-    fetchStopPushService.setStopPushSwitch(init, true);
+    svc.pushSwitchService
+        .getFetchStopPushService()
+        .setStopPushSwitch(System.currentTimeMillis(), true);
     svc.fireOnPushEmpty(subscriber, "testDc");
     Mockito.verify(svc.pushProcessor, Mockito.times(0))
         .firePush(
             Mockito.anyObject(), Mockito.anyObject(), Mockito.anyObject(), Mockito.anyObject());
 
-    fetchStopPushService.setStopPushSwitch(init, false);
+    svc.pushSwitchService
+        .getFetchStopPushService()
+        .setStopPushSwitch(System.currentTimeMillis(), false);
 
     svc.fireOnPushEmpty(subscriber, "testDc");
     Mockito.verify(svc.pushProcessor, Mockito.times(1))
@@ -96,9 +95,8 @@ public class FirePushServiceTest {
 
   @Test
   public void testPushEmpty() {
-    FirePushService svc = new FirePushService();
     SessionServerConfigBean config = TestUtils.newSessionConfig("testDc");
-    svc.sessionServerConfig = config;
+    FirePushService svc = new FirePushService(config);
     svc.pushSwitchService = Mockito.mock(PushSwitchService.class);
     svc.sessionInterests = Mockito.mock(Interests.class);
     svc.circuitBreakerService = Mockito.mock(CircuitBreakerService.class);
@@ -107,8 +105,13 @@ public class FirePushServiceTest {
     svc.pushProcessor.pushSwitchService = Mockito.mock(PushSwitchService.class);
 
     Subscriber subscriber = TestUtils.newZoneSubscriber(dataId, zone);
-    when(svc.pushSwitchService.canIpPush(anyString())).thenReturn(true);
-    when(svc.pushProcessor.pushSwitchService.canIpPush(anyString())).thenReturn(true);
+    when(svc.pushSwitchService.canIpPushLocal(anyString())).thenReturn(true);
+    when(svc.pushSwitchService.canIpPushMulti(anyString(), anySetOf(String.class)))
+        .thenReturn(true);
+    when(svc.pushProcessor.pushSwitchService.canIpPushLocal(anyString())).thenReturn(true);
+    when(svc.pushProcessor.pushSwitchService.canIpPushMulti(anyString(), anySetOf(String.class)))
+        .thenReturn(true);
+
     Assert.assertTrue(svc.fireOnPushEmpty(subscriber, "testDc", 1L));
 
     svc.fireOnPushEmpty(subscriber, "testDc", System.currentTimeMillis());
@@ -123,14 +126,14 @@ public class FirePushServiceTest {
   }
 
   private FirePushService mockFirePushService() {
-    FirePushService svc = new FirePushService();
     SessionServerConfigBean config = TestUtils.newSessionConfig("testDc");
-    svc.sessionServerConfig = config;
+    FirePushService svc = new FirePushService(config);
     svc.sessionInterests = Mockito.mock(Interests.class);
     svc.pushProcessor = Mockito.mock(PushProcessor.class);
-    svc.sessionCacheService = Mockito.mock(CacheService.class);
+    svc.sessionDatumCacheService = Mockito.mock(CacheService.class);
     svc.pushSwitchService = Mockito.mock(PushSwitchService.class);
     svc.circuitBreakerService = Mockito.mock(CircuitBreakerService.class);
+    svc.dataCenterMetadataCache = Mockito.mock(DataCenterMetadataCache.class);
     return svc;
   }
 
@@ -142,18 +145,21 @@ public class FirePushServiceTest {
     // datum is null
     TriggerPushContext ctx = new TriggerPushContext("testDc", 100, "testDataNode", now);
     Assert.assertFalse(svc.doExecuteOnChange("testDataId", ctx));
-    SubDatum datum = TestUtils.newSubDatum("testDataId", 200, Collections.emptyList());
+
+    MultiSubDatum datum =
+        TestUtils.newMultiSubDatum("testDc", "testDataId", 200, Collections.emptyList());
 
     // get the datum
     Subscriber subscriber = TestUtils.newZoneSubscriber(dataId, zone);
     Value v = new Value((Sizer) datum);
-    when(svc.sessionCacheService.getValueIfPresent(Mockito.anyObject())).thenReturn(v);
+    when(svc.sessionDatumCacheService.getValueIfPresent(Mockito.anyObject())).thenReturn(v);
     when(svc.sessionInterests.getDatas(Mockito.anyObject()))
         .thenReturn(Collections.singletonList(subscriber));
-    svc.pushSwitchService = new PushSwitchService();
-    svc.pushSwitchService.setFetchStopPushService(new FetchStopPushService());
-    svc.pushSwitchService.fetchStopPushService.setStopPushSwitch(System.currentTimeMillis(), false);
-    svc.pushSwitchService.setFetchGrayPushSwitchService(new FetchGrayPushSwitchService());
+    svc.pushSwitchService = TestUtils.newPushSwitchService("testDc");
+
+    svc.pushSwitchService
+        .getFetchStopPushService()
+        .setStopPushSwitch(System.currentTimeMillis(), false);
     svc.circuitBreakerService = Mockito.mock(CircuitBreakerService.class);
     Assert.assertTrue(svc.doExecuteOnChange("testDataId", ctx));
     Mockito.verify(svc.pushProcessor, Mockito.times(1))
@@ -161,10 +167,10 @@ public class FirePushServiceTest {
             Mockito.anyObject(), Mockito.anyObject(), Mockito.anyObject(), Mockito.anyObject());
 
     // get datum is old
-    datum = TestUtils.newSubDatum("testDataId", 80, Collections.emptyList());
+    datum = TestUtils.newMultiSubDatum("testDc", "testDataId", 80, Collections.emptyList());
     v = new Value((Sizer) datum);
-    when(svc.sessionCacheService.getValueIfPresent(Mockito.anyObject())).thenReturn(v);
-    when(svc.sessionCacheService.getValue(Mockito.anyObject())).thenReturn(v);
+    when(svc.sessionDatumCacheService.getValueIfPresent(Mockito.anyObject())).thenReturn(v);
+    when(svc.sessionDatumCacheService.getValue(Mockito.anyObject())).thenReturn(v);
     Assert.assertFalse(svc.doExecuteOnChange("testDataId", ctx));
   }
 
@@ -173,19 +179,13 @@ public class FirePushServiceTest {
     final long now = System.currentTimeMillis();
     TriggerPushContext ctx = new TriggerPushContext("testDc", 100, "testDataNode", now);
     FirePushService svc = mockFirePushService();
-    when(svc.sessionCacheService.getValue(Mockito.anyObject())).thenThrow(new RuntimeException());
+    when(svc.sessionDatumCacheService.getValue(Mockito.anyObject()))
+        .thenThrow(new RuntimeException());
     Assert.assertFalse(svc.changeHandler.onChange("testDataId", ctx));
-    SubDatum datum = TestUtils.newSubDatum("testDataId", 200, Collections.emptyList());
+    MultiSubDatum datum =
+        TestUtils.newMultiSubDatum("testDc", "testDataId", 200, Collections.emptyList());
     Value v = new Value((Sizer) datum);
-    when(svc.sessionCacheService.getValueIfPresent(Mockito.anyObject())).thenReturn(v);
+    when(svc.sessionDatumCacheService.getValueIfPresent(Mockito.anyObject())).thenReturn(v);
     Assert.assertTrue(svc.changeHandler.onChange("testDataId", ctx));
-  }
-
-  @Test
-  public void testOnSubscriber() {
-    FirePushService svc = mockFirePushService();
-    Subscriber subscriber = TestUtils.newZoneSubscriber("testZone");
-    subscriber.checkAndUpdateCtx("testDc", 100, 10);
-    Assert.assertTrue(svc.doExecuteOnReg("testDc", Lists.newArrayList(subscriber)));
   }
 }

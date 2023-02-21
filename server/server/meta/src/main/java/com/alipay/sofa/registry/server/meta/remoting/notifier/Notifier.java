@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.server.meta.remoting.notifier;
 
 import com.alipay.sofa.registry.common.model.metaserver.ProvideDataChangeEvent;
+import com.alipay.sofa.registry.common.model.metaserver.RemoteDatumClearEvent;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 
 /**
@@ -28,4 +29,6 @@ public interface Notifier {
   void notifySlotTableChange(SlotTable slotTable);
 
   void notifyProvideDataChange(ProvideDataChangeEvent event);
+
+  void notifyRemoteDatumClear(RemoteDatumClearEvent event);
 }

@@ -65,7 +65,7 @@ public class DefaultSessionRegistryStrategyTest extends AbstractSessionServerTes
     strategy.afterWatcherRegister(w);
     verify(strategy.firePushService, times(0)).fireOnWatcher(any(), any());
 
-    when(strategy.pushSwitchService.canIpPush(anyString())).thenReturn(true);
+    when(strategy.pushSwitchService.canIpPushLocal(anyString())).thenReturn(true);
     strategy.afterWatcherRegister(w);
     verify(strategy.firePushService, times(1)).fireOnWatcher(any(), any());
     verify(strategy.configProvideDataWatcher, times(0)).watch(any());
@@ -79,7 +79,7 @@ public class DefaultSessionRegistryStrategyTest extends AbstractSessionServerTes
     verify(strategy.configProvideDataWatcher, times(1)).watch(any());
     verify(strategy.firePushService, times(0)).fireOnWatcher(any(), any());
 
-    when(strategy.pushSwitchService.canIpPush(anyString())).thenReturn(true);
+    when(strategy.pushSwitchService.canIpPushLocal(anyString())).thenReturn(true);
     strategy.afterWatcherRegister(w);
     verify(strategy.firePushService, times(0)).fireOnWatcher(any(), any());
 

@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  ~ Licensed to the Apache Software Foundation (ASF) under one or more
+  ~ contributor license agreements.  See the NOTICE file distributed with
+  ~ this work for additional information regarding copyright ownership.
+  ~ The ASF licenses this file to You under the Apache License, Version 2.0
+  ~ (the "License"); you may not use this file except in compliance with
+  ~ the License.  You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.alipay.sofa.registry.jdbc.mapper.MultiClusterSyncMapper">
+
+    <resultMap type="com.alipay.sofa.registry.jdbc.domain.MultiClusterSyncDomain" id="multiClusterSyncResultMap">
+        <id property="id" column="id" javaType="long" jdbcType="BIGINT"/>
+        <result property="dataCenter" column="data_center" javaType="java.lang.String" jdbcType="VARCHAR"/>
+        <result property="remoteDataCenter" column="remote_data_center" javaType="java.lang.String" jdbcType="VARCHAR"/>
+        <result property="remoteMetaAddress" column="remote_meta_address" javaType="java.lang.String" jdbcType="VARCHAR"/>
+        <result property="enableSyncDatum" column="enable_sync_datum" javaType="java.lang.String" jdbcType="VARCHAR"/>
+        <result property="enablePush" column="enable_push" javaType="java.lang.String" jdbcType="VARCHAR"/>
+        <result property="syncDataInfoIds" column="sync_datainfoids" javaType="java.lang.String" jdbcType="LONGVARCHAR"/>
+        <result property="synPublisherGroups" column="syn_publisher_groups" javaType="java.lang.String" jdbcType="VARCHAR"/>
+        <result property="ignoreDataInfoIds" column="ignore_datainfoids" javaType="java.lang.String" jdbcType="LONGVARCHAR"/>
+        <result property="dataVersion" column="data_version" javaType="long" jdbcType="BIGINT"/>
+        <result property="gmtCreate" column="gmt_create" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
+        <result property="gmtModified" column="gmt_modified" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <insert id="save" parameterType="com.alipay.sofa.registry.jdbc.domain.MultiClusterSyncDomain">
+        <![CDATA[
+       INSERT INTO multi_cluster_sync_info
+       (
+           data_center,
+           remote_data_center,
+           remote_meta_address,
+           enable_sync_datum,
+           enable_push,
+           sync_datainfoids,
+           syn_publisher_groups,
+           ignore_datainfoids,
+           data_version,
+           gmt_create,
+           gmt_modified
+       )
+       VALUES
+       (
+           #{dataCenter},
+           #{remoteDataCenter},
+           #{remoteMetaAddress},
+           #{enableSyncDatum},
+           #{enablePush},
+           #{syncDataInfoIds},
+           #{synPublisherGroups},
+           #{ignoreDataInfoIds},
+           #{dataVersion},
+           CURRENT_TIMESTAMP,
+           CURRENT_TIMESTAMP
+       )
+       ]]>
+    </insert>
+
+    <update id="update">
+        <![CDATA[
+       update multi_cluster_sync_info set
+            remote_meta_address = #{data.remoteMetaAddress},
+            enable_sync_datum = #{data.enableSyncDatum},
+            enable_push = #{data.enablePush},
+            sync_datainfoids = #{data.syncDataInfoIds},
+            syn_publisher_groups = #{data.synPublisherGroups},
+            ignore_datainfoids = #{data.ignoreDataInfoIds},
+            data_version = #{data.dataVersion},
+            gmt_modified = CURRENT_TIMESTAMP
+       where
+             data_center = #{data.dataCenter}
+         and remote_data_center = #{data.remoteDataCenter}
+         and data_version = #{exceptVersion}
+       ]]>
+    </update>
+
+
+
+    <select id="queryByCluster" resultMap="multiClusterSyncResultMap">
+        <![CDATA[ select * from multi_cluster_sync_info
+                  where data_center = #{dataCenter}
+        ]]>
+    </select>
+
+    <select id="query" resultMap="multiClusterSyncResultMap">
+        <![CDATA[ select * from multi_cluster_sync_info
+                  where data_center = #{dataCenter} and remote_data_center = #{remoteDataCenter}
+        ]]>
+    </select>
+
+    <delete id="remove">
+        delete from multi_cluster_sync_info where data_center = #{dataCenter} and remote_data_center = #{remoteDataCenter}
+        and data_version = #{dataVersion}
+    </delete>
+
+</mapper>

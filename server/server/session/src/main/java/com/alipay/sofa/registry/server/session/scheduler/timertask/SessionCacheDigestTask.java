@@ -67,6 +67,7 @@ public class SessionCacheDigestTask {
     long firstDelay = firstDate.getTime() - System.currentTimeMillis();
     executorService.scheduleAtFixedRate(
         this::dump, firstDelay, (long) intervalMinutes * 60 * 1000, TimeUnit.MILLISECONDS);
+
     return true;
   }
 

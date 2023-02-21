@@ -50,4 +50,22 @@ public class AtomicSet<T> {
   public Set<T> get() {
     return new HashSet<>(data);
   }
+
+  public void addAll(Set<T> adds) {
+    rlock.lock();
+    try {
+      data.addAll(adds);
+    } finally {
+      rlock.unlock();
+    }
+  }
+
+  public int size() {
+    rlock.lock();
+    try {
+      return data.size();
+    } finally {
+      rlock.unlock();
+    }
+  }
 }

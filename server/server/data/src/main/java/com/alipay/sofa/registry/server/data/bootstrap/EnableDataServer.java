@@ -30,5 +30,5 @@ import org.springframework.context.annotation.Import;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Import(DataServerBeanConfiguration.class)
+@Import({DataServerBeanConfiguration.class, MultiClusterDataConfiguration.class})
 public @interface EnableDataServer {}

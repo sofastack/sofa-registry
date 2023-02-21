@@ -20,30 +20,20 @@ import com.alipay.sofa.registry.common.model.console.PersistenceData;
 import com.alipay.sofa.registry.common.model.console.PersistenceDataBuilder;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.jdbc.AbstractH2DbTestBase;
-import com.alipay.sofa.registry.jdbc.mapper.ProvideDataMapper;
-import com.alipay.sofa.registry.jdbc.mapper.RecoverConfigMapper;
 import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
-import com.alipay.sofa.registry.store.api.meta.RecoverConfigRepository;
-import java.sql.SQLException;
+import com.alipay.sofa.registry.util.ConcurrentUtils;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import javax.annotation.Resource;
 import org.junit.Assert;
 import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 
 public class ProvideDataJdbcRepositoryTest extends AbstractH2DbTestBase {
 
   @Resource private ProvideDataRepository provideDataRepository;
 
-  @Autowired private ProvideDataMapper provideDataMapper;
-
-  @Autowired private RecoverConfigMapper recoverConfigMapper;
-
-  @Autowired private RecoverConfigRepository recoverConfigRepository;
-
   @Test
-  public void testPut() throws SQLException, InterruptedException {
-    // startH2Server();
+  public void testPut() {
     long version = System.currentTimeMillis();
 
     String dataInfoId = DataInfo.toDataInfoId("key" + version, "DEFAULT", "DEFAULT");
@@ -54,9 +44,41 @@ public class ProvideDataJdbcRepositoryTest extends AbstractH2DbTestBase {
     Assert.assertEquals("val", provideDataRepository.get(dataInfoId).getData());
     Assert.assertEquals(
         persistenceData.getVersion(), provideDataRepository.get(dataInfoId).getVersion());
+  }
 
-    // CountDownLatch latch = new CountDownLatch(1);
-    // latch.await();
+  @Test
+  public void testUpdate() {
+    long version = System.currentTimeMillis();
+
+    String dataInfoId = DataInfo.toDataInfoId("key" + version, "DEFAULT", "DEFAULT");
+    PersistenceData persistenceData1 =
+        PersistenceDataBuilder.createPersistenceData(dataInfoId, "val1");
+    boolean success = provideDataRepository.put(persistenceData1);
+    Assert.assertTrue(success);
+    Assert.assertEquals(
+        persistenceData1.getData(), provideDataRepository.get(dataInfoId).getData());
+    Assert.assertEquals(
+        persistenceData1.getVersion(), provideDataRepository.get(dataInfoId).getVersion());
+
+    ConcurrentUtils.sleepUninterruptibly(1, TimeUnit.MILLISECONDS);
+    PersistenceData persistenceData2 =
+        PersistenceDataBuilder.createPersistenceData(dataInfoId, "val2");
+
+    success = provideDataRepository.put(persistenceData2, persistenceData1.getVersion());
+    Assert.assertTrue(success);
+    Assert.assertEquals(
+        persistenceData2.getData(), provideDataRepository.get(dataInfoId).getData());
+    Assert.assertEquals(
+        persistenceData2.getVersion(), provideDataRepository.get(dataInfoId).getVersion());
+
+    PersistenceData persistenceData3 =
+        PersistenceDataBuilder.createPersistenceData(dataInfoId, "val2");
+    success = provideDataRepository.put(persistenceData3, persistenceData1.getVersion());
+    Assert.assertFalse(success);
+    Assert.assertEquals(
+        persistenceData2.getData(), provideDataRepository.get(dataInfoId).getData());
+    Assert.assertEquals(
+        persistenceData2.getVersion(), provideDataRepository.get(dataInfoId).getVersion());
   }
 
   @Test
