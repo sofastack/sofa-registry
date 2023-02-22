@@ -36,9 +36,9 @@ public class MultiClusterDataServerConfigBean implements MultiClusterDataServerC
 
   private volatile int syncRemoteSlotLeaderConnNum = 3;
 
-  private volatile int remoteSyncSlotLeaderExecutorThreadSize = OsUtils.getCpuCount() * 3;
+  private volatile int remoteSyncSlotLeaderExecutorThreadSize = OsUtils.getCpuCount() * 10;
 
-  private volatile int remoteSyncSlotLeaderExecutorQueueSize = 100;
+  private volatile int remoteSyncSlotLeaderExecutorQueueSize = 10000;
 
   private volatile int remoteSyncDataIdExecutorThreadSize = OsUtils.getCpuCount() * 3;
 
