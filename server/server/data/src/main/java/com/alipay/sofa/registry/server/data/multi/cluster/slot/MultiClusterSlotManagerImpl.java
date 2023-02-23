@@ -512,11 +512,11 @@ public class MultiClusterSlotManagerImpl implements MultiClusterSlotManager {
     }
 
     void completeSyncRemoteDataIdTask() {
-      if (syncDataIdTask == null || !syncRemoteTask.isFinished()) {
+      if (syncDataIdTask == null || !syncDataIdTask.isFinished()) {
         return;
       }
 
-      if (syncRemoteTask.isSuccess()) {
+      if (syncDataIdTask.isSuccess()) {
         this.lastSuccessDataInfoIdTime = syncDataIdTask.getEndTime();
       }
     }
