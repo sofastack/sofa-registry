@@ -32,6 +32,8 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import java.util.List;
+
 public class CacheTaskTest {
   private String app = "app";
   private String group = "group";
@@ -131,5 +133,37 @@ public class CacheTaskTest {
     task.boltExchange = boltExchange;
     task.executorManager = new ExecutorManager(serverConfigBean);
     task.syncCount();
+  }
+
+  @Test
+  public void testSplitMultiSub() {
+    List<Subscriber> subs = Lists.newArrayList();
+    Tuple<List<Subscriber>, List<Subscriber>> tuple = CacheCountTask.splitMultiSub(subs);
+    Assert.assertEquals(0, tuple.o1.size());
+    Assert.assertEquals(0, tuple.o2.size());
+
+    Subscriber subscriber = new Subscriber();
+    subscriber.setAppName(app);
+    subscriber.setGroup(group);
+    subscriber.setInstanceId(instanceId);
+    subscriber.setDataInfoId(dataInfoId);
+    subs.add(subscriber);
+
+    tuple = CacheCountTask.splitMultiSub(subs);
+    Assert.assertEquals(1, tuple.o1.size());
+    Assert.assertEquals(0, tuple.o2.size());
+
+    Subscriber multiSubscriber = new Subscriber();
+    subscriber.setAppName(app);
+    subscriber.setGroup(group);
+    subscriber.setInstanceId(instanceId);
+    subscriber.setDataInfoId(dataInfoId);
+    subscriber.setAcceptMulti(true);
+    subs.add(multiSubscriber);
+
+    tuple = CacheCountTask.splitMultiSub(subs);
+    Assert.assertEquals(1, tuple.o1.size());
+    Assert.assertEquals(1, tuple.o2.size());
+
   }
 }
