@@ -75,7 +75,7 @@ public final class Metrics {
       Gauge.build()
           .namespace("session")
           .subsystem("cache")
-          .name("sub_total")
+          .name("not_multi_sub_total")
           .labelNames("instanceId", "group")
           .help("subscriber cache num")
           .register();
@@ -84,7 +84,7 @@ public final class Metrics {
       Gauge.build()
           .namespace("session")
           .subsystem("cache")
-          .name("sub_total")
+          .name("multi_sub_total")
           .labelNames("instanceId", "group")
           .help("subscriber cache num")
           .register();
@@ -93,7 +93,7 @@ public final class Metrics {
       Gauge.build()
           .namespace("session")
           .subsystem("cache")
-          .name("sub_dataID_total")
+          .name("not_multi_sub_dataID_total")
           .labelNames("instanceId", "group")
           .help("subscriber dataID cache num")
           .register();
@@ -102,7 +102,7 @@ public final class Metrics {
       Gauge.build()
           .namespace("session")
           .subsystem("cache")
-          .name("sub_dataID_total")
+          .name("multi_sub_dataID_total")
           .labelNames("instanceId", "group")
           .help("subscriber dataID cache num")
           .register();

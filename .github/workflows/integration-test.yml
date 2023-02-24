@@ -20,7 +20,13 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 1.8
-      - name: ut
+      - name: Integration Test
         run: mvn compile -B
-          && sh ./tools/check_format.sh
           && mvn clean test -DisSkipUnitTest=true "-Dtest.logging.level=ERROR"
+      - name: Publish Test Report
+        if: ${{ always() }}
+        uses: ScaCap/action-surefire-report@v1
+        with:
+          fail_on_test_failures: true
+          skip_publishing: true
+
