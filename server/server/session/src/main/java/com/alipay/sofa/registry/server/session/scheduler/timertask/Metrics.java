@@ -81,13 +81,13 @@ public final class Metrics {
           .register();
 
   static final Gauge MULTI_SUB_GAUGE =
-          Gauge.build()
-                  .namespace("session")
-                  .subsystem("cache")
-                  .name("sub_total")
-                  .labelNames("instanceId", "group")
-                  .help("subscriber cache num")
-                  .register();
+      Gauge.build()
+          .namespace("session")
+          .subsystem("cache")
+          .name("sub_total")
+          .labelNames("instanceId", "group")
+          .help("subscriber cache num")
+          .register();
 
   static final Gauge NOT_MULTI_SUB_DATA_ID_GAUGE =
       Gauge.build()
@@ -99,13 +99,13 @@ public final class Metrics {
           .register();
 
   static final Gauge MULTI_SUB_DATA_ID_GAUGE =
-          Gauge.build()
-                  .namespace("session")
-                  .subsystem("cache")
-                  .name("sub_dataID_total")
-                  .labelNames("instanceId", "group")
-                  .help("subscriber dataID cache num")
-                  .register();
+      Gauge.build()
+          .namespace("session")
+          .subsystem("cache")
+          .name("sub_dataID_total")
+          .labelNames("instanceId", "group")
+          .help("subscriber dataID cache num")
+          .register();
 
   static final Gauge WAT_COUNTER =
       Gauge.build()

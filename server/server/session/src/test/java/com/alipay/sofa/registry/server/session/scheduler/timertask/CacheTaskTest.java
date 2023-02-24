@@ -28,11 +28,10 @@ import com.alipay.sofa.registry.server.session.store.DataStore;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.session.store.Watchers;
 import com.google.common.collect.Lists;
+import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
-
-import java.util.List;
 
 public class CacheTaskTest {
   private String app = "app";
@@ -164,6 +163,5 @@ public class CacheTaskTest {
     tuple = CacheCountTask.splitMultiSub(subs);
     Assert.assertEquals(1, tuple.o1.size());
     Assert.assertEquals(1, tuple.o2.size());
-
   }
 }

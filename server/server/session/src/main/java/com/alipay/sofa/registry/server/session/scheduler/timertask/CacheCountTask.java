@@ -32,7 +32,6 @@ import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
 import com.google.common.collect.Lists;
 import io.prometheus.client.Gauge;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -90,11 +89,17 @@ public class CacheCountTask {
       Map<String, Map<String, Tuple<Integer, Integer>>> notMultiSubGroupCounts =
           DataUtils.countGroupByInstanceIdGroup(multiSubs.o1);
       Map<String, Map<String, Tuple<Integer, Integer>>> multiSubGroupCounts =
-              DataUtils.countGroupByInstanceIdGroup(multiSubs.o2);
+          DataUtils.countGroupByInstanceIdGroup(multiSubs.o2);
       printInstanceIdGroupCount(
-          "[NotMultiSubGroup]", notMultiSubGroupCounts, Metrics.NOT_MULTI_SUB_GAUGE, Metrics.NOT_MULTI_SUB_DATA_ID_GAUGE);
+          "[NotMultiSubGroup]",
+          notMultiSubGroupCounts,
+          Metrics.NOT_MULTI_SUB_GAUGE,
+          Metrics.NOT_MULTI_SUB_DATA_ID_GAUGE);
       printInstanceIdGroupCount(
-              "[MultiSubGroup]", multiSubGroupCounts, Metrics.MULTI_SUB_GAUGE, Metrics.MULTI_SUB_DATA_ID_GAUGE);
+          "[MultiSubGroup]",
+          multiSubGroupCounts,
+          Metrics.MULTI_SUB_GAUGE,
+          Metrics.MULTI_SUB_DATA_ID_GAUGE);
 
       Map<String, Map<String, Tuple<Integer, Integer>>> watGroupCounts =
           DataUtils.countGroupByInstanceIdGroup(wats);
@@ -124,7 +129,7 @@ public class CacheCountTask {
       return new Tuple<>(Collections.emptyList(), Collections.emptyList());
     }
 
-    int initSize = subs.size()/2;
+    int initSize = subs.size() / 2;
     List<Subscriber> notMulti = Lists.newArrayListWithExpectedSize(initSize);
     List<Subscriber> multi = Lists.newArrayListWithExpectedSize(initSize);
 
