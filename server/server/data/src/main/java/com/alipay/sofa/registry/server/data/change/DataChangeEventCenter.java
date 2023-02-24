@@ -397,7 +397,8 @@ public class DataChangeEventCenter {
       final Map<String, DatumVersion> changes =
           Maps.newHashMapWithExpectedSize(event.getDataInfoIds().size());
       for (String dataInfoId : event.getDataInfoIds()) {
-        DatumVersion datumVersion = datumStorageDelegate.getVersion(event.getDataCenter(), dataInfoId);
+        DatumVersion datumVersion =
+            datumStorageDelegate.getVersion(event.getDataCenter(), dataInfoId);
         if (datumVersion != null) {
           changes.put(dataInfoId, datumVersion);
         }
@@ -413,8 +414,7 @@ public class DataChangeEventCenter {
         try {
           notifyExecutor.execute(
               channel.getRemoteAddress(),
-              new ChangeNotifier(
-                  channel, notifyPort, dataCenter, changes, event.getTraceTimes()));
+              new ChangeNotifier(channel, notifyPort, dataCenter, changes, event.getTraceTimes()));
           CHANGE_COMMIT_COUNTER.inc();
         } catch (FastRejectedExecutionException e) {
           CHANGE_SKIP_COUNTER.inc();
