@@ -30,7 +30,9 @@ import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.session.store.Watchers;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
+import com.google.common.collect.Lists;
 import io.prometheus.client.Gauge;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -39,6 +41,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
 
 /**
  * @author qian.lqlq
@@ -81,10 +84,22 @@ public class CacheCountTask {
       printInstanceIdGroupCount(
           "[PubGroup]", pubGroupCounts, Metrics.PUB_GAUGE, Metrics.PUB_DATA_ID_GAUGE);
 
-      Map<String, Map<String, Tuple<Integer, Integer>>> subGroupCounts =
-          DataUtils.countGroupByInstanceIdGroup(subs);
+      Tuple<List<Subscriber>, List<Subscriber>> multiSubs = splitMultiSub(subs);
+
+      Map<String, Map<String, Tuple<Integer, Integer>>> notMultiSubGroupCounts =
+          DataUtils.countGroupByInstanceIdGroup(multiSubs.o1);
+      Map<String, Map<String, Tuple<Integer, Integer>>> multiSubGroupCounts =
+          DataUtils.countGroupByInstanceIdGroup(multiSubs.o2);
       printInstanceIdGroupCount(
-          "[SubGroup]", subGroupCounts, Metrics.SUB_GAUGE, Metrics.SUB_DATA_ID_GAUGE);
+          "[NotMultiSubGroup]",
+          notMultiSubGroupCounts,
+          Metrics.NOT_MULTI_SUB_GAUGE,
+          Metrics.NOT_MULTI_SUB_DATA_ID_GAUGE);
+      printInstanceIdGroupCount(
+          "[MultiSubGroup]",
+          multiSubGroupCounts,
+          Metrics.MULTI_SUB_GAUGE,
+          Metrics.MULTI_SUB_DATA_ID_GAUGE);
 
       Map<String, Map<String, Tuple<Integer, Integer>>> watGroupCounts =
           DataUtils.countGroupByInstanceIdGroup(wats);
@@ -107,6 +122,25 @@ public class CacheCountTask {
       LOGGER.safeError("cache count error", e);
       return false;
     }
+  }
+
+  static Tuple<List<Subscriber>, List<Subscriber>> splitMultiSub(List<Subscriber> subs) {
+    if (CollectionUtils.isEmpty(subs)) {
+      return new Tuple<>(Collections.emptyList(), Collections.emptyList());
+    }
+
+    int initSize = subs.size() / 2;
+    List<Subscriber> notMulti = Lists.newArrayListWithExpectedSize(initSize);
+    List<Subscriber> multi = Lists.newArrayListWithExpectedSize(initSize);
+
+    for (Subscriber sub : subs) {
+      if (sub.acceptMulti()) {
+        multi.add(sub);
+      } else {
+        notMulti.add(sub);
+      }
+    }
+    return new Tuple<>(notMulti, multi);
   }
 
   private static void printInstanceIdGroupAppCount(
