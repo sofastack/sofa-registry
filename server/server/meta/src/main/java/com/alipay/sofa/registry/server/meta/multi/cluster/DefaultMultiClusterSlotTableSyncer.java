@@ -87,7 +87,7 @@ public class DefaultMultiClusterSlotTableSyncer implements MultiClusterSlotTable
 
   @Override
   public Map<String, RemoteClusterSlotState> getMultiClusterSlotTable() {
-    if (metaLeaderService.amIStableAsLeader()) {
+    if (!metaLeaderService.amIStableAsLeader()) {
       throw new MetaLeaderNotWarmupException(
           metaLeaderService.getLeader(), metaLeaderService.getLeaderEpoch());
     }
