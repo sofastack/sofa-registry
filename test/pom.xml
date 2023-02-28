@@ -104,16 +104,6 @@
                 </configuration>
                 <executions>
                     <execution>
-                        <id>default-test</id>
-                        <phase>test</phase>
-                        <goals>
-                            <goal>test</goal>
-                        </goals>
-                        <configuration>
-                            <skipTests>true</skipTests>
-                        </configuration>
-                    </execution>
-                    <execution>
                         <id>test-junit</id>
                         <phase>test</phase>
                         <goals>
