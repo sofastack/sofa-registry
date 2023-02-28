@@ -26,6 +26,8 @@ import com.alipay.sofa.registry.server.data.multi.cluster.executor.MultiClusterE
 import com.alipay.sofa.registry.server.data.multi.cluster.slot.MultiClusterSlotManager;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractClientHandler;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
+
+import java.util.Set;
 import java.util.concurrent.Executor;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -85,12 +87,12 @@ public class RemoteDataChangeNotifyHandler extends AbstractClientHandler<DataCha
           request);
       return null;
     }
+    Set<String> dataInfoIds = request.getDataInfoIds().keySet();
     LOGGER.info(
         "[DataChangeRequest]dataCenter:{} data change:{}",
         request.getDataCenter(),
-        request.getDataInfoIds().keySet());
-    multiClusterSlotManager.dataChangeNotify(
-        request.getDataCenter(), request.getDataInfoIds().keySet());
+        dataInfoIds.size());
+    multiClusterSlotManager.dataChangeNotify(request.getDataCenter(), dataInfoIds);
     return null;
   }
 }

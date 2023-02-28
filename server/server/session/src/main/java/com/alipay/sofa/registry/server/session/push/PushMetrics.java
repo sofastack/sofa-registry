@@ -124,28 +124,25 @@ public final class PushMetrics {
             .subsystem("push")
             .name("push_delay")
             .help("push delay")
-            .labelNames("cause", "status")
+            .labelNames("datacenter", "cause", "status")
             .register();
 
-    private static final Histogram.Child SUB_OK =
-        PUSH_DELAY_HISTOGRAM.labels(PushType.Sub.name(), PushTrace.PushStatus.OK.name());
-    private static final Histogram.Child REG_OK =
-        PUSH_DELAY_HISTOGRAM.labels(PushType.Reg.name(), PushTrace.PushStatus.OK.name());
-
-    static void observePushDelayHistogram(
+    static void observePushDelayHistogram(String dataCenter,
         PushType pushType, long millis, PushTrace.PushStatus status) {
       // quick path
       if (status == PushTrace.PushStatus.OK) {
         if (pushType == PushType.Sub) {
-          SUB_OK.observe(millis);
+          PUSH_DELAY_HISTOGRAM.labels(dataCenter, PushType.Sub.name(), PushTrace.PushStatus.OK.name()).observe(millis);
+
           return;
         }
         if (pushType == PushType.Reg) {
-          REG_OK.observe(millis);
+          PUSH_DELAY_HISTOGRAM.labels(dataCenter, PushType.Reg.name(), PushTrace.PushStatus.OK.name()).observe(millis);
+
           return;
         }
       }
-      PUSH_DELAY_HISTOGRAM.labels(pushType.name(), status.name()).observe(millis);
+      PUSH_DELAY_HISTOGRAM.labels(dataCenter, pushType.name(), status.name()).observe(millis);
     }
 
     static final Counter PUSH_EMPTY_SKIP_COUNTER =

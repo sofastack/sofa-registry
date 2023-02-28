@@ -43,6 +43,7 @@ import com.alipay.sofa.registry.server.data.change.DataChangeEventCenter;
 import com.alipay.sofa.registry.server.data.multi.cluster.exchanger.RemoteDataNodeExchanger;
 import com.alipay.sofa.registry.server.data.multi.cluster.executor.MultiClusterExecutorManager;
 import com.alipay.sofa.registry.server.data.multi.cluster.loggers.Loggers;
+import com.alipay.sofa.registry.server.data.multi.cluster.slot.MultiClusterSlotMetrics.SyncType;
 import com.alipay.sofa.registry.server.data.multi.cluster.sync.info.FetchMultiSyncService;
 import com.alipay.sofa.registry.server.data.slot.SlotChangeListenerManager;
 import com.alipay.sofa.registry.server.data.slot.SlotDiffSyncer;
@@ -51,7 +52,6 @@ import com.alipay.sofa.registry.server.data.slot.SlotManagerImpl.ISlotState;
 import com.alipay.sofa.registry.server.data.slot.SyncContinues;
 import com.alipay.sofa.registry.server.data.slot.SyncLeaderTask;
 import com.alipay.sofa.registry.server.data.timer.Metrics;
-import com.alipay.sofa.registry.server.data.timer.Metrics.SyncType;
 import com.alipay.sofa.registry.server.shared.remoting.ClientSideExchanger;
 import com.alipay.sofa.registry.store.api.meta.MultiClusterSyncRepository;
 import com.alipay.sofa.registry.task.KeyedTask;
@@ -897,7 +897,7 @@ public class MultiClusterSlotManagerImpl implements MultiClusterSlotManager {
               MULTI_CLUSTER_SYNC_DIGEST_LOGGER);
       state.syncDataIdTask =
           multiClusterExecutorManager.getRemoteSyncDataIdExecutor().execute(slot.getId(), task);
-      Metrics.syncAccess(SyncType.SYNC_DELTA);
+      MultiClusterSlotMetrics.syncAccess(remoteDataCenter, SyncType.SYNC_DELTA);
       return;
     }
 
@@ -943,7 +943,7 @@ public class MultiClusterSlotManagerImpl implements MultiClusterSlotManager {
               MULTI_CLUSTER_SYNC_DIGEST_LOGGER);
       state.syncRemoteTask =
           multiClusterExecutorManager.getRemoteSyncLeaderExecutor().execute(slot.getId(), task);
-      Metrics.syncAccess(SyncType.SYNC_ALL);
+      MultiClusterSlotMetrics.syncAccess(remoteDataCenter, SyncType.SYNC_ALL);
       return;
     }
 

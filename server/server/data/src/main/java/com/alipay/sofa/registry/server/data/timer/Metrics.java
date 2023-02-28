@@ -39,31 +39,4 @@ public final class Metrics {
           .labelNames("dataCenter", "remote", "instanceId", "group")
           .help("publisher dataID cache num")
           .register();
-
-  private static final Counter SYNC_COUNTER =
-      Counter.build()
-          .namespace("data")
-          .subsystem("access")
-          .name("sync_total")
-          .labelNames("type")
-          .help("sync data access num")
-          .register();
-  static final Counter.Child SYNC_ALL = SYNC_COUNTER.labels("ALL");
-  static final Counter.Child SYNC_DELTA = SYNC_COUNTER.labels("DELTA");
-
-  public static void syncAccess(SyncType syncType) {
-    if (syncType == SyncType.SYNC_ALL) {
-      SYNC_ALL.inc();
-    } else if (syncType == SyncType.SYNC_DELTA) {
-      SYNC_DELTA.inc();
-    } else {
-      throw new IllegalArgumentException("illegal sync type: " + syncType);
-    }
-  }
-
-  public enum SyncType {
-    SYNC_ALL,
-    SYNC_DELTA,
-    ;
-  }
 }
