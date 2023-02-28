@@ -122,4 +122,29 @@ public class MultiClusterSlotMetrics {
         .labels(dataCenter, String.valueOf(slotId))
         .observe(millis / 1000d);
   }
+
+  private static final Counter SYNC_COUNTER =
+          Counter.build()
+                  .namespace("data")
+                  .subsystem("access")
+                  .name("sync_total")
+                  .labelNames("remote", "type")
+                  .help("sync data access num")
+                  .register();
+
+  public static void syncAccess(String remote, SyncType syncType) {
+    if (syncType == SyncType.SYNC_ALL) {
+      SYNC_COUNTER.labels(remote, "ALL").inc();
+    } else if (syncType == SyncType.SYNC_DELTA) {
+      SYNC_COUNTER.labels(remote, "DELTA").inc();
+    } else {
+      throw new IllegalArgumentException("illegal sync type: " + syncType);
+    }
+  }
+
+  public enum SyncType {
+    SYNC_ALL,
+    SYNC_DELTA,
+    ;
+  }
 }

@@ -295,7 +295,7 @@ public class Subscriber extends BaseInfo {
   @Override
   protected synchronized String getOtherInfo() {
     return StringFormatter.format(
-        "scope={},elementType={},ctx={}", scope, elementType, lastPushContexts);
+        "scope={},elementType={},multi={},ctx={}", scope, elementType, acceptMulti, lastPushContexts);
   }
 
   public synchronized String printPushContext() {
