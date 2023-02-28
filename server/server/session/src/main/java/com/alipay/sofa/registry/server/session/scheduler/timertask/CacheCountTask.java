@@ -180,10 +180,4 @@ public class CacheCountTask {
       }
     }
   }
-
-  public static void main(String[] args) {
-    List<String> notMulti = Lists.newArrayListWithExpectedSize(1000);
-    notMulti.add("aaa");
-    System.out.println(notMulti.size());
-  }
 }
