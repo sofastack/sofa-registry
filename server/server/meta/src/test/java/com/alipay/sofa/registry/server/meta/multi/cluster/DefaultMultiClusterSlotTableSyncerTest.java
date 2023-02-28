@@ -25,6 +25,7 @@ import static org.mockito.Mockito.when;
 import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.multi.cluster.DataCenterMetadata;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
+import com.alipay.sofa.registry.exception.MetaLeaderNotWarmupException;
 import com.alipay.sofa.registry.server.meta.MetaLeaderService;
 import com.alipay.sofa.registry.server.meta.bootstrap.ExecutorManager;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MultiClusterMetaServerConfig;
@@ -109,6 +110,7 @@ public class DefaultMultiClusterSlotTableSyncerTest {
     when(remoteClusterMetaExchanger.learn(anyString(), anyObject())).thenReturn(true);
 
     when(metaLeaderService.amILeader()).thenReturn(true);
+    when(metaLeaderService.amIStableAsLeader()).thenReturn(true);
     ConcurrentUtils.sleepUninterruptibly(500, TimeUnit.MILLISECONDS);
     Map<String, RemoteClusterSlotState> multiClusterSlotTable =
         defaultMultiClusterSlotTableSyncer.getMultiClusterSlotTable();
@@ -161,6 +163,7 @@ public class DefaultMultiClusterSlotTableSyncerTest {
         .thenReturn(() -> createUpgradeGenericResponse());
     when(remoteClusterMetaExchanger.learn(anyString(), anyObject())).thenReturn(true);
     when(metaLeaderService.amILeader()).thenReturn(false);
+    when(metaLeaderService.amIStableAsLeader()).thenReturn(true);
 
     ConcurrentUtils.sleepUninterruptibly(500, TimeUnit.MILLISECONDS);
     Map<String, RemoteClusterSlotState> multiClusterSlotTable =
@@ -173,6 +176,12 @@ public class DefaultMultiClusterSlotTableSyncerTest {
     when(metaLeaderService.amILeader()).thenReturn(true);
   }
 
+  @Test(expected = MetaLeaderNotWarmupException.class)
+  public void testMetaNotWarmupException() {
+    when(metaLeaderService.amIStableAsLeader()).thenReturn(false);
+    defaultMultiClusterSlotTableSyncer.getMultiClusterSlotTable();
+  }
+
   @Test
   public void testSendRequestError() {
     when(remoteClusterMetaExchanger.sendRequest(anyString(), anyObject()))
@@ -183,6 +192,8 @@ public class DefaultMultiClusterSlotTableSyncerTest {
     when(remoteClusterMetaExchanger.learn(anyString(), anyObject())).thenReturn(true);
 
     when(metaLeaderService.amILeader()).thenReturn(true);
+    when(metaLeaderService.amIStableAsLeader()).thenReturn(true);
+
     ConcurrentUtils.sleepUninterruptibly(500, TimeUnit.MILLISECONDS);
     Map<String, RemoteClusterSlotState> multiClusterSlotTable =
         defaultMultiClusterSlotTableSyncer.getMultiClusterSlotTable();
@@ -207,6 +218,8 @@ public class DefaultMultiClusterSlotTableSyncerTest {
     when(remoteClusterMetaExchanger.learn(anyString(), anyObject())).thenReturn(true);
 
     when(metaLeaderService.amILeader()).thenReturn(true);
+    when(metaLeaderService.amIStableAsLeader()).thenReturn(true);
+
     ConcurrentUtils.sleepUninterruptibly(500, TimeUnit.MILLISECONDS);
     Map<String, RemoteClusterSlotState> multiClusterSlotTable =
         defaultMultiClusterSlotTableSyncer.getMultiClusterSlotTable();
@@ -231,6 +244,8 @@ public class DefaultMultiClusterSlotTableSyncerTest {
     when(remoteClusterMetaExchanger.learn(anyString(), anyObject())).thenReturn(true);
 
     when(metaLeaderService.amILeader()).thenReturn(true);
+    when(metaLeaderService.amIStableAsLeader()).thenReturn(true);
+
     ConcurrentUtils.sleepUninterruptibly(500, TimeUnit.MILLISECONDS);
 
     Map<String, RemoteClusterSlotState> multiClusterSlotTable =
@@ -256,6 +271,8 @@ public class DefaultMultiClusterSlotTableSyncerTest {
     when(remoteClusterMetaExchanger.learn(anyString(), anyObject())).thenReturn(true);
 
     when(metaLeaderService.amILeader()).thenReturn(true);
+    when(metaLeaderService.amIStableAsLeader()).thenReturn(true);
+
     ConcurrentUtils.sleepUninterruptibly(500, TimeUnit.MILLISECONDS);
     Map<String, RemoteClusterSlotState> multiClusterSlotTable =
         defaultMultiClusterSlotTableSyncer.getMultiClusterSlotTable();
@@ -280,6 +297,8 @@ public class DefaultMultiClusterSlotTableSyncerTest {
     when(remoteClusterMetaExchanger.learn(anyString(), anyObject())).thenReturn(true);
 
     when(metaLeaderService.amILeader()).thenReturn(true);
+    when(metaLeaderService.amIStableAsLeader()).thenReturn(true);
+
     ConcurrentUtils.sleepUninterruptibly(500, TimeUnit.MILLISECONDS);
     Map<String, RemoteClusterSlotState> multiClusterSlotTable =
         defaultMultiClusterSlotTableSyncer.getMultiClusterSlotTable();
@@ -304,6 +323,8 @@ public class DefaultMultiClusterSlotTableSyncerTest {
     when(remoteClusterMetaExchanger.learn(anyString(), anyObject())).thenReturn(true);
 
     when(metaLeaderService.amILeader()).thenReturn(true);
+    when(metaLeaderService.amIStableAsLeader()).thenReturn(true);
+
     ConcurrentUtils.sleepUninterruptibly(1000, TimeUnit.MILLISECONDS);
     Map<String, RemoteClusterSlotState> multiClusterSlotTable =
         defaultMultiClusterSlotTableSyncer.getMultiClusterSlotTable();
