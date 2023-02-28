@@ -20,6 +20,7 @@ import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.elector.LeaderInfo;
 import com.alipay.sofa.registry.common.model.multi.cluster.DataCenterMetadata;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
+import com.alipay.sofa.registry.exception.MetaLeaderNotWarmupException;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.exchange.message.Response;
@@ -86,6 +87,10 @@ public class DefaultMultiClusterSlotTableSyncer implements MultiClusterSlotTable
 
   @Override
   public Map<String, RemoteClusterSlotState> getMultiClusterSlotTable() {
+    if (metaLeaderService.amIStableAsLeader()) {
+      throw new MetaLeaderNotWarmupException(metaLeaderService.getLeader(), metaLeaderService.getLeaderEpoch());
+    }
+
     Map<String, RemoteClusterSlotState> result =
         Maps.newHashMapWithExpectedSize(slotStateMap.size());
     for (Entry<String, RemoteClusterSlotState> entry : slotStateMap.entrySet()) {
