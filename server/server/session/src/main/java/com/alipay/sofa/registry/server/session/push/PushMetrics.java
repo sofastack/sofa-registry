@@ -127,17 +127,21 @@ public final class PushMetrics {
             .labelNames("datacenter", "cause", "status")
             .register();
 
-    static void observePushDelayHistogram(String dataCenter,
-        PushType pushType, long millis, PushTrace.PushStatus status) {
+    static void observePushDelayHistogram(
+        String dataCenter, PushType pushType, long millis, PushTrace.PushStatus status) {
       // quick path
       if (status == PushTrace.PushStatus.OK) {
         if (pushType == PushType.Sub) {
-          PUSH_DELAY_HISTOGRAM.labels(dataCenter, PushType.Sub.name(), PushTrace.PushStatus.OK.name()).observe(millis);
+          PUSH_DELAY_HISTOGRAM
+              .labels(dataCenter, PushType.Sub.name(), PushTrace.PushStatus.OK.name())
+              .observe(millis);
 
           return;
         }
         if (pushType == PushType.Reg) {
-          PUSH_DELAY_HISTOGRAM.labels(dataCenter, PushType.Reg.name(), PushTrace.PushStatus.OK.name()).observe(millis);
+          PUSH_DELAY_HISTOGRAM
+              .labels(dataCenter, PushType.Reg.name(), PushTrace.PushStatus.OK.name())
+              .observe(millis);
 
           return;
         }

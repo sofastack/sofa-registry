@@ -141,7 +141,7 @@ public class HeartbeatRequestHandler extends BaseMetaServerHandler<HeartbeatRequ
       if (e instanceof MetaLeaderNotWarmupException) {
         MetaLeaderNotWarmupException exception = (MetaLeaderNotWarmupException) e;
         BaseHeartBeatResponse response =
-                new BaseHeartBeatResponse(false, exception.getLeader(), exception.getEpoch());
+            new BaseHeartBeatResponse(false, exception.getLeader(), exception.getEpoch());
         return new GenericResponse<BaseHeartBeatResponse>().fillFailData(response);
       }
 

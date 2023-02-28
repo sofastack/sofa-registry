@@ -51,7 +51,6 @@ import com.alipay.sofa.registry.server.data.slot.SlotManager;
 import com.alipay.sofa.registry.server.data.slot.SlotManagerImpl.ISlotState;
 import com.alipay.sofa.registry.server.data.slot.SyncContinues;
 import com.alipay.sofa.registry.server.data.slot.SyncLeaderTask;
-import com.alipay.sofa.registry.server.data.timer.Metrics;
 import com.alipay.sofa.registry.server.shared.remoting.ClientSideExchanger;
 import com.alipay.sofa.registry.store.api.meta.MultiClusterSyncRepository;
 import com.alipay.sofa.registry.task.KeyedTask;
