@@ -28,6 +28,7 @@ import com.alipay.sofa.registry.common.model.multi.cluster.DataCenterMetadata;
 import com.alipay.sofa.registry.common.model.multi.cluster.RemoteSlotTableStatus;
 import com.alipay.sofa.registry.common.model.slot.SlotConfig;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
+import com.alipay.sofa.registry.exception.MetaLeaderNotWarmupException;
 import com.alipay.sofa.registry.exception.SofaRegistryMetaLeaderException;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -134,6 +135,13 @@ public class HeartbeatRequestHandler extends BaseMetaServerHandler<HeartbeatRequ
         SofaRegistryMetaLeaderException exception = (SofaRegistryMetaLeaderException) e;
         BaseHeartBeatResponse response =
             new BaseHeartBeatResponse(false, exception.getLeader(), exception.getEpoch());
+        return new GenericResponse<BaseHeartBeatResponse>().fillFailData(response);
+      }
+
+      if (e instanceof MetaLeaderNotWarmupException) {
+        MetaLeaderNotWarmupException exception = (MetaLeaderNotWarmupException) e;
+        BaseHeartBeatResponse response =
+                new BaseHeartBeatResponse(false, exception.getLeader(), exception.getEpoch());
         return new GenericResponse<BaseHeartBeatResponse>().fillFailData(response);
       }
 
