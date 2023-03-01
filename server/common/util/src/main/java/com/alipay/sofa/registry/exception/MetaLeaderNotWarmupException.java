@@ -14,28 +14,39 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.data.timer;
+package com.alipay.sofa.registry.exception;
 
-import io.prometheus.client.Gauge;
+/**
+ * @author chen.zhu
+ *     <p>Mar 09, 2021
+ */
+public class MetaLeaderNotWarmupException extends SofaRegistryRuntimeException {
 
-public final class Metrics {
-  private Metrics() {}
+  private final String leader;
 
-  static final Gauge PUB_GAUGE =
-      Gauge.build()
-          .namespace("data")
-          .subsystem("cache")
-          .name("pub_total")
-          .labelNames("dataCenter", "remote", "instanceId", "group")
-          .help("publisher cache num")
-          .register();
+  private final long epoch;
 
-  static final Gauge PUB_DATA_ID_GAUGE =
-      Gauge.build()
-          .namespace("data")
-          .subsystem("cache")
-          .name("pub_dataID_total")
-          .labelNames("dataCenter", "remote", "instanceId", "group")
-          .help("publisher dataID cache num")
-          .register();
+  public MetaLeaderNotWarmupException(String leader, long epoch) {
+    super("leader not warmup");
+    this.leader = leader;
+    this.epoch = epoch;
+  }
+
+  /**
+   * Getter method for property <tt>leader</tt>.
+   *
+   * @return property value of leader
+   */
+  public String getLeader() {
+    return leader;
+  }
+
+  /**
+   * Getter method for property <tt>epoch</tt>.
+   *
+   * @return property value of epoch
+   */
+  public long getEpoch() {
+    return epoch;
+  }
 }

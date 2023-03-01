@@ -124,13 +124,13 @@ public class MultiClusterSlotMetrics {
   }
 
   private static final Counter SYNC_COUNTER =
-          Counter.build()
-                  .namespace("data")
-                  .subsystem("access")
-                  .name("sync_total")
-                  .labelNames("remote", "type")
-                  .help("sync data access num")
-                  .register();
+      Counter.build()
+          .namespace("data")
+          .subsystem("access")
+          .name("sync_total")
+          .labelNames("remote", "type")
+          .help("sync data access num")
+          .register();
 
   public static void syncAccess(String remote, SyncType syncType) {
     if (syncType == SyncType.SYNC_ALL) {

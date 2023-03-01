@@ -201,8 +201,8 @@ public final class PushTrace {
       datumModifyPushSpanMillis = Math.max(datumPushedDelayList.get(0), datumVersionPushSpanMillis);
     }
 
-    PushMetrics.Push.observePushDelayHistogram(dataCenter,
-        pushCause.pushType, datumModifyPushSpanMillis, status);
+    PushMetrics.Push.observePushDelayHistogram(
+        dataCenter, pushCause.pushType, datumModifyPushSpanMillis, status);
     if (LOGGER.isInfoEnabled() || SLOW_LOGGER.isInfoEnabled()) {
       final String msg =
           StringFormatter.format(
