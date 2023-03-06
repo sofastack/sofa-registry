@@ -32,6 +32,7 @@ import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.task.FastRejectedExecutionException;
+import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.google.common.collect.Lists;
@@ -139,8 +140,8 @@ public class BufferedDataWritingEngine implements DataWritingEngine {
       this.blockingQueue = new LinkedBlockingQueue<>(bufferSize);
       this.retryBatches = Lists.newLinkedList();
 
-      Thread thread =
-          new Thread(
+      ConcurrentUtils.createDaemonThread(
+              workerName,
               () -> {
                 while (true) {
                   try {
@@ -177,10 +178,8 @@ public class BufferedDataWritingEngine implements DataWritingEngine {
                     LOGGER.safeError("failed to request batch", cause);
                   }
                 }
-              });
-      thread.setName(workerName);
-      thread.setDaemon(false);
-      thread.start();
+              })
+          .start();
     }
 
     public boolean offer(Req req) {
