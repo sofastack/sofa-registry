@@ -29,13 +29,15 @@ import java.util.*;
  * @author qian.lqlq
  * @version $Id: ClientOffPublisher.java, v 0.1 2017-12-01 15:48 qian.lqlq Exp $
  */
-public final class ClientOffPublisher implements Serializable {
+public final class ClientOffPublisher implements Serializable, DataServerReq {
   private static final long serialVersionUID = -3547806571058756207L;
 
+  private final String dataInfoId;
   private final ConnectId connectId;
   private final Map<String, Map<String, RegisterVersion>> publisherMap = Maps.newHashMap();
 
-  public ClientOffPublisher(ConnectId connectId) {
+  public ClientOffPublisher(String dataInfoId, ConnectId connectId) {
+    this.dataInfoId = dataInfoId;
     this.connectId = connectId;
   }
 
@@ -60,5 +62,10 @@ public final class ClientOffPublisher implements Serializable {
   @Override
   public String toString() {
     return "ClientOff{" + "connId=" + connectId + ", pubs=" + publisherMap + '}';
+  }
+
+  @Override
+  public String getDataInfoId() {
+    return dataInfoId;
   }
 }
