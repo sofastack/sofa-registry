@@ -43,7 +43,8 @@ import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
 import com.alipay.sofa.registry.server.session.store.DataStore;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.session.store.Watchers;
-import com.alipay.sofa.registry.server.session.strategy.SessionRegistryStrategy;
+import com.alipay.sofa.registry.server.session.strategy.ClientRegistrationHook;
+import com.alipay.sofa.registry.server.session.strategy.impl.DefaultClientRegistrationHook;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.LoopRunnable;
@@ -88,8 +89,6 @@ public class SessionRegistry implements Registry {
 
   @Autowired protected Exchange boltExchange;
 
-  @Autowired protected SessionRegistryStrategy sessionRegistryStrategy;
-
   @Autowired protected OrderedInterceptorManager orderedInterceptorManager;
 
   @Autowired protected WriteDataAcceptor writeDataAcceptor;
@@ -101,9 +100,18 @@ public class SessionRegistry implements Registry {
   @Autowired protected ConfigProvideDataWatcher configProvideDataWatcher;
 
   private final VersionWatchDog versionWatchDog = new VersionWatchDog();
+  private ClientRegistrationHook clientRegistrationHook;
 
   @PostConstruct
   public void init() {
+    this.clientRegistrationHook =
+        new DefaultClientRegistrationHook(
+            sessionServerConfig,
+            firePushService,
+            pushSwitchService,
+            configProvideDataWatcher,
+            sessionWatchers);
+
     ConcurrentUtils.createDaemonThread("SessionVerWatchDog", versionWatchDog).start();
     ConcurrentUtils.createDaemonThread("SessionClientWatchDog", new ClientWatchDog()).start();
   }
@@ -112,7 +120,7 @@ public class SessionRegistry implements Registry {
   public void register(StoreData storeData, Channel channel) {
     RegisterInvokeData registerInvokeData = new RegisterInvokeData(storeData, channel);
 
-    boolean allInterceptorsSuccess = true;
+    boolean allInterceptorsSuccess;
     try {
       allInterceptorsSuccess = orderedInterceptorManager.executeInterceptors(registerInvokeData);
     } catch (Exception e) {
@@ -135,24 +143,21 @@ public class SessionRegistry implements Registry {
             // All write operations to DataServer (pub/unPub/clientoff/renew/snapshot)
             // are handed over to WriteDataAcceptor
             writeDataAcceptor.accept(new PublisherRegisterWriteDataRequest(publisher));
-
-            sessionRegistryStrategy.afterPublisherRegister(publisher);
+            clientRegistrationHook.afterClientRegister(storeData);
             break;
           case SUBSCRIBER:
             Subscriber subscriber = (Subscriber) storeData;
             if (!sessionInterests.add(subscriber)) {
               break;
             }
-
-            sessionRegistryStrategy.afterSubscriberRegister(subscriber);
+            clientRegistrationHook.afterClientRegister(storeData);
             break;
           case WATCHER:
             Watcher watcher = (Watcher) storeData;
             if (!sessionWatchers.add(watcher)) {
               break;
             }
-
-            sessionRegistryStrategy.afterWatcherRegister(watcher);
+            clientRegistrationHook.afterClientRegister(storeData);
             break;
           default:
             break;
@@ -176,24 +181,21 @@ public class SessionRegistry implements Registry {
         // are handed over to WriteDataAcceptor
         writeDataAcceptor.accept(new PublisherUnregisterWriteDataRequest(publisher));
 
-        sessionRegistryStrategy.afterPublisherUnRegister(publisher);
+        clientRegistrationHook.afterClientUnregister(storeData);
         break;
-
       case SUBSCRIBER:
         Subscriber subscriber = (Subscriber) storeData;
         if (sessionInterests.deleteById(storeData.getId(), subscriber.getDataInfoId()) == null) {
           break;
         }
-        sessionRegistryStrategy.afterSubscriberUnRegister(subscriber);
+        clientRegistrationHook.afterClientUnregister(storeData);
         break;
-
       case WATCHER:
         Watcher watcher = (Watcher) storeData;
-
         if (sessionWatchers.deleteById(watcher.getId(), watcher.getDataInfoId()) == null) {
           break;
         }
-        sessionRegistryStrategy.afterWatcherUnRegister(watcher);
+        clientRegistrationHook.afterClientUnregister(storeData);
         break;
       default:
         break;

@@ -626,11 +626,6 @@ public class SessionServerConfiguration {
 
   @Configuration
   public static class SessionStrategyConfiguration {
-    @Bean
-    @ConditionalOnMissingBean
-    public SessionRegistryStrategy sessionRegistryStrategy() {
-      return new DefaultSessionRegistryStrategy();
-    }
 
     @Bean
     @ConditionalOnMissingBean

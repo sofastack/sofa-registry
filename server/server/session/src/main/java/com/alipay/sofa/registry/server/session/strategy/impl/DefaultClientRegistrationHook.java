@@ -19,19 +19,17 @@ package com.alipay.sofa.registry.server.session.strategy.impl;
 import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.common.model.store.BaseInfo;
-import com.alipay.sofa.registry.common.model.store.Publisher;
+import com.alipay.sofa.registry.common.model.store.StoreData;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.common.model.store.Watcher;
 import com.alipay.sofa.registry.core.model.ReceivedConfigData;
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.converter.ReceivedDataConverter;
 import com.alipay.sofa.registry.server.session.providedata.ConfigProvideDataWatcher;
 import com.alipay.sofa.registry.server.session.push.FirePushService;
 import com.alipay.sofa.registry.server.session.push.PushSwitchService;
 import com.alipay.sofa.registry.server.session.store.Watchers;
-import com.alipay.sofa.registry.server.session.strategy.SessionRegistryStrategy;
+import com.alipay.sofa.registry.server.session.strategy.ClientRegistrationHook;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.LoopRunnable;
 import com.google.common.collect.Lists;
@@ -41,51 +39,78 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import org.apache.commons.collections.CollectionUtils;
 import org.glassfish.jersey.internal.guava.Sets;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-/**
- * @author kezhu.wukz
- * @author xuanbei
- * @since 2019/2/15
- */
-public class DefaultSessionRegistryStrategy implements SessionRegistryStrategy {
-  private static final Logger LOGGER =
-      LoggerFactory.getLogger(DefaultSessionRegistryStrategy.class);
+/** Default implementation of {@link ClientRegistrationHook}. */
+public class DefaultClientRegistrationHook implements ClientRegistrationHook {
 
-  @Autowired protected FirePushService firePushService;
+  private static final Logger LOGGER = LoggerFactory.getLogger(DefaultClientRegistrationHook.class);
 
-  @Autowired protected SessionServerConfig sessionServerConfig;
+  private final SessionServerConfig sessionServerConfig;
+  private final FirePushService firePushService;
+  private final PushSwitchService pushSwitchService;
+  private final ConfigProvideDataWatcher configProvideDataWatcher;
+  private final Watchers sessionWatchers;
 
-  @Autowired protected PushSwitchService pushSwitchService;
+  public DefaultClientRegistrationHook(
+      SessionServerConfig sessionServerConfig,
+      FirePushService firePushService,
+      PushSwitchService pushSwitchService,
+      ConfigProvideDataWatcher configProvideDataWatcher,
+      Watchers sessionWatchers) {
+    this.sessionServerConfig = sessionServerConfig;
+    this.firePushService = firePushService;
+    this.pushSwitchService = pushSwitchService;
+    this.configProvideDataWatcher = configProvideDataWatcher;
+    this.sessionWatchers = sessionWatchers;
+    ConcurrentUtils.createDaemonThread(
+            "watcher-scan-dog",
+            new LoopRunnable() {
+              @Override
+              public void runUnthrowable() {
+                processWatch();
+              }
 
-  @Autowired protected ConfigProvideDataWatcher configProvideDataWatcher;
-
-  @Autowired protected Watchers sessionWatchers;
-
-  protected final WatcherScanDog watcherScanDog = new WatcherScanDog();
-  private final Thread t = ConcurrentUtils.createDaemonThread("watcher-scan-dog", watcherScanDog);
-
-  @Override
-  public void start() {
-    t.start();
+              @Override
+              public void waitingUnthrowable() {
+                ConcurrentUtils.sleepUninterruptibly(
+                    sessionServerConfig.getScanWatcherIntervalMillis(), TimeUnit.MILLISECONDS);
+              }
+            })
+        .start();
   }
 
   @Override
-  public void afterPublisherRegister(Publisher publisher) {}
+  public void afterClientRegister(StoreData<?> storeData) {
+    switch (storeData.getDataType()) {
+      case PUBLISHER:
+        // NOOP
+        break;
+      case SUBSCRIBER:
+        afterSubscriberRegister((Subscriber) storeData);
+        break;
+      case WATCHER:
+        afterWatcherRegister((Watcher) storeData);
+        break;
+      default:
+        throw new IllegalArgumentException(
+            "unsupported data type: " + storeData.getDataType().name());
+    }
+  }
 
   @Override
-  public void afterSubscriberRegister(Subscriber subscriber) {
+  public void afterClientUnregister(StoreData<?> storeData) {
+    // NOOP
+  }
+
+  private void afterSubscriberRegister(Subscriber subscriber) {
     if (pushSwitchService.canIpPush(subscriber.getSourceAddress().getIpAddress())) {
       firePushService.fireOnRegister(subscriber);
     }
   }
 
-  private boolean checkWatcherVersion(Watcher watcher) {
-    return watcher.getClientVersion() == BaseInfo.ClientVersion.StoreData;
-  }
-
-  @Override
-  public void afterWatcherRegister(Watcher watcher) {
+  private void afterWatcherRegister(Watcher watcher) {
     if (!checkWatcherVersion(watcher)) {
       LOGGER.warn(
           "unsupported watch:{}, clientVersion={}",
@@ -99,7 +124,7 @@ public class DefaultSessionRegistryStrategy implements SessionRegistryStrategy {
     if (!pushSwitchService.canIpPush(watcher.getSourceAddress().getIpAddress())) {
       return;
     }
-    ProvideData provideData = null;
+    ProvideData provideData;
     if (sessionServerConfig.isWatchConfigEnable()) {
       // the provideData maybe exist
       provideData = configProvideDataWatcher.get(watcher.getDataInfoId());
@@ -112,6 +137,10 @@ public class DefaultSessionRegistryStrategy implements SessionRegistryStrategy {
           ReceivedDataConverter.createReceivedConfigData(watcher, provideData);
       firePushService.fireOnWatcher(watcher, data);
     }
+  }
+
+  private boolean checkWatcherVersion(Watcher watcher) {
+    return watcher.getClientVersion() == BaseInfo.ClientVersion.StoreData;
   }
 
   boolean processWatchWhenWatchConfigDisable(Watcher w) {
@@ -172,41 +201,22 @@ public class DefaultSessionRegistryStrategy implements SessionRegistryStrategy {
     return Tuple.of(dataInfoIds, watchers);
   }
 
-  final class WatcherScanDog extends LoopRunnable {
-
-    @Override
-    public void runUnthrowable() {
-      Tuple<Set<String>, List<Watcher>> filtered = filter();
-      if (filtered == null) {
-        return;
-      }
-      final boolean watchConfigEnable = sessionServerConfig.isWatchConfigEnable();
-      if (watchConfigEnable) {
-        configProvideDataWatcher.refreshWatch(filtered.o1);
-      }
-
-      int count = 0;
-      for (Watcher w : filtered.o2) {
-        if (processWatch(w, watchConfigEnable)) {
-          count++;
-        }
-      }
-      LOGGER.info("fire watchers:{}", count);
+  void processWatch() {
+    Tuple<Set<String>, List<Watcher>> filtered = filter();
+    if (filtered == null) {
+      return;
+    }
+    final boolean watchConfigEnable = sessionServerConfig.isWatchConfigEnable();
+    if (watchConfigEnable) {
+      configProvideDataWatcher.refreshWatch(filtered.o1);
     }
 
-    @Override
-    public void waitingUnthrowable() {
-      ConcurrentUtils.sleepUninterruptibly(
-          sessionServerConfig.getScanWatcherIntervalMillis(), TimeUnit.MILLISECONDS);
+    int count = 0;
+    for (Watcher w : filtered.o2) {
+      if (processWatch(w, watchConfigEnable)) {
+        count++;
+      }
     }
+    LOGGER.info("fire watchers:{}", count);
   }
-
-  @Override
-  public void afterPublisherUnRegister(Publisher publisher) {}
-
-  @Override
-  public void afterSubscriberUnRegister(Subscriber subscriber) {}
-
-  @Override
-  public void afterWatcherUnRegister(Watcher watcher) {}
 }

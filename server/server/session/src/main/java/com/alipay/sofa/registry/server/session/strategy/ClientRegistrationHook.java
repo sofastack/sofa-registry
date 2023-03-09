@@ -16,27 +16,22 @@
  */
 package com.alipay.sofa.registry.server.session.strategy;
 
-import com.alipay.sofa.registry.common.model.store.Publisher;
-import com.alipay.sofa.registry.common.model.store.Subscriber;
-import com.alipay.sofa.registry.common.model.store.Watcher;
+import com.alipay.sofa.registry.common.model.store.StoreData;
 
-/**
- * @author xuanbei
- * @since 2019/2/15
- */
-public interface SessionRegistryStrategy {
+/** Hook interfaces that are called back after client registration and unregistration. */
+public interface ClientRegistrationHook {
 
-  void start();
+  /**
+   * Invoked after client register.
+   *
+   * @param storeData client
+   */
+  void afterClientRegister(StoreData<?> storeData);
 
-  void afterPublisherRegister(Publisher publisher);
-
-  void afterSubscriberRegister(Subscriber subscriber);
-
-  void afterWatcherRegister(Watcher watcher);
-
-  void afterPublisherUnRegister(Publisher publisher);
-
-  void afterSubscriberUnRegister(Subscriber subscriber);
-
-  void afterWatcherUnRegister(Watcher watcher);
+  /**
+   * Invoked after client unregister.
+   *
+   * @param storeData client
+   */
+  void afterClientUnregister(StoreData<?> storeData);
 }

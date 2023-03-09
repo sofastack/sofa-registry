@@ -36,7 +36,6 @@ import com.alipay.sofa.registry.server.session.metadata.MetadataCacheRegistry;
 import com.alipay.sofa.registry.server.session.providedata.ConfigProvideDataWatcher;
 import com.alipay.sofa.registry.server.session.remoting.handler.ClientNodeConnectionHandler;
 import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
-import com.alipay.sofa.registry.server.session.strategy.SessionRegistryStrategy;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.server.shared.providedata.SystemPropertyProcessorManager;
@@ -94,8 +93,6 @@ public class SessionServerBootstrap {
   @Autowired private SlotTableCache slotTableCache;
 
   @Autowired private ConfigProvideDataWatcher configProvideDataWatcher;
-
-  @Autowired private SessionRegistryStrategy sessionRegistryStrategy;
 
   @Autowired private ClientManagerAddressRepository clientManagerAddressRepository;
 
@@ -186,7 +183,6 @@ public class SessionServerBootstrap {
             return true;
           });
 
-      sessionRegistryStrategy.start();
       configProvideDataWatcher.start();
       registerSerializer();
       openConsoleServer();
