@@ -16,25 +16,24 @@
  */
 package com.alipay.sofa.registry.server.session.remoting.handler;
 
+import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.core.model.SyncConfigRequest;
 import com.alipay.sofa.registry.core.model.SyncConfigResponse;
 import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.server.session.strategy.SyncConfigHandlerStrategy;
+import com.google.common.collect.Lists;
 import java.util.concurrent.Executor;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author zhuoyu.sjw
  * @version $Id: SyncConfigHandler.java, v 0.1 2018-03-14 23:15 zhuoyu.sjw Exp $$
  */
 public class SyncConfigHandler extends AbstractClientDataRequestHandler<SyncConfigRequest> {
-  @Autowired SyncConfigHandlerStrategy syncConfigHandlerStrategy;
 
   @Override
   public Object doHandle(Channel channel, SyncConfigRequest request) {
     SyncConfigResponse response = new SyncConfigResponse();
     response.setSuccess(true);
-    syncConfigHandlerStrategy.handleSyncConfigResponse(response);
+    response.setAvailableSegments(Lists.newArrayList(ValueConstants.DEFAULT_DATA_CENTER));
     return response;
   }
 

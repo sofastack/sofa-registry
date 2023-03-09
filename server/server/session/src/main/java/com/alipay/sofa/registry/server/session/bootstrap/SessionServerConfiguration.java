@@ -629,12 +629,6 @@ public class SessionServerConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public SyncConfigHandlerStrategy syncConfigHandlerStrategy() {
-      return new DefaultSyncConfigHandlerStrategy();
-    }
-
-    @Bean
-    @ConditionalOnMissingBean
     public PublisherHandlerStrategy publisherHandlerStrategy() {
       return new DefaultPublisherHandlerStrategy();
     }
