@@ -33,6 +33,7 @@ import com.alipay.sofa.registry.server.session.TestUtils;
 import com.alipay.sofa.registry.server.session.providedata.ConfigProvideDataWatcher;
 import com.alipay.sofa.registry.server.session.push.FirePushService;
 import com.alipay.sofa.registry.server.session.push.PushSwitchService;
+import com.alipay.sofa.registry.server.session.registry.DefaultClientRegistrationHook;
 import com.alipay.sofa.registry.server.session.store.Watchers;
 import com.google.common.collect.Sets;
 import java.util.Collections;
