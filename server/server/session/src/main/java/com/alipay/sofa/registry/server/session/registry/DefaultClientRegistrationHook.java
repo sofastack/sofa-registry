@@ -142,7 +142,7 @@ public class DefaultClientRegistrationHook implements ClientRegistrationHook {
     return watcher.getClientVersion() == BaseInfo.ClientVersion.StoreData;
   }
 
-  boolean processWatchWhenWatchConfigDisable(Watcher w) {
+  public boolean processWatchWhenWatchConfigDisable(Watcher w) {
     if (w.hasPushed()) {
       return false;
     }
@@ -152,7 +152,7 @@ public class DefaultClientRegistrationHook implements ClientRegistrationHook {
     return true;
   }
 
-  boolean processWatchWhenWatchConfigEnable(Watcher w) {
+  public boolean processWatchWhenWatchConfigEnable(Watcher w) {
     final String dataInfoId = w.getDataInfoId();
     final ProvideData provideData = configProvideDataWatcher.get(dataInfoId);
     if (provideData == null) {
@@ -176,13 +176,13 @@ public class DefaultClientRegistrationHook implements ClientRegistrationHook {
     return false;
   }
 
-  boolean processWatch(Watcher w, boolean watchEnable) {
+  public boolean processWatch(Watcher w, boolean watchEnable) {
     return watchEnable
         ? processWatchWhenWatchConfigEnable(w)
         : processWatchWhenWatchConfigDisable(w);
   }
 
-  Tuple<Set<String>, List<Watcher>> filter() {
+  public Tuple<Set<String>, List<Watcher>> filter() {
     List<Watcher> watchers = Lists.newLinkedList(sessionWatchers.getDataList());
     if (CollectionUtils.isEmpty(watchers)) {
       return null;
@@ -200,7 +200,7 @@ public class DefaultClientRegistrationHook implements ClientRegistrationHook {
     return Tuple.of(dataInfoIds, watchers);
   }
 
-  void processWatch() {
+  public void processWatch() {
     Tuple<Set<String>, List<Watcher>> filtered = filter();
     if (filtered == null) {
       return;

@@ -32,7 +32,7 @@ import java.util.*;
 public final class ClientOffPublisher implements Serializable, DataServerReq {
   private static final long serialVersionUID = -3547806571058756207L;
 
-  private final String dataInfoId;
+  private final String dataInfoId; // use to cal slot id
   private final ConnectId connectId;
   private final Map<String, Map<String, RegisterVersion>> publisherMap = Maps.newHashMap();
 

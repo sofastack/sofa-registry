@@ -25,9 +25,6 @@ import com.alipay.sofa.registry.remoting.bolt.BoltChannel;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.mapper.ConnectionMapper;
-import com.alipay.sofa.registry.server.session.store.DataStore;
-import com.alipay.sofa.registry.server.session.store.Interests;
-import com.alipay.sofa.registry.server.session.store.Watchers;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.util.*;
@@ -39,12 +36,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class ConnectionsService {
 
   @Autowired Exchange boltExchange;
-
-  @Autowired DataStore sessionDataStore;
-
-  @Autowired Interests sessionInterests;
-
-  @Autowired Watchers sessionWatchers;
 
   @Autowired SessionServerConfig sessionServerConfig;
 
