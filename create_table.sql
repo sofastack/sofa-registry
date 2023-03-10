@@ -7,8 +7,8 @@ CREATE TABLE IF NOT EXISTS `app_revision`
     `base_params`          text                  DEFAULT NULL COMMENT '基础参数',
     `service_params`       text                  DEFAULT NULL COMMENT '服务参数',
     `service_params_large` mediumtext            DEFAULT NULL COMMENT '服务参数',
-    `gmt_create`           timestamp    NOT NULL COMMENT '创建时间',
-    `gmt_modified`         timestamp    NOT NULL COMMENT '修改时间',
+    `gmt_create`           timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `gmt_modified`         timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
     `client_version`       varchar(512)          DEFAULT NULL COMMENT '客户端版本',
     `deleted`              tinyint(1)   NOT NULL DEFAULT 0 COMMENT '是否被删除',
     PRIMARY KEY (`id`),
@@ -21,8 +21,8 @@ CREATE TABLE IF NOT EXISTS `interface_apps_index`
     `data_center`    varchar(128) NOT NULL COMMENT '集群名称',
     `app_name`       varchar(128) NOT NULL COMMENT '应用名',
     `interface_name` varchar(386) NOT NULL COMMENT '接口名',
-    `gmt_create`     timestamp(6) NOT NULL COMMENT '创建时间',
-    `gmt_modified`   timestamp(6) NOT NULL COMMENT '修改时间',
+    `gmt_create`     timestamp(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) COMMENT '创建时间',
+    `gmt_modified`   timestamp(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6) COMMENT '修改时间',
     `hashcode`       varchar(128) NOT NULL COMMENT '唯一索引hashcode',
     `reference`      tinyint(4)   NOT NULL COMMENT '是否被引用',
     PRIMARY KEY (`id`),
@@ -88,7 +88,7 @@ CREATE TABLE IF NOT EXISTS `recover_config`
 
 CREATE TABLE IF NOT EXISTS `multi_cluster_sync_info`
 (
-    `id`                   bigint(20)    NOT NULL AUTO_INCREMENT COMMENT '主键' primary key,
+    `id`                   bigint(20)    NOT NULL AUTO_INCREMENT COMMENT '主键',
     `data_center`          varchar(512)  NOT NULL COMMENT '集群名称',
     `remote_data_center`   varchar(512)  NOT NULL COMMENT '同步的集群名称',
     `remote_meta_address`  varchar(1024) NOT NULL COMMENT '同步的集群地址',
