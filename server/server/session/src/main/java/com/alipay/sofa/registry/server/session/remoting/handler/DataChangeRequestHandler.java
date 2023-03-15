@@ -28,7 +28,7 @@ import com.alipay.sofa.registry.server.session.cache.CacheService;
 import com.alipay.sofa.registry.server.session.push.FirePushService;
 import com.alipay.sofa.registry.server.session.push.PushSwitchService;
 import com.alipay.sofa.registry.server.session.push.TriggerPushContext;
-import com.alipay.sofa.registry.server.session.store.Interests;
+import com.alipay.sofa.registry.server.session.store.SubscriberStore;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractClientHandler;
 import com.alipay.sofa.registry.server.shared.remoting.RemotingHelper;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
@@ -45,7 +45,7 @@ public class DataChangeRequestHandler extends AbstractClientHandler<DataChangeRe
 
   private static final Logger LOGGER = LoggerFactory.getLogger(DataChangeRequestHandler.class);
   /** store subscribers */
-  @Autowired Interests sessionInterests;
+  @Autowired SubscriberStore subscriberStore;
 
   @Autowired SessionServerConfig sessionServerConfig;
 
@@ -84,10 +84,10 @@ public class DataChangeRequestHandler extends AbstractClientHandler<DataChangeRe
     for (Map.Entry<String, DatumVersion> e : dataChangeRequest.getDataInfoIds().entrySet()) {
       final String dataInfoId = e.getKey();
       final DatumVersion version = e.getValue();
-      Interests.InterestVersionCheck check =
-          sessionInterests.checkInterestVersion(dataCenter, dataInfoId, version.getValue());
+      SubscriberStore.InterestVersionCheck check =
+          subscriberStore.checkInterestVersion(dataCenter, dataInfoId, version.getValue());
       if (!check.interested) {
-        if (check != Interests.InterestVersionCheck.NoSub) {
+        if (check != SubscriberStore.InterestVersionCheck.NoSub) {
           // log exclude NoSub
           LOGGER.info("[SkipChange]{},{}, ver={}, {}", dataInfoId, dataCenter, version, check);
         }

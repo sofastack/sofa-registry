@@ -34,10 +34,11 @@ import com.alipay.sofa.registry.server.session.providedata.ConfigProvideDataWatc
 import com.alipay.sofa.registry.server.session.push.FirePushService;
 import com.alipay.sofa.registry.server.session.push.PushSwitchService;
 import com.alipay.sofa.registry.server.session.registry.DefaultClientRegistrationHook;
-import com.alipay.sofa.registry.server.session.store.Watchers;
+import com.alipay.sofa.registry.server.session.store.WatcherStore;
+import com.alipay.sofa.registry.server.session.store.WatcherStoreImpl;
 import com.google.common.collect.Sets;
+import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 import java.util.Set;
 import org.junit.Assert;
 import org.junit.Before;
@@ -62,7 +63,7 @@ public class DefaultClientRegistrationHookTest extends AbstractSessionServerTest
             mock(FirePushService.class),
             mock(PushSwitchService.class),
             mock(ConfigProvideDataWatcher.class),
-            mock(Watchers.class));
+            mock(WatcherStoreImpl.class));
     clientRegistrationHook.afterClientRegister(new Publisher());
   }
 
@@ -70,7 +71,7 @@ public class DefaultClientRegistrationHookTest extends AbstractSessionServerTest
   public void testAfterWatcherRegisterDisable() {
     FirePushService firePushService = mock(FirePushService.class);
     PushSwitchService pushSwitchService = mock(PushSwitchService.class);
-    Watchers sessionWatchers = mock(Watchers.class);
+    WatcherStore watcherStore = mock(WatcherStoreImpl.class);
     ConfigProvideDataWatcher configProvideDataWatcher = mock(ConfigProvideDataWatcher.class);
     DefaultClientRegistrationHook clientRegistrationHook =
         new DefaultClientRegistrationHook(
@@ -78,7 +79,7 @@ public class DefaultClientRegistrationHookTest extends AbstractSessionServerTest
             firePushService,
             pushSwitchService,
             configProvideDataWatcher,
-            sessionWatchers);
+            watcherStore);
 
     Watcher w = TestUtils.newWatcher(dataId);
     clientRegistrationHook.afterClientRegister(w);
@@ -96,7 +97,7 @@ public class DefaultClientRegistrationHookTest extends AbstractSessionServerTest
     sessionServerConfig.setWatchConfigEnable(true);
     FirePushService firePushService = mock(FirePushService.class);
     PushSwitchService pushSwitchService = mock(PushSwitchService.class);
-    Watchers sessionWatchers = mock(Watchers.class);
+    WatcherStore watcherStore = mock(WatcherStoreImpl.class);
     ConfigProvideDataWatcher configProvideDataWatcher = mock(ConfigProvideDataWatcher.class);
     DefaultClientRegistrationHook clientRegistrationHook =
         new DefaultClientRegistrationHook(
@@ -104,7 +105,7 @@ public class DefaultClientRegistrationHookTest extends AbstractSessionServerTest
             firePushService,
             pushSwitchService,
             configProvideDataWatcher,
-            sessionWatchers);
+            watcherStore);
 
     Watcher w = TestUtils.newWatcher(dataId);
     clientRegistrationHook.afterClientRegister(w);
@@ -125,7 +126,7 @@ public class DefaultClientRegistrationHookTest extends AbstractSessionServerTest
   public void testFilter() {
     FirePushService firePushService = mock(FirePushService.class);
     PushSwitchService pushSwitchService = mock(PushSwitchService.class);
-    Watchers sessionWatchers = mock(Watchers.class);
+    WatcherStore watcherStore = mock(WatcherStoreImpl.class);
     ConfigProvideDataWatcher configProvideDataWatcher = mock(ConfigProvideDataWatcher.class);
     DefaultClientRegistrationHook clientRegistrationHook =
         new DefaultClientRegistrationHook(
@@ -133,14 +134,14 @@ public class DefaultClientRegistrationHookTest extends AbstractSessionServerTest
             firePushService,
             pushSwitchService,
             configProvideDataWatcher,
-            sessionWatchers);
+            watcherStore);
 
     Assert.assertNull(clientRegistrationHook.filter());
     Watcher w = TestUtils.newWatcher(dataId);
-    when(sessionWatchers.getDataList()).thenReturn(Collections.singletonList(w));
-    Tuple<Set<String>, List<Watcher>> t = clientRegistrationHook.filter();
+    when(watcherStore.getAll()).thenReturn(Collections.singletonList(w));
+    Tuple<Set<String>, Collection<Watcher>> t = clientRegistrationHook.filter();
     Assert.assertEquals(t.o1, Sets.newHashSet(w.getDataInfoId()));
-    Assert.assertEquals(t.o2.get(0), w);
+    Assert.assertTrue(t.o2.contains(w));
     sessionServerConfig.setWatchConfigEnable(true);
     clientRegistrationHook.processWatch();
 
@@ -157,7 +158,7 @@ public class DefaultClientRegistrationHookTest extends AbstractSessionServerTest
   public void testProcess() {
     FirePushService firePushService = mock(FirePushService.class);
     PushSwitchService pushSwitchService = mock(PushSwitchService.class);
-    Watchers sessionWatchers = mock(Watchers.class);
+    WatcherStore watcherStore = mock(WatcherStoreImpl.class);
     ConfigProvideDataWatcher configProvideDataWatcher = mock(ConfigProvideDataWatcher.class);
     DefaultClientRegistrationHook clientRegistrationHook =
         new DefaultClientRegistrationHook(
@@ -165,7 +166,7 @@ public class DefaultClientRegistrationHookTest extends AbstractSessionServerTest
             firePushService,
             pushSwitchService,
             configProvideDataWatcher,
-            sessionWatchers);
+            watcherStore);
 
     Watcher w = TestUtils.newWatcher(dataId);
     Assert.assertTrue(clientRegistrationHook.processWatchWhenWatchConfigDisable(w));

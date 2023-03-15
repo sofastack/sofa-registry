@@ -28,12 +28,11 @@ import com.alipay.sofa.registry.server.session.converter.ReceivedDataConverter;
 import com.alipay.sofa.registry.server.session.providedata.ConfigProvideDataWatcher;
 import com.alipay.sofa.registry.server.session.push.FirePushService;
 import com.alipay.sofa.registry.server.session.push.PushSwitchService;
-import com.alipay.sofa.registry.server.session.store.Watchers;
+import com.alipay.sofa.registry.server.session.store.WatcherStore;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.LoopRunnable;
-import com.google.common.collect.Lists;
+import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import org.apache.commons.collections.CollectionUtils;
@@ -50,19 +49,19 @@ public class DefaultClientRegistrationHook implements ClientRegistrationHook {
   private final FirePushService firePushService;
   private final PushSwitchService pushSwitchService;
   private final ConfigProvideDataWatcher configProvideDataWatcher;
-  private final Watchers sessionWatchers;
+  private final WatcherStore watcherStore;
 
   public DefaultClientRegistrationHook(
       SessionServerConfig sessionServerConfig,
       FirePushService firePushService,
       PushSwitchService pushSwitchService,
       ConfigProvideDataWatcher configProvideDataWatcher,
-      Watchers sessionWatchers) {
+      WatcherStore watcherStore) {
     this.sessionServerConfig = sessionServerConfig;
     this.firePushService = firePushService;
     this.pushSwitchService = pushSwitchService;
     this.configProvideDataWatcher = configProvideDataWatcher;
-    this.sessionWatchers = sessionWatchers;
+    this.watcherStore = watcherStore;
     ConcurrentUtils.createDaemonThread(
             "watcher-scan-dog",
             new LoopRunnable() {
@@ -182,8 +181,8 @@ public class DefaultClientRegistrationHook implements ClientRegistrationHook {
         : processWatchWhenWatchConfigDisable(w);
   }
 
-  public Tuple<Set<String>, List<Watcher>> filter() {
-    List<Watcher> watchers = Lists.newLinkedList(sessionWatchers.getDataList());
+  public Tuple<Set<String>, Collection<Watcher>> filter() {
+    Collection<Watcher> watchers = watcherStore.getAll();
     if (CollectionUtils.isEmpty(watchers)) {
       return null;
     }
@@ -201,7 +200,7 @@ public class DefaultClientRegistrationHook implements ClientRegistrationHook {
   }
 
   public void processWatch() {
-    Tuple<Set<String>, List<Watcher>> filtered = filter();
+    Tuple<Set<String>, Collection<Watcher>> filtered = filter();
     if (filtered == null) {
       return;
     }

@@ -16,16 +16,16 @@
  */
 package com.alipay.sofa.registry.server.session.scheduler.timertask;
 
-import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.session.bootstrap.ExecutorManager;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import com.alipay.sofa.registry.server.session.store.DataStore;
-import com.alipay.sofa.registry.server.session.store.Interests;
-import com.alipay.sofa.registry.server.session.store.Watchers;
+import com.alipay.sofa.registry.server.session.store.PublisherStore;
+import com.alipay.sofa.registry.server.session.store.SubscriberStore;
+import com.alipay.sofa.registry.server.session.store.WatcherStore;
+import com.alipay.sofa.registry.server.session.store.engine.StoreEngine;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 
@@ -43,22 +43,17 @@ public class SyncClientsHeartbeatTask {
 
   @Autowired SessionServerConfig sessionServerConfig;
 
-  /** store subscribers */
-  @Autowired Interests sessionInterests;
-
-  /** store watchers */
-  @Autowired Watchers sessionWatchers;
-
-  /** store publishers */
-  @Autowired DataStore sessionDataStore;
+  @Autowired PublisherStore publisherStore;
+  @Autowired SubscriberStore subscriberStore;
+  @Autowired WatcherStore watcherStore;
 
   @Autowired ExecutorManager executorManager;
 
   @Scheduled(initialDelay = 60000, fixedRate = 60000)
   public void syncCount() {
-    Tuple<Long, Long> countSub = sessionInterests.count();
-    Tuple<Long, Long> countPub = sessionDataStore.count();
-    Tuple<Long, Long> countSubW = sessionWatchers.count();
+    StoreEngine.StoreStat countSub = subscriberStore.stat();
+    StoreEngine.StoreStat countPub = publisherStore.stat();
+    StoreEngine.StoreStat countSubW = watcherStore.stat();
 
     int channelCount = 0;
     Server sessionServer = boltExchange.getServer(sessionServerConfig.getServerPort());
@@ -66,19 +61,19 @@ public class SyncClientsHeartbeatTask {
       channelCount = sessionServer.getChannelCount();
     }
 
-    Metrics.PUB_SUM.set(countPub.o2);
-    Metrics.SUB_SUM.set(countSub.o2);
-    Metrics.WAT_SUM.set(countSubW.o2);
+    Metrics.PUB_SUM.set(countPub.size());
+    Metrics.SUB_SUM.set(countSub.size());
+    Metrics.WAT_SUM.set(countSubW.size());
     Metrics.CHANNEL_SUM.set(channelCount);
 
     CONSOLE_COUNT_LOGGER.info(
         "Subscriber count: {}, Publisher count: {}, Watcher count: {}, Connection count: {}, SubDataId={}, PubDataId={}, WatDataId={}",
-        countSub.o2,
-        countPub.o2,
-        countSubW.o2,
+        countSub.size(),
+        countPub.size(),
+        countSubW.size(),
         channelCount,
-        countSub.o1,
-        countPub.o1,
-        countSubW.o1);
+        countSub.nonEmptyDataIdSize(),
+        countPub.nonEmptyDataIdSize(),
+        countSubW.nonEmptyDataIdSize());
   }
 }

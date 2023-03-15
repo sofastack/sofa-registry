@@ -25,7 +25,7 @@ import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.server.session.TestUtils;
 import com.alipay.sofa.registry.server.session.bootstrap.ExecutorManager;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfigBean;
-import com.alipay.sofa.registry.server.session.store.Interests;
+import com.alipay.sofa.registry.server.session.store.SubscriberStore;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -47,7 +47,7 @@ public class QuerySubscriberRequestHandlerTest {
   @Test
   public void testHandle() {
     QuerySubscriberRequestHandler handler = newHandler();
-    handler.sessionInterests = mock(Interests.class);
+    handler.subscriberStore = mock(SubscriberStore.class);
 
     CommonResponse obj = (CommonResponse) handler.doHandle(null, request());
     Assert.assertTrue(obj.isSuccess());

@@ -20,7 +20,7 @@ import static org.mockito.Mockito.mock;
 
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.sessionserver.FilterSubscriberIPsRequest;
-import com.alipay.sofa.registry.server.session.store.Interests;
+import com.alipay.sofa.registry.server.session.store.SubscriberStore;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -34,7 +34,7 @@ public class FilterSubscriberIPsHandlerTest {
   @Test
   public void testHandle() {
     FilterSubscriberIPsHandler handler = newHandler();
-    handler.sessionInterests = mock(Interests.class);
+    handler.subscriberStore = mock(SubscriberStore.class);
     CommonResponse obj =
         (CommonResponse) handler.doHandle(null, new FilterSubscriberIPsRequest("DEFAULT_GROUP", 1));
     Assert.assertTrue(obj.isSuccess());

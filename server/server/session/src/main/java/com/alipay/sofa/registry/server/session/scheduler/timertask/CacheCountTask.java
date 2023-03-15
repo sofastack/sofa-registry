@@ -25,13 +25,13 @@ import com.alipay.sofa.registry.common.model.store.Watcher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import com.alipay.sofa.registry.server.session.store.DataStore;
-import com.alipay.sofa.registry.server.session.store.Interests;
-import com.alipay.sofa.registry.server.session.store.Watchers;
+import com.alipay.sofa.registry.server.session.store.PublisherStore;
+import com.alipay.sofa.registry.server.session.store.SubscriberStore;
+import com.alipay.sofa.registry.server.session.store.WatcherStore;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
 import io.prometheus.client.Gauge;
-import java.util.List;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ScheduledExecutorService;
@@ -49,11 +49,9 @@ public class CacheCountTask {
       LoggerFactory.getLogger(CacheCountTask.class, "[CacheCountTask]");
   private static final Logger COUNT_LOGGER = LoggerFactory.getLogger("CACHE-COUNT");
 
-  @Autowired DataStore sessionDataStore;
-
-  @Autowired Interests sessionInterests;
-
-  @Autowired Watchers sessionWatchers;
+  @Autowired PublisherStore publisherStore;
+  @Autowired SubscriberStore subscriberStore;
+  @Autowired WatcherStore watcherStore;
 
   @Autowired SessionServerConfig sessionServerConfig;
 
@@ -72,9 +70,9 @@ public class CacheCountTask {
 
   boolean syncCount() {
     try {
-      List<Publisher> pubs = sessionDataStore.getDataList();
-      List<Subscriber> subs = sessionInterests.getDataList();
-      List<Watcher> wats = sessionWatchers.getDataList();
+      Collection<Publisher> pubs = publisherStore.getAll();
+      Collection<Subscriber> subs = subscriberStore.getAll();
+      Collection<Watcher> wats = watcherStore.getAll();
 
       Map<String, Map<String, Tuple<Integer, Integer>>> pubGroupCounts =
           DataUtils.countGroupByInstanceIdGroup(pubs);

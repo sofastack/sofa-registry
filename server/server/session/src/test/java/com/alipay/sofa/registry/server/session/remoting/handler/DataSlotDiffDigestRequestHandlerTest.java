@@ -29,7 +29,7 @@ import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.server.session.TestUtils;
 import com.alipay.sofa.registry.server.session.bootstrap.ExecutorManager;
 import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
-import com.alipay.sofa.registry.server.session.store.DataStore;
+import com.alipay.sofa.registry.server.session.store.PublisherStore;
 import java.util.Collections;
 import java.util.Map;
 import org.junit.Assert;
@@ -69,9 +69,8 @@ public class DataSlotDiffDigestRequestHandlerTest {
     Assert.assertFalse(resp.isSuccess());
     Assert.assertNull(resp.getData());
 
-    handler.sessionDataStore = mock(DataStore.class);
-    when(handler.sessionDataStore.getDataInfoIdPublishers(anyInt()))
-        .thenReturn(Collections.emptyMap());
+    handler.publisherStore = mock(PublisherStore.class);
+    when(handler.publisherStore.getBySlotId(anyInt())).thenReturn(Collections.emptyList());
     resp = (GenericResponse) handler.doHandle(channel, request);
     Assert.assertTrue(resp.isSuccess());
     Assert.assertNotNull(resp.getData());

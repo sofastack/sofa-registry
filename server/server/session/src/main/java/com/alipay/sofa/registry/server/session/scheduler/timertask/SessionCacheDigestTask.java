@@ -23,8 +23,8 @@ import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import com.alipay.sofa.registry.server.session.store.DataStore;
-import com.alipay.sofa.registry.server.session.store.Interests;
+import com.alipay.sofa.registry.server.session.store.PublisherStore;
+import com.alipay.sofa.registry.server.session.store.SubscriberStore;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
 import java.util.*;
@@ -44,9 +44,9 @@ public class SessionCacheDigestTask {
 
   private static final Logger LOGGER = LoggerFactory.getLogger("CACHE-DIGEST");
 
-  @Autowired DataStore sessionDataStore;
+  @Autowired PublisherStore publisherStore;
 
-  @Autowired Interests sessionInterests;
+  @Autowired SubscriberStore subscriberStore;
 
   @Autowired SessionServerConfig sessionServerConfig;
 
@@ -72,16 +72,16 @@ public class SessionCacheDigestTask {
 
   boolean dump() {
     try {
-      Collection<String> storeDataInfoIds = sessionDataStore.getDataInfoIds();
-      Collection<String> interestDataInfoIds = sessionInterests.getDataInfoIds();
+      Collection<String> storeDataInfoIds = publisherStore.getNonEmptyDataInfoId();
+      Collection<String> interestDataInfoIds = subscriberStore.getNonEmptyDataInfoId();
       Set<String> dataInfoIds = new HashSet<>(storeDataInfoIds.size() + interestDataInfoIds.size());
 
       dataInfoIds.addAll(storeDataInfoIds);
       dataInfoIds.addAll(interestDataInfoIds);
 
       for (String dataInfoId : dataInfoIds) {
-        Collection<Publisher> publishers = sessionDataStore.getDatas(dataInfoId);
-        Collection<Subscriber> subscribers = sessionInterests.getDatas(dataInfoId);
+        Collection<Publisher> publishers = publisherStore.getByDataInfoId(dataInfoId);
+        Collection<Subscriber> subscribers = subscriberStore.getByDataInfoId(dataInfoId);
 
         LOGGER.info(
             "[dataInfo] {}; {}; {}; {}; [{}]; [{}]",

@@ -69,7 +69,7 @@ public class Subscriber extends BaseInfo {
   }
 
   private PushContext getPushContext(String dataCenter) {
-    PushContext ctx = null;
+    PushContext ctx;
     if (lastPushContexts == null) {
       ctx = new PushContext();
       this.lastPushContexts = Collections.singletonMap(dataCenter, ctx);
@@ -223,7 +223,6 @@ public class Subscriber extends BaseInfo {
     return emptyVersion;
   }
 
-  /** @return */
   public synchronized CircuitBreakerStatistic getStatistic(String dataCenter) {
     final PushContext ctx = getPushContext(dataCenter);
     return new CircuitBreakerStatistic(
@@ -232,28 +231,6 @@ public class Subscriber extends BaseInfo {
         getSourceAddress().buildAddressString(),
         ctx.pushedFailCount,
         ctx.lastPushedFailTimeStamp);
-  }
-
-  /**
-   * change subscriber word cache
-   *
-   * @param subscriber
-   * @return
-   */
-  public static Subscriber internSubscriber(Subscriber subscriber) {
-    subscriber.setDataInfoId(subscriber.getDataInfoId());
-    subscriber.setInstanceId(subscriber.getInstanceId());
-    subscriber.setGroup(subscriber.getGroup());
-    subscriber.setDataId(subscriber.getDataId());
-    subscriber.setCell(subscriber.getCell());
-    subscriber.setProcessId(subscriber.getProcessId());
-    subscriber.setAppName(subscriber.getAppName());
-
-    subscriber.setSourceAddress(URL.internURL(subscriber.getSourceAddress()));
-    subscriber.setTargetAddress(URL.internURL(subscriber.getTargetAddress()));
-    subscriber.setAttributes(subscriber.getAttributes());
-
-    return subscriber;
   }
 
   protected Map<String, String> internAttributes(Map<String, String> attributes) {

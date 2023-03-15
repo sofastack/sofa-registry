@@ -30,7 +30,7 @@ import com.alipay.sofa.registry.server.session.cache.Value;
 import com.alipay.sofa.registry.server.session.circuit.breaker.CircuitBreakerService;
 import com.alipay.sofa.registry.server.session.providedata.FetchGrayPushSwitchService;
 import com.alipay.sofa.registry.server.session.providedata.FetchStopPushService;
-import com.alipay.sofa.registry.server.session.store.Interests;
+import com.alipay.sofa.registry.server.session.store.SubscriberStore;
 import com.alipay.sofa.registry.task.FastRejectedExecutionException;
 import com.google.common.collect.Lists;
 import java.util.Collections;
@@ -51,7 +51,7 @@ public class FirePushServiceTest {
     svc.sessionServerConfig = config;
     FetchStopPushService fetchStopPushService = new FetchStopPushService();
     svc.pushSwitchService = new PushSwitchService();
-    svc.sessionInterests = Mockito.mock(Interests.class);
+    svc.subscriberStore = Mockito.mock(SubscriberStore.class);
     svc.pushProcessor = Mockito.mock(PushProcessor.class);
     svc.pushSwitchService.setFetchStopPushService(fetchStopPushService);
     svc.pushSwitchService.setFetchGrayPushSwitchService(new FetchGrayPushSwitchService());
@@ -100,7 +100,7 @@ public class FirePushServiceTest {
     SessionServerConfigBean config = TestUtils.newSessionConfig("testDc");
     svc.sessionServerConfig = config;
     svc.pushSwitchService = Mockito.mock(PushSwitchService.class);
-    svc.sessionInterests = Mockito.mock(Interests.class);
+    svc.subscriberStore = Mockito.mock(SubscriberStore.class);
     svc.circuitBreakerService = Mockito.mock(CircuitBreakerService.class);
     svc.changeProcessor = Mockito.mock(ChangeProcessor.class);
     svc.pushProcessor = Mockito.mock(PushProcessor.class);
@@ -126,7 +126,7 @@ public class FirePushServiceTest {
     FirePushService svc = new FirePushService();
     SessionServerConfigBean config = TestUtils.newSessionConfig("testDc");
     svc.sessionServerConfig = config;
-    svc.sessionInterests = Mockito.mock(Interests.class);
+    svc.subscriberStore = Mockito.mock(SubscriberStore.class);
     svc.pushProcessor = Mockito.mock(PushProcessor.class);
     svc.sessionCacheService = Mockito.mock(CacheService.class);
     svc.pushSwitchService = Mockito.mock(PushSwitchService.class);
@@ -148,7 +148,7 @@ public class FirePushServiceTest {
     Subscriber subscriber = TestUtils.newZoneSubscriber(dataId, zone);
     Value v = new Value((Sizer) datum);
     when(svc.sessionCacheService.getValueIfPresent(Mockito.anyObject())).thenReturn(v);
-    when(svc.sessionInterests.getDatas(Mockito.anyObject()))
+    when(svc.subscriberStore.getByDataInfoId(Mockito.anyObject()))
         .thenReturn(Collections.singletonList(subscriber));
     svc.pushSwitchService = new PushSwitchService();
     svc.pushSwitchService.setFetchStopPushService(new FetchStopPushService());
