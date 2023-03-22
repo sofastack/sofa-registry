@@ -29,7 +29,7 @@ import com.alipay.sofa.registry.server.session.TestUtils;
 import com.alipay.sofa.registry.server.session.bootstrap.ExecutorManager;
 import com.alipay.sofa.registry.server.session.push.PushSwitchService;
 import com.alipay.sofa.registry.server.session.strategy.AppRevisionHandlerStrategy;
-import com.alipay.sofa.registry.server.session.strategy.impl.DefaultAppRevisionHandlerStrategy;
+import com.alipay.sofa.registry.server.session.strategy.DefaultAppRevisionHandlerStrategy;
 import org.assertj.core.util.Lists;
 import org.junit.Assert;
 import org.junit.Test;

@@ -36,33 +36,26 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import javax.annotation.PostConstruct;
 import org.apache.commons.collections.CollectionUtils;
 import org.glassfish.jersey.internal.guava.Sets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /** Default implementation of {@link ClientRegistrationHook}. */
 public class DefaultClientRegistrationHook implements ClientRegistrationHook {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(DefaultClientRegistrationHook.class);
 
-  private final SessionServerConfig sessionServerConfig;
-  private final FirePushService firePushService;
-  private final PushSwitchService pushSwitchService;
-  private final ConfigProvideDataWatcher configProvideDataWatcher;
-  private final Watchers sessionWatchers;
+  @Autowired protected SessionServerConfig sessionServerConfig;
+  @Autowired protected FirePushService firePushService;
+  @Autowired protected PushSwitchService pushSwitchService;
+  @Autowired protected ConfigProvideDataWatcher configProvideDataWatcher;
+  @Autowired protected Watchers sessionWatchers;
 
-  public DefaultClientRegistrationHook(
-      SessionServerConfig sessionServerConfig,
-      FirePushService firePushService,
-      PushSwitchService pushSwitchService,
-      ConfigProvideDataWatcher configProvideDataWatcher,
-      Watchers sessionWatchers) {
-    this.sessionServerConfig = sessionServerConfig;
-    this.firePushService = firePushService;
-    this.pushSwitchService = pushSwitchService;
-    this.configProvideDataWatcher = configProvideDataWatcher;
-    this.sessionWatchers = sessionWatchers;
+  @PostConstruct
+  public void init() {
     ConcurrentUtils.createDaemonThread(
             "watcher-scan-dog",
             new LoopRunnable() {
