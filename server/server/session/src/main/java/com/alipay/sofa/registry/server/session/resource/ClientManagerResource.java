@@ -34,7 +34,7 @@ import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.connections.ConnectionsService;
 import com.alipay.sofa.registry.server.session.mapper.ConnectionMapper;
 import com.alipay.sofa.registry.server.session.providedata.FetchClientOffAddressService;
-import com.alipay.sofa.registry.server.session.registry.SessionRegistry;
+import com.alipay.sofa.registry.server.session.registry.Registry;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.google.common.collect.Maps;
@@ -64,7 +64,7 @@ public class ClientManagerResource {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(ClientManagerResource.class);
 
-  @Autowired private SessionRegistry sessionRegistry;
+  @Autowired private Registry sessionRegistry;
 
   @Autowired private SessionServerConfig sessionServerConfig;
   @Autowired private MetaServerService metaServerService;

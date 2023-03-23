@@ -44,6 +44,8 @@ import com.alipay.sofa.registry.server.session.metadata.MetadataCacheRegistry;
 import com.alipay.sofa.registry.server.session.node.service.*;
 import com.alipay.sofa.registry.server.session.providedata.*;
 import com.alipay.sofa.registry.server.session.push.*;
+import com.alipay.sofa.registry.server.session.registry.ClientRegistrationHook;
+import com.alipay.sofa.registry.server.session.registry.DefaultClientRegistrationHook;
 import com.alipay.sofa.registry.server.session.registry.Registry;
 import com.alipay.sofa.registry.server.session.registry.SessionRegistry;
 import com.alipay.sofa.registry.server.session.remoting.ClientNodeExchanger;
@@ -60,7 +62,6 @@ import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
 import com.alipay.sofa.registry.server.session.slot.SlotTableCacheImpl;
 import com.alipay.sofa.registry.server.session.store.*;
 import com.alipay.sofa.registry.server.session.strategy.*;
-import com.alipay.sofa.registry.server.session.strategy.impl.*;
 import com.alipay.sofa.registry.server.shared.client.manager.BaseClientManagerService;
 import com.alipay.sofa.registry.server.shared.client.manager.ClientManagerService;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerManager;
@@ -626,16 +627,11 @@ public class SessionServerConfiguration {
 
   @Configuration
   public static class SessionStrategyConfiguration {
-    @Bean
-    @ConditionalOnMissingBean
-    public SessionRegistryStrategy sessionRegistryStrategy() {
-      return new DefaultSessionRegistryStrategy();
-    }
 
     @Bean
     @ConditionalOnMissingBean
-    public SyncConfigHandlerStrategy syncConfigHandlerStrategy() {
-      return new DefaultSyncConfigHandlerStrategy();
+    public ClientRegistrationHook clientRegistrationHook() {
+      return new DefaultClientRegistrationHook();
     }
 
     @Bean

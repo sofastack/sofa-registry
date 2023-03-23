@@ -14,13 +14,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.strategy.impl;
+package com.alipay.sofa.registry.server.session.registry;
 
-import org.junit.Test;
+import com.alipay.sofa.registry.common.model.store.StoreData;
 
-public class MetricsTest {
-  @Test
-  public void testMetrics() {
-    Metrics.Access.pubSize("registry", "SOFA", 100);
-  }
+/** Hook interfaces that are called back after client registration and unregistration. */
+public interface ClientRegistrationHook {
+
+  /**
+   * Invoked after client register.
+   *
+   * @param storeData client
+   */
+  void afterClientRegister(StoreData<?> storeData);
+
+  /**
+   * Invoked after client unregister.
+   *
+   * @param storeData client
+   */
+  void afterClientUnregister(StoreData<?> storeData);
 }
