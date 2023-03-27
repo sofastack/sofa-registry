@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.strategy.impl;
+package com.alipay.sofa.registry.server.session.registry;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -33,9 +33,7 @@ import com.alipay.sofa.registry.server.session.TestUtils;
 import com.alipay.sofa.registry.server.session.providedata.ConfigProvideDataWatcher;
 import com.alipay.sofa.registry.server.session.push.FirePushService;
 import com.alipay.sofa.registry.server.session.push.PushSwitchService;
-import com.alipay.sofa.registry.server.session.registry.DefaultClientRegistrationHook;
 import com.alipay.sofa.registry.server.session.store.WatcherStore;
-import com.alipay.sofa.registry.server.session.store.WatcherStoreImpl;
 import com.google.common.collect.Sets;
 import java.util.Collection;
 import java.util.Collections;
@@ -48,97 +46,64 @@ import org.junit.Test;
 public class DefaultClientRegistrationHookTest extends AbstractSessionServerTestBase {
 
   private final String dataId = "testWatcherDataId";
+  private DefaultClientRegistrationHook clientRegistrationHook =
+      new DefaultClientRegistrationHook();
 
   @Before
   public void before() {
     sessionServerConfig.setWatchConfigEnable(false);
     sessionServerConfig.setScanWatcherIntervalMillis(10);
+
+    clientRegistrationHook.sessionServerConfig = sessionServerConfig;
+    clientRegistrationHook.firePushService = mock(FirePushService.class);
+    clientRegistrationHook.pushSwitchService = mock(PushSwitchService.class);
+    clientRegistrationHook.watcherStore = mock(WatcherStore.class);
+    clientRegistrationHook.configProvideDataWatcher = mock(ConfigProvideDataWatcher.class);
   }
 
   @Test
   public void testAfterPublisherRegister() {
-    DefaultClientRegistrationHook clientRegistrationHook =
-        new DefaultClientRegistrationHook(
-            sessionServerConfig,
-            mock(FirePushService.class),
-            mock(PushSwitchService.class),
-            mock(ConfigProvideDataWatcher.class),
-            mock(WatcherStoreImpl.class));
+    DefaultClientRegistrationHook clientRegistrationHook = new DefaultClientRegistrationHook();
     clientRegistrationHook.afterClientRegister(new Publisher());
   }
 
   @Test
   public void testAfterWatcherRegisterDisable() {
-    FirePushService firePushService = mock(FirePushService.class);
-    PushSwitchService pushSwitchService = mock(PushSwitchService.class);
-    WatcherStore watcherStore = mock(WatcherStoreImpl.class);
-    ConfigProvideDataWatcher configProvideDataWatcher = mock(ConfigProvideDataWatcher.class);
-    DefaultClientRegistrationHook clientRegistrationHook =
-        new DefaultClientRegistrationHook(
-            sessionServerConfig,
-            firePushService,
-            pushSwitchService,
-            configProvideDataWatcher,
-            watcherStore);
-
     Watcher w = TestUtils.newWatcher(dataId);
     clientRegistrationHook.afterClientRegister(w);
 
-    verify(firePushService, times(0)).fireOnWatcher(any(), any());
+    verify(clientRegistrationHook.firePushService, times(0)).fireOnWatcher(any(), any());
 
-    when(pushSwitchService.canIpPush(anyString())).thenReturn(true);
+    when(clientRegistrationHook.pushSwitchService.canIpPush(anyString())).thenReturn(true);
     clientRegistrationHook.afterClientRegister(w);
-    verify(firePushService, times(1)).fireOnWatcher(any(), any());
-    verify(configProvideDataWatcher, times(0)).watch(any());
+    verify(clientRegistrationHook.firePushService, times(1)).fireOnWatcher(any(), any());
+    verify(clientRegistrationHook.configProvideDataWatcher, times(0)).watch(any());
   }
 
   @Test
   public void testAfterWatcherRegisterEnable() {
     sessionServerConfig.setWatchConfigEnable(true);
-    FirePushService firePushService = mock(FirePushService.class);
-    PushSwitchService pushSwitchService = mock(PushSwitchService.class);
-    WatcherStore watcherStore = mock(WatcherStoreImpl.class);
-    ConfigProvideDataWatcher configProvideDataWatcher = mock(ConfigProvideDataWatcher.class);
-    DefaultClientRegistrationHook clientRegistrationHook =
-        new DefaultClientRegistrationHook(
-            sessionServerConfig,
-            firePushService,
-            pushSwitchService,
-            configProvideDataWatcher,
-            watcherStore);
 
     Watcher w = TestUtils.newWatcher(dataId);
     clientRegistrationHook.afterClientRegister(w);
-    verify(configProvideDataWatcher, times(1)).watch(any());
-    verify(firePushService, times(0)).fireOnWatcher(any(), any());
+    verify(clientRegistrationHook.configProvideDataWatcher, times(1)).watch(any());
+    verify(clientRegistrationHook.firePushService, times(0)).fireOnWatcher(any(), any());
 
-    when(pushSwitchService.canIpPush(anyString())).thenReturn(true);
+    when(clientRegistrationHook.pushSwitchService.canIpPush(anyString())).thenReturn(true);
     clientRegistrationHook.afterClientRegister(w);
-    verify(firePushService, times(0)).fireOnWatcher(any(), any());
+    verify(clientRegistrationHook.firePushService, times(0)).fireOnWatcher(any(), any());
 
-    when(configProvideDataWatcher.get(anyString()))
+    when(clientRegistrationHook.configProvideDataWatcher.get(anyString()))
         .thenReturn(new ProvideData(null, "dataId", 100L));
     clientRegistrationHook.afterClientRegister(w);
-    verify(firePushService, times(1)).fireOnWatcher(any(), any());
+    verify(clientRegistrationHook.firePushService, times(1)).fireOnWatcher(any(), any());
   }
 
   @Test
   public void testFilter() {
-    FirePushService firePushService = mock(FirePushService.class);
-    PushSwitchService pushSwitchService = mock(PushSwitchService.class);
-    WatcherStore watcherStore = mock(WatcherStoreImpl.class);
-    ConfigProvideDataWatcher configProvideDataWatcher = mock(ConfigProvideDataWatcher.class);
-    DefaultClientRegistrationHook clientRegistrationHook =
-        new DefaultClientRegistrationHook(
-            sessionServerConfig,
-            firePushService,
-            pushSwitchService,
-            configProvideDataWatcher,
-            watcherStore);
-
     Assert.assertNull(clientRegistrationHook.filter());
     Watcher w = TestUtils.newWatcher(dataId);
-    when(watcherStore.getAll()).thenReturn(Collections.singletonList(w));
+    when(clientRegistrationHook.watcherStore.getAll()).thenReturn(Collections.singletonList(w));
     Tuple<Set<String>, Collection<Watcher>> t = clientRegistrationHook.filter();
     Assert.assertEquals(t.o1, Sets.newHashSet(w.getDataInfoId()));
     Assert.assertTrue(t.o2.contains(w));
@@ -156,21 +121,9 @@ public class DefaultClientRegistrationHookTest extends AbstractSessionServerTest
 
   @Test
   public void testProcess() {
-    FirePushService firePushService = mock(FirePushService.class);
-    PushSwitchService pushSwitchService = mock(PushSwitchService.class);
-    WatcherStore watcherStore = mock(WatcherStoreImpl.class);
-    ConfigProvideDataWatcher configProvideDataWatcher = mock(ConfigProvideDataWatcher.class);
-    DefaultClientRegistrationHook clientRegistrationHook =
-        new DefaultClientRegistrationHook(
-            sessionServerConfig,
-            firePushService,
-            pushSwitchService,
-            configProvideDataWatcher,
-            watcherStore);
-
     Watcher w = TestUtils.newWatcher(dataId);
     Assert.assertTrue(clientRegistrationHook.processWatchWhenWatchConfigDisable(w));
-    verify(firePushService, times(1)).fireOnWatcher(any(), any());
+    verify(clientRegistrationHook.firePushService, times(1)).fireOnWatcher(any(), any());
     w.updatePushedVersion(10);
     Assert.assertFalse(clientRegistrationHook.processWatchWhenWatchConfigDisable(w));
 
@@ -178,18 +131,18 @@ public class DefaultClientRegistrationHookTest extends AbstractSessionServerTest
     w = TestUtils.newWatcher(dataId);
     Assert.assertFalse(clientRegistrationHook.processWatchWhenWatchConfigEnable(w));
     ProvideData data = new ProvideData(null, dataId, 10L);
-    when(configProvideDataWatcher.get(anyString())).thenReturn(data);
+    when(clientRegistrationHook.configProvideDataWatcher.get(anyString())).thenReturn(data);
     Assert.assertTrue(clientRegistrationHook.processWatchWhenWatchConfigEnable(w));
-    verify(firePushService, times(2)).fireOnWatcher(any(), any());
+    verify(clientRegistrationHook.firePushService, times(2)).fireOnWatcher(any(), any());
     w.updatePushedVersion(10);
 
     Assert.assertFalse(clientRegistrationHook.processWatchWhenWatchConfigEnable(w));
-    verify(firePushService, times(2)).fireOnWatcher(any(), any());
+    verify(clientRegistrationHook.firePushService, times(2)).fireOnWatcher(any(), any());
 
     data = new ProvideData(null, dataId, 20L);
-    when(configProvideDataWatcher.get(anyString())).thenReturn(data);
+    when(clientRegistrationHook.configProvideDataWatcher.get(anyString())).thenReturn(data);
     Assert.assertTrue(clientRegistrationHook.processWatchWhenWatchConfigEnable(w));
-    verify(firePushService, times(3)).fireOnWatcher(any(), any());
+    verify(clientRegistrationHook.firePushService, times(3)).fireOnWatcher(any(), any());
     w.updatePushedVersion(20);
     Assert.assertFalse(clientRegistrationHook.processWatch(w, false));
     Assert.assertFalse(clientRegistrationHook.processWatch(w, true));

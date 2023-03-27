@@ -91,19 +91,12 @@ public class SessionRegistry implements Registry {
 
   @Autowired protected ConfigProvideDataWatcher configProvideDataWatcher;
 
+  @Autowired protected ClientRegistrationHook clientRegistrationHook;
+
   private final VersionWatchDog versionWatchDog = new VersionWatchDog();
-  private ClientRegistrationHook clientRegistrationHook;
 
   @PostConstruct
   public void init() {
-    this.clientRegistrationHook =
-        new DefaultClientRegistrationHook(
-            sessionServerConfig,
-            firePushService,
-            pushSwitchService,
-            configProvideDataWatcher,
-            watcherStore);
-
     ConcurrentUtils.createDaemonThread("SessionVerWatchDog", versionWatchDog).start();
     ConcurrentUtils.createDaemonThread("SessionClientWatchDog", new ClientWatchDog()).start();
   }

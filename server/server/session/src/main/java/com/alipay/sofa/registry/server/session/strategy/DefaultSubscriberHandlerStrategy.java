@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.strategy.impl;
+package com.alipay.sofa.registry.server.session.strategy;
 
 import static com.alipay.sofa.registry.common.model.constants.ValueConstants.DEFAULT_INSTANCE_ID;
 
@@ -30,7 +30,6 @@ import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.bolt.BoltUtil;
 import com.alipay.sofa.registry.server.session.converter.SubscriberConverter;
 import com.alipay.sofa.registry.server.session.registry.Registry;
-import com.alipay.sofa.registry.server.session.strategy.SubscriberHandlerStrategy;
 import com.alipay.sofa.registry.server.shared.remoting.RemotingHelper;
 import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.core.async.Hack;
