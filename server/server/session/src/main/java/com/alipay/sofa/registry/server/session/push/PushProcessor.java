@@ -69,6 +69,9 @@ public class PushProcessor {
 
   @Autowired protected CircuitBreakerService circuitBreakerService;;
 
+  private int pushDataTaskDebouncingMillis = 500;
+  private PushEfficiencyImproveConfig pushEfficiencyImproveConfig;
+
   final Cleaner cleaner = new Cleaner();
 
   final RejectedDiscardHandler discardHandler = new RejectedDiscardHandler();
@@ -87,6 +90,13 @@ public class PushProcessor {
     ConcurrentUtils.createDaemonThread("PushCleaner", cleaner).start();
   }
 
+  public void setPushTaskDelayTime(PushEfficiencyImproveConfig pushEfficiencyImproveConfig) {
+    this.taskBuffer.setPushTaskWorkWaitingMillis(
+        pushEfficiencyImproveConfig.getPushTaskWaitingMillis());
+    this.pushDataTaskDebouncingMillis = pushEfficiencyImproveConfig.getPushTaskDebouncingMillis();
+    this.pushEfficiencyImproveConfig = pushEfficiencyImproveConfig;
+  }
+
   void intTaskBuffer() {
     if (this.taskBuffer == null) {
       this.taskBuffer = new PushTaskBuffer(sessionServerConfig.getPushTaskBufferBucketSize());
@@ -100,7 +110,13 @@ public class PushProcessor {
       MultiSubDatum datum) {
     PushTask pushTask = new PushTaskImpl(pushCause, addr, subscriberMap, datum);
     // set expireTimestamp, wait to merge to debouncing
-    pushTask.expireAfter(sessionServerConfig.getPushDataTaskDebouncingMillis());
+    if (null != pushEfficiencyImproveConfig) {
+      pushTask.expireAfter(
+          pushEfficiencyImproveConfig.fetchSbfAppPushTaskDebouncingMillis(
+              pushTask.subscriber.getAppName()));
+    } else {
+      pushTask.expireAfter(pushDataTaskDebouncingMillis);
+    }
     return Collections.singletonList(pushTask);
   }
 
@@ -117,7 +133,7 @@ public class PushProcessor {
     subscriberMap = CollectionUtils.toSingletonMap(subscriberMap);
     List<PushTask> fires = createPushTask(pushCause, addr, subscriberMap, datum);
     for (PushTask task : fires) {
-      taskBuffer.buffer(task);
+      taskBuffer.bufferWakeUp(task);
     }
   }
 
@@ -268,7 +284,7 @@ public class PushProcessor {
       final int backoffMillis = getRetryBackoffTime(retry);
       task.expireAfter(backoffMillis);
       PUSH_RETRY_COUNTER.labels(reason.name()).inc();
-      final boolean buffed = taskBuffer.buffer(task);
+      final boolean buffed = taskBuffer.bufferWakeUp(task);
       LOGGER.info(
           "[retry]{},{},{},retry={},buffed={}",
           task.taskID,

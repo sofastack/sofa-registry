@@ -833,6 +833,15 @@ public class SessionServerConfiguration {
     }
 
     @Bean
+    public FetchSystemPropertyService changeTaskWorkDelayService(
+        SystemPropertyProcessorManager systemPropertyProcessorManager) {
+      FetchPushEfficiencyConfigService fetchPushEfficiencyConfigService =
+          new FetchPushEfficiencyConfigService();
+      systemPropertyProcessorManager.addSystemDataProcessor(fetchPushEfficiencyConfigService);
+      return fetchPushEfficiencyConfigService;
+    }
+
+    @Bean
     public FetchSystemPropertyService fetchShutdownService(
         SystemPropertyProcessorManager systemPropertyProcessorManager) {
       FetchShutdownService fetchShutdownService = new FetchShutdownService();

@@ -37,6 +37,8 @@ import com.alipay.sofa.registry.server.session.node.service.ClientNodeService;
 import com.alipay.sofa.registry.task.RejectedDiscardHandler;
 import com.alipay.sofa.registry.util.BackOffTimes;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicReference;
@@ -523,5 +525,20 @@ public class PushProcessorTest {
         Collections.singletonMap(datum.getDataCenter(), 110L),
         Collections.singletonMap(datum.getDataCenter(), 100));
     Assert.assertFalse(processor.interestOfDatum(task));
+  }
+
+  @Test
+  public void testSetPushDelay(){
+    PushProcessor processor = newProcessor();
+
+    PushEfficiencyImproveConfig pushEfficiencyImproveConfig = new PushEfficiencyImproveConfig();
+    pushEfficiencyImproveConfig.setPushTaskWaitingMillis(10);
+    Set<String> zoneSet = new HashSet<>();
+    zoneSet.add("ALL_ZONE");
+    pushEfficiencyImproveConfig.setZoneSet(zoneSet);
+    processor.setPushTaskDelayTime(pushEfficiencyImproveConfig);
+
+    Assert.assertTrue(processor.taskBuffer.workers[0].getWaitingMillis() == 10);
+
   }
 }

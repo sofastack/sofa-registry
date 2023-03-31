@@ -56,6 +56,18 @@ public class ChangeProcessor {
     return workers;
   }
 
+  public void setWorkDelayTime(PushEfficiencyImproveConfig pushEfficiencyImproveConfig) {
+    for (Map.Entry<String, Worker[]> entry : dataCenterWorkers.entrySet()) {
+      Worker[] workers = entry.getValue();
+      if (workers == null) {
+        return;
+      }
+      for (Worker work : workers) {
+        work.setChangeTaskWorkDelay(pushEfficiencyImproveConfig);
+      }
+    }
+  }
+
   boolean fireChange(String dataInfoId, ChangeHandler handler, TriggerPushContext changeCtx) {
     ChangeKey key = new ChangeKey(changeCtx.dataCenters(), dataInfoId);
     Worker worker = workerOf(key);
@@ -102,8 +114,16 @@ public class ChangeProcessor {
   static final class Worker extends WakeUpLoopRunnable {
     // task sorted by expire probably
     final LinkedHashMap<ChangeKey, ChangeTask> tasks = Maps.newLinkedHashMap();
-    final int changeDebouncingMillis;
-    final int changeDebouncingMaxMillis;
+
+    public void setChangeTaskWorkDelay(PushEfficiencyImproveConfig pushEfficiencyImproveConfig) {
+      this.changeDebouncingMillis = pushEfficiencyImproveConfig.getChangeDebouncingMillis();
+      this.changeDebouncingMaxMillis = pushEfficiencyImproveConfig.getChangeDebouncingMaxMillis();
+      this.changeTaskWaitingMillis = pushEfficiencyImproveConfig.getChangeTaskWaitingMillis();
+    }
+
+    int changeDebouncingMillis;
+    int changeDebouncingMaxMillis;
+    int changeTaskWaitingMillis = 100;
 
     Worker(int changeDebouncingMillis, int changeDebouncingMaxMillis) {
       this.changeDebouncingMillis = changeDebouncingMillis;
@@ -183,7 +203,7 @@ public class ChangeProcessor {
 
     @Override
     public int getWaitingMillis() {
-      return 100;
+      return changeTaskWaitingMillis;
     }
   }
 

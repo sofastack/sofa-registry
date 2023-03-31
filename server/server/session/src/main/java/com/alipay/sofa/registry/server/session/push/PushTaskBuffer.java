@@ -38,6 +38,7 @@ public final class PushTaskBuffer {
       SystemUtils.getSystemInteger(KEY_MAX_BUFFERED_SIZE, 10000);
 
   final BufferWorker[] workers;
+  private PushEfficiencyImproveConfig pushEfficiencyImproveConfig;
 
   PushTaskBuffer(int workerSize) {
     this.workers = new BufferWorker[workerSize];
@@ -46,6 +47,23 @@ public final class PushTaskBuffer {
       this.workers[i] = worker;
       ConcurrentUtils.createDaemonThread("PushTaskBuffer-" + i, worker).start();
     }
+  }
+
+  public void setPushTaskWorkWaitingMillis(int workWaitingMillis) {
+    for (BufferWorker bufferWorker : workers) {
+      bufferWorker.setWaitingMillis(workWaitingMillis);
+    }
+  }
+
+  boolean bufferWakeUp(PushTask pushTask) {
+    final BufferTaskKey key = bufferTaskKey(pushTask);
+    final BufferWorker worker = workerOf(key);
+    boolean result = buffer(pushTask);
+    if (null != pushEfficiencyImproveConfig
+        && pushEfficiencyImproveConfig.fetchPushTaskWake(pushTask.subscriber.getAppName())) {
+      worker.wakeup();
+    }
+    return result;
   }
 
   boolean buffer(PushTask pushTask) {
@@ -110,6 +128,12 @@ public final class PushTaskBuffer {
   final class BufferWorker extends WakeUpLoopRunnable {
     final Map<BufferTaskKey, PushTask> bufferMap = new ConcurrentHashMap<>(4096);
 
+    public void setWaitingMillis(int waitingMillis) {
+      this.waitingMillis = waitingMillis;
+    }
+
+    private int waitingMillis = 200;
+
     @Override
     public void runUnthrowable() {
       watchBuffer(this);
@@ -117,7 +141,7 @@ public final class PushTaskBuffer {
 
     @Override
     public int getWaitingMillis() {
-      return 200;
+      return waitingMillis;
     }
 
     private List<PushTask> transferAndMerge() {
