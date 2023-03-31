@@ -20,7 +20,9 @@ import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import java.util.HashSet;
 import java.util.Set;
+
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
 
 /**
  * @author jiangcun.hlc@antfin.com
@@ -251,7 +253,7 @@ public class PushEfficiencyImproveConfig {
   }
 
   public void setSessionServerConfig(SessionServerConfig sessionServerConfig) {
-    if (null != sessionServerConfig && sessionServerConfig.getSessionServerRegion() != null) {
+    if (null != sessionServerConfig && StringUtils.isNotBlank(sessionServerConfig.getSessionServerRegion())) {
       this.CURRENT_ZONE = sessionServerConfig.getSessionServerRegion().toUpperCase();
       this.DEFAULT_CHANGE_DEBOUNCING_MILLIS = sessionServerConfig.getDataChangeDebouncingMillis();
       this.DEFAULT_CHANGE_DEBOUNCING_MAX_MILLIS =
