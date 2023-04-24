@@ -23,6 +23,7 @@ import com.alipay.sofa.registry.common.model.TraceTimes;
 import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
+import com.alipay.sofa.registry.common.model.metaserver.DataChangeMergeConfig;
 import com.alipay.sofa.registry.common.model.sessionserver.DataChangeRequest;
 import com.alipay.sofa.registry.common.model.sessionserver.DataPushRequest;
 import com.alipay.sofa.registry.common.model.store.Publisher;
@@ -51,6 +52,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -71,17 +73,22 @@ public class DataChangeEventCenter {
   @Autowired private DefaultCommonConfig defaultCommonConfig;
 
   private final Map<String, DataChangeMerger> dataCenter2Changes = Maps.newConcurrentMap();
+  // redundancy store dataCenter2Changes to notify remote dateCenter
+  private final Map<String, DataChangeMerger> multiDataCenter2Changes = Maps.newConcurrentMap();
   private final ReadWriteLock lock = new ReentrantReadWriteLock();
   private final LinkedList<ChangeNotifierRetry> retryNotifiers = Lists.newLinkedList();
+  private final LinkedList<ChangeNotifierRetry> multiRetryNotifiers = Lists.newLinkedList();
 
   private final Map<String, Map<String, Datum>> dataCenter2TempChanges = Maps.newConcurrentMap();
   private final ReadWriteLock tempLock = new ReentrantReadWriteLock();
 
   private final TempChangeMerger tempChangeMerger = new TempChangeMerger();
   private final ChangeMerger changeMerger = new ChangeMerger();
+  private final MultiChangeMerger multiChangeMerger = new MultiChangeMerger();
 
   private KeyedThreadPoolExecutor notifyExecutor;
   private KeyedThreadPoolExecutor notifyTempExecutor;
+  private DataChangeMergeConfig dataChangeMergeConfig;
 
   public void init() {
     this.notifyExecutor =
@@ -96,11 +103,16 @@ public class DataChangeEventCenter {
             dataServerConfig.getNotifyTempExecutorQueueSize());
 
     ConcurrentUtils.createDaemonThread("changeMerger", changeMerger).start();
+    ConcurrentUtils.createDaemonThread("multiChangeMerger", multiChangeMerger).start();
     ConcurrentUtils.createDaemonThread("tempChangeMerger", tempChangeMerger).start();
     LOGGER.info(
         "start DataChange NotifyIntervalMs={}, NotifyTempIntervalMs={}",
         dataServerConfig.getNotifyIntervalMillis(),
         dataServerConfig.getNotifyTempDataIntervalMillis());
+  }
+
+  public void setDataChangeConfig(DataChangeMergeConfig dataChangeMergeConfig) {
+    this.dataChangeMergeConfig = dataChangeMergeConfig;
   }
 
   public void onTempPubChange(Publisher publisher, String dataCenter) {
@@ -123,9 +135,12 @@ public class DataChangeEventCenter {
     }
     DataChangeMerger changes =
         dataCenter2Changes.computeIfAbsent(dataCenter, k -> new DataChangeMerger());
+    DataChangeMerger multiChanges =
+        multiDataCenter2Changes.computeIfAbsent(dataCenter, k -> new DataChangeMerger());
     lock.readLock().lock();
     try {
       changes.addChanges(dataInfoIds, dataChangeType);
+      multiChanges.addChanges(dataInfoIds, dataChangeType);
     } finally {
       lock.readLock().unlock();
     }
@@ -173,6 +188,7 @@ public class DataChangeEventCenter {
     final String dataCenter;
     final Map<String, DatumVersion> dataInfoIds;
     final TraceTimes times;
+    final NodeType nodeType;
 
     volatile int retryCount;
 
@@ -181,13 +197,14 @@ public class DataChangeEventCenter {
         int notifyPort,
         String dataCenter,
         Map<String, DatumVersion> dataInfoIds,
-        TraceTimes parentTimes) {
+        TraceTimes parentTimes, NodeType nodeType) {
       this.dataCenter = dataCenter;
       this.channel = channel;
       this.notifyPort = notifyPort;
       this.dataInfoIds = dataInfoIds;
       this.times = parentTimes.copy();
       this.times.setDatumNotifyCreate(System.currentTimeMillis());
+      this.nodeType = nodeType;
     }
 
     @Override
@@ -247,26 +264,49 @@ public class DataChangeEventCenter {
     final int maxSize = dataServerConfig.getNotifyRetryQueueSize();
     final long expireTimestamp =
         System.currentTimeMillis() + dataServerConfig.getNotifyRetryBackoffMillis();
-    synchronized (retryNotifiers) {
-      if (retryNotifiers.size() >= maxSize) {
-        // remove first
-        retryNotifiers.removeFirst();
+    if(NodeType.DATA == retry.nodeType){
+      synchronized (multiRetryNotifiers) {
+        if (multiRetryNotifiers.size() >= maxSize) {
+          // remove first
+          multiRetryNotifiers.removeFirst();
+        }
+        multiRetryNotifiers.add(new ChangeNotifierRetry(retry, expireTimestamp));
       }
-      retryNotifiers.add(new ChangeNotifierRetry(retry, expireTimestamp));
+    }else{
+      synchronized (retryNotifiers) {
+        if (retryNotifiers.size() >= maxSize) {
+          // remove first
+          retryNotifiers.removeFirst();
+        }
+        retryNotifiers.add(new ChangeNotifierRetry(retry, expireTimestamp));
+      }
     }
     return true;
   }
 
-  List<ChangeNotifier> getExpires() {
+  List<ChangeNotifier> getExpires(NodeType nodeType) {
     final List<ChangeNotifier> expires = Lists.newLinkedList();
     final long now = System.currentTimeMillis();
-    synchronized (retryNotifiers) {
-      final Iterator<ChangeNotifierRetry> it = retryNotifiers.iterator();
-      while (it.hasNext()) {
-        ChangeNotifierRetry retry = it.next();
-        if (retry.expireTimestamp <= now) {
-          expires.add(retry.notifier);
-          it.remove();
+    if(NodeType.DATA == nodeType){
+      synchronized (multiRetryNotifiers) {
+        final Iterator<ChangeNotifierRetry> it = multiRetryNotifiers.iterator();
+        while (it.hasNext()) {
+          ChangeNotifierRetry retry = it.next();
+          if (retry.expireTimestamp <= now) {
+            expires.add(retry.notifier);
+            it.remove();
+          }
+        }
+      }
+    }else{
+      synchronized (retryNotifiers) {
+        final Iterator<ChangeNotifierRetry> it = retryNotifiers.iterator();
+        while (it.hasNext()) {
+          ChangeNotifierRetry retry = it.next();
+          if (retry.expireTimestamp <= now) {
+            expires.add(retry.notifier);
+            it.remove();
+          }
         }
       }
     }
@@ -414,7 +454,7 @@ public class DataChangeEventCenter {
         try {
           notifyExecutor.execute(
               channel.getRemoteAddress(),
-              new ChangeNotifier(channel, notifyPort, dataCenter, changes, event.getTraceTimes()));
+              new ChangeNotifier(channel, notifyPort, dataCenter, changes, event.getTraceTimes(), nodeType));
           CHANGE_COMMIT_COUNTER.inc();
         } catch (FastRejectedExecutionException e) {
           CHANGE_SKIP_COUNTER.inc();
@@ -428,8 +468,8 @@ public class DataChangeEventCenter {
     return true;
   }
 
-  void handleExpire() {
-    final List<ChangeNotifier> retries = getExpires();
+  void handleExpire(NodeType nodeType) {
+    final List<ChangeNotifier> retries = getExpires(nodeType);
     // commit retry
     for (ChangeNotifier retry : retries) {
       try {
@@ -450,11 +490,15 @@ public class DataChangeEventCenter {
     }
   }
 
-  List<DataChangeEvent> transferChangeEvent(int maxItems) {
+  List<DataChangeEvent> transferChangeEvent(int maxItems, boolean isMulti) {
     final List<DataChangeEvent> events = Lists.newArrayList();
     lock.writeLock().lock();
     try {
-      for (Map.Entry<String, DataChangeMerger> change : dataCenter2Changes.entrySet()) {
+      Set<Map.Entry<String, DataChangeMerger>> dateChangeSet = dataCenter2Changes.entrySet();
+      if (isMulti) {
+        dateChangeSet = multiDataCenter2Changes.entrySet();
+      }
+      for (Map.Entry<String, DataChangeMerger> change : dateChangeSet) {
         final String dataCenter = change.getKey();
         DataChangeMerger merger = change.getValue();
         TraceTimes traceTimes = merger.createTraceTime();
@@ -478,18 +522,12 @@ public class DataChangeEventCenter {
       try {
         // first clean the event
         final int maxItems = dataServerConfig.getNotifyMaxItems();
-        final List<DataChangeEvent> events = transferChangeEvent(maxItems);
+        final List<DataChangeEvent> events = transferChangeEvent(maxItems, false);
 
         // notify local session
         handleChanges(events, NodeType.SESSION, dataServerConfig.getNotifyPort(), true);
 
-        // notify remote data
-        handleChanges(
-            events,
-            NodeType.DATA,
-            multiClusterDataServerConfig.getSyncRemoteSlotLeaderPort(),
-            false);
-        handleExpire();
+        handleExpire(NodeType.SESSION);
       } catch (Throwable e) {
         LOGGER.error("failed to merge change", e);
       }
@@ -497,8 +535,45 @@ public class DataChangeEventCenter {
 
     @Override
     public void waitingUnthrowable() {
+      int notifyIntervalMillis = dataServerConfig.getNotifyIntervalMillis();
+      if(null != dataChangeMergeConfig){
+        notifyIntervalMillis = dataChangeMergeConfig.getDataChangeMergeDelay();
+      }
       ConcurrentUtils.sleepUninterruptibly(
-          dataServerConfig.getNotifyIntervalMillis(), TimeUnit.MILLISECONDS);
+          notifyIntervalMillis, TimeUnit.MILLISECONDS);
+    }
+  }
+
+  private final class MultiChangeMerger extends LoopRunnable {
+
+    @Override
+    public void runUnthrowable() {
+      try {
+        // first clean the event
+        final int maxItems = dataServerConfig.getNotifyMaxItems();
+        final List<DataChangeEvent> events = transferChangeEvent(maxItems, true);
+
+        // notify remote data
+        handleChanges(
+            events,
+            NodeType.DATA,
+            multiClusterDataServerConfig.getSyncRemoteSlotLeaderPort(),
+            false);
+        handleExpire(NodeType.DATA);
+      } catch (Throwable e) {
+        LOGGER.error("failed to merge change", e);
+      }
+    }
+
+    @Override
+    public void waitingUnthrowable() {
+      //multi dataCenter data change merger notify interval 100 millis
+      int notifyIntervalMillis = 100;
+      if(null != dataChangeMergeConfig){
+        notifyIntervalMillis = dataChangeMergeConfig.getMultiDataChangeMergeDelay();
+      }
+      ConcurrentUtils.sleepUninterruptibly(
+              notifyIntervalMillis, TimeUnit.MILLISECONDS);
     }
   }
 
@@ -532,7 +607,7 @@ public class DataChangeEventCenter {
   @VisibleForTesting
   ChangeNotifier newChangeNotifier(
       Channel channel, int notifyPort, String dataCenter, Map<String, DatumVersion> dataInfoIds) {
-    return new ChangeNotifier(channel, notifyPort, dataCenter, dataInfoIds, new TraceTimes());
+    return new ChangeNotifier(channel, notifyPort, dataCenter, dataInfoIds, new TraceTimes(), NodeType.SESSION);
   }
 
   @VisibleForTesting

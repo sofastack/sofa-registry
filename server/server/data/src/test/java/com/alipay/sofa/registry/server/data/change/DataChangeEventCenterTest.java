@@ -90,7 +90,7 @@ public class DataChangeEventCenterTest {
 
     Assert.assertFalse(
         center.handleChanges(
-            center.transferChangeEvent(dataServerConfig.getNotifyMaxItems()),
+            center.transferChangeEvent(dataServerConfig.getNotifyMaxItems(), false),
             NodeType.SESSION,
             dataServerConfig.getNotifyPort(),
             true));
@@ -104,7 +104,7 @@ public class DataChangeEventCenterTest {
     center.onChange(changes1, DataChangeType.PUT, DC);
     Assert.assertFalse(
         center.handleChanges(
-            center.transferChangeEvent(dataServerConfig.getNotifyMaxItems()),
+            center.transferChangeEvent(dataServerConfig.getNotifyMaxItems(), false),
             NodeType.SESSION,
             dataServerConfig.getNotifyPort(),
             true));
@@ -126,7 +126,7 @@ public class DataChangeEventCenterTest {
     channelsMap.put("localhost", Lists.newArrayList(channel));
     Assert.assertTrue(
         center.handleChanges(
-            center.transferChangeEvent(dataServerConfig.getNotifyMaxItems()),
+            center.transferChangeEvent(dataServerConfig.getNotifyMaxItems(), false),
             NodeType.SESSION,
             dataServerConfig.getNotifyPort(),
             true));
@@ -137,7 +137,7 @@ public class DataChangeEventCenterTest {
     // npe
     Assert.assertTrue(
         center.handleChanges(
-            center.transferChangeEvent(dataServerConfig.getNotifyMaxItems()),
+            center.transferChangeEvent(dataServerConfig.getNotifyMaxItems(), false),
             NodeType.SESSION,
             dataServerConfig.getNotifyPort(),
             true));
@@ -148,7 +148,7 @@ public class DataChangeEventCenterTest {
     double pre = ChangeMetrics.CHANGE_SKIP_COUNTER.get();
     Assert.assertTrue(
         center.handleChanges(
-            center.transferChangeEvent(dataServerConfig.getNotifyMaxItems()),
+            center.transferChangeEvent(dataServerConfig.getNotifyMaxItems(), false),
             NodeType.SESSION,
             dataServerConfig.getNotifyPort(),
             true));
@@ -219,14 +219,14 @@ public class DataChangeEventCenterTest {
   @Test
   public void testHandleExpire_npe() {
     initHandleExpire();
-    center.handleExpire();
+    center.handleExpire(NodeType.SESSION);
   }
 
   @Test
   public void testHandleExpire_reject() {
     initHandleExpire();
     center.setNotifyExecutor(TestBaseUtils.rejectExecutor());
-    center.handleExpire();
+    center.handleExpire(NodeType.SESSION);
   }
 
   private void initHandleExpire() {
@@ -250,14 +250,14 @@ public class DataChangeEventCenterTest {
               DC,
               Collections.singletonMap(String.valueOf(i + 100), new DatumVersion(200))));
     }
-    List<DataChangeEventCenter.ChangeNotifier> expires = center.getExpires();
+    List<DataChangeEventCenter.ChangeNotifier> expires = center.getExpires(NodeType.SESSION);
     Assert.assertTrue(expires.isEmpty());
     // is full, make expire now
     dataServerConfig.setNotifyRetryBackoffMillis(0);
     for (DataChangeEventCenter.ChangeNotifier n : list) {
       center.commitRetry(n);
     }
-    expires = center.getExpires();
+    expires = center.getExpires(NodeType.SESSION);
     Assert.assertEquals(expires.size(), list.size());
     Assert.assertArrayEquals(expires.toArray(), list.toArray());
     for (DataChangeEventCenter.ChangeNotifier n : list) {
@@ -305,13 +305,13 @@ public class DataChangeEventCenterTest {
     setCenter();
     List<String> changes1 = Lists.newArrayList("1", "2", "3");
     center.onChange(changes1, DataChangeType.PUT, DC);
-    List<DataChangeEvent> events = center.transferChangeEvent(3);
+    List<DataChangeEvent> events = center.transferChangeEvent(3, false);
     Assert.assertNotNull(events.get(0).toString());
     Assert.assertEquals(1, events.size());
     assertEvent(events, changes1);
 
     center.onChange(changes1, DataChangeType.PUT, DC);
-    events = center.transferChangeEvent(2);
+    events = center.transferChangeEvent(2, false);
     Assert.assertEquals(2, events.size());
     assertEvent(events, changes1);
   }

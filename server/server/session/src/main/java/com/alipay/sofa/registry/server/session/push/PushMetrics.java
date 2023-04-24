@@ -119,7 +119,7 @@ public final class PushMetrics {
             .register();
     private static final Histogram PUSH_DELAY_HISTOGRAM =
         Histogram.build()
-            .linearBuckets(0, 1000, 30)
+            .linearBuckets(0, 1000, 10)
             .namespace("session")
             .subsystem("push")
             .name("push_delay")
