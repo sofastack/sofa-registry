@@ -119,9 +119,48 @@ public final class PushMetrics {
             .register();
     private static final Histogram PUSH_DELAY_HISTOGRAM =
         Histogram.build()
-            .linearBuckets(0, 1000, 30)
+            .linearBuckets(0, 1000, 15)
             .namespace("session")
             .subsystem("push")
+            .name("push_delay")
+            .help("push delay")
+            .labelNames("datacenter", "cause", "status")
+            .register();
+    private static final Histogram PUSH_DELAY_HISTOGRAM_SUB_OK =
+        Histogram.build()
+            .linearBuckets(0, 1000, 15)
+            .namespace("session")
+            .subsystem("push_sub_ok")
+            .name("push_delay")
+            .help("push delay")
+            .labelNames("datacenter", "cause", "status")
+            .register();
+
+    private static final Histogram PUSH_DELAY_HISTOGRAM_SUB_FAIL =
+        Histogram.build()
+            .linearBuckets(0, 1000, 15)
+            .namespace("session")
+            .subsystem("push_sub_fail")
+            .name("push_delay")
+            .help("push delay")
+            .labelNames("datacenter", "cause", "status")
+            .register();
+
+    private static final Histogram PUSH_DELAY_HISTOGRAM_REG_OK =
+        Histogram.build()
+            .linearBuckets(0, 1000, 15)
+            .namespace("session")
+            .subsystem("push_reg_ok")
+            .name("push_delay")
+            .help("push delay")
+            .labelNames("datacenter", "cause", "status")
+            .register();
+
+    private static final Histogram PUSH_DELAY_HISTOGRAM_REG_FAIL =
+        Histogram.build()
+            .linearBuckets(0, 1000, 15)
+            .namespace("session")
+            .subsystem("push_reg_fail")
             .name("push_delay")
             .help("push delay")
             .labelNames("datacenter", "cause", "status")
@@ -132,6 +171,9 @@ public final class PushMetrics {
       // quick path
       if (status == PushTrace.PushStatus.OK) {
         if (pushType == PushType.Sub) {
+          PUSH_DELAY_HISTOGRAM_SUB_OK
+              .labels(dataCenter, PushType.Sub.name(), PushTrace.PushStatus.OK.name())
+              .observe(millis);
           PUSH_DELAY_HISTOGRAM
               .labels(dataCenter, PushType.Sub.name(), PushTrace.PushStatus.OK.name())
               .observe(millis);
@@ -139,14 +181,34 @@ public final class PushMetrics {
           return;
         }
         if (pushType == PushType.Reg) {
+          PUSH_DELAY_HISTOGRAM_REG_OK
+              .labels(dataCenter, PushType.Reg.name(), PushTrace.PushStatus.OK.name())
+              .observe(millis);
           PUSH_DELAY_HISTOGRAM
               .labels(dataCenter, PushType.Reg.name(), PushTrace.PushStatus.OK.name())
               .observe(millis);
 
           return;
         }
+      } else {
+
+        PUSH_DELAY_HISTOGRAM.labels(dataCenter, pushType.name(), status.name()).observe(millis);
+
+        if (pushType == PushType.Sub) {
+          PUSH_DELAY_HISTOGRAM_SUB_FAIL
+              .labels(dataCenter, PushType.Sub.name(), PushTrace.PushStatus.Fail.name())
+              .observe(millis);
+
+          return;
+        }
+        if (pushType == PushType.Reg) {
+          PUSH_DELAY_HISTOGRAM_REG_FAIL
+              .labels(dataCenter, PushType.Reg.name(), PushTrace.PushStatus.Fail.name())
+              .observe(millis);
+
+          return;
+        }
       }
-      PUSH_DELAY_HISTOGRAM.labels(dataCenter, pushType.name(), status.name()).observe(millis);
     }
 
     static final Counter PUSH_EMPTY_SKIP_COUNTER =
