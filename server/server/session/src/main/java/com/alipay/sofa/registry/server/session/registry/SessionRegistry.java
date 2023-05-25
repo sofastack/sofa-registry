@@ -40,15 +40,14 @@ import com.alipay.sofa.registry.server.session.push.FirePushService;
 import com.alipay.sofa.registry.server.session.push.PushSwitchService;
 import com.alipay.sofa.registry.server.session.push.TriggerPushContext;
 import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
-import com.alipay.sofa.registry.server.session.store.DataStore;
-import com.alipay.sofa.registry.server.session.store.Interests;
-import com.alipay.sofa.registry.server.session.store.Watchers;
+import com.alipay.sofa.registry.server.session.store.PublisherStore;
+import com.alipay.sofa.registry.server.session.store.SubscriberStore;
+import com.alipay.sofa.registry.server.session.store.WatcherStore;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.LoopRunnable;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.util.*;
@@ -69,14 +68,9 @@ public class SessionRegistry implements Registry {
 
   protected static final Logger SCAN_VER_LOGGER = LoggerFactory.getLogger("SCAN-VER");
 
-  /** store subscribers */
-  @Autowired protected Interests sessionInterests;
-
-  /** store watchers */
-  @Autowired protected Watchers sessionWatchers;
-
-  /** store publishers */
-  @Autowired protected DataStore sessionDataStore;
+  @Autowired protected PublisherStore publisherStore;
+  @Autowired protected SubscriberStore subscriberStore;
+  @Autowired protected WatcherStore watcherStore;
 
   /** transfer data to DataNode */
   @Autowired protected DataNodeService dataNodeService;
@@ -128,7 +122,7 @@ public class SessionRegistry implements Registry {
           case PUBLISHER:
             Publisher publisher = (Publisher) storeData;
             publisher.setSessionProcessId(ServerEnv.PROCESS_ID);
-            if (!sessionDataStore.add(publisher)) {
+            if (!publisherStore.add(publisher)) {
               break;
             }
             // All write operations to DataServer (pub/unPub/clientoff/renew/snapshot)
@@ -138,14 +132,14 @@ public class SessionRegistry implements Registry {
             break;
           case SUBSCRIBER:
             Subscriber subscriber = (Subscriber) storeData;
-            if (!sessionInterests.add(subscriber)) {
+            if (!subscriberStore.add(subscriber)) {
               break;
             }
             clientRegistrationHook.afterClientRegister(storeData);
             break;
           case WATCHER:
             Watcher watcher = (Watcher) storeData;
-            if (!sessionWatchers.add(watcher)) {
+            if (!watcherStore.add(watcher)) {
               break;
             }
             clientRegistrationHook.afterClientRegister(storeData);
@@ -167,7 +161,7 @@ public class SessionRegistry implements Registry {
         Publisher publisher = (Publisher) storeData;
         publisher.setSessionProcessId(ServerEnv.PROCESS_ID);
         // no need to check whether the pub exist, make sure the unpub send to data
-        sessionDataStore.deleteById(storeData.getId(), publisher.getDataInfoId());
+        publisherStore.delete(publisher.getDataInfoId(), storeData.getId());
         // All write operations to DataServer (pub/unPub/clientoff)
         // are handed over to WriteDataAcceptor
         writeDataAcceptor.accept(new PublisherUnregisterWriteDataRequest(publisher));
@@ -176,14 +170,14 @@ public class SessionRegistry implements Registry {
         break;
       case SUBSCRIBER:
         Subscriber subscriber = (Subscriber) storeData;
-        if (sessionInterests.deleteById(storeData.getId(), subscriber.getDataInfoId()) == null) {
+        if (subscriberStore.delete(subscriber.getDataInfoId(), storeData.getId()) == null) {
           break;
         }
         clientRegistrationHook.afterClientUnregister(storeData);
         break;
       case WATCHER:
         Watcher watcher = (Watcher) storeData;
-        if (sessionWatchers.deleteById(watcher.getId(), watcher.getDataInfoId()) == null) {
+        if (watcherStore.delete(watcher.getDataInfoId(), watcher.getId()) == null) {
           break;
         }
         clientRegistrationHook.afterClientUnregister(storeData);
@@ -233,19 +227,22 @@ public class SessionRegistry implements Registry {
     final String dataCenter = getDataCenterWhenPushEmpty();
 
     if (checkSub) {
-      Map<ConnectId, Map<String, Subscriber>> subMap =
-          sessionInterests.queryByConnectIds(connectIdSet);
-      for (Entry<ConnectId, Map<String, Subscriber>> subEntry : subMap.entrySet()) {
+      for (ConnectId connectId : connectIdSet) {
+        Collection<Subscriber> subscribers = subscriberStore.getByConnectId(connectId);
+        if (subscribers == null || subscribers.size() <= 0) {
+          continue;
+        }
+
         int subEmptyCount = 0;
-        for (Subscriber sub : subEntry.getValue().values()) {
+        for (Subscriber sub : subscribers) {
           if (isPushEmpty(sub)) {
-            Long clientOffVersion = connectIdVersions.get(subEntry.getKey());
+            Long clientOffVersion = connectIdVersions.get(connectId);
             if (clientOffVersion != null && clientOffVersion < sub.getRegisterTimestamp()) {
               Loggers.CLIENT_DISABLE_LOG.error(
                   "[ClientOffVersionError]subEmpty,{},{},{}, clientOffVersion={} is smaller than subRegisterTimestamp={}",
                   sub.getDataInfoId(),
                   dataCenter,
-                  subEntry.getKey(),
+                  connectId,
                   clientOffVersion,
                   sub.getRegisterTimestamp());
               continue;
@@ -254,16 +251,15 @@ public class SessionRegistry implements Registry {
             subEmptyCount++;
             firePushService.fireOnPushEmpty(sub, dataCenter);
             Loggers.CLIENT_DISABLE_LOG.info(
-                "subEmpty,{},{},{}", sub.getDataInfoId(), dataCenter, subEntry.getKey());
+                "subEmpty,{},{},{}", sub.getDataInfoId(), dataCenter, connectId);
           }
         }
-        Loggers.CLIENT_DISABLE_LOG.info(
-            "connectId={}, subEmpty={}", subEntry.getKey(), subEmptyCount);
+        Loggers.CLIENT_DISABLE_LOG.info("connectId={}, subEmpty={}", connectId, subEmptyCount);
       }
     }
 
-    Map<ConnectId, List<Publisher>> pubMap = removeFromSession(connectIdSet, removeSubAndWat);
-    for (Entry<ConnectId, List<Publisher>> pubEntry : pubMap.entrySet()) {
+    Map<ConnectId, Collection<Publisher>> pubMap = removeFromSession(connectIdSet, removeSubAndWat);
+    for (Entry<ConnectId, Collection<Publisher>> pubEntry : pubMap.entrySet()) {
       clientOffToDataNode(pubEntry.getKey(), pubEntry.getValue());
       Loggers.CLIENT_DISABLE_LOG.info(
           "connectId={}, pubRemove={}", pubEntry.getKey(), pubEntry.getValue().size());
@@ -275,24 +271,26 @@ public class SessionRegistry implements Registry {
     return false;
   }
 
-  private Map<ConnectId, List<Publisher>> removeFromSession(
+  private Map<ConnectId, Collection<Publisher>> removeFromSession(
       Set<ConnectId> connectIds, boolean removeSubAndWat) {
-    Map<ConnectId, Map<String, Publisher>> publisherMap =
-        sessionDataStore.deleteByConnectIds(connectIds);
+    Map<ConnectId, Collection<Publisher>> ret = Maps.newHashMap();
 
-    if (removeSubAndWat) {
-      sessionInterests.deleteByConnectIds(connectIds);
-      sessionWatchers.deleteByConnectIds(connectIds);
-    }
-
-    Map<ConnectId, List<Publisher>> ret = Maps.newHashMap();
-    for (Entry<ConnectId, Map<String, Publisher>> entry : publisherMap.entrySet()) {
-      ret.put(entry.getKey(), Lists.newArrayList(entry.getValue().values()));
+    if (connectIds != null && connectIds.size() > 0) {
+      for (ConnectId connectId : connectIds) {
+        Collection<Publisher> publishers = publisherStore.delete(connectId);
+        if (publishers != null && publishers.size() > 0) {
+          ret.put(connectId, publishers);
+        }
+        if (removeSubAndWat) {
+          subscriberStore.delete(connectId);
+          watcherStore.delete(connectId);
+        }
+      }
     }
     return ret;
   }
 
-  private void clientOffToDataNode(ConnectId connectId, List<Publisher> clientOffPublishers) {
+  private void clientOffToDataNode(ConnectId connectId, Collection<Publisher> clientOffPublishers) {
     if (CollectionUtils.isEmpty(clientOffPublishers)) {
       return;
     }
@@ -357,7 +355,7 @@ public class SessionRegistry implements Registry {
       long round, String dataCenter) {
     final long start = System.currentTimeMillis();
     Tuple<Map<String, DatumVersion>, List<Subscriber>> tuple =
-        sessionInterests.selectSubscribers(dataCenter);
+        subscriberStore.selectSubscribers(dataCenter);
     SCAN_VER_LOGGER.info(
         "[select]round={}, interestSize={}, pushEmptySize={}, span={}",
         round,
@@ -451,7 +449,7 @@ public class SessionRegistry implements Registry {
         for (Map.Entry<String, DatumVersion> version : result.callback.versions.entrySet()) {
           final String dataInfoId = version.getKey();
           final long verVal = version.getValue().getValue();
-          if (sessionInterests.checkInterestVersion(dataCenter, dataInfoId, verVal).interested) {
+          if (subscriberStore.checkInterestVersion(dataCenter, dataInfoId, verVal).interested) {
             TriggerPushContext ctx = new TriggerPushContext(dataCenter, verVal, result.leader, now);
             firePushService.fireOnChange(dataInfoId, ctx);
             SCAN_VER_LOGGER.info(
@@ -590,9 +588,9 @@ public class SessionRegistry implements Registry {
     }
 
     Set<ConnectId> connectIndexes = Sets.newHashSetWithExpectedSize(1024 * 8);
-    connectIndexes.addAll(sessionDataStore.getConnectIds());
-    connectIndexes.addAll(sessionInterests.getConnectIds());
-    connectIndexes.addAll(sessionWatchers.getConnectIds());
+    connectIndexes.addAll(publisherStore.getAllConnectId());
+    connectIndexes.addAll(subscriberStore.getAllConnectId());
+    connectIndexes.addAll(watcherStore.getAllConnectId());
 
     List<ConnectId> connectIds = new ArrayList<>(64);
     for (ConnectId connectId : connectIndexes) {

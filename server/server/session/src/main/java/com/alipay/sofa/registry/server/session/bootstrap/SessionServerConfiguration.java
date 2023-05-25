@@ -61,6 +61,12 @@ import com.alipay.sofa.registry.server.session.scheduler.timertask.SyncClientsHe
 import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
 import com.alipay.sofa.registry.server.session.slot.SlotTableCacheImpl;
 import com.alipay.sofa.registry.server.session.store.*;
+import com.alipay.sofa.registry.server.session.store.PublisherStore;
+import com.alipay.sofa.registry.server.session.store.PublisherStoreImpl;
+import com.alipay.sofa.registry.server.session.store.SubscriberStore;
+import com.alipay.sofa.registry.server.session.store.SubscriberStoreImpl;
+import com.alipay.sofa.registry.server.session.store.WatcherStore;
+import com.alipay.sofa.registry.server.session.store.WatcherStoreImpl;
 import com.alipay.sofa.registry.server.session.strategy.*;
 import com.alipay.sofa.registry.server.shared.client.manager.BaseClientManagerService;
 import com.alipay.sofa.registry.server.shared.client.manager.ClientManagerService;
@@ -476,20 +482,20 @@ public class SessionServerConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public Interests sessionInterests() {
-      return new SessionInterests();
+    public PublisherStore publisherStore(SlotTableCache slotTableCache) {
+      return new PublisherStoreImpl(slotTableCache);
     }
 
     @Bean
     @ConditionalOnMissingBean
-    public Watchers sessionWatchers() {
-      return new SessionWatchers();
+    public SubscriberStore subscriberStore(SessionServerConfig sessionServerConfig) {
+      return new SubscriberStoreImpl(sessionServerConfig);
     }
 
     @Bean
     @ConditionalOnMissingBean
-    public DataStore sessionDataStore() {
-      return new SessionDataStore();
+    public WatcherStore watcherStore() {
+      return new WatcherStoreImpl();
     }
   }
 

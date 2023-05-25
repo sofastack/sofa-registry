@@ -16,6 +16,9 @@
  */
 package com.alipay.sofa.registry.common.model.store;
 
+import com.alipay.sofa.registry.common.model.ConnectId;
+import com.alipay.sofa.registry.common.model.RegisterVersion;
+
 /**
  * @author shangyu.wh
  * @version $Id: StoreData.java, v 0.1 2017-11-30 19:48 shangyu.wh Exp $
@@ -43,4 +46,12 @@ public interface StoreData<ID> {
    * @return
    */
   ID getId();
+
+  String getDataInfoId();
+
+  RegisterVersion registerVersion();
+
+  long getRegisterTimestamp();
+
+  ConnectId connectId();
 }

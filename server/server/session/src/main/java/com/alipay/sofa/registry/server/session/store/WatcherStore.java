@@ -16,15 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.store;
 
-import com.alipay.sofa.registry.common.model.store.Publisher;
-import java.util.Map;
+import com.alipay.sofa.registry.common.model.store.Watcher;
 
-/**
- * @author shangyu.wh
- * @version $Id: DataStore.java, v 0.1 2017-12-01 18:13 shangyu.wh Exp $
- */
-public interface DataStore extends DataManager<Publisher, String, String> {
-
-  Map<String /*dataInfoId*/, Map<String /*registerId*/, Publisher>> getDataInfoIdPublishers(
-      int slotId);
-}
+/** Used to store observer information */
+public interface WatcherStore extends ClientStore<Watcher> {}

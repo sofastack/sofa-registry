@@ -14,12 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.store;
+package com.alipay.sofa.registry.server.session.store.engine;
 
-import com.alipay.sofa.registry.common.model.store.Watcher;
+import com.alipay.sofa.registry.common.model.store.StoreData;
+import java.util.Collection;
 
-/**
- * @author shangyu.wh
- * @version $Id: SessionInterests.java, v 0.1 2017-11-30 15:53 shangyu.wh Exp $
- */
-public interface Watchers extends DataManager<Watcher, String, String> {}
+/** A storage engine that supports aggregation by a specific key. */
+public interface SlotStoreEngine<T extends StoreData<String>> extends StoreEngine<T> {
+
+  /**
+   * All StoreData belonging to the same slot.
+   *
+   * @param slotId slot id
+   * @return StoreData belonging to the same slot
+   */
+  Collection<T> getSlotStoreData(int slotId);
+}

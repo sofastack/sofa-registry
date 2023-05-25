@@ -77,7 +77,8 @@ public class ClientManagerTest extends BaseIntegrationTest {
     Thread.sleep(5000L);
 
     // check session
-    Assert.assertTrue(isExist(sessionDataStore.getDatas(dataInfo.getDataInfoId()), localAddress));
+    Assert.assertTrue(
+        isExist(publisherStore.getByDataInfoId(dataInfo.getDataInfoId()), localAddress));
 
     // check data
     Assert.assertTrue(
@@ -105,7 +106,8 @@ public class ClientManagerTest extends BaseIntegrationTest {
     Thread.sleep(3000L);
 
     // check session local cache
-    Assert.assertFalse(isExist(sessionDataStore.getDatas(dataInfo.getDataInfoId()), localAddress));
+    Assert.assertFalse(
+        isExist(publisherStore.getByDataInfoId(dataInfo.getDataInfoId()), localAddress));
     // check data publisher
     Assert.assertFalse(
         isExist(localDatumStorage.getAllPublisher().get(dataInfo.getDataInfoId()), localAddress));
@@ -114,7 +116,8 @@ public class ClientManagerTest extends BaseIntegrationTest {
     Thread.sleep(2000L);
 
     // check session local cache
-    Assert.assertFalse(isExist(sessionDataStore.getDatas(dataInfo.getDataInfoId()), localAddress));
+    Assert.assertFalse(
+        isExist(publisherStore.getByDataInfoId(dataInfo.getDataInfoId()), localAddress));
     // check data publisher
     Assert.assertFalse(
         isExist(localDatumStorage.getAllPublisher().get(dataInfo.getDataInfoId()), localAddress));
@@ -141,7 +144,8 @@ public class ClientManagerTest extends BaseIntegrationTest {
     Thread.sleep(5000);
 
     // check session local cache
-    Assert.assertTrue(isExist(sessionDataStore.getDatas(dataInfo.getDataInfoId()), localAddress));
+    Assert.assertTrue(
+        isExist(publisherStore.getByDataInfoId(dataInfo.getDataInfoId()), localAddress));
     Assert.assertTrue(
         isExist(localDatumStorage.getAllPublisher().get(dataInfo.getDataInfoId()), localAddress));
   }
@@ -224,7 +228,8 @@ public class ClientManagerTest extends BaseIntegrationTest {
     Thread.sleep(5000L);
 
     // check session
-    Assert.assertTrue(isExist(sessionDataStore.getDatas(dataInfo.getDataInfoId()), localAddress));
+    Assert.assertTrue(
+        isExist(publisherStore.getByDataInfoId(dataInfo.getDataInfoId()), localAddress));
 
     // check data
     Assert.assertTrue(
@@ -252,7 +257,8 @@ public class ClientManagerTest extends BaseIntegrationTest {
     Thread.sleep(3000L);
 
     // check session local cache
-    Assert.assertFalse(isExist(sessionDataStore.getDatas(dataInfo.getDataInfoId()), localAddress));
+    Assert.assertFalse(
+        isExist(publisherStore.getByDataInfoId(dataInfo.getDataInfoId()), localAddress));
     // check data publisher
     Assert.assertFalse(
         isExist(localDatumStorage.getAllPublisher().get(dataInfo.getDataInfoId()), localAddress));
@@ -261,7 +267,8 @@ public class ClientManagerTest extends BaseIntegrationTest {
     Thread.sleep(2000L);
 
     // check session local cache
-    Assert.assertFalse(isExist(sessionDataStore.getDatas(dataInfo.getDataInfoId()), localAddress));
+    Assert.assertFalse(
+        isExist(publisherStore.getByDataInfoId(dataInfo.getDataInfoId()), localAddress));
     // check data publisher
     Assert.assertFalse(
         isExist(localDatumStorage.getAllPublisher().get(dataInfo.getDataInfoId()), localAddress));
@@ -288,7 +295,8 @@ public class ClientManagerTest extends BaseIntegrationTest {
     Thread.sleep(5000);
 
     // check session local cache
-    Assert.assertFalse(isExist(sessionDataStore.getDatas(dataInfo.getDataInfoId()), localAddress));
+    Assert.assertFalse(
+        isExist(publisherStore.getByDataInfoId(dataInfo.getDataInfoId()), localAddress));
     Assert.assertFalse(
         isExist(localDatumStorage.getAllPublisher().get(dataInfo.getDataInfoId()), localAddress));
 
@@ -296,7 +304,8 @@ public class ClientManagerTest extends BaseIntegrationTest {
     Thread.sleep(2000L);
 
     // check session local cache
-    Assert.assertTrue(isExist(sessionDataStore.getDatas(dataInfo.getDataInfoId()), localAddress));
+    Assert.assertTrue(
+        isExist(publisherStore.getByDataInfoId(dataInfo.getDataInfoId()), localAddress));
     // check data publisher
     Assert.assertTrue(
         isExist(localDatumStorage.getAllPublisher().get(dataInfo.getDataInfoId()), localAddress));

@@ -23,6 +23,8 @@ import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.server.session.connections.ConnectionsService;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -40,10 +42,10 @@ public class FetchPubSubDataInfoIdService {
   @Autowired private ConnectionsService connectionsService;
 
   /** store subscribers */
-  @Autowired protected Interests sessionInterests;
+  @Autowired protected SubscriberStore subscriberStore;
 
   /** store publishers */
-  @Autowired protected DataStore sessionDataStore;
+  @Autowired protected PublisherStore publisherStore;
 
   public PubSubDataInfoIdResp queryByIps(Set<String> ips) {
 
@@ -53,10 +55,27 @@ public class FetchPubSubDataInfoIdService {
       return resp;
     }
 
-    Map<ConnectId, Map<String, Publisher>> connectIdPubMap =
-        sessionDataStore.queryByConnectIds(Sets.newHashSet(connectIds));
-    Map<ConnectId, Map<String, Subscriber>> connectIdSubMap =
-        sessionInterests.queryByConnectIds(Sets.newHashSet(connectIds));
+    Map<ConnectId, Map<String, Publisher>> connectIdPubMap = new HashMap<>();
+    Map<ConnectId, Map<String, Subscriber>> connectIdSubMap = new HashMap<>();
+    for (ConnectId connectId : connectIds) {
+      Collection<Publisher> publishers = publisherStore.getByConnectId(connectId);
+      if (publishers != null && publishers.size() > 0) {
+        for (Publisher publisher : publishers) {
+          Map<String, Publisher> dataInfoIdPublishers =
+              connectIdPubMap.computeIfAbsent(publisher.connectId(), connectId1 -> new HashMap<>());
+          dataInfoIdPublishers.put(publisher.getRegisterId(), publisher);
+        }
+      }
+      Collection<Subscriber> subscribers = subscriberStore.getByConnectId(connectId);
+      if (subscribers != null && subscribers.size() > 0) {
+        for (Subscriber subscriber : subscribers) {
+          Map<String, Subscriber> dataInfoIdSubscribers =
+              connectIdSubMap.computeIfAbsent(
+                  subscriber.connectId(), connectId1 -> new HashMap<>());
+          dataInfoIdSubscribers.put(subscriber.getRegisterId(), subscriber);
+        }
+      }
+    }
 
     // collect pub and sub dataInfoIds
     Map<String, Set<String>> pubs = parsePubDataInfoIds(connectIdPubMap);

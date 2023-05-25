@@ -21,16 +21,16 @@ import com.alipay.sofa.registry.common.model.SubscriberUtils;
 import com.alipay.sofa.registry.common.model.sessionserver.QuerySubscriberRequest;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.server.session.store.Interests;
+import com.alipay.sofa.registry.server.session.store.SubscriberStore;
 import java.util.Collection;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class QuerySubscriberRequestHandler extends AbstractConsoleHandler<QuerySubscriberRequest> {
-  @Autowired protected Interests sessionInterests;
+  @Autowired protected SubscriberStore subscriberStore;
 
   @Override
   public Object doHandle(Channel channel, QuerySubscriberRequest request) {
-    Collection<Subscriber> subscribers = sessionInterests.getInterests(request.getDataInfoId());
+    Collection<Subscriber> subscribers = subscriberStore.getByDataInfoId(request.getDataInfoId());
     return new GenericResponse().fillSucceed(SubscriberUtils.convert(subscribers));
   }
 

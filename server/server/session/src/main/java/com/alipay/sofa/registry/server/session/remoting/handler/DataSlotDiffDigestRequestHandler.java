@@ -28,11 +28,13 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.session.bootstrap.ExecutorManager;
 import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
-import com.alipay.sofa.registry.server.session.store.DataStore;
+import com.alipay.sofa.registry.server.session.store.PublisherStore;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.alipay.sofa.registry.util.StringFormatter;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,7 +50,7 @@ public class DataSlotDiffDigestRequestHandler
 
   @Autowired ExecutorManager executorManager;
 
-  @Autowired DataStore sessionDataStore;
+  @Autowired PublisherStore publisherStore;
 
   @Autowired SlotTableCache slotTableCache;
 
@@ -61,11 +63,18 @@ public class DataSlotDiffDigestRequestHandler
   @Override
   public Object doHandle(Channel channel, DataSlotDiffDigestRequest request) {
     try {
+      Map<String, Map<String, Publisher>> existingPublishers = new HashMap<>();
+      Collection<Publisher> publishers = publisherStore.getBySlotId(request.getSlotId());
+      if (publishers != null) {
+        for (Publisher publisher : publishers) {
+          Map<String, Publisher> dataInfoIdPublishers =
+              existingPublishers.computeIfAbsent(publisher.getDataInfoId(), k -> new HashMap<>());
+          dataInfoIdPublishers.put(publisher.getRegisterId(), publisher);
+        }
+      }
+
       DataSlotDiffDigestResult result =
-          calcDiffResult(
-              request.getSlotId(),
-              request.getDatumDigest(),
-              sessionDataStore.getDataInfoIdPublishers(request.getSlotId()));
+          calcDiffResult(request.getSlotId(), request.getDatumDigest(), existingPublishers);
       result.setSlotTableEpoch(slotTableCache.getEpoch());
       result.setSessionProcessId(ServerEnv.PROCESS_ID);
       return new GenericResponse().fillSucceed(result);

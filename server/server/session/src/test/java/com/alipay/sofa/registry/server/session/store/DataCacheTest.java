@@ -26,7 +26,6 @@ import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.server.session.bootstrap.CommonConfig;
-import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfigBean;
 import com.alipay.sofa.registry.server.session.providedata.FetchStopPushService;
 import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
@@ -53,30 +52,29 @@ public class DataCacheTest extends BaseTest {
 
   @Test
   public void testGetSub() {
-    SessionInterests sessionInterests = new SessionInterests();
-    sessionInterests.setSessionServerConfig(new SessionServerConfigBean(null));
+    SubscriberStore subscriberStore = new SubscriberStoreImpl(new SessionServerConfigBean(null));
 
     String dataId = "dataid";
     String connectId = "192.168.1.2:9000_127.0.0.1:34567";
 
     for (int i = 0; i < 100; i++) {
-      sessionInterests.add(getSub(dataId, ScopeEnum.zone, null, null));
+      subscriberStore.add(getSub(dataId, ScopeEnum.zone, null, null));
     }
     // add other ip
-    sessionInterests.add(getSub(dataId, ScopeEnum.zone, null, new URL("192.168.1.9", 8000)));
+    subscriberStore.add(getSub(dataId, ScopeEnum.zone, null, new URL("192.168.1.9", 8000)));
 
     Map<InetSocketAddress, Map<String, Subscriber>> map =
         getCacheSub(
-            DataInfo.toDataInfoId(dataId, "instance2", "rpc"), ScopeEnum.zone, sessionInterests);
-    Assert.assertTrue(getCacheSub(sessionInterests, connectId));
+            DataInfo.toDataInfoId(dataId, "instance2", "rpc"), ScopeEnum.zone, subscriberStore);
+    Assert.assertTrue(getCacheSub(subscriberStore, connectId));
 
-    sessionInterests.deleteByConnectId(ConnectId.parse(connectId));
+    subscriberStore.delete(ConnectId.parse(connectId));
 
     Map<InetSocketAddress, Map<String, Subscriber>> map2 =
         getCacheSub(
-            DataInfo.toDataInfoId(dataId, "instance2", "rpc"), ScopeEnum.zone, sessionInterests);
+            DataInfo.toDataInfoId(dataId, "instance2", "rpc"), ScopeEnum.zone, subscriberStore);
 
-    Assert.assertFalse(getCacheSub(sessionInterests, connectId));
+    Assert.assertFalse(getCacheSub(subscriberStore, connectId));
 
     // map no change
     Assert.assertEquals(2, map.size());
@@ -89,8 +87,7 @@ public class DataCacheTest extends BaseTest {
 
   @Test
   public void testDeleteSubById() {
-    SessionInterests sessionInterests = new SessionInterests();
-    sessionInterests.setSessionServerConfig(new SessionServerConfigBean(null));
+    SubscriberStore sessionInterests = new SubscriberStoreImpl(new SessionServerConfigBean(null));
 
     String dataId = "dataid";
 
@@ -109,7 +106,7 @@ public class DataCacheTest extends BaseTest {
             DataInfo.toDataInfoId(dataId, "instance2", "rpc"), ScopeEnum.zone, sessionInterests);
     Assert.assertTrue(getCacheSub(sessionInterests, "192.168.1.9:8000_127.0.0.1:34567"));
 
-    sessionInterests.deleteById("xxregist123", DataInfo.toDataInfoId(dataId, "instance2", "rpc"));
+    sessionInterests.delete(DataInfo.toDataInfoId(dataId, "instance2", "rpc"), "xxregist123");
 
     Map<InetSocketAddress, Map<String, Subscriber>> map2 =
         getCacheSub(
@@ -134,27 +131,26 @@ public class DataCacheTest extends BaseTest {
 
   @Test
   public void testGetPub() {
-    SessionDataStore sessionDataStore = new SessionDataStore();
-    sessionDataStore.slotTableCache = mock(SlotTableCache.class);
-    doReturn(0).when(sessionDataStore.slotTableCache).slotOf(anyString());
+    SlotTableCache slotTableCache = mock(SlotTableCache.class);
+    PublisherStore publisherStore = new PublisherStoreImpl(slotTableCache);
+    doReturn(0).when(slotTableCache).slotOf(anyString());
 
     String dataId = "dataid";
     String connectId = "192.168.1.2:9000_127.0.0.1:34567";
     for (int i = 0; i < 10; i++) {
-
-      sessionDataStore.add(getPub(dataId, null, null));
+      publisherStore.add(getPub(dataId, null, null));
     }
 
-    Assert.assertTrue(getCachePub(sessionDataStore, connectId));
-    sessionDataStore.deleteByConnectId(ConnectId.parse(connectId));
-    Assert.assertFalse(getCachePub(sessionDataStore, connectId));
+    Assert.assertTrue(getCachePub(publisherStore, connectId));
+    publisherStore.delete(ConnectId.parse(connectId));
+    Assert.assertFalse(getCachePub(publisherStore, connectId));
   }
 
   @Test
   public void testGetPubRefresh() {
-    SessionDataStore sessionDataStore = new SessionDataStore();
-    sessionDataStore.slotTableCache = mock(SlotTableCache.class);
-    doReturn(0).when(sessionDataStore.slotTableCache).slotOf(anyString());
+    SlotTableCache slotTableCache = mock(SlotTableCache.class);
+    PublisherStore publisherStore = new PublisherStoreImpl(slotTableCache);
+    doReturn(0).when(slotTableCache).slotOf(anyString());
 
     String dataId = "dataid";
     String connectId = "192.168.1.2:9000";
@@ -163,11 +159,11 @@ public class DataCacheTest extends BaseTest {
     for (int i = 0; i < number; i++) {
       String connectIdss = "192.111.0.1:" + (8000 + i);
       Publisher p = getPub(dataId, null, URL.valueOf(connectIdss));
-      sessionDataStore.add(p);
+      publisherStore.add(p);
       publisherList.add(p);
       Assert.assertTrue(
           getCachePub(
-              sessionDataStore,
+              publisherStore,
               connectIdss
                   + ValueConstants.CONNECT_ID_SPLIT
                   + p.getTargetAddress().buildAddressString()));
@@ -175,44 +171,42 @@ public class DataCacheTest extends BaseTest {
     for (Publisher p : publisherList) {
       String c =
           connectId + ValueConstants.CONNECT_ID_SPLIT + p.getTargetAddress().buildAddressString();
-      Assert.assertFalse(getCachePub(sessionDataStore, c));
+      Assert.assertFalse(getCachePub(publisherStore, c));
     }
   }
 
   @Test
   public void testDelPubById() {
-    SessionDataStore sessionDataStore = new SessionDataStore();
-    sessionDataStore.slotTableCache = mock(SlotTableCache.class);
-    doReturn(0).when(sessionDataStore.slotTableCache).slotOf(anyString());
+    SlotTableCache slotTableCache = mock(SlotTableCache.class);
+    PublisherStore publisherStore = new PublisherStoreImpl(slotTableCache);
+    doReturn(0).when(slotTableCache).slotOf(anyString());
     String dataId = "dataid";
     String connectId = "192.168.1.2:9000_127.0.0.1:34567";
     for (int i = 0; i < 10; i++) {
-
-      sessionDataStore.add(getPub(dataId, null, null));
+      publisherStore.add(getPub(dataId, null, null));
     }
+    publisherStore.add(getPub(dataId, "XXXX", new URL("192.168.1.9", 8000)));
 
-    sessionDataStore.add(getPub(dataId, "XXXX", new URL("192.168.1.9", 8000)));
-
-    Assert.assertTrue(getCachePub(sessionDataStore, connectId));
-    Assert.assertTrue(getCachePub(sessionDataStore, "192.168.1.9:8000_127.0.0.1:34567"));
-    sessionDataStore.deleteById("XXXX", DataInfo.toDataInfoId(dataId, "instance2", "rpc"));
-    Assert.assertTrue(getCachePub(sessionDataStore, connectId));
-    Assert.assertFalse(getCachePub(sessionDataStore, "192.168.1.9:8000_127.0.0.1:34567"));
+    Assert.assertTrue(getCachePub(publisherStore, connectId));
+    Assert.assertTrue(getCachePub(publisherStore, "192.168.1.9:8000_127.0.0.1:34567"));
+    publisherStore.delete(DataInfo.toDataInfoId(dataId, "instance2", "rpc"), "XXXX");
+    Assert.assertTrue(getCachePub(publisherStore, connectId));
+    Assert.assertFalse(getCachePub(publisherStore, "192.168.1.9:8000_127.0.0.1:34567"));
   }
 
-  private boolean getCachePub(SessionDataStore sessionDataStore, String connectId) {
-    Map map = sessionDataStore.queryByConnectId(ConnectId.parse(connectId));
-    return map != null && !map.isEmpty();
+  private boolean getCachePub(PublisherStore publisherStore, String connectId) {
+    Collection<Publisher> publishers = publisherStore.getByConnectId(ConnectId.parse(connectId));
+    return publishers != null && !publishers.isEmpty();
   }
 
-  private boolean getCacheSub(SessionInterests sessionInterests, String connectId) {
-    Map map = sessionInterests.queryByConnectId(ConnectId.parse(connectId));
-    return map != null && !map.isEmpty();
+  private boolean getCacheSub(SubscriberStore subscriberStore, String connectId) {
+    Collection<Subscriber> subscribers = subscriberStore.getByConnectId(ConnectId.parse(connectId));
+    return subscribers != null && !subscribers.isEmpty();
   }
 
   private Map<InetSocketAddress, Map<String, Subscriber>> getCacheSub(
-      String dataInfoId, ScopeEnum scopeEnum, SessionInterests sessionInterests) {
-    Collection<Subscriber> subscribers = sessionInterests.getDatas(dataInfoId);
+      String dataInfoId, ScopeEnum scopeEnum, SubscriberStore subscriberStore) {
+    Collection<Subscriber> subscribers = subscriberStore.getByDataInfoId(dataInfoId);
     Map<InetSocketAddress, Map<String, Subscriber>> ret = Maps.newHashMap();
     Map<ScopeEnum, List<Subscriber>> scopes = SubscriberUtils.groupByScope(subscribers);
     List<Subscriber> list = scopes.get(scopeEnum);
@@ -272,10 +266,9 @@ public class DataCacheTest extends BaseTest {
 
   @Test
   public void testOverwriteSameConnectIdPublisher() {
-
-    SessionDataStore sessionDataStore = new SessionDataStore();
-    sessionDataStore.slotTableCache = mock(SlotTableCache.class);
-    doReturn(0).when(sessionDataStore.slotTableCache).slotOf(anyString());
+    SlotTableCache slotTableCache = mock(SlotTableCache.class);
+    PublisherStore publisherStore = new PublisherStoreImpl(slotTableCache);
+    doReturn(0).when(slotTableCache).slotOf(anyString());
 
     Publisher publisher1 = new Publisher();
     publisher1.setDataInfoId("dataInfoId1");
@@ -294,20 +287,16 @@ public class DataCacheTest extends BaseTest {
     publisher2.setTargetAddress(new URL("192.168.1.2", 9600));
     publisher2.setVersion(2L);
     publisher2.setRegisterTimestamp(System.currentTimeMillis());
-    Assert.assertTrue(sessionDataStore.add(publisher1));
-    Assert.assertTrue(sessionDataStore.add(publisher2));
+    Assert.assertTrue(publisherStore.add(publisher1));
+    Assert.assertTrue(publisherStore.add(publisher2));
 
     Assert.assertEquals(
-        sessionDataStore
-            .queryByConnectId(ConnectId.parse("192.168.1.1:12345_192.168.1.2:9600"))
-            .size(),
+        publisherStore.getByConnectId(ConnectId.parse("192.168.1.1:12345_192.168.1.2:9600")).size(),
         2);
-    Assert.assertFalse(sessionDataStore.add(publisher2));
+    Assert.assertFalse(publisherStore.add(publisher2));
 
     Assert.assertEquals(
-        sessionDataStore
-            .queryByConnectId(ConnectId.parse("192.168.1.1:12345_192.168.1.2:9600"))
-            .size(),
+        publisherStore.getByConnectId(ConnectId.parse("192.168.1.1:12345_192.168.1.2:9600")).size(),
         2);
 
     Publisher publisher3 = new Publisher();
@@ -328,18 +317,14 @@ public class DataCacheTest extends BaseTest {
     publisher4.setVersion(2L);
     publisher4.setRegisterTimestamp(System.currentTimeMillis() + 1000);
 
-    Assert.assertTrue(sessionDataStore.add(publisher3));
-    Assert.assertTrue(sessionDataStore.add(publisher4));
+    Assert.assertTrue(publisherStore.add(publisher3));
+    Assert.assertTrue(publisherStore.add(publisher4));
 
     Assert.assertEquals(
-        sessionDataStore
-            .queryByConnectId(ConnectId.parse("192.168.1.1:12345_192.168.1.2:9600"))
-            .size(),
+        publisherStore.getByConnectId(ConnectId.parse("192.168.1.1:12345_192.168.1.2:9600")).size(),
         0);
     Assert.assertEquals(
-        sessionDataStore
-            .queryByConnectId(ConnectId.parse("192.168.1.1:12346_192.168.1.2:9600"))
-            .size(),
+        publisherStore.getByConnectId(ConnectId.parse("192.168.1.1:12346_192.168.1.2:9600")).size(),
         2);
   }
 
@@ -349,9 +334,8 @@ public class DataCacheTest extends BaseTest {
     FetchStopPushService fetchStopPushService = mock(FetchStopPushService.class);
     when(fetchStopPushService.isStopPushSwitch()).thenReturn(false);
 
-    SessionInterests sessionInterests = new SessionInterests();
-    SessionServerConfig config = new SessionServerConfigBean(new CommonConfig());
-    sessionInterests.setSessionServerConfig(config);
+    SubscriberStore sessionInterests =
+        new SubscriberStoreImpl(new SessionServerConfigBean(new CommonConfig()));
 
     Subscriber subscriber1 = createSubscriber();
     subscriber1.setScope(ScopeEnum.dataCenter);
@@ -376,14 +360,14 @@ public class DataCacheTest extends BaseTest {
 
     Assert.assertEquals(
         sessionInterests
-            .queryByConnectId(ConnectId.parse("192.168.1.1:12345_192.168.1.2:9600"))
+            .getByConnectId(ConnectId.parse("192.168.1.1:12345_192.168.1.2:9600"))
             .size(),
         2);
     sessionInterests.add(subscriber2);
 
     Assert.assertEquals(
         sessionInterests
-            .queryByConnectId(ConnectId.parse("192.168.1.1:12345_192.168.1.2:9600"))
+            .getByConnectId(ConnectId.parse("192.168.1.1:12345_192.168.1.2:9600"))
             .size(),
         2);
 
@@ -412,87 +396,19 @@ public class DataCacheTest extends BaseTest {
 
     Assert.assertEquals(
         sessionInterests
-            .queryByConnectId(ConnectId.parse("192.168.1.1:12345_192.168.1.2:9600"))
+            .getByConnectId(ConnectId.parse("192.168.1.1:12345_192.168.1.2:9600"))
             .size(),
         0);
     Assert.assertEquals(
         sessionInterests
-            .queryByConnectId(ConnectId.parse("192.168.1.1:12346_192.168.1.2:9600"))
-            .size(),
-        2);
-  }
-
-  @Test
-  public void testOverwriteSameConnectIdWatcher() {
-
-    SessionWatchers sessionWatchers = new SessionWatchers();
-
-    Watcher watcher1 = createWatcher();
-    watcher1.setDataInfoId("dataInfoId1");
-    watcher1.setDataId("dataId1");
-    watcher1.setRegisterId("RegisterId1");
-    watcher1.setSourceAddress(new URL("192.168.1.1", 12345));
-    watcher1.setTargetAddress(new URL("192.168.1.2", 9600));
-
-    Watcher watcher2 = createWatcher();
-    watcher2.setDataInfoId("dataInfoId2");
-    watcher2.setDataId("dataId2");
-    watcher2.setRegisterId("RegisterId2");
-    watcher2.setSourceAddress(new URL("192.168.1.1", 12345));
-    watcher2.setTargetAddress(new URL("192.168.1.2", 9600));
-
-    Assert.assertTrue(sessionWatchers.add(watcher1));
-    Assert.assertTrue(sessionWatchers.add(watcher2));
-
-    Assert.assertEquals(
-        sessionWatchers
-            .queryByConnectId(ConnectId.parse("192.168.1.1:12345_192.168.1.2:9600"))
-            .size(),
-        2);
-    sessionWatchers.add(watcher2);
-
-    Assert.assertEquals(
-        sessionWatchers
-            .queryByConnectId(ConnectId.parse("192.168.1.1:12345_192.168.1.2:9600"))
-            .size(),
-        2);
-
-    Watcher watcher3 = createWatcher();
-    watcher3.setDataInfoId(watcher1.getDataInfoId());
-    watcher3.setDataId(watcher1.getDataId());
-    watcher3.setVersion(1);
-    watcher3.setRegisterId(watcher1.getRegisterId());
-    watcher3.setSourceAddress(new URL("192.168.1.1", 12346));
-    watcher3.setTargetAddress(new URL("192.168.1.2", 9600));
-
-    Watcher watcher4 = createWatcher();
-    watcher4.setDataInfoId(watcher2.getDataInfoId());
-    watcher4.setVersion(1);
-    watcher4.setDataId(watcher2.getDataId());
-    watcher4.setRegisterId(watcher2.getRegisterId());
-    watcher4.setSourceAddress(new URL("192.168.1.1", 12346));
-    watcher4.setTargetAddress(new URL("192.168.1.2", 9600));
-
-    Assert.assertTrue(sessionWatchers.add(watcher3));
-    Assert.assertTrue(sessionWatchers.add(watcher4));
-
-    Assert.assertEquals(
-        sessionWatchers
-            .queryByConnectId(ConnectId.parse("192.168.1.1:12345_192.168.1.2:9600"))
-            .size(),
-        0);
-    Assert.assertEquals(
-        sessionWatchers
-            .queryByConnectId(ConnectId.parse("192.168.1.1:12346_192.168.1.2:9600"))
+            .getByConnectId(ConnectId.parse("192.168.1.1:12346_192.168.1.2:9600"))
             .size(),
         2);
   }
 
   @Test
   public void testSubAndClientOffUnorder() {
-    SessionInterests sessionInterests = new SessionInterests();
-    SessionServerConfig config = new SessionServerConfigBean(null);
-    sessionInterests.setSessionServerConfig(config);
+    SubscriberStore sessionInterests = new SubscriberStoreImpl(new SessionServerConfigBean(null));
 
     Subscriber subscriber1 = createSubscriber();
     subscriber1.setScope(ScopeEnum.dataCenter);
@@ -516,7 +432,7 @@ public class DataCacheTest extends BaseTest {
 
     Assert.assertTrue(sessionInterests.add(subscriber2));
 
-    sessionInterests.deleteByConnectId(
+    sessionInterests.delete(
         ConnectId.parse(
             subscriber1.getSourceAddress().buildAddressString()
                 + "_"
@@ -524,12 +440,12 @@ public class DataCacheTest extends BaseTest {
 
     Assert.assertEquals(
         sessionInterests
-            .queryByConnectId(ConnectId.parse("192.168.1.1:12345_192.168.1.2:9600"))
+            .getByConnectId(ConnectId.parse("192.168.1.1:12345_192.168.1.2:9600"))
             .isEmpty(),
         true);
     Assert.assertEquals(
         sessionInterests
-            .queryByConnectId(ConnectId.parse("192.168.1.1:12346_192.168.1.2:9600"))
+            .getByConnectId(ConnectId.parse("192.168.1.1:12346_192.168.1.2:9600"))
             .size(),
         1);
 
@@ -537,8 +453,9 @@ public class DataCacheTest extends BaseTest {
         getCacheSub(subscriber1.getDataInfoId(), subscriber1.getScope(), sessionInterests);
     Assert.assertEquals(addressMap.get(new InetSocketAddress("192.168.1.1", 12345)), null);
     Assert.assertEquals(addressMap.get(new InetSocketAddress("192.168.1.1", 12346)).size(), 1);
-    Assert.assertEquals(sessionInterests.getDatas(subscriber1.getDataInfoId()).size(), 1);
-    Assert.assertTrue(sessionInterests.getDatas(subscriber1.getDataInfoId()).contains(subscriber2));
+    Assert.assertEquals(sessionInterests.getByDataInfoId(subscriber1.getDataInfoId()).size(), 1);
+    Assert.assertTrue(
+        sessionInterests.getByDataInfoId(subscriber1.getDataInfoId()).contains(subscriber2));
   }
 
   private Subscriber createSubscriber() {

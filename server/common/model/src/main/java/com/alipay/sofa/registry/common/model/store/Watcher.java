@@ -22,6 +22,7 @@ package com.alipay.sofa.registry.common.model.store;
  */
 public class Watcher extends BaseInfo {
 
+  private static final long serialVersionUID = -2122505760402915804L;
   private volatile long pushedVersion;
 
   @Override
@@ -52,28 +53,5 @@ public class Watcher extends BaseInfo {
     sb.append("pushed=").append(pushedVersion).append(", ");
     sb.append("sourceAddress=").append(getSourceAddress().buildAddressString());
     return sb.toString();
-  }
-
-  /**
-   * change watcher word cache
-   *
-   * @param watcher
-   * @return
-   */
-  public static Watcher internWatcher(Watcher watcher) {
-    watcher.setRegisterId(watcher.getRegisterId());
-    watcher.setDataInfoId(watcher.getDataInfoId());
-    watcher.setInstanceId(watcher.getInstanceId());
-    watcher.setGroup(watcher.getGroup());
-    watcher.setDataId(watcher.getDataId());
-    watcher.setClientId(watcher.getClientId());
-    watcher.setCell(watcher.getCell());
-    watcher.setProcessId(watcher.getProcessId());
-    watcher.setAppName(watcher.getAppName());
-    watcher.setSourceAddress(URL.internURL(watcher.getSourceAddress()));
-    watcher.setTargetAddress(URL.internURL(watcher.getTargetAddress()));
-    watcher.setAttributes(watcher.getAttributes());
-
-    return watcher;
   }
 }

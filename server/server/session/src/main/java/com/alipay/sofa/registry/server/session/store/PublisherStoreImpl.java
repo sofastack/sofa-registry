@@ -14,32 +14,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.common.model;
+package com.alipay.sofa.registry.server.session.store;
 
 import com.alipay.sofa.registry.common.model.store.Publisher;
-import com.google.common.collect.Lists;
+import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
+import com.alipay.sofa.registry.server.session.store.engine.SlotMemoryStoreEngine;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
 
-public class ClientOffPublishers {
-  private final ConnectId connectId;
-  private final List<Publisher> publishers;
+/** Implementation of PublisherStore. */
+public class PublisherStoreImpl extends AbstractClientStore<Publisher> implements PublisherStore {
 
-  public ClientOffPublishers(ConnectId connectId, Collection<Publisher> publishers) {
-    this.connectId = connectId;
-    this.publishers = Collections.unmodifiableList(Lists.newArrayList(publishers));
+  public PublisherStoreImpl(SlotTableCache slotTableCache) {
+    super(new SlotMemoryStoreEngine<>(slotTableCache::slotOf));
   }
 
-  public ConnectId getConnectId() {
-    return connectId;
-  }
-
-  public boolean isEmpty() {
-    return publishers.isEmpty();
-  }
-
-  public List<Publisher> getPublishers() {
-    return publishers;
+  @Override
+  public Collection<Publisher> getBySlotId(int slotId) {
+    SlotMemoryStoreEngine<Publisher> slotStoreEngine =
+        (SlotMemoryStoreEngine<Publisher>) storeEngine;
+    return slotStoreEngine.getSlotStoreData(slotId);
   }
 }

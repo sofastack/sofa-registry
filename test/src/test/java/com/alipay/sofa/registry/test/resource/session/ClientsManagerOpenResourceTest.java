@@ -62,24 +62,21 @@ public class ClientsManagerOpenResourceTest extends BaseIntegrationTest {
     registryClient1.register(registration, value);
     Thread.sleep(3000L);
 
-    long count =
-        sessionDataStore.getDataList().stream().filter(p -> p.getDataId().equals(dataId)).count();
-    Assert.assertEquals(count, 1);
+    long count = publisherStore.getAll().stream().filter(p -> p.getDataId().equals(dataId)).count();
+    Assert.assertEquals(1, count);
 
     response = mockedResource.clientOffInZone(sessionChannel.getLocalAddress().getHostString());
     assertTrue(response.isSuccess());
 
-    count =
-        sessionDataStore.getDataList().stream().filter(p -> p.getDataId().equals(dataId)).count();
-    Assert.assertEquals(count, 0);
+    count = publisherStore.getAll().stream().filter(p -> p.getDataId().equals(dataId)).count();
+    Assert.assertEquals(0, count);
 
     // clientOn
     response = mockedResource.clientOn(sessionChannel.getLocalAddress().getHostString());
     assertTrue(response.getMessage(), response.isSuccess());
     Thread.sleep(5000L);
-    count =
-        sessionDataStore.getDataList().stream().filter(p -> p.getDataId().equals(dataId)).count();
-    Assert.assertEquals(count, 1);
+    count = publisherStore.getAll().stream().filter(p -> p.getDataId().equals(dataId)).count();
+    Assert.assertEquals(1, count);
   }
 
   @After

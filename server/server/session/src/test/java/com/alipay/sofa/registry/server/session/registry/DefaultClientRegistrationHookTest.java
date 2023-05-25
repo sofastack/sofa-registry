@@ -33,10 +33,10 @@ import com.alipay.sofa.registry.server.session.TestUtils;
 import com.alipay.sofa.registry.server.session.providedata.ConfigProvideDataWatcher;
 import com.alipay.sofa.registry.server.session.push.FirePushService;
 import com.alipay.sofa.registry.server.session.push.PushSwitchService;
-import com.alipay.sofa.registry.server.session.store.Watchers;
+import com.alipay.sofa.registry.server.session.store.WatcherStore;
 import com.google.common.collect.Sets;
+import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 import java.util.Set;
 import org.junit.Assert;
 import org.junit.Before;
@@ -57,7 +57,7 @@ public class DefaultClientRegistrationHookTest extends AbstractSessionServerTest
     clientRegistrationHook.sessionServerConfig = sessionServerConfig;
     clientRegistrationHook.firePushService = mock(FirePushService.class);
     clientRegistrationHook.pushSwitchService = mock(PushSwitchService.class);
-    clientRegistrationHook.sessionWatchers = mock(Watchers.class);
+    clientRegistrationHook.watcherStore = mock(WatcherStore.class);
     clientRegistrationHook.configProvideDataWatcher = mock(ConfigProvideDataWatcher.class);
   }
 
@@ -103,11 +103,10 @@ public class DefaultClientRegistrationHookTest extends AbstractSessionServerTest
   public void testFilter() {
     Assert.assertNull(clientRegistrationHook.filter());
     Watcher w = TestUtils.newWatcher(dataId);
-    when(clientRegistrationHook.sessionWatchers.getDataList())
-        .thenReturn(Collections.singletonList(w));
-    Tuple<Set<String>, List<Watcher>> t = clientRegistrationHook.filter();
+    when(clientRegistrationHook.watcherStore.getAll()).thenReturn(Collections.singletonList(w));
+    Tuple<Set<String>, Collection<Watcher>> t = clientRegistrationHook.filter();
     Assert.assertEquals(t.o1, Sets.newHashSet(w.getDataInfoId()));
-    Assert.assertEquals(t.o2.get(0), w);
+    Assert.assertTrue(t.o2.contains(w));
     sessionServerConfig.setWatchConfigEnable(true);
     clientRegistrationHook.processWatch();
 

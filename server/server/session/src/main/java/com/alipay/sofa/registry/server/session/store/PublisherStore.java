@@ -16,21 +16,17 @@
  */
 package com.alipay.sofa.registry.server.session.store;
 
-import com.alipay.sofa.registry.common.model.Tuple;
+import com.alipay.sofa.registry.common.model.store.Publisher;
 import java.util.Collection;
-import java.util.Map;
-import java.util.function.BiConsumer;
 
-public interface Store<T> {
-  Map<String, T> get(String dataInfoId);
+/** Used to store publisher information */
+public interface PublisherStore extends ClientStore<Publisher> {
 
-  Map<String, T> getOrCreate(String dataInfoId);
-
-  void forEach(BiConsumer<String, Map<String, T>> consumer);
-
-  Map<String, Map<String, T>> copyMap();
-
-  Tuple<Long, Long> count();
-
-  Collection<String> getDataInfoIds();
+  /**
+   * Get publisher with slot.
+   *
+   * @param slotId slot id
+   * @return publisher collection
+   */
+  Collection<Publisher> getBySlotId(int slotId);
 }

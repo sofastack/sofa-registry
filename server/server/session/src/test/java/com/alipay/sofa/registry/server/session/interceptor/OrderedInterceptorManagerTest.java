@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.server.session.interceptor;
 
+import com.alipay.sofa.registry.common.model.ConnectId;
+import com.alipay.sofa.registry.common.model.RegisterVersion;
 import com.alipay.sofa.registry.common.model.store.StoreData;
 import com.alipay.sofa.registry.exception.InterceptorExecutionException;
 import java.util.ArrayList;
@@ -42,6 +44,26 @@ public class OrderedInterceptorManagerTest {
               @Override
               public Object getId() {
                 return "dataId";
+              }
+
+              @Override
+              public String getDataInfoId() {
+                return null;
+              }
+
+              @Override
+              public RegisterVersion registerVersion() {
+                return null;
+              }
+
+              @Override
+              public long getRegisterTimestamp() {
+                return 0;
+              }
+
+              @Override
+              public ConnectId connectId() {
+                return null;
               }
             },
             null);

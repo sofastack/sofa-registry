@@ -30,7 +30,7 @@ import com.alipay.sofa.registry.server.session.providedata.FetchGrayPushSwitchSe
 import com.alipay.sofa.registry.server.session.providedata.FetchStopPushService;
 import com.alipay.sofa.registry.server.session.push.FirePushService;
 import com.alipay.sofa.registry.server.session.push.PushSwitchService;
-import com.alipay.sofa.registry.server.session.store.Interests;
+import com.alipay.sofa.registry.server.session.store.SubscriberStore;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.Assert;
@@ -63,7 +63,7 @@ public class DataChangeRequestHandlerTest {
     handler.pushSwitchService = new PushSwitchService();
     handler.executorManager = new ExecutorManager(serverConfigBean);
     handler.firePushService = mock(FirePushService.class);
-    handler.sessionInterests = mock(Interests.class);
+    handler.subscriberStore = mock(SubscriberStore.class);
     handler.pushSwitchService.setFetchStopPushService(new FetchStopPushService());
     handler.pushSwitchService.setFetchGrayPushSwitchService(new FetchGrayPushSwitchService());
 
@@ -73,14 +73,14 @@ public class DataChangeRequestHandlerTest {
     Assert.assertNull(obj);
 
     handler.pushSwitchService.getFetchStopPushService().setStopPushSwitch(init, false);
-    when(handler.sessionInterests.checkInterestVersion(anyString(), anyString(), anyLong()))
-        .thenReturn(Interests.InterestVersionCheck.Obsolete);
+    when(handler.subscriberStore.checkInterestVersion(anyString(), anyString(), anyLong()))
+        .thenReturn(SubscriberStore.InterestVersionCheck.Obsolete);
     obj = handler.doHandle(null, request());
     Assert.assertNull(obj);
     verify(handler.firePushService, times(0)).fireOnChange(anyString(), anyObject());
 
-    when(handler.sessionInterests.checkInterestVersion(anyString(), anyString(), anyLong()))
-        .thenReturn(Interests.InterestVersionCheck.Interested);
+    when(handler.subscriberStore.checkInterestVersion(anyString(), anyString(), anyLong()))
+        .thenReturn(SubscriberStore.InterestVersionCheck.Interested);
     obj = handler.doHandle(null, request());
     Assert.assertNull(obj);
     verify(handler.firePushService, times(2)).fireOnChange(anyString(), anyObject());
