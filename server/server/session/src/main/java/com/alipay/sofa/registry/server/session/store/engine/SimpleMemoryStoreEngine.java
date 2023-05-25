@@ -39,17 +39,8 @@ public class SimpleMemoryStoreEngine<T extends StoreData<String>> implements Sto
   @Override
   public Pair<Boolean, T> putIfAbsent(T storeData) {
     String dataInfoId = storeData.getDataInfoId();
-    ClientsGroup<T> clientsGroup = groups.get(dataInfoId);
-    if (clientsGroup == null) {
-      clientsGroup = new ClientsGroup<>(dataInfoId, 128);
-      ClientsGroup<T> exist = groups.putIfAbsent(dataInfoId, clientsGroup);
-      if (exist != null) {
-        // 如果之前已经存在了，直接复用之前的ClientGroups，并向其中加入新的StoreData
-        // 如果exist == null，意味着新的ClientGroups被添加进去了，向新的ClientGroups加入StoreData
-        clientsGroup = exist;
-      }
-    }
-
+    ClientsGroup<T> clientsGroup =
+        groups.computeIfAbsent(dataInfoId, s -> new ClientsGroup<>(dataInfoId, 128));
     return clientsGroup.putIfAbsent(storeData);
   }
 
