@@ -37,11 +37,11 @@ public abstract class AbstractLeaderElector implements LeaderElector {
 
   private final List<LeaderAware> leaderAwares = Lists.newCopyOnWriteArrayList();
 
-  private volatile LeaderInfo leaderInfo = LeaderInfo.HAS_NO_LEADER;
+  private LeaderInfo leaderInfo = LeaderInfo.HAS_NO_LEADER;
 
-  private volatile boolean startElector = false;
+  private boolean startElector = false;
 
-  private volatile boolean isObserver = false;
+  private boolean isObserver = false;
 
   private final LeaderElectorTrigger leaderElectorTrigger = new LeaderElectorTrigger();
 

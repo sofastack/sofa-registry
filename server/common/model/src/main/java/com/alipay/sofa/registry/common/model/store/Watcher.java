@@ -22,7 +22,7 @@ package com.alipay.sofa.registry.common.model.store;
  */
 public class Watcher extends BaseInfo {
 
-  private volatile long pushedVersion;
+  private long pushedVersion;
 
   @Override
   public DataType getDataType() {

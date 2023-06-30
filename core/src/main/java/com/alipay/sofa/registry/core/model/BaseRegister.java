@@ -56,7 +56,7 @@ public class BaseRegister implements Serializable {
 
   private Long timestamp;
 
-  private volatile Map<String, String> attributes;
+  private Map<String, String> attributes;
 
   /**
    * Getter method for property <tt>instanceId</tt>.
