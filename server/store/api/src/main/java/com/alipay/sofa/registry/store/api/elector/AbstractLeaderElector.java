@@ -37,7 +37,7 @@ public abstract class AbstractLeaderElector implements LeaderElector {
 
   private final List<LeaderAware> leaderAwares = Lists.newCopyOnWriteArrayList();
 
-  private LeaderInfo leaderInfo = LeaderInfo.HAS_NO_LEADER;
+  private volatile LeaderInfo leaderInfo = LeaderInfo.HAS_NO_LEADER;
 
   private boolean startElector = false;
 
