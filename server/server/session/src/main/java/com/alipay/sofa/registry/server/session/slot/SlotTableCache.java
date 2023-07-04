@@ -38,6 +38,7 @@ public interface SlotTableCache {
    * Gets get slot.
    *
    * @param dataInfoId the data info id
+   * @param dataCenter dataCenter
    * @return the get slot
    */
   Slot getSlot(String dataCenter, String dataInfoId);
@@ -46,6 +47,7 @@ public interface SlotTableCache {
    * Gets get slot.
    *
    * @param slotId the slot id
+   * @param dataCenter dataCenter
    * @return the get slot
    */
   Slot getSlot(String dataCenter, int slotId);
@@ -54,6 +56,7 @@ public interface SlotTableCache {
    * Gets get leader.
    *
    * @param slotId the slot id
+   * @param dataCenter dataCenter
    * @return the get leader
    */
   String getLeader(String dataCenter, int slotId);
@@ -61,6 +64,7 @@ public interface SlotTableCache {
   /**
    * Gets get epoch.
    *
+   * @param dataCenter dataCenter
    * @return the get epoch
    */
   long getEpoch(String dataCenter);

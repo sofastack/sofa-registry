@@ -33,10 +33,10 @@ public interface Interests extends DataManager<Subscriber, String, String> {
    * check subscribers interest dataInfoId version,very dataCenter dataInfoId version different if
    * return false else check return bigger version
    *
-   * @param dataCenter
-   * @param datumDataInfoId
-   * @param version
-   * @return
+   * @param dataCenter dataCenter
+   * @param datumDataInfoId datumDataInfoId
+   * @param version version
+   * @return InterestVersionCheck
    */
   InterestVersionCheck checkInterestVersion(
       String dataCenter, String datumDataInfoId, long version);

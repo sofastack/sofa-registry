@@ -20,7 +20,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.util.*;
 
-/** unsupported k && v is null */
+/** unsupported k v is null */
 public final class ImmutableMap4<K, V> extends AbstractImmutableMap<K, V> {
   private static final Entry NULL_ENTRY = new AbstractMap.SimpleEntry(null, null);
   private final K k0;

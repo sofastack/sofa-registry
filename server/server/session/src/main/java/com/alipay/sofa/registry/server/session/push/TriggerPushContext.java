@@ -121,8 +121,8 @@ public final class TriggerPushContext {
   /**
    * return true when this all datacenter version are smaller than changeCtx
    *
-   * @param existCtx
-   * @return
+   * @param existCtx existCtx
+   * @return boolean
    */
   public synchronized boolean smallerThan(TriggerPushContext existCtx) {
     ParaCheckUtil.checkEquals(

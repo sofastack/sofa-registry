@@ -263,6 +263,7 @@ public final class SlotTableCacheImpl implements SlotTableCache {
    * Setter method for property <tt>sessionServerConfig</tt>.
    *
    * @param sessionServerConfig value to be assigned to property sessionServerConfig
+   * @return SlotTableCacheImpl
    */
   @VisibleForTesting
   public SlotTableCacheImpl setSessionServerConfig(SessionServerConfig sessionServerConfig) {

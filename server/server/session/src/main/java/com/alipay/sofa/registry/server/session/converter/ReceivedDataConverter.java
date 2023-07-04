@@ -63,6 +63,8 @@ public final class ReceivedDataConverter {
    * @param scope the scope
    * @param subscriberRegisterIdList the subscriber register id list
    * @param regionLocal the region local
+   * @param localDataCenter localDataCenter
+   * @param pushdataPredicate pushdataPredicate
    * @return received data multi
    */
   public static PushData<ReceivedData> getReceivedData(

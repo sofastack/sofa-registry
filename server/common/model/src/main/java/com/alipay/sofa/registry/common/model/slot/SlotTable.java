@@ -101,7 +101,13 @@ public final class SlotTable implements Serializable {
         "SlotTable{epoch={}, num={}, leaders={}}", epoch, slots.size(), slotLeaders());
   }
 
-  /** the slot table is too big for rpc */
+  /**
+   * the slot table is too big for rpc
+   *
+   * @param targetDataNode targetDataNode
+   * @param ignoreFollowers ignoreFollowers
+   * @return List
+   */
   public List<DataNodeSlot> transfer(String targetDataNode, boolean ignoreFollowers) {
     Map<String, List<Integer>> leadersMap = new HashMap<>();
     Map<String, List<Integer>> followersMap = new HashMap<>();

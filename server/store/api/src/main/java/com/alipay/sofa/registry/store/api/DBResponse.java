@@ -32,8 +32,8 @@ public class DBResponse<T> implements Serializable {
   private final OperationStatus operationStatus;
 
   /**
-   * @param entity
-   * @param operationStatus
+   * @param entity entity
+   * @param operationStatus operationStatus
    */
   public DBResponse(T entity, OperationStatus operationStatus) {
     this.entity = entity;
@@ -43,7 +43,7 @@ public class DBResponse<T> implements Serializable {
   /**
    * generate response ok
    *
-   * @return
+   * @return DBResponseBuilder
    */
   public static DBResponseBuilder ok() {
     return setStatus(OperationStatus.SUCCESS);
@@ -52,8 +52,8 @@ public class DBResponse<T> implements Serializable {
   /**
    * generate response ok
    *
-   * @param entity
-   * @return
+   * @param entity entity
+   * @return DBResponseBuilder
    */
   public static <T> DBResponseBuilder ok(T entity) {
     DBResponseBuilder b = ok();
@@ -64,7 +64,7 @@ public class DBResponse<T> implements Serializable {
   /**
    * set operationStatus to NOTFOUND
    *
-   * @return
+   * @return DBResponseBuilder
    */
   public static DBResponseBuilder notfound() {
     return setStatus(OperationStatus.NOTFOUND);
@@ -73,8 +73,8 @@ public class DBResponse<T> implements Serializable {
   /**
    * set operationStatus
    *
-   * @param status
-   * @return
+   * @param status status
+   * @return DBResponseBuilder
    */
   protected static DBResponseBuilder setStatus(OperationStatus status) {
     DBResponseBuilder b = DBResponseBuilder.getInstance();
@@ -107,7 +107,7 @@ public class DBResponse<T> implements Serializable {
     /**
      * get DBResponseBuilder instance
      *
-     * @return
+     * @return DBResponseBuilder
      */
     public static DBResponseBuilder getInstance() {
       return new DBResponseBuilder();
@@ -120,7 +120,7 @@ public class DBResponse<T> implements Serializable {
     /**
      * build func
      *
-     * @return
+     * @return DBResponse
      */
     public DBResponse build() {
       return new DBResponse(entity, operationStatus);
@@ -128,8 +128,8 @@ public class DBResponse<T> implements Serializable {
     /**
      * set operationStatus status
      *
-     * @param status
-     * @return
+     * @param status status
+     * @return DBResponseBuilder
      */
     public DBResponseBuilder status(OperationStatus status) {
       ParaCheckUtil.checkNotNull(status, "OperationStatus");
@@ -140,8 +140,8 @@ public class DBResponse<T> implements Serializable {
     /**
      * set entity
      *
-     * @param entity
-     * @return
+     * @param entity entity
+     * @return DBResponseBuilder
      */
     public DBResponseBuilder entity(T entity) {
       this.entity = entity;

@@ -229,7 +229,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
   /**
    * constructor
    *
-   * @param commonConfig
+   * @param commonConfig commonConfig
    */
   public SessionServerConfigBean(CommonConfig commonConfig) {
     this.commonConfig = commonConfig;

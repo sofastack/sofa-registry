@@ -45,8 +45,8 @@ public class AppRevisionRaftRepository implements AppRevisionRepository {
   /**
    * check if revisionId exist
    *
-   * @param revisionId
-   * @return
+   * @param revisionId revisionId
+   * @return boolean
    */
   @Override
   public boolean exist(String revisionId) {

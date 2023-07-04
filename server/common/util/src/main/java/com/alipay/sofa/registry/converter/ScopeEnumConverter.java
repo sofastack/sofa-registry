@@ -27,8 +27,8 @@ public class ScopeEnumConverter {
   /**
    * scope convert func
    *
-   * @param name
-   * @return
+   * @param name name
+   * @return ScopeEnum
    */
   public static ScopeEnum convertToScope(String name) {
     if (ScopeEnum.contains(name)) {

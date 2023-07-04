@@ -33,8 +33,8 @@ public final class PublisherUtils {
   /**
    * change publisher word cache
    *
-   * @param publisher
-   * @return
+   * @param publisher publisher
+   * @return publisher
    */
   public static Publisher internPublisher(Publisher publisher) {
     publisher.setRegisterId(publisher.getRegisterId());

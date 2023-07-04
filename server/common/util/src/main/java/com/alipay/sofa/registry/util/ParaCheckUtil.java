@@ -32,9 +32,9 @@ public final class ParaCheckUtil {
   /**
    * check object not null
    *
-   * @param param
-   * @param paraName
-   * @throws RuntimeException
+   * @param param param
+   * @param paraName paraName
+   * @throws RuntimeException RuntimeException
    */
   public static void checkNotNull(Object param, String paraName) {
     if (param == null) {
@@ -71,9 +71,9 @@ public final class ParaCheckUtil {
   /**
    * check string not blank
    *
-   * @param param
-   * @param paraName
-   * @throws RuntimeException
+   * @param param param
+   * @param paraName paraName
+   * @throws RuntimeException RuntimeException
    */
   public static void checkNotBlank(String param, String paraName) {
     if (StringUtils.isBlank(param)) {
@@ -85,9 +85,9 @@ public final class ParaCheckUtil {
   /**
    * check param not empty
    *
-   * @param param
-   * @param paraName
-   * @throws RuntimeException
+   * @param param param
+   * @param paraName paraName
+   * @throws RuntimeException RuntimeException
    */
   public static void checkNotEmpty(Collection<?> param, String paraName) {
     if (param == null || param.size() == 0) {
@@ -99,9 +99,9 @@ public final class ParaCheckUtil {
   /**
    * check param not empty
    *
-   * @param param
-   * @param paraName
-   * @throws RuntimeException
+   * @param param param
+   * @param paraName paraName
+   * @throws RuntimeException RuntimeException
    */
   public static void checkNotEmpty(Map param, String paraName) {
     if (param == null || param.size() == 0) {

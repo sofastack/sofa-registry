@@ -28,27 +28,32 @@ public interface MultiClusterSyncRepository {
   /**
    * insert
    *
-   * @param syncInfo
-   * @return
+   * @param syncInfo syncInfo
+   * @return boolean
    */
   boolean insert(MultiClusterSyncInfo syncInfo);
 
   /**
    * update with cas
    *
-   * @param syncInfo
-   * @return
+   * @param syncInfo syncInfo
+   * @return boolean
    */
   boolean update(MultiClusterSyncInfo syncInfo, long expectVersion);
 
-  /** query MultiClusterSyncInfo */
+  /**
+   * query MultiClusterSyncInfo
+   *
+   * @return Set
+   */
   public Set<MultiClusterSyncInfo> queryLocalSyncInfos();
 
   /**
    * remove provideData
    *
-   * @param remoteDataCenter
-   * @param dataVersion
+   * @param remoteDataCenter remoteDataCenter
+   * @param dataVersion dataVersion
+   * @return int
    */
   public int remove(String remoteDataCenter, long dataVersion);
 

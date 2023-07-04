@@ -55,8 +55,8 @@ public class ConnectionMapper {
   /**
    * 是否包含连接到 clientIp 的映射
    *
-   * @param connectId
-   * @return
+   * @param connectId connectId
+   * @return boolean
    */
   public boolean contains(String connectId) {
     return connectionToClientIpMap.containsKey(connectId);

@@ -153,8 +153,8 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository, Recover
   /**
    * check if revisionId exist
    *
-   * @param revisionId
-   * @return
+   * @param revisionId revisionId
+   * @return boolean
    */
   @Override
   public boolean exist(String revisionId) {

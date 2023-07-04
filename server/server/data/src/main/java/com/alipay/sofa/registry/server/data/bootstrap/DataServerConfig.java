@@ -137,7 +137,7 @@ public class DataServerConfig implements ServerShareConfig {
   /**
    * constructor
    *
-   * @param commonConfig
+   * @param commonConfig commonConfig
    */
   public DataServerConfig(CommonConfig commonConfig) {
     this.commonConfig = commonConfig;

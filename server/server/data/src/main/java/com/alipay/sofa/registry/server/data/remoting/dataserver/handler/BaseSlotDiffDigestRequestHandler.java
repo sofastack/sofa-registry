@@ -139,6 +139,7 @@ public abstract class BaseSlotDiffDigestRequestHandler
    * Setter method for property <tt>datumStorageDelegate</tt>.
    *
    * @param datumStorageDelegate value to be assigned to property datumStorageDelegate
+   * @return BaseSlotDiffDigestRequestHandler
    */
   @VisibleForTesting
   public BaseSlotDiffDigestRequestHandler setDatumStorageDelegate(
@@ -151,6 +152,7 @@ public abstract class BaseSlotDiffDigestRequestHandler
    * Setter method for property <tt>slotManager</tt>.
    *
    * @param slotManager value to be assigned to property slotManager
+   * @return BaseSlotDiffDigestRequestHandler
    */
   @VisibleForTesting
   public BaseSlotDiffDigestRequestHandler setSlotManager(SlotManager slotManager) {
@@ -162,6 +164,7 @@ public abstract class BaseSlotDiffDigestRequestHandler
    * Setter method for property <tt>dataServerConfig</tt>.
    *
    * @param dataServerConfig value to be assigned to property dataServerConfig
+   * @return BaseSlotDiffDigestRequestHandler
    */
   @VisibleForTesting
   public BaseSlotDiffDigestRequestHandler setDataServerConfig(DataServerConfig dataServerConfig) {

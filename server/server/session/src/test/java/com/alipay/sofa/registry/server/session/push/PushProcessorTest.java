@@ -528,7 +528,7 @@ public class PushProcessorTest {
   }
 
   @Test
-  public void testSetPushDelay(){
+  public void testSetPushDelay() {
     PushProcessor processor = newProcessor();
 
     PushEfficiencyImproveConfig pushEfficiencyImproveConfig = new PushEfficiencyImproveConfig();
@@ -539,6 +539,5 @@ public class PushProcessorTest {
     processor.setPushTaskDelayTime(pushEfficiencyImproveConfig);
 
     Assert.assertTrue(processor.taskBuffer.workers[0].getWaitingMillis() == 10);
-
   }
 }

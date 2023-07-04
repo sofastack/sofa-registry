@@ -25,8 +25,8 @@ public interface CacheGenerator {
   /**
    * generator cache on write request
    *
-   * @param key
-   * @return
+   * @param key key
+   * @return Value
    */
   Value generatePayload(Key key);
 }

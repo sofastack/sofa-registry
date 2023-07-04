@@ -172,7 +172,6 @@ public class DefaultSlotAssigner implements SlotAssigner {
     return assignCount != 0;
   }
 
-  /** ================================== Getters ====================================== * */
   public Set<String> getCurrentDataServers() {
     return currentDataServers;
   }
@@ -185,7 +184,6 @@ public class DefaultSlotAssigner implements SlotAssigner {
     return migrateSlotGroup;
   }
 
-  /** ================================== Classes ====================================== * */
   static class FewerFollowerFirstStrategy implements ScoreStrategy<Integer> {
 
     final SlotTableBuilder slotTableBuilder;

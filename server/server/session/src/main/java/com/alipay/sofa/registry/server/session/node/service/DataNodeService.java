@@ -33,14 +33,14 @@ public interface DataNodeService {
   /**
    * new publisher data transform to data server
    *
-   * @param publisher
+   * @param publisher publisher
    */
   void register(Publisher publisher);
 
   /**
    * remove publisher data from data server
    *
-   * @param publisher
+   * @param publisher publisher
    */
   void unregister(Publisher publisher);
 
@@ -48,7 +48,7 @@ public interface DataNodeService {
    * session server support api to stop some client node,all register data on data server will be
    * removed data on session server will be remove too
    *
-   * @param clientOffPublishers
+   * @param clientOffPublishers clientOffPublishers
    */
   void clientOff(ClientOffPublishers clientOffPublishers);
 
@@ -60,9 +60,9 @@ public interface DataNodeService {
   /**
    * fetch one dataCenter publisher data from data server
    *
-   * @param dataInfoId
-   * @param dataCenters
-   * @return
+   * @param dataInfoId dataInfoId
+   * @param dataCenters dataCenters
+   * @return MultiSubDatum
    */
   MultiSubDatum fetch(String dataInfoId, Set<String> dataCenters);
 }

@@ -222,6 +222,7 @@ public class MetadataCacheRegistry {
    * Setter method for property <tt>appRevisionRepository</tt>.
    *
    * @param appRevisionRepository value to be assigned to property appRevisionRepository
+   * @return MetadataCacheRegistry
    */
   @VisibleForTesting
   public MetadataCacheRegistry setAppRevisionRepository(
@@ -234,6 +235,7 @@ public class MetadataCacheRegistry {
    * Setter method for property <tt>interfaceAppsRepository</tt>.
    *
    * @param interfaceAppsRepository value to be assigned to property interfaceAppsRepository
+   * @return MetadataCacheRegistry
    */
   @VisibleForTesting
   public MetadataCacheRegistry setInterfaceAppsRepository(
@@ -246,6 +248,7 @@ public class MetadataCacheRegistry {
    * Setter method for property <tt>executorManager</tt>.
    *
    * @param executorManager value to be assigned to property executorManager
+   * @return MetadataCacheRegistry
    */
   @VisibleForTesting
   public MetadataCacheRegistry setExecutorManager(ExecutorManager executorManager) {
@@ -257,6 +260,7 @@ public class MetadataCacheRegistry {
    * Setter method for property <tt>multiClusterSyncRepository</tt>.
    *
    * @param multiClusterSyncRepository value to be assigned to property multiClusterSyncRepository
+   * @return MetadataCacheRegistry
    */
   @VisibleForTesting
   public MetadataCacheRegistry setMultiClusterSyncRepository(
@@ -269,6 +273,7 @@ public class MetadataCacheRegistry {
    * Setter method for property <tt>defaultCommonConfig</tt>.
    *
    * @param defaultCommonConfig value to be assigned to property defaultCommonConfig
+   * @return MetadataCacheRegistry
    */
   @VisibleForTesting
   public MetadataCacheRegistry setDefaultCommonConfig(DefaultCommonConfig defaultCommonConfig) {
@@ -281,6 +286,7 @@ public class MetadataCacheRegistry {
    *
    * @param multiClusterSessionServerConfig value to be assigned to property
    *     multiClusterSessionServerConfig
+   * @return MetadataCacheRegistry
    */
   @VisibleForTesting
   public MetadataCacheRegistry setMultiClusterSessionServerConfig(

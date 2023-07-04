@@ -548,7 +548,7 @@ public class MultiClusterSlotManagerImpl implements MultiClusterSlotManager {
   /**
    * get remote cluster slotTable epoch
    *
-   * @return map<cluster, slotTableEpoch>
+   * @return map
    */
   @Override
   public Map<String, Long> getSlotTableEpoch() {
@@ -571,7 +571,7 @@ public class MultiClusterSlotManagerImpl implements MultiClusterSlotManager {
    * 1.add new dataCenter slot table to remoteSlotTableStates 2.update exist dataCenter slot table
    * 3.important: remove slot table which not exist in meta
    *
-   * @param remoteSlotTableStatus
+   * @param remoteSlotTableStatus remoteSlotTableStatus
    */
   @Override
   public void updateSlotTable(Map<String, RemoteSlotTableStatus> remoteSlotTableStatus) {
@@ -1075,6 +1075,7 @@ public class MultiClusterSlotManagerImpl implements MultiClusterSlotManager {
   /**
    * Getter method for property <tt>slotTableStorageMap</tt>.
    *
+   * @param dataCenter dataCenter
    * @return property value of slotTableStorageMap
    */
   @VisibleForTesting

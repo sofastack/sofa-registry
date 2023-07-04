@@ -27,8 +27,8 @@ public class MetaNode extends AbstractNode {
   /**
    * constructor
    *
-   * @param nodeUrl
-   * @param dataCenter
+   * @param nodeUrl nodeUrl
+   * @param dataCenter dataCenter
    */
   public MetaNode(URL nodeUrl, String dataCenter) {
     super(dataCenter, nodeUrl, null);

@@ -419,14 +419,16 @@ public final class SlotDiffSyncer {
    * summary == null means can not assembly summary at first(migrating); do
    * getDatumSummary(sessionIp)
    *
-   * @param slotId
-   * @param sessionIp
-   * @param exchanger
-   * @param slotTableEpoch
-   * @param continues
-   * @param summary
-   * @return
-   * @throws RequestException
+   * @param slotId slotId
+   * @param sessionIp sessionIp
+   * @param exchanger exchanger
+   * @param slotTableEpoch slotTableEpoch
+   * @param continues continues
+   * @param summary summary
+   * @param slotLeaderEpoch slotLeaderEpoch
+   * @param syncDataCenter syncDataCenter
+   * @return boolean
+   * @throws RequestException RequestException
    */
   public boolean syncSession(
       String syncDataCenter,

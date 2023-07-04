@@ -25,16 +25,16 @@ public interface WrapperInterceptor<T, R> {
   /**
    * invoke inside function
    *
-   * @param invocation
-   * @return
-   * @throws Exception
+   * @param invocation invocation
+   * @return R
+   * @throws Exception exception
    */
   R invokeCodeWrapper(WrapperInvocation<T, R> invocation) throws Exception;
 
   /**
    * Interceptor order
    *
-   * @return
+   * @return int
    */
   int getOrder();
 }

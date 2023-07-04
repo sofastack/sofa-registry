@@ -30,7 +30,13 @@ public final class DataUtils {
 
   private DataUtils() {}
 
-  /** instanceId/group/app - > {info.count,dataInfoId.count} */
+  /**
+   * instanceId/group/app - {info.count,dataInfoId.count}
+   *
+   * @param infos infos
+   * @param <T> T
+   * @return Map
+   */
   public static <T extends BaseInfo>
       Map<String, Map<String, Map<String, Tuple<Integer, Integer>>>> countGroupByInstanceIdGroupApp(
           Collection<T> infos) {
@@ -72,7 +78,13 @@ public final class DataUtils {
     return ret;
   }
 
-  /** instanceId/group - > {info.count,dataInfoId.count} */
+  /**
+   * instanceId/group - {info.count,dataInfoId.count}
+   *
+   * @param infos infos
+   * @param <T> T
+   * @return Map
+   */
   public static <T extends BaseInfo>
       Map<String, Map<String, Tuple<Integer, Integer>>> countGroupByInstanceIdGroup(
           Collection<T> infos) {

@@ -16,10 +16,7 @@
  */
 package com.alipay.sofa.registry.observer;
 
-/**
- * @author zhuchen
- * @date Nov 25, 2020, 11:16:14 AM
- */
+/** @author zhuchen */
 public interface Observable {
 
   void addObserver(UnblockingObserver observer);

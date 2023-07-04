@@ -41,7 +41,7 @@ public class RemoteDatumClearEventHandler extends AbstractClientHandler<RemoteDa
   /**
    * return processor request class name
    *
-   * @return
+   * @return Class
    */
   @Override
   public Class interest() {
@@ -68,9 +68,9 @@ public class RemoteDatumClearEventHandler extends AbstractClientHandler<RemoteDa
   /**
    * execute
    *
-   * @param channel
-   * @param request
-   * @return
+   * @param channel channel
+   * @param request request
+   * @return Object
    */
   @Override
   public Object doHandle(Channel channel, RemoteDatumClearEvent request) {

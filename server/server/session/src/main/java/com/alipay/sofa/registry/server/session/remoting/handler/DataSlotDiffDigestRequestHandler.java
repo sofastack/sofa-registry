@@ -119,6 +119,7 @@ public class DataSlotDiffDigestRequestHandler
    * Setter method for property <tt>executorManager</tt>.
    *
    * @param executorManager value to be assigned to property executorManager
+   * @return DataSlotDiffDigestRequestHandler
    */
   @VisibleForTesting
   public DataSlotDiffDigestRequestHandler setExecutorManager(ExecutorManager executorManager) {
@@ -130,6 +131,7 @@ public class DataSlotDiffDigestRequestHandler
    * Setter method for property <tt>sessionDataStore</tt>.
    *
    * @param sessionDataStore value to be assigned to property sessionDataStore
+   * @return DataSlotDiffDigestRequestHandler
    */
   @VisibleForTesting
   public DataSlotDiffDigestRequestHandler setSessionDataStore(DataStore sessionDataStore) {
@@ -141,6 +143,7 @@ public class DataSlotDiffDigestRequestHandler
    * Setter method for property <tt>slotTableCache</tt>.
    *
    * @param slotTableCache value to be assigned to property slotTableCache
+   * @return DataSlotDiffDigestRequestHandler
    */
   @VisibleForTesting
   public DataSlotDiffDigestRequestHandler setSlotTableCache(SlotTableCache slotTableCache) {
@@ -152,6 +155,7 @@ public class DataSlotDiffDigestRequestHandler
    * Setter method for property <tt>syncSlotAcceptAllManager</tt>.
    *
    * @param syncSlotAcceptAllManager value to be assigned to property syncSlotAcceptAllManager
+   * @return DataSlotDiffDigestRequestHandler
    */
   @VisibleForTesting
   public DataSlotDiffDigestRequestHandler setSyncSlotAcceptAllManager(

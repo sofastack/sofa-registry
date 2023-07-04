@@ -38,9 +38,9 @@ public class DataCenterNodes<T extends Node> implements Serializable {
   /**
    * constructor
    *
-   * @param nodeType
-   * @param version
-   * @param dataCenterId
+   * @param nodeType nodeType
+   * @param version version
+   * @param dataCenterId dataCenterId
    */
   public DataCenterNodes(NodeType nodeType, long version, String dataCenterId) {
     this.nodeType = nodeType;

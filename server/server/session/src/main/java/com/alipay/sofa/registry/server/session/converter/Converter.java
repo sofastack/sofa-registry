@@ -18,8 +18,7 @@ package com.alipay.sofa.registry.server.session.converter;
 
 /**
  * @author shangyu.wh
- * @version $Id: Converter.java, v 0.1 2017-11-29 11:55 shangyu.wh Exp $
- *     <p><S> source type <T> target type
+ * @version $Id: Converter.java, v 0.1 2017-11-29 11:55 shangyu.wh Exp $ source type target type
  */
 public interface Converter<S, T> {
 

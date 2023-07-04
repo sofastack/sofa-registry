@@ -48,7 +48,7 @@ public interface MetaLeaderService {
   /**
    * get leader info
    *
-   * @return
+   * @return LeaderInfo
    */
   LeaderInfo getLeaderInfo();
 

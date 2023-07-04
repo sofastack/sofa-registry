@@ -33,21 +33,21 @@ public interface AppRevisionRepository extends MultiDataCenterListener {
   /**
    * persistence appRevision
    *
-   * @param appRevision
+   * @param appRevision appRevision
    */
   void register(AppRevision appRevision) throws Exception;
 
   /**
    * check if revisionId exist
    *
-   * @param revisionId
-   * @return
+   * @param revisionId revisionId
+   * @return boolean
    */
   boolean exist(String revisionId);
   /**
    * get AppRevision
    *
-   * @param revision
+   * @param revision revision
    * @return
    */
   AppRevision queryRevision(String revision);

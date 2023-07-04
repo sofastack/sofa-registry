@@ -64,8 +64,8 @@ public class DataCenterMetadataCacheImpl implements DataCenterMetadataCache {
   /**
    * get zones of dataCenter
    *
-   * @param dataCenter
-   * @return
+   * @param dataCenter dataCenter
+   * @return Set
    */
   @Override
   public Set<String> dataCenterZonesOf(String dataCenter) {
@@ -163,6 +163,7 @@ public class DataCenterMetadataCacheImpl implements DataCenterMetadataCache {
    * Setter method for property <tt>sessionServerConfig</tt>.
    *
    * @param sessionServerConfig value to be assigned to property sessionServerConfig
+   * @return DataCenterMetadataCacheImpl
    */
   @VisibleForTesting
   public DataCenterMetadataCacheImpl setSessionServerConfig(

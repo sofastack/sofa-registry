@@ -29,27 +29,38 @@ public interface ProvideDataMapper {
   /**
    * insert or update provideData
    *
-   * @param data
+   * @param data data
+   * @return int
    */
   public int save(ProvideDataDomain data);
 
   /**
    * insert or update provideData
    *
-   * @param data
+   * @param data data
+   * @param exceptVersion exceptVersion
+   * @return int
    */
   public int update(
       @Param("data") ProvideDataDomain data, @Param("exceptVersion") long exceptVersion);
 
-  /** query provideData */
+  /**
+   * query provideData
+   *
+   * @param dataCenter dataCenter
+   * @param dataKey dataKey
+   * @return ProvideDataDomain
+   */
   public ProvideDataDomain query(
       @Param("dataCenter") String dataCenter, @Param("dataKey") String dataKey);
 
   /**
    * remove provideData
    *
-   * @param dataCenter
-   * @param dataKey
+   * @param dataCenter dataCenter
+   * @param dataKey dataKey
+   * @param dataVersion dataVersion
+   * @return int
    */
   public int remove(
       @Param("dataCenter") String dataCenter,
@@ -59,10 +70,10 @@ public interface ProvideDataMapper {
   /**
    * query by page
    *
-   * @param dataCenter
-   * @param start
-   * @param limit
-   * @return
+   * @param dataCenter dataCenter
+   * @param start start
+   * @param limit limit
+   * @return List
    */
   List<ProvideDataDomain> queryByPage(
       @Param("dataCenter") String dataCenter, @Param("start") int start, @Param("limit") int limit);
@@ -70,8 +81,8 @@ public interface ProvideDataMapper {
   /**
    * query total count
    *
-   * @param dataCenter
-   * @return
+   * @param dataCenter dataCenter
+   * @return int
    */
   int selectTotalCount(@Param("dataCenter") String dataCenter);
 }

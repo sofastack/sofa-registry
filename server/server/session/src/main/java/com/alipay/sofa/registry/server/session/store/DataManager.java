@@ -39,37 +39,40 @@ public interface DataManager<DATA, ID, DATAINFOID> {
   /**
    * new publisher and subscriber data add
    *
-   * @param data
+   * @param data data
+   * @return boolean
    */
   boolean add(DATA data);
 
   /**
    * query data by client node connectId
    *
-   * @param connectId
-   * @return
+   * @param connectId connectId
+   * @return Map
    */
   Map<ID, DATA> queryByConnectId(ConnectId connectId);
 
   /**
    * query data by client node connectId
    *
-   * @param connectIds
-   * @return
+   * @param connectIds connectIds
+   * @return Map
    */
   Map<ConnectId, Map<ID, DATA>> queryByConnectIds(Set<ConnectId> connectIds);
 
   /**
    * remove data by client node connectId
    *
-   * @param connectId
+   * @param connectId connectId
+   * @return Map
    */
   Map<ID, DATA> deleteByConnectId(ConnectId connectId);
 
   /**
    * remove data by client node connectIds
    *
-   * @param connectIds
+   * @param connectIds connectIds
+   * @return Map
    */
   Map<ConnectId, Map<ID, DATA>> deleteByConnectIds(Set<ConnectId> connectIds);
 
@@ -78,13 +81,17 @@ public interface DataManager<DATA, ID, DATAINFOID> {
   /**
    * remove single data by register id
    *
-   * @param registerId
-   * @param dataInfoId
-   * @return
+   * @param registerId registerId
+   * @param dataInfoId dataInfoId
+   * @return Data
    */
   DATA deleteById(ID registerId, DATAINFOID dataInfoId);
 
-  /** dataInfoId.size and data.size */
+  /**
+   * dataInfoId.size and data.size
+   *
+   * @return Tuple
+   */
   Tuple<Long, Long> count();
 
   Set<ConnectId> getConnectIds();

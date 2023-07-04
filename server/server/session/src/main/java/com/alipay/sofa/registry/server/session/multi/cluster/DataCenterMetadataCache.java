@@ -30,8 +30,8 @@ public interface DataCenterMetadataCache {
   /**
    * get zones of dataCenter
    *
-   * @param dataCenter
-   * @return
+   * @param dataCenter dataCenter
+   * @return Set
    */
   Set<String> dataCenterZonesOf(String dataCenter);
 

@@ -41,6 +41,7 @@ public class FetchStopPushService {
    * Setter method for property <tt>provideDataService</tt>.
    *
    * @param provideDataService value to be assigned to property provideDataService
+   * @return FetchStopPushService
    */
   @VisibleForTesting
   public FetchStopPushService setProvideDataService(ProvideDataService provideDataService) {

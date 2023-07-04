@@ -87,11 +87,7 @@ public class RemoteClusterMetaExchanger extends AbstractMetaLeaderExchanger {
     return Collections.singleton(info.getRemoteMetaAddress());
   }
 
-  /**
-   * update and remove cluster infos according to db
-   *
-   * @return
-   */
+  /** update and remove cluster infos according to db */
   public void refreshClusterInfos() {
     Set<MultiClusterSyncInfo> updates = multiClusterSyncRepository.queryLocalSyncInfos();
     Set<String> remoteDataCenters =
@@ -115,7 +111,7 @@ public class RemoteClusterMetaExchanger extends AbstractMetaLeaderExchanger {
   /**
    * get all remote clusters
    *
-   * @return
+   * @return Set
    */
   public synchronized Set<String> getAllRemoteClusters() {
     return Sets.newHashSet(syncConfigMap.keySet());

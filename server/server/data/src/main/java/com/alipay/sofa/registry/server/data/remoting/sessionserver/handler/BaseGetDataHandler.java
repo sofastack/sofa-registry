@@ -141,6 +141,7 @@ public abstract class BaseGetDataHandler<T> extends AbstractDataHandler<T> {
    * Setter method for property <tt>compressDatumService</tt>.
    *
    * @param compressDatumService value to be assigned to property compressDatumService
+   * @return BaseGetDataHandler
    */
   @VisibleForTesting
   public BaseGetDataHandler setCompressDatumService(CompressDatumService compressDatumService) {
