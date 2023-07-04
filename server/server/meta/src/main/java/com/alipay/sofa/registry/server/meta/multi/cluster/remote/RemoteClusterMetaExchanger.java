@@ -51,7 +51,7 @@ public class RemoteClusterMetaExchanger extends AbstractMetaLeaderExchanger {
   @Autowired private MultiClusterSyncRepository multiClusterSyncRepository;
 
   /** <dataCenter, syncInfo> */
-  private Map<String, MultiClusterSyncInfo> syncConfigMap = Maps.newConcurrentMap();
+  private volatile Map<String, MultiClusterSyncInfo> syncConfigMap = Maps.newConcurrentMap();
 
   public RemoteClusterMetaExchanger() {
     super(Exchange.REMOTE_CLUSTER_META, MULTI_CLUSTER_CLIENT_LOGGER);

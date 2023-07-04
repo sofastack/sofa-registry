@@ -39,7 +39,7 @@ public abstract class AbstractLeaderElector implements LeaderElector {
 
   private volatile LeaderInfo leaderInfo = LeaderInfo.HAS_NO_LEADER;
 
-  private boolean startElector = false;
+  private volatile boolean startElector = false;
 
   private boolean isObserver = false;
 

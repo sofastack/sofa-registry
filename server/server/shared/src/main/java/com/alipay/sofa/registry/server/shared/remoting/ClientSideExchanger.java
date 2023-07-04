@@ -51,7 +51,7 @@ public abstract class ClientSideExchanger
 
   @Autowired protected Exchange boltExchange;
 
-  protected Set<String> serverIps = Sets.newHashSet();
+  protected volatile Set<String> serverIps = Sets.newHashSet();
   private final Connector connector;
 
   protected ClientSideExchanger(String serverType) {
