@@ -29,8 +29,8 @@ public interface ProvideDataRepository {
    * save or update provideData, such as stop_push_switch; directly use new value to override old
    * value;
    *
-   * @param persistenceData
-   * @return
+   * @param persistenceData persistenceData
+   * @return boolean
    */
   boolean put(PersistenceData persistenceData);
 
@@ -38,32 +38,32 @@ public interface ProvideDataRepository {
    * save or update with cas, such as node_server_operate_list; it use previous value to produce new
    * value;
    *
-   * @param persistenceData
-   * @param expectVersion
-   * @return
+   * @param persistenceData persistenceData
+   * @param expectVersion expectVersion
+   * @return boolean
    */
   boolean put(PersistenceData persistenceData, long expectVersion);
 
   /**
    * query provideData by key
    *
-   * @param key
-   * @return
+   * @param key key
+   * @return PersistenceData
    */
   PersistenceData get(String key);
 
   /**
    * delete provideData
    *
-   * @param key
-   * @return
+   * @param key key
+   * @return boolean
    */
   boolean remove(String key, long version);
 
   /**
    * query all provide data
    *
-   * @return
+   * @return Map
    */
   Map<String, PersistenceData> getAll();
 }

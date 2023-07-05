@@ -30,8 +30,8 @@ public interface InterfaceAppsRepository extends MultiDataCenterListener {
   /**
    * get revisions by interfaceName
    *
-   * @param dataInfoId
-   * @return return <appName, revisions>
+   * @param dataInfoId dataInfoId
+   * @return return InterfaceMapping
    */
   InterfaceMapping getAppNames(String dataInfoId);
 

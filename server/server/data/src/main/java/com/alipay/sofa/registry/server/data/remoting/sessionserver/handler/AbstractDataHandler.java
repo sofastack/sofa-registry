@@ -163,6 +163,7 @@ public abstract class AbstractDataHandler<T> extends AbstractServerHandler<T> {
    * Setter method for property <tt>dataChangeEventCenter</tt>.
    *
    * @param dataChangeEventCenter value to be assigned to property dataChangeEventCenter
+   * @return AbstractDataHandler
    */
   @VisibleForTesting
   public AbstractDataHandler setDataChangeEventCenter(DataChangeEventCenter dataChangeEventCenter) {
@@ -184,6 +185,7 @@ public abstract class AbstractDataHandler<T> extends AbstractServerHandler<T> {
    * Setter method for property <tt>dataServerConfig</tt>.
    *
    * @param dataServerConfig value to be assigned to property dataServerConfig
+   * @return AbstractDataHandler
    */
   @VisibleForTesting
   public AbstractDataHandler setDataServerConfig(DataServerConfig dataServerConfig) {
@@ -204,6 +206,7 @@ public abstract class AbstractDataHandler<T> extends AbstractServerHandler<T> {
    * Setter method for property <tt>slotAccessor</tt>.
    *
    * @param slotAccessorDelegate value to be assigned to property slotAccessor
+   * @return AbstractDataHandler
    */
   @VisibleForTesting
   public AbstractDataHandler setSlotAccessor(SlotAccessorDelegate slotAccessorDelegate) {
@@ -225,6 +228,7 @@ public abstract class AbstractDataHandler<T> extends AbstractServerHandler<T> {
    * Setter method for property <tt>datumStorageDelegate</tt>.
    *
    * @param datumStorageDelegate value to be assigned to property datumStorageDelegate
+   * @return AbstractDataHandler
    */
   @VisibleForTesting
   public AbstractDataHandler setDatumStorageDelegate(DatumStorage datumStorageDelegate) {
@@ -246,6 +250,7 @@ public abstract class AbstractDataHandler<T> extends AbstractServerHandler<T> {
    * Setter method for property <tt>sessionLeaseManager</tt>.
    *
    * @param sessionLeaseManager value to be assigned to property sessionLeaseManager
+   * @return AbstractDataHandler
    */
   @VisibleForTesting
   public AbstractDataHandler setSessionLeaseManager(SessionLeaseManager sessionLeaseManager) {

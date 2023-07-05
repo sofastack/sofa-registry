@@ -64,9 +64,9 @@ public class RemoteClusterSlotSyncHandler
   }
 
   /**
-   * @param channel
-   * @param request
-   * @return
+   * @param channel channel
+   * @param request request
+   * @return GenericResponse
    */
   @Override
   public GenericResponse<RemoteClusterSlotSyncResponse> doHandle(

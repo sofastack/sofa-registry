@@ -48,6 +48,7 @@ public class DefaultSlotStats implements SlotStats {
    * Constructor.
    *
    * @param slot the slot
+   * @param maxSyncGap maxSyncGap
    */
   public DefaultSlotStats(Slot slot, long maxSyncGap) {
     this.slot = slot;

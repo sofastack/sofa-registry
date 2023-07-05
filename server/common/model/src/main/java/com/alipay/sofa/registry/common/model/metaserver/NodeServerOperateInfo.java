@@ -40,7 +40,7 @@ public class NodeServerOperateInfo {
   /**
    * get meta operating members
    *
-   * @return
+   * @return Set
    */
   public synchronized Set<OperationInfo> getMetas() {
     return Sets.newHashSet(metas);
@@ -49,7 +49,7 @@ public class NodeServerOperateInfo {
   /**
    * get data operating members
    *
-   * @return
+   * @return Set
    */
   public synchronized Set<OperationInfo> getDatas() {
     return Sets.newHashSet(datas);
@@ -62,7 +62,7 @@ public class NodeServerOperateInfo {
   /**
    * get session operating members
    *
-   * @return
+   * @return Set
    */
   public synchronized Set<OperationInfo> sessionNodes() {
     Set<OperationInfo> ret = Sets.newHashSet();
@@ -89,8 +89,8 @@ public class NodeServerOperateInfo {
   }
 
   /**
-   * @param cell
-   * @return
+   * @param cell cell
+   * @return int
    */
   public synchronized int sessionSize(String cell) {
     Set<OperationInfo> operationInfos = sessions.get(cell);
@@ -149,8 +149,9 @@ public class NodeServerOperateInfo {
   /**
    * add meta operation
    *
-   * @param cell
-   * @param address
+   * @param cell cell
+   * @param address address
+   * @return boolean
    */
   public synchronized boolean addMetas(String cell, String address) {
     return metas.add(new OperationInfo(NodeType.META, cell, address, System.currentTimeMillis()));
@@ -159,8 +160,9 @@ public class NodeServerOperateInfo {
   /**
    * remove meta operation
    *
-   * @param cell
-   * @param address
+   * @param cell cell
+   * @param address address
+   * @return boolean
    */
   public synchronized boolean removeMetas(String cell, String address) {
     return metas.remove(
@@ -170,8 +172,9 @@ public class NodeServerOperateInfo {
   /**
    * add data operation
    *
-   * @param cell
-   * @param address
+   * @param cell cell
+   * @param address address
+   * @return boolean
    */
   public synchronized boolean addDatas(String cell, String address) {
     return datas.add(new OperationInfo(NodeType.DATA, cell, address, System.currentTimeMillis()));
@@ -180,8 +183,9 @@ public class NodeServerOperateInfo {
   /**
    * remove data operation
    *
-   * @param cell
-   * @param address
+   * @param cell cell
+   * @param address address
+   * @return boolean
    */
   public synchronized boolean removeDatas(String cell, String address) {
     return datas.remove(
@@ -191,8 +195,9 @@ public class NodeServerOperateInfo {
   /**
    * add session operation
    *
-   * @param cell
-   * @param address
+   * @param cell cell
+   * @param address address
+   * @return boolean
    */
   public synchronized boolean addSessions(String cell, String address) {
     Set<OperationInfo> operationInfos = sessions.computeIfAbsent(cell, k -> Sets.newHashSet());
@@ -203,8 +208,9 @@ public class NodeServerOperateInfo {
   /**
    * remove session operation
    *
-   * @param cell
-   * @param address
+   * @param cell cell
+   * @param address address
+   * @return boolean
    */
   public synchronized boolean removeSessions(String cell, String address) {
 

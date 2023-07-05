@@ -52,8 +52,9 @@ public class DefaultCircuitBreakerService implements CircuitBreakerService {
   /**
    * check if statistic should be circuit break
    *
-   * @param statistic
-   * @return
+   * @param statistic statistic
+   * @param hasPushed hasPushed
+   * @return boolean
    */
   @Override
   public boolean pushCircuitBreaker(CircuitBreakerStatistic statistic, boolean hasPushed) {
@@ -105,9 +106,9 @@ public class DefaultCircuitBreakerService implements CircuitBreakerService {
   /**
    * statistic when push fail
    *
-   * @param versions
-   * @param subscriber
-   * @return
+   * @param versions versions
+   * @param subscriber subscriber
+   * @return boolean
    */
   public boolean onPushFail(Map<String, Long> versions, Subscriber subscriber) {
 
@@ -139,10 +140,10 @@ public class DefaultCircuitBreakerService implements CircuitBreakerService {
   /**
    * statistic when push success
    *
-   * @param versions dataCenter -> version
-   * @param pushNums dataCenter -> pushNum
-   * @param subscriber
-   * @return
+   * @param versions dataCenter version
+   * @param pushNums dataCenter pushNum
+   * @param subscriber subscriber
+   * @return boolean
    */
   public boolean onPushSuccess(
       Map<String, Long> versions, Map<String, Integer> pushNums, Subscriber subscriber) {

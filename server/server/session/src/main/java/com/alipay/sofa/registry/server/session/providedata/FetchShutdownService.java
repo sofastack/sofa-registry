@@ -116,6 +116,7 @@ public class FetchShutdownService
    * Setter method for property <tt>sessionServerConfig</tt>.
    *
    * @param sessionServerConfig value to be assigned to property sessionServerConfig
+   * @return FetchShutdownService
    */
   @VisibleForTesting
   public FetchShutdownService setSessionServerConfig(SessionServerConfig sessionServerConfig) {
@@ -127,6 +128,7 @@ public class FetchShutdownService
    * Setter method for property <tt>sessionServerBootstrap</tt>.
    *
    * @param sessionServerBootstrap value to be assigned to property sessionServerBootstrap
+   * @return FetchShutdownService
    */
   @VisibleForTesting
   public FetchShutdownService setSessionServerBootstrap(
@@ -139,6 +141,7 @@ public class FetchShutdownService
    * Setter method for property <tt>fetchStopPushService</tt>.
    *
    * @param fetchStopPushService value to be assigned to property fetchStopPushService
+   * @return FetchShutdownService
    */
   @VisibleForTesting
   public FetchShutdownService setFetchStopPushService(FetchStopPushService fetchStopPushService) {

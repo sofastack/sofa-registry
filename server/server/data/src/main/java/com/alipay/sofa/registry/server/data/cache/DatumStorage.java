@@ -40,9 +40,9 @@ public interface DatumStorage {
   /**
    * get datum by specific dataInfoId
    *
-   * @param dataCenter
-   * @param dataInfoId
-   * @return
+   * @param dataCenter dataCenter
+   * @param dataInfoId dataInfoId
+   * @return Datum
    */
   Datum get(String dataCenter, String dataInfoId);
 
@@ -58,7 +58,8 @@ public interface DatumStorage {
   /**
    * get all datum
    *
-   * @return
+   * @param dataCenter dataCenter
+   * @return Map
    */
   Map<String, Datum> getAll(String dataCenter);
 

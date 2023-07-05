@@ -47,7 +47,7 @@ public class RemoteDataChangeNotifyHandler extends AbstractClientHandler<DataCha
   /**
    * return processor request class name
    *
-   * @return
+   * @return Class
    */
   @Override
   public Class interest() {
@@ -73,9 +73,9 @@ public class RemoteDataChangeNotifyHandler extends AbstractClientHandler<DataCha
   /**
    * execute
    *
-   * @param channel
-   * @param request
-   * @return
+   * @param channel channel
+   * @param request request
+   * @return Object
    */
   @Override
   public Object doHandle(Channel channel, DataChangeRequest request) {

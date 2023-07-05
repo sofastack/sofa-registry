@@ -56,7 +56,6 @@ public class StopPushDataResource {
 
   @Autowired private DefaultProvideDataNotifier provideDataNotifier;
 
-  /** close push */
   @GET
   @Path("open")
   @Produces(MediaType.APPLICATION_JSON)

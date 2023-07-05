@@ -43,7 +43,7 @@ public class MultiClusterSlotDiffDigestRequestHandler extends BaseSlotDiffDigest
   /**
    * specify executor for processor handler
    *
-   * @return
+   * @return Executor
    */
   @Override
   public Executor getExecutor() {

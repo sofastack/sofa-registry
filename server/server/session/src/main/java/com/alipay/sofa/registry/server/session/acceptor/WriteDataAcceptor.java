@@ -26,7 +26,7 @@ public interface WriteDataAcceptor {
   /**
    * accept all write data request
    *
-   * @param request
+   * @param request request
    */
   void accept(WriteDataRequest request);
 }

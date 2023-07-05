@@ -78,7 +78,12 @@ public class ClientManagerResource {
 
   @Autowired protected ExecutorManager executorManager;
 
-  /** Client off */
+  /**
+   * Client off
+   *
+   * @param ips ips
+   * @return CommonResponse
+   */
   @POST
   @Path("/clientOff")
   public CommonResponse clientOff(@FormParam("ips") String ips) {
@@ -92,7 +97,12 @@ public class ClientManagerResource {
     return CommonResponse.buildSuccessResponse();
   }
 
-  /** Client on */
+  /**
+   * Client on
+   *
+   * @param ips ips
+   * @return CommonResponse
+   */
   @POST
   @Path("/clientOpen")
   public CommonResponse clientOn(@FormParam("ips") String ips) {
@@ -106,7 +116,12 @@ public class ClientManagerResource {
     return CommonResponse.buildSuccessResponse();
   }
 
-  /** Client off */
+  /**
+   * Client off
+   *
+   * @param ips ips
+   * @return CommonResponse
+   */
   @POST
   @Path("/zone/clientOff")
   public CommonResponse clientOffInZone(@FormParam("ips") String ips) {
@@ -137,7 +152,12 @@ public class ClientManagerResource {
     return CommonResponse.buildSuccessResponse();
   }
 
-  /** Client on */
+  /**
+   * Client on
+   *
+   * @param ips ips
+   * @return CommonResponse
+   */
   @POST
   @Path("/zone/clientOpen")
   public CommonResponse clientOnInZone(@FormParam("ips") String ips) {
@@ -167,7 +187,11 @@ public class ClientManagerResource {
     return CommonResponse.buildSuccessResponse();
   }
 
-  /** Client on */
+  /**
+   * Client on
+   *
+   * @return GenericResponse
+   */
   @POST
   @Path("/zone/queryClientOff")
   public GenericResponse<Map<String, ClientManagerResp>> queryClientOff() {

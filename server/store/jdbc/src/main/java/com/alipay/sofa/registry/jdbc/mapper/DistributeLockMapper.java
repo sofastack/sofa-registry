@@ -29,9 +29,9 @@ public interface DistributeLockMapper {
   /**
    * query by dataCenter and lockName
    *
-   * @param dataCenter
-   * @param lockName
-   * @return
+   * @param dataCenter dataCenter
+   * @param lockName lockName
+   * @return DistributeLockInfo
    */
   public DistributeLockInfo queryDistLock(
       @Param("dataCenter") String dataCenter, @Param("lockName") String lockName);
@@ -39,21 +39,29 @@ public interface DistributeLockMapper {
   /**
    * compete lock, it will throw exception if lockName existed
    *
-   * @param lock
+   * @param lock lock
+   * @throws Exception Exception
    */
   public void competeLockOnInsert(DistributeLockInfo lock) throws Exception;
 
   /**
    * compete lock with cas
    *
-   * @param competeLock
-   * @return
+   * @param competeLock competeLock
    */
   public void competeLockOnUpdate(FollowCompeteLockDomain competeLock);
 
-  /** renew lock last update time */
+  /**
+   * renew lock last update time
+   *
+   * @param lock lock
+   */
   public void ownerHeartbeat(DistributeLockInfo lock);
 
-  /** force reset owner and duration */
+  /**
+   * force reset owner and duration
+   *
+   * @param lock lock
+   */
   public void forceRefresh(DistributeLockInfo lock);
 }

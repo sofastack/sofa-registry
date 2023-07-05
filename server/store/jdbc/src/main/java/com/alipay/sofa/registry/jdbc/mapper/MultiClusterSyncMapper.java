@@ -29,16 +29,17 @@ public interface MultiClusterSyncMapper {
   /**
    * insert data
    *
-   * @param data
+   * @param data data
+   * @return int
    */
   public int save(MultiClusterSyncDomain data);
 
   /**
    * update meta address with exceptVersion cas
    *
-   * @param data
-   * @param exceptVersion
-   * @return
+   * @param data data
+   * @param exceptVersion exceptVersion
+   * @return int
    */
   public int update(
       @Param("data") MultiClusterSyncDomain data, @Param("exceptVersion") long exceptVersion);
@@ -46,16 +47,17 @@ public interface MultiClusterSyncMapper {
   /**
    * query MultiClusterSyncInfo
    *
-   * @param dataCenter
-   * @return
+   * @param dataCenter dataCenter
+   * @return List
    */
   public List<MultiClusterSyncDomain> queryByCluster(@Param("dataCenter") String dataCenter);
 
   /**
    * query MultiClusterSyncInfo
    *
-   * @param dataCenter
-   * @return
+   * @param dataCenter dataCenter
+   * @param remoteDataCenter remoteDataCenter
+   * @return MultiClusterSyncDomain
    */
   public MultiClusterSyncDomain query(
       @Param("dataCenter") String dataCenter, @Param("remoteDataCenter") String remoteDataCenter);
@@ -63,9 +65,10 @@ public interface MultiClusterSyncMapper {
   /**
    * remove provideData
    *
-   * @param dataCenter
-   * @param remoteDataCenter
-   * @param dataVersion
+   * @param dataCenter dataCenter
+   * @param remoteDataCenter remoteDataCenter
+   * @param dataVersion dataVersion
+   * @return int
    */
   public int remove(
       @Param("dataCenter") String dataCenter,

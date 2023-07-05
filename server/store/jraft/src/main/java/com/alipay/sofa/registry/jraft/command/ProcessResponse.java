@@ -33,9 +33,9 @@ public class ProcessResponse implements Serializable {
   /**
    * constructor
    *
-   * @param entity
-   * @param success
-   * @param redirect
+   * @param entity entity
+   * @param success success
+   * @param redirect redirect
    */
   public ProcessResponse(Object entity, Boolean success, String redirect) {
     this.entity = entity;
@@ -55,8 +55,8 @@ public class ProcessResponse implements Serializable {
   /**
    * response ok
    *
-   * @param entity
-   * @return
+   * @param entity entity
+   * @return ResponseBuilder
    */
   public static ResponseBuilder ok(Object entity) {
     ResponseBuilder b = ok();
@@ -67,7 +67,7 @@ public class ProcessResponse implements Serializable {
   /**
    * response fail
    *
-   * @return
+   * @return ResponseBuilder
    */
   public static ResponseBuilder fail() {
     return setStatus(false);
@@ -76,8 +76,8 @@ public class ProcessResponse implements Serializable {
   /**
    * response fail
    *
-   * @param errorMsg
-   * @return
+   * @param errorMsg errorMsg
+   * @return ResponseBuilder
    */
   public static ResponseBuilder fail(String errorMsg) {
     ResponseBuilder b = fail();
@@ -88,8 +88,8 @@ public class ProcessResponse implements Serializable {
   /**
    * response redirect
    *
-   * @param leader
-   * @return
+   * @param leader leader
+   * @return ResponseBuilder
    */
   public static ResponseBuilder redirect(String leader) {
     ResponseBuilder b = fail();

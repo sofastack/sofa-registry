@@ -30,14 +30,14 @@ public interface MultiClusterSlotManager extends SlotAccessor {
   /**
    * get remote cluster slotTable epoch
    *
-   * @return map<cluster, slotTableEpoch>
+   * @return map
    */
   public Map<String, Long> getSlotTableEpoch();
 
   /**
    * update remote slot table
    *
-   * @param remoteSlotTableStatus
+   * @param remoteSlotTableStatus remoteSlotTableStatus
    */
   void updateSlotTable(Map<String, RemoteSlotTableStatus> remoteSlotTableStatus);
 

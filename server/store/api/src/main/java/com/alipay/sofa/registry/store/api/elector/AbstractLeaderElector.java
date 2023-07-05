@@ -107,22 +107,14 @@ public abstract class AbstractLeaderElector implements LeaderElector {
   public String myself() {
     return address;
   }
-  /**
-   * start compete leader
-   *
-   * @return
-   */
+  /** start compete leader */
   @Override
   public synchronized void change2Follow() {
     this.startElector = true;
     this.isObserver = false;
   }
 
-  /**
-   * stop compete leader
-   *
-   * @return
-   */
+  /** stop compete leader */
   @Override
   public synchronized void change2Observer() {
     this.isObserver = true;
@@ -130,14 +122,14 @@ public abstract class AbstractLeaderElector implements LeaderElector {
   /**
    * query leader
    *
-   * @return
+   * @return LeaderInfo
    */
   protected abstract LeaderInfo doQuery();
 
   /**
    * elector leader
    *
-   * @return
+   * @return LeaderInfo
    */
   protected abstract LeaderInfo doElect();
 

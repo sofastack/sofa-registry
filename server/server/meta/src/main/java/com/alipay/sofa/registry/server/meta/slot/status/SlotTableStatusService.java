@@ -127,6 +127,7 @@ public class SlotTableStatusService {
    * Setter method for property <tt>slotManager</tt>.
    *
    * @param slotManager value to be assigned to property slotManager
+   * @return SlotTableStatusService
    */
   @VisibleForTesting
   public SlotTableStatusService setSlotManager(SlotManager slotManager) {
@@ -138,6 +139,7 @@ public class SlotTableStatusService {
    * Setter method for property <tt>slotTableMonitor</tt>.
    *
    * @param slotTableMonitor value to be assigned to property slotTableMonitor
+   * @return SlotTableStatusService
    */
   @VisibleForTesting
   public SlotTableStatusService setSlotTableMonitor(SlotTableMonitor slotTableMonitor) {
@@ -149,6 +151,7 @@ public class SlotTableStatusService {
    * Setter method for property <tt>dataServerManager</tt>.
    *
    * @param dataServerManager value to be assigned to property dataServerManager
+   * @return SlotTableStatusService
    */
   @VisibleForTesting
   public SlotTableStatusService setDataServerManager(DataServerManager dataServerManager) {
@@ -160,6 +163,7 @@ public class SlotTableStatusService {
    * Setter method for property <tt>slotArranger</tt>.
    *
    * @param slotArranger value to be assigned to property slotArranger
+   * @return SlotTableStatusService
    */
   @VisibleForTesting
   public SlotTableStatusService setSlotArranger(ScheduledSlotArranger slotArranger) {

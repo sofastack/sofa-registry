@@ -30,7 +30,7 @@ public class RemoteSlotTableStatus implements Serializable {
   /** slotTableEpoch */
   private final long slotTableEpoch;
 
-  /** when data.slotTableEpoch > meta.slotTableEpoch, slotTableEpochConflict=true */
+  /** when data.slotTableEpoch meta.slotTableEpoch, slotTableEpochConflict=true */
   private final boolean slotTableEpochConflict;
 
   /** if slot table upgrade */

@@ -142,6 +142,7 @@ public class ShutdownSwitchResource {
    * Setter method for property <tt>fetchStopPushService</tt>.
    *
    * @param fetchStopPushService value to be assigned to property fetchStopPushService
+   * @return ShutdownSwitchResource
    */
   public ShutdownSwitchResource setFetchStopPushService(FetchStopPushService fetchStopPushService) {
     this.fetchStopPushService = fetchStopPushService;

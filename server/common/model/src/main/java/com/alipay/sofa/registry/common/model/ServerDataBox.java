@@ -191,7 +191,7 @@ public class ServerDataBox implements Serializable {
   /**
    * Set bytes byte [ ].
    *
-   * @return byte[] byte [ ]
+   * @param bytes bytes
    */
   public void setBytes(byte[] bytes) {
     this.bytes = bytes;

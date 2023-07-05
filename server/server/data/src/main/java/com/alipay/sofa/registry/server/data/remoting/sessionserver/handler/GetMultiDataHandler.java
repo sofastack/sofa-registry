@@ -57,7 +57,7 @@ public class GetMultiDataHandler extends BaseGetDataHandler<GetMultiDataRequest>
   /**
    * return processor request class name
    *
-   * @return
+   * @return Class
    */
   @Override
   public Class interest() {
@@ -67,9 +67,9 @@ public class GetMultiDataHandler extends BaseGetDataHandler<GetMultiDataRequest>
   /**
    * execute
    *
-   * @param channel
-   * @param request
-   * @return
+   * @param channel channel
+   * @param request request
+   * @return MultiSlotAccessGenericResponse
    */
   @Override
   public MultiSlotAccessGenericResponse<MultiSubDatum> doHandle(

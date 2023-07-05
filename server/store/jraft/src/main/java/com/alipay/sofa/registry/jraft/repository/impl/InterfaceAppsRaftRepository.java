@@ -31,7 +31,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class InterfaceAppsRaftRepository implements InterfaceAppsRepository {
   protected static final Logger LOG = LoggerFactory.getLogger(InterfaceAppsRaftRepository.class);
 
-  /** map: <interface, appNames> */
+  /** map: interface, appNames */
   protected final Map<String, InterfaceMapping> interfaceApps = new ConcurrentHashMap<>();
 
   @Override

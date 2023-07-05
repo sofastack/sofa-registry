@@ -246,6 +246,7 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository, Rec
    * Setter method for property <tt>interfaceAppsIndexMapper</tt>.
    *
    * @param interfaceAppsIndexMapper value to be assigned to property interfaceAppsIndexMapper
+   * @return InterfaceAppsJdbcRepository
    */
   @VisibleForTesting
   public InterfaceAppsJdbcRepository setInterfaceAppsIndexMapper(
@@ -258,6 +259,7 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository, Rec
    * Setter method for property <tt>defaultCommonConfig</tt>.
    *
    * @param defaultCommonConfig value to be assigned to property defaultCommonConfig
+   * @return InterfaceAppsJdbcRepository
    */
   @VisibleForTesting
   public InterfaceAppsJdbcRepository setDefaultCommonConfig(

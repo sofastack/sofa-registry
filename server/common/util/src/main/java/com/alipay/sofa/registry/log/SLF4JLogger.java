@@ -75,8 +75,8 @@ public class SLF4JLogger implements Logger, Serializable {
   }
 
   /**
-   * @param name
-   * @param msgPrefix
+   * @param name name
+   * @param msgPrefix msgPrefix
    */
   public SLF4JLogger(String name, String msgPrefix) {
     this.name = name;
@@ -85,8 +85,8 @@ public class SLF4JLogger implements Logger, Serializable {
   }
 
   /**
-   * @param clazz
-   * @param msgPrefix
+   * @param clazz clazz
+   * @param msgPrefix msgPrefix
    */
   public SLF4JLogger(Class clazz, String msgPrefix) {
     this.name = clazz.getCanonicalName();
@@ -95,8 +95,8 @@ public class SLF4JLogger implements Logger, Serializable {
   }
 
   /**
-   * @param name
-   * @return
+   * @param name name
+   * @return Logger
    */
   public org.slf4j.Logger getLoggerBySpace(String name) {
     if (name == null || name.isEmpty()) {

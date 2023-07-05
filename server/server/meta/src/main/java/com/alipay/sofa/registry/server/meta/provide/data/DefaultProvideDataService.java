@@ -100,8 +100,8 @@ public class DefaultProvideDataService implements ProvideDataService {
   /**
    * save or update provideData
    *
-   * @param persistenceData
-   * @return
+   * @param persistenceData persistenceData
+   * @return boolean
    */
   @Override
   public boolean saveProvideData(PersistenceData persistenceData) {
@@ -113,8 +113,8 @@ public class DefaultProvideDataService implements ProvideDataService {
   /**
    * save or update provideData with expectVersion
    *
-   * @param persistenceData
-   * @return
+   * @param persistenceData persistenceData
+   * @return boolean
    */
   @Override
   public boolean saveProvideData(PersistenceData persistenceData, long expectVersion) {
@@ -149,8 +149,8 @@ public class DefaultProvideDataService implements ProvideDataService {
   /**
    * get except version
    *
-   * @param key
-   * @return
+   * @param key key
+   * @return long
    */
   private long getExpectVersion(String key) {
     long expectVersion = 0;
@@ -165,8 +165,8 @@ public class DefaultProvideDataService implements ProvideDataService {
   /**
    * query provideData by key
    *
-   * @param key
-   * @return
+   * @param key key
+   * @return DBResponse
    */
   @Override
   public DBResponse<PersistenceData> queryProvideData(String key) {

@@ -25,8 +25,8 @@ public class LoggerFactory {
   /**
    * get logger
    *
-   * @param name
-   * @return
+   * @param name name
+   * @return Logger
    */
   public static Logger getLogger(String name) {
     return new SLF4JLogger(name);
@@ -35,7 +35,7 @@ public class LoggerFactory {
   /**
    * get logger
    *
-   * @param clazz
+   * @param clazz clazz
    * @return
    */
   public static Logger getLogger(Class clazz) {
@@ -45,8 +45,8 @@ public class LoggerFactory {
   /**
    * get logger
    *
-   * @param name
-   * @param prefix
+   * @param name name
+   * @param prefix prefix
    * @return
    */
   public static Logger getLogger(String name, String prefix) {
@@ -56,9 +56,9 @@ public class LoggerFactory {
   /**
    * get logger
    *
-   * @param clazz
-   * @param prefix
-   * @return
+   * @param clazz clazz
+   * @param prefix prefix
+   * @return Logger
    */
   public static Logger getLogger(Class clazz, String prefix) {
     return new SLF4JLogger(clazz, prefix);

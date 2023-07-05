@@ -75,8 +75,8 @@ public final class SubscriberConverter {
   /**
    * Convert watcher.
    *
-   * @param configuratorRegister
-   * @return
+   * @param configuratorRegister configuratorRegister
+   * @return Watcher
    */
   public static Watcher convert(ConfiguratorRegister configuratorRegister) {
     Converter<ConfiguratorRegister, Watcher> converter =

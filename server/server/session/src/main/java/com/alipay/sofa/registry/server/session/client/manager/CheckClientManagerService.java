@@ -76,8 +76,8 @@ public class CheckClientManagerService {
   /**
    * check local version and other session version
    *
-   * @param expectedVersion
-   * @return
+   * @param expectedVersion expectedVersion
+   * @return boolean
    */
   public boolean check(long expectedVersion) {
 
@@ -111,9 +111,9 @@ public class CheckClientManagerService {
   /**
    * check other session version
    *
-   * @param map
-   * @param expectedVersion
-   * @return
+   * @param map map
+   * @param expectedVersion expectedVersion
+   * @return boolean
    */
   private boolean checkOtherServersResp(Map<URL, CommonResponse> map, long expectedVersion) {
     for (Entry<URL, CommonResponse> entry : map.entrySet()) {
@@ -142,8 +142,8 @@ public class CheckClientManagerService {
   /**
    * check local version
    *
-   * @param expectedVersion
-   * @return
+   * @param expectedVersion expectedVersion
+   * @return Tuple
    */
   public Tuple<Boolean, Long> checkLocalCache(long expectedVersion) {
 

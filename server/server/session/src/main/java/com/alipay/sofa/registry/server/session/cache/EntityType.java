@@ -28,7 +28,7 @@ public interface EntityType {
   /**
    * cache contents uniqueKey,use for make up Key' hash code
    *
-   * @return
+   * @return String
    */
   String getUniqueKey();
 }

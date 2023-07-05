@@ -408,6 +408,7 @@ public class HeartbeatRequestHandler extends BaseMetaServerHandler<HeartbeatRequ
    * Setter method for property <tt>multiClusterSlotTableSyncer</tt>.
    *
    * @param multiClusterSlotTableSyncer value to be assigned to property multiClusterSlotTableSyncer
+   * @return HeartbeatRequestHandler
    */
   @VisibleForTesting
   public HeartbeatRequestHandler setMultiClusterSlotTableSyncer(

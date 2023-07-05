@@ -29,7 +29,7 @@ public class FetchProvideDataRequest implements Serializable {
   /**
    * construtor
    *
-   * @param dataInfoId
+   * @param dataInfoId dataInfoId
    */
   public FetchProvideDataRequest(String dataInfoId) {
     this.dataInfoId = dataInfoId;

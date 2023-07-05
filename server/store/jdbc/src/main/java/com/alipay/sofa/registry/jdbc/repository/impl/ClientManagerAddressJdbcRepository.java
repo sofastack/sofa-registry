@@ -251,6 +251,7 @@ public class ClientManagerAddressJdbcRepository
    * Setter method for property <tt>clientManagerAddressMapper</tt>.
    *
    * @param clientManagerAddressMapper value to be assigned to property clientManagerAddressMapper
+   * @return ClientManagerAddressJdbcRepository
    */
   @VisibleForTesting
   public ClientManagerAddressJdbcRepository setClientManagerAddressMapper(
@@ -263,6 +264,7 @@ public class ClientManagerAddressJdbcRepository
    * Setter method for property <tt>defaultCommonConfig</tt>.
    *
    * @param defaultCommonConfig value to be assigned to property defaultCommonConfig
+   * @return ClientManagerAddressJdbcRepository
    */
   @VisibleForTesting
   public ClientManagerAddressJdbcRepository setDefaultCommonConfig(

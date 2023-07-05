@@ -64,7 +64,7 @@ public class ConnectionsService {
    * get connectIds by ip set
    *
    * @param ipSet ip set
-   * @return
+   * @return List
    */
   public List<ConnectId> getIpConnects(Set<String> ipSet) {
     return markChannelAndGetIpConnects(ipSet, null, null);
@@ -74,7 +74,9 @@ public class ConnectionsService {
    * get connectIds by ip set
    *
    * @param ipSet ip set
-   * @return
+   * @param key key
+   * @param value value
+   * @return List
    */
   public List<ConnectId> markChannelAndGetIpConnects(Set<String> ipSet, String key, Object value) {
     Server sessionServer = boltExchange.getServer(sessionServerConfig.getServerPort());
@@ -110,7 +112,7 @@ public class ConnectionsService {
    * close ip connects
    *
    * @param ipList ip list
-   * @return
+   * @return List
    */
   public List<String> closeIpConnects(List<String> ipList) {
     Server sessionServer = boltExchange.getServer(sessionServerConfig.getServerPort());

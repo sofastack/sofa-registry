@@ -41,6 +41,7 @@ public class FetchStopPushService extends BaseStopPushService {
    * Setter method for property <tt>sessionServerConfig</tt>.
    *
    * @param sessionServerConfig value to be assigned to property sessionServerConfig
+   * @return FetchStopPushService
    */
   @VisibleForTesting
   protected FetchStopPushService setSessionServerConfig(SessionServerConfig sessionServerConfig) {

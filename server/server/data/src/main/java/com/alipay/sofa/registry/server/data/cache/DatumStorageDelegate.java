@@ -63,9 +63,9 @@ public class DatumStorageDelegate implements DatumStorage {
   /**
    * get datum by specific dataCenter and dataInfoId
    *
-   * @param dataCenter
-   * @param dataInfoId
-   * @return
+   * @param dataCenter dataCenter
+   * @param dataInfoId dataInfoId
+   * @return Datum
    */
   @Override
   public Datum get(String dataCenter, String dataInfoId) {
@@ -96,7 +96,7 @@ public class DatumStorageDelegate implements DatumStorage {
   /**
    * get all datum
    *
-   * @return
+   * @return Map
    */
   public Map<String, Map<String, Datum>> getLocalAll() {
     Map<String, Map<String, Datum>> datumMap = new HashMap<>();
@@ -134,8 +134,8 @@ public class DatumStorageDelegate implements DatumStorage {
   /**
    * get all datum
    *
-   * @return
-   * @param dataCenter
+   * @return Map
+   * @param dataCenter dataCenter
    */
   @Override
   public Map<String, Datum> getAll(String dataCenter) {

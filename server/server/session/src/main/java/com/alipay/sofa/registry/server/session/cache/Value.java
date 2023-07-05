@@ -31,7 +31,7 @@ public class Value implements Sizer {
   /**
    * constructor
    *
-   * @param payload
+   * @param payload payload
    */
   public Value(Sizer payload) {
     this.payload = payload;

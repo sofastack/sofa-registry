@@ -100,6 +100,7 @@ public class PushSwitchService {
    * Setter method for property <tt>sessionServerConfig</tt>.
    *
    * @param sessionServerConfig value to be assigned to property sessionServerConfig
+   * @return PushSwitchService
    */
   @VisibleForTesting
   public PushSwitchService setSessionServerConfig(SessionServerConfig sessionServerConfig) {
@@ -111,6 +112,7 @@ public class PushSwitchService {
    * Setter method for property <tt>fetchGrayPushSwitchService</tt>.
    *
    * @param fetchGrayPushSwitchService value to be assigned to property fetchGrayPushSwitchService
+   * @return PushSwitchService
    */
   @VisibleForTesting
   public PushSwitchService setFetchGrayPushSwitchService(
@@ -123,6 +125,7 @@ public class PushSwitchService {
    * Setter method for property <tt>fetchStopPushService</tt>.
    *
    * @param fetchStopPushService value to be assigned to property fetchStopPushService
+   * @return PushSwitchService
    */
   @VisibleForTesting
   public PushSwitchService setFetchStopPushService(FetchStopPushService fetchStopPushService) {
@@ -154,6 +157,7 @@ public class PushSwitchService {
    * Setter method for property <tt>metadataCacheRegistry</tt>.
    *
    * @param metadataCacheRegistry value to be assigned to property metadataCacheRegistry
+   * @return PushSwitchService
    */
   @VisibleForTesting
   public PushSwitchService setMetadataCacheRegistry(MetadataCacheRegistry metadataCacheRegistry) {

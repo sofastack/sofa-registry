@@ -33,8 +33,8 @@ public class NodeClusterViewRequest implements Serializable {
   /**
    * constructor
    *
-   * @param nodeType
-   * @param dataCenterId
+   * @param nodeType nodeType
+   * @param dataCenterId dataCenterId
    */
   public NodeClusterViewRequest(NodeType nodeType, String dataCenterId) {
     this.nodeType = nodeType;

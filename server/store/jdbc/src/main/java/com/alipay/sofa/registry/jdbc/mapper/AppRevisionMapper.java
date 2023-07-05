@@ -31,9 +31,9 @@ public interface AppRevisionMapper {
   /**
    * query revision
    *
-   * @param dataCenters
-   * @param revision
-   * @return
+   * @param dataCenters dataCenters
+   * @param revision revision
+   * @return List
    */
   List<AppRevisionDomain> queryRevision(
       @Param("dataCenters") Set<String> dataCenters, @Param("revision") String revision);

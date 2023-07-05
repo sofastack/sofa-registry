@@ -118,7 +118,8 @@ public class FetchPushEfficiencyConfigService
   }
 
   @VisibleForTesting
-  public FetchPushEfficiencyConfigService setSessionServerConfig(SessionServerConfig sessionServerConfig){
+  public FetchPushEfficiencyConfigService setSessionServerConfig(
+      SessionServerConfig sessionServerConfig) {
     this.sessionServerConfig = sessionServerConfig;
     return this;
   }

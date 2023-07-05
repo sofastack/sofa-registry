@@ -30,8 +30,8 @@ public class DataNode extends AbstractNode {
   /**
    * constructor
    *
-   * @param nodeUrl
-   * @param dataCenter
+   * @param nodeUrl nodeUrl
+   * @param dataCenter dataCenter
    */
   public DataNode(URL nodeUrl, String dataCenter) {
     super(dataCenter, nodeUrl, null);

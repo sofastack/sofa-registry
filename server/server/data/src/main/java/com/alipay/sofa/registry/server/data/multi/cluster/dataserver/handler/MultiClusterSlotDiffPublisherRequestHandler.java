@@ -42,7 +42,7 @@ public class MultiClusterSlotDiffPublisherRequestHandler
   /**
    * specify executor for processor handler
    *
-   * @return
+   * @return Executor
    */
   @Override
   public Executor getExecutor() {

@@ -182,8 +182,8 @@ public abstract class AbstractDataManager<T extends BaseInfo>
   /**
    * query data by client node connectId
    *
-   * @param connectIds
-   * @return
+   * @param connectIds connectIds
+   * @return Map
    */
   @Override
   public Map<ConnectId, Map<String, T>> queryByConnectIds(Set<ConnectId> connectIds) {

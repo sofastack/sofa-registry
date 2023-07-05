@@ -83,7 +83,6 @@ public class MetaDigestResource {
     }
   }
 
-  /** return true mean push switch on */
   @GET
   @Path("pushSwitch")
   @Produces(MediaType.APPLICATION_JSON)

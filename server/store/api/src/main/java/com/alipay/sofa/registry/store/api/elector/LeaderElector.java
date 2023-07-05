@@ -28,18 +28,10 @@ public interface LeaderElector {
 
   String myself();
 
-  /**
-   * start compete leader
-   *
-   * @return
-   */
+  /** start compete leader */
   void change2Follow();
 
-  /**
-   * stop compete leader
-   *
-   * @return
-   */
+  /** stop compete leader */
   void change2Observer();
 
   /**

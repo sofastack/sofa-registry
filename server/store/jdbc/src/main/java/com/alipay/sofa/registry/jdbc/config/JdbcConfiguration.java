@@ -132,8 +132,9 @@ public class JdbcConfiguration {
     /**
      * create datasource
      *
-     * @return
-     * @throws Exception
+     * @param jdbcDriverConfig jdbcDriverConfig
+     * @return DataSource
+     * @throws Exception Exception
      */
     @Bean
     public DataSource dataSource(JdbcDriverConfig jdbcDriverConfig) throws Exception {
@@ -185,9 +186,11 @@ public class JdbcConfiguration {
     /**
      * create sqlSessionFactory
      *
-     * @param dataSource
-     * @return
-     * @throws Exception
+     * @param dataSource dataSource
+     * @param jdbcDriverConfig jdbcDriverConfig
+     * @param databaseIdProvider databaseIdProvider
+     * @return SqlSessionFactory
+     * @throws Exception Exception
      */
     @Bean
     public SqlSessionFactory sqlSessionFactory(
@@ -244,7 +247,11 @@ public class JdbcConfiguration {
   @Configuration
   public static class RepositoryBeanConfiguration {
 
-    /** JDBC Repository */
+    /**
+     * JDBC Repository
+     *
+     * @return AppRevisionRepository
+     */
     @Bean
     public AppRevisionRepository appRevisionJdbcRepository() {
       return new AppRevisionJdbcRepository();

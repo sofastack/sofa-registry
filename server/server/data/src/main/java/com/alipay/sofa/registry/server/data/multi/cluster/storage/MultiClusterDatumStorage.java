@@ -62,9 +62,9 @@ public class MultiClusterDatumStorage implements DatumStorage {
   /**
    * get datum by specific dataInfoId
    *
-   * @param dataCenter
-   * @param dataInfoId
-   * @return
+   * @param dataCenter dataCenter
+   * @param dataInfoId dataInfoId
+   * @return Datum
    */
   @Override
   public Datum get(String dataCenter, String dataInfoId) {
@@ -124,8 +124,8 @@ public class MultiClusterDatumStorage implements DatumStorage {
   /**
    * get all datum
    *
-   * @return
-   * @param dataCenter
+   * @return Map
+   * @param dataCenter dataCenter
    */
   @Override
   public Map<String, Datum> getAll(String dataCenter) {

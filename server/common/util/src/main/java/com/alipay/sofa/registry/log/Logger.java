@@ -27,94 +27,94 @@ public interface Logger {
   /**
    * TRACE level
    *
-   * @return
+   * @return boolean boolean
    */
   boolean isTraceEnabled();
 
   /**
    * Log TRACE level
    *
-   * @param msg
+   * @param msg msg
    */
   void trace(String msg);
 
   /**
    * Log TRACE level
    *
-   * @param format
-   * @param arg
+   * @param format format
+   * @param arg arg
    */
   void trace(String format, Object arg);
 
   /**
    * Log TRACE level
    *
-   * @param format
-   * @param arg1
-   * @param arg2
+   * @param format format
+   * @param arg1 format
+   * @param arg2 arg2
    */
   void trace(String format, Object arg1, Object arg2);
 
   /**
    * Log TRACE level
    *
-   * @param format
-   * @param arguments
+   * @param format format
+   * @param arguments arguments
    */
   void trace(String format, Object... arguments);
 
   /**
    * Log TRACE level
    *
-   * @param msg
-   * @param t
+   * @param msg msg
+   * @param t t
    */
   void trace(String msg, Throwable t);
 
   /**
    * DEBUG level
    *
-   * @return
+   * @return boolean boolean
    */
   boolean isDebugEnabled();
 
   /**
    * Log DEBUG level.
    *
-   * @param msg
+   * @param msg msg
    */
   void debug(String msg);
 
   /**
    * Log DEBUG level.
    *
-   * @param format
-   * @param arg
+   * @param format format
+   * @param arg arg
    */
   void debug(String format, Object arg);
 
   /**
    * Log DEBUG level.
    *
-   * @param format
-   * @param arg1
-   * @param arg2
+   * @param format format
+   * @param arg1 arg1
+   * @param arg2 arg2
    */
   void debug(String format, Object arg1, Object arg2);
 
   /**
    * Log DEBUG level.
    *
-   * @param format
-   * @param arguments
+   * @param format format
+   * @param arguments arguments
    */
   void debug(String format, Object... arguments);
 
   /**
    * Log DEBUG level.
    *
-   * @param msg
-   * @param t
+   * @param msg msg
+   * @param t t
    */
   void debug(String msg, Throwable t);
 
@@ -128,94 +128,94 @@ public interface Logger {
   /**
    * Log INFO level.
    *
-   * @param msg
+   * @param msg msg
    */
   void info(String msg);
 
   /**
    * Log INFO level.
    *
-   * @param format
-   * @param arg
+   * @param format format
+   * @param arg arg
    */
   void info(String format, Object arg);
 
   /**
    * Log INFO level.
    *
-   * @param format
-   * @param arg1
-   * @param arg2
+   * @param format format
+   * @param arg1 arg1
+   * @param arg2 arg2
    */
   void info(String format, Object arg1, Object arg2);
 
   /**
    * Log INFO level.
    *
-   * @param format
-   * @param arguments
+   * @param format format
+   * @param arguments arguments
    */
   void info(String format, Object... arguments);
 
   /**
    * Log INFO level.
    *
-   * @param msg
-   * @param t
+   * @param msg msg
+   * @param t t
    */
   void info(String msg, Throwable t);
 
   /**
    * WARN level
    *
-   * @return
+   * @return boolean boolean
    */
   boolean isWarnEnabled();
 
   /**
    * Log WARN level.
    *
-   * @param msg
+   * @param msg msg
    */
   void warn(String msg);
 
   /**
    * Log WARN level.
    *
-   * @param format
-   * @param arg
+   * @param format format
+   * @param arg arg
    */
   void warn(String format, Object arg);
 
   /**
    * Log WARN level.
    *
-   * @param format
-   * @param arguments
+   * @param format format
+   * @param arguments arguments
    */
   void warn(String format, Object... arguments);
 
   /**
    * Log WARN level.
    *
-   * @param format
-   * @param arg1
-   * @param arg2
+   * @param format format
+   * @param arg1 arg1
+   * @param arg2 arg2
    */
   void warn(String format, Object arg1, Object arg2);
 
   /**
    * Log WARN level.
    *
-   * @param msg
-   * @param t
+   * @param msg msg
+   * @param t t
    */
   void warn(String msg, Throwable t);
 
   /**
    * ERROR level
    *
-   * @return
+   * @return boolean boolean
    */
   boolean isErrorEnabled();
 
@@ -229,43 +229,44 @@ public interface Logger {
   /**
    * Log ERROR level.
    *
-   * @param format
-   * @param arg
+   * @param format format
+   * @param arg arg
    */
   void error(String format, Object arg);
 
   /**
    * Log ERROR level.
    *
-   * @param format
-   * @param arg1
-   * @param arg2
+   * @param format format
+   * @param arg1 arg1
+   * @param arg2 arg2
    */
   void error(String format, Object arg1, Object arg2);
 
   /**
    * Log ERROR level.
    *
-   * @param format
-   * @param arguments
+   * @param format format
+   * @param arguments arguments
    */
   void error(String format, Object... arguments);
 
   /**
    * Log ERROR level.
    *
-   * @param msg
-   * @param t
+   * @param msg msg
+   * @param t t
    */
   void error(String msg, Throwable t);
 
   /**
    * get actually logger
    *
-   * @return
+   * @return Object Object
    */
   Object getLogger();
 
+  /** @return String string */
   String getName();
 
   // zero allocate arguments

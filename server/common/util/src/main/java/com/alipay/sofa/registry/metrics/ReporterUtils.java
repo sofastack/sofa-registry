@@ -36,9 +36,9 @@ public class ReporterUtils {
   /**
    * start slf4j reporter
    *
-   * @param period
-   * @param registry
-   * @param loggerMetrics
+   * @param period period
+   * @param registry registry
+   * @param loggerMetrics loggerMetrics
    */
   public static void startSlf4jReporter(
       long period, MetricRegistry registry, Logger loggerMetrics) {
@@ -58,8 +58,8 @@ public class ReporterUtils {
   /**
    * start slf4j reporter
    *
-   * @param period
-   * @param registry
+   * @param period period
+   * @param registry registry
    */
   public static void startSlf4jReporter(long period, MetricRegistry registry) {
     startSlf4jReporter(period, registry, METRIC_LOGGER);

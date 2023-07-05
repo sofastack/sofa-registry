@@ -30,8 +30,9 @@ public class SessionNode extends AbstractNode {
   /**
    * constructor
    *
-   * @param nodeUrl
-   * @param regionId
+   * @param nodeUrl nodeUrl
+   * @param regionId regionId
+   * @param processId processId
    */
   public SessionNode(URL nodeUrl, String regionId, ProcessId processId) {
     super(null, nodeUrl, regionId);

@@ -51,21 +51,18 @@ public class FetchPushEfficiencyConfigServiceTest {
   public void test() {
     Assert.assertTrue(fetchPushEfficiencyConfigService.getSystemPropertyIntervalMillis() == 0);
     Assert.assertTrue(
-            fetchPushEfficiencyConfigService.doProcess(
-                    fetchPushEfficiencyConfigService.getStorage().get(),
-                    new ProvideData(
-                            new ServerDataBox(
-                                    ""),
-                            ValueConstants.CHANGE_PUSH_TASK_DELAY_CONFIG_DATA_ID,
-                            0L)));
+        fetchPushEfficiencyConfigService.doProcess(
+            fetchPushEfficiencyConfigService.getStorage().get(),
+            new ProvideData(
+                new ServerDataBox(""), ValueConstants.CHANGE_PUSH_TASK_DELAY_CONFIG_DATA_ID, 0L)));
     Assert.assertFalse(
-            fetchPushEfficiencyConfigService.doProcess(
-                    new FetchPushEfficiencyConfigService.SwitchStorage(0L, null),
-                    new ProvideData(
-                            new ServerDataBox(
-                                    "{\"changeDebouncingMillis\":1000,\"changeDebouncingMaxMillis\":3000,\"changeTaskWaitingMillis\":100,\"pushTaskWaitingMillis\":0,\"pushTaskDebouncingMillis\":500,\"regWorkWaitingMillis\":200,\"zoneSet\":[\"ALL_ZONE\"]}"),
-                            ValueConstants.CHANGE_PUSH_TASK_DELAY_CONFIG_DATA_ID,
-                            0L)));
+        fetchPushEfficiencyConfigService.doProcess(
+            new FetchPushEfficiencyConfigService.SwitchStorage(0L, null),
+            new ProvideData(
+                new ServerDataBox(
+                    "{\"changeDebouncingMillis\":1000,\"changeDebouncingMaxMillis\":3000,\"changeTaskWaitingMillis\":100,\"pushTaskWaitingMillis\":0,\"pushTaskDebouncingMillis\":500,\"regWorkWaitingMillis\":200,\"zoneSet\":[\"ALL_ZONE\"]}"),
+                ValueConstants.CHANGE_PUSH_TASK_DELAY_CONFIG_DATA_ID,
+                0L)));
 
     Assert.assertFalse(
         fetchPushEfficiencyConfigService.doProcess(
@@ -84,62 +81,62 @@ public class FetchPushEfficiencyConfigServiceTest {
                 ValueConstants.CHANGE_PUSH_TASK_DELAY_CONFIG_DATA_ID,
                 2L)));
     Assert.assertFalse(
-            fetchPushEfficiencyConfigService.doProcess(
-                    fetchPushEfficiencyConfigService.getStorage().get(),
-                    new ProvideData(
-                            new ServerDataBox(
-                                    "{\"changeDebouncingMillis\":100,\"changeDebouncingMaxMillis\":1000,\"changeTaskWaitingMillis\":50,\"pushTaskWaitingMillis\":50,\"pushTaskDebouncingMillis\":10,\"regWorkWaitingMillis\":100,\"ipSet\":[\"127.0.0.1\"]}"),
-                            ValueConstants.CHANGE_PUSH_TASK_DELAY_CONFIG_DATA_ID,
-                            5L)));
+        fetchPushEfficiencyConfigService.doProcess(
+            fetchPushEfficiencyConfigService.getStorage().get(),
+            new ProvideData(
+                new ServerDataBox(
+                    "{\"changeDebouncingMillis\":100,\"changeDebouncingMaxMillis\":1000,\"changeTaskWaitingMillis\":50,\"pushTaskWaitingMillis\":50,\"pushTaskDebouncingMillis\":10,\"regWorkWaitingMillis\":100,\"ipSet\":[\"127.0.0.1\"]}"),
+                ValueConstants.CHANGE_PUSH_TASK_DELAY_CONFIG_DATA_ID,
+                5L)));
     Assert.assertTrue(
-            fetchPushEfficiencyConfigService
-                    .getStorage()
-                    .get()
-                    .pushEfficiencyImproveConfig
-                    .getChangeDebouncingMillis()
-                    == 1000);
+        fetchPushEfficiencyConfigService
+                .getStorage()
+                .get()
+                .pushEfficiencyImproveConfig
+                .getChangeDebouncingMillis()
+            == 1000);
     Assert.assertTrue(
-            fetchPushEfficiencyConfigService
-                    .getStorage()
-                    .get()
-                    .pushEfficiencyImproveConfig
-                    .getChangeDebouncingMaxMillis()
-                    == 3000);
+        fetchPushEfficiencyConfigService
+                .getStorage()
+                .get()
+                .pushEfficiencyImproveConfig
+                .getChangeDebouncingMaxMillis()
+            == 3000);
     Assert.assertTrue(
-            fetchPushEfficiencyConfigService
-                    .getStorage()
-                    .get()
-                    .pushEfficiencyImproveConfig
-                    .getChangeTaskWaitingMillis()
-                    == 100);
+        fetchPushEfficiencyConfigService
+                .getStorage()
+                .get()
+                .pushEfficiencyImproveConfig
+                .getChangeTaskWaitingMillis()
+            == 100);
     Assert.assertTrue(
-            fetchPushEfficiencyConfigService
-                    .getStorage()
-                    .get()
-                    .pushEfficiencyImproveConfig
-                    .getPushTaskWaitingMillis()
-                    == 200);
+        fetchPushEfficiencyConfigService
+                .getStorage()
+                .get()
+                .pushEfficiencyImproveConfig
+                .getPushTaskWaitingMillis()
+            == 200);
     Assert.assertTrue(
-            fetchPushEfficiencyConfigService
-                    .getStorage()
-                    .get()
-                    .pushEfficiencyImproveConfig
-                    .getPushTaskDebouncingMillis()
-                    == 500);
+        fetchPushEfficiencyConfigService
+                .getStorage()
+                .get()
+                .pushEfficiencyImproveConfig
+                .getPushTaskDebouncingMillis()
+            == 500);
     Assert.assertTrue(
-            fetchPushEfficiencyConfigService
-                    .getStorage()
-                    .get()
-                    .pushEfficiencyImproveConfig
-                    .getRegWorkWaitingMillis()
-                    == 200);
+        fetchPushEfficiencyConfigService
+                .getStorage()
+                .get()
+                .pushEfficiencyImproveConfig
+                .getRegWorkWaitingMillis()
+            == 200);
     Assert.assertTrue(
-            fetchPushEfficiencyConfigService
-                    .getStorage()
-                    .get()
-                    .pushEfficiencyImproveConfig
-                    .getSbfAppPushTaskDebouncingMillis()
-                    == 500);
+        fetchPushEfficiencyConfigService
+                .getStorage()
+                .get()
+                .pushEfficiencyImproveConfig
+                .getSbfAppPushTaskDebouncingMillis()
+            == 500);
 
     Assert.assertTrue(
         fetchPushEfficiencyConfigService.doProcess(

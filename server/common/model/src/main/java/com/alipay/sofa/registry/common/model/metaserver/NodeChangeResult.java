@@ -41,7 +41,7 @@ public class NodeChangeResult<T extends Node> implements Serializable {
   /**
    * constructor
    *
-   * @param nodeType
+   * @param nodeType nodeType
    */
   public NodeChangeResult(NodeType nodeType) {
     this.nodeType = nodeType;

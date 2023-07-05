@@ -286,7 +286,6 @@ public class SessionDigestResource {
         countSub.o2, countPub.o2, countSubW.o2);
   }
 
-  /** return true mean push switch on */
   @GET
   @Path("pushSwitch")
   @Produces(MediaType.APPLICATION_JSON)

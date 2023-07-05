@@ -37,8 +37,8 @@ public class ProvideDataChangeEvent implements Serializable {
   /**
    * constructor
    *
-   * @param dataInfoId
-   * @param version
+   * @param dataInfoId dataInfoId
+   * @param version version
    */
   public ProvideDataChangeEvent(String dataInfoId, long version) {
     this(dataInfoId, version, Sets.newHashSet(NodeType.SESSION));

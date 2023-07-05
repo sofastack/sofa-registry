@@ -53,8 +53,12 @@ public class HeartbeatRequest<T extends Node> implements Serializable {
   /**
    * constructor
    *
-   * @param node
-   * @param slotTableEpoch
+   * @param node node
+   * @param slotTableEpoch slotTableEpoch
+   * @param dataCenter dataCenter
+   * @param timestamp timestamp
+   * @param slotBasicInfo slotBasicInfo
+   * @param remoteClusterSlotTableEpoch remoteClusterSlotTableEpoch
    */
   public HeartbeatRequest(
       T node,
@@ -75,8 +79,13 @@ public class HeartbeatRequest<T extends Node> implements Serializable {
   /**
    * constructor
    *
-   * @param node
-   * @param slotTableEpoch
+   * @param node node
+   * @param slotTableEpoch slotTableEpoch
+   * @param dataCenter dataCenter
+   * @param timestamp timestamp
+   * @param slotBasicInfo slotBasicInfo
+   * @param slotStatuses slotStatuses
+   * @param remoteClusterSlotTableEpoch remoteClusterSlotTableEpoch
    */
   public HeartbeatRequest(
       T node,

@@ -143,6 +143,7 @@ public abstract class BaseSlotDiffPublisherRequestHandler
    * Setter method for property <tt>datumStorageDelegate</tt>.
    *
    * @param datumStorageDelegate value to be assigned to property datumStorageDelegate
+   * @return BaseSlotDiffPublisherRequestHandler
    */
   @VisibleForTesting
   public BaseSlotDiffPublisherRequestHandler setDatumStorageDelegate(
@@ -165,6 +166,7 @@ public abstract class BaseSlotDiffPublisherRequestHandler
    * Setter method for property <tt>dataServerConfig</tt>.
    *
    * @param dataServerConfig value to be assigned to property dataServerConfig
+   * @return BaseSlotDiffPublisherRequestHandler
    */
   @VisibleForTesting
   public BaseSlotDiffPublisherRequestHandler setDataServerConfig(
@@ -187,6 +189,7 @@ public abstract class BaseSlotDiffPublisherRequestHandler
    * Setter method for property <tt>slotManager</tt>.
    *
    * @param slotManager value to be assigned to property slotManager
+   * @return BaseSlotDiffPublisherRequestHandler
    */
   @VisibleForTesting
   public BaseSlotDiffPublisherRequestHandler setSlotManager(SlotManager slotManager) {

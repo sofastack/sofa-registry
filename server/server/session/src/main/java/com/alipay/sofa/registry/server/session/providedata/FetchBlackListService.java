@@ -192,6 +192,7 @@ public class FetchBlackListService extends AbstractFetchSystemPropertyService<Bl
    * Setter method for property <tt>sessionRegistry</tt>.
    *
    * @param sessionRegistry value to be assigned to property sessionRegistry
+   * @return FetchBlackListService
    */
   @VisibleForTesting
   public FetchBlackListService setSessionRegistry(Registry sessionRegistry) {
@@ -203,6 +204,7 @@ public class FetchBlackListService extends AbstractFetchSystemPropertyService<Bl
    * Setter method for property <tt>connectionsService</tt>.
    *
    * @param connectionsService value to be assigned to property connectionsService
+   * @return FetchBlackListService
    */
   @VisibleForTesting
   public FetchBlackListService setConnectionsService(ConnectionsService connectionsService) {
@@ -214,6 +216,7 @@ public class FetchBlackListService extends AbstractFetchSystemPropertyService<Bl
    * Setter method for property <tt>sessionServerConfig</tt>.
    *
    * @param sessionServerConfig value to be assigned to property sessionServerConfig
+   * @return FetchBlackListService
    */
   @VisibleForTesting
   public FetchBlackListService setSessionServerConfig(SessionServerConfig sessionServerConfig) {

@@ -29,37 +29,37 @@ public interface NodeConfig {
   /**
    * get other metaServer node
    *
-   * @return
+   * @return Map
    */
   Map<String, Collection<String>> getMetaNode();
 
   /**
    * get other metaServer node ip
    *
-   * @return
+   * @return Map
    */
   Map<String, Collection<String>> getMetaNodeIP();
 
   /**
    * local data Center id
    *
-   * @return
+   * @return String
    */
   String getLocalDataCenter();
 
   /**
    * get dataCenter by meta node ipAddress
    *
-   * @param metaIpAddress
-   * @return
+   * @param metaIpAddress metaIpAddress
+   * @return String
    */
   String getMetaDataCenter(String metaIpAddress);
 
   /**
    * get datacenter meta servers
    *
-   * @param dataCenter
-   * @return
+   * @param dataCenter dataCenter
+   * @return Set
    */
   Set<String> getDataCenterMetaServers(String dataCenter);
 }

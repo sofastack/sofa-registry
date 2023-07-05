@@ -67,6 +67,9 @@ public class DatumApiResource {
   /**
    * curl -i -d '{"dataInfoId":"testDataId#@#DEFAULT_INSTANCE_ID#@#DEFAULT_GROUP"}' -H
    * "Content-Type: application/json" -X POST http://localhost:9622/datum/api/get
+   *
+   * @param datumParam datumParam
+   * @return CommonResponse
    */
   @POST
   @Path("/get")
@@ -102,6 +105,9 @@ public class DatumApiResource {
   /**
    * curl -i -d '{"dataInfoId":"testDataId#@#DEFAULT_INSTANCE_ID#@#DEFAULT_GROUP"}' -H
    * "Content-Type: application/json" -X POST http://localhost:9622/datum/api/delete
+   *
+   * @param datumParam datumParam
+   * @return CommonResponse
    */
   @POST
   @Path("/delete")
@@ -134,6 +140,9 @@ public class DatumApiResource {
    * http://localhost:9622/datum/api/pub/add "publisherConnectId" can be unspecified. If not
    * specified, the connectId of the first pub under the datum can be automatically selected (for
    * testing purposes, it is generally not necessary to specify the connectId artificially).
+   *
+   * @param datumParam datumParam
+   * @return CommonResponse
    */
   @POST
   @Path("/pub/add")
@@ -173,6 +182,9 @@ public class DatumApiResource {
    * curl -i -d '{"dataInfoId":"testDataId#@#DEFAULT_INSTANCE_ID#@#DEFAULT_GROUP",
    * "publisherRegisterId":"98de0e41-2a4d-44d7-b1f7-c520660657e8"} ' -H "Content-Type:
    * application/json" -X POST http://localhost:9622/datum/api/pub/delete
+   *
+   * @param datumParam datumParam
+   * @return CommonResponse
    */
   @POST
   @Path("/pub/delete")
@@ -211,6 +223,9 @@ public class DatumApiResource {
   /**
    * curl -d '{"dataCenter":"registry-cloud-test-b"}' -H "Content-Type: application/json"
    * http://localhost:9622/datum/api/getDatumVersions
+   *
+   * @param datumParam datumParam
+   * @return Object
    */
   @POST
   @Path("/getDatumVersions")
@@ -237,6 +252,9 @@ public class DatumApiResource {
   /**
    * curl -d '{"dataCenter":"registry-cloud-test-b"}' -H "Content-Type: application/json"
    * http://localhost:9622/datum/api/getDatumVersions
+   *
+   * @param datumParam datumParam
+   * @return Object
    */
   @POST
   @Path("/getRemoteDatumVersions")
@@ -245,7 +263,11 @@ public class DatumApiResource {
     throw new UnsupportedOperationException();
   }
 
-  /** curl -H "Content-Type: application/json" http://localhost:9622/datum/api/getDatumSizes */
+  /**
+   * curl -H "Content-Type: application/json" http://localhost:9622/datum/api/getDatumSizes
+   *
+   * @return Object
+   */
   @GET
   @Path("/getDatumSizes")
   @Produces(MediaType.APPLICATION_JSON)
@@ -264,6 +286,9 @@ public class DatumApiResource {
    * curl -d '{"dataCenter":"registry-cloud-test-b",
    * "dataInfoId":"testDataId#@#DEFAULT_INSTANCE_ID#@#DEFAULT_GROUP"}' -H "Content-Type:
    * application/json" http://localhost:9622/datum/api/getDatumVersion
+   *
+   * @param datumParam datumParam
+   * @return Object
    */
   @POST
   @Path("/getDatumVersion")

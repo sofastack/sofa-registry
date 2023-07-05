@@ -48,7 +48,7 @@ public class MetaJdbcLeaderElector extends AbstractLeaderElector implements Reco
   /**
    * start elect, return current leader
    *
-   * @return
+   * @return LeaderInfo
    */
   @Override
   protected LeaderInfo doElect() {
@@ -106,7 +106,7 @@ public class MetaJdbcLeaderElector extends AbstractLeaderElector implements Reco
   /**
    * query current leader
    *
-   * @return
+   * @return LeaderInfo
    */
   @Override
   protected LeaderInfo doQuery() {

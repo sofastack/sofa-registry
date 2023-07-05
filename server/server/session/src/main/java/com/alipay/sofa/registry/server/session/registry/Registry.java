@@ -30,28 +30,29 @@ public interface Registry {
   /**
    * register new publisher or subscriber data
    *
-   * @param data
+   * @param data data
+   * @param channel channel
    */
   void register(StoreData<String> data, Channel channel);
 
   /**
    * clean all the connectIds: 1. clean pubs/sub/wat
    *
-   * @param connectIds
+   * @param connectIds connectIds
    */
   void clean(List<ConnectId> connectIds);
 
   /**
    * client off the connectIds: 1. clean pubs, keep sub/wat; 2. check sub
    *
-   * @param connectIds
+   * @param connectIds connectIds
    */
   void clientOff(List<ConnectId> connectIds);
 
   /**
    * disable the connectIds: 1. clean pub/sub/wat; 2. check sub
    *
-   * @param connectIds
+   * @param connectIds connectIds
    */
   void blacklist(List<ConnectId> connectIds);
 
@@ -59,7 +60,7 @@ public interface Registry {
    * message mode com.alipay.sofa.registry.client.provider for client node to unregister single
    * subscriber or publisher data
    *
-   * @param data
+   * @param data data
    */
   void unRegister(StoreData<String> data);
 
