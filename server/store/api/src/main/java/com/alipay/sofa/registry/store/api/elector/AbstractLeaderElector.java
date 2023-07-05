@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.registry.store.api.elector;
 
-import com.alipay.sofa.common.profile.StringUtil;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.net.NetUtil;
@@ -24,6 +23,8 @@ import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.LoopRunnable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import org.apache.commons.lang.StringUtils;
+
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.PostConstruct;
@@ -152,7 +153,7 @@ public abstract class AbstractLeaderElector implements LeaderElector {
   }
 
   protected boolean amILeader(String leader) {
-    return StringUtil.equals(myself(), leader) && leaderNotExpired();
+    return StringUtils.equals(myself(), leader) && leaderNotExpired();
   }
 
   private boolean leaderNotExpired() {

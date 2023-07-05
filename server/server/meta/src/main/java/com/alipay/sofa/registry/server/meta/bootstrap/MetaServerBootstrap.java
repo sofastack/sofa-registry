@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.registry.server.meta.bootstrap;
 
-import com.alipay.sofa.common.profile.StringUtil;
 import com.alipay.sofa.registry.common.model.elector.LeaderInfo;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
@@ -178,7 +177,7 @@ public class MetaServerBootstrap {
                 "[MetaBootstrap] retry connect to meta leader: {}, client:{}",
                 leader.getLeader(),
                 localMetaExchanger.getClient());
-            return StringUtil.isNotEmpty(leader.getLeader())
+            return StringUtils.isNotEmpty(leader.getLeader())
                 && localMetaExchanger.getClient() != null;
           });
 

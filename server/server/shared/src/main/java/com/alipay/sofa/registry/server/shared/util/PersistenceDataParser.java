@@ -16,10 +16,10 @@
  */
 package com.alipay.sofa.registry.server.shared.util;
 
-import com.alipay.sofa.common.profile.StringUtil;
 import com.alipay.sofa.registry.common.model.console.PersistenceData;
 import com.alipay.sofa.registry.store.api.DBResponse;
 import com.alipay.sofa.registry.store.api.OperationStatus;
+import org.apache.commons.lang.StringUtils;
 
 /**
  * @author xiaojian.xj
@@ -29,7 +29,7 @@ public class PersistenceDataParser {
 
   public static boolean parse2BoolIgnoreCase(
       PersistenceData persistenceData, boolean defaultValue) {
-    if (persistenceData == null || StringUtil.isBlank(persistenceData.getData())) {
+    if (persistenceData == null || StringUtils.isBlank(persistenceData.getData())) {
       return defaultValue;
     }
     return Boolean.parseBoolean(persistenceData.getData());
