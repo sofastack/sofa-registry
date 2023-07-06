@@ -20,7 +20,6 @@ import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import java.util.HashSet;
 import java.util.Set;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 
@@ -73,14 +72,13 @@ public class PushEfficiencyImproveConfig {
 
   /** 三板斧配置 支持 按订阅方应用 设置 时间 */
   private Set<String> subAppSet = new HashSet<>();
-  /** 三板斧配置 支持 按订阅方应用 设置 pushTask wake  默认false */
+  /** 三板斧配置 支持 按订阅方应用 设置 pushTask wake 默认false */
   private boolean pushTaskWake = false;
-  /** 三板斧配置 支持 按订阅方应用 设置 regWorkTask wake 默认 reg wakeup true*/
+  /** 三板斧配置 支持 按订阅方应用 设置 regWorkTask wake 默认 reg wakeup true */
   private boolean regWorkWake = true;
 
   /** session 处理 pushTask delay pushTaskDebouncingMillis 时间处理，可以合并相同的推送任务，避免数据连续变化触发大量推送, 默认500ms */
   private int sbfAppPushTaskDebouncingMillis = DEFAULT_PUSH_TASK_DEBOUNCING_MILLIS;
-
 
   /**
    * 判断是否满足 三板斧灰度条件
@@ -106,7 +104,7 @@ public class PushEfficiencyImproveConfig {
    * @return
    */
   public boolean inAppSBF(String appName) {
-    if(CollectionUtils.isNotEmpty(subAppSet) && subAppSet.contains(ALL_APP)){
+    if (CollectionUtils.isNotEmpty(subAppSet) && subAppSet.contains(ALL_APP)) {
       return true;
     }
     if (CollectionUtils.isNotEmpty(subAppSet) && subAppSet.contains(appName)) {
@@ -253,7 +251,8 @@ public class PushEfficiencyImproveConfig {
   }
 
   public void setSessionServerConfig(SessionServerConfig sessionServerConfig) {
-    if (null != sessionServerConfig && StringUtils.isNotBlank(sessionServerConfig.getSessionServerRegion())) {
+    if (null != sessionServerConfig
+        && StringUtils.isNotBlank(sessionServerConfig.getSessionServerRegion())) {
       this.CURRENT_ZONE = sessionServerConfig.getSessionServerRegion().toUpperCase();
       this.DEFAULT_CHANGE_DEBOUNCING_MILLIS = sessionServerConfig.getDataChangeDebouncingMillis();
       this.DEFAULT_CHANGE_DEBOUNCING_MAX_MILLIS =

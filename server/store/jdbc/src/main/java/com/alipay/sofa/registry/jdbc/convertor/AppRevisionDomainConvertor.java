@@ -23,7 +23,6 @@ import com.alipay.sofa.registry.util.JsonUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.annotations.VisibleForTesting;
 import java.util.*;
-
 import org.apache.commons.lang.StringUtils;
 import org.springframework.util.CollectionUtils;
 
