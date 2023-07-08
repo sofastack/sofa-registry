@@ -41,7 +41,7 @@ public abstract class AbstractLeaderElector implements LeaderElector {
 
   private volatile boolean startElector = false;
 
-  private volatile boolean isObserver = false;
+  private boolean isObserver = false;
 
   private final LeaderElectorTrigger leaderElectorTrigger = new LeaderElectorTrigger();
 
