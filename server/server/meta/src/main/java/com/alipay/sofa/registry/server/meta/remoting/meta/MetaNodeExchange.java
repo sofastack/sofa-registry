@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.registry.server.meta.remoting.meta;
 
-import com.alipay.sofa.common.profile.StringUtil;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -33,6 +32,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -77,12 +77,12 @@ public class MetaNodeExchange extends ClientSideExchanger {
 
   public Response sendRequest(Object requestBody) throws RequestException {
     final String newLeader = metaLeaderService.getLeader();
-    if (StringUtil.isBlank(newLeader)) {
+    if (StringUtils.isBlank(newLeader)) {
       LOGGER.error("[sendRequest] meta leader is empty.");
       return () -> ResultStatus.FAILED;
     }
 
-    if (!StringUtil.equals(metaLeader, newLeader) || boltExchange.getClient(serverType) == null) {
+    if (!StringUtils.equals(metaLeader, newLeader) || boltExchange.getClient(serverType) == null) {
       setLeaderAndConnect(newLeader);
     }
 

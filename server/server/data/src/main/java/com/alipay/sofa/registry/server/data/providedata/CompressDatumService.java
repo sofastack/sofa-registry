@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.registry.server.data.providedata;
 
-import com.alipay.sofa.common.profile.StringUtil;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.CompressDatumSwitch;
 import com.alipay.sofa.registry.common.model.metaserver.CompressPushSwitch;
@@ -30,6 +29,7 @@ import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.shared.providedata.AbstractFetchSystemPropertyService;
 import com.alipay.sofa.registry.server.shared.providedata.SystemDataStorage;
 import com.alipay.sofa.registry.util.JsonUtils;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class CompressDatumService
@@ -52,7 +52,7 @@ public class CompressDatumService
   @Override
   protected boolean doProcess(CompressStorage expect, ProvideData data) {
     final String switchString = ProvideData.toString(data);
-    if (StringUtil.isBlank(switchString)) {
+    if (StringUtils.isBlank(switchString)) {
       LOGGER.info("Fetch compress datum switch content empty");
       return true;
     }

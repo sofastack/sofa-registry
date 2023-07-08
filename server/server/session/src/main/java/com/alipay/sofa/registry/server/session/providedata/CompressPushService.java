@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.registry.server.session.providedata;
 
-import com.alipay.sofa.common.profile.StringUtil;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.CompressPushSwitch;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
@@ -55,7 +54,7 @@ public class CompressPushService
   @Override
   protected boolean doProcess(CompressStorage expect, ProvideData data) {
     final String switchString = ProvideData.toString(data);
-    if (StringUtil.isBlank(switchString)) {
+    if (StringUtils.isBlank(switchString)) {
       LOGGER.info("Fetch session push compressed enabled content empty");
       return true;
     }
