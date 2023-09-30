@@ -40,6 +40,7 @@ public abstract class BaseInformer<T extends DbEntry, C extends DbEntryContainer
   protected final WatchLoop watchLoop = new WatchLoop();
   protected final ListLoop listLoop = new ListLoop();
   private volatile boolean enabled;
+  private volatile boolean listLoopGotLock;
   private boolean started;
   private volatile long syncStartVersion;
   private volatile long syncEndVersion;
@@ -205,6 +206,10 @@ public abstract class BaseInformer<T extends DbEntry, C extends DbEntryContainer
       if (!enabled) {
         return;
       }
+      // ensure startup period listWatch executed in front
+      if (!listLoopGotLock) {
+        return;
+      }
       listLock.lock();
       try {
         watch();
@@ -227,6 +232,7 @@ public abstract class BaseInformer<T extends DbEntry, C extends DbEntryContainer
         return;
       }
       listLock.lock();
+      listLoopGotLock = true;
       try {
         list();
       } finally {
