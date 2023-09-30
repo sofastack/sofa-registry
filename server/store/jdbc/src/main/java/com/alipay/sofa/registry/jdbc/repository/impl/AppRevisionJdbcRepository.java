@@ -45,6 +45,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.common.util.concurrent.ExecutionError;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
@@ -172,14 +173,14 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository, Recover
     try {
       return registry.get(revision);
     } catch (ExecutionException e) {
-      if (e.getCause() instanceof RevisionNotExistException) {
-        LOG.info("jdbc query revision failed, revision: {} not exist in db", revision, e);
-        return null;
-      }
-
       LOG.error("jdbc query revision error, revision: {}", revision, e);
       throw new RuntimeException("jdbc refresh revision failed", e);
+    } catch (ExecutionError e) {
+      if (e.getCause() instanceof RevisionNotExistException) {
+        LOG.info("jdbc query revision failed, revision: {} not exist in db", revision, e);
+      }
     }
+    return null;
   }
 
   @Override

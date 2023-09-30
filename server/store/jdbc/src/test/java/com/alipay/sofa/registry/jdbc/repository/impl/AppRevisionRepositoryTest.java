@@ -117,6 +117,10 @@ public class AppRevisionRepositoryTest extends AbstractH2DbTestBase {
 
     LoadingCache<String, AppRevision> cache = repository.getRevisions();
     Assert.assertEquals(cache.asMap().size(), APP_REVISION_SIZE);
+    AppRevision notExistAppRevision = BuildNotExistRevision();
+
+    appRevisionList.add(notExistAppRevision);
+    appRevisionList.add(notExistAppRevision);
 
     for (AppRevision appRevisionRegister : appRevisionList) {
       cache.invalidate(appRevisionRegister.getRevision());
@@ -127,7 +131,11 @@ public class AppRevisionRepositoryTest extends AbstractH2DbTestBase {
     for (AppRevision appRevisionRegister : appRevisionList) {
       AppRevision revision =
           appRevisionJdbcRepository.queryRevision(appRevisionRegister.getRevision());
-      Assert.assertEquals(appRevisionRegister.getAppName(), revision.getAppName());
+      if (notExistAppRevision.getRevision().equals(appRevisionRegister.getRevision())) {
+        Assert.assertNull(revision);
+      } else {
+        Assert.assertEquals(appRevisionRegister.getAppName(), revision.getAppName());
+      }
     }
 
     Assert.assertEquals(cache.asMap().size(), APP_REVISION_SIZE);
