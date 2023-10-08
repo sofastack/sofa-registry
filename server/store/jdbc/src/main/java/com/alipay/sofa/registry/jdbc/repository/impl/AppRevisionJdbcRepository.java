@@ -26,7 +26,7 @@ import com.alipay.sofa.registry.concurrent.CachedExecutor;
 import com.alipay.sofa.registry.jdbc.constant.TableEnum;
 import com.alipay.sofa.registry.jdbc.convertor.AppRevisionDomainConvertor;
 import com.alipay.sofa.registry.jdbc.domain.AppRevisionDomain;
-import com.alipay.sofa.registry.jdbc.exception.RevisionNotExistException;
+import com.alipay.sofa.registry.jdbc.exception.RevisionNotExistError;
 import com.alipay.sofa.registry.jdbc.informer.BaseInformer;
 import com.alipay.sofa.registry.jdbc.mapper.AppRevisionMapper;
 import com.alipay.sofa.registry.log.Logger;
@@ -102,14 +102,14 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository, Recover
                     List<AppRevisionDomain> revisionDomains =
                         appRevisionMapper.queryRevision(dataCenters, revision);
                     if (CollectionUtils.isEmpty(revisionDomains)) {
-                      throw new RevisionNotExistException(revision);
+                      throw new RevisionNotExistError(revision);
                     }
                     for (AppRevisionDomain revisionDomain : revisionDomains) {
                       if (!revisionDomain.isDeleted()) {
                         return AppRevisionDomainConvertor.convert2Revision(revisionDomain);
                       }
                     }
-                    throw new RevisionNotExistException(revision);
+                    throw new RevisionNotExistError(revision);
                   }
                 });
     CacheCleaner.autoClean(localRevisions, 1000 * 60 * 10);
@@ -176,7 +176,7 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository, Recover
       LOG.error("jdbc query revision error, revision: {}", revision, e);
       throw new RuntimeException("jdbc refresh revision failed", e);
     } catch (ExecutionError e) {
-      if (e.getCause() instanceof RevisionNotExistException) {
+      if (e.getCause() instanceof RevisionNotExistError) {
         LOG.info("jdbc query revision failed, revision: {} not exist in db", revision, e);
       }
     }
