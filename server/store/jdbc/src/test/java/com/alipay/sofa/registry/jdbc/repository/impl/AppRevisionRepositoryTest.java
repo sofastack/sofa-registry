@@ -189,9 +189,7 @@ public class AppRevisionRepositoryTest extends AbstractH2DbTestBase {
     for (AppRevision appRevision : appRevisionList) {
       boolean after = appRevisionJdbcRepository.heartbeat(appRevision.getRevision());
       Assert.assertFalse(after);
-      TestUtils.assertException(
-          UncheckedExecutionException.class,
-          () -> appRevisionJdbcRepository.queryRevision(appRevision.getRevision()));
+      Assert.assertNull(appRevisionJdbcRepository.queryRevision(appRevision.getRevision()));
     }
     ConcurrentUtils.createDaemonThread("heartbeatClean-test", new HeartbeatRunner()).start();
     ((AppRevisionJdbcRepository) appRevisionJdbcRepository).cleanCache();
