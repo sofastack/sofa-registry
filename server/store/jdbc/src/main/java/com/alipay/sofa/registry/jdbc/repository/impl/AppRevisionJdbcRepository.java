@@ -26,7 +26,7 @@ import com.alipay.sofa.registry.concurrent.CachedExecutor;
 import com.alipay.sofa.registry.jdbc.constant.TableEnum;
 import com.alipay.sofa.registry.jdbc.convertor.AppRevisionDomainConvertor;
 import com.alipay.sofa.registry.jdbc.domain.AppRevisionDomain;
-import com.alipay.sofa.registry.jdbc.exception.RevisionNotExistError;
+import com.alipay.sofa.registry.jdbc.exception.RevisionNotExistException;
 import com.alipay.sofa.registry.jdbc.informer.BaseInformer;
 import com.alipay.sofa.registry.jdbc.mapper.AppRevisionMapper;
 import com.alipay.sofa.registry.log.Logger;
@@ -45,7 +45,6 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.google.common.util.concurrent.ExecutionError;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
@@ -102,14 +101,14 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository, Recover
                     List<AppRevisionDomain> revisionDomains =
                         appRevisionMapper.queryRevision(dataCenters, revision);
                     if (CollectionUtils.isEmpty(revisionDomains)) {
-                      throw new RevisionNotExistError(revision);
+                      throw new RevisionNotExistException(revision);
                     }
                     for (AppRevisionDomain revisionDomain : revisionDomains) {
                       if (!revisionDomain.isDeleted()) {
                         return AppRevisionDomainConvertor.convert2Revision(revisionDomain);
                       }
                     }
-                    throw new RevisionNotExistError(revision);
+                    throw new RevisionNotExistException(revision);
                   }
                 });
     CacheCleaner.autoClean(localRevisions, 1000 * 60 * 10);
@@ -175,9 +174,9 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository, Recover
     } catch (ExecutionException e) {
       LOG.error("jdbc query revision error, revision: {}", revision, e);
       throw new RuntimeException("jdbc refresh revision failed", e);
-    } catch (ExecutionError e) {
-      if (e.getCause() instanceof RevisionNotExistError) {
-        LOG.info("jdbc query revision failed, revision: {} not exist in db", revision, e);
+    } catch (Throwable t) {
+      if (t.getCause() instanceof RevisionNotExistException) {
+        LOG.info("jdbc query revision failed, revision: {} not exist in db", revision, t);
       }
     }
     return null;
