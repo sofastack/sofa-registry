@@ -96,6 +96,7 @@ public class StopPushDataResource {
   @GET
   @Path("close")
   @Produces(MediaType.APPLICATION_JSON)
+  @AuthRestController
   public Result openPush() {
     boolean ret;
     Result result = new Result();
