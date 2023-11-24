@@ -18,6 +18,7 @@ package com.alipay.sofa.registry.util;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
 
 /**
  * @author yuzhi.lyz
@@ -26,6 +27,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public final class JsonUtils {
   public static final ThreadLocal<ObjectMapper> JACKSON_MAPPER =
       ThreadLocal.withInitial(() -> new ObjectMapper());
+
+  public static final Gson gson = new Gson();
 
   private JsonUtils() {}
 
@@ -47,6 +50,14 @@ public final class JsonUtils {
     } catch (Throwable e) {
       throw new RuntimeException(
           "failed to read json to " + typeReference.toString() + ", " + str, e);
+    }
+  }
+
+  public static <T> T gsonRead(String str, Class<T> clazz) {
+    try {
+      return gson.fromJson(str, clazz);
+    } catch (Throwable e) {
+      throw new RuntimeException("failed to read gson to " + clazz.toString() + ", " + str, e);
     }
   }
 
