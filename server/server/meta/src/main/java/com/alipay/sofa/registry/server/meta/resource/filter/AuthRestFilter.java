@@ -60,7 +60,7 @@ public class AuthRestFilter implements ContainerRequestFilter {
     }
     if (!authAllow) {
       Response response =
-          Response.status(Response.Status.BAD_REQUEST)
+          Response.status(Response.Status.UNAUTHORIZED)
               .header("reason", "auth check failed!")
               .build();
       LOGGER.error(

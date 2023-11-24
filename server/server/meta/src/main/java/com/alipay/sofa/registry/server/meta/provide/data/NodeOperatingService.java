@@ -33,45 +33,43 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public class NodeOperatingService {
 
-    @Autowired
-    protected ProvideDataService provideDataService;
+  @Autowired protected ProvideDataService provideDataService;
 
-    protected Tuple<Long, NodeServerOperateInfo> currentVersion = null;
+  protected Tuple<Long, NodeServerOperateInfo> currentVersion = null;
 
-    public NodeOperatingService() {
+  public NodeOperatingService() {}
+
+  public NodeOperatingService(ProvideDataService provideDataService) {
+    this.provideDataService = provideDataService;
+  }
+
+  public Tuple<Long, NodeServerOperateInfo> queryOperateInfoAndVersion() {
+    DBResponse<PersistenceData> response =
+        provideDataService.queryProvideData(ValueConstants.NODE_SERVER_OPERATING_DATA_ID);
+
+    if (response.getOperationStatus() == OperationStatus.NOTFOUND) {
+      return null;
     }
 
-    public NodeOperatingService(ProvideDataService provideDataService) {
-        this.provideDataService = provideDataService;
-    }
+    String entityData = PersistenceDataBuilder.getEntityData(response.getEntity());
 
-    public Tuple<Long, NodeServerOperateInfo> queryOperateInfoAndVersion() {
-        DBResponse<PersistenceData> response =
-                provideDataService.queryProvideData(ValueConstants.NODE_SERVER_OPERATING_DATA_ID);
-
-        if (response.getOperationStatus() == OperationStatus.NOTFOUND) {
-            return null;
-        }
-
-        String entityData = PersistenceDataBuilder.getEntityData(response.getEntity());
-
-        if (null != currentVersion) {
-            if (response.getEntity().getVersion() <= currentVersion.o1) {
-                return currentVersion;
-            }
-        }
-        NodeServerOperateInfo read = JsonUtils.gsonRead(entityData, NodeServerOperateInfo.class);
-        currentVersion = new Tuple<>(response.getEntity().getVersion(), read);
+    if (null != currentVersion) {
+      if (response.getEntity().getVersion() <= currentVersion.o1) {
         return currentVersion;
+      }
     }
+    NodeServerOperateInfo read = JsonUtils.gsonRead(entityData, NodeServerOperateInfo.class);
+    currentVersion = new Tuple<>(response.getEntity().getVersion(), read);
+    return currentVersion;
+  }
 
-    /**
-     * Setter method for property <tt>provideDataService</tt>.
-     *
-     * @param provideDataService value to be assigned to property provideDataService
-     */
-    @VisibleForTesting
-    public void setProvideDataService(ProvideDataService provideDataService) {
-        this.provideDataService = provideDataService;
-    }
+  /**
+   * Setter method for property <tt>provideDataService</tt>.
+   *
+   * @param provideDataService value to be assigned to property provideDataService
+   */
+  @VisibleForTesting
+  public void setProvideDataService(ProvideDataService provideDataService) {
+    this.provideDataService = provideDataService;
+  }
 }
