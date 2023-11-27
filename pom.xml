@@ -91,6 +91,7 @@
         <log4j2.version>2.17.0</log4j2.version>
         <spring.boot.version>2.3.9.RELEASE</spring.boot.version>
         <gson.version>2.10.1</gson.version>
+        <jmh.version>1.32</jmh.version>
         <main.user.dir>${user.dir}</main.user.dir>
         <argLine>-Dnetwork_interface_denylist=docker0</argLine>
         <!-- for linke 添加isSkipUT, isSkipIT参数声明，防止编译时产生错误 -->
@@ -462,6 +463,18 @@
                 <groupId>com.google.code.gson</groupId>
                 <artifactId>gson</artifactId>
                 <version>${gson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.openjdk.jmh</groupId>
+                <artifactId>jmh-core</artifactId>
+                <version>${jmh.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.openjdk.jmh</groupId>
+                <artifactId>jmh-generator-annprocess</artifactId>
+                <version>${jmh.version}</version>
+                <scope>test</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>

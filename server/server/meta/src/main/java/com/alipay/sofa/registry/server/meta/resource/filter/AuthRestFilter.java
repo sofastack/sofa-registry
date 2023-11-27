@@ -24,7 +24,10 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataService;
 import com.alipay.sofa.registry.store.api.DBResponse;
 import com.alipay.sofa.registry.store.api.OperationStatus;
+import com.alipay.sofa.registry.util.JsonUtils;
+import com.fasterxml.jackson.core.type.TypeReference;
 import java.io.IOException;
+import java.util.Set;
 import javax.annotation.Priority;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -33,6 +36,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.Provider;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
 
 /**
  * @author jiangcun.hlc
@@ -51,12 +55,17 @@ public class AuthRestFilter implements ContainerRequestFilter {
     boolean authAllow;
     DBResponse<PersistenceData> queryResponse =
         provideDataService.queryProvideData(ADMIN_API_TOKEN_DATA_ID);
-    if (queryResponse.getOperationStatus() == OperationStatus.SUCCESS) {
-      authAllow =
-          StringUtils.equals(
-              queryResponse.getEntity().getData(), getAuthToken(containerRequestContext));
-    } else {
+    if (queryResponse.getOperationStatus() == OperationStatus.NOTFOUND
+        || StringUtils.isBlank(queryResponse.getEntity().getData())) {
       authAllow = true;
+    } else {
+      authAllow = false;
+      Set<String> tokens =
+          JsonUtils.read(queryResponse.getEntity().getData(), new TypeReference<Set<String>>() {});
+      if (!CollectionUtils.isEmpty(tokens)
+          && tokens.contains(getAuthToken(containerRequestContext))) {
+        authAllow = true;
+      }
     }
     if (!authAllow) {
       Response response =
