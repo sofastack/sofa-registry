@@ -64,6 +64,7 @@ import com.alipay.sofa.registry.server.meta.resource.ShutdownSwitchResource;
 import com.alipay.sofa.registry.server.meta.resource.SlotSyncResource;
 import com.alipay.sofa.registry.server.meta.resource.SlotTableResource;
 import com.alipay.sofa.registry.server.meta.resource.StopPushDataResource;
+import com.alipay.sofa.registry.server.meta.resource.filter.AuthRestFilter;
 import com.alipay.sofa.registry.server.meta.resource.filter.LeaderAwareFilter;
 import com.alipay.sofa.registry.server.meta.slot.status.SlotTableStatusService;
 import com.alipay.sofa.registry.server.shared.config.CommonConfig;
@@ -333,6 +334,11 @@ public class MetaServerConfiguration {
     @Bean
     public LeaderAwareFilter leaderAwareFilter() {
       return new LeaderAwareFilter();
+    }
+
+    @Bean
+    public AuthRestFilter authRestFilter() {
+      return new AuthRestFilter();
     }
 
     @Bean

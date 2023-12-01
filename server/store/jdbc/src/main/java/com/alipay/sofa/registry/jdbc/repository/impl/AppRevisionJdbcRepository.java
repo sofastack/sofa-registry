@@ -172,14 +172,14 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository, Recover
     try {
       return registry.get(revision);
     } catch (ExecutionException e) {
-      if (e.getCause() instanceof RevisionNotExistException) {
-        LOG.info("jdbc query revision failed, revision: {} not exist in db", revision, e);
-        return null;
-      }
-
       LOG.error("jdbc query revision error, revision: {}", revision, e);
       throw new RuntimeException("jdbc refresh revision failed", e);
+    } catch (Throwable t) {
+      if (t.getCause() instanceof RevisionNotExistException) {
+        LOG.info("jdbc query revision failed, revision: {} not exist in db", revision, t);
+      }
     }
+    return null;
   }
 
   @Override

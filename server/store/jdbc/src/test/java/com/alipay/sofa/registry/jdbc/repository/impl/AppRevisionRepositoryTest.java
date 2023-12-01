@@ -20,7 +20,6 @@ import com.alipay.sofa.registry.common.model.appmeta.InterfaceMapping;
 import com.alipay.sofa.registry.common.model.store.AppRevision;
 import com.alipay.sofa.registry.core.model.AppRevisionInterface;
 import com.alipay.sofa.registry.jdbc.AbstractH2DbTestBase;
-import com.alipay.sofa.registry.jdbc.TestUtils;
 import com.alipay.sofa.registry.jdbc.convertor.AppRevisionDomainConvertor;
 import com.alipay.sofa.registry.jdbc.domain.AppRevisionDomain;
 import com.alipay.sofa.registry.jdbc.mapper.AppRevisionMapper;
@@ -30,7 +29,6 @@ import com.alipay.sofa.registry.store.api.repository.InterfaceAppsRepository;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.LoopRunnable;
 import com.google.common.cache.LoadingCache;
-import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -117,6 +115,10 @@ public class AppRevisionRepositoryTest extends AbstractH2DbTestBase {
 
     LoadingCache<String, AppRevision> cache = repository.getRevisions();
     Assert.assertEquals(cache.asMap().size(), APP_REVISION_SIZE);
+    AppRevision notExistAppRevision = BuildNotExistRevision();
+
+    appRevisionList.add(notExistAppRevision);
+    appRevisionList.add(notExistAppRevision);
 
     for (AppRevision appRevisionRegister : appRevisionList) {
       cache.invalidate(appRevisionRegister.getRevision());
@@ -127,7 +129,11 @@ public class AppRevisionRepositoryTest extends AbstractH2DbTestBase {
     for (AppRevision appRevisionRegister : appRevisionList) {
       AppRevision revision =
           appRevisionJdbcRepository.queryRevision(appRevisionRegister.getRevision());
-      Assert.assertEquals(appRevisionRegister.getAppName(), revision.getAppName());
+      if (notExistAppRevision.getRevision().equals(appRevisionRegister.getRevision())) {
+        Assert.assertNull(revision);
+      } else {
+        Assert.assertEquals(appRevisionRegister.getAppName(), revision.getAppName());
+      }
     }
 
     Assert.assertEquals(cache.asMap().size(), APP_REVISION_SIZE);
@@ -181,9 +187,7 @@ public class AppRevisionRepositoryTest extends AbstractH2DbTestBase {
     for (AppRevision appRevision : appRevisionList) {
       boolean after = appRevisionJdbcRepository.heartbeat(appRevision.getRevision());
       Assert.assertFalse(after);
-      TestUtils.assertException(
-          UncheckedExecutionException.class,
-          () -> appRevisionJdbcRepository.queryRevision(appRevision.getRevision()));
+      Assert.assertNull(appRevisionJdbcRepository.queryRevision(appRevision.getRevision()));
     }
     ConcurrentUtils.createDaemonThread("heartbeatClean-test", new HeartbeatRunner()).start();
     ((AppRevisionJdbcRepository) appRevisionJdbcRepository).cleanCache();

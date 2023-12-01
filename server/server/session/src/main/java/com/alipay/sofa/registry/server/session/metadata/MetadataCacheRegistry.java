@@ -83,6 +83,11 @@ public class MetadataCacheRegistry {
 
   public void register(AppRevision appRevision) {
     registerTask.put(appRevision.getRevision(), appRevision);
+    registerWorker.wakeup();
+  }
+  // retry not wakeup
+  public void registerNotWake(AppRevision appRevision) {
+    registerTask.put(appRevision.getRevision(), appRevision);
   }
 
   private Tuple<Set<String>, Set<String>> getMetadataDataCenters() {
@@ -156,11 +161,11 @@ public class MetadataCacheRegistry {
           if (success == null || !success) {
             String revision = entry.getKey();
             LOG.info("register fail, retry ro register revision:{}", revision);
-            register(registers.get(revision));
+            registerNotWake(registers.get(revision));
           }
         } catch (Throwable throwable) {
           String revision = entry.getKey();
-          register(registers.get(revision));
+          registerNotWake(registers.get(revision));
           LOG.error(
               "[AppRevision]do register error, retry next time. revision:{}", revision, throwable);
         }
