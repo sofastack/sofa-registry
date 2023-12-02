@@ -19,7 +19,7 @@ package com.alipay.sofa.registry.server.session.mapper;
 import com.google.common.collect.Maps;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * @author ruoshan

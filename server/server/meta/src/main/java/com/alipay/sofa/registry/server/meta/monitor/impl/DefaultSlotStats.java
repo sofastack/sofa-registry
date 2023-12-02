@@ -24,7 +24,7 @@ import com.alipay.sofa.registry.server.meta.monitor.SlotStats;
 import com.google.common.collect.Maps;
 import java.util.Map;
 import java.util.Objects;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * @author chen.zhu

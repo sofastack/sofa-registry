@@ -19,7 +19,7 @@ package com.alipay.sofa.registry.util;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.google.common.annotations.VisibleForTesting;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * generates ID: 49 bit millisecond timestamp + 15 bit incremental ID

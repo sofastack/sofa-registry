@@ -37,7 +37,7 @@ import java.util.*;
 import java.util.Map.Entry;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 

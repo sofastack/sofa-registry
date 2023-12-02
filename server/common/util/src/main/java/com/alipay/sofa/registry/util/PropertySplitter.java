@@ -19,7 +19,7 @@ package com.alipay.sofa.registry.util;
 import com.google.common.base.Splitter;
 import java.util.*;
 import java.util.Map.Entry;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * @author shangyu.wh

@@ -30,7 +30,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.util.*;
 import java.util.function.BiConsumer;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * cache of datum, providing query function to the upper module

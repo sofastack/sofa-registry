@@ -18,7 +18,7 @@ package com.alipay.sofa.registry.common.model;
 
 import com.alipay.sofa.registry.common.model.store.URL;
 import java.io.Serializable;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * @author shangyu.wh

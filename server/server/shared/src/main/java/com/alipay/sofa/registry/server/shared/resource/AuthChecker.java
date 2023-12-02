@@ -16,7 +16,7 @@
  */
 package com.alipay.sofa.registry.server.shared.resource;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * @author xiaojian.xj

@@ -34,8 +34,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.sql.DataSource;
-import org.apache.commons.lang.StringUtils;
-import org.apache.logging.log4j.util.Strings;
+import org.apache.commons.lang3.StringUtils;
 import org.h2.tools.Console;
 import org.h2.tools.Server;
 import org.junit.Before;
@@ -114,7 +113,7 @@ public class AbstractH2DbTestBase extends AbstractTest implements ApplicationCon
     try {
       conn = dataSource.getConnection();
       conn.setAutoCommit(false);
-      if (!Strings.isEmpty(prepareSql)) {
+      if (!StringUtils.isEmpty(prepareSql)) {
         for (String sql : prepareSql.split(";")) {
           logger.debug("[setup][data]{}", sql.trim());
           stmt = conn.prepareStatement(sql);

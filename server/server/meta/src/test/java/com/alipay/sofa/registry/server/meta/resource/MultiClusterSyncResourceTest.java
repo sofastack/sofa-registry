@@ -23,7 +23,7 @@ import com.alipay.sofa.registry.test.TestUtils.MockMultiClusterSyncRepository;
 import java.util.Collections;
 import java.util.Locale;
 import java.util.Set;
-import org.apache.logging.log4j.util.Strings;
+import org.apache.commons.lang3.StringUtils;
 import org.glassfish.jersey.internal.guava.Sets;
 import org.junit.Assert;
 import org.junit.Test;
@@ -347,7 +347,7 @@ public class MultiClusterSyncResourceTest {
 
     // update fail
     Set<String> idSet1 = Collections.singleton("test-id1");
-    String ids1 = Strings.join(idSet1, ',');
+    String ids1 = StringUtils.join(idSet1, ',');
 
     response =
         multiClusterSyncResource.addSyncDataInfoIds(

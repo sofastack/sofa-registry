@@ -41,8 +41,7 @@ import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Collections;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.StringUtils;
-import org.apache.logging.log4j.util.Strings;
+import org.apache.commons.lang3.StringUtils;
 import org.h2.tools.Server;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -284,7 +283,7 @@ public class RegistryApplication {
     PreparedStatement stmt = null;
     try {
       conn.setAutoCommit(false);
-      if (!Strings.isEmpty(prepareSql)) {
+      if (!StringUtils.isEmpty(prepareSql)) {
         for (String sql : prepareSql.split(";")) {
           LOGGER.debug("[setup][data]{}", sql.trim());
           stmt = conn.prepareStatement(sql);

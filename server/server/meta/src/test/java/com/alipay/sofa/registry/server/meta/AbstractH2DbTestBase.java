@@ -25,8 +25,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.StringUtils;
-import org.apache.logging.log4j.util.Strings;
+import org.apache.commons.lang3.StringUtils;
 import org.h2.tools.Server;
 import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
@@ -164,7 +163,7 @@ public class AbstractH2DbTestBase extends AbstractTestBase implements Applicatio
     PreparedStatement stmt = null;
     try {
       conn.setAutoCommit(false);
-      if (!Strings.isEmpty(prepareSql)) {
+      if (!StringUtils.isEmpty(prepareSql)) {
         for (String sql : prepareSql.split(";")) {
           stmt = conn.prepareStatement(sql);
           stmt.executeUpdate();

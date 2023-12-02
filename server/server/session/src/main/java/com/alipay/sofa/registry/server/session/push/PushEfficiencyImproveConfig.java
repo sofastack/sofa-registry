@@ -21,7 +21,7 @@ import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import java.util.HashSet;
 import java.util.Set;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * @author jiangcun.hlc@antfin.com

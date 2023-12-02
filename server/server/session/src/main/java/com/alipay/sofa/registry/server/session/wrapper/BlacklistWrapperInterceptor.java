@@ -28,7 +28,7 @@ import com.alipay.sofa.registry.server.session.loggers.Loggers;
 import com.alipay.sofa.registry.server.session.push.FirePushService;
 import com.alipay.sofa.registry.server.session.registry.SessionRegistry;
 import com.alipay.sofa.registry.server.shared.remoting.RemotingHelper;
-import org.apache.logging.log4j.util.Strings;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -52,7 +52,7 @@ public class BlacklistWrapperInterceptor
 
     RegisterInvokeData registerInvokeData = invocation.getParameterSupplier().get();
     BaseInfo storeData = (BaseInfo) registerInvokeData.getStoreData();
-    if (Strings.isNotBlank(storeData.attributeOf(ValueConstants.BLOCKED_REQUEST_KEY))
+    if (StringUtils.isNotBlank(storeData.attributeOf(ValueConstants.BLOCKED_REQUEST_KEY))
         || processFilter.match(storeData)) {
       if (DataType.PUBLISHER == storeData.getDataType()) {
         // match blacklist stop pub.

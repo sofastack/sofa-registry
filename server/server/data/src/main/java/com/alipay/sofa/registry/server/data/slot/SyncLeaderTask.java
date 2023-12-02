@@ -21,7 +21,7 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.server.shared.remoting.ClientSideExchanger;
 import com.alipay.sofa.registry.task.TaskErrorSilenceException;
 import com.alipay.sofa.registry.util.StringFormatter;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * @author xiaojian.xj

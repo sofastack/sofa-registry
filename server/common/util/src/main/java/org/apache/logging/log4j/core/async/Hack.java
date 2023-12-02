@@ -22,10 +22,10 @@ import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.LoopRunnable;
 import com.google.common.collect.Maps;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
-import org.apache.commons.lang.reflect.FieldUtils;
 import org.apache.logging.log4j.status.StatusLogger;
 import org.apache.logging.slf4j.Log4jLogger;
 
@@ -43,8 +43,18 @@ public final class Hack {
     Field fieldLogger = null;
     Field fieldDisruptor = null;
     try {
-      fieldLogger = FieldUtils.getField(Log4jLogger.class, "logger", true);
-      fieldDisruptor = FieldUtils.getField(AsyncLogger.class, "loggerDisruptor", true);
+      Class<?> log4jLoggerSuperCls = Log4jLogger.class.getSuperclass();
+      Field logger = log4jLoggerSuperCls.getDeclaredField("logger");
+      if (!Modifier.isPublic(logger.getModifiers())) {
+        logger.setAccessible(true);
+      }
+      fieldLogger = logger;
+      Class<?> asyncLoggerSuperCls = AsyncLogger.class.getSuperclass();
+      Field loggerDisruptor = asyncLoggerSuperCls.getDeclaredField("loggerDisruptor");
+      if (!Modifier.isPublic(loggerDisruptor.getModifiers())) {
+        loggerDisruptor.setAccessible(true);
+      }
+      fieldDisruptor = loggerDisruptor;
     } catch (Throwable e) {
       LOGGER.error("failed to getDeclaredField to hack", e);
     }

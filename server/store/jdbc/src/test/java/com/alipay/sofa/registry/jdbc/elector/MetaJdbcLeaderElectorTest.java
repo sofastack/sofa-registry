@@ -29,9 +29,9 @@ import com.alipay.sofa.registry.util.StringFormatter;
 import com.google.common.collect.Lists;
 import java.util.Date;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import org.apache.commons.lang.math.RandomUtils;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -136,7 +136,8 @@ public class MetaJdbcLeaderElectorTest extends AbstractH2DbTestBase {
 
     @Override
     public void waitingUnthrowable() {
-      int sleep = (int) (RandomUtils.nextFloat() * 150 + 150);
+      Random random = new Random();
+      int sleep = (int) (random.nextFloat() * 150 + 150);
       ConcurrentUtils.sleepUninterruptibly(sleep, TimeUnit.MILLISECONDS);
     }
   }
