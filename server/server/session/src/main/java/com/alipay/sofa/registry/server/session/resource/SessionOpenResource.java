@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.server.session.resource;
 
 import com.alipay.sofa.registry.common.model.slot.Slot;
+import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
@@ -42,6 +43,8 @@ public class SessionOpenResource {
 
   @Autowired private SlotTableCache slotTableCache;
 
+  @Autowired private Exchange boltExchange;
+
   @GET
   @Path("query.json")
   @Produces(MediaType.APPLICATION_JSON)
@@ -61,6 +64,13 @@ public class SessionOpenResource {
   @Produces(MediaType.TEXT_PLAIN)
   public String getSessionServerList(@QueryParam("zone") String zone) {
     return Joiner.on(";").join(getSessionServerListJson(zone));
+  }
+
+  @GET
+  @Path("connectionNum")
+  @Produces(MediaType.TEXT_PLAIN)
+  public int getCurrentSessionConnNum() {
+    return boltExchange.getServer(sessionServerConfig.getServerPort()).getChannels().size();
   }
 
   @GET
