@@ -52,7 +52,6 @@ import com.codahale.metrics.MetricRegistry;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -303,15 +302,22 @@ public class SessionDigestResource {
   @GET
   @Path("{type}/getDataInfoIdListGroupByCount")
   @Produces(MediaType.APPLICATION_JSON)
-  public List<Map.Entry<String, Integer>> getDataInfoIdListGroupByCount(final @PathParam("type") String type) {
+  public List<Map.Entry<String, Integer>> getDataInfoIdListGroupByCount(
+      final @PathParam("type") String type) {
     List<Map.Entry<String, Integer>> list = new ArrayList<>();
     switch (type) {
       case "pub":
-        sessionInterests.getDatas().forEach((key, value) -> list.add(new AbstractMap.SimpleEntry<>(key, value.size())));
+        sessionInterests
+            .getDatas()
+            .forEach((key, value) -> list.add(new AbstractMap.SimpleEntry<>(key, value.size())));
       case "sub":
-        sessionDataStore.getDatas().forEach((key, value) -> list.add(new AbstractMap.SimpleEntry<>(key, value.size())));
+        sessionDataStore
+            .getDatas()
+            .forEach((key, value) -> list.add(new AbstractMap.SimpleEntry<>(key, value.size())));
       case "watch":
-        sessionWatchers.getDatas().forEach((key,value) -> list.add(new AbstractMap.SimpleEntry<>(key, value.size())));
+        sessionWatchers
+            .getDatas()
+            .forEach((key, value) -> list.add(new AbstractMap.SimpleEntry<>(key, value.size())));
     }
     list.sort(Collections.reverseOrder(Map.Entry.comparingByValue()));
     return list;

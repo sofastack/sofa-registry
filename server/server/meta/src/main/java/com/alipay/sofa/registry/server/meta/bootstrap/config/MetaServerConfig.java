@@ -79,5 +79,7 @@ public interface MetaServerConfig {
 
   int getAppRevisionMaxRemove();
 
+  int getInterfaceMaxRemove();
+
   int getAppRevisionCountAlarmThreshold();
 }

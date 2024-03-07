@@ -77,6 +77,21 @@ public class MetaCenterResource {
     return result;
   }
 
+  @PUT
+  @Path("interfaceAppsCleaner/switch")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Result interfaceAppsCleanerEnable(@FormParam("enabled") boolean enabled) {
+    Result result = new Result();
+    try {
+      interfaceAppsIndexCleaner.setEnabled(enabled);
+      result.setSuccess(true);
+    } catch (Exception e) {
+      result.setSuccess(false);
+      result.setMessage(e.getMessage());
+    }
+    return result;
+  }
+
   MetaCenterResource setInterfaceAppsIndexCleaner(InterfaceAppsIndexCleaner cleaner) {
     interfaceAppsIndexCleaner = cleaner;
     return this;
