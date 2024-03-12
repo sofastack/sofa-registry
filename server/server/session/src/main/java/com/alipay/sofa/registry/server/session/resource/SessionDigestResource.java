@@ -305,19 +305,24 @@ public class SessionDigestResource {
   public List<Map.Entry<String, Integer>> getDataInfoIdListGroupByCount(
       final @PathParam("type") String type) {
     List<Map.Entry<String, Integer>> list = new ArrayList<>();
-    switch (type) {
-      case "pub":
-        sessionInterests
-            .getDatas()
-            .forEach((key, value) -> list.add(new AbstractMap.SimpleEntry<>(key, value.size())));
-      case "sub":
+    String inputType = type.toUpperCase();
+    switch (inputType) {
+      case SUB:
         sessionDataStore
             .getDatas()
             .forEach((key, value) -> list.add(new AbstractMap.SimpleEntry<>(key, value.size())));
-      case "watch":
+        break;
+      case WAT:
         sessionWatchers
             .getDatas()
             .forEach((key, value) -> list.add(new AbstractMap.SimpleEntry<>(key, value.size())));
+        break;
+      default:
+        sessionInterests
+                .getDatas()
+                .forEach((key, value) -> list.add(new AbstractMap.SimpleEntry<>(key, value.size())));
+        break;
+
     }
     list.sort(Collections.reverseOrder(Map.Entry.comparingByValue()));
     return list;

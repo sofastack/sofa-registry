@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.resource;
 
+import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
@@ -23,6 +24,7 @@ import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.google.common.base.Joiner;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.ws.rs.*;
@@ -67,6 +69,20 @@ public class SessionOpenResource {
   }
 
   @GET
+  @Path("queryWithConnNum")
+  @Produces(MediaType.TEXT_PLAIN)
+  public String getSessionServerListWithConnNum(@QueryParam("zone") String zone) {
+    if (StringUtils.isBlank(zone)) {
+      zone = sessionServerConfig.getSessionServerRegion();
+    }
+
+    if (StringUtils.isNotBlank(zone)) {
+      zone = zone.toUpperCase();
+    }
+    return Joiner.on(";").join(getSessionServersWithConnNum(zone));
+  }
+
+  @GET
   @Path("connectionNum")
   @Produces(MediaType.TEXT_PLAIN)
   public int getCurrentSessionConnNum() {
@@ -99,6 +115,21 @@ public class SessionOpenResource {
             .map(server -> server + ":" + sessionServerConfig.getServerPort())
             .collect(Collectors.toList());
     return serverList;
+  }
+
+  private List<String> getSessionServersWithConnNum(String zone) {
+    List<SessionNode> serverList = metaNodeService.getSessionNodeWithConnNumList(zone);
+    List<String> serverWithConnNumList = new ArrayList<>();
+    serverList.forEach(
+        item -> {
+          serverWithConnNumList.add(
+              item.getNodeUrl().getIpAddress()
+                  + ":"
+                  + sessionServerConfig.getServerPort()
+                  + ":"
+                  + item.getWeight());
+        });
+    return serverWithConnNumList;
   }
 
   @GET

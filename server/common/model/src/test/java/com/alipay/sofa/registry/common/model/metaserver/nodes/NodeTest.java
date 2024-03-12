@@ -51,9 +51,9 @@ public class NodeTest {
   public void testSessionNode() {
     ProcessId processId1 = new ProcessId("test", 1, 2, 3);
     ProcessId processId2 = new ProcessId("test1", 1, 2, 3);
-    SessionNode node1 = new SessionNode(url1, region, processId1);
-    SessionNode node2 = new SessionNode(url2, region, processId2);
-    SessionNode node3 = new SessionNode(url1, region, processId2);
+    SessionNode node1 = new SessionNode(url1, region, processId1, 0);
+    SessionNode node2 = new SessionNode(url2, region, processId2, 0);
+    SessionNode node3 = new SessionNode(url1, region, processId2, 0);
     Assert.assertEquals(node1, node3);
     Assert.assertEquals(node1.hashCode(), node3.hashCode());
     Assert.assertEquals(node1.toString(), node3.toString());

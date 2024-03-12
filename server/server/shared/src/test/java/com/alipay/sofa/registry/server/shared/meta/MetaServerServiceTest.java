@@ -121,9 +121,9 @@ public class MetaServerServiceTest {
             new VersionedList(
                 1,
                 Lists.newArrayList(
-                    new SessionNode(new URL("192.168.1.2"), "zoneA", ServerEnv.PROCESS_ID),
+                    new SessionNode(new URL("192.168.1.2"), "zoneA", ServerEnv.PROCESS_ID, 0),
                     new SessionNode(
-                        new URL("192.168.1.3"), "zoneB", new ProcessId("test", 1, 1, 1)))),
+                        new URL("192.168.1.3"), "zoneB", new ProcessId("test", 1, 1, 1), 0))),
             "test",
             100,
             Collections.emptyMap());
@@ -235,9 +235,9 @@ public class MetaServerServiceTest {
             new VersionedList(
                 1,
                 Lists.newArrayList(
-                    new SessionNode(new URL("192.168.1.2"), "zoneA", ServerEnv.PROCESS_ID),
+                    new SessionNode(new URL("192.168.1.2"), "zoneA", ServerEnv.PROCESS_ID, 0),
                     new SessionNode(
-                        new URL("192.168.1.3"), "zoneB", new ProcessId("test", 1, 1, 1)))),
+                        new URL("192.168.1.3"), "zoneB", new ProcessId("test", 1, 1, 1), 0))),
             "test",
             100,
             Collections.emptyMap());
