@@ -69,7 +69,7 @@ public class SessionOpenResource {
   }
 
   @GET
-  @Path("queryWithConnNum")
+  @Path("queryWithWeight")
   @Produces(MediaType.TEXT_PLAIN)
   public String getSessionServerListWithConnNum(@QueryParam("zone") String zone) {
     if (StringUtils.isBlank(zone)) {
@@ -126,7 +126,7 @@ public class SessionOpenResource {
               item.getNodeUrl().getIpAddress()
                   + ":"
                   + sessionServerConfig.getServerPort()
-                  + ":"
+                  + "?weight="
                   + item.getWeight());
         });
     return serverWithConnNumList;

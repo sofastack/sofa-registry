@@ -125,12 +125,17 @@ public class ClientConnection implements Client {
     List<ServerNode> serverNodes = new ArrayList<ServerNode>(serverManager.getServerList());
     // shuffle server list to make server connections as discrete as possible
     Collections.shuffle(serverNodes);
-    for (ServerNode serverNode : serverNodes) {
+    int choosed = 0;
+    for (int i = 0; i < serverNodes.size(); i++) {
       try {
-        connection = connect(serverNode);
+        // Power of Two Choices
+        if(serverNodes.size() > 1){
+          choosed = serverNodes.get(i).getWeight() > serverNodes.get(i+1).getWeight() ? i + 1 : i;
+        }
+        connection = connect(serverNodes.get(choosed));
         if (null != connection && connection.isFine()) {
           resetRegister();
-          LOGGER.info("[Connect] Successfully connected to server: {}", serverNode);
+          LOGGER.info("[Connect] Successfully connected to server: {}", serverNodes.get(choosed));
           break;
         } else {
           recycle(connection);
@@ -138,7 +143,7 @@ public class ClientConnection implements Client {
 
         Thread.sleep(random.nextInt(RECONNECTING_DELAY));
       } catch (Exception e) {
-        LOGGER.error("[Connect] Failed trying connect to {}", serverNode, e);
+        LOGGER.error("[Connect] Failed trying connect to {}", serverNodes.get(choosed), e);
       }
     }
 

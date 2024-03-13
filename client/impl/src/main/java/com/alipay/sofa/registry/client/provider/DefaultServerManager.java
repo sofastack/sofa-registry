@@ -90,7 +90,7 @@ public class DefaultServerManager implements ServerManager {
   private void syncServerList() {
     String url =
         String.format(
-            "http://%s:%d/api/servers/query",
+            "http://%s:%d/api/servers/queryWithWeight",
             config.getRegistryEndpoint(), config.getRegistryEndpointPort());
     Map<String, String> params = new HashMap<String, String>();
     params.put("env", config.getEnv());

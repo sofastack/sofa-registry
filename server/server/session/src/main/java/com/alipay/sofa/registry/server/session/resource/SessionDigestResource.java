@@ -319,10 +319,9 @@ public class SessionDigestResource {
         break;
       default:
         sessionInterests
-                .getDatas()
-                .forEach((key, value) -> list.add(new AbstractMap.SimpleEntry<>(key, value.size())));
+            .getDatas()
+            .forEach((key, value) -> list.add(new AbstractMap.SimpleEntry<>(key, value.size())));
         break;
-
     }
     list.sort(Collections.reverseOrder(Map.Entry.comparingByValue()));
     return list;

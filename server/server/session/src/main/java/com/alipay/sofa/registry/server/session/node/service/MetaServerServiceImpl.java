@@ -114,9 +114,9 @@ public class MetaServerServiceImpl extends AbstractMetaServerService<BaseHeartBe
         getWeight());
   }
 
-  private int getWeight(){
+  private int getWeight() {
     Server server = boltExchange.getServer(sessionServerConfig.getServerPort());
-    if(null == server) {
+    if (null == server) {
       return 0;
     }
     return server.getChannels().size();
@@ -151,9 +151,9 @@ public class MetaServerServiceImpl extends AbstractMetaServerService<BaseHeartBe
   void setDataCenterMetadataCache(DataCenterMetadataCache dataCenterMetadataCache) {
     this.dataCenterMetadataCache = dataCenterMetadataCache;
   }
+
   @VisibleForTesting
   public void setBoltExchange(Exchange boltExchange) {
     this.boltExchange = boltExchange;
   }
-
 }

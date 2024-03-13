@@ -53,4 +53,11 @@ public interface ServerNode {
    * @return the url
    */
   String getUrl();
+
+  /**
+   * Gets Weight
+   *
+   * @return the weight
+   */
+  int getWeight();
 }
