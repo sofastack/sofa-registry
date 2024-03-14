@@ -129,8 +129,8 @@ public class ClientConnection implements Client {
     for (int i = 0; i < serverNodes.size(); i++) {
       try {
         // Power of Two Choices
-        if(serverNodes.size() > 1){
-          choosed = serverNodes.get(i).getWeight() > serverNodes.get(i+1).getWeight() ? i + 1 : i;
+        if (serverNodes.size() > 1) {
+          choosed = serverNodes.get(i).getWeight() > serverNodes.get(i + 1).getWeight() ? i + 1 : i;
         }
         connection = connect(serverNodes.get(choosed));
         if (null != connection && connection.isFine()) {

@@ -21,6 +21,7 @@ import static org.mockito.Mockito.*;
 import com.alipay.sofa.registry.core.model.Result;
 import com.alipay.sofa.registry.jdbc.convertor.AppRevisionDomainConvertor;
 import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
+import com.alipay.sofa.registry.server.meta.cleaner.InterfaceAppsIndexCleaner;
 import com.alipay.sofa.registry.server.meta.provide.data.DefaultProvideDataNotifier;
 import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataService;
 import org.junit.Assert;
@@ -40,7 +41,8 @@ public class MetaCenterResourceTest {
     metaCenterResource =
         new MetaCenterResource()
             .setProvideDataNotifier(dataNotifier)
-            .setProvideDataService(provideDataService);
+            .setProvideDataService(provideDataService)
+            .setInterfaceAppsIndexCleaner(new InterfaceAppsIndexCleaner());
   }
 
   @Test
@@ -55,5 +57,11 @@ public class MetaCenterResourceTest {
         metaCenterResource.setAppRevisionWriteSwitch(
             new AppRevisionDomainConvertor.EnableConfig(false, true));
     Assert.assertFalse(ret.isSuccess());
+  }
+
+  @Test
+  public void testInterfaceStartCleaner() {
+    Result ret = metaCenterResource.interfaceAppsIndexClean();
+    Assert.assertTrue(ret.isSuccess());
   }
 }

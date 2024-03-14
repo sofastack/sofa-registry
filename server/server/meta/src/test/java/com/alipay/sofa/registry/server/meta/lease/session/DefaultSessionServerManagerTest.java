@@ -19,6 +19,7 @@ package com.alipay.sofa.registry.server.meta.lease.session;
 import static org.mockito.Mockito.when;
 
 import com.alipay.sofa.registry.common.model.ProcessId;
+import com.alipay.sofa.registry.common.model.metaserver.Lease;
 import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.HeartbeatRequest;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 import com.alipay.sofa.registry.common.model.slot.SlotConfig;
@@ -159,5 +160,21 @@ public class DefaultSessionServerManagerTest extends AbstractMetaServerTestBase 
                 Collections.emptyMap())
             .setSlotTable(slotTable));
     Assert.assertNotEquals(SlotTable.INIT, slotManager.getSlotTable());
+  }
+
+  @Test
+  public void testWeightChange() {
+    List<SessionNode> sessionNodes = randomSessionNodes(10);
+    for (SessionNode sessionNode : sessionNodes) {
+      sessionManager.register(new Lease<>(sessionNode, 10000));
+    }
+    SessionNode sessionNode =
+        new SessionNode(
+            sessionNodes.get(0).getNodeUrl(),
+            sessionNodes.get(0).getRegionId(),
+            sessionNodes.get(0).getProcessId(),
+            1);
+    sessionManager.renew(sessionNode, 1000);
+    Assert.assertEquals(10, sessionManager.getSessionServerMetaInfo().getClusterMembers().size());
   }
 }

@@ -101,6 +101,10 @@ public class InterfaceAppsIndexCleaner
     LOG.info("InterfaceAppsIndexCleaner started");
   }
 
+  protected AppRevision revisionConvert(AppRevision revision) {
+    return revision;
+  }
+
   public void renew() {
     if (!metaLeaderService.amILeader()) {
       return;
@@ -134,7 +138,9 @@ public class InterfaceAppsIndexCleaner
         }
       }
       LOG.info("renew interface apps index succeed");
+      consecutiveSuccess.success();
     } catch (Throwable e) {
+      consecutiveSuccess.fail();
       LOG.error("renew interface apps index failed:", e);
     }
   }
@@ -165,15 +171,19 @@ public class InterfaceAppsIndexCleaner
     }
     int count =
         interfaceAppsRepository.cleanDeleted(
-            dateBeforeNow(metadataConfig.getRevisionRenewIntervalMinutes() * 15),
+            dateBeforeNow(metadataConfig.getInterfaceAppsIndexRenewIntervalMinutes() * 15),
             metaServerConfig.getInterfaceMaxRemove());
     if (count > 0) {
-      LOG.info("clean up {} revisions", count);
+      LOG.info("clean up {} interface app", count);
     }
   }
 
   public void startRenew() {
     renewer.wakeup();
+  }
+
+  public void startCleaner() {
+    cleaner.wakeup();
   }
 
   public void setEnabled(boolean enabled) {
@@ -214,7 +224,7 @@ public class InterfaceAppsIndexCleaner
   final class Cleaner extends WakeUpLoopRunnable {
     @Override
     public int getWaitingMillis() {
-      int base = metadataConfig.getRevisionRenewIntervalMinutes() * 1000 * 60;
+      int base = metadataConfig.getInterfaceAppsIndexRenewIntervalMinutes() * 1000 * 60;
       return (int) (base + Math.random() * base);
     }
 

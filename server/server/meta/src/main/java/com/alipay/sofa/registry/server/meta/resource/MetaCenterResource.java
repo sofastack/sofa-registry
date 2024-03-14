@@ -63,6 +63,16 @@ public class MetaCenterResource {
   }
 
   @PUT
+  @Path("interfaceAppsIndex/clean")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Result interfaceAppsIndexClean() {
+    Result result = new Result();
+    interfaceAppsIndexCleaner.startCleaner();
+    result.setSuccess(true);
+    return result;
+  }
+
+  @PUT
   @Path("appRevisionCleaner/switch")
   @Produces(MediaType.APPLICATION_JSON)
   public Result appRevisionCleanerEnable(@FormParam("enabled") boolean enabled) {
@@ -139,5 +149,10 @@ public class MetaCenterResource {
   public MetaCenterResource setProvideDataService(ProvideDataService provideDataService) {
     this.provideDataService = provideDataService;
     return this;
+  }
+
+  @VisibleForTesting
+  public void setAppRevisionCleaner(AppRevisionCleaner appRevisionCleaner) {
+    this.appRevisionCleaner = appRevisionCleaner;
   }
 }

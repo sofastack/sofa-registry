@@ -152,6 +152,9 @@ public class MetaServerServiceTest {
     Assert.assertTrue(zones.contains("192.168.1.2"));
     Assert.assertTrue(zones.contains("192.168.1.3"));
 
+    List<SessionNode> nodes = mockServerService.getSessionNodeWithConnNumList("");
+    Assert.assertEquals(nodes.size(), 2);
+
     Assert.assertEquals(2, mockServerService.getSessionProcessIds().size());
     Assert.assertTrue(mockServerService.getSessionProcessIds().contains(ServerEnv.PROCESS_ID));
     zones = mockServerService.getSessionServerList("zoneC");
