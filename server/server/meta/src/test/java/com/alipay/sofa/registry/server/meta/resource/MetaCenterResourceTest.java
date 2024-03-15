@@ -32,17 +32,19 @@ import org.junit.Test;
 public class MetaCenterResourceTest {
   private MetaCenterResource metaCenterResource;
   private DefaultProvideDataNotifier dataNotifier;
+  private InterfaceAppsIndexCleaner interfaceAppsIndexCleaner;
   private ProvideDataService provideDataService =
       spy(new AbstractMetaServerTestBase.InMemoryProvideDataRepo());
 
   @Before
   public void before() {
     dataNotifier = mock(DefaultProvideDataNotifier.class);
+    interfaceAppsIndexCleaner = mock(InterfaceAppsIndexCleaner.class);
     metaCenterResource =
         new MetaCenterResource()
             .setProvideDataNotifier(dataNotifier)
             .setProvideDataService(provideDataService)
-            .setInterfaceAppsIndexCleaner(new InterfaceAppsIndexCleaner());
+            .setInterfaceAppsIndexCleaner(interfaceAppsIndexCleaner);
   }
 
   @Test
