@@ -63,12 +63,37 @@ public class MetaCenterResource {
   }
 
   @PUT
+  @Path("interfaceAppsIndex/clean")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Result interfaceAppsIndexClean() {
+    Result result = new Result();
+    interfaceAppsIndexCleaner.startCleaner();
+    result.setSuccess(true);
+    return result;
+  }
+
+  @PUT
   @Path("appRevisionCleaner/switch")
   @Produces(MediaType.APPLICATION_JSON)
   public Result appRevisionCleanerEnable(@FormParam("enabled") boolean enabled) {
     Result result = new Result();
     try {
       appRevisionCleaner.setEnabled(enabled);
+      result.setSuccess(true);
+    } catch (Exception e) {
+      result.setSuccess(false);
+      result.setMessage(e.getMessage());
+    }
+    return result;
+  }
+
+  @PUT
+  @Path("interfaceAppsCleaner/switch")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Result interfaceAppsCleanerEnable(@FormParam("enabled") boolean enabled) {
+    Result result = new Result();
+    try {
+      interfaceAppsIndexCleaner.setEnabled(enabled);
       result.setSuccess(true);
     } catch (Exception e) {
       result.setSuccess(false);
@@ -124,5 +149,10 @@ public class MetaCenterResource {
   public MetaCenterResource setProvideDataService(ProvideDataService provideDataService) {
     this.provideDataService = provideDataService;
     return this;
+  }
+
+  @VisibleForTesting
+  public void setAppRevisionCleaner(AppRevisionCleaner appRevisionCleaner) {
+    this.appRevisionCleaner = appRevisionCleaner;
   }
 }

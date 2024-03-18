@@ -26,6 +26,9 @@ import com.alipay.sofa.registry.common.model.metaserver.Lease;
 import com.alipay.sofa.registry.common.model.metaserver.NodeServerOperateInfo;
 import com.alipay.sofa.registry.common.model.metaserver.OperationInfo;
 import com.alipay.sofa.registry.common.model.metaserver.blacklist.RegistryForbiddenServerRequest;
+import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
+import com.alipay.sofa.registry.common.model.metaserver.nodes.MetaNode;
+import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 import com.alipay.sofa.registry.exception.SofaRegistryRuntimeException;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -91,6 +94,15 @@ public class DefaultForbiddenServerManager implements RegistryForbiddenServerMan
   @Override
   public boolean allowSelect(Lease<Node> lease) {
     ForbiddenServer servers = getForbiddenServers();
+    if (lease.getRenewal() instanceof SessionNode) {
+      return !servers.contains(NodeType.SESSION, lease.getRenewal().getNodeUrl().getIpAddress());
+    }
+    if (lease.getRenewal() instanceof DataNode) {
+      return !servers.contains(NodeType.DATA, lease.getRenewal().getNodeUrl().getIpAddress());
+    }
+    if (lease.getRenewal() instanceof MetaNode) {
+      return !servers.contains(NodeType.META, lease.getRenewal().getNodeUrl().getIpAddress());
+    }
     return !servers.contains(lease.getRenewal().getNodeUrl().getIpAddress());
   }
 

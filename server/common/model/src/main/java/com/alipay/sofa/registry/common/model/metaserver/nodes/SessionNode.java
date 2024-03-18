@@ -27,6 +27,9 @@ public class SessionNode extends AbstractNode {
 
   private final ProcessId processId;
 
+  // session weight for client conn load balance
+  private int weight;
+
   /**
    * constructor
    *
@@ -34,9 +37,10 @@ public class SessionNode extends AbstractNode {
    * @param regionId regionId
    * @param processId processId
    */
-  public SessionNode(URL nodeUrl, String regionId, ProcessId processId) {
+  public SessionNode(URL nodeUrl, String regionId, ProcessId processId, int weight) {
     super(null, nodeUrl, regionId);
     this.processId = processId;
+    this.weight = weight;
   }
 
   @Override
@@ -59,6 +63,10 @@ public class SessionNode extends AbstractNode {
 
   public ProcessId getProcessId() {
     return processId;
+  }
+
+  public int getWeight() {
+    return weight;
   }
 
   /**

@@ -37,7 +37,7 @@ public class FetchStopPushServiceTest extends FetchStopPushService {
 
   @Test
   public void test() {
-    Assert.assertTrue(isStopPushSwitch());
+    Assert.assertFalse(isStopPushSwitch());
 
     Assert.assertTrue(doProcess(storage.get(), new StopPushStorage(2L, false)));
     Assert.assertEquals(isStopPushSwitch(), false);

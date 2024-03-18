@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.client.provider;
 
 import com.alipay.sofa.registry.client.remoting.ServerNode;
+import com.alipay.sofa.registry.client.util.StringUtils;
 import java.util.Properties;
 
 /**
@@ -34,6 +35,8 @@ public class DefaultServerNode implements ServerNode {
   private int port;
 
   private Properties properties;
+
+  private static final String WEIGHT_KEY = "weight";
 
   /**
    * Instantiates a new Default server node.
@@ -78,6 +81,22 @@ public class DefaultServerNode implements ServerNode {
   @Override
   public String getUrl() {
     return url;
+  }
+
+  @Override
+  public int getWeight() {
+    if (null == getProperties()) {
+      return 0;
+    }
+    String weightStr = getProperties().getProperty(WEIGHT_KEY);
+    if (StringUtils.isBlank(weightStr)) {
+      return 0;
+    }
+    try {
+      return Integer.parseInt(weightStr);
+    } catch (NumberFormatException e) {
+      return 0;
+    }
   }
 
   /**

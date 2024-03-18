@@ -32,10 +32,7 @@ import com.alipay.sofa.registry.store.api.repository.InterfaceAppsRepository;
 import com.alipay.sofa.registry.util.TimestampUtil;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.Assert;
 import org.junit.Before;
@@ -130,5 +127,11 @@ public class InterfaceAppsJdbcRepositoryTest extends AbstractH2DbTestBase {
     for (String service : services) {
       impl.register(app1, Collections.singleton(service));
     }
+  }
+
+  @Test
+  public void testCleaned() {
+    interfaceAppsJdbcRepository.renew("testInterfaceName", "testApp");
+    Assert.assertEquals(0, interfaceAppsJdbcRepository.cleanDeleted(new Date(), 0));
   }
 }

@@ -102,6 +102,13 @@ public class DefaultSessionServerManager
       notifyObservers(new NodeModified<>(lease.getRenewal(), renewal));
       return false;
     } else {
+      // replace the session node, as it has changed weight already
+      if (renewal.getProcessId() != null
+          && lease != null
+          && lease.getRenewal() != null
+          && renewal.getWeight() != lease.getRenewal().getWeight()) {
+        lease.setRenewal(renewal);
+      }
       return super.renew(renewal, duration);
     }
   }

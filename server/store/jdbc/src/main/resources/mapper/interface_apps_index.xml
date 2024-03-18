@@ -41,4 +41,11 @@
         order by id limit #{limitCount}
     </select>
 
+    <delete id="cleanDeleted">
+        <![CDATA[
+        delete /*+ QUERY_TIMEOUT(3000000) */ from interface_apps_index where data_center=#{dataCenter} and gmt_modified < #{beforeTime}
+            limit #{limit}
+        ]]>
+    </delete>
+
 </mapper>

@@ -31,7 +31,8 @@ public class DataCenterNodesTest {
     ProcessId processId1 = new ProcessId("test", 1, 2, 3);
     final String dataId = "testDataId";
     DataCenterNodes request = new DataCenterNodes(Node.NodeType.CLIENT, 10, dataId);
-    SessionNode sessionNode = new SessionNode(new URL("192.168.1.1", 8888), "testZone", processId1);
+    SessionNode sessionNode =
+        new SessionNode(new URL("192.168.1.1", 8888), "testZone", processId1, 0);
     request.setNodes(Collections.singletonMap("testKey", sessionNode));
     Assert.assertEquals(request.getDataCenterId(), dataId);
     Assert.assertEquals(request.getVersion(), 10);

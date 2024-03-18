@@ -138,6 +138,12 @@ public class ValueConstants {
           "app_revision.cleaner.enabled",
           SESSION_PROVIDE_DATA_INSTANCE_ID,
           SESSION_PROVIDE_DATA_GROUP);
+
+  public static final String INTERFACE_APP_CLEANER_ENABLED_DATA_ID =
+      DataInfo.toDataInfoId(
+          "interface_app.cleaner.enabled",
+          SESSION_PROVIDE_DATA_INSTANCE_ID,
+          SESSION_PROVIDE_DATA_GROUP);
   public static final String COMPRESS_PUSH_SWITCH_DATA_ID =
       DataInfo.toDataInfoId(
           "compress.push.switch", SESSION_PROVIDE_DATA_INSTANCE_ID, SESSION_PROVIDE_DATA_GROUP);

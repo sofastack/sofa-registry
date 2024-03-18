@@ -13,6 +13,7 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
     - uses: actions/checkout@v2
@@ -23,6 +24,12 @@ jobs:
     - name: Unit Testt
       run: mvn compile -B
         && mvn clean test -DisSkipIntegrationTest=true "-Dtest.logging.level=ERROR" --fail-at-end --batch-mode
+    - name: Upload heap dump
+      if: always()
+      uses: actions/upload-artifact@v2
+      with:
+        name: heap-dump
+        path: /tmp/*.hprof
     - name: Publish Test Report
       if: ${{ always() }}
       uses: ScaCap/action-surefire-report@v1

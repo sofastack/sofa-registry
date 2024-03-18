@@ -17,9 +17,7 @@
 package com.alipay.sofa.registry.client.provider;
 
 import static org.junit.Assert.assertNotNull;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyMapOf;
-import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
@@ -53,6 +51,38 @@ public class DefaultServerManagerTest {
     when(config.getSyncConfigRetryInterval()).thenReturn(100);
     when(HttpClientUtils.get(
             anyString(), anyMapOf(String.class, String.class), any(RegistryClientConfig.class)))
+        .thenReturn("127.0.0.1:9600;127.0.0.2:9600");
+
+    // then
+    ServerManager serverManager = new DefaultServerManager(config);
+
+    List<ServerNode> serverList = serverManager.getServerList();
+
+    assertNotNull(serverList);
+
+    Thread.sleep(450);
+
+    // verify
+    PowerMockito.verifyStatic(times(4));
+  }
+
+  @Test
+  public void initServerListCompatible() throws Exception {
+    // given
+    PowerMockito.mockStatic(HttpClientUtils.class);
+    RegistryClientConfig config = mock(RegistryClientConfig.class);
+
+    // when
+    when(config.getSyncConfigRetryInterval()).thenReturn(100);
+    when(HttpClientUtils.get(
+            eq("http://null:0/api/servers/queryWithWeight"),
+            anyMapOf(String.class, String.class),
+            any(RegistryClientConfig.class)))
+        .thenReturn(null);
+    when(HttpClientUtils.get(
+            eq("http://null:0/api/servers/query"),
+            anyMapOf(String.class, String.class),
+            any(RegistryClientConfig.class)))
         .thenReturn("127.0.0.1:9600;127.0.0.2:9600");
 
     // then

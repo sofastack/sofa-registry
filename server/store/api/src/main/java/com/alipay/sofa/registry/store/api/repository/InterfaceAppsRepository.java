@@ -18,6 +18,7 @@ package com.alipay.sofa.registry.store.api.repository;
 
 import com.alipay.sofa.registry.common.model.appmeta.InterfaceMapping;
 import com.alipay.sofa.registry.store.api.multi.MultiDataCenterListener;
+import java.util.Date;
 import java.util.Map;
 import java.util.Set;
 
@@ -38,6 +39,8 @@ public interface InterfaceAppsRepository extends MultiDataCenterListener {
   void register(String appName, Set<String> interfaceNames);
 
   void renew(String interfaceName, String appName);
+
+  int cleanDeleted(Date beforeTime, int limit);
 
   void startSynced();
 

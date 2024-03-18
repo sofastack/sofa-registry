@@ -82,8 +82,8 @@ public class DefaultCurrentDcMetaServerTest extends AbstractMetaServerTestBase {
             new VersionedList<>(
                 DatumVersionUtil.nextId(),
                 Lists.newArrayList(
-                    new SessionNode(randomURL(), getDc(), ServerEnv.PROCESS_ID),
-                    new SessionNode(randomURL(), getDc(), ServerEnv.PROCESS_ID))));
+                    new SessionNode(randomURL(), getDc(), ServerEnv.PROCESS_ID, 0),
+                    new SessionNode(randomURL(), getDc(), ServerEnv.PROCESS_ID, 0))));
     Assert.assertEquals(
         2,
         metaServer.getSessionServerManager().getSessionServerMetaInfo().getClusterMembers().size());

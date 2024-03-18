@@ -105,6 +105,12 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository, Rec
   }
 
   @Override
+  public int cleanDeleted(Date beforeTime, int limit) {
+    return interfaceAppsIndexMapper.cleanDeleted(
+        defaultCommonConfig.getDefaultClusterId(), beforeTime, limit);
+  }
+
+  @Override
   public void startSynced() {
     ParaCheckUtil.checkNotEmpty(dataCenters, "dataCenters");
 

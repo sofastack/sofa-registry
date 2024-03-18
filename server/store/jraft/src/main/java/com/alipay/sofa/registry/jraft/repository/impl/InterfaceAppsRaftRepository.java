@@ -20,6 +20,7 @@ import com.alipay.sofa.registry.common.model.appmeta.InterfaceMapping;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.store.api.repository.InterfaceAppsRepository;
+import java.util.Date;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -51,6 +52,11 @@ public class InterfaceAppsRaftRepository implements InterfaceAppsRepository {
 
   @Override
   public void renew(String interfaceName, String appName) {}
+
+  @Override
+  public int cleanDeleted(Date beforeTime, int limit) {
+    return 0;
+  }
 
   @Override
   public void startSynced() {}

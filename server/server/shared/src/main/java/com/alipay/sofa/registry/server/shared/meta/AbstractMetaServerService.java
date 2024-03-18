@@ -366,6 +366,19 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
     return serverList;
   }
 
+  public List<SessionNode> getSessionNodeWithConnNumList(String zonename) {
+    List<SessionNode> serverList = new ArrayList<>();
+    for (SessionNode sessionNode : getSessionNodes().values()) {
+      if (StringUtils.isBlank(zonename) || zonename.equals(sessionNode.getRegionId())) {
+        URL url = sessionNode.getNodeUrl();
+        if (url != null) {
+          serverList.add(sessionNode);
+        }
+      }
+    }
+    return serverList;
+  }
+
   @Override
   public long getSessionServerEpoch() {
     return state.sessionServerEpoch;

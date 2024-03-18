@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.jdbc.mapper;
 
 import com.alipay.sofa.registry.jdbc.domain.InterfaceAppsIndexDomain;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import org.apache.ibatis.annotations.Param;
@@ -55,4 +56,9 @@ public interface InterfaceAppsIndexMapper {
       @Param("dataCenters") Set<String> dataCenters,
       @Param("maxId") long maxId,
       @Param("limitCount") int limitCount);
+
+  int cleanDeleted(
+      @Param("dataCenter") String dataCenter,
+      @Param("beforeTime") Date beforeTime,
+      @Param("limit") int limit);
 }

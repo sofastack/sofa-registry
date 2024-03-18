@@ -21,8 +21,13 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.alipay.sofa.registry.common.model.CommonResponse;
+import com.alipay.sofa.registry.common.model.ProcessId;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.Lease;
+import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
+import com.alipay.sofa.registry.common.model.metaserver.nodes.MetaNode;
+import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
+import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.exception.SofaRegistryRuntimeException;
 import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
 import com.alipay.sofa.registry.server.meta.lease.filter.DefaultForbiddenServerManager;
@@ -118,5 +123,22 @@ public class RegistryCoreOpsResourceTest extends AbstractMetaServerTestBase {
     Assert.assertTrue(response.isSuccess());
     Assert.assertTrue(
         registryForbiddenServerManager.allowSelect(new Lease<>(new SimpleNode("127.0.0.1"), 100)));
+  }
+
+  @Test
+  public void testDistinguishServerGroup() {
+    ProcessId processId1 = new ProcessId("test", 1, 2, 3);
+    CommonResponse response = resource.kickoffServer("testCell", "DATA", "127.0.0.1");
+    Assert.assertTrue(response.isSuccess());
+    Assert.assertTrue(
+        registryForbiddenServerManager.allowSelect(
+            new Lease<>(
+                new SessionNode(new URL("127.0.0.1", 8888), "regionId", processId1, 0), 100)));
+    Assert.assertFalse(
+        registryForbiddenServerManager.allowSelect(
+            new Lease<>(new DataNode(new URL("127.0.0.1", 8888), "regionId"), 100)));
+    Assert.assertTrue(
+        registryForbiddenServerManager.allowSelect(
+            new Lease<>(new MetaNode(new URL("127.0.0.1", 8888), "regionId"), 100)));
   }
 }

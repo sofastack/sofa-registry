@@ -90,7 +90,7 @@ public class DefaultServerManager implements ServerManager {
   private void syncServerList() {
     String url =
         String.format(
-            "http://%s:%d/api/servers/query",
+            "http://%s:%d/api/servers/queryWithWeight",
             config.getRegistryEndpoint(), config.getRegistryEndpointPort());
     Map<String, String> params = new HashMap<String, String>();
     params.put("env", config.getEnv());
@@ -100,6 +100,14 @@ public class DefaultServerManager implements ServerManager {
     params.put("instanceId", config.getInstanceId());
     try {
       String result = HttpClientUtils.get(url, params, config);
+      if (null == result) {
+        // when registry not support query with weight , go back
+        url =
+            String.format(
+                "http://%s:%d/api/servers/query",
+                config.getRegistryEndpoint(), config.getRegistryEndpointPort());
+        result = HttpClientUtils.get(url, params, config);
+      }
       if (null != result) {
         String[] servers = result.split(";");
         Set<ServerNode> tempNodes = new HashSet<ServerNode>();
