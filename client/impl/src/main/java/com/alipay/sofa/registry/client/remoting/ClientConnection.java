@@ -130,7 +130,7 @@ public class ClientConnection implements Client {
       try {
         // Power of Two Choices
         if (serverNodes.size() > 1) {
-          choosed = serverNodes.get(i).getWeight() > serverNodes.get(i + 1).getWeight() ? i + 1 : i;
+          choosed = serverNodes.get(i).getWeight() > serverNodes.get( (i + 1) % serverNodes.size() ).getWeight() ? (i + 1) % serverNodes.size() : i;
         }
         connection = connect(serverNodes.get(choosed));
         if (null != connection && connection.isFine()) {
