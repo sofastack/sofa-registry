@@ -225,8 +225,10 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository, Rec
         for (Entry<String, InterfaceMapping> entry : currentMappings.entrySet()) {
           InterfaceMapping newMapping = newMappings.get(entry.getKey());
           InterfaceMapping currentMapping = entry.getValue();
-          if (newMapping == null
-              || newMapping.getNanosVersion() < currentMapping.getNanosVersion()
+          if (newMapping == null) {
+            continue;
+          }
+          if (newMapping.getNanosVersion() < currentMapping.getNanosVersion()
               || (newMapping.getNanosVersion() == currentMapping.getNanosVersion()
                   && !newMapping.getApps().equals(currentMapping.getApps()))) {
             if (conflictCallback != null) {

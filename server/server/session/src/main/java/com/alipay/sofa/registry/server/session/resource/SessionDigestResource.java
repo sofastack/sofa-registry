@@ -307,7 +307,7 @@ public class SessionDigestResource {
     List<Map.Entry<String, Integer>> list = new ArrayList<>();
     String inputType = type.toUpperCase();
     switch (inputType) {
-      case SUB:
+      case PUB:
         sessionDataStore
             .getDatas()
             .forEach((key, value) -> list.add(new AbstractMap.SimpleEntry<>(key, value.size())));
