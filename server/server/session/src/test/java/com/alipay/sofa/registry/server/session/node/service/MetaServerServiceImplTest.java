@@ -25,6 +25,7 @@ import com.alipay.sofa.registry.common.model.slot.SlotConfig;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
 import com.alipay.sofa.registry.server.session.TestUtils;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfigBean;
 import com.alipay.sofa.registry.server.session.remoting.DataNodeExchanger;
@@ -137,6 +138,7 @@ public class MetaServerServiceImplTest {
     sessionServerConfigBean = TestUtils.newSessionConfig("testDc");
 
     impl.setSessionServerConfig(sessionServerConfigBean);
+    impl.setBoltExchange(new BoltExchange());
     Assert.assertEquals(
         impl.getRenewIntervalSecs(), sessionServerConfigBean.getSchedulerHeartbeatIntervalSecs());
     slotTableCache = new SlotTableCacheImpl();

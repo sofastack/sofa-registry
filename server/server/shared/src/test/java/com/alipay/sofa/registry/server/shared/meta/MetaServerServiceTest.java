@@ -121,9 +121,9 @@ public class MetaServerServiceTest {
             new VersionedList(
                 1,
                 Lists.newArrayList(
-                    new SessionNode(new URL("192.168.1.2"), "zoneA", ServerEnv.PROCESS_ID),
+                    new SessionNode(new URL("192.168.1.2"), "zoneA", ServerEnv.PROCESS_ID, 0),
                     new SessionNode(
-                        new URL("192.168.1.3"), "zoneB", new ProcessId("test", 1, 1, 1)))),
+                        new URL("192.168.1.3"), "zoneB", new ProcessId("test", 1, 1, 1), 0))),
             "test",
             100,
             Collections.emptyMap());
@@ -151,6 +151,9 @@ public class MetaServerServiceTest {
     Assert.assertEquals(zones.size(), 2);
     Assert.assertTrue(zones.contains("192.168.1.2"));
     Assert.assertTrue(zones.contains("192.168.1.3"));
+
+    List<SessionNode> nodes = mockServerService.getSessionNodeWithConnNumList("");
+    Assert.assertEquals(nodes.size(), 2);
 
     Assert.assertEquals(2, mockServerService.getSessionProcessIds().size());
     Assert.assertTrue(mockServerService.getSessionProcessIds().contains(ServerEnv.PROCESS_ID));
@@ -235,9 +238,9 @@ public class MetaServerServiceTest {
             new VersionedList(
                 1,
                 Lists.newArrayList(
-                    new SessionNode(new URL("192.168.1.2"), "zoneA", ServerEnv.PROCESS_ID),
+                    new SessionNode(new URL("192.168.1.2"), "zoneA", ServerEnv.PROCESS_ID, 0),
                     new SessionNode(
-                        new URL("192.168.1.3"), "zoneB", new ProcessId("test", 1, 1, 1)))),
+                        new URL("192.168.1.3"), "zoneB", new ProcessId("test", 1, 1, 1), 0))),
             "test",
             100,
             Collections.emptyMap());

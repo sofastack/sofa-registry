@@ -24,6 +24,8 @@ import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 import com.alipay.sofa.registry.common.model.slot.SlotConfig;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.common.model.store.URL;
+import com.alipay.sofa.registry.remoting.Server;
+import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.multi.cluster.DataCenterMetadataCache;
 import com.alipay.sofa.registry.server.session.remoting.DataNodeExchanger;
@@ -50,6 +52,8 @@ public class MetaServerServiceImpl extends AbstractMetaServerService<BaseHeartBe
   @Autowired private DataNodeExchanger dataNodeExchanger;
 
   @Autowired private DataNodeNotifyExchanger dataNodeNotifyExchanger;
+
+  @Autowired private Exchange boltExchange;
 
   @Override
   protected long getCurrentSlotTableEpoch() {
@@ -104,7 +108,18 @@ public class MetaServerServiceImpl extends AbstractMetaServerService<BaseHeartBe
 
   private Node createNode() {
     return new SessionNode(
-        new URL(ServerEnv.IP), sessionServerConfig.getSessionServerRegion(), ServerEnv.PROCESS_ID);
+        new URL(ServerEnv.IP),
+        sessionServerConfig.getSessionServerRegion(),
+        ServerEnv.PROCESS_ID,
+        getWeight());
+  }
+
+  private int getWeight() {
+    Server server = boltExchange.getServer(sessionServerConfig.getServerPort());
+    if (null == server) {
+      return 0;
+    }
+    return server.getChannels().size();
   }
 
   @VisibleForTesting
@@ -135,5 +150,10 @@ public class MetaServerServiceImpl extends AbstractMetaServerService<BaseHeartBe
   @VisibleForTesting
   void setDataCenterMetadataCache(DataCenterMetadataCache dataCenterMetadataCache) {
     this.dataCenterMetadataCache = dataCenterMetadataCache;
+  }
+
+  @VisibleForTesting
+  public void setBoltExchange(Exchange boltExchange) {
+    this.boltExchange = boltExchange;
   }
 }

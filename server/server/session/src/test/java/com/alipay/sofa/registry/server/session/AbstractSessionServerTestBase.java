@@ -884,6 +884,11 @@ public class AbstractSessionServerTestBase extends AbstractTestBase {
     public void renew(String interfaceName, String appName) {}
 
     @Override
+    public int cleanDeleted(Date beforeTime, int limit) {
+      return 0;
+    }
+
+    @Override
     public void startSynced() {}
 
     @Override

@@ -74,6 +74,8 @@ public class MetaServerConfigBean implements MetaServerConfig {
   private int clientManagerExpireDays = 1;
 
   private int appRevisionMaxRemove = 2000;
+
+  private int interfaceMaxRemove = 2000;
   private int appRevisionCountAlarmThreshold = 20;
 
   private long metaLeaderWarmupMillis =
@@ -518,8 +520,17 @@ public class MetaServerConfigBean implements MetaServerConfig {
     return appRevisionMaxRemove;
   }
 
+  @Override
+  public int getInterfaceMaxRemove() {
+    return interfaceMaxRemove;
+  }
+
   public void setAppRevisionMaxRemove(int appRevisionMaxRemove) {
     this.appRevisionMaxRemove = appRevisionMaxRemove;
+  }
+
+  public void setInterfaceMaxRemove(int interfaceMaxRemove) {
+    this.interfaceMaxRemove = interfaceMaxRemove;
   }
   /**
    * Setter method for property <tt>clientManagerCleanSecs</tt>.

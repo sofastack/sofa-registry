@@ -28,8 +28,8 @@ public class NodeUtilsTest {
   @Test
   public void test() {
     Assert.assertTrue(NodeUtils.transferNodeToIpList(Collections.EMPTY_LIST).isEmpty());
-    SessionNode node1 = new SessionNode(new URL("xx", 12), "test", null);
-    SessionNode node2 = new SessionNode(new URL("xyz", 34), "test", null);
+    SessionNode node1 = new SessionNode(new URL("xx", 12), "test", null, 0);
+    SessionNode node2 = new SessionNode(new URL("xyz", 34), "test", null, 0);
     List<String> list = NodeUtils.transferNodeToIpList(Lists.newArrayList(node1, node2));
     Assert.assertEquals(list.get(0), "xx");
     Assert.assertEquals(list.get(1), "xyz");

@@ -32,7 +32,7 @@ public abstract class BaseStopPushService
 
   @Autowired private ProvideDataRepository provideDataRepository;
 
-  private static final StopPushStorage INIT = new StopPushStorage(INIT_VERSION, true);
+  private static final StopPushStorage INIT = new StopPushStorage(INIT_VERSION, false);
 
   public BaseStopPushService() {
     // default value is stop.push
