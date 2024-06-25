@@ -56,7 +56,7 @@ public final class PublisherUtils {
     for (Map.Entry<String, Map<String, Publisher>> e : publisherMap.entrySet()) {
 
       // filter dataInfoId
-      if (!acceptorManager.accept(SyncAcceptorRequest.buildRequest(e.getKey()))) {
+      if (acceptorManager != null && !acceptorManager.accept(SyncAcceptorRequest.buildRequest(e.getKey()))) {
         continue;
       }
 
