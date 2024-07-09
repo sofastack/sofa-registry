@@ -89,8 +89,8 @@ CREATE TABLE IF NOT EXISTS `recover_config`
 CREATE TABLE IF NOT EXISTS `multi_cluster_sync_info`
 (
     `id`                   bigint(20)    NOT NULL AUTO_INCREMENT COMMENT '主键',
-    `data_center`          varchar(512)  NOT NULL COMMENT '集群名称',
-    `remote_data_center`   varchar(512)  NOT NULL COMMENT '同步的集群名称',
+    `data_center`          varchar(255)  NOT NULL COMMENT '集群名称',
+    `remote_data_center`   varchar(255)  NOT NULL COMMENT '同步的集群名称',
     `remote_meta_address`  varchar(1024) NOT NULL COMMENT '同步的集群地址',
     `enable_sync_datum`    varchar(16)   NOT NULL COMMENT 'datum同步的开关是否开启',
     `enable_push`          varchar(16)   NOT NULL COMMENT '同步的数据是否允许推送',
