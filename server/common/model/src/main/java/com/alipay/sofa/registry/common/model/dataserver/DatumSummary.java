@@ -52,7 +52,7 @@ public class DatumSummary implements Serializable {
     Map<String, RegisterVersion> versionMap = Maps.newHashMapWithExpectedSize(publisherMap.size());
     for (Map.Entry<String, Publisher> e : publisherMap.entrySet()) {
       // filter publisher
-      if (!acceptorManager.accept(
+      if (acceptorManager != null && !acceptorManager.accept(
           SyncAcceptorRequest.buildRequest(dataInfoId, e.getValue().getPublishSource()))) {
         continue;
       }
