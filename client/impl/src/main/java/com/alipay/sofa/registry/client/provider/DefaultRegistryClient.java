@@ -36,10 +36,7 @@ import com.alipay.sofa.registry.client.api.registration.PublisherRegistration;
 import com.alipay.sofa.registry.client.api.registration.SubscriberRegistration;
 import com.alipay.sofa.registry.client.auth.AuthManager;
 import com.alipay.sofa.registry.client.auth.NoopAuthManager;
-import com.alipay.sofa.registry.client.event.ConfiguratorProcessEvent;
 import com.alipay.sofa.registry.client.event.DefaultEventBus;
-import com.alipay.sofa.registry.client.event.LookoutSubscriber;
-import com.alipay.sofa.registry.client.event.SubscriberProcessEvent;
 import com.alipay.sofa.registry.client.log.LoggerFactory;
 import com.alipay.sofa.registry.client.remoting.ClientConnection;
 import com.alipay.sofa.registry.client.remoting.ClientConnectionCloseEventProcessor;
@@ -101,8 +98,6 @@ public class DefaultRegistryClient implements RegistryClient {
 
   private EventBus eventBus;
 
-  private LookoutSubscriber lookoutSubscriber;
-
   private AtomicBoolean init = new AtomicBoolean(false);
 
   /**
@@ -155,16 +150,9 @@ public class DefaultRegistryClient implements RegistryClient {
       return;
     }
 
-    // init lookout subscriber
-    if (null == lookoutSubscriber) {
-      this.lookoutSubscriber = new LookoutSubscriber();
-    }
-
     // init event bus
     if (null == eventBus) {
       this.eventBus = new DefaultEventBus(registryClientConfig);
-      this.eventBus.register(SubscriberProcessEvent.class, lookoutSubscriber);
-      this.eventBus.register(ConfiguratorProcessEvent.class, lookoutSubscriber);
     }
 
     // init server manager
@@ -536,15 +524,6 @@ public class DefaultRegistryClient implements RegistryClient {
    */
   public void setAuthManager(AuthManager authManager) {
     this.authManager = authManager;
-  }
-
-  /**
-   * Setter method for property <tt>lookoutSubscriber</tt>.
-   *
-   * @param lookoutSubscriber value to be assigned to property lookoutSubscriber
-   */
-  public void setLookoutSubscriber(LookoutSubscriber lookoutSubscriber) {
-    this.lookoutSubscriber = lookoutSubscriber;
   }
 
   /**

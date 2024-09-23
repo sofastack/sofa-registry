@@ -54,7 +54,6 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <bolt.version>1.6.2</bolt.version>
         <hessian.version>3.3.8</hessian.version>
-        <lookout.version>1.5.2</lookout.version>
         <sofa.common.tools.version>1.0.12</sofa.common.tools.version>
         <netty.version>4.1.42.Final</netty.version>
         <slf4j.version>1.7.21</slf4j.version>
@@ -96,11 +95,6 @@
             <groupId>com.alipay.sofa.common</groupId>
             <artifactId>sofa-common-tools</artifactId>
             <version>${sofa.common.tools.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.alipay.sofa.lookout</groupId>
-            <artifactId>lookout-api</artifactId>
-            <version>${lookout.version}</version>
         </dependency>
         <dependency>
             <groupId>io.netty</groupId>

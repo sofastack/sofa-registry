@@ -50,10 +50,6 @@
             <artifactId>sofa-common-tools</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.alipay.sofa.lookout</groupId>
-            <artifactId>lookout-api</artifactId>
-        </dependency>
-        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <scope>test</scope>
