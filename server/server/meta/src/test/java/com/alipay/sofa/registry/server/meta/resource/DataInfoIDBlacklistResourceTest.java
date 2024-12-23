@@ -9,7 +9,6 @@ import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataNotifier;
 import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataService;
 import com.alipay.sofa.registry.store.api.DBResponse;
 import com.alipay.sofa.registry.store.api.OperationStatus;
-import com.alipay.sofa.registry.store.api.config.DefaultCommonConfig;
 import com.alipay.sofa.registry.util.JsonUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.junit.Assert;
@@ -18,10 +17,8 @@ import org.junit.Test;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
 
 /**
  * @author huicha
@@ -35,24 +32,16 @@ public class DataInfoIDBlacklistResourceTest extends AbstractMetaServerTestBase 
 
   private DataInfoIDBlacklistResource createDataIDBlacklistResource(ProvideDataService provideDataService) {
     ProvideDataNotifier provideDataNotifier = mock(ProvideDataNotifier.class);
-    DefaultCommonConfig defaultCommonConfig = mock(DefaultCommonConfig.class);
-    when(defaultCommonConfig.getClusterId(anyString(), anyString())).thenReturn("DEFAULT_DATACENTER");
-
-   return new DataInfoIDBlacklistResource()
-                    .setProvideDataNotifier(provideDataNotifier)
-                    .setProvideDataService(provideDataService)
-                    .setDefaultCommonConfig(defaultCommonConfig);
+    return new DataInfoIDBlacklistResource()
+            .setProvideDataNotifier(provideDataNotifier)
+            .setProvideDataService(provideDataService);
   }
 
   private DataInfoIDBlacklistResource createDataIDBlacklistResource(ProvideDataService provideDataService,
                                                                     ProvideDataNotifier provideDataNotifier) {
-    DefaultCommonConfig defaultCommonConfig = mock(DefaultCommonConfig.class);
-    when(defaultCommonConfig.getClusterId(anyString(), anyString())).thenReturn("DEFAULT_DATACENTER");
-
     return new DataInfoIDBlacklistResource()
             .setProvideDataNotifier(provideDataNotifier)
-            .setProvideDataService(provideDataService)
-            .setDefaultCommonConfig(defaultCommonConfig);
+            .setProvideDataService(provideDataService);
   }
 
   @Test
@@ -60,17 +49,16 @@ public class DataInfoIDBlacklistResourceTest extends AbstractMetaServerTestBase 
     ProvideDataService provideDataService = createProvideDataService();
     DataInfoIDBlacklistResource resource = this.createDataIDBlacklistResource(provideDataService);
 
-    String dataCenter = "DEFAULT_DATACENTER";
     String dataIdOne = "dataid.black.list.test";
     String group = "dataid-black-list-test-group";
     String instanceId = "DEFAULT_INSTANCE_ID";
 
     // 添加了两个数据
-    Result resultOne = resource.addBlackList(dataCenter, dataIdOne, group, instanceId);
+    Result resultOne = resource.addBlackList(dataIdOne, group, instanceId);
     Assert.assertTrue(resultOne.isSuccess());
 
     String dataIdTwo = "dataid.black.list.test2";
-    Result resultTwo = resource.addBlackList(dataCenter, dataIdTwo, group, instanceId);
+    Result resultTwo = resource.addBlackList(dataIdTwo, group, instanceId);
     Assert.assertTrue(resultTwo.isSuccess());
 
     // 因此这里的查询结果也应该是两条
@@ -79,17 +67,18 @@ public class DataInfoIDBlacklistResourceTest extends AbstractMetaServerTestBase 
     Assert.assertNotNull(queryResult.getEntity());
     PersistenceData persistenceData = queryResult.getEntity();
     String dataJson = persistenceData.getData();
-    Set<String> data = JsonUtils.read(dataJson, new TypeReference<Set<String>>() {});
+    Set<String> data = JsonUtils.read(dataJson, new TypeReference<Set<String>>() {
+    });
     Assert.assertEquals(2, data.size());
     Assert.assertTrue(data.contains(String.format("%s#@#%s#@#%s", dataIdOne, instanceId, group)));
     Assert.assertTrue(data.contains(String.format("%s#@#%s#@#%s", dataIdTwo, instanceId, group)));
 
     // 删除了第一条数据以及一条不存在的数据
-    Result deleteResultOne = resource.deleteBlackList(dataCenter, dataIdOne, group, instanceId);
+    Result deleteResultOne = resource.deleteBlackList(dataIdOne, group, instanceId);
     Assert.assertTrue(deleteResultOne.isSuccess());
 
     String notExistDataId = "not.exist";
-    Result deleteResultTwo = resource.deleteBlackList(dataCenter, notExistDataId, group, instanceId);
+    Result deleteResultTwo = resource.deleteBlackList(notExistDataId, group, instanceId);
     Assert.assertTrue(deleteResultTwo.isSuccess());
 
     // 因此这里的查询结果应该是只有一条数据，且是第二条数据
@@ -98,14 +87,14 @@ public class DataInfoIDBlacklistResourceTest extends AbstractMetaServerTestBase 
     Assert.assertNotNull(queryResultTwo.getEntity());
     PersistenceData persistenceDataTwo = queryResultTwo.getEntity();
     String dataJsonTwo = persistenceDataTwo.getData();
-    Set<String> dataTwo = JsonUtils.read(dataJsonTwo, new TypeReference<Set<String>>() {});
+    Set<String> dataTwo = JsonUtils.read(dataJsonTwo, new TypeReference<Set<String>>() {
+    });
     Assert.assertEquals(1, dataTwo.size());
     Assert.assertTrue(data.contains(String.format("%s#@#%s#@#%s", dataIdTwo, instanceId, group)));
   }
 
   @Test
   public void testNotify() {
-    String dataCenter = "DEFAULT_DATACENTER";
     String dataId = "dataid.black.list.test";
     String group = "dataid-black-list-test-group";
     String instanceId = "DEFAULT_INSTANCE_ID";
@@ -127,7 +116,7 @@ public class DataInfoIDBlacklistResourceTest extends AbstractMetaServerTestBase 
       counter.addAndGet(1);
     });
 
-    Result result = resource.addBlackList(dataCenter, dataId, group, instanceId);
+    Result result = resource.addBlackList(dataId, group, instanceId);
     Assert.assertTrue(result.isSuccess());
     Assert.assertEquals(1, counter.get());
   }

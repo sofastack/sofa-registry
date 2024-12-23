@@ -7,7 +7,6 @@ import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideDataChangeEvent;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.core.model.Result;
-import com.alipay.sofa.registry.jdbc.constant.TableEnum;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataNotifier;
@@ -16,11 +15,9 @@ import com.alipay.sofa.registry.server.meta.resource.filter.AuthRestController;
 import com.alipay.sofa.registry.server.meta.resource.filter.LeaderAwareRestController;
 import com.alipay.sofa.registry.store.api.DBResponse;
 import com.alipay.sofa.registry.store.api.OperationStatus;
-import com.alipay.sofa.registry.store.api.config.DefaultCommonConfig;
 import com.alipay.sofa.registry.util.JsonUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.annotations.VisibleForTesting;
-import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.ws.rs.FormParam;
@@ -47,18 +44,14 @@ public class DataInfoIDBlacklistResource {
   @Autowired
   private ProvideDataNotifier provideDataNotifier;
 
-  @Autowired
-  private DefaultCommonConfig defaultCommonConfig;
-
   @POST
   @Path("add")
   @Produces(MediaType.APPLICATION_JSON)
-  public Result addBlackList(@FormParam("dataCenter") String dataCenter,
-                             @FormParam("dataId") String dataId,
+  public Result addBlackList(@FormParam("dataId") String dataId,
                              @FormParam("group") String group,
                              @FormParam("instanceId") String instanceId) {
     try {
-      return process(dataCenter, dataId, group, instanceId, Operation.ADD);
+      return process(dataId, group, instanceId, Operation.ADD);
     } catch (Throwable throwable) {
       LOGGER.error("Save dataid black list exception", throwable);
       return Result.failed("Save dataid black list exception");
@@ -68,28 +61,20 @@ public class DataInfoIDBlacklistResource {
   @POST
   @Path("delete")
   @Produces(MediaType.APPLICATION_JSON)
-  public Result deleteBlackList(@FormParam("dataCenter") String dataCenter,
-                                @FormParam("dataId") String dataId,
+  public Result deleteBlackList(@FormParam("dataId") String dataId,
                                 @FormParam("group") String group,
                                 @FormParam("instanceId") String instanceId) {
     try {
-      return process(dataCenter, dataId, group, instanceId, Operation.DELETE);
+      return process(dataId, group, instanceId, Operation.DELETE);
     } catch (Throwable throwable) {
       LOGGER.error("Delete dataid black list exception", throwable);
       return Result.failed("Delete dataid black list exception");
     }
   }
 
-  private Result process(String dataCenter, String dataId, String group, String instanceId, Operation operation) {
+  private Result process(String dataId, String group, String instanceId, Operation operation) {
     // 1. 参数检查
-    // 1.1. 检查 DataCenter 是否就是当前 Meta 的所属 DataCenter
-    String clusterId = defaultCommonConfig.getClusterId(TableEnum.PROVIDE_DATA.getTableName(), ValueConstants.SESSION_DATAID_BLACKLIST_DATA_ID);
-    if (!StringUtils.equals(dataCenter, clusterId)) {
-      // 给定的机房不是当前机房，那么拒绝添加黑名单，直接返回
-      return Result.failed("Invalid data center");
-    }
-
-    // 1.2. 检查要处理的 DataId 以及 Group 是否符合规则
+    //   检查要处理的 DataId 以及 Group 是否符合规则
     DataInfo dataInfo = new DataInfo(instanceId, dataId, group);
     Tuple<Boolean, String> checkResult = this.checkDataInfoId(dataInfo);
     if (!checkResult.o1) {
@@ -165,12 +150,6 @@ public class DataInfoIDBlacklistResource {
   @VisibleForTesting
   public DataInfoIDBlacklistResource setProvideDataNotifier(ProvideDataNotifier provideDataNotifier) {
     this.provideDataNotifier = provideDataNotifier;
-    return this;
-  }
-
-  @VisibleForTesting
-  public DataInfoIDBlacklistResource setDefaultCommonConfig(DefaultCommonConfig defaultCommonConfig) {
-    this.defaultCommonConfig = defaultCommonConfig;
     return this;
   }
 }
