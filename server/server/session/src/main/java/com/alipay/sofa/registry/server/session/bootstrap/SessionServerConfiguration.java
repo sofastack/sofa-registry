@@ -82,6 +82,7 @@ import com.alipay.sofa.registry.server.session.remoting.console.handler.ClientOn
 import com.alipay.sofa.registry.server.session.remoting.console.handler.FilterSubscriberIPsHandler;
 import com.alipay.sofa.registry.server.session.remoting.console.handler.GetClientManagerRequestHandler;
 import com.alipay.sofa.registry.server.session.remoting.console.handler.PubSubDataInfoIdRequestHandler;
+import com.alipay.sofa.registry.server.session.remoting.console.handler.QueryPublisherRequestHandler;
 import com.alipay.sofa.registry.server.session.remoting.console.handler.QuerySubscriberRequestHandler;
 import com.alipay.sofa.registry.server.session.remoting.console.handler.StopPushRequestHandler;
 import com.alipay.sofa.registry.server.session.remoting.handler.AppRevisionSliceHandler;
@@ -301,6 +302,7 @@ public class SessionServerConfiguration {
     public Collection<AbstractServerHandler> consoleHandlers() {
       Collection<AbstractServerHandler> list = new ArrayList<>();
       list.add(querySubscriberRequestHandler());
+      list.add(queryPublisherRequestHandler());
       list.add(clientOffRequestHandler());
       list.add(clientOnRequestHandler());
       list.add(getClientManagerRequestHandler());
@@ -339,6 +341,11 @@ public class SessionServerConfiguration {
     @Bean
     public AbstractServerHandler querySubscriberRequestHandler() {
       return new QuerySubscriberRequestHandler();
+    }
+
+    @Bean
+    public AbstractServerHandler queryPublisherRequestHandler() {
+      return new QueryPublisherRequestHandler();
     }
 
     @Bean
