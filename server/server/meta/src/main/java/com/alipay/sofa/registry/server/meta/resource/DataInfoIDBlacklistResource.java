@@ -12,7 +12,7 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataNotifier;
 import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataService;
 import com.alipay.sofa.registry.server.meta.resource.filter.AuthRestController;
-import com.alipay.sofa.registry.server.meta.resource.filter.LeaderAwareRestController;
+import com.alipay.sofa.registry.server.meta.resource.filter.LeaderForwardRestController;
 import com.alipay.sofa.registry.store.api.DBResponse;
 import com.alipay.sofa.registry.store.api.OperationStatus;
 import com.alipay.sofa.registry.util.JsonUtils;
@@ -20,10 +20,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.annotations.VisibleForTesting;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import javax.ws.rs.FormParam;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.HashSet;
 import java.util.Set;
@@ -33,8 +30,7 @@ import java.util.Set;
  * @date 2024/12/13
  */
 @Path("datainfoid/blacklist")
-@AuthRestController
-@LeaderAwareRestController
+@LeaderForwardRestController
 public class DataInfoIDBlacklistResource {
   private static final Logger LOGGER = LoggerFactory.getLogger(DataInfoIDBlacklistResource.class);
 
@@ -47,6 +43,7 @@ public class DataInfoIDBlacklistResource {
   @POST
   @Path("add")
   @Produces(MediaType.APPLICATION_JSON)
+  @AuthRestController
   public Result addBlackList(@FormParam("dataId") String dataId,
                              @FormParam("group") String group,
                              @FormParam("instanceId") String instanceId) {
@@ -61,6 +58,7 @@ public class DataInfoIDBlacklistResource {
   @POST
   @Path("delete")
   @Produces(MediaType.APPLICATION_JSON)
+  @AuthRestController
   public Result deleteBlackList(@FormParam("dataId") String dataId,
                                 @FormParam("group") String group,
                                 @FormParam("instanceId") String instanceId) {
@@ -69,6 +67,28 @@ public class DataInfoIDBlacklistResource {
     } catch (Throwable throwable) {
       LOGGER.error("Delete dataid black list exception", throwable);
       return Result.failed("Delete dataid black list exception");
+    }
+  }
+
+  @GET
+  @Path("query")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Result queryBlackList() {
+    try {
+      DBResponse<PersistenceData> queryResponse =
+              this.provideDataService.queryProvideData(ValueConstants.SESSION_DATAID_BLACKLIST_DATA_ID);
+      OperationStatus operationStatus = queryResponse.getOperationStatus();
+      if (OperationStatus.SUCCESS.equals(operationStatus)) {
+        PersistenceData persistenceData = queryResponse.getEntity();
+        Result result = Result.success();
+        result.setMessage(persistenceData.getData());
+        return result;
+      } else {
+        return Result.success();
+      }
+    } catch (Throwable throwable) {
+      LOGGER.error("Query dataid black list exception", throwable);
+      return Result.failed("Query dataid black list exception");
     }
   }
 

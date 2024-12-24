@@ -22,51 +22,25 @@ import com.alipay.sofa.registry.jraft.config.RaftConfiguration;
 import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.remoting.jersey.exchange.JerseyExchange;
-import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
-import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfigBean;
-import com.alipay.sofa.registry.server.meta.bootstrap.config.MultiClusterMetaServerConfig;
-import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
-import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfigBeanProperty;
+import com.alipay.sofa.registry.server.meta.bootstrap.config.*;
 import com.alipay.sofa.registry.server.meta.cleaner.AppRevisionCleaner;
 import com.alipay.sofa.registry.server.meta.cleaner.InterfaceAppsIndexCleaner;
 import com.alipay.sofa.registry.server.meta.lease.filter.DefaultForbiddenServerManager;
 import com.alipay.sofa.registry.server.meta.lease.filter.RegistryForbiddenServerManager;
-import com.alipay.sofa.registry.server.meta.provide.data.DefaultClientManagerService;
-import com.alipay.sofa.registry.server.meta.provide.data.DefaultProvideDataService;
-import com.alipay.sofa.registry.server.meta.provide.data.FetchStopPushService;
-import com.alipay.sofa.registry.server.meta.provide.data.NodeOperatingService;
-import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataService;
+import com.alipay.sofa.registry.server.meta.provide.data.*;
 import com.alipay.sofa.registry.server.meta.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.server.meta.remoting.MetaServerExchanger;
 import com.alipay.sofa.registry.server.meta.remoting.SessionNodeExchanger;
 import com.alipay.sofa.registry.server.meta.remoting.connection.DataConnectionManager;
 import com.alipay.sofa.registry.server.meta.remoting.connection.MetaConnectionManager;
 import com.alipay.sofa.registry.server.meta.remoting.connection.SessionConnectionManager;
-import com.alipay.sofa.registry.server.meta.remoting.handler.FetchProvideDataRequestHandler;
-import com.alipay.sofa.registry.server.meta.remoting.handler.FetchSystemPropertyRequestHandler;
-import com.alipay.sofa.registry.server.meta.remoting.handler.GetSlotTableStatusRequestHandler;
-import com.alipay.sofa.registry.server.meta.remoting.handler.HeartbeatRequestHandler;
-import com.alipay.sofa.registry.server.meta.remoting.handler.RegistryForbiddenServerHandler;
+import com.alipay.sofa.registry.server.meta.remoting.handler.*;
 import com.alipay.sofa.registry.server.meta.remoting.meta.LocalMetaExchanger;
 import com.alipay.sofa.registry.server.meta.remoting.meta.MetaServerRenewService;
-import com.alipay.sofa.registry.server.meta.resource.BlacklistDataResource;
-import com.alipay.sofa.registry.server.meta.resource.CircuitBreakerResources;
-import com.alipay.sofa.registry.server.meta.resource.ClientManagerResource;
-import com.alipay.sofa.registry.server.meta.resource.CompressResource;
-import com.alipay.sofa.registry.server.meta.resource.DataInfoIDBlacklistResource;
-import com.alipay.sofa.registry.server.meta.resource.HealthResource;
-import com.alipay.sofa.registry.server.meta.resource.MetaCenterResource;
-import com.alipay.sofa.registry.server.meta.resource.MetaDigestResource;
-import com.alipay.sofa.registry.server.meta.resource.MetaLeaderResource;
-import com.alipay.sofa.registry.server.meta.resource.ProvideDataResource;
-import com.alipay.sofa.registry.server.meta.resource.RecoverConfigResource;
-import com.alipay.sofa.registry.server.meta.resource.RegistryCoreOpsResource;
-import com.alipay.sofa.registry.server.meta.resource.ShutdownSwitchResource;
-import com.alipay.sofa.registry.server.meta.resource.SlotSyncResource;
-import com.alipay.sofa.registry.server.meta.resource.SlotTableResource;
-import com.alipay.sofa.registry.server.meta.resource.StopPushDataResource;
+import com.alipay.sofa.registry.server.meta.resource.*;
 import com.alipay.sofa.registry.server.meta.resource.filter.AuthRestFilter;
 import com.alipay.sofa.registry.server.meta.resource.filter.LeaderAwareFilter;
+import com.alipay.sofa.registry.server.meta.resource.filter.LeaderForwardFilter;
 import com.alipay.sofa.registry.server.meta.slot.status.SlotTableStatusService;
 import com.alipay.sofa.registry.server.shared.config.CommonConfig;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
@@ -89,12 +63,7 @@ import org.springframework.context.annotation.Import;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  * @author shangyu.wh
@@ -336,6 +305,11 @@ public class MetaServerConfiguration {
     @Bean
     public LeaderAwareFilter leaderAwareFilter() {
       return new LeaderAwareFilter();
+    }
+
+    @Bean
+    public LeaderForwardFilter leaderForwardFilter() {
+      return new LeaderForwardFilter();
     }
 
     @Bean
