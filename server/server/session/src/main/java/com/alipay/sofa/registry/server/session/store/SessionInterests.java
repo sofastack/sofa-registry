@@ -18,6 +18,7 @@ package com.alipay.sofa.registry.server.session.store;
 
 import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
+import com.alipay.sofa.registry.common.model.sessionserver.SubscriberCountByApp;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -25,10 +26,9 @@ import com.alipay.sofa.registry.server.session.registry.SessionRegistry.SelectSu
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.util.CollectionUtils;
@@ -46,6 +46,8 @@ public class SessionInterests extends AbstractDataManager<Subscriber> implements
   }
 
   private final Store<Subscriber> store = new SimpleStore<>(1024 * 16, 256);
+
+  private static final String DEFAULT_APP = "DEFAULT_APP";
 
   @Override
   public boolean add(Subscriber subscriber) {
@@ -75,6 +77,50 @@ public class SessionInterests extends AbstractDataManager<Subscriber> implements
   @Override
   public Collection<Subscriber> getInterests(String datumDataInfoId) {
     return getDatas(datumDataInfoId);
+  }
+
+  @Override
+  public Collection<Subscriber> getInterestsByOption(
+          String datumDataInfoId, String suberApp, int limit) {
+    List<Subscriber> subscribers = (List<Subscriber>) getDatas(datumDataInfoId);
+
+    // 过滤逻辑
+    if (StringUtils.isNotEmpty(suberApp)) {
+      subscribers =
+              subscribers.stream()
+                      .filter(
+                              subscriber ->
+                                      suberApp.equals(subscriber.getAppName())
+                                              || StringUtils.isEmpty(subscriber.getAppName()))
+                      .collect(Collectors.toList());
+    }
+
+    // 处理返回的限制
+    if (limit > 0 && limit < subscribers.size()) {
+      return subscribers.subList(0, limit);
+    }
+
+    return subscribers;
+  }
+
+  @Override
+  public List<SubscriberCountByApp> getSubscriberCountByApp(String datumDataInfoId) {
+    List<Subscriber> subscribers = (List<Subscriber>) getDatas(datumDataInfoId);
+
+    Map<String, AtomicInteger> suberAppAndCountMap = new HashMap<>();
+
+    for (Subscriber subscriber : subscribers) {
+      String suberApp =
+              Optional.ofNullable(subscriber.getAppName())
+                      .filter(appName -> !appName.isEmpty())
+                      .orElse(DEFAULT_APP);
+
+      suberAppAndCountMap.computeIfAbsent(suberApp, app -> new AtomicInteger(0)).incrementAndGet();
+    }
+
+    return suberAppAndCountMap.entrySet().stream()
+            .map(entry -> new SubscriberCountByApp(entry.getKey(), entry.getValue().get()))
+            .collect(Collectors.toList());
   }
 
   @Override

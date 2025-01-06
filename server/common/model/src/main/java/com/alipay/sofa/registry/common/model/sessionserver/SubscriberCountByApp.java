@@ -16,42 +16,47 @@
  */
 package com.alipay.sofa.registry.common.model.sessionserver;
 
-import com.alipay.sofa.registry.util.StringFormatter;
 import java.io.Serializable;
 
-public final class QuerySubscriberRequest implements Serializable {
-  private static final long serialVersionUID = -8913725014328394409L;
+/**
+ * app ins count
+ *
+ * @author shanyan
+ * @version $Id: SubscriberCountByApp.java, v 0.1 2024-11-25
+ */
+public class SubscriberCountByApp implements Serializable {
 
-  private final String dataInfoId;
+  private static final long serialVersionUID = 1223527440228443734L;
 
-  private String suberApp;
+  /** appName */
+  private String appName;
 
-  private int limit;
+  /** count */
+  private int count;
 
-  public QuerySubscriberRequest(String dataInfoId) {
-    this.dataInfoId = dataInfoId;
+  public SubscriberCountByApp(String appName, int count) {
+    this.appName = appName;
+    this.count = count;
   }
 
-  public QuerySubscriberRequest(String dataInfoId, String suberApp, int limit) {
-    this.dataInfoId = dataInfoId;
-    this.suberApp = suberApp;
-    this.limit = limit;
+  public String getAppName() {
+    return appName;
   }
 
-  public String getDataInfoId() {
-    return dataInfoId;
+  public void setAppName(String appName) {
+    this.appName = appName;
   }
 
-  public String getSuberApp() {
-    return suberApp;
+  public int getCount() {
+    return count;
   }
 
-  public int getLimit() {
-    return limit;
+  public void setCount(int count) {
+    this.count = count;
   }
 
   @Override
   public String toString() {
-    return StringFormatter.format("QuerySubscriberRequest={}}", dataInfoId);
+    return "SubscriberCountByApp{" + "appName='" + appName + '\'' + ", count=" + count + '}';
   }
 }
