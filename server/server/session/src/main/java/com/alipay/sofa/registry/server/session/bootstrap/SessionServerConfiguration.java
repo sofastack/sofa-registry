@@ -303,6 +303,7 @@ public class SessionServerConfiguration {
       Collection<AbstractServerHandler> list = new ArrayList<>();
       list.add(querySubscriberRequestHandler());
       list.add(queryPublisherRequestHandler());
+      list.add(querySubscriberCountByAppRequestHandler());
       list.add(clientOffRequestHandler());
       list.add(clientOnRequestHandler());
       list.add(getClientManagerRequestHandler());
@@ -346,6 +347,11 @@ public class SessionServerConfiguration {
     @Bean
     public AbstractServerHandler queryPublisherRequestHandler() {
       return new QueryPublisherRequestHandler();
+    }
+
+    @Bean
+    public AbstractServerHandler querySubscriberCountByAppRequestHandler() {
+      return new QuerySubscriberCountByAppRequestHandler();
     }
 
     @Bean

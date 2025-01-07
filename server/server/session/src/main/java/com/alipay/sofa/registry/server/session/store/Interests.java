@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.store;
 
+import com.alipay.sofa.registry.common.model.sessionserver.SubscriberCountByApp;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.server.session.registry.SessionRegistry.SelectSubscriber;
 import java.util.Collection;
@@ -42,6 +43,10 @@ public interface Interests extends DataManager<Subscriber, String, String> {
       String dataCenter, String datumDataInfoId, long version);
 
   Collection<Subscriber> getInterests(String datumDataInfoId);
+
+  Collection<Subscriber> getInterestsByOption(String datumDataInfoId, String suberApp, int limit);
+
+  List<SubscriberCountByApp> getSubscriberCountByApp(String datumDataInfoId);
 
   SelectSubscriber selectSubscribers(Set<String> dataCenters);
 
