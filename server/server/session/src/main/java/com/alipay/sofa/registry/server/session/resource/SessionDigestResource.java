@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.server.session.resource;
 
+import static com.alipay.sofa.registry.common.model.constants.ValueConstants.CONNECT_ID_SPLIT;
+
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.GenericResponse;
@@ -53,18 +55,6 @@ import com.codahale.metrics.MetricRegistry;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.util.CollectionUtils;
-
-import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -77,8 +67,17 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.stream.Collectors;
-
-import static com.alipay.sofa.registry.common.model.constants.ValueConstants.CONNECT_ID_SPLIT;
+import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.MediaType;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
 
 /**
  * @author shangyu.wh
@@ -439,36 +438,45 @@ public class SessionDigestResource {
   @GET
   @Path("/data/zone/queryPublisher")
   @Produces(MediaType.APPLICATION_JSON)
-  public GenericResponse<List<SimplePublisher>> queryZonePublisher(@QueryParam("dataInfoId") String dataInfoId) {
+  public GenericResponse<List<SimplePublisher>> queryZonePublisher(
+      @QueryParam("dataInfoId") String dataInfoId) {
     Collection<Publisher> publishers = this.sessionDataStore.getDatas(dataInfoId);
-    List<SimplePublisher> allPublishers = publishers.stream().map(PublisherUtils::convert).collect(Collectors.toList());
+    List<SimplePublisher> allPublishers =
+        publishers.stream().map(PublisherUtils::convert).collect(Collectors.toList());
 
-    List<URL> otherSessions = Sdks.getOtherConsoleServers(null, this.sessionServerConfig, this.metaNodeService);
+    List<URL> otherSessions =
+        Sdks.getOtherConsoleServers(null, this.sessionServerConfig, this.metaNodeService);
     if (!CollectionUtils.isEmpty(otherSessions)) {
-      Map<URL, CommonResponse> respMap = Sdks.concurrentSdkSend(
+      Map<URL, CommonResponse> respMap =
+          Sdks.concurrentSdkSend(
               pubSubQueryZoneExecutor,
               otherSessions,
               (URL url) -> {
                 final QueryPublisherRequest req = new QueryPublisherRequest(dataInfoId);
-                return (CommonResponse) sessionConsoleExchanger.request(new SimpleRequest(req, url)).getResult();
+                return (CommonResponse)
+                    sessionConsoleExchanger.request(new SimpleRequest(req, url)).getResult();
               },
-              5000
-      );
+              5000);
 
       for (Entry<URL, CommonResponse> entry : respMap.entrySet()) {
         CommonResponse response = entry.getValue();
         if (response instanceof GenericResponse) {
-          GenericResponse<List<SimplePublisher>> genericResponse = (GenericResponse<List<SimplePublisher>>) response;
+          GenericResponse<List<SimplePublisher>> genericResponse =
+              (GenericResponse<List<SimplePublisher>>) response;
           if (genericResponse.isSuccess()) {
-            List<SimplePublisher> subPublishers =  genericResponse.getData();
+            List<SimplePublisher> subPublishers = genericResponse.getData();
             allPublishers.addAll(subPublishers);
           } else {
-            LOGGER.error("url={} query publishers fail, response:{}.",
-                    entry.getKey().getIpAddress(), entry.getValue());
+            LOGGER.error(
+                "url={} query publishers fail, response:{}.",
+                entry.getKey().getIpAddress(),
+                entry.getValue());
           }
         } else {
-          LOGGER.error("url={} query publishers fail, unexpect response type, response:{}.",
-                  entry.getKey().getIpAddress(), entry.getValue());
+          LOGGER.error(
+              "url={} query publishers fail, unexpect response type, response:{}.",
+              entry.getKey().getIpAddress(),
+              entry.getValue());
         }
       }
     }

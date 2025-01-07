@@ -1,4 +1,25 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.alipay.sofa.registry.server.session.providedata;
+
+import static org.mockito.Matchers.anyLong;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.alipay.sofa.registry.common.model.PublishType;
 import com.alipay.sofa.registry.common.model.ServerDataBox;
@@ -14,19 +35,13 @@ import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
 import com.alipay.sofa.registry.server.session.store.SessionDataStore;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.util.JsonUtils;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
-
-import java.util.HashSet;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
-
-import static org.mockito.Matchers.anyLong;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 /**
  * @author huicha
@@ -60,13 +75,16 @@ public class FetchDataInfoIDBlackListServiceTest {
   public void testFetchDataAndCleanProvider() {
     // 创建 Mock 的依赖资源以创建 FetchDataInfoIDBlackListService 对象
     // MetaServerService 需要定制以支持 Mock 更新 Provider Data 中的数据
-    MockFetchSystemPropertyAnswer mockFetchSystemPropertyAnswer = new MockFetchSystemPropertyAnswer();
+    MockFetchSystemPropertyAnswer mockFetchSystemPropertyAnswer =
+        new MockFetchSystemPropertyAnswer();
     MetaServerService metaServerService = mock(MetaServerService.class);
-    when(metaServerService.fetchSystemProperty(anyString(), anyLong())).then(mockFetchSystemPropertyAnswer);
+    when(metaServerService.fetchSystemProperty(anyString(), anyLong()))
+        .then(mockFetchSystemPropertyAnswer);
 
     SessionServerConfig sessionServerConfig = mock(SessionServerConfig.class);
     // 防止后台线程空转
-    when(sessionServerConfig.getSystemPropertyIntervalMillis()).thenReturn((int) TimeUnit.MILLISECONDS.toMillis(50));
+    when(sessionServerConfig.getSystemPropertyIntervalMillis())
+        .thenReturn((int) TimeUnit.MILLISECONDS.toMillis(50));
 
     WriteDataAcceptor writeDataAcceptor = mock(WriteDataAcceptor.class);
 
@@ -109,13 +127,17 @@ public class FetchDataInfoIDBlackListServiceTest {
     // 这里模拟添加了三个不同客户端的 Publisher
     // 第一个发布的 DataIdOne，第二个和第三个都发布的 DataIdTwo
     Assert.assertTrue(sessionDataStore.add(publisherOne));
-    Assert.assertNotNull(sessionDataStore.queryById(publisherOne.getRegisterId(), publisherOne.getDataInfoId()));
+    Assert.assertNotNull(
+        sessionDataStore.queryById(publisherOne.getRegisterId(), publisherOne.getDataInfoId()));
     Assert.assertTrue(sessionDataStore.add(publisherTwo));
-    Assert.assertNotNull(sessionDataStore.queryById(publisherTwo.getRegisterId(), publisherTwo.getDataInfoId()));
+    Assert.assertNotNull(
+        sessionDataStore.queryById(publisherTwo.getRegisterId(), publisherTwo.getDataInfoId()));
     Assert.assertTrue(sessionDataStore.add(publisherThree));
-    Assert.assertNotNull(sessionDataStore.queryById(publisherThree.getRegisterId(), publisherThree.getDataInfoId()));
+    Assert.assertNotNull(
+        sessionDataStore.queryById(publisherThree.getRegisterId(), publisherThree.getDataInfoId()));
 
-    FetchDataInfoIDBlackListService fetchDataInfoIDBlackListService = new FetchDataInfoIDBlackListService();
+    FetchDataInfoIDBlackListService fetchDataInfoIDBlackListService =
+        new FetchDataInfoIDBlackListService();
     fetchDataInfoIDBlackListService.setSessionDataStore(sessionDataStore);
     fetchDataInfoIDBlackListService.setWriteDataAcceptor(writeDataAcceptor);
     fetchDataInfoIDBlackListService.setSessionServerConfig(sessionServerConfig);
@@ -129,7 +151,8 @@ public class FetchDataInfoIDBlackListServiceTest {
     mockDataOne.add(this.dataInfoIdOne);
     String mockDataJsonOne = JsonUtils.writeValueAsString(mockDataOne);
     ServerDataBox serverDataBoxOne = new ServerDataBox(mockDataJsonOne);
-    ProvideData provideDataOne = new ProvideData(serverDataBoxOne, ValueConstants.SESSION_DATAID_BLACKLIST_DATA_ID, 1L);
+    ProvideData provideDataOne =
+        new ProvideData(serverDataBoxOne, ValueConstants.SESSION_DATAID_BLACKLIST_DATA_ID, 1L);
     mockFetchSystemPropertyAnswer.setProvideData(provideDataOne);
 
     // 开启后台数据拉取
@@ -141,7 +164,7 @@ public class FetchDataInfoIDBlackListServiceTest {
     // 获取一下数据，检查是否已经拉取到了
     DataInfoIDBlacklistStorage storageOne = fetchDataInfoIDBlackListService.getStorage().get();
     Assert.assertNotNull(storageOne);
-    Set<String> setInStorageOne =  storageOne.getDataInfoIds();
+    Set<String> setInStorageOne = storageOne.getDataInfoIds();
     Assert.assertEquals(1, setInStorageOne.size());
     Assert.assertTrue(setInStorageOne.contains(this.dataInfoIdOne));
     Assert.assertEquals(1L, storageOne.getVersion());
@@ -149,7 +172,8 @@ public class FetchDataInfoIDBlackListServiceTest {
     Assert.assertFalse(fetchDataInfoIDBlackListService.isInBlackList(this.dataInfoIdTwo));
 
     // 拉黑了 DataIDOne，预期第一个 Publisher 已经不存在了
-    Assert.assertNull(sessionDataStore.queryById(publisherOne.getRegisterId(), publisherOne.getDataInfoId()));
+    Assert.assertNull(
+        sessionDataStore.queryById(publisherOne.getRegisterId(), publisherOne.getDataInfoId()));
 
     // 将数据更新为版本 2
     Set<String> mockDataTwo = new HashSet<>();
@@ -157,7 +181,8 @@ public class FetchDataInfoIDBlackListServiceTest {
     mockDataTwo.add(this.dataInfoIdTwo);
     String mockDataJsonTwo = JsonUtils.writeValueAsString(mockDataTwo);
     ServerDataBox serverDataBoxTwo = new ServerDataBox(mockDataJsonTwo);
-    ProvideData provideDataTwo = new ProvideData(serverDataBoxTwo, ValueConstants.SESSION_DATAID_BLACKLIST_DATA_ID, 2L);
+    ProvideData provideDataTwo =
+        new ProvideData(serverDataBoxTwo, ValueConstants.SESSION_DATAID_BLACKLIST_DATA_ID, 2L);
     mockFetchSystemPropertyAnswer.setProvideData(provideDataTwo);
 
     // 等 300ms，让它处理完
@@ -166,7 +191,7 @@ public class FetchDataInfoIDBlackListServiceTest {
     // 获取一下数据，检查是否已经拉取到了
     DataInfoIDBlacklistStorage storageTwo = fetchDataInfoIDBlackListService.getStorage().get();
     Assert.assertNotNull(storageTwo);
-    Set<String> setInStorageTwo =  storageTwo.getDataInfoIds();
+    Set<String> setInStorageTwo = storageTwo.getDataInfoIds();
     Assert.assertEquals(2, setInStorageTwo.size());
     Assert.assertTrue(setInStorageTwo.contains(this.dataInfoIdOne));
     Assert.assertTrue(setInStorageTwo.contains(this.dataInfoIdTwo));
@@ -175,8 +200,10 @@ public class FetchDataInfoIDBlackListServiceTest {
     Assert.assertTrue(fetchDataInfoIDBlackListService.isInBlackList(this.dataInfoIdTwo));
 
     // 拉黑了 DataIDTwo，预期第二个和第三个 Publisher 都已经不存在了
-    Assert.assertNull(sessionDataStore.queryById(publisherTwo.getRegisterId(), publisherTwo.getDataInfoId()));
-    Assert.assertNull(sessionDataStore.queryById(publisherThree.getRegisterId(), publisherThree.getDataInfoId()));
+    Assert.assertNull(
+        sessionDataStore.queryById(publisherTwo.getRegisterId(), publisherTwo.getDataInfoId()));
+    Assert.assertNull(
+        sessionDataStore.queryById(publisherThree.getRegisterId(), publisherThree.getDataInfoId()));
   }
 
   private void sleep(Long time, TimeUnit timeUnit) {
@@ -188,9 +215,7 @@ public class FetchDataInfoIDBlackListServiceTest {
   }
 
   @Test
-  public void testCleanPublisher() {
-
-  }
+  public void testCleanPublisher() {}
 }
 
 class MockFetchSystemPropertyAnswer implements Answer<FetchSystemPropertyResult> {
@@ -216,5 +241,4 @@ class MockFetchSystemPropertyAnswer implements Answer<FetchSystemPropertyResult>
   public void setProvideData(ProvideData provideData) {
     this.provideData = provideData;
   }
-
 }

@@ -53,6 +53,9 @@ import com.alipay.sofa.registry.util.DefaultExecutorFactory;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
 import com.alipay.sofa.registry.util.OsUtils;
 import com.alipay.sofa.registry.util.PropertySplitter;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.concurrent.*;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -60,10 +63,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.concurrent.*;
 
 /**
  * @author shangyu.wh

@@ -1,4 +1,23 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.alipay.sofa.registry.server.session.remoting.console.handler;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.GenericResponse;
@@ -11,23 +30,18 @@ import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.server.session.TestUtils;
 import com.alipay.sofa.registry.server.session.bootstrap.ExecutorManager;
 import com.alipay.sofa.registry.server.session.store.DataStore;
+import java.util.ArrayList;
+import java.util.List;
 import org.apache.commons.collections.CollectionUtils;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 /**
  * @author huicha
  * @date 2024/12/23
  */
 public class QueryPublisherRequestHandlerTest {
-
 
   @Test
   public void testHandle() {
@@ -48,8 +62,8 @@ public class QueryPublisherRequestHandlerTest {
 
     QueryPublisherRequestHandler handler = new QueryPublisherRequestHandler();
     handler
-            .setExecutorManager(new ExecutorManager(TestUtils.newSessionConfig("testDc")))
-            .setSessionDataStore(dataStore);
+        .setExecutorManager(new ExecutorManager(TestUtils.newSessionConfig("testDc")))
+        .setSessionDataStore(dataStore);
 
     Assert.assertNotNull(handler.getExecutor());
     Assert.assertEquals(handler.interest(), QueryPublisherRequest.class);
@@ -59,13 +73,15 @@ public class QueryPublisherRequestHandlerTest {
     Assert.assertFalse(((CommonResponse) handler.buildFailedResponse("msg")).isSuccess());
 
     QueryPublisherRequest notExistReq = new QueryPublisherRequest("not-exist");
-    GenericResponse<List<SimplePublisher>> notExistResp = (GenericResponse) handler.doHandle(null, notExistReq);
+    GenericResponse<List<SimplePublisher>> notExistResp =
+        (GenericResponse) handler.doHandle(null, notExistReq);
     Assert.assertTrue(notExistResp.isSuccess());
     List<SimplePublisher> notExistPublishers = notExistResp.getData();
     Assert.assertTrue(CollectionUtils.isEmpty(notExistPublishers));
 
     QueryPublisherRequest existReq = new QueryPublisherRequest(dataInfoId);
-    GenericResponse<List<SimplePublisher>> existResp = (GenericResponse) handler.doHandle(null, existReq);
+    GenericResponse<List<SimplePublisher>> existResp =
+        (GenericResponse) handler.doHandle(null, existReq);
     Assert.assertTrue(existResp.isSuccess());
     List<SimplePublisher> existPublishers = existResp.getData();
     Assert.assertFalse(CollectionUtils.isEmpty(existPublishers));
@@ -83,5 +99,4 @@ public class QueryPublisherRequestHandlerTest {
       Assert.assertEquals("App", appName);
     }
   }
-
 }

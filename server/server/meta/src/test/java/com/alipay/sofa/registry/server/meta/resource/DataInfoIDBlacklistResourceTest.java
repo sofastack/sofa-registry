@@ -1,4 +1,23 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.alipay.sofa.registry.server.meta.resource;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 
 import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.console.PersistenceData;
@@ -11,14 +30,10 @@ import com.alipay.sofa.registry.store.api.DBResponse;
 import com.alipay.sofa.registry.store.api.OperationStatus;
 import com.alipay.sofa.registry.util.JsonUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
-import org.junit.Assert;
-import org.junit.Test;
-
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author huicha
@@ -30,18 +45,19 @@ public class DataInfoIDBlacklistResourceTest extends AbstractMetaServerTestBase 
     return spy(new InMemoryProvideDataRepo());
   }
 
-  private DataInfoIDBlacklistResource createDataIDBlacklistResource(ProvideDataService provideDataService) {
+  private DataInfoIDBlacklistResource createDataIDBlacklistResource(
+      ProvideDataService provideDataService) {
     ProvideDataNotifier provideDataNotifier = mock(ProvideDataNotifier.class);
     return new DataInfoIDBlacklistResource()
-            .setProvideDataNotifier(provideDataNotifier)
-            .setProvideDataService(provideDataService);
+        .setProvideDataNotifier(provideDataNotifier)
+        .setProvideDataService(provideDataService);
   }
 
-  private DataInfoIDBlacklistResource createDataIDBlacklistResource(ProvideDataService provideDataService,
-                                                                    ProvideDataNotifier provideDataNotifier) {
+  private DataInfoIDBlacklistResource createDataIDBlacklistResource(
+      ProvideDataService provideDataService, ProvideDataNotifier provideDataNotifier) {
     return new DataInfoIDBlacklistResource()
-            .setProvideDataNotifier(provideDataNotifier)
-            .setProvideDataService(provideDataService);
+        .setProvideDataNotifier(provideDataNotifier)
+        .setProvideDataService(provideDataService);
   }
 
   @Test
@@ -62,13 +78,13 @@ public class DataInfoIDBlacklistResourceTest extends AbstractMetaServerTestBase 
     Assert.assertTrue(resultTwo.isSuccess());
 
     // 因此这里的查询结果也应该是两条
-    DBResponse<PersistenceData> queryResult = provideDataService.queryProvideData(ValueConstants.SESSION_DATAID_BLACKLIST_DATA_ID);
+    DBResponse<PersistenceData> queryResult =
+        provideDataService.queryProvideData(ValueConstants.SESSION_DATAID_BLACKLIST_DATA_ID);
     Assert.assertEquals(OperationStatus.SUCCESS, queryResult.getOperationStatus());
     Assert.assertNotNull(queryResult.getEntity());
     PersistenceData persistenceData = queryResult.getEntity();
     String dataJson = persistenceData.getData();
-    Set<String> data = JsonUtils.read(dataJson, new TypeReference<Set<String>>() {
-    });
+    Set<String> data = JsonUtils.read(dataJson, new TypeReference<Set<String>>() {});
     Assert.assertEquals(2, data.size());
     Assert.assertTrue(data.contains(String.format("%s#@#%s#@#%s", dataIdOne, instanceId, group)));
     Assert.assertTrue(data.contains(String.format("%s#@#%s#@#%s", dataIdTwo, instanceId, group)));
@@ -82,13 +98,13 @@ public class DataInfoIDBlacklistResourceTest extends AbstractMetaServerTestBase 
     Assert.assertTrue(deleteResultTwo.isSuccess());
 
     // 因此这里的查询结果应该是只有一条数据，且是第二条数据
-    DBResponse<PersistenceData> queryResultTwo = provideDataService.queryProvideData(ValueConstants.SESSION_DATAID_BLACKLIST_DATA_ID);
+    DBResponse<PersistenceData> queryResultTwo =
+        provideDataService.queryProvideData(ValueConstants.SESSION_DATAID_BLACKLIST_DATA_ID);
     Assert.assertEquals(OperationStatus.SUCCESS, queryResultTwo.getOperationStatus());
     Assert.assertNotNull(queryResultTwo.getEntity());
     PersistenceData persistenceDataTwo = queryResultTwo.getEntity();
     String dataJsonTwo = persistenceDataTwo.getData();
-    Set<String> dataTwo = JsonUtils.read(dataJsonTwo, new TypeReference<Set<String>>() {
-    });
+    Set<String> dataTwo = JsonUtils.read(dataJsonTwo, new TypeReference<Set<String>>() {});
     Assert.assertEquals(1, dataTwo.size());
     Assert.assertTrue(data.contains(String.format("%s#@#%s#@#%s", dataIdTwo, instanceId, group)));
   }
@@ -102,19 +118,22 @@ public class DataInfoIDBlacklistResourceTest extends AbstractMetaServerTestBase 
     AtomicInteger counter = new AtomicInteger(0);
 
     ProvideDataService provideDataService = createProvideDataService();
-    DataInfoIDBlacklistResource resource = this.createDataIDBlacklistResource(provideDataService, event -> {
-      // 这个数据是提供给 Session 消费的，因此消费的节点类型有且只有 Session
-      Set<NodeType> nodeTypes = event.getNodeTypes();
-      Assert.assertEquals(1, nodeTypes.size());
-      Assert.assertTrue(nodeTypes.contains(NodeType.SESSION));
+    DataInfoIDBlacklistResource resource =
+        this.createDataIDBlacklistResource(
+            provideDataService,
+            event -> {
+              // 这个数据是提供给 Session 消费的，因此消费的节点类型有且只有 Session
+              Set<NodeType> nodeTypes = event.getNodeTypes();
+              Assert.assertEquals(1, nodeTypes.size());
+              Assert.assertTrue(nodeTypes.contains(NodeType.SESSION));
 
-      // 检查 DataInfoId 是否是预期的
-      String dataInfoId = event.getDataInfoId();
-      Assert.assertEquals(ValueConstants.SESSION_DATAID_BLACKLIST_DATA_ID, dataInfoId);
+              // 检查 DataInfoId 是否是预期的
+              String dataInfoId = event.getDataInfoId();
+              Assert.assertEquals(ValueConstants.SESSION_DATAID_BLACKLIST_DATA_ID, dataInfoId);
 
-      // 增加计数
-      counter.addAndGet(1);
-    });
+              // 增加计数
+              counter.addAndGet(1);
+            });
 
     Result result = resource.addBlackList(dataId, group, instanceId);
     Assert.assertTrue(result.isSuccess());

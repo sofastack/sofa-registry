@@ -76,8 +76,8 @@ public class ValueConstants {
           "session.blacklist.data", SESSION_PROVIDE_DATA_INSTANCE_ID, SESSION_PROVIDE_DATA_GROUP);
 
   public static final String SESSION_DATAID_BLACKLIST_DATA_ID =
-          DataInfo.toDataInfoId(
-                  "session.dataid.blacklist", SESSION_PROVIDE_DATA_INSTANCE_ID, SESSION_PROVIDE_DATA_GROUP);
+      DataInfo.toDataInfoId(
+          "session.dataid.blacklist", SESSION_PROVIDE_DATA_INSTANCE_ID, SESSION_PROVIDE_DATA_GROUP);
 
   public static final String CLIENT_OFF_ADDRESS_DATA_ID =
       DataInfo.toDataInfoId(

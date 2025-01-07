@@ -23,7 +23,6 @@ import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import java.util.Collection;
-
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -35,8 +34,8 @@ public class QuerySubscriberRequestHandler extends AbstractConsoleHandler<QueryS
     Collection<Subscriber> subscribers;
     if (StringUtils.isNotEmpty(request.getSuberApp()) || request.getLimit() != 0) {
       subscribers =
-              sessionInterests.getInterestsByOption(
-                      request.getDataInfoId(), request.getSuberApp(), request.getLimit());
+          sessionInterests.getInterestsByOption(
+              request.getDataInfoId(), request.getSuberApp(), request.getLimit());
     } else {
       subscribers = sessionInterests.getInterests(request.getDataInfoId());
     }

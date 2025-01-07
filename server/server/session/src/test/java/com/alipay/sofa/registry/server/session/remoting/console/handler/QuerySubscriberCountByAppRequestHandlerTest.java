@@ -16,10 +16,11 @@
  */
 package com.alipay.sofa.registry.server.session.remoting.console.handler;
 
+import static org.mockito.Mockito.mock;
+
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.sessionserver.QuerySubscriberCountByAppRequest;
-import com.alipay.sofa.registry.common.model.sessionserver.QuerySubscriberRequest;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.server.session.TestUtils;
 import com.alipay.sofa.registry.server.session.bootstrap.ExecutorManager;
@@ -27,8 +28,6 @@ import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfigBean
 import com.alipay.sofa.registry.server.session.store.Interests;
 import org.junit.Assert;
 import org.junit.Test;
-
-import static org.mockito.Mockito.mock;
 
 public class QuerySubscriberCountByAppRequestHandlerTest {
   private SessionServerConfigBean serverConfigBean = TestUtils.newSessionConfig("testDc");
@@ -59,5 +58,4 @@ public class QuerySubscriberCountByAppRequestHandlerTest {
     Assert.assertTrue(req.toString(), req.toString().contains("testDataId"));
     return req;
   }
-
 }

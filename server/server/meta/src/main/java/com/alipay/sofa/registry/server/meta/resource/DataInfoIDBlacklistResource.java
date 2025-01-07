@@ -1,3 +1,19 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.alipay.sofa.registry.server.meta.resource;
 
 import com.alipay.sofa.registry.common.model.Tuple;
@@ -18,12 +34,11 @@ import com.alipay.sofa.registry.store.api.OperationStatus;
 import com.alipay.sofa.registry.util.JsonUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.annotations.VisibleForTesting;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
 import java.util.HashSet;
 import java.util.Set;
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author huicha
@@ -34,19 +49,18 @@ import java.util.Set;
 public class DataInfoIDBlacklistResource {
   private static final Logger LOGGER = LoggerFactory.getLogger(DataInfoIDBlacklistResource.class);
 
-  @Autowired
-  private ProvideDataService provideDataService;
+  @Autowired private ProvideDataService provideDataService;
 
-  @Autowired
-  private ProvideDataNotifier provideDataNotifier;
+  @Autowired private ProvideDataNotifier provideDataNotifier;
 
   @POST
   @Path("add")
   @Produces(MediaType.APPLICATION_JSON)
   @AuthRestController
-  public Result addBlackList(@FormParam("dataId") String dataId,
-                             @FormParam("group") String group,
-                             @FormParam("instanceId") String instanceId) {
+  public Result addBlackList(
+      @FormParam("dataId") String dataId,
+      @FormParam("group") String group,
+      @FormParam("instanceId") String instanceId) {
     try {
       return process(dataId, group, instanceId, Operation.ADD);
     } catch (Throwable throwable) {
@@ -59,9 +73,10 @@ public class DataInfoIDBlacklistResource {
   @Path("delete")
   @Produces(MediaType.APPLICATION_JSON)
   @AuthRestController
-  public Result deleteBlackList(@FormParam("dataId") String dataId,
-                                @FormParam("group") String group,
-                                @FormParam("instanceId") String instanceId) {
+  public Result deleteBlackList(
+      @FormParam("dataId") String dataId,
+      @FormParam("group") String group,
+      @FormParam("instanceId") String instanceId) {
     try {
       return process(dataId, group, instanceId, Operation.DELETE);
     } catch (Throwable throwable) {
@@ -76,7 +91,7 @@ public class DataInfoIDBlacklistResource {
   public Result queryBlackList() {
     try {
       DBResponse<PersistenceData> queryResponse =
-              this.provideDataService.queryProvideData(ValueConstants.SESSION_DATAID_BLACKLIST_DATA_ID);
+          this.provideDataService.queryProvideData(ValueConstants.SESSION_DATAID_BLACKLIST_DATA_ID);
       OperationStatus operationStatus = queryResponse.getOperationStatus();
       if (OperationStatus.SUCCESS.equals(operationStatus)) {
         PersistenceData persistenceData = queryResponse.getEntity();
@@ -104,10 +119,11 @@ public class DataInfoIDBlacklistResource {
 
     // 2. 查询出当前黑名单列表
     DBResponse<PersistenceData> queryResponse =
-            this.provideDataService.queryProvideData(ValueConstants.SESSION_DATAID_BLACKLIST_DATA_ID);
+        this.provideDataService.queryProvideData(ValueConstants.SESSION_DATAID_BLACKLIST_DATA_ID);
 
     // 3. 根据操作类型，添加 DataID 到列表中，或者删除列表中的 DataID，并保存
-    Tuple<PersistenceData, Long> tuple = this.createNewPersistenceData(queryResponse, dataInfo, operation);
+    Tuple<PersistenceData, Long> tuple =
+        this.createNewPersistenceData(queryResponse, dataInfo, operation);
     PersistenceData newPersistenceData = tuple.o1;
     Long oldVersion = tuple.o2;
     if (!this.provideDataService.saveProvideData(newPersistenceData, oldVersion)) {
@@ -117,20 +133,22 @@ public class DataInfoIDBlacklistResource {
 
     // 4. 保存成功则通知 Session 黑名单变化了
     ProvideDataChangeEvent provideDataChangeEvent =
-            new ProvideDataChangeEvent(ValueConstants.SESSION_DATAID_BLACKLIST_DATA_ID,
-                    newPersistenceData.getVersion());
+        new ProvideDataChangeEvent(
+            ValueConstants.SESSION_DATAID_BLACKLIST_DATA_ID, newPersistenceData.getVersion());
     this.provideDataNotifier.notifyProvideDataChange(provideDataChangeEvent);
 
     return Result.success();
   }
 
-  private Tuple<PersistenceData, Long> createNewPersistenceData(DBResponse<PersistenceData> queryResponse, DataInfo dataInfo, Operation operation) {
+  private Tuple<PersistenceData, Long> createNewPersistenceData(
+      DBResponse<PersistenceData> queryResponse, DataInfo dataInfo, Operation operation) {
     OperationStatus operationStatus = queryResponse.getOperationStatus();
     if (OperationStatus.SUCCESS.equals(operationStatus)) {
       // 读取旧数据成功，其格式为 Json 字符串，解析出来
       PersistenceData oldPersistenceData = queryResponse.getEntity();
       String oldBlackListJson = oldPersistenceData.getData();
-      Set<String> oldDataIdBlackList = JsonUtils.read(oldBlackListJson, new TypeReference<Set<String>>() {});
+      Set<String> oldDataIdBlackList =
+          JsonUtils.read(oldBlackListJson, new TypeReference<Set<String>>() {});
 
       // 添加或删除新的需要拉黑的数据
       if (Operation.ADD.equals(operation)) {
@@ -140,9 +158,10 @@ public class DataInfoIDBlacklistResource {
       }
 
       // 创建新数据，并返回新数据以及旧数据的版本号
-      PersistenceData newPersistenceData = PersistenceDataBuilder
-              .createPersistenceData(ValueConstants.SESSION_DATAID_BLACKLIST_DATA_ID,
-                      JsonUtils.writeValueAsString(oldDataIdBlackList));
+      PersistenceData newPersistenceData =
+          PersistenceDataBuilder.createPersistenceData(
+              ValueConstants.SESSION_DATAID_BLACKLIST_DATA_ID,
+              JsonUtils.writeValueAsString(oldDataIdBlackList));
       return new Tuple<>(newPersistenceData, oldPersistenceData.getVersion());
     } else {
       // 没有旧数据旧直接创建新的，旧数据的版本号设置为 0
@@ -150,9 +169,10 @@ public class DataInfoIDBlacklistResource {
       if (Operation.ADD.equals(operation)) {
         dataIdBlackList.add(dataInfo.getDataInfoId());
       }
-      PersistenceData newPersistenceData = PersistenceDataBuilder
-              .createPersistenceData(ValueConstants.SESSION_DATAID_BLACKLIST_DATA_ID,
-                      JsonUtils.writeValueAsString(dataIdBlackList));
+      PersistenceData newPersistenceData =
+          PersistenceDataBuilder.createPersistenceData(
+              ValueConstants.SESSION_DATAID_BLACKLIST_DATA_ID,
+              JsonUtils.writeValueAsString(dataIdBlackList));
       return new Tuple<>(newPersistenceData, 0L);
     }
   }
@@ -168,7 +188,8 @@ public class DataInfoIDBlacklistResource {
   }
 
   @VisibleForTesting
-  public DataInfoIDBlacklistResource setProvideDataNotifier(ProvideDataNotifier provideDataNotifier) {
+  public DataInfoIDBlacklistResource setProvideDataNotifier(
+      ProvideDataNotifier provideDataNotifier) {
     this.provideDataNotifier = provideDataNotifier;
     return this;
   }
@@ -178,4 +199,3 @@ enum Operation {
   ADD,
   DELETE
 }
-

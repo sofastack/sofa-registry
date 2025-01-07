@@ -105,7 +105,8 @@ public final class DataSlotDiffUtils {
       for (Map.Entry<String, Publisher> p : publisherMap.entrySet()) {
 
         // filter publishers
-        if (acceptorManager != null && !acceptorManager.accept(
+        if (acceptorManager != null
+            && !acceptorManager.accept(
                 SyncAcceptorRequest.buildRequest(dataInfoId, p.getValue().getPublishSource()))) {
           continue;
         }

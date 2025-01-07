@@ -1,4 +1,23 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.alipay.sofa.registry.server.meta.resource.filter;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.common.model.store.URL;
@@ -8,6 +27,11 @@ import com.alipay.sofa.registry.server.meta.AbstractH2DbTestBase;
 import com.alipay.sofa.registry.server.meta.MetaLeaderService;
 import com.alipay.sofa.registry.util.JsonUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
+import java.util.Set;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.Form;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.Assert;
 import org.junit.Test;
@@ -15,23 +39,13 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.Form;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import java.util.Set;
-
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 /**
  * @author huicha
  * @date 2024/12/24
  */
 public class LeaderForwardFilterTest extends AbstractH2DbTestBase {
 
-  @Autowired
-  private LeaderForwardFilter leaderForwardFilter;
+  @Autowired private LeaderForwardFilter leaderForwardFilter;
 
   @Test
   public void test() {
@@ -79,11 +93,11 @@ public class LeaderForwardFilterTest extends AbstractH2DbTestBase {
 
   private Response sendQueryBlackListRequest() {
     return JerseyClient.getInstance()
-            .connect(new URL("127.0.0.1", 9615))
-            .getWebTarget()
-            .path("datainfoid/blacklist/query")
-            .request(MediaType.APPLICATION_JSON_TYPE)
-            .get();
+        .connect(new URL("127.0.0.1", 9615))
+        .getWebTarget()
+        .path("datainfoid/blacklist/query")
+        .request(MediaType.APPLICATION_JSON_TYPE)
+        .get();
   }
 
   private Response sendAddBlackListRequest() {
@@ -93,12 +107,12 @@ public class LeaderForwardFilterTest extends AbstractH2DbTestBase {
     form.param("instanceId", "test-instance-id");
 
     return JerseyClient.getInstance()
-            .connect(new URL("127.0.0.1", 9615))
-            .getWebTarget()
-            .path("datainfoid/blacklist/add")
-            .request(MediaType.APPLICATION_JSON_TYPE)
-            .buildPost(Entity.form(form))
-            .invoke();
+        .connect(new URL("127.0.0.1", 9615))
+        .getWebTarget()
+        .path("datainfoid/blacklist/add")
+        .request(MediaType.APPLICATION_JSON_TYPE)
+        .buildPost(Entity.form(form))
+        .invoke();
   }
 }
 
@@ -122,5 +136,4 @@ class AmILeaderAnswer implements Answer<Boolean> {
   public void setFirstTime(boolean firstTime) {
     this.firstTime = firstTime;
   }
-
 }

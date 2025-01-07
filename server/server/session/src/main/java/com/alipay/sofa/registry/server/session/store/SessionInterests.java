@@ -26,7 +26,6 @@ import com.alipay.sofa.registry.server.session.registry.SessionRegistry.SelectSu
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -81,18 +80,18 @@ public class SessionInterests extends AbstractDataManager<Subscriber> implements
 
   @Override
   public Collection<Subscriber> getInterestsByOption(
-          String datumDataInfoId, String suberApp, int limit) {
+      String datumDataInfoId, String suberApp, int limit) {
     List<Subscriber> subscribers = (List<Subscriber>) getDatas(datumDataInfoId);
 
     // 过滤逻辑
     if (StringUtils.isNotEmpty(suberApp)) {
       subscribers =
-              subscribers.stream()
-                      .filter(
-                              subscriber ->
-                                      suberApp.equals(subscriber.getAppName())
-                                              || StringUtils.isEmpty(subscriber.getAppName()))
-                      .collect(Collectors.toList());
+          subscribers.stream()
+              .filter(
+                  subscriber ->
+                      suberApp.equals(subscriber.getAppName())
+                          || StringUtils.isEmpty(subscriber.getAppName()))
+              .collect(Collectors.toList());
     }
 
     // 处理返回的限制
@@ -111,16 +110,16 @@ public class SessionInterests extends AbstractDataManager<Subscriber> implements
 
     for (Subscriber subscriber : subscribers) {
       String suberApp =
-              Optional.ofNullable(subscriber.getAppName())
-                      .filter(appName -> !appName.isEmpty())
-                      .orElse(DEFAULT_APP);
+          Optional.ofNullable(subscriber.getAppName())
+              .filter(appName -> !appName.isEmpty())
+              .orElse(DEFAULT_APP);
 
       suberAppAndCountMap.computeIfAbsent(suberApp, app -> new AtomicInteger(0)).incrementAndGet();
     }
 
     return suberAppAndCountMap.entrySet().stream()
-            .map(entry -> new SubscriberCountByApp(entry.getKey(), entry.getValue().get()))
-            .collect(Collectors.toList());
+        .map(entry -> new SubscriberCountByApp(entry.getKey(), entry.getValue().get()))
+        .collect(Collectors.toList());
   }
 
   @Override

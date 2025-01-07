@@ -19,16 +19,15 @@ package com.alipay.sofa.registry.server.session.bootstrap;
 import com.alipay.sofa.registry.server.shared.config.CommonConfig;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.util.OsUtils;
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.builder.ToStringBuilder;
-import org.apache.commons.lang.builder.ToStringStyle;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.builder.ToStringBuilder;
+import org.apache.commons.lang.builder.ToStringStyle;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * The type Session server config bean.
@@ -1463,7 +1462,9 @@ public class SessionServerConfigBean implements SessionServerConfig {
     return scanPublisherInDataInfoIdBlackListIntervalMillis;
   }
 
-  public void setScanPublisherInDataInfoIdBlackListIntervalMillis(int scanPublisherInDataInfoIdBlackListIntervalMillis) {
-    this.scanPublisherInDataInfoIdBlackListIntervalMillis = scanPublisherInDataInfoIdBlackListIntervalMillis;
+  public void setScanPublisherInDataInfoIdBlackListIntervalMillis(
+      int scanPublisherInDataInfoIdBlackListIntervalMillis) {
+    this.scanPublisherInDataInfoIdBlackListIntervalMillis =
+        scanPublisherInDataInfoIdBlackListIntervalMillis;
   }
 }

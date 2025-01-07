@@ -1,23 +1,38 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.alipay.sofa.registry.server.session.wrapper;
+
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.common.model.wrapper.Wrapper;
 import com.alipay.sofa.registry.common.model.wrapper.WrapperInvocation;
 import com.alipay.sofa.registry.server.session.providedata.FetchDataInfoIDBlackListService;
-import org.junit.Assert;
-import org.junit.Test;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
-
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import org.junit.Assert;
+import org.junit.Test;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 /**
  * @author huicha
@@ -50,7 +65,8 @@ public class DataInfoIDBlacklistWrapperInterceptorTest {
   @Test
   public void test() throws Exception {
     MockIsInBlackListAnswer mockIsInBlackListAnswer = new MockIsInBlackListAnswer();
-    FetchDataInfoIDBlackListService fetchDataInfoIDBlackListService = mock(FetchDataInfoIDBlackListService.class);
+    FetchDataInfoIDBlackListService fetchDataInfoIDBlackListService =
+        mock(FetchDataInfoIDBlackListService.class);
     when(fetchDataInfoIDBlackListService.isInBlackList(anyString())).then(mockIsInBlackListAnswer);
 
     DataInfoIDBlacklistWrapperInterceptor interceptor = new DataInfoIDBlacklistWrapperInterceptor();
@@ -72,7 +88,8 @@ public class DataInfoIDBlacklistWrapperInterceptorTest {
     TouchChecker touchCheckerSub = new TouchChecker(registerInvokeDataSub);
 
     // 模拟执行 Sub 流程
-    WrapperInvocation<RegisterInvokeData, Boolean> invocationSub = new WrapperInvocation<>(touchCheckerSub, Collections.singletonList(interceptor));
+    WrapperInvocation<RegisterInvokeData, Boolean> invocationSub =
+        new WrapperInvocation<>(touchCheckerSub, Collections.singletonList(interceptor));
     invocationSub.proceed();
     // 因为我们预期不处理 Sub，TouchChecker 应该是会被执行的，因此这里检查应该为 True
     Assert.assertTrue(touchCheckerSub.hasBeenChecked());
@@ -88,7 +105,8 @@ public class DataInfoIDBlacklistWrapperInterceptorTest {
     TouchChecker touchCheckerPubTwo = new TouchChecker(registerInvokeDataPubTwo);
 
     // 模拟执行 Pub 流程
-    WrapperInvocation<RegisterInvokeData, Boolean> invocationPubTwo = new WrapperInvocation<>(touchCheckerPubTwo, Collections.singletonList(interceptor));
+    WrapperInvocation<RegisterInvokeData, Boolean> invocationPubTwo =
+        new WrapperInvocation<>(touchCheckerPubTwo, Collections.singletonList(interceptor));
     invocationPubTwo.proceed();
     // 因为黑名单中只有 dataIdOne，因此这里预期会执行 TouchChecker，因此这里检查应该为 True
     Assert.assertTrue(touchCheckerPubTwo.hasBeenChecked());
@@ -104,7 +122,8 @@ public class DataInfoIDBlacklistWrapperInterceptorTest {
     TouchChecker touchCheckerPubOne = new TouchChecker(registerInvokeDataPubOne);
 
     // 模拟执行 Pub 流程
-    WrapperInvocation<RegisterInvokeData, Boolean> invocationPubOne = new WrapperInvocation<>(touchCheckerPubOne, Collections.singletonList(interceptor));
+    WrapperInvocation<RegisterInvokeData, Boolean> invocationPubOne =
+        new WrapperInvocation<>(touchCheckerPubOne, Collections.singletonList(interceptor));
     invocationPubOne.proceed();
     // 因为黑名单中有 dataIdOne，因此这里预期会跳过执行 TouchChecker，因此这里检查应该为 False
     Assert.assertFalse(touchCheckerPubOne.hasBeenChecked());
@@ -124,7 +143,6 @@ class MockIsInBlackListAnswer implements Answer<Boolean> {
   public void setDataInfoIds(Set<String> dataInfoIds) {
     this.dataInfoIds = dataInfoIds;
   }
-
 }
 
 class TouchChecker implements Wrapper<RegisterInvokeData, Boolean> {
@@ -160,5 +178,4 @@ class TouchChecker implements Wrapper<RegisterInvokeData, Boolean> {
   public boolean hasBeenChecked() {
     return this.touched;
   }
-
 }

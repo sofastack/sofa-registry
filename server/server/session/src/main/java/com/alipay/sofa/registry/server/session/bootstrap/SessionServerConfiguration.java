@@ -76,15 +76,7 @@ import com.alipay.sofa.registry.server.session.remoting.ClientNodeExchanger;
 import com.alipay.sofa.registry.server.session.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.server.session.remoting.DataNodeNotifyExchanger;
 import com.alipay.sofa.registry.server.session.remoting.console.SessionConsoleExchanger;
-import com.alipay.sofa.registry.server.session.remoting.console.handler.CheckClientManagerHandler;
-import com.alipay.sofa.registry.server.session.remoting.console.handler.ClientOffRequestHandler;
-import com.alipay.sofa.registry.server.session.remoting.console.handler.ClientOnRequestHandler;
-import com.alipay.sofa.registry.server.session.remoting.console.handler.FilterSubscriberIPsHandler;
-import com.alipay.sofa.registry.server.session.remoting.console.handler.GetClientManagerRequestHandler;
-import com.alipay.sofa.registry.server.session.remoting.console.handler.PubSubDataInfoIdRequestHandler;
-import com.alipay.sofa.registry.server.session.remoting.console.handler.QueryPublisherRequestHandler;
-import com.alipay.sofa.registry.server.session.remoting.console.handler.QuerySubscriberRequestHandler;
-import com.alipay.sofa.registry.server.session.remoting.console.handler.StopPushRequestHandler;
+import com.alipay.sofa.registry.server.session.remoting.console.handler.*;
 import com.alipay.sofa.registry.server.session.remoting.handler.AppRevisionSliceHandler;
 import com.alipay.sofa.registry.server.session.remoting.handler.ClientNodeConnectionHandler;
 import com.alipay.sofa.registry.server.session.remoting.handler.DataChangeRequestHandler;
@@ -164,6 +156,11 @@ import com.alipay.sofa.registry.store.api.config.StoreApiConfiguration;
 import com.alipay.sofa.registry.task.MetricsableThreadPoolExecutor;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
 import com.alipay.sofa.registry.util.PropertySplitter;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -171,12 +168,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author shangyu.wh
@@ -961,8 +952,9 @@ public class SessionServerConfiguration {
 
     @Bean
     public FetchDataInfoIDBlackListService fetchDataInfoIDBlackListService(
-            SystemPropertyProcessorManager systemPropertyProcessorManager) {
-      FetchDataInfoIDBlackListService fetchDataInfoIDBlackListService = new FetchDataInfoIDBlackListService();
+        SystemPropertyProcessorManager systemPropertyProcessorManager) {
+      FetchDataInfoIDBlackListService fetchDataInfoIDBlackListService =
+          new FetchDataInfoIDBlackListService();
       systemPropertyProcessorManager.addSystemDataProcessor(fetchDataInfoIDBlackListService);
       return fetchDataInfoIDBlackListService;
     }

@@ -1,3 +1,19 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.alipay.sofa.registry.server.session.providedata;
 
 import com.alipay.sofa.registry.common.model.ConnectId;
@@ -18,40 +34,39 @@ import com.alipay.sofa.registry.util.JsonUtils;
 import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.annotations.VisibleForTesting;
-import org.apache.commons.collections.CollectionUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
+import org.apache.commons.collections.CollectionUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author huicha
  * @date 2024/12/13
  */
-public class FetchDataInfoIDBlackListService extends AbstractFetchSystemPropertyService<DataInfoIDBlacklistStorage> {
+public class FetchDataInfoIDBlackListService
+    extends AbstractFetchSystemPropertyService<DataInfoIDBlacklistStorage> {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(FetchDataInfoIDBlackListService.class, "[DataInfoIDBlackList]");
+  private static final Logger LOGGER =
+      LoggerFactory.getLogger(FetchDataInfoIDBlackListService.class, "[DataInfoIDBlackList]");
 
-  @Autowired
-  private SessionServerConfig sessionServerConfig;
+  @Autowired private SessionServerConfig sessionServerConfig;
 
-  @Autowired
-  private SessionDataStore sessionDataStore;
+  @Autowired private SessionDataStore sessionDataStore;
 
-  @Autowired
-  private WriteDataAcceptor writeDataAcceptor;
+  @Autowired private WriteDataAcceptor writeDataAcceptor;
 
   private AtomicBoolean start;
 
   private WatchDog watchDog;
 
   public FetchDataInfoIDBlackListService() {
-    super(ValueConstants.SESSION_DATAID_BLACKLIST_DATA_ID,
-            new DataInfoIDBlacklistStorage(INIT_VERSION, Collections.emptySet()));
+    super(
+        ValueConstants.SESSION_DATAID_BLACKLIST_DATA_ID,
+        new DataInfoIDBlacklistStorage(INIT_VERSION, Collections.emptySet()));
     this.start = new AtomicBoolean(false);
     this.watchDog = new WatchDog();
   }
@@ -78,7 +93,10 @@ public class FetchDataInfoIDBlackListService extends AbstractFetchSystemProperty
       Set<String> newDataInfoIds = JsonUtils.read(data, new TypeReference<Set<String>>() {});
 
       // 2. 首先覆盖保存，让新的 Publisher 可以被忽略，这样可以避免新增的 Publisher 被遗漏清理
-      if (!this.getStorage().compareAndSet(oldStorage, new DataInfoIDBlacklistStorage(provideData.getVersion(), newDataInfoIds))) {
+      if (!this.getStorage()
+          .compareAndSet(
+              oldStorage,
+              new DataInfoIDBlacklistStorage(provideData.getVersion(), newDataInfoIds))) {
         // 覆盖失败了那么可能是有并发冲突，跳过处理
         return false;
       }
@@ -94,7 +112,7 @@ public class FetchDataInfoIDBlackListService extends AbstractFetchSystemProperty
   }
 
   public boolean isInBlackList(String dataInfoId) {
-    DataInfoIDBlacklistStorage storage =  this.storage.get();
+    DataInfoIDBlacklistStorage storage = this.storage.get();
     if (null == storage) {
       return false;
     }
@@ -125,8 +143,8 @@ public class FetchDataInfoIDBlackListService extends AbstractFetchSystemProperty
 
       // 2. 进行清理
       // 查询出当前 Session 上所有发布了 dataInfoId 的 Publisher，并按照和 Data 的链接 id 分组
-      Map<ConnectId, List<Publisher>> publisherMap = dataInfoIds
-              .stream()
+      Map<ConnectId, List<Publisher>> publisherMap =
+          dataInfoIds.stream()
               .flatMap(dataInfoId -> this.sessionDataStore.getDatas(dataInfoId).stream())
               .collect(Collectors.groupingBy(Publisher::connectId));
 
@@ -168,7 +186,8 @@ public class FetchDataInfoIDBlackListService extends AbstractFetchSystemProperty
       // 由于数据发生变化的时候，会有一个通知机制主动唤醒这个 WatchDog 执行
       // Publisher 清理任务，而这个扫描绝大多数时候的执行都是不会找到可执行的 Publisher 的
       // 因此这里的自动执行间隔需要配置的更大一些，不需要那么频繁
-      return FetchDataInfoIDBlackListService.this.sessionServerConfig.getScanPublisherInDataInfoIdBlackListIntervalMillis();
+      return FetchDataInfoIDBlackListService.this.sessionServerConfig
+          .getScanPublisherInDataInfoIdBlackListIntervalMillis();
     }
 
     @Override
@@ -189,11 +208,11 @@ public class FetchDataInfoIDBlackListService extends AbstractFetchSystemProperty
     public Set<String> getDataInfoIds() {
       return dataInfoIds;
     }
-
   }
 
   @VisibleForTesting
-  public FetchDataInfoIDBlackListService setSessionServerConfig(SessionServerConfig sessionServerConfig) {
+  public FetchDataInfoIDBlackListService setSessionServerConfig(
+      SessionServerConfig sessionServerConfig) {
     this.sessionServerConfig = sessionServerConfig;
     return this;
   }
@@ -209,5 +228,4 @@ public class FetchDataInfoIDBlackListService extends AbstractFetchSystemProperty
     this.writeDataAcceptor = writeDataAcceptor;
     return this;
   }
-
 }
