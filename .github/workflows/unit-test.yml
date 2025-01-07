@@ -26,7 +26,7 @@ jobs:
         && mvn clean test -DisSkipIntegrationTest=true "-Dtest.logging.level=ERROR" --fail-at-end --batch-mode
     - name: Upload heap dump
       if: always()
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: heap-dump
         path: /tmp/*.hprof
