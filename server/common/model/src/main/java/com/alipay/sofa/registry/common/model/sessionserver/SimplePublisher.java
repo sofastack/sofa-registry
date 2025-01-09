@@ -54,6 +54,6 @@ public final class SimplePublisher implements Serializable {
   @Override
   public String toString() {
     return StringFormatter.format(
-        "SimplePublisher{app={},clientId={},add={}}", appName, clientId, sourceAddress);
+        "SimplePublisher{app={},clientId={},addr={}}", appName, clientId, sourceAddress);
   }
 }
