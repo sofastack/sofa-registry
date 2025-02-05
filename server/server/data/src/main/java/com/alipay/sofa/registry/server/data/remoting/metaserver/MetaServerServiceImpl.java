@@ -25,18 +25,22 @@ import com.alipay.sofa.registry.common.model.slot.BaseSlotStatus;
 import com.alipay.sofa.registry.common.model.slot.SlotConfig;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.common.model.store.URL;
-import com.alipay.sofa.registry.server.data.bootstrap.CommonConfig;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
+import com.alipay.sofa.registry.server.data.multi.cluster.exchanger.RemoteDataNodeExchanger;
+import com.alipay.sofa.registry.server.data.multi.cluster.slot.MultiClusterSlotManager;
 import com.alipay.sofa.registry.server.data.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.server.data.remoting.SessionNodeExchanger;
 import com.alipay.sofa.registry.server.data.slot.SlotManager;
+import com.alipay.sofa.registry.server.shared.config.CommonConfig;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.meta.AbstractMetaServerService;
 import com.alipay.sofa.registry.server.shared.slot.SlotTableRecorder;
 import com.google.common.annotations.VisibleForTesting;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.apache.commons.collections.CollectionUtils;
+import org.glassfish.jersey.internal.guava.Sets;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -55,6 +59,10 @@ public class MetaServerServiceImpl extends AbstractMetaServerService<BaseHeartBe
   @Autowired private DataServerConfig dataServerConfig;
 
   @Autowired private CommonConfig commonConfig;
+
+  @Autowired private MultiClusterSlotManager multiClusterSlotManager;
+
+  @Autowired private RemoteDataNodeExchanger remoteDataNodeExchanger;
 
   private volatile SlotTable currentSlotTable;
 
@@ -81,6 +89,20 @@ public class MetaServerServiceImpl extends AbstractMetaServerService<BaseHeartBe
       sessionNodeExchanger.setServerIps(sessionServerList);
       sessionNodeExchanger.notifyConnectServerAsync();
     }
+
+    Map<String, Set<String>> remoteDataServers = getRemoteDataServers();
+    if (!org.springframework.util.CollectionUtils.isEmpty(remoteDataServers)) {
+
+      Set<String> dataServers = Sets.newHashSetWithExpectedSize(128);
+      for (Set<String> servers : remoteDataServers.values()) {
+        if (!CollectionUtils.isEmpty(servers)) {
+          dataServers.addAll(servers);
+        }
+      }
+      remoteDataNodeExchanger.setServerIps(dataServers);
+      remoteDataNodeExchanger.notifyConnectServerAsync();
+    }
+
     if (result.getSlotTable() != null
         && result.getSlotTable().getEpoch() != SlotTable.INIT.getEpoch()) {
       slotManager.updateSlotTable(result.getSlotTable());
@@ -89,11 +111,14 @@ public class MetaServerServiceImpl extends AbstractMetaServerService<BaseHeartBe
           "[handleRenewResult] slot table is {}",
           result.getSlotTable() == null ? "null" : "SlotTable.INIT");
     }
+
+    multiClusterSlotManager.updateSlotTable(result.getRemoteSlotTableStatus());
   }
 
   @Override
   protected HeartbeatRequest createRequest() {
-    Tuple<Long, List<BaseSlotStatus>> tuple = slotManager.getSlotTableEpochAndStatuses();
+    Tuple<Long, List<BaseSlotStatus>> tuple =
+        slotManager.getSlotTableEpochAndStatuses(dataServerConfig.getLocalDataCenter());
     final long slotTableEpoch = tuple.o1;
     final List<BaseSlotStatus> slotStatuses = tuple.o2;
     HeartbeatRequest<DataNode> request =
@@ -103,7 +128,8 @@ public class MetaServerServiceImpl extends AbstractMetaServerService<BaseHeartBe
                 dataServerConfig.getLocalDataCenter(),
                 System.currentTimeMillis(),
                 SlotConfig.slotBasicInfo(),
-                slotStatuses)
+                slotStatuses,
+                multiClusterSlotManager.getSlotTableEpoch())
             .setSlotTable(currentSlotTable);
     return request;
   }
@@ -123,23 +149,38 @@ public class MetaServerServiceImpl extends AbstractMetaServerService<BaseHeartBe
   }
 
   @VisibleForTesting
-  void setSlotManager(SlotManager slotManager) {
+  MetaServerServiceImpl setSlotManager(SlotManager slotManager) {
     this.slotManager = slotManager;
+    return this;
   }
 
   @VisibleForTesting
-  void setDataNodeExchanger(DataNodeExchanger dataNodeExchanger) {
+  MetaServerServiceImpl setDataNodeExchanger(DataNodeExchanger dataNodeExchanger) {
     this.dataNodeExchanger = dataNodeExchanger;
+    return this;
   }
 
   @VisibleForTesting
-  void setSessionNodeExchanger(SessionNodeExchanger sessionNodeExchanger) {
+  MetaServerServiceImpl setSessionNodeExchanger(SessionNodeExchanger sessionNodeExchanger) {
     this.sessionNodeExchanger = sessionNodeExchanger;
+    return this;
   }
 
   @VisibleForTesting
-  void setDataServerConfig(DataServerConfig dataServerConfig) {
+  MetaServerServiceImpl setDataServerConfig(DataServerConfig dataServerConfig) {
     this.dataServerConfig = dataServerConfig;
+    return this;
+  }
+
+  /**
+   * Setter method for property <tt>multiClusterSlotManager</tt>.
+   *
+   * @param multiClusterSlotManager value to be assigned to property multiClusterSlotManager
+   */
+  MetaServerServiceImpl setMultiClusterSlotManager(
+      MultiClusterSlotManager multiClusterSlotManager) {
+    this.multiClusterSlotManager = multiClusterSlotManager;
+    return this;
   }
 
   @Override

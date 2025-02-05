@@ -16,22 +16,46 @@
  */
 package com.alipay.sofa.registry.server.data.remoting;
 
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.remoting.ChannelHandler;
+import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
-import com.alipay.sofa.registry.server.shared.meta.AbstractMetaServerManager;
+import com.alipay.sofa.registry.server.shared.constant.MetaLeaderLearnModeEnum;
+import com.alipay.sofa.registry.server.shared.meta.AbstractMetaLeaderExchanger;
 import com.google.common.annotations.VisibleForTesting;
 import java.util.Collection;
+import javax.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author chen.zhu
  *     <p>Mar 15, 2021
  */
-public class DataMetaServerManager extends AbstractMetaServerManager {
+public class DataMetaServerManager extends AbstractMetaLeaderExchanger {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(AbstractMetaLeaderExchanger.class);
 
   @Autowired private DataServerConfig dataServerConfig;
 
+  @Resource(name = "metaClientHandlers")
+  private Collection<ChannelHandler> metaClientHandlers;
+
+  public DataMetaServerManager() {
+    super(Exchange.META_SERVER_TYPE, LOGGER);
+  }
+
   @Override
-  protected Collection<String> getConfiguredMetaServerDomains() {
+  protected MetaLeaderLearnModeEnum getMode() {
+    if (defaultCommonConfig.isJdbc()) {
+      return MetaLeaderLearnModeEnum.JDBC;
+    } else {
+      return MetaLeaderLearnModeEnum.LOADBALANCER;
+    }
+  }
+
+  @Override
+  protected Collection<String> getMetaServerDomains(String dataCenter) {
     return dataServerConfig.getMetaServerAddresses();
   }
 
@@ -43,6 +67,11 @@ public class DataMetaServerManager extends AbstractMetaServerManager {
   @Override
   public int getServerPort() {
     return dataServerConfig.getMetaServerPort();
+  }
+
+  @Override
+  protected Collection<ChannelHandler> getClientHandlers() {
+    return metaClientHandlers;
   }
 
   @VisibleForTesting

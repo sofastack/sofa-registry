@@ -19,6 +19,7 @@ package com.alipay.sofa.registry.util;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.google.common.annotations.VisibleForTesting;
+import org.apache.commons.lang.StringUtils;
 
 /**
  * generates ID: 49 bit millisecond timestamp + 15 bit incremental ID
@@ -91,7 +92,7 @@ public final class DatumVersionUtil {
   }
 
   public static boolean useConfregVersionGen() {
-    return DATUM_VERSION_TYPE_CONFREG.equals(datumVersionType);
+    return StringUtils.equals(datumVersionType, DATUM_VERSION_TYPE_CONFREG);
   }
 
   public static long confregNextId(long lastVersion) {

@@ -38,9 +38,9 @@ public class RegistryForbiddenServerRequest implements Serializable {
   private NodeServerOperateInfo operateInfo;
 
   /**
-   * @param operation
-   * @param nodeType
-   * @param ip
+   * @param operation operation
+   * @param nodeType nodeType
+   * @param ip ip
    */
   public RegistryForbiddenServerRequest(
       DataOperation operation, NodeType nodeType, String ip, String cell) {

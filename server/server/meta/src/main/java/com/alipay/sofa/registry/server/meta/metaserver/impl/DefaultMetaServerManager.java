@@ -66,9 +66,7 @@ public class DefaultMetaServerManager {
     result.setLocalDataCenter(nodeConfig.getLocalDataCenter());
     Map<String, Map<String, MetaNode>> nodeMap = Maps.newHashMap();
     Map<String, Long> epochMap = Maps.newHashMap();
-    //    for (String dcName : nodeConfig.getMetaNodeIP().keySet()) {
-    //    }
-    // TODO unsupported multi-cross dataCenter
+
     nodeMap.put(
         nodeConfig.getLocalDataCenter(), transform(currentDcMetaServer.getClusterMembers()));
     epochMap.put(nodeConfig.getLocalDataCenter(), currentDcMetaServer.getEpoch());

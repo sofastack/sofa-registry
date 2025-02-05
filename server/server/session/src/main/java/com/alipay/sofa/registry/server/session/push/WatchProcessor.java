@@ -50,7 +50,7 @@ public class WatchProcessor {
           "WatchCallback", OsUtils.getCpuCount() * 2, 8000, discardHandler);
 
   boolean doExecuteOnWatch(Watcher watcher, ReceivedConfigData data, long triggerTimestamp) {
-    if (!pushSwitchService.canIpPush(watcher.getSourceAddress().getIpAddress())) {
+    if (!pushSwitchService.canIpPushLocal(watcher.getSourceAddress().getIpAddress())) {
       return false;
     }
     if (watcher.getPushedVersion() >= data.getVersion()) {

@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.push;
 
+import java.util.Collections;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -25,15 +26,16 @@ public class TriggerPushContextTest {
     TriggerPushContext ctx = new TriggerPushContext("testDc", 100, "testData", 200);
     Assert.assertTrue(ctx.toString(), ctx.toString().contains("100"));
 
-    Assert.assertEquals(ctx.dataCenter, "testDc");
+    Assert.assertTrue(ctx.dataCenters().contains("testDc"));
+    Assert.assertEquals(ctx.dataCenters().size(), 1);
     Assert.assertEquals(ctx.dataNode, "testData");
-    Assert.assertEquals(ctx.getExpectDatumVersion(), 100);
+    Assert.assertEquals(ctx.getExpectDatumVersion().get("testDc").longValue(), 100);
     Assert.assertEquals(ctx.getFirstTimes().getTriggerSession(), 200);
 
-    ctx.setExpectDatumVersion(300);
+    ctx.setExpectDatumVersion(Collections.singletonMap("testDc", 300L));
     ctx.getFirstTimes().setTriggerSession(500);
 
-    Assert.assertEquals(ctx.getExpectDatumVersion(), 300);
+    Assert.assertEquals(ctx.getExpectDatumVersion().get("testDc").longValue(), 300);
     Assert.assertEquals(ctx.getFirstTimes().getTriggerSession(), 500);
   }
 }

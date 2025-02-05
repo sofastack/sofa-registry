@@ -59,30 +59,6 @@ public class MetadataMetrics {
             .name("revision_register_total")
             .help("revision register")
             .register();
-
-    public static final Counter REVISION_HEARTBEAT_COUNTER =
-        Counter.build()
-            .namespace("metadata")
-            .subsystem("revision")
-            .name("revision_heartbeat_total")
-            .help("revision register")
-            .register();
-
-    public static final Counter REVISION_GC_COUNTER =
-        Counter.build()
-            .namespace("metadata")
-            .subsystem("revision")
-            .name("revision_delete_total")
-            .help("revision delete")
-            .register();
-
-    public static final Counter INTERFACE_APPS_REGISTER_COUNTER =
-        Counter.build()
-            .namespace("metadata")
-            .subsystem("apps")
-            .name("apps_register_total")
-            .help("apps register")
-            .register();
   }
 
   public static final class ProvideData {

@@ -101,7 +101,13 @@ public final class SlotTable implements Serializable {
         "SlotTable{epoch={}, num={}, leaders={}}", epoch, slots.size(), slotLeaders());
   }
 
-  /** the slot table is too big for rpc */
+  /**
+   * the slot table is too big for rpc
+   *
+   * @param targetDataNode targetDataNode
+   * @param ignoreFollowers ignoreFollowers
+   * @return List
+   */
   public List<DataNodeSlot> transfer(String targetDataNode, boolean ignoreFollowers) {
     Map<String, List<Integer>> leadersMap = new HashMap<>();
     Map<String, List<Integer>> followersMap = new HashMap<>();
@@ -158,11 +164,22 @@ public final class SlotTable implements Serializable {
     return servers;
   }
 
+  public SlotTable filter(Set<Integer> slotIds) {
+    if (slots.isEmpty()) {
+      return this;
+    }
+    final Map<Integer, Slot> slotMap = Maps.newTreeMap();
+    for (Integer slotId : slotIds) {
+      slotMap.put(slotId, slots.get(slotId));
+    }
+    return new SlotTable(epoch, slotMap);
+  }
+
   public SlotTable filter(String ip) {
     if (slots.isEmpty()) {
       return this;
     }
-    final Map<Integer, Slot> slotMap = Maps.newHashMapWithExpectedSize(slots.size());
+    final Map<Integer, Slot> slotMap = Maps.newTreeMap();
     slots.forEach(
         (k, v) -> {
           if (v.getLeader().equals(ip) || v.getFollowers().contains(ip)) {
@@ -172,8 +189,26 @@ public final class SlotTable implements Serializable {
     return new SlotTable(epoch, slotMap);
   }
 
+  public SlotTable filterLeaderInfo() {
+    if (slots.isEmpty()) {
+      return this;
+    }
+    final Map<Integer, Slot> slotMap = Maps.newTreeMap();
+    slots.forEach(
+        (k, v) -> {
+          // filter followers
+          slotMap.put(
+              k, new Slot(v.getId(), v.getLeader(), v.getLeaderEpoch(), Collections.emptyList()));
+        });
+    return new SlotTable(epoch, slotMap);
+  }
+
   public int getLeaderNum(String dataServerIp) {
     return (int) slots.values().stream().filter(s -> dataServerIp.equals(s.getLeader())).count();
+  }
+
+  public int getSlotNum() {
+    return slots.size();
   }
 
   public int getFollowerNum(String dataServerIp) {

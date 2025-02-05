@@ -29,7 +29,7 @@ import com.alipay.sofa.registry.remoting.bolt.BoltChannel;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.CleanContinues;
-import com.alipay.sofa.registry.server.data.cache.DatumStorage;
+import com.alipay.sofa.registry.server.data.cache.DatumStorageDelegate;
 import com.alipay.sofa.registry.server.data.change.DataChangeEventCenter;
 import com.alipay.sofa.registry.server.data.change.DataChangeType;
 import com.alipay.sofa.registry.server.data.slot.SlotManager;
@@ -46,6 +46,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -60,7 +61,7 @@ public final class SessionLeaseManager {
   private static final int MIN_LEASE_SEC = 5;
 
   @Autowired DataServerConfig dataServerConfig;
-  @Autowired DatumStorage localDatumStorage;
+  @Resource DatumStorageDelegate datumStorageDelegate;
 
   @Autowired Exchange boltExchange;
 
@@ -135,14 +136,15 @@ public final class SessionLeaseManager {
 
   void cleanStorage() {
     // make sure the existing processId be clean
-    Set<ProcessId> stores = localDatumStorage.getSessionProcessIds();
+    Set<ProcessId> stores =
+        datumStorageDelegate.getSessionProcessIds(dataServerConfig.getLocalDataCenter());
     final int deadlineMillis = dataServerConfig.getSessionLeaseCleanDeadlineSecs() * 1000;
     for (int i = 0; i < SlotConfig.SLOT_NUM; i++) {
-      if (slotManager.isFollower(i)) {
+      if (slotManager.isFollower(dataServerConfig.getLocalDataCenter(), i)) {
         LOGGER.info("skip clean for follower, slotId={}", i);
         continue;
       }
-      if (slotManager.isLeader(i)) {
+      if (slotManager.isLeader(dataServerConfig.getLocalDataCenter(), i)) {
         // own the slot and is leader
         for (ProcessId p : stores) {
           if (!connectIdRenewTimestampMap.containsKey(p)) {
@@ -158,7 +160,9 @@ public final class SessionLeaseManager {
             // deadlineTs, ensure that the cleanup ends within the expected time
             final long deadlineTimestamp = start + deadlineMillis;
             CleanLeaseContinues continues = new CleanLeaseContinues(deadlineTimestamp);
-            Map<String, DatumVersion> versionMap = localDatumStorage.clean(i, p, continues);
+            Map<String, DatumVersion> versionMap =
+                datumStorageDelegate.cleanBySessionId(
+                    dataServerConfig.getLocalDataCenter(), i, p, continues);
             if (!versionMap.isEmpty()) {
               dataChangeEventCenter.onChange(
                   versionMap.keySet(), DataChangeType.LEASE, dataServerConfig.getLocalDataCenter());
@@ -260,7 +264,8 @@ public final class SessionLeaseManager {
     // compact the unpub
     long tombstoneTimestamp =
         System.currentTimeMillis() - dataServerConfig.getDatumCompactDelaySecs() * 1000;
-    Map<String, Integer> compacted = localDatumStorage.compact(tombstoneTimestamp);
+    Map<String, Integer> compacted =
+        datumStorageDelegate.compact(dataServerConfig.getLocalDataCenter(), tombstoneTimestamp);
     COMPACT_LOGGER.info("compact datum, {}", compacted);
   }
 }

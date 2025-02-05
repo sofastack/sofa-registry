@@ -16,23 +16,9 @@
  */
 package com.alipay.sofa.registry.server.data.remoting.dataserver.handler;
 
-import com.alipay.sofa.registry.common.model.GenericResponse;
-import com.alipay.sofa.registry.common.model.Node;
-import com.alipay.sofa.registry.common.model.dataserver.DatumDigest;
 import com.alipay.sofa.registry.common.model.slot.DataSlotDiffDigestRequest;
-import com.alipay.sofa.registry.common.model.slot.DataSlotDiffDigestResult;
-import com.alipay.sofa.registry.common.model.slot.DataSlotDiffUtils;
-import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.server.data.cache.DatumStorage;
-import com.alipay.sofa.registry.server.data.slot.SlotManager;
-import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
-import com.alipay.sofa.registry.util.ParaCheckUtil;
-import com.alipay.sofa.registry.util.StringFormatter;
-import com.google.common.annotations.VisibleForTesting;
-import java.util.Map;
+import com.alipay.sofa.registry.server.data.multi.cluster.loggers.Loggers;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadPoolExecutor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,70 +27,13 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @author yuzhi.lyz
  * @version v 0.1 2020-11-06 15:41 yuzhi.lyz Exp $
  */
-public class SlotFollowerDiffDigestRequestHandler
-    extends AbstractServerHandler<DataSlotDiffDigestRequest> {
-  private static final Logger LOGGER =
-      LoggerFactory.getLogger(SlotFollowerDiffDigestRequestHandler.class);
+public class SlotFollowerDiffDigestRequestHandler extends BaseSlotDiffDigestRequestHandler {
+  private static final Logger LOGGER = Loggers.SYNC_SRV_LOGGER;
 
   @Autowired private ThreadPoolExecutor slotSyncRequestProcessorExecutor;
 
-  @Autowired private DatumStorage localDatumStorage;
-
-  @Autowired private SlotManager slotManager;
-
-  @Override
-  public Object doHandle(Channel channel, DataSlotDiffDigestRequest request) {
-    try {
-      slotManager.triggerUpdateSlotTable(request.getSlotTableEpoch());
-      final int slotId = request.getSlotId();
-      if (!slotManager.isLeader(slotId)) {
-        LOGGER.warn("not leader of {}", slotId);
-        return new GenericResponse().fillFailed("not leader of " + slotId);
-      }
-      DataSlotDiffDigestResult result =
-          calcDiffResult(
-              slotId,
-              request.getDatumDigest(),
-              localDatumStorage.getPublishers(request.getSlotId()));
-      result.setSlotTableEpoch(slotManager.getSlotTableEpoch());
-      return new GenericResponse().fillSucceed(result);
-    } catch (Throwable e) {
-      String msg =
-          StringFormatter.format("DiffSyncDigest request error for slot {}", request.getSlotId());
-      LOGGER.error(msg, e);
-      return new GenericResponse().fillFailed(msg);
-    }
-  }
-
-  private DataSlotDiffDigestResult calcDiffResult(
-      int targetSlot,
-      Map<String, DatumDigest> targetDigestMap,
-      Map<String, Map<String, Publisher>> existingPublishers) {
-    DataSlotDiffDigestResult result =
-        DataSlotDiffUtils.diffDigestResult(targetDigestMap, existingPublishers);
-    DataSlotDiffUtils.logDiffResult(result, targetSlot);
-    return result;
-  }
-
-  @Override
-  protected Node.NodeType getConnectNodeType() {
-    return Node.NodeType.DATA;
-  }
-
-  @Override
-  public Class interest() {
-    return DataSlotDiffDigestRequest.class;
-  }
-
-  @Override
-  public void checkParam(DataSlotDiffDigestRequest request) {
-    ParaCheckUtil.checkNonNegative(request.getSlotId(), "request.slotId");
-    ParaCheckUtil.checkNotNull(request.getDatumDigest(), "request.datumDigest");
-  }
-
-  @Override
-  public Object buildFailedResponse(String msg) {
-    return new GenericResponse().fillFailed(msg);
+  public SlotFollowerDiffDigestRequestHandler() {
+    super(LOGGER);
   }
 
   @Override
@@ -112,23 +41,20 @@ public class SlotFollowerDiffDigestRequestHandler
     return slotSyncRequestProcessorExecutor;
   }
 
-  @VisibleForTesting
-  void setLocalDatumStorage(DatumStorage localDatumStorage) {
-    this.localDatumStorage = localDatumStorage;
+  @Override
+  protected boolean preCheck(DataSlotDiffDigestRequest request) {
+    if (!slotManager.isLeader(dataServerConfig.getLocalDataCenter(), request.getSlotId())) {
+      LOGGER.warn(
+          "sync slot request from {}, not leader of {}",
+          request.getLocalDataCenter(),
+          request.getSlotId());
+      return false;
+    }
+    return true;
   }
 
-  @VisibleForTesting
-  void setSlotManager(SlotManager slotManager) {
-    this.slotManager = slotManager;
-  }
-
-  @VisibleForTesting
-  DatumStorage getLocalDatumStorage() {
-    return localDatumStorage;
-  }
-
-  @VisibleForTesting
-  SlotManager getSlotManager() {
-    return slotManager;
+  @Override
+  protected boolean postCheck(DataSlotDiffDigestRequest request) {
+    return true;
   }
 }

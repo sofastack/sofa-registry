@@ -23,6 +23,7 @@ import static org.mockito.Mockito.spy;
 
 import com.alipay.remoting.rpc.exception.InvokeTimeoutException;
 import com.alipay.sofa.registry.common.model.store.BaseInfo;
+import com.alipay.sofa.registry.common.model.store.MultiSubDatum;
 import com.alipay.sofa.registry.common.model.store.SubDatum;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.net.NetUtil;
@@ -33,11 +34,11 @@ import com.alipay.sofa.registry.server.session.TestUtils;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfigBean;
 import com.alipay.sofa.registry.server.session.circuit.breaker.CircuitBreakerService;
 import com.alipay.sofa.registry.server.session.node.service.ClientNodeService;
-import com.alipay.sofa.registry.server.session.providedata.FetchGrayPushSwitchService;
-import com.alipay.sofa.registry.server.session.providedata.FetchStopPushService;
 import com.alipay.sofa.registry.task.RejectedDiscardHandler;
 import com.alipay.sofa.registry.util.BackOffTimes;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicReference;
@@ -49,6 +50,8 @@ import org.mockito.Mockito;
 public class PushProcessorTest {
   private String zone = "testZone";
   private String dataId = "testDataId";
+
+  private String dataCenter = "testDc";
   private long version = -1L;
 
   @BeforeEach
@@ -63,10 +66,13 @@ public class PushProcessorTest {
 
     Assert.assertEquals(processor.taskBuffer.watchBuffer(worker), 0);
     TriggerPushContext ctx =
-        new TriggerPushContext("testDc", 100, null, System.currentTimeMillis());
-    PushCause pushCause = new PushCause(ctx, PushType.Sub, System.currentTimeMillis());
+        new TriggerPushContext(dataCenter, 100, null, System.currentTimeMillis());
+    PushCause pushCause =
+        new PushCause(
+            ctx, PushType.Sub, Collections.singletonMap(dataCenter, System.currentTimeMillis()));
     Subscriber subscriber = TestUtils.newZoneSubscriber(dataId, zone);
-    SubDatum datum = TestUtils.newSubDatum(subscriber.getDataId(), 100, Collections.emptyList());
+    SubDatum datum =
+        TestUtils.newSubDatum(dataCenter, subscriber.getDataId(), 100, Collections.emptyList());
     Assert.assertTrue(worker.bufferMap.isEmpty());
 
     long now1 = System.currentTimeMillis();
@@ -74,7 +80,7 @@ public class PushProcessorTest {
         pushCause,
         NetUtil.getLocalSocketAddress(),
         Collections.singletonMap(subscriber.getRegisterId(), subscriber),
-        datum);
+        MultiSubDatum.of(datum));
     long now2 = System.currentTimeMillis();
 
     Assert.assertEquals(worker.bufferMap.size(), 1);
@@ -95,18 +101,18 @@ public class PushProcessorTest {
         pushCause,
         NetUtil.getLocalSocketAddress(),
         Collections.singletonMap(subscriber.getRegisterId(), subscriber),
-        datum);
+        MultiSubDatum.of(datum));
     Assert.assertEquals(BUFFER_SKIP_COUNTER.get(), skip + 1, 0);
     Assert.assertEquals(worker.bufferMap.size(), 1, 0);
 
     // fire after
     Assert.assertEquals(BUFFER_REPLACE_COUNTER.get(), replace, 0);
-    datum = TestUtils.newSubDatum(subscriber.getDataId(), 200, Collections.emptyList());
+    datum = TestUtils.newSubDatum(dataCenter, subscriber.getDataId(), 200, Collections.emptyList());
     processor.firePush(
         pushCause,
         NetUtil.getLocalSocketAddress(),
         Collections.singletonMap(subscriber.getRegisterId(), subscriber),
-        datum);
+        MultiSubDatum.of(datum));
     Assert.assertEquals(BUFFER_REPLACE_COUNTER.get(), replace + 1, 0);
     Assert.assertEquals(worker.bufferMap.size(), 1, 0);
     PushTask replaceTask = worker.bufferMap.get(taskKey);
@@ -116,10 +122,16 @@ public class PushProcessorTest {
     Assert.assertTrue(replaceTask.toString(), replaceTask.toString().contains(dataId));
 
     // now there is one pending task with delay
-    processor.pushSwitchService.fetchStopPushService.setStopPushSwitch(version, true);
+    processor
+        .pushSwitchService
+        .getFetchStopPushService()
+        .setStopPushSwitch(System.currentTimeMillis(), true);
     Assert.assertEquals(processor.taskBuffer.watchBuffer(worker), 0);
 
-    processor.pushSwitchService.fetchStopPushService.setStopPushSwitch(version, false);
+    processor
+        .pushSwitchService
+        .getFetchStopPushService()
+        .setStopPushSwitch(System.currentTimeMillis(), false);
     // task clean
     worker.bufferMap.clear();
     // first suspend, avoid run watchdog
@@ -129,17 +141,19 @@ public class PushProcessorTest {
     // push again
     // Reg.noDelay=false
     processor.firePush(
-        new PushCause(ctx, PushType.Empty, System.currentTimeMillis()),
+        new PushCause(
+            ctx, PushType.Empty, Collections.singletonMap(dataCenter, System.currentTimeMillis())),
         NetUtil.getLocalSocketAddress(),
         Collections.singletonMap(subscriber.getRegisterId(), subscriber),
-        datum);
+        MultiSubDatum.of(datum));
 
     // noDelay=false
     processor.firePush(
-        new PushCause(ctx, PushType.Sub, System.currentTimeMillis()),
+        new PushCause(
+            ctx, PushType.Sub, Collections.singletonMap(dataCenter, System.currentTimeMillis())),
         NetUtil.getLocalSocketAddress(),
         Collections.singletonMap(subscriber.getRegisterId() + "-test", subscriber),
-        datum);
+        MultiSubDatum.of(datum));
     Assert.assertEquals(worker.bufferMap.size(), 2);
     // only one, sub is not expire
     Assert.assertEquals(1, processor.taskBuffer.watchBuffer(worker));
@@ -165,9 +179,12 @@ public class PushProcessorTest {
 
     TriggerPushContext ctx =
         new TriggerPushContext("testDc", 100, null, System.currentTimeMillis());
-    PushCause pushCause = new PushCause(ctx, PushType.Reg, System.currentTimeMillis());
+    PushCause pushCause =
+        new PushCause(
+            ctx, PushType.Reg, Collections.singletonMap(dataCenter, System.currentTimeMillis()));
     Subscriber subscriber = TestUtils.newZoneSubscriber(dataId, zone);
-    SubDatum datum = TestUtils.newSubDatum(subscriber.getDataId(), 100, Collections.emptyList());
+    SubDatum datum =
+        TestUtils.newSubDatum(dataCenter, subscriber.getDataId(), 100, Collections.emptyList());
 
     PushTask task1 =
         processor
@@ -175,7 +192,7 @@ public class PushProcessorTest {
                 pushCause,
                 NetUtil.getLocalSocketAddress(),
                 Collections.singletonMap(subscriber.getRegisterId(), subscriber),
-                datum)
+                MultiSubDatum.of(datum))
             .get(0);
 
     Assert.assertTrue(processor.taskBuffer.buffer(task1));
@@ -190,7 +207,7 @@ public class PushProcessorTest {
                 pushCause,
                 NetUtil.getLocalSocketAddress(),
                 Collections.singletonMap(subscriber.getRegisterId(), subscriber2),
-                datum)
+                MultiSubDatum.of(datum))
             .get(0);
 
     Assert.assertFalse(processor.taskBuffer.buffer(task2));
@@ -202,7 +219,7 @@ public class PushProcessorTest {
                 pushCause,
                 NetUtil.getLocalSocketAddress(),
                 Collections.singletonMap(subscriber.getRegisterId(), subscriber2),
-                datum)
+                MultiSubDatum.of(datum))
             .get(0);
     Assert.assertTrue(processor.taskBuffer.buffer(task2));
   }
@@ -214,23 +231,32 @@ public class PushProcessorTest {
 
     TriggerPushContext ctx =
         new TriggerPushContext("testDc", 100, null, System.currentTimeMillis());
-    PushCause pushCause = new PushCause(ctx, PushType.Reg, System.currentTimeMillis());
+    PushCause pushCause =
+        new PushCause(
+            ctx, PushType.Reg, Collections.singletonMap(dataCenter, System.currentTimeMillis()));
     Subscriber subscriber = TestUtils.newZoneSubscriber(dataId, zone);
-    SubDatum datum = TestUtils.newSubDatum(subscriber.getDataId(), 100, Collections.emptyList());
+    SubDatum datum =
+        TestUtils.newSubDatum(dataCenter, subscriber.getDataId(), 100, Collections.emptyList());
 
     processor.firePush(
         pushCause,
         NetUtil.getLocalSocketAddress(),
         Collections.singletonMap(subscriber.getRegisterId(), subscriber),
-        datum);
+        MultiSubDatum.of(datum));
 
     PushTask task = worker.bufferMap.values().iterator().next();
     worker.bufferMap.clear();
 
-    processor.pushSwitchService.fetchStopPushService.setStopPushSwitch(version, true);
+    processor
+        .pushSwitchService
+        .getFetchStopPushService()
+        .setStopPushSwitch(System.currentTimeMillis(), true);
     Assert.assertFalse(processor.doPush(task));
 
-    processor.pushSwitchService.fetchStopPushService.setStopPushSwitch(version, false);
+    processor
+        .pushSwitchService
+        .getFetchStopPushService()
+        .setStopPushSwitch(System.currentTimeMillis(), false);
     // clientNodeService is null
     processor.clientNodeService = null;
     Assert.assertFalse(processor.doPush(task));
@@ -359,15 +385,18 @@ public class PushProcessorTest {
 
     TriggerPushContext ctx =
         new TriggerPushContext("testDc", 100, null, System.currentTimeMillis());
-    PushCause pushCause = new PushCause(ctx, PushType.Reg, System.currentTimeMillis());
+    PushCause pushCause =
+        new PushCause(
+            ctx, PushType.Reg, Collections.singletonMap(dataCenter, System.currentTimeMillis()));
     Subscriber subscriber = TestUtils.newZoneSubscriber(dataId, zone);
-    SubDatum datum = TestUtils.newSubDatum(subscriber.getDataId(), 100, Collections.emptyList());
+    SubDatum datum =
+        TestUtils.newSubDatum(dataCenter, subscriber.getDataId(), 100, Collections.emptyList());
 
     processor.firePush(
         pushCause,
         NetUtil.getLocalSocketAddress(),
         Collections.singletonMap(subscriber.getRegisterId(), subscriber),
-        datum);
+        MultiSubDatum.of(datum));
 
     PushTask task = worker.bufferMap.values().iterator().next();
     processor.doPush(task);
@@ -384,15 +413,16 @@ public class PushProcessorTest {
 
   private PushProcessor newProcessor() {
     PushProcessor processor = new PushProcessor();
-    SessionServerConfigBean config = TestUtils.newSessionConfig("testDc");
+    SessionServerConfigBean config = TestUtils.newSessionConfig(dataCenter);
     config.setPushTaskBufferBucketSize(1);
     processor.sessionServerConfig = config;
     processor.clientNodeService = mock(ClientNodeService.class);
-    processor.pushSwitchService = new PushSwitchService();
-    processor.pushSwitchService.setFetchStopPushService(new FetchStopPushService());
-    processor.pushSwitchService.setFetchGrayPushSwitchService(new FetchGrayPushSwitchService());
-    processor.pushSwitchService.fetchStopPushService.setStopPushSwitch(
-        System.currentTimeMillis(), false);
+    processor.pushSwitchService = TestUtils.newPushSwitchService(config);
+
+    processor
+        .pushSwitchService
+        .getFetchStopPushService()
+        .setStopPushSwitch(System.currentTimeMillis(), false);
     CircuitBreakerService circuitBreakerService = spy(InMemoryCircuitBreakerService.class);
     processor.circuitBreakerService = circuitBreakerService;
     processor.pushDataGenerator = new PushDataGenerator();
@@ -409,15 +439,18 @@ public class PushProcessorTest {
     final PushTaskBuffer.BufferWorker worker = processor.taskBuffer.workers[0];
     TriggerPushContext ctx =
         new TriggerPushContext("testDc", 100, null, System.currentTimeMillis());
-    PushCause pushCause = new PushCause(ctx, PushType.Reg, System.currentTimeMillis());
+    PushCause pushCause =
+        new PushCause(
+            ctx, PushType.Reg, Collections.singletonMap(dataCenter, System.currentTimeMillis()));
     Subscriber subscriber = TestUtils.newZoneSubscriber(dataId, zone);
-    SubDatum datum = TestUtils.newSubDatum(subscriber.getDataId(), 100, Collections.emptyList());
+    SubDatum datum =
+        TestUtils.newSubDatum(dataCenter, subscriber.getDataId(), 100, Collections.emptyList());
 
     processor.firePush(
         pushCause,
         NetUtil.getLocalSocketAddress(),
         Collections.singletonMap(subscriber.getRegisterId(), subscriber),
-        datum);
+        MultiSubDatum.of(datum));
 
     PushTask task = worker.bufferMap.values().iterator().next();
     processor.doPush(task);
@@ -443,16 +476,19 @@ public class PushProcessorTest {
 
     Assert.assertEquals(0, processor.cleanPushingTaskRunTooLong());
     TriggerPushContext ctx =
-        new TriggerPushContext("testDc", 100, null, System.currentTimeMillis());
-    PushCause pushCause = new PushCause(ctx, PushType.Reg, System.currentTimeMillis());
+        new TriggerPushContext(dataCenter, 100, null, System.currentTimeMillis());
+    PushCause pushCause =
+        new PushCause(
+            ctx, PushType.Reg, Collections.singletonMap(dataCenter, System.currentTimeMillis()));
     Subscriber subscriber = TestUtils.newZoneSubscriber(dataId, zone);
-    SubDatum datum = TestUtils.newSubDatum(subscriber.getDataId(), 100, Collections.emptyList());
+    SubDatum datum =
+        TestUtils.newSubDatum(dataCenter, subscriber.getDataId(), 100, Collections.emptyList());
 
     processor.firePush(
         pushCause,
         NetUtil.getLocalSocketAddress(),
         Collections.singletonMap(subscriber.getRegisterId(), subscriber),
-        datum);
+        MultiSubDatum.of(datum));
     PushTask task = worker.bufferMap.values().iterator().next();
     processor.doPush(task);
     // no run too long
@@ -466,18 +502,42 @@ public class PushProcessorTest {
   public void testInterestOfDatum() throws Exception {
     PushProcessor processor = new PushProcessor();
     Subscriber subscriber = TestUtils.newZoneSubscriber(dataId, zone);
-    SubDatum datum = TestUtils.newSubDatum(subscriber.getDataId(), 100, Collections.emptyList());
+    SubDatum datum =
+        TestUtils.newSubDatum(dataCenter, subscriber.getDataId(), 100, Collections.emptyList());
     PushTask task =
         processor
         .new PushTaskImpl(
-            null, null, Collections.singletonMap(subscriber.getRegisterId(), subscriber), datum);
+            null,
+            null,
+            Collections.singletonMap(subscriber.getRegisterId(), subscriber),
+            MultiSubDatum.of(datum));
 
     Assert.assertTrue(processor.interestOfDatum(task));
-    subscriber.checkAndUpdateCtx(datum.getDataCenter(), 90, 100);
+    subscriber.checkAndUpdateCtx(
+        Collections.singletonMap(datum.getDataCenter(), 90L),
+        Collections.singletonMap(datum.getDataCenter(), 100));
     Assert.assertTrue(processor.interestOfDatum(task));
-    subscriber.checkAndUpdateCtx(datum.getDataCenter(), 100, 100);
+    subscriber.checkAndUpdateCtx(
+        Collections.singletonMap(datum.getDataCenter(), 100L),
+        Collections.singletonMap(datum.getDataCenter(), 100));
     Assert.assertFalse(processor.interestOfDatum(task));
-    subscriber.checkAndUpdateCtx(datum.getDataCenter(), 110, 100);
+    subscriber.checkAndUpdateCtx(
+        Collections.singletonMap(datum.getDataCenter(), 110L),
+        Collections.singletonMap(datum.getDataCenter(), 100));
     Assert.assertFalse(processor.interestOfDatum(task));
+  }
+
+  @Test
+  public void testSetPushDelay() {
+    PushProcessor processor = newProcessor();
+
+    PushEfficiencyImproveConfig pushEfficiencyImproveConfig = new PushEfficiencyImproveConfig();
+    pushEfficiencyImproveConfig.setPushTaskWaitingMillis(10);
+    Set<String> zoneSet = new HashSet<>();
+    zoneSet.add("ALL_ZONE");
+    pushEfficiencyImproveConfig.setZoneSet(zoneSet);
+    processor.setPushTaskDelayTime(pushEfficiencyImproveConfig);
+
+    Assert.assertTrue(processor.taskBuffer.workers[0].getWaitingMillis() == 10);
   }
 }

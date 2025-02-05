@@ -39,7 +39,6 @@ import com.alipay.sofa.registry.server.meta.remoting.handler.HeartbeatRequestHan
 import com.alipay.sofa.registry.server.meta.remoting.session.DefaultSessionServerServiceTest;
 import com.alipay.sofa.registry.server.meta.resource.*;
 import com.alipay.sofa.registry.server.meta.resource.filter.LeaderAwareFilterTest;
-import com.alipay.sofa.registry.server.meta.slot.arrange.CrossDcSlotAllocatorTest;
 import com.alipay.sofa.registry.server.meta.slot.arrange.ScheduledSlotArrangerTest;
 import com.alipay.sofa.registry.server.meta.slot.balance.LeaderOnlyBalancerTest;
 import com.alipay.sofa.registry.server.meta.slot.manager.DefaultSlotManagerTest;
@@ -57,12 +56,9 @@ import org.junit.runners.Suite;
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
   Crc32CSlotFunctionTest.class,
-  //  DefaultCrossDcMetaServerTest.class,
-  CrossDcSlotAllocatorTest.class,
   DefaultCurrentDcMetaServerTest.class,
   DefaultSessionServerManagerTest.class,
   DefaultDataServerManagerTest.class,
-  CrossDcMetaServerManagerTest.class,
   LeaseTest.class,
   HeartbeatRequestHandlerTest.class,
   DefaultMetaServerManagerTest.class,

@@ -30,9 +30,10 @@ public interface ClientManagerAddressMapper {
   /**
    * query after than maxId
    *
-   * @param maxId
-   * @param limit
-   * @return
+   * @param dataCenter dataCenter
+   * @param maxId maxId
+   * @param limit limit
+   * @return List
    */
   List<ClientManagerAddressDomain> queryAfterThanByLimit(
       @Param("dataCenter") String dataCenter,
@@ -40,7 +41,7 @@ public interface ClientManagerAddressMapper {
       @Param("limit") long limit);
 
   /**
-   * @param clientManagerAddress
+   * @param clientManagerAddress clientManagerAddress
    * @return effect rows
    */
   int update(ClientManagerAddressDomain clientManagerAddress);
@@ -48,8 +49,8 @@ public interface ClientManagerAddressMapper {
   /**
    * insert on replace
    *
-   * @param clientManagerAddress
-   * @return
+   * @param clientManagerAddress clientManagerAddress
+   * @return int
    */
   int insertOnReplace(ClientManagerAddressDomain clientManagerAddress);
 

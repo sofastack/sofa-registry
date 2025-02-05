@@ -30,5 +30,7 @@ public interface DefaultCommonConfig {
 
   String getRecoverClusterId();
 
+  String getDefaultClusterId();
+
   boolean isJdbc();
 }

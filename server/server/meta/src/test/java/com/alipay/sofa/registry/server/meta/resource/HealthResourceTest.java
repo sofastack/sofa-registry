@@ -70,6 +70,7 @@ public class HealthResourceTest {
     when(metaServerBootstrap.isRpcServerForDataStarted()).thenReturn(true);
     when(currentDcMetaServer.getClusterMembers())
         .thenReturn(Lists.newArrayList(new MetaNode(new URL("127.0.0.1"), "dc")));
+    when(metaServerBootstrap.isRpcServerForRemoteMetaStarted()).thenReturn(true);
 
     when(metaLeaderService.getLeader()).thenReturn("127.0.0.1");
     response = healthResource.checkHealth();

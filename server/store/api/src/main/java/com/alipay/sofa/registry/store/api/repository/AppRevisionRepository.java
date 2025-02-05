@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.store.api.repository;
 
 import com.alipay.sofa.registry.common.model.store.AppRevision;
+import com.alipay.sofa.registry.store.api.multi.MultiDataCenterListener;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -27,26 +28,26 @@ import java.util.Set;
  * @author xiaojian.xj
  * @version $Id: AppRevisionRepository.java, v 0.1 2021年01月17日 13:54 xiaojian.xj Exp $
  */
-public interface AppRevisionRepository {
+public interface AppRevisionRepository extends MultiDataCenterListener {
 
   /**
    * persistence appRevision
    *
-   * @param appRevision
+   * @param appRevision appRevision
    */
   void register(AppRevision appRevision) throws Exception;
 
   /**
    * check if revisionId exist
    *
-   * @param revisionId
-   * @return
+   * @param revisionId revisionId
+   * @return boolean
    */
   boolean exist(String revisionId);
   /**
    * get AppRevision
    *
-   * @param revision
+   * @param revision revision
    * @return
    */
   AppRevision queryRevision(String revision);
@@ -58,6 +59,8 @@ public interface AppRevisionRepository {
   Collection<String> availableRevisions();
 
   List<AppRevision> listFromStorage(long start, int limit);
+
+  void startSynced();
 
   void waitSynced();
 

@@ -38,7 +38,7 @@ public class BaseSlotStatus implements Serializable {
    * @param slotId the slot id
    * @param slotLeaderEpoch the slot leader epoch
    * @param role the role
-   * @param server
+   * @param server server
    */
   public BaseSlotStatus(int slotId, long slotLeaderEpoch, Slot.Role role, String server) {
     this.slotId = slotId;

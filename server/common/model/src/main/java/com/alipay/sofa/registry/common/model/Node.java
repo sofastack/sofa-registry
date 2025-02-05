@@ -51,14 +51,14 @@ public interface Node extends Serializable {
   /**
    * get node type
    *
-   * @return
+   * @return NodeType
    */
   NodeType getNodeType();
 
   /**
    * get node url
    *
-   * @return
+   * @return URL
    */
   URL getNodeUrl();
 }

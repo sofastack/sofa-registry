@@ -376,7 +376,7 @@ public class SessionDigestResourceTest extends BaseIntegrationTest {
             .request(APPLICATION_JSON)
             .get(Set.class);
 
-    Map<String, InterfaceMapping> mappings =
+    Map<String, Map<String, InterfaceMapping>> mappings =
         sessionChannel
             .getWebTarget()
             .path("digest/metadata/allServiceMapping")
@@ -386,6 +386,8 @@ public class SessionDigestResourceTest extends BaseIntegrationTest {
     for (AppRevision revision : appRevisionList) {
       Assert.assertTrue(revisionIds.contains(revision.getRevision()));
       for (String itf : revision.getInterfaceMap().keySet()) {
+        System.out.println(itf);
+        System.out.println(mappings.keySet());
         Assert.assertTrue(mappings.containsKey(itf));
       }
     }

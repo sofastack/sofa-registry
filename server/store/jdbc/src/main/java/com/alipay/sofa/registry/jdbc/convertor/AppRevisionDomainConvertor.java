@@ -16,17 +16,14 @@
  */
 package com.alipay.sofa.registry.jdbc.convertor;
 
-import com.alipay.sofa.common.profile.StringUtil;
 import com.alipay.sofa.registry.common.model.store.AppRevision;
 import com.alipay.sofa.registry.core.model.AppRevisionInterface;
 import com.alipay.sofa.registry.jdbc.domain.AppRevisionDomain;
 import com.alipay.sofa.registry.util.JsonUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.annotations.VisibleForTesting;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.util.CollectionUtils;
 
 /**
@@ -78,7 +75,7 @@ public class AppRevisionDomainConvertor {
     appRevision.setBaseParams(JsonUtils.read(domain.getBaseParams(), BASE_FORMAT));
 
     String serviceParams = domain.getServiceParamsLarge();
-    if (StringUtil.isBlank(serviceParams)) {
+    if (StringUtils.isBlank(serviceParams)) {
       serviceParams = domain.getServiceParams();
     }
     appRevision.setInterfaceMap(JsonUtils.read(serviceParams, SERVICE_FORMAT));
@@ -135,6 +132,23 @@ public class AppRevisionDomainConvertor {
 
     public boolean isServiceParamsLarge() {
       return serviceParamsLarge;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+      EnableConfig that = (EnableConfig) o;
+      return serviceParams == that.serviceParams && serviceParamsLarge == that.serviceParamsLarge;
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(serviceParams, serviceParamsLarge);
     }
   }
 }

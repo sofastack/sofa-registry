@@ -30,7 +30,9 @@ import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.lease.data.DataServerManager;
 import com.alipay.sofa.registry.server.meta.lease.session.SessionServerManager;
 import com.alipay.sofa.registry.server.meta.metaserver.impl.DefaultCurrentDcMetaServer;
+import com.alipay.sofa.registry.server.meta.multi.cluster.MultiClusterSlotTableSyncer;
 import com.alipay.sofa.registry.server.meta.slot.manager.DefaultSlotManager;
+import java.util.Collections;
 import java.util.concurrent.TimeoutException;
 import org.junit.Assert;
 import org.junit.Before;
@@ -52,20 +54,28 @@ public class HeartbeatRequestHandlerTest extends AbstractMetaServerTestBase {
 
   @Mock private MetaLeaderService metaLeaderService;
 
+  @Mock private NodeConfig nodeConfig;
+
+  @Mock private MultiClusterSlotTableSyncer multiClusterSlotTableSyncer;
+
   private DefaultSlotManager slotManager;
 
   @Before
   public void beforeHeartbeatRequestHandlerTest() {
     MockitoAnnotations.initMocks(this);
-    NodeConfig nodeConfig = mock(NodeConfig.class);
-    handler.setNodeConfig(nodeConfig);
     when(nodeConfig.getLocalDataCenter()).thenReturn(getDc());
+    when(multiClusterSlotTableSyncer.getMultiClusterSlotTable()).thenReturn(Collections.emptyMap());
     when(metaLeaderService.amILeader()).thenReturn(true);
     slotManager = new DefaultSlotManager(metaLeaderService);
-    handler.setCurrentDcMetaServer(currentDcMetaServer).setMetaLeaderElector(metaLeaderService);
     when(currentDcMetaServer.getDataServerManager()).thenReturn(dataServerManager);
     when(currentDcMetaServer.getSessionServerManager()).thenReturn(sessionServerManager);
     when(currentDcMetaServer.getSlotTable()).thenReturn(slotManager.getSlotTable());
+
+    handler
+        .setNodeConfig(nodeConfig)
+        .setCurrentDcMetaServer(currentDcMetaServer)
+        .setMetaLeaderElector(metaLeaderService)
+        .setMultiClusterSlotTableSyncer(multiClusterSlotTableSyncer);
   }
 
   @Test
@@ -79,7 +89,8 @@ public class HeartbeatRequestHandlerTest extends AbstractMetaServerTestBase {
             getDc(),
             System.currentTimeMillis(),
             new SlotConfig.SlotBasicInfo(
-                SlotConfig.SLOT_NUM, SlotConfig.SLOT_REPLICAS, SlotConfig.FUNC));
+                SlotConfig.SLOT_NUM, SlotConfig.SLOT_REPLICAS, SlotConfig.FUNC),
+            Collections.emptyMap());
     Assert.assertTrue(((GenericResponse) handler.doHandle(channel, heartbeat)).isSuccess());
   }
 
@@ -94,7 +105,8 @@ public class HeartbeatRequestHandlerTest extends AbstractMetaServerTestBase {
             "ERROR_DC",
             System.currentTimeMillis(),
             new SlotConfig.SlotBasicInfo(
-                SlotConfig.SLOT_NUM, SlotConfig.SLOT_REPLICAS, SlotConfig.FUNC));
+                SlotConfig.SLOT_NUM, SlotConfig.SLOT_REPLICAS, SlotConfig.FUNC),
+            Collections.emptyMap());
     handler.doHandle(channel, heartbeat);
     verify(channel, times(1)).close();
   }
@@ -110,7 +122,8 @@ public class HeartbeatRequestHandlerTest extends AbstractMetaServerTestBase {
             getDc(),
             System.currentTimeMillis(),
             new SlotConfig.SlotBasicInfo(
-                SlotConfig.SLOT_NUM - 1, SlotConfig.SLOT_REPLICAS, SlotConfig.FUNC));
+                SlotConfig.SLOT_NUM - 1, SlotConfig.SLOT_REPLICAS, SlotConfig.FUNC),
+            Collections.emptyMap());
     handler.doHandle(channel, heartbeat);
     verify(channel, times(1)).close();
 
@@ -121,7 +134,8 @@ public class HeartbeatRequestHandlerTest extends AbstractMetaServerTestBase {
             getDc(),
             System.currentTimeMillis(),
             new SlotConfig.SlotBasicInfo(
-                SlotConfig.SLOT_NUM, SlotConfig.SLOT_REPLICAS - 1, SlotConfig.FUNC));
+                SlotConfig.SLOT_NUM, SlotConfig.SLOT_REPLICAS - 1, SlotConfig.FUNC),
+            Collections.emptyMap());
     handler.doHandle(channel, heartbeat);
     verify(channel, times(2)).close();
 
@@ -131,7 +145,8 @@ public class HeartbeatRequestHandlerTest extends AbstractMetaServerTestBase {
             0,
             getDc(),
             System.currentTimeMillis(),
-            new SlotConfig.SlotBasicInfo(SlotConfig.SLOT_NUM, SlotConfig.SLOT_REPLICAS, "unknown"));
+            new SlotConfig.SlotBasicInfo(SlotConfig.SLOT_NUM, SlotConfig.SLOT_REPLICAS, "unknown"),
+            Collections.emptyMap());
     handler.doHandle(channel, heartbeat);
     verify(channel, times(3)).close();
   }

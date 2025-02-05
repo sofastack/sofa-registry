@@ -16,18 +16,26 @@
  */
 package com.alipay.sofa.registry.test;
 
+import com.alipay.sofa.registry.common.model.metaserver.MultiClusterSyncInfo;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
+import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.server.meta.slot.balance.NaiveBalancePolicy;
+import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.slot.SlotTableUtils;
+import com.alipay.sofa.registry.store.api.meta.MultiClusterSyncRepository;
 import com.alipay.sofa.registry.util.MathUtils;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.assertj.core.util.Sets;
 import org.junit.Assert;
+import org.springframework.beans.BeanUtils;
 
 public final class TestUtils {
   private static final AtomicInteger IP_INT = new AtomicInteger();
@@ -147,6 +155,90 @@ public final class TestUtils {
       Assert.assertTrue(false);
     } catch (Throwable exception) {
       Assert.assertEquals(exception.getClass(), eclazz);
+    }
+  }
+
+  public static SlotTable newTable_0_1(long tableEpoch, long leaderEpoch) {
+    Slot slot0 = createSelfLeader(0, leaderEpoch);
+    Slot slot1 = createSelfLeader(1, leaderEpoch);
+    return new SlotTable(tableEpoch, Lists.newArrayList(slot0, slot1));
+  }
+
+  public static Slot createLeader(int slotId, long leaderEpoch, String address) {
+    return new Slot(slotId, address, leaderEpoch, Lists.newArrayList("xxx"));
+  }
+
+  public static Slot createSelfLeader(int slotId, long leaderEpoch) {
+    return createLeader(slotId, leaderEpoch, ServerEnv.IP);
+  }
+
+  public static class MockMultiClusterSyncRepository implements MultiClusterSyncRepository {
+
+    private final Map<String, MultiClusterSyncInfo> map = Maps.newHashMap();
+    /**
+     * insert
+     *
+     * @param syncInfo
+     * @return
+     */
+    @Override
+    public synchronized boolean insert(MultiClusterSyncInfo syncInfo) {
+      return map.putIfAbsent(syncInfo.getRemoteDataCenter(), syncInfo) == null;
+    }
+
+    /**
+     * update with cas
+     *
+     * @param syncInfo
+     * @param expectVersion
+     * @return
+     */
+    @Override
+    public synchronized boolean update(MultiClusterSyncInfo syncInfo, long expectVersion) {
+      MultiClusterSyncInfo multiClusterSyncInfo = map.get(syncInfo.getRemoteDataCenter());
+
+      if (multiClusterSyncInfo != null && multiClusterSyncInfo.getDataVersion() == expectVersion) {
+        map.put(syncInfo.getRemoteDataCenter(), syncInfo);
+        return true;
+      }
+      return false;
+    }
+
+    /** query MultiClusterSyncInfo */
+    @Override
+    public synchronized Set<MultiClusterSyncInfo> queryLocalSyncInfos() {
+      return Sets.newHashSet(map.values());
+    }
+
+    /**
+     * remove provideData
+     *
+     * @param remoteDataCenter
+     * @param dataVersion
+     */
+    @Override
+    public synchronized int remove(String remoteDataCenter, long dataVersion) {
+      MultiClusterSyncInfo multiClusterSyncInfo = map.get(remoteDataCenter);
+      if (multiClusterSyncInfo == null || multiClusterSyncInfo.getDataVersion() != dataVersion) {
+        return 0;
+      }
+      map.remove(remoteDataCenter);
+      return 1;
+    }
+
+    @Override
+    public synchronized MultiClusterSyncInfo query(String remoteDataCenter) {
+      MultiClusterSyncInfo multiClusterSyncInfo = map.get(remoteDataCenter);
+      return of(multiClusterSyncInfo);
+    }
+
+    private MultiClusterSyncInfo of(MultiClusterSyncInfo multiClusterSyncInfo) {
+      if (multiClusterSyncInfo == null) {
+        return null;
+      }
+      MultiClusterSyncInfo ret = new MultiClusterSyncInfo();
+      BeanUtils.copyProperties(multiClusterSyncInfo, ret);
+      return ret;
     }
   }
 }

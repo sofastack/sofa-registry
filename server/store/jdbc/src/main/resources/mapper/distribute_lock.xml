@@ -20,7 +20,7 @@
 
 <mapper namespace="com.alipay.sofa.registry.jdbc.mapper.DistributeLockMapper">
 
-    <resultMap type="com.alipay.sofa.registry.jdbc.domain.DistributeLockDomain" id="distributeLockResultMap">
+    <resultMap type="com.alipay.sofa.registry.common.model.elector.DistributeLockInfo" id="distributeLockResultMap">
         <id property="id" column="id" javaType="long" jdbcType="BIGINT"/>
         <result property="dataCenter" column="data_center" javaType="java.lang.String" jdbcType="VARCHAR"/>
         <result property="lockName" column="lock_name" javaType="java.lang.String" jdbcType="VARCHAR"/>
@@ -34,7 +34,7 @@
         <result property="termDuration" column="term_duration" javaType="long" jdbcType="BIGINT"/>
     </resultMap>
 
-    <insert id="competeLockOnInsert" parameterType="com.alipay.sofa.registry.jdbc.domain.DistributeLockDomain">
+    <insert id="competeLockOnInsert" parameterType="com.alipay.sofa.registry.common.model.elector.DistributeLockInfo">
         <![CDATA[
        INSERT /*+ QUERY_TIMEOUT(2000000) */ INTO distribute_lock
        (
@@ -70,7 +70,7 @@
        ]]>
     </update>
 
-    <update id="ownerHeartbeat" parameterType="com.alipay.sofa.registry.jdbc.domain.DistributeLockDomain">
+    <update id="ownerHeartbeat" parameterType="com.alipay.sofa.registry.common.model.elector.DistributeLockInfo">
         <![CDATA[
           update /*+ QUERY_TIMEOUT(2000000) */ distribute_lock set owner = #{owner}, gmt_modified =  NOW(3), `term_duration` = (`term_duration` + 1)
           where data_center = #{dataCenter} and lock_name = #{lockName} and owner = #{owner}
@@ -82,7 +82,7 @@
         where data_center = #{dataCenter} and lock_name = #{lockName}
     </select>
 
-    <update id="forceRefresh" parameterType="com.alipay.sofa.registry.jdbc.domain.DistributeLockDomain">
+    <update id="forceRefresh" parameterType="com.alipay.sofa.registry.common.model.elector.DistributeLockInfo">
         <![CDATA[
           update /*+ QUERY_TIMEOUT(2000000) */ distribute_lock set duration = #{duration}, gmt_modified = NOW(3)
           where data_center = #{dataCenter} and lock_name = #{lockName} and owner = #{owner}

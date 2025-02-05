@@ -23,20 +23,27 @@ import com.alipay.sofa.registry.common.model.ServerDataBox;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
+import com.alipay.sofa.registry.common.model.slot.filter.SyncSlotAcceptorManager;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.server.data.TestBaseUtils;
+import com.alipay.sofa.registry.server.data.pubiterator.DatumBiConsumer;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import org.junit.Assert;
 import org.junit.Test;
 
 public class PublisherGroupTest {
+
+  private static final SyncSlotAcceptorManager ACCEPT_ALL = request -> true;
+
   @Test
   public void testBaseOp() {
     final String dataId = "testDataInfoId";
@@ -276,7 +283,16 @@ public class PublisherGroupTest {
     Assert.assertTrue(group.getSessionProcessIds().contains(ServerEnv.PROCESS_ID));
 
     String sessionIp = "notFound";
-    Map<String, DatumSummary> sessionSummary = group.getSummary(Sets.newHashSet(sessionIp));
+    Map<String, DatumSummary> sessionSummary = Maps.newHashMap();
+    Map<String, Map<String, RegisterVersion>> sessionPubVersions = Maps.newHashMap();
+
+    group.foreach(
+        DatumBiConsumer.publisherGroupBiConsumer(
+            publisher.getDataInfoId(), sessionPubVersions, Sets.newHashSet(sessionIp), ACCEPT_ALL));
+    for (Entry<String, Map<String, RegisterVersion>> entry : sessionPubVersions.entrySet()) {
+      sessionSummary.put(entry.getKey(), new DatumSummary(group.dataInfoId, entry.getValue()));
+    }
+
     DatumSummary summary = sessionSummary.get(sessionIp);
     Assert.assertEquals(sessionSummary.size(), 1);
     Assert.assertEquals(summary.getDataInfoId(), group.dataInfoId);
@@ -284,7 +300,16 @@ public class PublisherGroupTest {
     Assert.assertEquals(summary.getPublisherVersions().size(), 0);
 
     sessionIp = publisher.getTargetAddress().getIpAddress();
-    sessionSummary = group.getSummary(Sets.newHashSet(sessionIp));
+
+    sessionSummary = Maps.newHashMap();
+    sessionPubVersions = Maps.newHashMap();
+    group.foreach(
+        DatumBiConsumer.publisherGroupBiConsumer(
+            publisher.getDataInfoId(), sessionPubVersions, Sets.newHashSet(sessionIp), ACCEPT_ALL));
+    for (Entry<String, Map<String, RegisterVersion>> entry : sessionPubVersions.entrySet()) {
+      sessionSummary.put(entry.getKey(), new DatumSummary(group.dataInfoId, entry.getValue()));
+    }
+
     summary = sessionSummary.get(sessionIp);
     Assert.assertEquals(summary.getPublisherVersions().size(), 1);
 
@@ -301,13 +326,25 @@ public class PublisherGroupTest {
     Assert.assertTrue(group.getPublishers().contains(add));
 
     sessionIp = publisher.getTargetAddress().getIpAddress();
-    sessionSummary = group.getSummary(Sets.newHashSet(sessionIp));
+
+    sessionSummary = Maps.newHashMap();
+    sessionPubVersions = Maps.newHashMap();
+    group.foreach(
+        DatumBiConsumer.publisherGroupBiConsumer(
+            publisher.getDataInfoId(), sessionPubVersions, Sets.newHashSet(sessionIp), ACCEPT_ALL));
+    for (Entry<String, Map<String, RegisterVersion>> entry : sessionPubVersions.entrySet()) {
+      sessionSummary.put(entry.getKey(), new DatumSummary(group.dataInfoId, entry.getValue()));
+    }
     summary = sessionSummary.get(sessionIp);
     Assert.assertEquals(summary.getPublisherVersions().size(), 2);
 
-    summary = group.getAllSummary();
-    Assert.assertEquals(summary.getPublisherVersions().size(), 2);
+    Map<String, RegisterVersion> publisherVersions = Maps.newHashMap();
+    group.foreach(
+        DatumBiConsumer.publisherGroupBiConsumer(
+            publisher.getDataInfoId(), publisherVersions, ACCEPT_ALL));
+    summary = new DatumSummary(group.dataInfoId, publisherVersions);
 
+    Assert.assertEquals(summary.getPublisherVersions().size(), 2);
     Assert.assertEquals(group.getSessionProcessIds().size(), 2);
     Assert.assertTrue(group.getSessionProcessIds().contains(ServerEnv.PROCESS_ID));
     Assert.assertTrue(group.getSessionProcessIds().contains(mockProcessId));
@@ -332,7 +369,15 @@ public class PublisherGroupTest {
     Assert.assertEquals(group.getSessionProcessIds().size(), 1);
     Assert.assertTrue(group.getSessionProcessIds().contains(ServerEnv.PROCESS_ID));
 
-    summary = group.getAllSummary();
+    sessionSummary = Maps.newHashMap();
+    sessionPubVersions = Maps.newHashMap();
+    group.foreach(
+        DatumBiConsumer.publisherGroupBiConsumer(
+            publisher.getDataInfoId(), sessionPubVersions, Sets.newHashSet(sessionIp), ACCEPT_ALL));
+    for (Entry<String, Map<String, RegisterVersion>> entry : sessionPubVersions.entrySet()) {
+      sessionSummary.put(entry.getKey(), new DatumSummary(dataId, entry.getValue()));
+    }
+    summary = sessionSummary.get(sessionIp);
     Assert.assertEquals(summary.getPublisherVersions().size(), 1);
 
     conns = group.getByConnectId(add.connectId());
@@ -342,61 +387,4 @@ public class PublisherGroupTest {
     Assert.assertEquals(conns.size(), 1);
     Assert.assertEquals(conns.get(newer.getRegisterId()), newer);
   }
-
-  //    public static void main(String[] args) {
-  //        Map<String, DatumVersion> m = Maps.newConcurrentMap();
-  //        Set<String> set = new HashSet<>();
-  //        int C = 2000;
-  //        int T = 100;
-  //        for (int i = 0; i < C; i++) {
-  //            String k = System.currentTimeMillis() +
-  // "_dasddsadasdadadasdasagagsdafagasfasfadsdsdsadadasdasf" + i;
-  //            m.put(k, new DatumVersion(System.currentTimeMillis()));
-  //            if (i < T) {
-  //                set.add(k);
-  //            }
-  //        }
-  //
-  //        System.out.println("" + m.size() + "@" + set.size());
-  //        for (int i = 0; i < 1000000; i++) {
-  //            scan(m, set);
-  //        }
-  //
-  //        for (int i = 0; i < 1000000; i++) {
-  //            get(m, set);
-  //        }
-  //
-  //        long start = System.currentTimeMillis();
-  //        for (int i = 0; i < 1000000; i++) {
-  //            scan(m, set);
-  //        }
-  //
-  //        System.out.println("" + (System.currentTimeMillis() - start));
-  //        start = System.currentTimeMillis();
-  //        for (int i = 0; i < 1000000; i++) {
-  //            get(m, set);
-  //        }
-  //        System.out.println("" + (System.currentTimeMillis() - start));
-  //    }
-  //
-  //    static Map<String, DatumVersion> scan(Map<String, DatumVersion> m, Set<String> targets) {
-  //        Map<String, DatumVersion> ret = Maps.newHashMapWithExpectedSize(targets.size());
-  //        for (Map.Entry<String, DatumVersion> e : m.entrySet()) {
-  //            if (targets.contains(e.getKey())) {
-  //                ret.put(e.getKey(), e.getValue());
-  //            }
-  //        }
-  //        return ret;
-  //    }
-  //
-  //    static Map<String, DatumVersion> get(Map<String, DatumVersion> m, Set<String> targets) {
-  //        Map<String, DatumVersion> ret = Maps.newHashMapWithExpectedSize(targets.size());
-  //        for (String k : targets) {
-  //            DatumVersion v = m.get(k);
-  //            if (v != null) {
-  //                ret.put(k, v);
-  //            }
-  //        }
-  //        return ret;
-  //    }
 }

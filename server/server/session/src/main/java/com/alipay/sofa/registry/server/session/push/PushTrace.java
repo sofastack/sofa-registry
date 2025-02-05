@@ -16,11 +16,12 @@
  */
 package com.alipay.sofa.registry.server.session.push;
 
+import com.alipay.sofa.registry.common.model.DataCenterPushInfo;
 import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
+import com.alipay.sofa.registry.common.model.store.MultiSubDatum;
 import com.alipay.sofa.registry.common.model.store.SubDatum;
 import com.alipay.sofa.registry.common.model.store.SubPublisher;
-import com.alipay.sofa.registry.compress.CompressUtils;
 import com.alipay.sofa.registry.concurrent.ThreadLocalStringBuilder;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -33,6 +34,8 @@ import java.net.InetSocketAddress;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.logging.log4j.core.async.Hack;
 
@@ -42,7 +45,7 @@ public final class PushTrace {
       Hack.hackLoggerDisruptor(LoggerFactory.getLogger("PUSH-TRACE"));
   private static final Logger SLOW_LOGGER =
       Hack.hackLoggerDisruptor(LoggerFactory.getLogger("PUSH-TRACE-SLOW"));
-  private final SubDatum datum;
+  private final MultiSubDatum datum;
   final long pushCreateTimestamp = System.currentTimeMillis();
 
   private final String subApp;
@@ -55,7 +58,7 @@ public final class PushTrace {
   private final int subNum;
 
   private PushTrace(
-      SubDatum datum,
+      MultiSubDatum datum,
       InetSocketAddress address,
       String subApp,
       PushCause pushCause,
@@ -70,7 +73,7 @@ public final class PushTrace {
   }
 
   public static PushTrace trace(
-      SubDatum datum,
+      MultiSubDatum datum,
       InetSocketAddress address,
       String subApp,
       PushCause pushCause,
@@ -79,8 +82,9 @@ public final class PushTrace {
     return new PushTrace(datum, address, subApp, pushCause, subNum, subRegTimestamp);
   }
 
-  private Tuple<List<Long>, String> datumPushedDelayList(long finishedTs, long lastPushTs) {
-    List<Long> recentVersions = datum.getRecentVersions();
+  private Tuple<List<Long>, String> datumPushedDelayList(
+      String dataCenter, long finishedTs, long lastPushTs) {
+    List<Long> recentVersions = datum.getRecentVersions(dataCenter);
     List<Long> timestamps =
         Lists.newArrayListWithCapacity(recentVersions == null ? 1 : recentVersions.size() + 1);
     StringBuilder builder = ThreadLocalStringBuilder.get();
@@ -95,7 +99,7 @@ public final class PushTrace {
       }
     }
 
-    long datumChangeTs = DatumVersionUtil.getRealTimestamp(datum.getVersion());
+    long datumChangeTs = DatumVersionUtil.getRealTimestamp(datum.getVersion(dataCenter));
     long delay = finishedTs - Math.max(lastPushTs, datumChangeTs);
     timestamps.add(delay);
     builder.append(delay);
@@ -109,13 +113,15 @@ public final class PushTrace {
   public void finishPush(
       PushStatus status,
       TraceID taskID,
-      long subscriberPushedVersion,
-      int pushNum,
-      int retry,
-      String pushEncode,
-      int encodeSize) {
+      Map<String, DataCenterPushInfo> dataCenterPushInfoMap,
+      int retry) {
     try {
-      finish(status, taskID, subscriberPushedVersion, pushNum, retry, pushEncode, encodeSize);
+
+      for (Entry<String, DataCenterPushInfo> entry : dataCenterPushInfoMap.entrySet()) {
+        String dataCenter = entry.getKey();
+        DataCenterPushInfo pushInfo = entry.getValue();
+        finish(dataCenter, status, taskID, pushInfo, retry);
+      }
     } catch (Throwable t) {
       LOGGER.error(
           "finish push error, {},{},{},{}",
@@ -128,13 +134,13 @@ public final class PushTrace {
   }
 
   private void finish(
+      String dataCenter,
       PushStatus status,
       TraceID taskID,
-      long subscriberPushedVersion,
-      int pushNum,
-      int retry,
-      String pushEncode,
-      int encodeSize) {
+      DataCenterPushInfo pushInfo,
+      int retry) {
+    final long subscriberPushedVersion = pushInfo.getPushVersion();
+
     final long pushFinishTimestamp = System.currentTimeMillis();
     // push.finish- first.newly.datumTimestamp(after subscriberPushedVersion)
     long datumModifyPushSpanMillis;
@@ -159,10 +165,11 @@ public final class PushTrace {
       datumVersionPushSpanMillis = pushFinishTimestamp - subRegTimestamp;
       datumVersionTriggerSpanMillis = Math.max(lastTriggerSession - subRegTimestamp, 0);
     } else {
-      datumVersionPushSpanMillis = Math.max(pushFinishTimestamp - pushCause.datumTimestamp, 0);
-      datumVersionTriggerSpanMillis = Math.max(lastTriggerSession - pushCause.datumTimestamp, 0);
+      long datumTimestamp = pushCause.datumTimestamp.get(dataCenter);
+      datumVersionPushSpanMillis = Math.max(pushFinishTimestamp - datumTimestamp, 0);
+      datumVersionTriggerSpanMillis = Math.max(lastTriggerSession - datumTimestamp, 0);
       if (pushCause.pushType == PushType.Sub) {
-        if (subRegTimestamp >= pushCause.datumTimestamp) {
+        if (subRegTimestamp >= datumTimestamp) {
           // case: datum.change trigger the sub.sub, but the sub.reg not finish
           datumVersionPushSpanMillis = pushFinishTimestamp - subRegTimestamp;
           datumVersionTriggerSpanMillis = Math.max(lastTriggerSession - subRegTimestamp, 0);
@@ -184,7 +191,7 @@ public final class PushTrace {
             : DatumVersionUtil.getRealTimestamp(subscriberPushedVersion);
 
     Tuple<List<Long>, String> datumPushedDelay =
-        datumPushedDelayList(pushFinishTimestamp, lastPushTimestamp);
+        datumPushedDelayList(dataCenter, pushFinishTimestamp, lastPushTimestamp);
     List<Long> datumPushedDelayList = datumPushedDelay.o1;
     String pushDatumDelayStr = datumPushedDelay.o2;
 
@@ -195,7 +202,7 @@ public final class PushTrace {
     }
 
     PushMetrics.Push.observePushDelayHistogram(
-        pushCause.pushType, datumModifyPushSpanMillis, status);
+        dataCenter, pushCause.pushType, datumModifyPushSpanMillis, status);
     if (LOGGER.isInfoEnabled() || SLOW_LOGGER.isInfoEnabled()) {
       final String msg =
           StringFormatter.format(
@@ -205,7 +212,7 @@ public final class PushTrace {
                   + "{},recentDelay={},pushNum={},retry={},encode={},encSize={}",
               status,
               datum.getDataInfoId(),
-              datum.getDataCenter(),
+              dataCenter,
               datum.getVersion(),
               subApp,
               pushCause.pushType,
@@ -227,10 +234,10 @@ public final class PushTrace {
               subRegTimestamp,
               pushCause.triggerPushCtx.formatTraceTimes(pushFinishTimestamp),
               pushDatumDelayStr,
-              pushNum,
+              pushInfo.getPushNum(),
               retry,
-              CompressUtils.normalizeEncode(pushEncode),
-              encodeSize);
+              pushInfo.getEncode(),
+              pushInfo.getEncodeSize());
       LOGGER.info(msg);
       if (datumModifyPushSpanMillis > 6000) {
         SLOW_LOGGER.info(msg);

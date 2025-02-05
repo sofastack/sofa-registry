@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.data.bootstrap;
 
+import com.alipay.sofa.registry.server.shared.config.CommonConfig;
 import com.alipay.sofa.registry.server.shared.config.ServerShareConfig;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.util.OsUtils;
@@ -52,7 +53,7 @@ public class DataServerConfig implements ServerShareConfig {
 
   private int notifyMaxItems = 400;
 
-  private int notifyIntervalMillis = 2000;
+  private int notifyIntervalMillis = 500;
 
   private int notifyRetryTimes = 3;
 
@@ -92,6 +93,8 @@ public class DataServerConfig implements ServerShareConfig {
   private int slotLeaderSyncSessionExecutorThreadSize = OsUtils.getCpuCount() * 3;
   private int slotLeaderSyncSessionExecutorQueueSize = 40000;
   private volatile int slotLeaderSyncSessionIntervalSecs = 6;
+  private volatile int slotSyncAppRevisionIntervalSecs = 6;
+  private volatile int slotSyncServiceMappingIntervalSecs = 6;
 
   private int slotFollowerSyncLeaderExecutorThreadSize = OsUtils.getCpuCount();
   private int slotFollowerSyncLeaderExecutorQueueSize = 10000;
@@ -134,7 +137,7 @@ public class DataServerConfig implements ServerShareConfig {
   /**
    * constructor
    *
-   * @param commonConfig
+   * @param commonConfig commonConfig
    */
   public DataServerConfig(CommonConfig commonConfig) {
     this.commonConfig = commonConfig;
@@ -516,6 +519,44 @@ public class DataServerConfig implements ServerShareConfig {
    */
   public int getSlotLeaderSyncSessionIntervalSecs() {
     return slotLeaderSyncSessionIntervalSecs;
+  }
+
+  /**
+   * Getter method for property <tt>slotSyncAppRevisionIntervalSecs</tt>.
+   *
+   * @return property value of slotSyncAppRevisionIntervalSecs
+   */
+  public int getSlotSyncAppRevisionIntervalSecs() {
+    return slotSyncAppRevisionIntervalSecs;
+  }
+
+  /**
+   * Setter method for property <tt>slotSyncAppRevisionIntervalSecs</tt>.
+   *
+   * @param slotSyncAppRevisionIntervalSecs value to be assigned to property
+   *     slotSyncAppRevisionIntervalSecs
+   */
+  public void setSlotSyncAppRevisionIntervalSecs(int slotSyncAppRevisionIntervalSecs) {
+    this.slotSyncAppRevisionIntervalSecs = slotSyncAppRevisionIntervalSecs;
+  }
+
+  /**
+   * Getter method for property <tt>slotSyncServiceMappingIntervalSecs</tt>.
+   *
+   * @return property value of slotSyncServiceMappingIntervalSecs
+   */
+  public int getSlotSyncServiceMappingIntervalSecs() {
+    return slotSyncServiceMappingIntervalSecs;
+  }
+
+  /**
+   * Setter method for property <tt>slotSyncServiceMappingIntervalSecs</tt>.
+   *
+   * @param slotSyncServiceMappingIntervalSecs value to be assigned to property
+   *     slotSyncServiceMappingIntervalSecs
+   */
+  public void setSlotSyncServiceMappingIntervalSecs(int slotSyncServiceMappingIntervalSecs) {
+    this.slotSyncServiceMappingIntervalSecs = slotSyncServiceMappingIntervalSecs;
   }
 
   /**

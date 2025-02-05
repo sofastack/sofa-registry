@@ -24,13 +24,31 @@ import java.util.Set;
  */
 public interface RecoverConfigRepository {
 
-  /** query recoverConfig */
+  /**
+   * query recoverConfig
+   *
+   * @param propertyTable propertyTable
+   * @return Set
+   */
   public Set<String> queryKey(String propertyTable);
 
-  /** insert data */
+  /**
+   * insert data
+   *
+   * @param propertyTable propertyTable
+   * @param propertyKey propertyKey
+   * @param recoverClusterId recoverClusterId
+   * @return boolean
+   */
   public boolean save(String propertyTable, String propertyKey, String recoverClusterId);
 
-  /** delete data */
+  /**
+   * delete data
+   *
+   * @param propertyTable propertyTable
+   * @param propertyKey propertyKey
+   * @return boolean
+   */
   public boolean remove(String propertyTable, String propertyKey);
 
   void waitSynced();

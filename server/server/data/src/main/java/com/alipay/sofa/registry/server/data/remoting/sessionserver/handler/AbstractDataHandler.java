@@ -35,12 +35,14 @@ import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.DatumStorage;
 import com.alipay.sofa.registry.server.data.change.DataChangeEventCenter;
 import com.alipay.sofa.registry.server.data.lease.SessionLeaseManager;
-import com.alipay.sofa.registry.server.data.slot.SlotManager;
+import com.alipay.sofa.registry.server.data.slot.SlotAccessorDelegate;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import java.util.Collections;
 import java.util.Set;
+import javax.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -58,9 +60,9 @@ public abstract class AbstractDataHandler<T> extends AbstractServerHandler<T> {
 
   @Autowired protected DataServerConfig dataServerConfig;
 
-  @Autowired protected SlotManager slotManager;
+  @Autowired protected SlotAccessorDelegate slotAccessorDelegate;
 
-  @Autowired protected DatumStorage localDatumStorage;
+  @Resource protected DatumStorage datumStorageDelegate;
 
   @Autowired protected SessionLeaseManager sessionLeaseManager;
 
@@ -83,30 +85,38 @@ public abstract class AbstractDataHandler<T> extends AbstractServerHandler<T> {
     ParaCheckUtil.checkNotNull(sessionProcessId, "request.sessionProcessId");
   }
 
-  protected SlotAccess checkAccess(String dataInfoId, long slotTableEpoch, long slotLeaderEpoch) {
-    final int slotId = slotManager.slotOf(dataInfoId);
-    return checkAccess(slotId, slotTableEpoch, slotLeaderEpoch);
+  protected SlotAccess checkAccess(
+      String dataCenter, String dataInfoId, long slotTableEpoch, long slotLeaderEpoch) {
+    final int slotId = slotAccessorDelegate.slotOf(dataInfoId);
+    return checkAccess(dataCenter, slotId, slotTableEpoch, slotLeaderEpoch);
   }
 
-  protected SlotAccess checkAccess(int slotId, long slotTableEpoch, long slotLeaderEpoch) {
+  protected SlotAccess checkAccess(
+      String dataCenter, int slotId, long slotTableEpoch, long slotLeaderEpoch) {
     final SlotAccess slotAccess =
-        slotManager.checkSlotAccess(slotId, slotTableEpoch, slotLeaderEpoch);
+        slotAccessorDelegate.checkSlotAccess(dataCenter, slotId, slotTableEpoch, slotLeaderEpoch);
     if (slotAccess.isMoved()) {
       LOGGER_SLOT_ACCESS.warn(
-          "[moved]{}, leaderEpoch={}, tableEpoch={}", slotAccess, slotLeaderEpoch, slotTableEpoch);
+          "[moved]{}, dataCenter={}, leaderEpoch={}, tableEpoch={}",
+          slotAccess,
+          dataCenter,
+          slotLeaderEpoch,
+          slotTableEpoch);
     }
 
     if (slotAccess.isMigrating()) {
       LOGGER_SLOT_ACCESS.warn(
-          "[migrating]{}, leaderEpoch={}, tableEpoch={}",
+          "[migrating]{}, dataCenter={}, leaderEpoch={}, tableEpoch={}",
           slotAccess,
+          dataCenter,
           slotLeaderEpoch,
           slotTableEpoch);
     }
     if (slotAccess.isMisMatch()) {
       LOGGER_SLOT_ACCESS.warn(
-          "[mismatch]{}, leaderEpoch={}, tableEpoch={}",
+          "[mismatch]{}, dataCenter={}, leaderEpoch={}, tableEpoch={}",
           slotAccess,
+          dataCenter,
           slotLeaderEpoch,
           slotTableEpoch);
     }
@@ -137,5 +147,114 @@ public abstract class AbstractDataHandler<T> extends AbstractServerHandler<T> {
   @Override
   protected void logRequest(Channel channel, T request) {
     // too much to log
+  }
+
+  /**
+   * Getter method for property <tt>dataChangeEventCenter</tt>.
+   *
+   * @return property value of dataChangeEventCenter
+   */
+  @VisibleForTesting
+  public DataChangeEventCenter getDataChangeEventCenter() {
+    return dataChangeEventCenter;
+  }
+
+  /**
+   * Setter method for property <tt>dataChangeEventCenter</tt>.
+   *
+   * @param dataChangeEventCenter value to be assigned to property dataChangeEventCenter
+   * @return AbstractDataHandler
+   */
+  @VisibleForTesting
+  public AbstractDataHandler setDataChangeEventCenter(DataChangeEventCenter dataChangeEventCenter) {
+    this.dataChangeEventCenter = dataChangeEventCenter;
+    return this;
+  }
+
+  /**
+   * Getter method for property <tt>dataServerConfig</tt>.
+   *
+   * @return property value of dataServerConfig
+   */
+  @VisibleForTesting
+  public DataServerConfig getDataServerConfig() {
+    return dataServerConfig;
+  }
+
+  /**
+   * Setter method for property <tt>dataServerConfig</tt>.
+   *
+   * @param dataServerConfig value to be assigned to property dataServerConfig
+   * @return AbstractDataHandler
+   */
+  @VisibleForTesting
+  public AbstractDataHandler setDataServerConfig(DataServerConfig dataServerConfig) {
+    this.dataServerConfig = dataServerConfig;
+    return this;
+  }
+
+  /**
+   * Getter method for property <tt>slotAccessor</tt>.
+   *
+   * @return property value of slotAccessor
+   */
+  public SlotAccessorDelegate getSlotAccessorDelegate() {
+    return slotAccessorDelegate;
+  }
+
+  /**
+   * Setter method for property <tt>slotAccessor</tt>.
+   *
+   * @param slotAccessorDelegate value to be assigned to property slotAccessor
+   * @return AbstractDataHandler
+   */
+  @VisibleForTesting
+  public AbstractDataHandler setSlotAccessor(SlotAccessorDelegate slotAccessorDelegate) {
+    this.slotAccessorDelegate = slotAccessorDelegate;
+    return this;
+  }
+
+  /**
+   * Getter method for property <tt>datumStorageDelegate</tt>.
+   *
+   * @return property value of datumStorageDelegate
+   */
+  @VisibleForTesting
+  public DatumStorage getDatumStorageDelegate() {
+    return datumStorageDelegate;
+  }
+
+  /**
+   * Setter method for property <tt>datumStorageDelegate</tt>.
+   *
+   * @param datumStorageDelegate value to be assigned to property datumStorageDelegate
+   * @return AbstractDataHandler
+   */
+  @VisibleForTesting
+  public AbstractDataHandler setDatumStorageDelegate(DatumStorage datumStorageDelegate) {
+    this.datumStorageDelegate = datumStorageDelegate;
+    return this;
+  }
+
+  /**
+   * Getter method for property <tt>sessionLeaseManager</tt>.
+   *
+   * @return property value of sessionLeaseManager
+   */
+  @VisibleForTesting
+  public SessionLeaseManager getSessionLeaseManager() {
+    return sessionLeaseManager;
+  }
+
+  /**
+   * Setter method for property <tt>sessionLeaseManager</tt>.
+   *
+   * @param sessionLeaseManager value to be assigned to property sessionLeaseManager
+   * @return AbstractDataHandler
+   */
+  @VisibleForTesting
+  public AbstractDataHandler setSessionLeaseManager(SessionLeaseManager sessionLeaseManager) {
+    this.sessionLeaseManager = sessionLeaseManager;
+    return this;
   }
 }

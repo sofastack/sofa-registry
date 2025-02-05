@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.registry.store.api.elector;
 
-import com.alipay.sofa.common.profile.StringUtil;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.net.NetUtil;
@@ -27,6 +26,7 @@ import com.google.common.collect.Lists;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.PostConstruct;
+import org.apache.commons.lang.StringUtils;
 
 /**
  * @author chen.zhu
@@ -41,7 +41,7 @@ public abstract class AbstractLeaderElector implements LeaderElector {
 
   private volatile boolean startElector = false;
 
-  private volatile boolean isObserver = false;
+  private boolean isObserver = false;
 
   private final LeaderElectorTrigger leaderElectorTrigger = new LeaderElectorTrigger();
 
@@ -107,22 +107,14 @@ public abstract class AbstractLeaderElector implements LeaderElector {
   public String myself() {
     return address;
   }
-  /**
-   * start compete leader
-   *
-   * @return
-   */
+  /** start compete leader */
   @Override
   public synchronized void change2Follow() {
     this.startElector = true;
     this.isObserver = false;
   }
 
-  /**
-   * stop compete leader
-   *
-   * @return
-   */
+  /** stop compete leader */
   @Override
   public synchronized void change2Observer() {
     this.isObserver = true;
@@ -130,14 +122,14 @@ public abstract class AbstractLeaderElector implements LeaderElector {
   /**
    * query leader
    *
-   * @return
+   * @return LeaderInfo
    */
   protected abstract LeaderInfo doQuery();
 
   /**
    * elector leader
    *
-   * @return
+   * @return LeaderInfo
    */
   protected abstract LeaderInfo doElect();
 
@@ -152,7 +144,7 @@ public abstract class AbstractLeaderElector implements LeaderElector {
   }
 
   protected boolean amILeader(String leader) {
-    return StringUtil.equals(myself(), leader) && leaderNotExpired();
+    return StringUtils.equals(myself(), leader) && leaderNotExpired();
   }
 
   private boolean leaderNotExpired() {
@@ -165,22 +157,12 @@ public abstract class AbstractLeaderElector implements LeaderElector {
    * @return the get elector
    */
   @Override
-  public String getLeader() {
+  public LeaderInfo getLeaderInfo() {
 
     if (leaderNotExpired()) {
-      return leaderInfo.leader;
+      return leaderInfo;
     }
-    return LeaderInfo.HAS_NO_LEADER.leader;
-  }
-
-  /**
-   * Gets get elector epoch.
-   *
-   * @return the get elector epoch
-   */
-  @Override
-  public long getLeaderEpoch() {
-    return leaderInfo.epoch;
+    return LeaderInfo.HAS_NO_LEADER;
   }
 
   /** notify when change to elector */

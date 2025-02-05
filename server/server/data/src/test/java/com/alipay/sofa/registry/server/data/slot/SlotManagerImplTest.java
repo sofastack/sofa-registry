@@ -16,10 +16,13 @@
  */
 package com.alipay.sofa.registry.server.data.slot;
 
+import static org.mockito.Mockito.mock;
+
 import com.alipay.sofa.registry.common.model.slot.*;
+import com.alipay.sofa.registry.common.model.slot.filter.SyncSlotAcceptorManager;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.server.data.TestBaseUtils;
-import com.alipay.sofa.registry.server.data.cache.LocalDatumStorage;
+import com.alipay.sofa.registry.server.data.cache.DatumStorageDelegate;
 import com.alipay.sofa.registry.server.data.change.DataChangeEventCenter;
 import com.alipay.sofa.registry.server.data.lease.SessionLeaseManager;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.MetaServerServiceImpl;
@@ -37,6 +40,9 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 public class SlotManagerImplTest {
+
+  private static final String DATACENTER = "testdc";
+  private static final SyncSlotAcceptorManager ACCEPT_ALL = request -> true;
 
   @Test
   public void testUpdate() {
@@ -69,45 +75,45 @@ public class SlotManagerImplTest {
     SlotTable slotTable = newTable_0_1(3, 3);
     Assert.assertTrue(sm.updateSlotTable(slotTable));
     sm.processUpdating();
-    LocalDatumStorage storage = (LocalDatumStorage) mock.mockSync.syncer.getDatumStorage();
+    DatumStorageDelegate delegate = mock.mockSync.syncer.getDatumStorageDelegate();
     // check slots, 2 slots [0,1], but no datas
-    Assert.assertTrue(storage.updateVersion(0).isEmpty());
-    Assert.assertTrue(storage.updateVersion(1).isEmpty());
-    Assert.assertTrue(storage.updateVersion(2).isEmpty());
+    Assert.assertTrue(delegate.updateVersion(DATACENTER, 0).isEmpty());
+    Assert.assertTrue(delegate.updateVersion(DATACENTER, 1).isEmpty());
+    Assert.assertTrue(delegate.updateVersion(DATACENTER, 2).isEmpty());
 
     Publisher p0 = TestBaseUtils.createTestPublishers(0, 1).get(0);
-    storage.put(p0);
-    Assert.assertFalse(storage.updateVersion(0).isEmpty());
-    Assert.assertTrue(storage.updateVersion(1).isEmpty());
+    delegate.putPublisher(DATACENTER, p0);
+    Assert.assertFalse(delegate.updateVersion(DATACENTER, 0).isEmpty());
+    Assert.assertTrue(delegate.updateVersion(DATACENTER, 1).isEmpty());
 
-    Assert.assertTrue(storage.updateVersion(0).containsKey(p0.getDataInfoId()));
-    Assert.assertTrue(storage.updateVersion(0).size() == 1);
+    Assert.assertTrue(delegate.updateVersion(DATACENTER, 0).containsKey(p0.getDataInfoId()));
+    Assert.assertTrue(delegate.updateVersion(DATACENTER, 0).size() == 1);
 
     Publisher p1 = TestBaseUtils.createTestPublishers(1, 1).get(0);
-    storage.put(p1);
-    Assert.assertFalse(storage.updateVersion(0).isEmpty());
-    Assert.assertFalse(storage.updateVersion(1).isEmpty());
+    delegate.putPublisher(DATACENTER, p1);
+    Assert.assertFalse(delegate.updateVersion(DATACENTER, 0).isEmpty());
+    Assert.assertFalse(delegate.updateVersion(DATACENTER, 1).isEmpty());
 
-    Assert.assertTrue(sm.isLeader(0));
-    Assert.assertTrue(sm.isFollower(1));
+    Assert.assertTrue(sm.isLeader(DATACENTER, 0));
+    Assert.assertTrue(sm.isFollower(DATACENTER, 1));
 
-    Assert.assertFalse(sm.isFollower(0));
-    Assert.assertFalse(sm.isLeader(1));
+    Assert.assertFalse(sm.isFollower(DATACENTER, 0));
+    Assert.assertFalse(sm.isLeader(DATACENTER, 1));
 
     slotTable = newTable_1_2(4, 4);
     Assert.assertTrue(sm.updateSlotTable(slotTable));
     sm.processUpdating();
     // check slots, 2 slots [1,2]
-    Assert.assertTrue(storage.updateVersion(0).isEmpty());
-    Assert.assertFalse(storage.updateVersion(1).isEmpty());
-    Assert.assertTrue(storage.updateVersion(2).isEmpty());
-    Assert.assertTrue(storage.updateVersion(3).isEmpty());
+    Assert.assertTrue(delegate.updateVersion(DATACENTER, 0).isEmpty());
+    Assert.assertFalse(delegate.updateVersion(DATACENTER, 1).isEmpty());
+    Assert.assertTrue(delegate.updateVersion(DATACENTER, 2).isEmpty());
+    Assert.assertTrue(delegate.updateVersion(DATACENTER, 3).isEmpty());
 
-    Assert.assertTrue(sm.isLeader(1));
-    Assert.assertTrue(sm.isFollower(2));
+    Assert.assertTrue(sm.isLeader(DATACENTER, 1));
+    Assert.assertTrue(sm.isFollower(DATACENTER, 2));
 
-    Assert.assertFalse(sm.isFollower(1));
-    Assert.assertFalse(sm.isLeader(2));
+    Assert.assertFalse(sm.isFollower(DATACENTER, 1));
+    Assert.assertFalse(sm.isLeader(DATACENTER, 2));
   }
 
   @Test
@@ -118,9 +124,11 @@ public class SlotManagerImplTest {
     sm.updateSlotTable(slotTable);
     sm.processUpdating();
 
-    SlotAccess access0 = sm.checkSlotAccess(0, 100, slotTable.getSlot(0).getLeaderEpoch());
+    SlotAccess access0 =
+        sm.checkSlotAccess(DATACENTER, 0, 100, slotTable.getSlot(0).getLeaderEpoch());
     Assert.assertTrue(access0.isMigrating());
-    SlotAccess access1 = sm.checkSlotAccess(1, 100, slotTable.getSlot(1).getLeaderEpoch());
+    SlotAccess access1 =
+        sm.checkSlotAccess(DATACENTER, 1, 100, slotTable.getSlot(1).getLeaderEpoch());
     Assert.assertTrue(access1.isMoved());
   }
 
@@ -160,7 +168,7 @@ public class SlotManagerImplTest {
     SlotManagerImpl.SlotState slotState = new SlotManagerImpl.SlotState(createSelfLeader(0, 3));
     slotState.migrated = false;
     // migrating
-    KeyedTask kt = Mockito.mock(KeyedTask.class);
+    KeyedTask kt = mock(KeyedTask.class);
     slotState.syncLeaderTask = kt;
 
     Mockito.when(kt.isFinished()).thenReturn(false);
@@ -224,11 +232,11 @@ public class SlotManagerImplTest {
     SlotManagerImpl sm = mock.slotManager;
     SlotManagerImpl.SlotState slotState = new SlotManagerImpl.SlotState(createSelfLeader(0, 3));
 
-    KeyedTask kt1 = Mockito.mock(KeyedTask.class);
+    KeyedTask kt1 = mock(KeyedTask.class);
     SlotManagerImpl.MigratingTask mt1 = new SlotManagerImpl.MigratingTask("xx1", kt1);
     slotState.migratingTasks.put(mt1.sessionIp, mt1);
 
-    KeyedTask kt2 = Mockito.mock(KeyedTask.class);
+    KeyedTask kt2 = mock(KeyedTask.class);
     SlotManagerImpl.MigratingTask mt2 = new SlotManagerImpl.MigratingTask("xx2", kt2);
     slotState.migratingTasks.put(mt2.sessionIp, mt2);
 
@@ -292,10 +300,10 @@ public class SlotManagerImplTest {
     Assert.assertFalse(sm.hasSlot());
   }
 
-  static void slotEquals(SlotTable table, SlotManagerImpl sm) {
+  public static void slotEquals(SlotTable table, SlotManagerImpl sm) {
     Map<Integer, Slot> slotMap = table.getSlotMap();
     for (Slot slot : slotMap.values()) {
-      Slot s = sm.getSlot(slot.getId());
+      Slot s = sm.getSlot(DATACENTER, slot.getId());
       Assert.assertEquals(s, slot);
     }
     Assert.assertEquals(sm.getSlotStatuses().size(), slotMap.size());
@@ -329,19 +337,25 @@ public class SlotManagerImplTest {
     return new SlotTable(tableEpoch, Lists.newArrayList(slot1, slot2));
   }
 
-  static Mock mockSM(int slotId, boolean initSync, boolean initExecutor, Set<String> sessions) {
-    SlotDiffSyncerTest.MockSync mockSync = SlotDiffSyncerTest.mockSync(slotId, "testDc", initSync);
+  public static Mock mockSM(
+      int slotId, boolean initSync, boolean initExecutor, Set<String> sessions) {
+    SlotDiffSyncerTest.MockSync mockSync =
+        SlotDiffSyncerTest.mockSync(slotId, DATACENTER, initSync);
     SlotDiffSyncer syncer = mockSync.syncer;
     SlotManagerImpl slotManager = new SlotManagerImpl();
     slotManager.setDataChangeEventCenter(new DataChangeEventCenter());
     slotManager.setSessionLeaseManager(new SessionLeaseManager());
-    slotManager.setLocalDatumStorage(syncer.getDatumStorage());
+    slotManager.setDatumStorageDelegate((DatumStorageDelegate) syncer.getDatumStorageDelegate());
     slotManager.setDataServerConfig(syncer.getDataServerConfig());
-    MetaServerServiceImpl mss = Mockito.mock(MetaServerServiceImpl.class);
+    MetaServerServiceImpl mss = mock(MetaServerServiceImpl.class);
     slotManager.setRecorders(Lists.newArrayList(new DiskSlotTableRecorder(), mss));
     Mockito.when(mss.getSessionServerList()).thenReturn(sessions);
     slotManager.setMetaServerService(mss);
-    slotManager.initSlotChangeListener();
+
+    SlotChangeListenerManager listenerManager = new SlotChangeListenerManager();
+    listenerManager.setDatumStorageDelegate(syncer.getDatumStorageDelegate());
+    slotManager.setSlotChangeListenerManager(listenerManager);
+    slotManager.setSyncSlotAcceptAllManager(ACCEPT_ALL);
     if (initExecutor) {
       slotManager.initExecutors();
     }
@@ -352,8 +366,8 @@ public class SlotManagerImplTest {
     return mock;
   }
 
-  static final class Mock {
-    SlotDiffSyncerTest.MockSync mockSync;
-    SlotManagerImpl slotManager;
+  public static final class Mock {
+    public SlotDiffSyncerTest.MockSync mockSync;
+    public SlotManagerImpl slotManager;
   }
 }

@@ -32,7 +32,7 @@ public abstract class BaseStopPushService
 
   @Autowired private ProvideDataRepository provideDataRepository;
 
-  private static final StopPushStorage INIT = new StopPushStorage(INIT_VERSION, true);
+  private static final StopPushStorage INIT = new StopPushStorage(INIT_VERSION, false);
 
   public BaseStopPushService() {
     // default value is stop.push
@@ -65,6 +65,8 @@ public abstract class BaseStopPushService
             update.stopPushSwitch);
         return false;
       }
+
+      afterProcess(this.storage.get());
       LOGGER.info(
           "Fetch session stopPushSwitch={}, prev={}, current={}",
           update,
@@ -94,7 +96,13 @@ public abstract class BaseStopPushService
       super(version);
       this.stopPushSwitch = stopPushSwitch;
     }
+
+    public boolean isStopPush() {
+      return stopPushSwitch;
+    }
   }
+
+  protected void afterProcess(StopPushStorage storage) {}
 
   /**
    * Setter method for property <tt>stopPushSwitch</tt>.

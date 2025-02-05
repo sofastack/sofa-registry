@@ -26,7 +26,7 @@ public final class Metrics {
           .namespace("data")
           .subsystem("cache")
           .name("pub_total")
-          .labelNames("dataCenter", "instanceId", "group")
+          .labelNames("dataCenter", "remote", "instanceId", "group")
           .help("publisher cache num")
           .register();
 
@@ -35,7 +35,7 @@ public final class Metrics {
           .namespace("data")
           .subsystem("cache")
           .name("pub_dataID_total")
-          .labelNames("dataCenter", "instanceId", "group")
+          .labelNames("dataCenter", "remote", "instanceId", "group")
           .help("publisher dataID cache num")
           .register();
 }

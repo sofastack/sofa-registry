@@ -24,6 +24,7 @@ import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.common.model.store.Watcher;
 import com.alipay.sofa.registry.core.model.ReceivedConfigData;
 import com.alipay.sofa.registry.server.session.TestUtils;
+import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfigBean;
 import com.alipay.sofa.registry.server.session.converter.ReceivedDataConverter;
 import com.alipay.sofa.registry.server.session.node.service.ClientNodeService;
 import org.junit.Assert;
@@ -33,9 +34,11 @@ public class WatchProcessorTest {
   @Test
   public void test() {
     WatchProcessor processor = new WatchProcessor();
-    processor.sessionServerConfig = TestUtils.newSessionConfig("testDc");
+    SessionServerConfigBean sessionServerConfigBean = TestUtils.newSessionConfig("testDc");
+    processor.sessionServerConfig = sessionServerConfigBean;
     processor.clientNodeService = mock(ClientNodeService.class);
     processor.pushDataGenerator = new PushDataGenerator();
+    processor.pushDataGenerator.sessionServerConfig = sessionServerConfigBean;
     processor.pushSwitchService = mock(PushSwitchService.class);
     Watcher w = TestUtils.newWatcher("test-watch");
     ReceivedConfigData data =
@@ -46,7 +49,7 @@ public class WatchProcessorTest {
 
     Assert.assertFalse(processor.doExecuteOnWatch(w, data, System.currentTimeMillis()));
 
-    when(processor.pushSwitchService.canIpPush(anyString())).thenReturn(true);
+    when(processor.pushSwitchService.canIpPushLocal(anyString())).thenReturn(true);
     Assert.assertFalse(processor.doExecuteOnWatch(w, data, System.currentTimeMillis()));
 
     data =

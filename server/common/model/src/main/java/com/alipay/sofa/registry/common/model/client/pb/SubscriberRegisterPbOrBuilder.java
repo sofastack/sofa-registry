@@ -21,21 +21,52 @@ public interface SubscriberRegisterPbOrBuilder
     // @@protoc_insertion_point(interface_extends:SubscriberRegisterPb)
     com.google.protobuf.MessageOrBuilder {
 
-  /** <code>string scope = 1;</code> */
+  /**
+   * <code>string scope = 1;</code>
+   *
+   * @return The scope.
+   */
   java.lang.String getScope();
-  /** <code>string scope = 1;</code> */
+  /**
+   * <code>string scope = 1;</code>
+   *
+   * @return The bytes for scope.
+   */
   com.google.protobuf.ByteString getScopeBytes();
 
-  /** <code>.BaseRegisterPb baseRegister = 2;</code> */
+  /**
+   * <code>.BaseRegisterPb baseRegister = 2;</code>
+   *
+   * @return Whether the baseRegister field is set.
+   */
   boolean hasBaseRegister();
-  /** <code>.BaseRegisterPb baseRegister = 2;</code> */
+  /**
+   * <code>.BaseRegisterPb baseRegister = 2;</code>
+   *
+   * @return The baseRegister.
+   */
   com.alipay.sofa.registry.common.model.client.pb.BaseRegisterPb getBaseRegister();
   /** <code>.BaseRegisterPb baseRegister = 2;</code> */
   com.alipay.sofa.registry.common.model.client.pb.BaseRegisterPbOrBuilder
       getBaseRegisterOrBuilder();
 
-  /** <code>string acceptEncoding = 3;</code> */
+  /**
+   * <code>string acceptEncoding = 3;</code>
+   *
+   * @return The acceptEncoding.
+   */
   java.lang.String getAcceptEncoding();
-  /** <code>string acceptEncoding = 3;</code> */
+  /**
+   * <code>string acceptEncoding = 3;</code>
+   *
+   * @return The bytes for acceptEncoding.
+   */
   com.google.protobuf.ByteString getAcceptEncodingBytes();
+
+  /**
+   * <code>bool acceptMulti = 4;</code>
+   *
+   * @return The acceptMulti.
+   */
+  boolean getAcceptMulti();
 }

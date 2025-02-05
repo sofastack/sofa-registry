@@ -36,6 +36,7 @@ import com.alipay.sofa.registry.store.api.date.DateNowRepository;
 import com.alipay.sofa.registry.store.api.meta.RecoverConfig;
 import com.alipay.sofa.registry.store.api.repository.AppRevisionRepository;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
+import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.cache.Cache;
@@ -43,11 +44,16 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
 
 /**
  * @author xiaojian.xj
@@ -76,7 +82,9 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository, Recover
 
   @Autowired private DefaultCommonConfig defaultCommonConfig;
 
-  final Informer informer;
+  private final Informer informer = new Informer();
+
+  private Set<String> dataCenters = Sets.newConcurrentHashSet();
 
   public AppRevisionJdbcRepository() {
     this.registry =
@@ -87,24 +95,27 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository, Recover
                 new CacheLoader<String, AppRevision>() {
                   @Override
                   public AppRevision load(String revision) throws InterruptedException {
+                    ParaCheckUtil.checkNotEmpty(dataCenters, "dataCenters");
+
                     REVISION_CACHE_MISS_COUNTER.inc();
-                    AppRevisionDomain revisionDomain =
-                        appRevisionMapper.queryRevision(
-                            defaultCommonConfig.getClusterId(tableName()), revision);
-                    if (revisionDomain == null || revisionDomain.isDeleted()) {
+                    List<AppRevisionDomain> revisionDomains =
+                        appRevisionMapper.queryRevision(dataCenters, revision);
+                    if (CollectionUtils.isEmpty(revisionDomains)) {
                       throw new RevisionNotExistException(revision);
                     }
-                    return AppRevisionDomainConvertor.convert2Revision(revisionDomain);
+                    for (AppRevisionDomain revisionDomain : revisionDomains) {
+                      if (!revisionDomain.isDeleted()) {
+                        return AppRevisionDomainConvertor.convert2Revision(revisionDomain);
+                      }
+                    }
+                    throw new RevisionNotExistException(revision);
                   }
                 });
     CacheCleaner.autoClean(localRevisions, 1000 * 60 * 10);
-    informer = new Informer();
   }
 
   @PostConstruct
   public void init() {
-    informer.setEnabled(true);
-    informer.start();
 
     revisionDigestService.scheduleAtFixedRate(
         () -> {
@@ -133,7 +144,7 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository, Recover
     }
     AppRevisionDomain domain =
         AppRevisionDomainConvertor.convert2Domain(
-            defaultCommonConfig.getClusterId(tableName()), appRevision);
+            defaultCommonConfig.getDefaultClusterId(), appRevision);
     // new revision, save into database
     REVISION_REGISTER_COUNTER.inc();
     refreshEntryToStorage(domain);
@@ -142,8 +153,8 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository, Recover
   /**
    * check if revisionId exist
    *
-   * @param revisionId
-   * @return
+   * @param revisionId revisionId
+   * @return boolean
    */
   @Override
   public boolean exist(String revisionId) {
@@ -161,14 +172,14 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository, Recover
     try {
       return registry.get(revision);
     } catch (ExecutionException e) {
-      if (e.getCause() instanceof RevisionNotExistException) {
-        LOG.info("jdbc query revision failed, revision: {} not exist in db", revision, e);
-        return null;
-      }
-
       LOG.error("jdbc query revision error, revision: {}", revision, e);
       throw new RuntimeException("jdbc refresh revision failed", e);
+    } catch (Throwable t) {
+      if (t.getCause() instanceof RevisionNotExistException) {
+        LOG.info("jdbc query revision failed, revision: {} not exist in db", revision, t);
+      }
     }
+    return null;
   }
 
   @Override
@@ -240,9 +251,17 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository, Recover
   @Override
   public List<AppRevision> listFromStorage(long start, int limit) {
     List<AppRevisionDomain> domains =
-        appRevisionMapper.listRevisions(
-            defaultCommonConfig.getClusterId(tableName()), start, limit);
+        appRevisionMapper.listRevisions(defaultCommonConfig.getDefaultClusterId(), start, limit);
     return AppRevisionDomainConvertor.convert2Revisions(domains);
+  }
+
+  @Override
+  public void startSynced() {
+    ParaCheckUtil.checkNotEmpty(dataCenters, "dataCenters");
+
+    // after set datacenters
+    informer.setEnabled(true);
+    informer.start();
   }
 
   @Override
@@ -253,8 +272,7 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository, Recover
   @Override
   public List<AppRevision> getExpired(Date beforeTime, int limit) {
     List<AppRevisionDomain> expired =
-        appRevisionMapper.getExpired(
-            defaultCommonConfig.getClusterId(tableName()), beforeTime, limit);
+        appRevisionMapper.getExpired(defaultCommonConfig.getDefaultClusterId(), beforeTime, limit);
     return AppRevisionDomainConvertor.convert2Revisions(expired);
   }
 
@@ -262,18 +280,31 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository, Recover
   public void replace(AppRevision appRevision) {
     appRevisionMapper.replace(
         AppRevisionDomainConvertor.convert2Domain(
-            defaultCommonConfig.getClusterId(tableName()), appRevision));
+            defaultCommonConfig.getDefaultClusterId(), appRevision));
   }
 
   @Override
   public int cleanDeleted(Date beforeTime, int limit) {
     return appRevisionMapper.cleanDeleted(
-        defaultCommonConfig.getClusterId(tableName()), beforeTime, limit);
+        defaultCommonConfig.getDefaultClusterId(), beforeTime, limit);
   }
 
   @Override
   public String tableName() {
     return TableEnum.APP_REVISION.getTableName();
+  }
+
+  @Override
+  public Set<String> dataCenters() {
+    return new HashSet<>(dataCenters);
+  }
+
+  @Override
+  public synchronized void setDataCenters(Set<String> dataCenters) {
+    if (!this.dataCenters.equals(dataCenters)) {
+      LOG.info("dataCenters change from {} to {}", this.dataCenters, dataCenters);
+      this.dataCenters = dataCenters;
+    }
   }
 
   class Informer extends BaseInformer<AppRevisionDomain, AppRevisionContainer> {
@@ -290,7 +321,7 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository, Recover
     @Override
     protected List<AppRevisionDomain> listFromStorage(long start, int limit) {
       return appRevisionMapper.listRevisions(
-          defaultCommonConfig.getClusterId(tableName()), start, limit);
+          defaultCommonConfig.getDefaultClusterId(), start, limit);
     }
 
     @Override

@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.server.meta;
 
+import com.alipay.sofa.registry.store.api.elector.AbstractLeaderElector.LeaderInfo;
+
 /**
  * @author chen.zhu
  *     <p>Mar 10, 2021
@@ -42,6 +44,13 @@ public interface MetaLeaderService {
    * @return the get elector epoch
    */
   long getLeaderEpoch();
+
+  /**
+   * get leader info
+   *
+   * @return LeaderInfo
+   */
+  LeaderInfo getLeaderInfo();
 
   /**
    * Gets get meta server elector state.

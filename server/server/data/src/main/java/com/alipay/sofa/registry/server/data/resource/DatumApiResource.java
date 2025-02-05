@@ -29,8 +29,7 @@ import com.alipay.sofa.registry.common.model.store.UnPublisher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
-import com.alipay.sofa.registry.server.data.cache.DatumCache;
-import com.alipay.sofa.registry.server.data.cache.DatumStorage;
+import com.alipay.sofa.registry.server.data.cache.DatumStorageDelegate;
 import com.alipay.sofa.registry.server.data.slot.SlotManager;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
@@ -59,9 +58,7 @@ public class DatumApiResource {
 
   @Autowired DataServerConfig dataServerConfig;
 
-  @Autowired DatumCache datumCache;
-
-  @Autowired DatumStorage localDatumStorage;
+  @Autowired DatumStorageDelegate datumStorageDelegate;
 
   @Autowired AbstractServerHandler batchPutDataHandler;
 
@@ -70,6 +67,9 @@ public class DatumApiResource {
   /**
    * curl -i -d '{"dataInfoId":"testDataId#@#DEFAULT_INSTANCE_ID#@#DEFAULT_GROUP"}' -H
    * "Content-Type: application/json" -X POST http://localhost:9622/datum/api/get
+   *
+   * @param datumParam datumParam
+   * @return CommonResponse
    */
   @POST
   @Path("/get")
@@ -82,7 +82,7 @@ public class DatumApiResource {
       return CommonResponse.buildFailedResponse(e.getMessage());
     }
 
-    Datum datum = datumCache.get(datumParam.getDataCenter(), datumParam.getDataInfoId());
+    Datum datum = datumStorageDelegate.get(datumParam.getDataCenter(), datumParam.getDataInfoId());
     if (datum == null) {
       return getNotFoundResponse(datumParam);
     }
@@ -98,13 +98,16 @@ public class DatumApiResource {
       dataCenter = dataServerConfig.getLocalDataCenter();
     }
 
-    Map<String, Map<String, Integer>> pubCount = datumCache.getPubCount();
+    Map<String, Map<String, Integer>> pubCount = datumStorageDelegate.getLocalPubCount();
     return pubCount.get(dataCenter);
   }
 
   /**
    * curl -i -d '{"dataInfoId":"testDataId#@#DEFAULT_INSTANCE_ID#@#DEFAULT_GROUP"}' -H
    * "Content-Type: application/json" -X POST http://localhost:9622/datum/api/delete
+   *
+   * @param datumParam datumParam
+   * @return CommonResponse
    */
   @POST
   @Path("/delete")
@@ -118,13 +121,13 @@ public class DatumApiResource {
       return CommonResponse.buildFailedResponse(e.getMessage());
     }
 
-    Datum datum = datumCache.get(datumParam.getDataCenter(), datumParam.getDataInfoId());
+    Datum datum = datumStorageDelegate.get(datumParam.getDataCenter(), datumParam.getDataInfoId());
     if (datum == null) {
       return getNotFoundResponse(datumParam);
     }
-    datumCache.clean(datumParam.getDataCenter(), datumParam.getDataInfoId());
+    datumStorageDelegate.cleanLocal(datumParam.getDataCenter(), datumParam.getDataInfoId());
     // get the newly datum
-    datum = datumCache.get(datumParam.getDataCenter(), datumParam.getDataInfoId());
+    datum = datumStorageDelegate.get(datumParam.getDataCenter(), datumParam.getDataInfoId());
     return createResponse(datum);
   }
 
@@ -137,6 +140,9 @@ public class DatumApiResource {
    * http://localhost:9622/datum/api/pub/add "publisherConnectId" can be unspecified. If not
    * specified, the connectId of the first pub under the datum can be automatically selected (for
    * testing purposes, it is generally not necessary to specify the connectId artificially).
+   *
+   * @param datumParam datumParam
+   * @return CommonResponse
    */
   @POST
   @Path("/pub/add")
@@ -147,7 +153,8 @@ public class DatumApiResource {
       validateAndCorrect(datumParam);
 
       // build pub
-      Datum datum = datumCache.get(datumParam.getDataCenter(), datumParam.getDataInfoId());
+      Datum datum =
+          datumStorageDelegate.get(datumParam.getDataCenter(), datumParam.getDataInfoId());
       if (datum == null) {
         return getNotFoundResponse(datumParam);
       }
@@ -155,7 +162,7 @@ public class DatumApiResource {
 
       // build request and invoke
       final int slotId = slotManager.slotOf(publisher.getDataInfoId());
-      final Slot slot = slotManager.getSlot(slotId);
+      final Slot slot = slotManager.getSlot(dataServerConfig.getLocalDataCenter(), slotId);
       BatchRequest batchRequest =
           new BatchRequest(
               publisher.getSessionProcessId(), slotId, Collections.singletonList(publisher));
@@ -163,7 +170,7 @@ public class DatumApiResource {
       batchRequest.setSlotLeaderEpoch(slot.getLeaderEpoch());
       batchPutDataHandler.doHandle(null, batchRequest);
       // get the newly datum
-      datum = datumCache.get(datumParam.getDataCenter(), datumParam.getDataInfoId());
+      datum = datumStorageDelegate.get(datumParam.getDataCenter(), datumParam.getDataInfoId());
       return createResponse(datum);
     } catch (RuntimeException e) {
       LOGGER.error(e.getMessage(), e);
@@ -175,6 +182,9 @@ public class DatumApiResource {
    * curl -i -d '{"dataInfoId":"testDataId#@#DEFAULT_INSTANCE_ID#@#DEFAULT_GROUP",
    * "publisherRegisterId":"98de0e41-2a4d-44d7-b1f7-c520660657e8"} ' -H "Content-Type:
    * application/json" -X POST http://localhost:9622/datum/api/pub/delete
+   *
+   * @param datumParam datumParam
+   * @return CommonResponse
    */
   @POST
   @Path("/pub/delete")
@@ -185,7 +195,8 @@ public class DatumApiResource {
       validateAndCorrect(datumParam);
 
       // build pub
-      Datum datum = datumCache.get(datumParam.getDataCenter(), datumParam.getDataInfoId());
+      Datum datum =
+          datumStorageDelegate.get(datumParam.getDataCenter(), datumParam.getDataInfoId());
       if (datum == null) {
         return getNotFoundResponse(datumParam);
       }
@@ -193,7 +204,7 @@ public class DatumApiResource {
 
       // build request and invoke
       final int slotId = slotManager.slotOf(publisher.getDataInfoId());
-      final Slot slot = slotManager.getSlot(slotId);
+      final Slot slot = slotManager.getSlot(dataServerConfig.getLocalDataCenter(), slotId);
       BatchRequest batchRequest =
           new BatchRequest(
               publisher.getSessionProcessId(), slotId, Collections.singletonList(publisher));
@@ -201,7 +212,7 @@ public class DatumApiResource {
       batchRequest.setSlotLeaderEpoch(slot.getLeaderEpoch());
       batchPutDataHandler.doHandle(null, batchRequest);
       // get the newly datum
-      datum = datumCache.get(datumParam.getDataCenter(), datumParam.getDataInfoId());
+      datum = datumStorageDelegate.get(datumParam.getDataCenter(), datumParam.getDataInfoId());
       return createResponse(datum);
     } catch (RuntimeException e) {
       LOGGER.error(e.getMessage(), e);
@@ -212,6 +223,9 @@ public class DatumApiResource {
   /**
    * curl -d '{"dataCenter":"registry-cloud-test-b"}' -H "Content-Type: application/json"
    * http://localhost:9622/datum/api/getDatumVersions
+   *
+   * @param datumParam datumParam
+   * @return Object
    */
   @POST
   @Path("/getDatumVersions")
@@ -225,7 +239,8 @@ public class DatumApiResource {
   private Map<String, Long> _getDatumVersions(DatumParam datumParam) {
     Map<String, Long> datumVersions = new HashMap<>();
     if (dataServerConfig.isLocalDataCenter(datumParam.getDataCenter())) {
-      Map<String, Datum> localDatums = localDatumStorage.getAll();
+      Map<String, Datum> localDatums =
+          datumStorageDelegate.getAll(dataServerConfig.getLocalDataCenter());
       return DatumUtils.getVersions(localDatums);
     } else {
       // TODO need support remote datecenter
@@ -237,6 +252,9 @@ public class DatumApiResource {
   /**
    * curl -d '{"dataCenter":"registry-cloud-test-b"}' -H "Content-Type: application/json"
    * http://localhost:9622/datum/api/getDatumVersions
+   *
+   * @param datumParam datumParam
+   * @return Object
    */
   @POST
   @Path("/getRemoteDatumVersions")
@@ -245,14 +263,19 @@ public class DatumApiResource {
     throw new UnsupportedOperationException();
   }
 
-  /** curl -H "Content-Type: application/json" http://localhost:9622/datum/api/getDatumSizes */
+  /**
+   * curl -H "Content-Type: application/json" http://localhost:9622/datum/api/getDatumSizes
+   *
+   * @return Object
+   */
   @GET
   @Path("/getDatumSizes")
   @Produces(MediaType.APPLICATION_JSON)
   public Object getDatumSizes() {
     Map<String, Integer> datumSizes = new HashMap<>();
 
-    Map<String, Datum> localDatums = localDatumStorage.getAll();
+    Map<String, Datum> localDatums =
+        datumStorageDelegate.getAll(dataServerConfig.getLocalDataCenter());
     int localDatumSize = localDatums.size();
     datumSizes.put(dataServerConfig.getLocalDataCenter(), localDatumSize);
     // TODO remote cluster
@@ -263,6 +286,9 @@ public class DatumApiResource {
    * curl -d '{"dataCenter":"registry-cloud-test-b",
    * "dataInfoId":"testDataId#@#DEFAULT_INSTANCE_ID#@#DEFAULT_GROUP"}' -H "Content-Type:
    * application/json" http://localhost:9622/datum/api/getDatumVersion
+   *
+   * @param datumParam datumParam
+   * @return Object
    */
   @POST
   @Path("/getDatumVersion")
@@ -272,7 +298,8 @@ public class DatumApiResource {
     String dataServer = null;
     Long version = null;
     if (dataServerConfig.isLocalDataCenter(datumParam.getDataCenter())) {
-      Map<String, Datum> localDatums = localDatumStorage.getAll();
+      Map<String, Datum> localDatums =
+          datumStorageDelegate.getAll(dataServerConfig.getLocalDataCenter());
       Datum datum = localDatums.get(datumParam.getDataInfoId());
       if (datum != null) {
         version = datum.getVersion();

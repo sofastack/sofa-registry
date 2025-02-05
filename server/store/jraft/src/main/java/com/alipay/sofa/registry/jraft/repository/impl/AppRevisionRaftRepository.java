@@ -45,8 +45,8 @@ public class AppRevisionRaftRepository implements AppRevisionRepository {
   /**
    * check if revisionId exist
    *
-   * @param revisionId
-   * @return
+   * @param revisionId revisionId
+   * @return boolean
    */
   @Override
   public boolean exist(String revisionId) {
@@ -103,4 +103,15 @@ public class AppRevisionRaftRepository implements AppRevisionRepository {
   public List<AppRevision> listFromStorage(long start, int limit) {
     return null;
   }
+
+  @Override
+  public void startSynced() {}
+
+  @Override
+  public Set<String> dataCenters() {
+    return null;
+  }
+
+  @Override
+  public void setDataCenters(Set<String> dataCenters) {}
 }

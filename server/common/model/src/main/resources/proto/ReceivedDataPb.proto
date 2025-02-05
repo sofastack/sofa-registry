@@ -19,5 +19,8 @@ message ReceivedDataPb {
     string encoding = 10;
     bytes body = 11;
     int32 originBodySize = 12;
+
+    map<string, int32> pushDataCount = 13;
+
 }
 

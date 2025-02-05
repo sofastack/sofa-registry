@@ -31,7 +31,7 @@ public class DataPushRequest implements Serializable {
   /**
    * constructor
    *
-   * @param datum
+   * @param datum datum
    */
   public DataPushRequest(SubDatum datum) {
     this.datum = datum;

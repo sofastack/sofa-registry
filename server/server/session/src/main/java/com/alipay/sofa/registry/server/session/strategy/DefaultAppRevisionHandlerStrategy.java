@@ -79,8 +79,8 @@ public class DefaultAppRevisionHandlerStrategy implements AppRevisionHandlerStra
     ParaCheckUtil.checkNotEmpty(services, "services");
     ServiceAppMappingResponse.Builder builder = ServiceAppMappingResponse.newBuilder();
 
-    if (!pushSwitchService.canIpPush(remoteIp)) {
-      builder.setStatusCode(ValueConstants.METADATA_STATUS_METHOD_NOT_ALLOW);
+    if (!pushSwitchService.canIpPushLocal(remoteIp)) {
+      builder.setStatusCode(ValueConstants.METADATA_STATUS_DATA_NOT_FOUND);
       return builder.build();
     }
 
@@ -175,6 +175,7 @@ public class DefaultAppRevisionHandlerStrategy implements AppRevisionHandlerStra
    * Setter method for property <tt>metadataCacheRegistry</tt>.
    *
    * @param metadataCacheRegistry value to be assigned to property metadataCacheRegistry
+   * @return DefaultAppRevisionHandlerStrategy
    */
   @VisibleForTesting
   public DefaultAppRevisionHandlerStrategy setMetadataCacheRegistry(
@@ -187,6 +188,7 @@ public class DefaultAppRevisionHandlerStrategy implements AppRevisionHandlerStra
    * Setter method for property <tt>pushSwitchService</tt>.
    *
    * @param pushSwitchService value to be assigned to property pushSwitchService
+   * @return DefaultAppRevisionHandlerStrategy
    */
   @VisibleForTesting
   public DefaultAppRevisionHandlerStrategy setPushSwitchService(

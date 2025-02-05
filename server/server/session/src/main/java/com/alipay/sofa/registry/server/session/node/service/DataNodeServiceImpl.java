@@ -17,14 +17,18 @@
 package com.alipay.sofa.registry.server.session.node.service;
 
 import com.alipay.sofa.registry.common.model.ClientOffPublishers;
+import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.dataserver.*;
+import com.alipay.sofa.registry.common.model.slot.MultiSlotAccessGenericResponse;
 import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.common.model.slot.SlotAccessGenericResponse;
+import com.alipay.sofa.registry.common.model.store.MultiSubDatum;
 import com.alipay.sofa.registry.common.model.store.Publisher;
-import com.alipay.sofa.registry.common.model.store.SubDatum;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.common.model.store.UnPublisher;
 import com.alipay.sofa.registry.compress.CompressConstants;
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.CallbackHandler;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.exchange.ExchangeCallback;
@@ -40,11 +44,15 @@ import com.alipay.sofa.registry.server.shared.util.DatumUtils;
 import com.alipay.sofa.registry.task.MetricsableThreadPoolExecutor;
 import com.alipay.sofa.registry.task.RejectedDiscardHandler;
 import com.alipay.sofa.registry.util.OsUtils;
+import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.alipay.sofa.registry.util.StringFormatter;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.util.*;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import javax.annotation.PostConstruct;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,6 +62,8 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @version $Id: DataNode.java, v 0.1 2017-12-01 11:30 shangyu.wh Exp $
  */
 public class DataNodeServiceImpl implements DataNodeService {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(DataNodeServiceImpl.class);
 
   @Autowired private NodeExchanger dataNodeExchanger;
 
@@ -72,6 +82,7 @@ public class DataNodeServiceImpl implements DataNodeService {
   public void init() {
     this.dataWritingEngine =
         new BufferedDataWritingEngine(
+            sessionServerConfig.getSessionServerDataCenter(),
             sessionServerConfig.getDataNodeExecutorWorkerSize(),
             sessionServerConfig.getDataNodeExecutorQueueSize(),
             sessionServerConfig.getDataNodeMaxBatchSize(),
@@ -109,12 +120,12 @@ public class DataNodeServiceImpl implements DataNodeService {
       int slotId,
       Map<String, DatumVersion> interests,
       ExchangeCallback<Map<String, DatumVersion>> callback) {
-    final Slot slot = getSlot(slotId);
+    final Slot slot = getSlot(dataCenter, slotId);
     final String dataNodeIp = slot.getLeader();
     try {
       final GetDataVersionRequest request =
           new GetDataVersionRequest(dataCenter, ServerEnv.PROCESS_ID, slotId, interests);
-      request.setSlotTableEpoch(slotTableCache.getEpoch());
+      request.setSlotTableEpoch(slotTableCache.getEpoch(dataCenter));
       request.setSlotLeaderEpoch(slot.getLeaderEpoch());
       final CallbackHandler handler =
           new CallbackHandler() {
@@ -134,8 +145,9 @@ public class DataNodeServiceImpl implements DataNodeService {
               return callbackExecutor;
             }
           };
+      final Slot localSlot = getSlot(sessionServerConfig.getSessionServerDataCenter(), slotId);
       Request<GetDataVersionRequest> getDataVersionRequestRequest =
-          new SimpleRequest<>(request, getUrl(slot), handler);
+          new SimpleRequest<>(request, getUrl(localSlot), handler);
       Response response = dataNodeExchanger.request(getDataVersionRequestRequest);
       Response.ResultStatus result = (Response.ResultStatus) response.getResult();
       if (result != Response.ResultStatus.SUCCESSFUL) {
@@ -176,29 +188,40 @@ public class DataNodeServiceImpl implements DataNodeService {
   }
 
   @Override
-  public SubDatum fetch(String dataInfoId, String dataCenter) {
-    String dataNodeIp = null;
-    int slotId = -1;
+  public MultiSubDatum fetch(String dataInfoId, Set<String> dataCenters) {
+    final Slot localSlot = getSlot(sessionServerConfig.getSessionServerDataCenter(), dataInfoId);
+    int slotId = localSlot.getId();
+    String dataNodeIp = localSlot.getLeader();
+
+    Map<String, Long> slotTableEpochs = Maps.newHashMapWithExpectedSize(dataCenters.size());
+    Map<String, Long> slotLeaderEpochs = Maps.newHashMapWithExpectedSize(dataCenters.size());
+    for (String dataCenter : dataCenters) {
+      final Slot slot = getSlot(dataCenter, dataInfoId);
+      ParaCheckUtil.checkEquals(slotId, slot.getId(), "slotId");
+      slotTableEpochs.put(dataCenter, slotTableCache.getEpoch(dataCenter));
+      slotLeaderEpochs.put(dataCenter, slot.getLeaderEpoch());
+    }
     try {
-      final Slot slot = getSlot(dataInfoId);
-      dataNodeIp = slot.getLeader();
-      slotId = slot.getId();
-      GetDataRequest getDataRequest =
-          new GetDataRequest(ServerEnv.PROCESS_ID, dataInfoId, dataCenter, slot.getId());
-      getDataRequest.setAcceptEncodes(CompressConstants.defaultCompressEncodes);
-      getDataRequest.setSlotTableEpoch(slotTableCache.getEpoch());
-      getDataRequest.setSlotLeaderEpoch(slot.getLeaderEpoch());
-      Request<GetDataRequest> getDataRequestStringRequest =
-          new Request<GetDataRequest>() {
+      GetMultiDataRequest getMultiDataRequest =
+          new GetMultiDataRequest(
+              ServerEnv.PROCESS_ID,
+              slotId,
+              dataInfoId,
+              CompressConstants.defaultCompressEncodes,
+              slotTableEpochs,
+              slotLeaderEpochs);
+
+      Request<GetMultiDataRequest> getDataRequestStringRequest =
+          new Request<GetMultiDataRequest>() {
 
             @Override
-            public GetDataRequest getRequestBody() {
-              return getDataRequest;
+            public GetMultiDataRequest getRequestBody() {
+              return getMultiDataRequest;
             }
 
             @Override
             public URL getRequestUrl() {
-              return getUrl(slot);
+              return getUrl(localSlot);
             }
 
             @Override
@@ -209,44 +232,61 @@ public class DataNodeServiceImpl implements DataNodeService {
 
       Response response = dataNodeExchanger.request(getDataRequestStringRequest);
       Object result = response.getResult();
-      SlotAccessGenericResponse<SubDatum> genericResponse =
-          (SlotAccessGenericResponse<SubDatum>) result;
+      MultiSlotAccessGenericResponse<MultiSubDatum> genericResponse =
+          (MultiSlotAccessGenericResponse<MultiSubDatum>) result;
       if (genericResponse.isSuccess()) {
-        final SubDatum datum = genericResponse.getData();
+        final MultiSubDatum datum = genericResponse.getData();
         if (datum == null) {
           return null;
         }
-        return SubDatum.intern(datum);
+        return MultiSubDatum.intern(datum);
       } else {
         throw new RuntimeException(
             StringFormatter.format(
-                "GetData got fail response {}, {}, {}, slotId={} msg:{}",
+                "GetMultiData got fail response {}, {}, {}, slotId={} msg:{}",
                 dataNodeIp,
                 dataInfoId,
-                dataCenter,
+                dataCenters,
                 slotId,
                 genericResponse.getMessage()));
       }
     } catch (RequestException e) {
       throw new RuntimeException(
           StringFormatter.format(
-              "GetData fail {}, {}, {}, slotId={}", dataNodeIp, dataInfoId, dataCenter, slotId),
+              "GetMultiData fail {}, {}, {}, slotId={}",
+              dataNodeIp,
+              dataInfoId,
+              dataCenters,
+              slotId),
           e);
     }
   }
 
-  private Slot getSlot(String dataInfoId) {
-    final int slotId = slotTableCache.slotOf(dataInfoId);
-    Slot slot = slotTableCache.getSlot(slotId);
+  private CommonResponse sendRequest(Request request) throws RequestException {
+    Response response = dataNodeExchanger.request(request);
+    Object result = response.getResult();
+    SlotAccessGenericResponse resp = (SlotAccessGenericResponse) result;
+    if (!resp.isSuccess()) {
+      throw new RuntimeException(
+          String.format(
+              "response failed, target: %s, request: %s, message: %s",
+              request.getRequestUrl(), request.getRequestBody(), resp.getMessage()));
+    }
+    return resp;
+  }
+
+  private Slot getSlot(String dataCenter, String dataInfoId) {
+    Slot slot = slotTableCache.getSlot(dataCenter, dataInfoId);
     if (slot == null) {
       throw new RequestException(
-          StringFormatter.format("slot not found for {}, slotId={}", dataInfoId, slotId));
+          StringFormatter.format(
+              "slot not found for dataCenter={}, dataInfoId={}", dataCenter, dataInfoId));
     }
     return slot;
   }
 
-  private Slot getSlot(int slotId) {
-    Slot slot = slotTableCache.getSlot(slotId);
+  private Slot getSlot(String dataCenter, int slotId) {
+    Slot slot = slotTableCache.getSlot(dataCenter, slotId);
     if (slot == null) {
       throw new RequestException(StringFormatter.format("slot not found, slotId={}", slotId));
     }
@@ -271,6 +311,151 @@ public class DataNodeServiceImpl implements DataNodeService {
           ret.computeIfAbsent(
               slotId, k -> new ClientOffPublisher(dataInfoId, clientOffPublishers.getConnectId()));
       request.addPublisher(publisher);
+    }
+    return ret;
+  }
+
+  private static final class Req {
+    final int slotId;
+    final Object req;
+
+    Req(int slotId, Object req) {
+      this.slotId = slotId;
+      this.req = req;
+    }
+  }
+
+  private static final class RetryBatch {
+    final BatchRequest batch;
+    long expireTimestamp;
+    int retryCount;
+
+    RetryBatch(BatchRequest batch) {
+      this.batch = batch;
+    }
+
+    @Override
+    public String toString() {
+      return "RetryBatch{"
+          + "batch="
+          + batch
+          + ", retry="
+          + retryCount
+          + ", expire="
+          + expireTimestamp
+          + '}';
+    }
+  }
+
+  private final class Worker implements Runnable {
+    final BlockingQueue<Req> queue;
+    final LinkedList<RetryBatch> retryBatches = Lists.newLinkedList();
+
+    Worker(BlockingQueue<Req> queue) {
+      this.queue = queue;
+    }
+
+    @Override
+    public void run() {
+      for (; ; ) {
+        try {
+          final Req firstReq = queue.poll(200, TimeUnit.MILLISECONDS);
+          if (firstReq != null) {
+            // TODO config max
+            Map<Integer, LinkedList<Object>> reqs =
+                drainReq(queue, sessionServerConfig.getDataNodeMaxBatchSize());
+            // send by order, firstReq.slotId is the first one
+            LinkedList<Object> firstBatch = reqs.remove(firstReq.slotId);
+            if (firstBatch == null) {
+              firstBatch = Lists.newLinkedList();
+            }
+            firstBatch.addFirst(firstReq.req);
+            request(firstReq.slotId, firstBatch);
+            for (Map.Entry<Integer, LinkedList<Object>> batch : reqs.entrySet()) {
+              request(batch.getKey(), batch.getValue());
+            }
+          }
+          // check the retry
+          if (!retryBatches.isEmpty()) {
+            final Iterator<RetryBatch> it = retryBatches.iterator();
+            List<RetryBatch> retries = Lists.newArrayList();
+            while (it.hasNext()) {
+              RetryBatch batch = it.next();
+              it.remove();
+              if (!DataNodeServiceImpl.this.request(batch.batch)) {
+                retries.add(batch);
+              }
+            }
+            for (RetryBatch retry : retries) {
+              retry(retry);
+            }
+          }
+        } catch (Throwable e) {
+          LOGGER.safeError("failed to request batch", e);
+        }
+      }
+    }
+
+    private boolean retry(RetryBatch retry) {
+      retry.retryCount++;
+      if (retry.retryCount <= sessionServerConfig.getDataNodeRetryTimes()) {
+        if (retryBatches.size() >= sessionServerConfig.getDataNodeRetryQueueSize()) {
+          // remove the oldest
+          retryBatches.removeFirst();
+        }
+        retry.expireTimestamp =
+            System.currentTimeMillis() + sessionServerConfig.getDataNodeRetryBackoffMillis();
+        retryBatches.add(retry);
+        return true;
+      }
+      return false;
+    }
+
+    private boolean request(int slotId, List<Object> reqs) {
+      final BatchRequest batch = new BatchRequest(ServerEnv.PROCESS_ID, slotId, reqs);
+      if (!DataNodeServiceImpl.this.request(batch)) {
+        retry(new RetryBatch(batch));
+        return false;
+      }
+      return true;
+    }
+  }
+
+  private boolean request(BatchRequest batch) {
+    try {
+      String localDataCenter = sessionServerConfig.getSessionServerDataCenter();
+      final Slot slot = getSlot(localDataCenter, batch.getSlotId());
+      batch.setSlotTableEpoch(slotTableCache.getEpoch(localDataCenter));
+      batch.setSlotLeaderEpoch(slot.getLeaderEpoch());
+      sendRequest(
+          new Request() {
+            @Override
+            public Object getRequestBody() {
+              return batch;
+            }
+
+            @Override
+            public URL getRequestUrl() {
+              return getUrl(slot);
+            }
+          });
+      return true;
+    } catch (Throwable e) {
+      LOGGER.error("failed to request batch, {}", batch, e);
+      return false;
+    }
+  }
+
+  private Map<Integer, LinkedList<Object>> drainReq(BlockingQueue<Req> queue, int max) {
+    List<Req> reqs = new ArrayList<>(max);
+    queue.drainTo(reqs, max);
+    if (reqs.isEmpty()) {
+      return Collections.emptyMap();
+    }
+    Map<Integer, LinkedList<Object>> ret = Maps.newLinkedHashMap();
+    for (Req req : reqs) {
+      LinkedList<Object> objects = ret.computeIfAbsent(req.slotId, k -> Lists.newLinkedList());
+      objects.add(req.req);
     }
     return ret;
   }

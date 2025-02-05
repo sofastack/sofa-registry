@@ -29,8 +29,8 @@ public class CommandCodec {
   /**
    * encode the command,returns the byte array.
    *
-   * @param obj
-   * @return
+   * @param obj obj
+   * @return byte[]
    */
   public static byte[] encodeCommand(Object obj) {
     try {
@@ -43,9 +43,10 @@ public class CommandCodec {
   /**
    * Decode the command object from byte array.
    *
-   * @param content
-   * @param clazz
-   * @return
+   * @param content content
+   * @param clazz clazz
+   * @param <T> T
+   * @return T
    */
   public static <T> T decodeCommand(byte[] content, Class<T> clazz) {
     try {

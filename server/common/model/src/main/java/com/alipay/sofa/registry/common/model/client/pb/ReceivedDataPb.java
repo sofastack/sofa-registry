@@ -34,11 +34,15 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
     segment_ = "";
     scope_ = "";
     subscriberRegistIds_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-    version_ = 0L;
     localZone_ = "";
     encoding_ = "";
     body_ = com.google.protobuf.ByteString.EMPTY;
-    originBodySize_ = 0;
+  }
+
+  @java.lang.Override
+  @SuppressWarnings({"unused"})
+  protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    return new ReceivedDataPb();
   }
 
   @java.lang.Override
@@ -65,13 +69,6 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
           case 0:
             done = true;
             break;
-          default:
-            {
-              if (!parseUnknownFieldProto3(input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
           case 10:
             {
               java.lang.String s = input.readStringRequireUtf8();
@@ -110,19 +107,19 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
           case 50:
             {
               java.lang.String s = input.readStringRequireUtf8();
-              if (!((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
+              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
                 subscriberRegistIds_ = new com.google.protobuf.LazyStringArrayList();
-                mutable_bitField0_ |= 0x00000020;
+                mutable_bitField0_ |= 0x00000001;
               }
               subscriberRegistIds_.add(s);
               break;
             }
           case 58:
             {
-              if (!((mutable_bitField0_ & 0x00000040) == 0x00000040)) {
+              if (!((mutable_bitField0_ & 0x00000002) != 0)) {
                 data_ =
                     com.google.protobuf.MapField.newMapField(DataDefaultEntryHolder.defaultEntry);
-                mutable_bitField0_ |= 0x00000040;
+                mutable_bitField0_ |= 0x00000002;
               }
               com.google.protobuf.MapEntry<
                       java.lang.String, com.alipay.sofa.registry.common.model.client.pb.DataBoxesPb>
@@ -162,6 +159,30 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
               originBodySize_ = input.readInt32();
               break;
             }
+          case 106:
+            {
+              if (!((mutable_bitField0_ & 0x00000004) != 0)) {
+                pushDataCount_ =
+                    com.google.protobuf.MapField.newMapField(
+                        PushDataCountDefaultEntryHolder.defaultEntry);
+                mutable_bitField0_ |= 0x00000004;
+              }
+              com.google.protobuf.MapEntry<java.lang.String, java.lang.Integer> pushDataCount__ =
+                  input.readMessage(
+                      PushDataCountDefaultEntryHolder.defaultEntry.getParserForType(),
+                      extensionRegistry);
+              pushDataCount_
+                  .getMutableMap()
+                  .put(pushDataCount__.getKey(), pushDataCount__.getValue());
+              break;
+            }
+          default:
+            {
+              if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
         }
       }
     } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -169,7 +190,7 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
     } catch (java.io.IOException e) {
       throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
     } finally {
-      if (((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
+      if (((mutable_bitField0_ & 0x00000001) != 0)) {
         subscriberRegistIds_ = subscriberRegistIds_.getUnmodifiableView();
       }
       this.unknownFields = unknownFields.build();
@@ -183,15 +204,19 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
   }
 
   @SuppressWarnings({"rawtypes"})
+  @java.lang.Override
   protected com.google.protobuf.MapField internalGetMapField(int number) {
     switch (number) {
       case 7:
         return internalGetData();
+      case 13:
+        return internalGetPushDataCount();
       default:
         throw new RuntimeException("Invalid map field number: " + number);
     }
   }
 
+  @java.lang.Override
   protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internalGetFieldAccessorTable() {
     return com.alipay.sofa.registry.common.model.client.pb.ReceivedDataPbOuterClass
@@ -201,10 +226,14 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
             com.alipay.sofa.registry.common.model.client.pb.ReceivedDataPb.Builder.class);
   }
 
-  private int bitField0_;
   public static final int DATAID_FIELD_NUMBER = 1;
   private volatile java.lang.Object dataId_;
-  /** <code>string dataId = 1;</code> */
+  /**
+   * <code>string dataId = 1;</code>
+   *
+   * @return The dataId.
+   */
+  @java.lang.Override
   public java.lang.String getDataId() {
     java.lang.Object ref = dataId_;
     if (ref instanceof java.lang.String) {
@@ -216,7 +245,12 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
       return s;
     }
   }
-  /** <code>string dataId = 1;</code> */
+  /**
+   * <code>string dataId = 1;</code>
+   *
+   * @return The bytes for dataId.
+   */
+  @java.lang.Override
   public com.google.protobuf.ByteString getDataIdBytes() {
     java.lang.Object ref = dataId_;
     if (ref instanceof java.lang.String) {
@@ -231,7 +265,12 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
 
   public static final int GROUP_FIELD_NUMBER = 2;
   private volatile java.lang.Object group_;
-  /** <code>string group = 2;</code> */
+  /**
+   * <code>string group = 2;</code>
+   *
+   * @return The group.
+   */
+  @java.lang.Override
   public java.lang.String getGroup() {
     java.lang.Object ref = group_;
     if (ref instanceof java.lang.String) {
@@ -243,7 +282,12 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
       return s;
     }
   }
-  /** <code>string group = 2;</code> */
+  /**
+   * <code>string group = 2;</code>
+   *
+   * @return The bytes for group.
+   */
+  @java.lang.Override
   public com.google.protobuf.ByteString getGroupBytes() {
     java.lang.Object ref = group_;
     if (ref instanceof java.lang.String) {
@@ -258,7 +302,12 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
 
   public static final int INSTANCEID_FIELD_NUMBER = 3;
   private volatile java.lang.Object instanceId_;
-  /** <code>string instanceId = 3;</code> */
+  /**
+   * <code>string instanceId = 3;</code>
+   *
+   * @return The instanceId.
+   */
+  @java.lang.Override
   public java.lang.String getInstanceId() {
     java.lang.Object ref = instanceId_;
     if (ref instanceof java.lang.String) {
@@ -270,7 +319,12 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
       return s;
     }
   }
-  /** <code>string instanceId = 3;</code> */
+  /**
+   * <code>string instanceId = 3;</code>
+   *
+   * @return The bytes for instanceId.
+   */
+  @java.lang.Override
   public com.google.protobuf.ByteString getInstanceIdBytes() {
     java.lang.Object ref = instanceId_;
     if (ref instanceof java.lang.String) {
@@ -285,7 +339,12 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
 
   public static final int SEGMENT_FIELD_NUMBER = 4;
   private volatile java.lang.Object segment_;
-  /** <code>string segment = 4;</code> */
+  /**
+   * <code>string segment = 4;</code>
+   *
+   * @return The segment.
+   */
+  @java.lang.Override
   public java.lang.String getSegment() {
     java.lang.Object ref = segment_;
     if (ref instanceof java.lang.String) {
@@ -297,7 +356,12 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
       return s;
     }
   }
-  /** <code>string segment = 4;</code> */
+  /**
+   * <code>string segment = 4;</code>
+   *
+   * @return The bytes for segment.
+   */
+  @java.lang.Override
   public com.google.protobuf.ByteString getSegmentBytes() {
     java.lang.Object ref = segment_;
     if (ref instanceof java.lang.String) {
@@ -312,7 +376,12 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
 
   public static final int SCOPE_FIELD_NUMBER = 5;
   private volatile java.lang.Object scope_;
-  /** <code>string scope = 5;</code> */
+  /**
+   * <code>string scope = 5;</code>
+   *
+   * @return The scope.
+   */
+  @java.lang.Override
   public java.lang.String getScope() {
     java.lang.Object ref = scope_;
     if (ref instanceof java.lang.String) {
@@ -324,7 +393,12 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
       return s;
     }
   }
-  /** <code>string scope = 5;</code> */
+  /**
+   * <code>string scope = 5;</code>
+   *
+   * @return The bytes for scope.
+   */
+  @java.lang.Override
   public com.google.protobuf.ByteString getScopeBytes() {
     java.lang.Object ref = scope_;
     if (ref instanceof java.lang.String) {
@@ -339,19 +413,37 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
 
   public static final int SUBSCRIBERREGISTIDS_FIELD_NUMBER = 6;
   private com.google.protobuf.LazyStringList subscriberRegistIds_;
-  /** <code>repeated string subscriberRegistIds = 6;</code> */
+  /**
+   * <code>repeated string subscriberRegistIds = 6;</code>
+   *
+   * @return A list containing the subscriberRegistIds.
+   */
   public com.google.protobuf.ProtocolStringList getSubscriberRegistIdsList() {
     return subscriberRegistIds_;
   }
-  /** <code>repeated string subscriberRegistIds = 6;</code> */
+  /**
+   * <code>repeated string subscriberRegistIds = 6;</code>
+   *
+   * @return The count of subscriberRegistIds.
+   */
   public int getSubscriberRegistIdsCount() {
     return subscriberRegistIds_.size();
   }
-  /** <code>repeated string subscriberRegistIds = 6;</code> */
+  /**
+   * <code>repeated string subscriberRegistIds = 6;</code>
+   *
+   * @param index The index of the element to return.
+   * @return The subscriberRegistIds at the given index.
+   */
   public java.lang.String getSubscriberRegistIds(int index) {
     return subscriberRegistIds_.get(index);
   }
-  /** <code>repeated string subscriberRegistIds = 6;</code> */
+  /**
+   * <code>repeated string subscriberRegistIds = 6;</code>
+   *
+   * @param index The index of the value to return.
+   * @return The bytes of the subscriberRegistIds at the given index.
+   */
   public com.google.protobuf.ByteString getSubscriberRegistIdsBytes(int index) {
     return subscriberRegistIds_.getByteString(index);
   }
@@ -391,6 +483,7 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
     return internalGetData().getMap().size();
   }
   /** <code>map&lt;string, .DataBoxesPb&gt; data = 7;</code> */
+  @java.lang.Override
   public boolean containsData(java.lang.String key) {
     if (key == null) {
       throw new java.lang.NullPointerException();
@@ -398,6 +491,7 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
     return internalGetData().getMap().containsKey(key);
   }
   /** Use {@link #getDataMap()} instead. */
+  @java.lang.Override
   @java.lang.Deprecated
   public java.util.Map<
           java.lang.String, com.alipay.sofa.registry.common.model.client.pb.DataBoxesPb>
@@ -405,12 +499,14 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
     return getDataMap();
   }
   /** <code>map&lt;string, .DataBoxesPb&gt; data = 7;</code> */
+  @java.lang.Override
   public java.util.Map<
           java.lang.String, com.alipay.sofa.registry.common.model.client.pb.DataBoxesPb>
       getDataMap() {
     return internalGetData().getMap();
   }
   /** <code>map&lt;string, .DataBoxesPb&gt; data = 7;</code> */
+  @java.lang.Override
   public com.alipay.sofa.registry.common.model.client.pb.DataBoxesPb getDataOrDefault(
       java.lang.String key,
       com.alipay.sofa.registry.common.model.client.pb.DataBoxesPb defaultValue) {
@@ -422,6 +518,7 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
     return map.containsKey(key) ? map.get(key) : defaultValue;
   }
   /** <code>map&lt;string, .DataBoxesPb&gt; data = 7;</code> */
+  @java.lang.Override
   public com.alipay.sofa.registry.common.model.client.pb.DataBoxesPb getDataOrThrow(
       java.lang.String key) {
     if (key == null) {
@@ -437,14 +534,24 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
 
   public static final int VERSION_FIELD_NUMBER = 8;
   private long version_;
-  /** <code>int64 version = 8;</code> */
+  /**
+   * <code>int64 version = 8;</code>
+   *
+   * @return The version.
+   */
+  @java.lang.Override
   public long getVersion() {
     return version_;
   }
 
   public static final int LOCALZONE_FIELD_NUMBER = 9;
   private volatile java.lang.Object localZone_;
-  /** <code>string localZone = 9;</code> */
+  /**
+   * <code>string localZone = 9;</code>
+   *
+   * @return The localZone.
+   */
+  @java.lang.Override
   public java.lang.String getLocalZone() {
     java.lang.Object ref = localZone_;
     if (ref instanceof java.lang.String) {
@@ -456,7 +563,12 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
       return s;
     }
   }
-  /** <code>string localZone = 9;</code> */
+  /**
+   * <code>string localZone = 9;</code>
+   *
+   * @return The bytes for localZone.
+   */
+  @java.lang.Override
   public com.google.protobuf.ByteString getLocalZoneBytes() {
     java.lang.Object ref = localZone_;
     if (ref instanceof java.lang.String) {
@@ -471,7 +583,12 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
 
   public static final int ENCODING_FIELD_NUMBER = 10;
   private volatile java.lang.Object encoding_;
-  /** <code>string encoding = 10;</code> */
+  /**
+   * <code>string encoding = 10;</code>
+   *
+   * @return The encoding.
+   */
+  @java.lang.Override
   public java.lang.String getEncoding() {
     java.lang.Object ref = encoding_;
     if (ref instanceof java.lang.String) {
@@ -483,7 +600,12 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
       return s;
     }
   }
-  /** <code>string encoding = 10;</code> */
+  /**
+   * <code>string encoding = 10;</code>
+   *
+   * @return The bytes for encoding.
+   */
+  @java.lang.Override
   public com.google.protobuf.ByteString getEncodingBytes() {
     java.lang.Object ref = encoding_;
     if (ref instanceof java.lang.String) {
@@ -498,20 +620,99 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
 
   public static final int BODY_FIELD_NUMBER = 11;
   private com.google.protobuf.ByteString body_;
-  /** <code>bytes body = 11;</code> */
+  /**
+   * <code>bytes body = 11;</code>
+   *
+   * @return The body.
+   */
+  @java.lang.Override
   public com.google.protobuf.ByteString getBody() {
     return body_;
   }
 
   public static final int ORIGINBODYSIZE_FIELD_NUMBER = 12;
   private int originBodySize_;
-  /** <code>int32 originBodySize = 12;</code> */
+  /**
+   * <code>int32 originBodySize = 12;</code>
+   *
+   * @return The originBodySize.
+   */
+  @java.lang.Override
   public int getOriginBodySize() {
     return originBodySize_;
   }
 
+  public static final int PUSHDATACOUNT_FIELD_NUMBER = 13;
+
+  private static final class PushDataCountDefaultEntryHolder {
+    static final com.google.protobuf.MapEntry<java.lang.String, java.lang.Integer> defaultEntry =
+        com.google.protobuf.MapEntry.<java.lang.String, java.lang.Integer>newDefaultInstance(
+            com.alipay.sofa.registry.common.model.client.pb.ReceivedDataPbOuterClass
+                .internal_static_ReceivedDataPb_PushDataCountEntry_descriptor,
+            com.google.protobuf.WireFormat.FieldType.STRING,
+            "",
+            com.google.protobuf.WireFormat.FieldType.INT32,
+            0);
+  }
+
+  private com.google.protobuf.MapField<java.lang.String, java.lang.Integer> pushDataCount_;
+
+  private com.google.protobuf.MapField<java.lang.String, java.lang.Integer>
+      internalGetPushDataCount() {
+    if (pushDataCount_ == null) {
+      return com.google.protobuf.MapField.emptyMapField(
+          PushDataCountDefaultEntryHolder.defaultEntry);
+    }
+    return pushDataCount_;
+  }
+
+  public int getPushDataCountCount() {
+    return internalGetPushDataCount().getMap().size();
+  }
+  /** <code>map&lt;string, int32&gt; pushDataCount = 13;</code> */
+  @java.lang.Override
+  public boolean containsPushDataCount(java.lang.String key) {
+    if (key == null) {
+      throw new java.lang.NullPointerException();
+    }
+    return internalGetPushDataCount().getMap().containsKey(key);
+  }
+  /** Use {@link #getPushDataCountMap()} instead. */
+  @java.lang.Override
+  @java.lang.Deprecated
+  public java.util.Map<java.lang.String, java.lang.Integer> getPushDataCount() {
+    return getPushDataCountMap();
+  }
+  /** <code>map&lt;string, int32&gt; pushDataCount = 13;</code> */
+  @java.lang.Override
+  public java.util.Map<java.lang.String, java.lang.Integer> getPushDataCountMap() {
+    return internalGetPushDataCount().getMap();
+  }
+  /** <code>map&lt;string, int32&gt; pushDataCount = 13;</code> */
+  @java.lang.Override
+  public int getPushDataCountOrDefault(java.lang.String key, int defaultValue) {
+    if (key == null) {
+      throw new java.lang.NullPointerException();
+    }
+    java.util.Map<java.lang.String, java.lang.Integer> map = internalGetPushDataCount().getMap();
+    return map.containsKey(key) ? map.get(key) : defaultValue;
+  }
+  /** <code>map&lt;string, int32&gt; pushDataCount = 13;</code> */
+  @java.lang.Override
+  public int getPushDataCountOrThrow(java.lang.String key) {
+    if (key == null) {
+      throw new java.lang.NullPointerException();
+    }
+    java.util.Map<java.lang.String, java.lang.Integer> map = internalGetPushDataCount().getMap();
+    if (!map.containsKey(key)) {
+      throw new java.lang.IllegalArgumentException();
+    }
+    return map.get(key);
+  }
+
   private byte memoizedIsInitialized = -1;
 
+  @java.lang.Override
   public final boolean isInitialized() {
     byte isInitialized = memoizedIsInitialized;
     if (isInitialized == 1) return true;
@@ -521,6 +722,7 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
     return true;
   }
 
+  @java.lang.Override
   public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
     if (!getDataIdBytes().isEmpty()) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 1, dataId_);
@@ -557,9 +759,12 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
     if (originBodySize_ != 0) {
       output.writeInt32(12, originBodySize_);
     }
+    com.google.protobuf.GeneratedMessageV3.serializeStringMapTo(
+        output, internalGetPushDataCount(), PushDataCountDefaultEntryHolder.defaultEntry, 13);
     unknownFields.writeTo(output);
   }
 
+  @java.lang.Override
   public int getSerializedSize() {
     int size = memoizedSize;
     if (size != -1) return size;
@@ -616,6 +821,16 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
     if (originBodySize_ != 0) {
       size += com.google.protobuf.CodedOutputStream.computeInt32Size(12, originBodySize_);
     }
+    for (java.util.Map.Entry<java.lang.String, java.lang.Integer> entry :
+        internalGetPushDataCount().getMap().entrySet()) {
+      com.google.protobuf.MapEntry<java.lang.String, java.lang.Integer> pushDataCount__ =
+          PushDataCountDefaultEntryHolder.defaultEntry
+              .newBuilderForType()
+              .setKey(entry.getKey())
+              .setValue(entry.getValue())
+              .build();
+      size += com.google.protobuf.CodedOutputStream.computeMessageSize(13, pushDataCount__);
+    }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
     return size;
@@ -632,21 +847,21 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
     com.alipay.sofa.registry.common.model.client.pb.ReceivedDataPb other =
         (com.alipay.sofa.registry.common.model.client.pb.ReceivedDataPb) obj;
 
-    boolean result = true;
-    result = result && getDataId().equals(other.getDataId());
-    result = result && getGroup().equals(other.getGroup());
-    result = result && getInstanceId().equals(other.getInstanceId());
-    result = result && getSegment().equals(other.getSegment());
-    result = result && getScope().equals(other.getScope());
-    result = result && getSubscriberRegistIdsList().equals(other.getSubscriberRegistIdsList());
-    result = result && internalGetData().equals(other.internalGetData());
-    result = result && (getVersion() == other.getVersion());
-    result = result && getLocalZone().equals(other.getLocalZone());
-    result = result && getEncoding().equals(other.getEncoding());
-    result = result && getBody().equals(other.getBody());
-    result = result && (getOriginBodySize() == other.getOriginBodySize());
-    result = result && unknownFields.equals(other.unknownFields);
-    return result;
+    if (!getDataId().equals(other.getDataId())) return false;
+    if (!getGroup().equals(other.getGroup())) return false;
+    if (!getInstanceId().equals(other.getInstanceId())) return false;
+    if (!getSegment().equals(other.getSegment())) return false;
+    if (!getScope().equals(other.getScope())) return false;
+    if (!getSubscriberRegistIdsList().equals(other.getSubscriberRegistIdsList())) return false;
+    if (!internalGetData().equals(other.internalGetData())) return false;
+    if (getVersion() != other.getVersion()) return false;
+    if (!getLocalZone().equals(other.getLocalZone())) return false;
+    if (!getEncoding().equals(other.getEncoding())) return false;
+    if (!getBody().equals(other.getBody())) return false;
+    if (getOriginBodySize() != other.getOriginBodySize()) return false;
+    if (!internalGetPushDataCount().equals(other.internalGetPushDataCount())) return false;
+    if (!unknownFields.equals(other.unknownFields)) return false;
+    return true;
   }
 
   @java.lang.Override
@@ -684,6 +899,10 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
     hash = (53 * hash) + getBody().hashCode();
     hash = (37 * hash) + ORIGINBODYSIZE_FIELD_NUMBER;
     hash = (53 * hash) + getOriginBodySize();
+    if (!internalGetPushDataCount().getMap().isEmpty()) {
+      hash = (37 * hash) + PUSHDATACOUNT_FIELD_NUMBER;
+      hash = (53 * hash) + internalGetPushDataCount().hashCode();
+    }
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -761,6 +980,7 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
         PARSER, input, extensionRegistry);
   }
 
+  @java.lang.Override
   public Builder newBuilderForType() {
     return newBuilder();
   }
@@ -774,6 +994,7 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
     return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
   }
 
+  @java.lang.Override
   public Builder toBuilder() {
     return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
   }
@@ -798,6 +1019,8 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
       switch (number) {
         case 7:
           return internalGetData();
+        case 13:
+          return internalGetPushDataCount();
         default:
           throw new RuntimeException("Invalid map field number: " + number);
       }
@@ -808,11 +1031,14 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
       switch (number) {
         case 7:
           return internalGetMutableData();
+        case 13:
+          return internalGetMutablePushDataCount();
         default:
           throw new RuntimeException("Invalid map field number: " + number);
       }
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return com.alipay.sofa.registry.common.model.client.pb.ReceivedDataPbOuterClass
@@ -836,6 +1062,7 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
       if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {}
     }
 
+    @java.lang.Override
     public Builder clear() {
       super.clear();
       dataId_ = "";
@@ -849,7 +1076,7 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
       scope_ = "";
 
       subscriberRegistIds_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-      bitField0_ = (bitField0_ & ~0x00000020);
+      bitField0_ = (bitField0_ & ~0x00000001);
       internalGetMutableData().clear();
       version_ = 0L;
 
@@ -861,19 +1088,23 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
 
       originBodySize_ = 0;
 
+      internalGetMutablePushDataCount().clear();
       return this;
     }
 
+    @java.lang.Override
     public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
       return com.alipay.sofa.registry.common.model.client.pb.ReceivedDataPbOuterClass
           .internal_static_ReceivedDataPb_descriptor;
     }
 
+    @java.lang.Override
     public com.alipay.sofa.registry.common.model.client.pb.ReceivedDataPb
         getDefaultInstanceForType() {
       return com.alipay.sofa.registry.common.model.client.pb.ReceivedDataPb.getDefaultInstance();
     }
 
+    @java.lang.Override
     public com.alipay.sofa.registry.common.model.client.pb.ReceivedDataPb build() {
       com.alipay.sofa.registry.common.model.client.pb.ReceivedDataPb result = buildPartial();
       if (!result.isInitialized()) {
@@ -882,19 +1113,19 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
       return result;
     }
 
+    @java.lang.Override
     public com.alipay.sofa.registry.common.model.client.pb.ReceivedDataPb buildPartial() {
       com.alipay.sofa.registry.common.model.client.pb.ReceivedDataPb result =
           new com.alipay.sofa.registry.common.model.client.pb.ReceivedDataPb(this);
       int from_bitField0_ = bitField0_;
-      int to_bitField0_ = 0;
       result.dataId_ = dataId_;
       result.group_ = group_;
       result.instanceId_ = instanceId_;
       result.segment_ = segment_;
       result.scope_ = scope_;
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         subscriberRegistIds_ = subscriberRegistIds_.getUnmodifiableView();
-        bitField0_ = (bitField0_ & ~0x00000020);
+        bitField0_ = (bitField0_ & ~0x00000001);
       }
       result.subscriberRegistIds_ = subscriberRegistIds_;
       result.data_ = internalGetData();
@@ -904,38 +1135,46 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
       result.encoding_ = encoding_;
       result.body_ = body_;
       result.originBodySize_ = originBodySize_;
-      result.bitField0_ = to_bitField0_;
+      result.pushDataCount_ = internalGetPushDataCount();
+      result.pushDataCount_.makeImmutable();
       onBuilt();
       return result;
     }
 
+    @java.lang.Override
     public Builder clone() {
-      return (Builder) super.clone();
+      return super.clone();
     }
 
+    @java.lang.Override
     public Builder setField(
         com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
-      return (Builder) super.setField(field, value);
+      return super.setField(field, value);
     }
 
+    @java.lang.Override
     public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
-      return (Builder) super.clearField(field);
+      return super.clearField(field);
     }
 
+    @java.lang.Override
     public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-      return (Builder) super.clearOneof(oneof);
+      return super.clearOneof(oneof);
     }
 
+    @java.lang.Override
     public Builder setRepeatedField(
         com.google.protobuf.Descriptors.FieldDescriptor field, int index, java.lang.Object value) {
-      return (Builder) super.setRepeatedField(field, index, value);
+      return super.setRepeatedField(field, index, value);
     }
 
+    @java.lang.Override
     public Builder addRepeatedField(
         com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
-      return (Builder) super.addRepeatedField(field, value);
+      return super.addRepeatedField(field, value);
     }
 
+    @java.lang.Override
     public Builder mergeFrom(com.google.protobuf.Message other) {
       if (other instanceof com.alipay.sofa.registry.common.model.client.pb.ReceivedDataPb) {
         return mergeFrom((com.alipay.sofa.registry.common.model.client.pb.ReceivedDataPb) other);
@@ -972,7 +1211,7 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
       if (!other.subscriberRegistIds_.isEmpty()) {
         if (subscriberRegistIds_.isEmpty()) {
           subscriberRegistIds_ = other.subscriberRegistIds_;
-          bitField0_ = (bitField0_ & ~0x00000020);
+          bitField0_ = (bitField0_ & ~0x00000001);
         } else {
           ensureSubscriberRegistIdsIsMutable();
           subscriberRegistIds_.addAll(other.subscriberRegistIds_);
@@ -997,15 +1236,18 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
       if (other.getOriginBodySize() != 0) {
         setOriginBodySize(other.getOriginBodySize());
       }
+      internalGetMutablePushDataCount().mergeFrom(other.internalGetPushDataCount());
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
       return this;
     }
 
+    @java.lang.Override
     public final boolean isInitialized() {
       return true;
     }
 
+    @java.lang.Override
     public Builder mergeFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -1029,7 +1271,11 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
     private int bitField0_;
 
     private java.lang.Object dataId_ = "";
-    /** <code>string dataId = 1;</code> */
+    /**
+     * <code>string dataId = 1;</code>
+     *
+     * @return The dataId.
+     */
     public java.lang.String getDataId() {
       java.lang.Object ref = dataId_;
       if (!(ref instanceof java.lang.String)) {
@@ -1041,7 +1287,11 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
         return (java.lang.String) ref;
       }
     }
-    /** <code>string dataId = 1;</code> */
+    /**
+     * <code>string dataId = 1;</code>
+     *
+     * @return The bytes for dataId.
+     */
     public com.google.protobuf.ByteString getDataIdBytes() {
       java.lang.Object ref = dataId_;
       if (ref instanceof String) {
@@ -1053,7 +1303,12 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
         return (com.google.protobuf.ByteString) ref;
       }
     }
-    /** <code>string dataId = 1;</code> */
+    /**
+     * <code>string dataId = 1;</code>
+     *
+     * @param value The dataId to set.
+     * @return This builder for chaining.
+     */
     public Builder setDataId(java.lang.String value) {
       if (value == null) {
         throw new NullPointerException();
@@ -1063,14 +1318,23 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
       onChanged();
       return this;
     }
-    /** <code>string dataId = 1;</code> */
+    /**
+     * <code>string dataId = 1;</code>
+     *
+     * @return This builder for chaining.
+     */
     public Builder clearDataId() {
 
       dataId_ = getDefaultInstance().getDataId();
       onChanged();
       return this;
     }
-    /** <code>string dataId = 1;</code> */
+    /**
+     * <code>string dataId = 1;</code>
+     *
+     * @param value The bytes for dataId to set.
+     * @return This builder for chaining.
+     */
     public Builder setDataIdBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
         throw new NullPointerException();
@@ -1083,7 +1347,11 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
     }
 
     private java.lang.Object group_ = "";
-    /** <code>string group = 2;</code> */
+    /**
+     * <code>string group = 2;</code>
+     *
+     * @return The group.
+     */
     public java.lang.String getGroup() {
       java.lang.Object ref = group_;
       if (!(ref instanceof java.lang.String)) {
@@ -1095,7 +1363,11 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
         return (java.lang.String) ref;
       }
     }
-    /** <code>string group = 2;</code> */
+    /**
+     * <code>string group = 2;</code>
+     *
+     * @return The bytes for group.
+     */
     public com.google.protobuf.ByteString getGroupBytes() {
       java.lang.Object ref = group_;
       if (ref instanceof String) {
@@ -1107,7 +1379,12 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
         return (com.google.protobuf.ByteString) ref;
       }
     }
-    /** <code>string group = 2;</code> */
+    /**
+     * <code>string group = 2;</code>
+     *
+     * @param value The group to set.
+     * @return This builder for chaining.
+     */
     public Builder setGroup(java.lang.String value) {
       if (value == null) {
         throw new NullPointerException();
@@ -1117,14 +1394,23 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
       onChanged();
       return this;
     }
-    /** <code>string group = 2;</code> */
+    /**
+     * <code>string group = 2;</code>
+     *
+     * @return This builder for chaining.
+     */
     public Builder clearGroup() {
 
       group_ = getDefaultInstance().getGroup();
       onChanged();
       return this;
     }
-    /** <code>string group = 2;</code> */
+    /**
+     * <code>string group = 2;</code>
+     *
+     * @param value The bytes for group to set.
+     * @return This builder for chaining.
+     */
     public Builder setGroupBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
         throw new NullPointerException();
@@ -1137,7 +1423,11 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
     }
 
     private java.lang.Object instanceId_ = "";
-    /** <code>string instanceId = 3;</code> */
+    /**
+     * <code>string instanceId = 3;</code>
+     *
+     * @return The instanceId.
+     */
     public java.lang.String getInstanceId() {
       java.lang.Object ref = instanceId_;
       if (!(ref instanceof java.lang.String)) {
@@ -1149,7 +1439,11 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
         return (java.lang.String) ref;
       }
     }
-    /** <code>string instanceId = 3;</code> */
+    /**
+     * <code>string instanceId = 3;</code>
+     *
+     * @return The bytes for instanceId.
+     */
     public com.google.protobuf.ByteString getInstanceIdBytes() {
       java.lang.Object ref = instanceId_;
       if (ref instanceof String) {
@@ -1161,7 +1455,12 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
         return (com.google.protobuf.ByteString) ref;
       }
     }
-    /** <code>string instanceId = 3;</code> */
+    /**
+     * <code>string instanceId = 3;</code>
+     *
+     * @param value The instanceId to set.
+     * @return This builder for chaining.
+     */
     public Builder setInstanceId(java.lang.String value) {
       if (value == null) {
         throw new NullPointerException();
@@ -1171,14 +1470,23 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
       onChanged();
       return this;
     }
-    /** <code>string instanceId = 3;</code> */
+    /**
+     * <code>string instanceId = 3;</code>
+     *
+     * @return This builder for chaining.
+     */
     public Builder clearInstanceId() {
 
       instanceId_ = getDefaultInstance().getInstanceId();
       onChanged();
       return this;
     }
-    /** <code>string instanceId = 3;</code> */
+    /**
+     * <code>string instanceId = 3;</code>
+     *
+     * @param value The bytes for instanceId to set.
+     * @return This builder for chaining.
+     */
     public Builder setInstanceIdBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
         throw new NullPointerException();
@@ -1191,7 +1499,11 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
     }
 
     private java.lang.Object segment_ = "";
-    /** <code>string segment = 4;</code> */
+    /**
+     * <code>string segment = 4;</code>
+     *
+     * @return The segment.
+     */
     public java.lang.String getSegment() {
       java.lang.Object ref = segment_;
       if (!(ref instanceof java.lang.String)) {
@@ -1203,7 +1515,11 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
         return (java.lang.String) ref;
       }
     }
-    /** <code>string segment = 4;</code> */
+    /**
+     * <code>string segment = 4;</code>
+     *
+     * @return The bytes for segment.
+     */
     public com.google.protobuf.ByteString getSegmentBytes() {
       java.lang.Object ref = segment_;
       if (ref instanceof String) {
@@ -1215,7 +1531,12 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
         return (com.google.protobuf.ByteString) ref;
       }
     }
-    /** <code>string segment = 4;</code> */
+    /**
+     * <code>string segment = 4;</code>
+     *
+     * @param value The segment to set.
+     * @return This builder for chaining.
+     */
     public Builder setSegment(java.lang.String value) {
       if (value == null) {
         throw new NullPointerException();
@@ -1225,14 +1546,23 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
       onChanged();
       return this;
     }
-    /** <code>string segment = 4;</code> */
+    /**
+     * <code>string segment = 4;</code>
+     *
+     * @return This builder for chaining.
+     */
     public Builder clearSegment() {
 
       segment_ = getDefaultInstance().getSegment();
       onChanged();
       return this;
     }
-    /** <code>string segment = 4;</code> */
+    /**
+     * <code>string segment = 4;</code>
+     *
+     * @param value The bytes for segment to set.
+     * @return This builder for chaining.
+     */
     public Builder setSegmentBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
         throw new NullPointerException();
@@ -1245,7 +1575,11 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
     }
 
     private java.lang.Object scope_ = "";
-    /** <code>string scope = 5;</code> */
+    /**
+     * <code>string scope = 5;</code>
+     *
+     * @return The scope.
+     */
     public java.lang.String getScope() {
       java.lang.Object ref = scope_;
       if (!(ref instanceof java.lang.String)) {
@@ -1257,7 +1591,11 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
         return (java.lang.String) ref;
       }
     }
-    /** <code>string scope = 5;</code> */
+    /**
+     * <code>string scope = 5;</code>
+     *
+     * @return The bytes for scope.
+     */
     public com.google.protobuf.ByteString getScopeBytes() {
       java.lang.Object ref = scope_;
       if (ref instanceof String) {
@@ -1269,7 +1607,12 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
         return (com.google.protobuf.ByteString) ref;
       }
     }
-    /** <code>string scope = 5;</code> */
+    /**
+     * <code>string scope = 5;</code>
+     *
+     * @param value The scope to set.
+     * @return This builder for chaining.
+     */
     public Builder setScope(java.lang.String value) {
       if (value == null) {
         throw new NullPointerException();
@@ -1279,14 +1622,23 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
       onChanged();
       return this;
     }
-    /** <code>string scope = 5;</code> */
+    /**
+     * <code>string scope = 5;</code>
+     *
+     * @return This builder for chaining.
+     */
     public Builder clearScope() {
 
       scope_ = getDefaultInstance().getScope();
       onChanged();
       return this;
     }
-    /** <code>string scope = 5;</code> */
+    /**
+     * <code>string scope = 5;</code>
+     *
+     * @param value The bytes for scope to set.
+     * @return This builder for chaining.
+     */
     public Builder setScopeBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
         throw new NullPointerException();
@@ -1302,28 +1654,52 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
         com.google.protobuf.LazyStringArrayList.EMPTY;
 
     private void ensureSubscriberRegistIdsIsMutable() {
-      if (!((bitField0_ & 0x00000020) == 0x00000020)) {
+      if (!((bitField0_ & 0x00000001) != 0)) {
         subscriberRegistIds_ = new com.google.protobuf.LazyStringArrayList(subscriberRegistIds_);
-        bitField0_ |= 0x00000020;
+        bitField0_ |= 0x00000001;
       }
     }
-    /** <code>repeated string subscriberRegistIds = 6;</code> */
+    /**
+     * <code>repeated string subscriberRegistIds = 6;</code>
+     *
+     * @return A list containing the subscriberRegistIds.
+     */
     public com.google.protobuf.ProtocolStringList getSubscriberRegistIdsList() {
       return subscriberRegistIds_.getUnmodifiableView();
     }
-    /** <code>repeated string subscriberRegistIds = 6;</code> */
+    /**
+     * <code>repeated string subscriberRegistIds = 6;</code>
+     *
+     * @return The count of subscriberRegistIds.
+     */
     public int getSubscriberRegistIdsCount() {
       return subscriberRegistIds_.size();
     }
-    /** <code>repeated string subscriberRegistIds = 6;</code> */
+    /**
+     * <code>repeated string subscriberRegistIds = 6;</code>
+     *
+     * @param index The index of the element to return.
+     * @return The subscriberRegistIds at the given index.
+     */
     public java.lang.String getSubscriberRegistIds(int index) {
       return subscriberRegistIds_.get(index);
     }
-    /** <code>repeated string subscriberRegistIds = 6;</code> */
+    /**
+     * <code>repeated string subscriberRegistIds = 6;</code>
+     *
+     * @param index The index of the value to return.
+     * @return The bytes of the subscriberRegistIds at the given index.
+     */
     public com.google.protobuf.ByteString getSubscriberRegistIdsBytes(int index) {
       return subscriberRegistIds_.getByteString(index);
     }
-    /** <code>repeated string subscriberRegistIds = 6;</code> */
+    /**
+     * <code>repeated string subscriberRegistIds = 6;</code>
+     *
+     * @param index The index to set the value at.
+     * @param value The subscriberRegistIds to set.
+     * @return This builder for chaining.
+     */
     public Builder setSubscriberRegistIds(int index, java.lang.String value) {
       if (value == null) {
         throw new NullPointerException();
@@ -1333,7 +1709,12 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
       onChanged();
       return this;
     }
-    /** <code>repeated string subscriberRegistIds = 6;</code> */
+    /**
+     * <code>repeated string subscriberRegistIds = 6;</code>
+     *
+     * @param value The subscriberRegistIds to add.
+     * @return This builder for chaining.
+     */
     public Builder addSubscriberRegistIds(java.lang.String value) {
       if (value == null) {
         throw new NullPointerException();
@@ -1343,21 +1724,35 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
       onChanged();
       return this;
     }
-    /** <code>repeated string subscriberRegistIds = 6;</code> */
+    /**
+     * <code>repeated string subscriberRegistIds = 6;</code>
+     *
+     * @param values The subscriberRegistIds to add.
+     * @return This builder for chaining.
+     */
     public Builder addAllSubscriberRegistIds(java.lang.Iterable<java.lang.String> values) {
       ensureSubscriberRegistIdsIsMutable();
       com.google.protobuf.AbstractMessageLite.Builder.addAll(values, subscriberRegistIds_);
       onChanged();
       return this;
     }
-    /** <code>repeated string subscriberRegistIds = 6;</code> */
+    /**
+     * <code>repeated string subscriberRegistIds = 6;</code>
+     *
+     * @return This builder for chaining.
+     */
     public Builder clearSubscriberRegistIds() {
       subscriberRegistIds_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-      bitField0_ = (bitField0_ & ~0x00000020);
+      bitField0_ = (bitField0_ & ~0x00000001);
       onChanged();
       return this;
     }
-    /** <code>repeated string subscriberRegistIds = 6;</code> */
+    /**
+     * <code>repeated string subscriberRegistIds = 6;</code>
+     *
+     * @param value The bytes of the subscriberRegistIds to add.
+     * @return This builder for chaining.
+     */
     public Builder addSubscriberRegistIdsBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
         throw new NullPointerException();
@@ -1400,6 +1795,7 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
       return internalGetData().getMap().size();
     }
     /** <code>map&lt;string, .DataBoxesPb&gt; data = 7;</code> */
+    @java.lang.Override
     public boolean containsData(java.lang.String key) {
       if (key == null) {
         throw new java.lang.NullPointerException();
@@ -1407,6 +1803,7 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
       return internalGetData().getMap().containsKey(key);
     }
     /** Use {@link #getDataMap()} instead. */
+    @java.lang.Override
     @java.lang.Deprecated
     public java.util.Map<
             java.lang.String, com.alipay.sofa.registry.common.model.client.pb.DataBoxesPb>
@@ -1414,12 +1811,14 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
       return getDataMap();
     }
     /** <code>map&lt;string, .DataBoxesPb&gt; data = 7;</code> */
+    @java.lang.Override
     public java.util.Map<
             java.lang.String, com.alipay.sofa.registry.common.model.client.pb.DataBoxesPb>
         getDataMap() {
       return internalGetData().getMap();
     }
     /** <code>map&lt;string, .DataBoxesPb&gt; data = 7;</code> */
+    @java.lang.Override
     public com.alipay.sofa.registry.common.model.client.pb.DataBoxesPb getDataOrDefault(
         java.lang.String key,
         com.alipay.sofa.registry.common.model.client.pb.DataBoxesPb defaultValue) {
@@ -1431,6 +1830,7 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
       return map.containsKey(key) ? map.get(key) : defaultValue;
     }
     /** <code>map&lt;string, .DataBoxesPb&gt; data = 7;</code> */
+    @java.lang.Override
     public com.alipay.sofa.registry.common.model.client.pb.DataBoxesPb getDataOrThrow(
         java.lang.String key) {
       if (key == null) {
@@ -1484,18 +1884,32 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
     }
 
     private long version_;
-    /** <code>int64 version = 8;</code> */
+    /**
+     * <code>int64 version = 8;</code>
+     *
+     * @return The version.
+     */
+    @java.lang.Override
     public long getVersion() {
       return version_;
     }
-    /** <code>int64 version = 8;</code> */
+    /**
+     * <code>int64 version = 8;</code>
+     *
+     * @param value The version to set.
+     * @return This builder for chaining.
+     */
     public Builder setVersion(long value) {
 
       version_ = value;
       onChanged();
       return this;
     }
-    /** <code>int64 version = 8;</code> */
+    /**
+     * <code>int64 version = 8;</code>
+     *
+     * @return This builder for chaining.
+     */
     public Builder clearVersion() {
 
       version_ = 0L;
@@ -1504,7 +1918,11 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
     }
 
     private java.lang.Object localZone_ = "";
-    /** <code>string localZone = 9;</code> */
+    /**
+     * <code>string localZone = 9;</code>
+     *
+     * @return The localZone.
+     */
     public java.lang.String getLocalZone() {
       java.lang.Object ref = localZone_;
       if (!(ref instanceof java.lang.String)) {
@@ -1516,7 +1934,11 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
         return (java.lang.String) ref;
       }
     }
-    /** <code>string localZone = 9;</code> */
+    /**
+     * <code>string localZone = 9;</code>
+     *
+     * @return The bytes for localZone.
+     */
     public com.google.protobuf.ByteString getLocalZoneBytes() {
       java.lang.Object ref = localZone_;
       if (ref instanceof String) {
@@ -1528,7 +1950,12 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
         return (com.google.protobuf.ByteString) ref;
       }
     }
-    /** <code>string localZone = 9;</code> */
+    /**
+     * <code>string localZone = 9;</code>
+     *
+     * @param value The localZone to set.
+     * @return This builder for chaining.
+     */
     public Builder setLocalZone(java.lang.String value) {
       if (value == null) {
         throw new NullPointerException();
@@ -1538,14 +1965,23 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
       onChanged();
       return this;
     }
-    /** <code>string localZone = 9;</code> */
+    /**
+     * <code>string localZone = 9;</code>
+     *
+     * @return This builder for chaining.
+     */
     public Builder clearLocalZone() {
 
       localZone_ = getDefaultInstance().getLocalZone();
       onChanged();
       return this;
     }
-    /** <code>string localZone = 9;</code> */
+    /**
+     * <code>string localZone = 9;</code>
+     *
+     * @param value The bytes for localZone to set.
+     * @return This builder for chaining.
+     */
     public Builder setLocalZoneBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
         throw new NullPointerException();
@@ -1558,7 +1994,11 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
     }
 
     private java.lang.Object encoding_ = "";
-    /** <code>string encoding = 10;</code> */
+    /**
+     * <code>string encoding = 10;</code>
+     *
+     * @return The encoding.
+     */
     public java.lang.String getEncoding() {
       java.lang.Object ref = encoding_;
       if (!(ref instanceof java.lang.String)) {
@@ -1570,7 +2010,11 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
         return (java.lang.String) ref;
       }
     }
-    /** <code>string encoding = 10;</code> */
+    /**
+     * <code>string encoding = 10;</code>
+     *
+     * @return The bytes for encoding.
+     */
     public com.google.protobuf.ByteString getEncodingBytes() {
       java.lang.Object ref = encoding_;
       if (ref instanceof String) {
@@ -1582,7 +2026,12 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
         return (com.google.protobuf.ByteString) ref;
       }
     }
-    /** <code>string encoding = 10;</code> */
+    /**
+     * <code>string encoding = 10;</code>
+     *
+     * @param value The encoding to set.
+     * @return This builder for chaining.
+     */
     public Builder setEncoding(java.lang.String value) {
       if (value == null) {
         throw new NullPointerException();
@@ -1592,14 +2041,23 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
       onChanged();
       return this;
     }
-    /** <code>string encoding = 10;</code> */
+    /**
+     * <code>string encoding = 10;</code>
+     *
+     * @return This builder for chaining.
+     */
     public Builder clearEncoding() {
 
       encoding_ = getDefaultInstance().getEncoding();
       onChanged();
       return this;
     }
-    /** <code>string encoding = 10;</code> */
+    /**
+     * <code>string encoding = 10;</code>
+     *
+     * @param value The bytes for encoding to set.
+     * @return This builder for chaining.
+     */
     public Builder setEncodingBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
         throw new NullPointerException();
@@ -1612,11 +2070,21 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
     }
 
     private com.google.protobuf.ByteString body_ = com.google.protobuf.ByteString.EMPTY;
-    /** <code>bytes body = 11;</code> */
+    /**
+     * <code>bytes body = 11;</code>
+     *
+     * @return The body.
+     */
+    @java.lang.Override
     public com.google.protobuf.ByteString getBody() {
       return body_;
     }
-    /** <code>bytes body = 11;</code> */
+    /**
+     * <code>bytes body = 11;</code>
+     *
+     * @param value The body to set.
+     * @return This builder for chaining.
+     */
     public Builder setBody(com.google.protobuf.ByteString value) {
       if (value == null) {
         throw new NullPointerException();
@@ -1626,7 +2094,11 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
       onChanged();
       return this;
     }
-    /** <code>bytes body = 11;</code> */
+    /**
+     * <code>bytes body = 11;</code>
+     *
+     * @return This builder for chaining.
+     */
     public Builder clearBody() {
 
       body_ = getDefaultInstance().getBody();
@@ -1635,18 +2107,32 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
     }
 
     private int originBodySize_;
-    /** <code>int32 originBodySize = 12;</code> */
+    /**
+     * <code>int32 originBodySize = 12;</code>
+     *
+     * @return The originBodySize.
+     */
+    @java.lang.Override
     public int getOriginBodySize() {
       return originBodySize_;
     }
-    /** <code>int32 originBodySize = 12;</code> */
+    /**
+     * <code>int32 originBodySize = 12;</code>
+     *
+     * @param value The originBodySize to set.
+     * @return This builder for chaining.
+     */
     public Builder setOriginBodySize(int value) {
 
       originBodySize_ = value;
       onChanged();
       return this;
     }
-    /** <code>int32 originBodySize = 12;</code> */
+    /**
+     * <code>int32 originBodySize = 12;</code>
+     *
+     * @return This builder for chaining.
+     */
     public Builder clearOriginBodySize() {
 
       originBodySize_ = 0;
@@ -1654,10 +2140,113 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
       return this;
     }
 
-    public final Builder setUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {
-      return super.setUnknownFieldsProto3(unknownFields);
+    private com.google.protobuf.MapField<java.lang.String, java.lang.Integer> pushDataCount_;
+
+    private com.google.protobuf.MapField<java.lang.String, java.lang.Integer>
+        internalGetPushDataCount() {
+      if (pushDataCount_ == null) {
+        return com.google.protobuf.MapField.emptyMapField(
+            PushDataCountDefaultEntryHolder.defaultEntry);
+      }
+      return pushDataCount_;
     }
 
+    private com.google.protobuf.MapField<java.lang.String, java.lang.Integer>
+        internalGetMutablePushDataCount() {
+      onChanged();
+      ;
+      if (pushDataCount_ == null) {
+        pushDataCount_ =
+            com.google.protobuf.MapField.newMapField(PushDataCountDefaultEntryHolder.defaultEntry);
+      }
+      if (!pushDataCount_.isMutable()) {
+        pushDataCount_ = pushDataCount_.copy();
+      }
+      return pushDataCount_;
+    }
+
+    public int getPushDataCountCount() {
+      return internalGetPushDataCount().getMap().size();
+    }
+    /** <code>map&lt;string, int32&gt; pushDataCount = 13;</code> */
+    @java.lang.Override
+    public boolean containsPushDataCount(java.lang.String key) {
+      if (key == null) {
+        throw new java.lang.NullPointerException();
+      }
+      return internalGetPushDataCount().getMap().containsKey(key);
+    }
+    /** Use {@link #getPushDataCountMap()} instead. */
+    @java.lang.Override
+    @java.lang.Deprecated
+    public java.util.Map<java.lang.String, java.lang.Integer> getPushDataCount() {
+      return getPushDataCountMap();
+    }
+    /** <code>map&lt;string, int32&gt; pushDataCount = 13;</code> */
+    @java.lang.Override
+    public java.util.Map<java.lang.String, java.lang.Integer> getPushDataCountMap() {
+      return internalGetPushDataCount().getMap();
+    }
+    /** <code>map&lt;string, int32&gt; pushDataCount = 13;</code> */
+    @java.lang.Override
+    public int getPushDataCountOrDefault(java.lang.String key, int defaultValue) {
+      if (key == null) {
+        throw new java.lang.NullPointerException();
+      }
+      java.util.Map<java.lang.String, java.lang.Integer> map = internalGetPushDataCount().getMap();
+      return map.containsKey(key) ? map.get(key) : defaultValue;
+    }
+    /** <code>map&lt;string, int32&gt; pushDataCount = 13;</code> */
+    @java.lang.Override
+    public int getPushDataCountOrThrow(java.lang.String key) {
+      if (key == null) {
+        throw new java.lang.NullPointerException();
+      }
+      java.util.Map<java.lang.String, java.lang.Integer> map = internalGetPushDataCount().getMap();
+      if (!map.containsKey(key)) {
+        throw new java.lang.IllegalArgumentException();
+      }
+      return map.get(key);
+    }
+
+    public Builder clearPushDataCount() {
+      internalGetMutablePushDataCount().getMutableMap().clear();
+      return this;
+    }
+    /** <code>map&lt;string, int32&gt; pushDataCount = 13;</code> */
+    public Builder removePushDataCount(java.lang.String key) {
+      if (key == null) {
+        throw new java.lang.NullPointerException();
+      }
+      internalGetMutablePushDataCount().getMutableMap().remove(key);
+      return this;
+    }
+    /** Use alternate mutation accessors instead. */
+    @java.lang.Deprecated
+    public java.util.Map<java.lang.String, java.lang.Integer> getMutablePushDataCount() {
+      return internalGetMutablePushDataCount().getMutableMap();
+    }
+    /** <code>map&lt;string, int32&gt; pushDataCount = 13;</code> */
+    public Builder putPushDataCount(java.lang.String key, int value) {
+      if (key == null) {
+        throw new java.lang.NullPointerException();
+      }
+
+      internalGetMutablePushDataCount().getMutableMap().put(key, value);
+      return this;
+    }
+    /** <code>map&lt;string, int32&gt; pushDataCount = 13;</code> */
+    public Builder putAllPushDataCount(java.util.Map<java.lang.String, java.lang.Integer> values) {
+      internalGetMutablePushDataCount().getMutableMap().putAll(values);
+      return this;
+    }
+
+    @java.lang.Override
+    public final Builder setUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {
+      return super.setUnknownFields(unknownFields);
+    }
+
+    @java.lang.Override
     public final Builder mergeUnknownFields(
         final com.google.protobuf.UnknownFieldSet unknownFields) {
       return super.mergeUnknownFields(unknownFields);
@@ -1681,6 +2270,7 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
 
   private static final com.google.protobuf.Parser<ReceivedDataPb> PARSER =
       new com.google.protobuf.AbstractParser<ReceivedDataPb>() {
+        @java.lang.Override
         public ReceivedDataPb parsePartialFrom(
             com.google.protobuf.CodedInputStream input,
             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -1698,6 +2288,7 @@ public final class ReceivedDataPb extends com.google.protobuf.GeneratedMessageV3
     return PARSER;
   }
 
+  @java.lang.Override
   public com.alipay.sofa.registry.common.model.client.pb.ReceivedDataPb
       getDefaultInstanceForType() {
     return DEFAULT_INSTANCE;

@@ -31,7 +31,12 @@ public final class Key implements Sizer {
   private final String hashKey;
   private final EntityType entityType;
 
-  /** construct func */
+  /**
+   * construct func
+   *
+   * @param entityName entityName
+   * @param entityType entityType
+   */
   public Key(String entityName, EntityType entityType) {
     this.entityName = entityName;
     this.entityType = entityType;

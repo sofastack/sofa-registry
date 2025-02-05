@@ -32,7 +32,7 @@ public class DataServerStats {
   /**
    * Constructor.
    *
-   * @param dataServer
+   * @param dataServer dataServer
    * @param slotTableEpoch the slot table epoch
    * @param slotStatuses the slot status
    */

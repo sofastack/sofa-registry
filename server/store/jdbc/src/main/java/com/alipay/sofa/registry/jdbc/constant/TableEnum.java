@@ -26,6 +26,7 @@ public enum TableEnum {
   INTERFACE_APP_INDEX("interface_app_index"),
   DISTRIBUTE_LOCK("distribute_lock"),
   CLIENT_MANAGER_ADDRESS("client_manager_address"),
+  MULTI_CLUSTER_SYNC_INFO("multi_cluster_sync_info"),
   ;
 
   private String tableName;

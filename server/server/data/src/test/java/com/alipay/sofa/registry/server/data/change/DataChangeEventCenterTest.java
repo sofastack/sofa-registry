@@ -18,6 +18,7 @@ package com.alipay.sofa.registry.server.data.change;
 
 import static com.alipay.sofa.registry.server.data.change.ChangeMetrics.*;
 
+import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.store.Publisher;
@@ -27,7 +28,9 @@ import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.data.TestBaseUtils;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
-import com.alipay.sofa.registry.server.data.cache.DatumCache;
+import com.alipay.sofa.registry.server.data.bootstrap.MultiClusterDataServerConfig;
+import com.alipay.sofa.registry.server.data.cache.DatumStorageDelegate;
+import com.alipay.sofa.registry.store.api.config.DefaultCommonConfig;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -43,14 +46,21 @@ public class DataChangeEventCenterTest {
   private static final String DC = "testDc";
   private DataChangeEventCenter center;
   private DataServerConfig dataServerConfig;
-  private DatumCache datumCache;
+  private DatumStorageDelegate datumStorageDelegate;
+  private MultiClusterDataServerConfig multiClusterDataServerConfig;
+  private DefaultCommonConfig defaultCommonConfig;
 
   private void setCenter() {
     this.center = new DataChangeEventCenter();
     this.dataServerConfig = TestBaseUtils.newDataConfig(DC);
-    this.datumCache = TestBaseUtils.newLocalDatumCache(DC, true);
+    this.multiClusterDataServerConfig = TestBaseUtils.newMultiDataConfig();
+    this.datumStorageDelegate = TestBaseUtils.newLocalDatumDelegate(DC, true);
+    this.defaultCommonConfig = TestBaseUtils.newDefaultCommonConfig(DC);
     center.setDataServerConfig(dataServerConfig);
-    center.setDatumCache(datumCache);
+    center.setDatumDelegate(datumStorageDelegate);
+    center.setMultiClusterDataServerConfig(multiClusterDataServerConfig);
+    center.setDefaultCommonConfig(defaultCommonConfig);
+    dataServerConfig.setNotifyIntervalMillis(100);
   }
 
   @Test
@@ -77,29 +87,71 @@ public class DataChangeEventCenterTest {
   @Test
   public void testHandleChangeNotInit() {
     setCenter();
-    Assert.assertFalse(center.handleChanges(Maps.newHashMap()));
+
+    Assert.assertFalse(
+        center.handleChanges(
+            center.transferChangeEvent(dataServerConfig.getNotifyMaxItems()),
+            NodeType.SESSION,
+            dataServerConfig.getNotifyPort(),
+            true));
+
+    Exchange exchange = Mockito.mock(Exchange.class);
+    Server server = Mockito.mock(Server.class);
+    Mockito.when(exchange.getServer(dataServerConfig.getNotifyPort())).thenReturn(server);
+    center.setExchange(exchange);
 
     List<String> changes1 = Lists.newArrayList("1", "2");
     center.onChange(changes1, DataChangeType.PUT, DC);
-    Assert.assertFalse(center.handleChanges(Maps.newHashMap()));
+    Assert.assertFalse(
+        center.handleChanges(
+            center.transferChangeEvent(dataServerConfig.getNotifyMaxItems()),
+            NodeType.SESSION,
+            dataServerConfig.getNotifyPort(),
+            true));
 
     TestBaseUtils.MockBlotChannel channel = TestBaseUtils.newChannel(9620, "localhost", 1000);
+    Mockito.when(server.selectAvailableChannelsForHostAddress())
+        .thenReturn(
+            Collections.singletonMap(
+                channel.getRemoteAddress().getAddress().getHostAddress(), channel));
+
+    Mockito.when(server.selectAllAvailableChannelsForHostAddress())
+        .thenReturn(
+            Collections.singletonMap(
+                channel.getRemoteAddress().getAddress().getHostAddress(),
+                Lists.newArrayList(channel)));
+
     center.onChange(changes1, DataChangeType.PUT, DC);
     Map<String, List<Channel>> channelsMap = Maps.newHashMap();
     channelsMap.put("localhost", Lists.newArrayList(channel));
-    Assert.assertTrue(center.handleChanges(channelsMap));
+    Assert.assertTrue(
+        center.handleChanges(
+            center.transferChangeEvent(dataServerConfig.getNotifyMaxItems()),
+            NodeType.SESSION,
+            dataServerConfig.getNotifyPort(),
+            true));
 
     Publisher pub = TestBaseUtils.createTestPublisher("testDataId");
     center.onChange(Lists.newArrayList(pub.getDataInfoId()), DataChangeType.PUT, DC);
-    datumCache.getLocalDatumStorage().put(pub);
+    datumStorageDelegate.getLocalDatumStorage().putPublisher(DC, pub);
     // npe
-    Assert.assertTrue(center.handleChanges(channelsMap));
+    Assert.assertTrue(
+        center.handleChanges(
+            center.transferChangeEvent(dataServerConfig.getNotifyMaxItems()),
+            NodeType.SESSION,
+            dataServerConfig.getNotifyPort(),
+            true));
 
     // reject
     center.setNotifyExecutor(TestBaseUtils.rejectExecutor());
     center.onChange(Lists.newArrayList(pub.getDataInfoId()), DataChangeType.PUT, DC);
     double pre = ChangeMetrics.CHANGE_SKIP_COUNTER.get();
-    Assert.assertTrue(center.handleChanges(channelsMap));
+    Assert.assertTrue(
+        center.handleChanges(
+            center.transferChangeEvent(dataServerConfig.getNotifyMaxItems()),
+            NodeType.SESSION,
+            dataServerConfig.getNotifyPort(),
+            true));
     Assert.assertTrue(ChangeMetrics.CHANGE_SKIP_COUNTER.get() == (pre + 1));
   }
 
@@ -110,7 +162,10 @@ public class DataChangeEventCenterTest {
     channel.setActive(false);
     DataChangeEventCenter.ChangeNotifier notifier =
         center.newChangeNotifier(
-            channel, DC, Collections.singletonMap(String.valueOf(100), new DatumVersion(100)));
+            channel,
+            dataServerConfig.getNotifyPort(),
+            DC,
+            Collections.singletonMap(String.valueOf(100), new DatumVersion(100)));
 
     double pre = CHANGE_FAIL_COUNTER.get();
     notifier.run();
@@ -184,10 +239,14 @@ public class DataChangeEventCenterTest {
     for (int i = 0; i < dataServerConfig.getNotifyRetryQueueSize(); i++) {
       center.commitRetry(
           center.newChangeNotifier(
-              channel, DC, Collections.singletonMap(String.valueOf(i), new DatumVersion(100))));
+              channel,
+              dataServerConfig.getNotifyPort(),
+              DC,
+              Collections.singletonMap(String.valueOf(i), new DatumVersion(100))));
       list.add(
           center.newChangeNotifier(
               channel,
+              dataServerConfig.getNotifyPort(),
               DC,
               Collections.singletonMap(String.valueOf(i + 100), new DatumVersion(200))));
     }
@@ -293,6 +352,8 @@ public class DataChangeEventCenterTest {
     Exchange exchange = Mockito.mock(Exchange.class);
     Server server = Mockito.mock(Server.class);
     Mockito.when(exchange.getServer(dataServerConfig.getNotifyPort())).thenReturn(server);
+    Mockito.when(exchange.getServer(multiClusterDataServerConfig.getSyncRemoteSlotLeaderPort()))
+        .thenReturn(server);
 
     center.setExchange(exchange);
     TestBaseUtils.MockBlotChannel channel = TestBaseUtils.newChannel(9620, "localhost", 1000);
@@ -314,7 +375,7 @@ public class DataChangeEventCenterTest {
         .thenThrow(new UnsupportedOperationException());
 
     Publisher pub = TestBaseUtils.createTestPublisher("testDataId");
-    datumCache.getLocalDatumStorage().put(pub);
+    datumStorageDelegate.getLocalDatumStorage().putPublisher(DC, pub);
 
     center.init();
     this.dataServerConfig.setNotifyRetryBackoffMillis(1);
@@ -322,19 +383,22 @@ public class DataChangeEventCenterTest {
 
     center.onChange(Lists.newArrayList(pub.getDataInfoId()), DataChangeType.PUT, DC);
     center.onTempPubChange(pub, DC);
-    Thread.sleep(4000);
+    Thread.sleep(500);
+
+    Mockito.verify(server, Mockito.times(0))
+        .sendSync(Mockito.anyObject(), Mockito.anyObject(), Mockito.anyInt());
 
     channel.setActive(true);
     Assert.assertTrue(channel.isConnected());
 
     center.onChange(Lists.newArrayList(pub.getDataInfoId()), DataChangeType.PUT, DC);
     center.onTempPubChange(pub, DC);
-    Thread.sleep(4000);
+    Thread.sleep(500);
 
     center.onChange(Lists.newArrayList(pub.getDataInfoId()), DataChangeType.PUT, DC);
     center.onTempPubChange(pub, DC);
-    Thread.sleep(4000);
-    Mockito.verify(server, Mockito.times(6))
+    Thread.sleep(500);
+    Mockito.verify(server, Mockito.times(10))
         .sendSync(Mockito.anyObject(), Mockito.anyObject(), Mockito.anyInt());
   }
 }

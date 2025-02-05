@@ -75,8 +75,26 @@ public final class PublisherEnvelope {
     return publisher != null;
   }
 
-  RegisterVersion getVersionIfPub() {
+  public RegisterVersion getVersionIfPub() {
     return isPub() ? registerVersion : null;
+  }
+
+  /**
+   * Getter method for property <tt>sessionProcessId</tt>.
+   *
+   * @return property value of sessionProcessId
+   */
+  public ProcessId getSessionProcessId() {
+    return sessionProcessId;
+  }
+
+  /**
+   * Getter method for property <tt>publisher</tt>.
+   *
+   * @return property value of publisher
+   */
+  public Publisher getPublisher() {
+    return publisher;
   }
 
   boolean isConnectId(ConnectId connectId) {

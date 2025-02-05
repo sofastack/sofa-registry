@@ -468,14 +468,23 @@ public final class AppList extends com.google.protobuf.GeneratedMessageV3
     public long getVersion() {
       return version_;
     }
-    /** <code>int64 version = 1;</code> */
+    /**
+     * <code>int64 version = 1;</code>
+     *
+     * @param value value
+     * @return Builder
+     */
     public Builder setVersion(long value) {
 
       version_ = value;
       onChanged();
       return this;
     }
-    /** <code>int64 version = 1;</code> */
+    /**
+     * <code>int64 version = 1;</code>
+     *
+     * @return Builder
+     */
     public Builder clearVersion() {
 
       version_ = 0L;
@@ -508,7 +517,13 @@ public final class AppList extends com.google.protobuf.GeneratedMessageV3
     public com.google.protobuf.ByteString getAppsBytes(int index) {
       return apps_.getByteString(index);
     }
-    /** <code>repeated string apps = 2;</code> */
+    /**
+     * <code>repeated string apps = 2;</code>
+     *
+     * @param index index
+     * @param value value
+     * @return Builder
+     */
     public Builder setApps(int index, java.lang.String value) {
       if (value == null) {
         throw new NullPointerException();

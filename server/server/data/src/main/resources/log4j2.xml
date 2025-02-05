@@ -582,8 +582,86 @@
             </DefaultRolloverStrategy>
         </RollingRandomAccessFile>
 
+        <!-- multi cluster logger -->
+        <RollingRandomAccessFile name="MULTI-CLUSTER-SLOT-TABLE-APPENDER" fileName="${DATA_LOG_HOME}/registry-multi-slot-table.log"
+                                 filePattern="${DATA_LOG_HOME}/registry-multi-slot-table.log.%d{yyyy-MM-dd}">
+            <PatternLayout pattern="[%d{ISO8601}][%p][%t][%c{0}] - %m%n"/>
+            <ThresholdFilter level="ERROR" onMatch="DENY" onMismatch="NEUTRAL"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy/>
+                <SizeBasedTriggeringPolicy size="256MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="30">
+                <Delete basePath="${DATA_LOG_HOME}" maxDepth="2">
+                    <IfFileName glob="registry-multi-slot-table.log.*" />
+                    <IfLastModified age="10d" />
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingRandomAccessFile>
 
+        <RollingRandomAccessFile name="MULTI-CLUSTER-SYNC-APPENDER" fileName="${DATA_LOG_HOME}/registry-multi-sync.log"
+                                 filePattern="${DATA_LOG_HOME}/registry-multi-sync.log.%d{yyyy-MM-dd}">
+            <PatternLayout pattern="[%d{ISO8601}][%p][%t][%c{0}] - %m%n"/>
+            <ThresholdFilter level="ERROR" onMatch="DENY" onMismatch="NEUTRAL"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy/>
+                <SizeBasedTriggeringPolicy size="256MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="30">
+                <Delete basePath="${DATA_LOG_HOME}" maxDepth="2">
+                    <IfFileName glob="registry-multi-sync.log.*" />
+                    <IfLastModified age="10d" />
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingRandomAccessFile>
 
+        <RollingRandomAccessFile name="MULTI-CLUSTER-SYNC-DIGEST-APPENDER" fileName="${DATA_LOG_HOME}/registry-multi-sync-digest.log"
+                                 filePattern="${DATA_LOG_HOME}/registry-multi-sync-digest.log.%d{yyyy-MM-dd}">
+            <PatternLayout pattern="[%d{ISO8601}][%p][%t][%c{0}] - %m%n"/>
+            <ThresholdFilter level="ERROR" onMatch="DENY" onMismatch="NEUTRAL"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy/>
+                <SizeBasedTriggeringPolicy size="256MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="30">
+                <Delete basePath="${DATA_LOG_HOME}" maxDepth="2">
+                    <IfFileName glob="registry-multi-sync-digest.log.*" />
+                    <IfLastModified age="10d" />
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingRandomAccessFile>
+
+        <RollingRandomAccessFile name="MULTI-CLUSTER-SRV-APPENDER" fileName="${DATA_LOG_HOME}/registry-multi-srv.log"
+                                 filePattern="${DATA_LOG_HOME}/registry-multi-srv.log.%d{yyyy-MM-dd}">
+            <PatternLayout pattern="[%d{ISO8601}][%p][%t][%c{0}] - %m%n"/>
+            <ThresholdFilter level="ERROR" onMatch="DENY" onMismatch="NEUTRAL"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy/>
+                <SizeBasedTriggeringPolicy size="256MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="30">
+                <Delete basePath="${DATA_LOG_HOME}" maxDepth="2">
+                    <IfFileName glob="registry-multi-srv.log.*" />
+                    <IfLastModified age="10d" />
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingRandomAccessFile>
+
+        <RollingRandomAccessFile name="MULTI-PUT-APPENDER" fileName="${DATA_LOG_HOME}/registry-multi-put.log"
+                                 filePattern="${DATA_LOG_HOME}/registry-multi-put.log.%d{yyyy-MM-dd}.%i">
+            <PatternLayout pattern="[%d{ISO8601}][%p][%t][%c{0}] [%X{traceID},%X{address}] - %m%n"/>
+            <ThresholdFilter level="ERROR" onMatch="DENY" onMismatch="NEUTRAL"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy/>
+                <SizeBasedTriggeringPolicy size="256MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="30">
+                <Delete basePath="${DATA_LOG_HOME}" maxDepth="2">
+                    <IfFileName glob="registry-multi-put.log.*" />
+                    <IfLastModified age="30d" />
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingRandomAccessFile>
     </appenders>
 
     <loggers>
@@ -785,6 +863,33 @@
         <logger name="CRITICAL-ERROR" additivity="=false">
             <appender-ref ref="CRITICAL-ERROR-APPENDER"/>
         </logger>
+
+
+        <logger name="MULTI-CLUSTER-SLOT-TABLE" level="${LOG_LEVEL}" additivity="false">
+            <appender-ref ref="MULTI-CLUSTER-SLOT-TABLE-APPENDER"/>
+            <appender-ref ref="COMMON-ERROR-APPENDER"/>
+        </logger>
+
+        <logger name="MULTI-CLUSTER-SYNC" level="${LOG_LEVEL}" additivity="false">
+            <appender-ref ref="MULTI-CLUSTER-SYNC-APPENDER"/>
+            <appender-ref ref="COMMON-ERROR-APPENDER"/>
+        </logger>
+
+        <logger name="MULTI-CLUSTER-SYNC-DIGEST" level="${LOG_LEVEL}" additivity="false">
+            <appender-ref ref="MULTI-CLUSTER-SYNC-DIGEST-APPENDER"/>
+            <appender-ref ref="COMMON-ERROR-APPENDER"/>
+        </logger>
+
+        <logger name="MULTI-CLUSTER-SRV" level="${LOG_LEVEL}" additivity="false">
+            <appender-ref ref="MULTI-CLUSTER-SRV-APPENDER"/>
+            <appender-ref ref="COMMON-ERROR-APPENDER"/>
+        </logger>
+
+        <logger name="MULTI-PUT" level="${LOG_LEVEL}" additivity="false">
+            <appender-ref ref="MULTI-PUT-APPENDER"/>
+            <appender-ref ref="COMMON-ERROR-APPENDER"/>
+        </logger>
+
 
         <!-- root loggers -->
 

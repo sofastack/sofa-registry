@@ -113,6 +113,7 @@ public class FetchSystemPropertyRequestHandler
    * Setter method for property <tt>provideDataService</tt>.
    *
    * @param provideDataService value to be assigned to property provideDataService
+   * @return FetchSystemPropertyRequestHandler
    */
   @VisibleForTesting
   public FetchSystemPropertyRequestHandler setProvideDataService(

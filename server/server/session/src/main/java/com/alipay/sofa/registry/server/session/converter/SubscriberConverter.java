@@ -61,6 +61,7 @@ public final class SubscriberConverter {
           subscriber.setAttributes(source.getAttributes());
           subscriber.setClientVersion(ClientVersion.StoreData);
           subscriber.internAcceptEncoding(source.getAcceptEncoding());
+          subscriber.setAcceptMulti(source.acceptMulti());
 
           DataInfo dataInfo =
               new DataInfo(source.getInstanceId(), source.getDataId(), source.getGroup());
@@ -74,8 +75,8 @@ public final class SubscriberConverter {
   /**
    * Convert watcher.
    *
-   * @param configuratorRegister
-   * @return
+   * @param configuratorRegister configuratorRegister
+   * @return Watcher
    */
   public static Watcher convert(ConfiguratorRegister configuratorRegister) {
     Converter<ConfiguratorRegister, Watcher> converter =

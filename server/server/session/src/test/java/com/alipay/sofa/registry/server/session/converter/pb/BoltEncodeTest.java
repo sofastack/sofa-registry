@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.com.alipay.sofa.registry.server.session.converter.pb;
+package com.alipay.sofa.registry.server.session.converter.pb;
 
 import com.alipay.remoting.CustomSerializerManager;
 import com.alipay.remoting.exception.DeserializationException;
@@ -28,8 +28,6 @@ import com.alipay.sofa.registry.core.model.DataBox;
 import com.alipay.sofa.registry.core.model.PublisherRegister;
 import com.alipay.sofa.registry.remoting.bolt.serializer.ProtobufCustomSerializer;
 import com.alipay.sofa.registry.remoting.bolt.serializer.ProtobufSerializer;
-import com.alipay.sofa.registry.server.session.converter.pb.DataBoxConvertor;
-import com.alipay.sofa.registry.server.session.converter.pb.PublisherRegisterConvertor;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;

@@ -16,13 +16,14 @@
  */
 package com.alipay.sofa.registry.jdbc.domain;
 
+import com.alipay.sofa.registry.jdbc.version.config.ConfigEntry;
 import java.util.Date;
 
 /**
  * @author xiaojian.xj
  * @version $Id: ProvideDataDomain.java, v 0.1 2021年03月13日 19:29 xiaojian.xj Exp $
  */
-public class ProvideDataDomain {
+public class ProvideDataDomain implements ConfigEntry {
 
   /** primary dataKey */
   private long id;
@@ -167,6 +168,7 @@ public class ProvideDataDomain {
    *
    * @return property value of dataVersion
    */
+  @Override
   public long getDataVersion() {
     return dataVersion;
   }

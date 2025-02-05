@@ -44,6 +44,10 @@ public class PropertySplitter {
    * Example: property=KEY1:VALUE1.1,VALUE1.2|KEY2:VALUE2.1,VALUE2.2, defaultKey=ignored Example:
    * property = KEY1:VALUE1.1,VALUE1.2, defaultKey=KEY2 Example: property = VALUE1.1,VALUE1.2,
    * defaultKey=KEY2
+   *
+   * @param defaultKey defaultKey
+   * @param property property
+   * @return Map Map
    */
   public Map<String, Collection<String>> mapOfKeyList(String defaultKey, String property) {
     if (StringUtils.isBlank(property)) {
@@ -74,7 +78,12 @@ public class PropertySplitter {
     return mapOfList;
   }
 
-  /** Example: one.example.property = VALUE1,VALUE2,VALUE3,VALUE4 */
+  /**
+   * Example: one.example.property = VALUE1,VALUE2,VALUE3,VALUE4
+   *
+   * @param property property
+   * @return Collection Collection
+   */
   public Collection<String> list(String property) {
     if (property == null) {
       return new ArrayList<>();
@@ -82,7 +91,12 @@ public class PropertySplitter {
     return this.list(property, ",");
   }
 
-  /** Example: one.example.property = VALUE1.1,VALUE1.2|VALUE2.1,VALUE2.2 */
+  /**
+   * Example: one.example.property = VALUE1.1,VALUE1.2|VALUE2.1,VALUE2.2
+   *
+   * @param property property
+   * @return Collection Collection
+   */
   public Collection<Collection<String>> groupedList(String property) {
     if (property == null) {
       return new ArrayList<>();

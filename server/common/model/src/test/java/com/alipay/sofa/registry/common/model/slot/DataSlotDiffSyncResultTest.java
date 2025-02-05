@@ -20,6 +20,8 @@ import com.alipay.sofa.registry.common.model.PublisherDigestUtil;
 import com.alipay.sofa.registry.common.model.PublisherUtils;
 import com.alipay.sofa.registry.common.model.dataserver.DatumDigest;
 import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
+import com.alipay.sofa.registry.common.model.slot.filter.SyncAcceptorRequest;
+import com.alipay.sofa.registry.common.model.slot.filter.SyncSlotAcceptorManager;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -42,6 +44,14 @@ public class DataSlotDiffSyncResultTest {
   private static final Logger LOG = LoggerFactory.getLogger(DataSlotDiffSyncResultTest.class);
   private static final AtomicLong SEQ = new AtomicLong();
 
+  private static final SyncSlotAcceptorManager ACCEPT_ALL =
+      new SyncSlotAcceptorManager() {
+        @Override
+        public boolean accept(SyncAcceptorRequest request) {
+          return true;
+        }
+      };
+
   @Test
   public void testDiffDigestResult_emptyTarget() {
     Map<String, Integer> m = Maps.newHashMap();
@@ -49,7 +59,7 @@ public class DataSlotDiffSyncResultTest {
     m.put("b", 200);
     Map<String, Map<String, Publisher>> publishers = randPublishers(m);
     DataSlotDiffDigestResult result =
-        DataSlotDiffUtils.diffDigestResult(Collections.emptyMap(), publishers);
+        DataSlotDiffUtils.diffDigestResult(Collections.emptyMap(), publishers, ACCEPT_ALL);
     Assert.assertFalse(result.getAddedDataInfoIds().isEmpty());
     Assert.assertEquals(result.getAddedDataInfoIds(), Lists.newArrayList("a", "b"));
     Assert.assertTrue(result.getRemovedDataInfoIds().isEmpty());
@@ -61,16 +71,17 @@ public class DataSlotDiffSyncResultTest {
     m.put("a", 100);
     m.put("b", 200);
     Map<String, Map<String, Publisher>> publishers = randPublishers(m);
-    Map<String, DatumSummary> summaryMap = PublisherUtils.getDatumSummary(publishers);
+    Map<String, DatumSummary> summaryMap = PublisherUtils.getDatumSummary(publishers, ACCEPT_ALL);
     Map<String, DatumDigest> digestMap = PublisherDigestUtil.digest(summaryMap);
-    DataSlotDiffDigestResult result = DataSlotDiffUtils.diffDigestResult(digestMap, publishers);
+    DataSlotDiffDigestResult result =
+        DataSlotDiffUtils.diffDigestResult(digestMap, publishers, ACCEPT_ALL);
     Assert.assertTrue(result.getAddedDataInfoIds().isEmpty());
     Assert.assertTrue(result.getRemovedDataInfoIds().isEmpty());
 
     Map<String, DatumDigest> test = Maps.newHashMap(digestMap);
 
     test.put("c", new DatumDigest(1, 0, 0, 0, (short) 0, (short) 0));
-    result = DataSlotDiffUtils.diffDigestResult(test, publishers);
+    result = DataSlotDiffUtils.diffDigestResult(test, publishers, ACCEPT_ALL);
     Assert.assertTrue(result.getAddedDataInfoIds().isEmpty());
     Assert.assertFalse(result.getRemovedDataInfoIds().isEmpty());
 
@@ -79,14 +90,14 @@ public class DataSlotDiffSyncResultTest {
     test = Maps.newHashMap(digestMap);
     test.remove("b");
     test.put("c", new DatumDigest(1, 0, 0, 0, (short) 0, (short) 0));
-    result = DataSlotDiffUtils.diffDigestResult(test, publishers);
+    result = DataSlotDiffUtils.diffDigestResult(test, publishers, ACCEPT_ALL);
     // add "b"
     Assert.assertEquals(result.getAddedDataInfoIds(), Lists.newArrayList("b"));
 
     // delete "c"
     Assert.assertTrue(result.getRemovedDataInfoIds().size() == 1);
     Assert.assertTrue(result.getRemovedDataInfoIds().contains("c"));
-    DataSlotDiffUtils.logDiffResult(result, 10);
+    DataSlotDiffUtils.logDiffResult("testDC", result, 10, LOG);
   }
 
   @Test
@@ -98,9 +109,9 @@ public class DataSlotDiffSyncResultTest {
     Map<String, Map<String, Publisher>> publishers = randPublishers(m);
 
     // the same
-    Map<String, DatumSummary> summaryMap = PublisherUtils.getDatumSummary(publishers);
+    Map<String, DatumSummary> summaryMap = PublisherUtils.getDatumSummary(publishers, ACCEPT_ALL);
     DataSlotDiffPublisherResult result =
-        DataSlotDiffUtils.diffPublishersResult(summaryMap.values(), publishers, 400);
+        DataSlotDiffUtils.diffPublishersResult(summaryMap.values(), publishers, 400, ACCEPT_ALL);
     Assert.assertFalse(result.isHasRemain());
     Assert.assertTrue(result.getUpdatedPublishers().isEmpty());
     Assert.assertTrue(result.getRemovedPublishers().isEmpty());
@@ -116,7 +127,8 @@ public class DataSlotDiffSyncResultTest {
     // not reach max.publishers
     summaryMap.put("c", new DatumSummary("c"));
     summaryMap.put("d", new DatumSummary("d"));
-    result = DataSlotDiffUtils.diffPublishersResult(summaryMap.values(), publishers, 1000);
+    result =
+        DataSlotDiffUtils.diffPublishersResult(summaryMap.values(), publishers, 1000, ACCEPT_ALL);
     Assert.assertFalse(result.isHasRemain());
     Assert.assertTrue(result.getRemovedPublishers().isEmpty());
 
@@ -125,7 +137,8 @@ public class DataSlotDiffSyncResultTest {
     checkAddedPublisher(publishers, result);
 
     // reach max.publishers
-    result = DataSlotDiffUtils.diffPublishersResult(summaryMap.values(), publishers, 100);
+    result =
+        DataSlotDiffUtils.diffPublishersResult(summaryMap.values(), publishers, 100, ACCEPT_ALL);
     Assert.assertTrue(result.isHasRemain());
     Assert.assertTrue(result.getRemovedPublishers().isEmpty());
 
@@ -138,7 +151,7 @@ public class DataSlotDiffSyncResultTest {
     checkAddedPublisher(publishers, result);
 
     // delete a dataInfoId, delete b.publisher, modify c.publisher,  add d.publisher
-    summaryMap = PublisherUtils.getDatumSummary(publishers);
+    summaryMap = PublisherUtils.getDatumSummary(publishers, ACCEPT_ALL);
     publishers.remove("a");
 
     Iterator<Map.Entry<String, Publisher>> iter = publishers.get("b").entrySet().iterator();
@@ -155,7 +168,8 @@ public class DataSlotDiffSyncResultTest {
     publishers.get("d").put(addD.getRegisterId(), addD);
 
     // not reach max
-    result = DataSlotDiffUtils.diffPublishersResult(summaryMap.values(), publishers, 400);
+    result =
+        DataSlotDiffUtils.diffPublishersResult(summaryMap.values(), publishers, 400, ACCEPT_ALL);
     Assert.assertFalse(result.isHasRemain());
     Assert.assertTrue(result.getRemovedPublishers().get("b").size() == 1);
     Assert.assertEquals(result.getRemovedPublishers().get("b").get(0), removedB.getRegisterId());
@@ -166,10 +180,10 @@ public class DataSlotDiffSyncResultTest {
     Assert.assertEquals(result.getUpdatedPublishers().get("c").get(0), modifyC);
     Assert.assertEquals(result.getUpdatedPublishers().get("d").get(0), addD);
 
-    DataSlotDiffUtils.logDiffResult(result, 10);
+    DataSlotDiffUtils.logDiffResult("testDC", result, 10, LOG);
 
     // reach max
-    result = DataSlotDiffUtils.diffPublishersResult(summaryMap.values(), publishers, 1);
+    result = DataSlotDiffUtils.diffPublishersResult(summaryMap.values(), publishers, 1, ACCEPT_ALL);
     Assert.assertTrue(result.isHasRemain());
     Assert.assertTrue(result.getRemovedPublishers().get("b").size() == 1);
     Assert.assertEquals(result.getRemovedPublishers().get("b").get(0), removedB.getRegisterId());
@@ -189,7 +203,7 @@ public class DataSlotDiffSyncResultTest {
       Assert.assertEquals(result.getUpdatedPublishers().get("d").size(), 1);
       Assert.assertEquals(result.getUpdatedPublishers().get("d").get(0), addD);
     }
-    DataSlotDiffUtils.logDiffResult(result, 10);
+    DataSlotDiffUtils.logDiffResult("testDC", result, 10, LOG);
   }
 
   private static void checkAddedPublisher(

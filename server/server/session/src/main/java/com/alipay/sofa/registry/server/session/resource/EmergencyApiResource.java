@@ -81,7 +81,11 @@ public class EmergencyApiResource {
     client = JerseyClient.getInstance().getClient();
   }
 
-  /** close push by repository when meta leader is down */
+  /**
+   * close push by repository when meta leader is down
+   *
+   * @return CommonResponse
+   */
   @POST
   @Path("/pushSwitch/stop")
   @Produces(MediaType.APPLICATION_JSON)
@@ -103,7 +107,12 @@ public class EmergencyApiResource {
     return CommonResponse.buildSuccessResponse();
   }
 
-  /** stop server by repository when meta leader is down */
+  /**
+   * stop server by repository when meta leader is down
+   *
+   * @param token token
+   * @return CommonResponse
+   */
   @POST
   @Path("/shutdown")
   @Produces(MediaType.APPLICATION_JSON)
@@ -135,7 +144,11 @@ public class EmergencyApiResource {
     return CommonResponse.buildSuccessResponse();
   }
 
-  /** close push broadcast on zone when meta leader is down */
+  /**
+   * close push broadcast on zone when meta leader is down
+   *
+   * @return CommonResponse
+   */
   @GET
   @Path("/pushSwitch/zone/stop")
   @Produces(MediaType.APPLICATION_JSON)
@@ -191,6 +204,7 @@ public class EmergencyApiResource {
    * Setter method for property <tt>metaNodeService</tt>.
    *
    * @param metaServerService value to be assigned to property metaNodeService
+   * @return EmergencyApiResource
    */
   @VisibleForTesting
   public EmergencyApiResource setMetaNodeService(MetaServerService metaServerService) {

@@ -20,6 +20,8 @@ import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.common.model.slot.func.SlotFunctionRegistry;
 import com.alipay.sofa.registry.server.session.AbstractSessionServerTestBase;
+import com.alipay.sofa.registry.server.session.TestUtils;
+import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.shared.slot.SlotTableRecorder;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
 import com.google.common.collect.Sets;
@@ -30,16 +32,24 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import org.assertj.core.util.Lists;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 public class SlotTableCacheImplTest extends AbstractSessionServerTestBase {
 
+  private static final String DATACENTER = "testdc";
+
   private SlotTableCacheImpl slotTableCache = new SlotTableCacheImpl();
+
+  private SessionServerConfig sessionServerConfig = TestUtils.newSessionConfig(DATACENTER);
+
+  @Before
+  public void init() {
+    slotTableCache.setSessionServerConfig(sessionServerConfig);
+  }
 
   @Test
   public void testSlotOf() {
-
-    int i = slotTableCache.slotOf("foo#@#DEFAULT_INSTANCE_ID#@#SOFA_APP");
 
     String dataInfoId = randomString();
     int slotId = slotTableCache.slotOf(dataInfoId);
@@ -62,16 +72,16 @@ public class SlotTableCacheImplTest extends AbstractSessionServerTestBase {
 
   @Test
   public void testGetInfo() {
-    slotTableCache.updateSlotTable(randomSlotTable());
+    slotTableCache.updateLocalSlotTable(randomSlotTable());
     String dataInfoId = randomString();
     Assert.assertEquals(
-        slotTableCache.getSlot(SlotFunctionRegistry.getFunc().slotOf(dataInfoId)),
-        slotTableCache.getSlot(dataInfoId));
+        slotTableCache.getSlot(DATACENTER, SlotFunctionRegistry.getFunc().slotOf(dataInfoId)),
+        slotTableCache.getSlot(DATACENTER, dataInfoId));
     Assert.assertSame(
-        slotTableCache.getSlot(SlotFunctionRegistry.getFunc().slotOf(dataInfoId)),
-        slotTableCache.getSlot(dataInfoId));
-    Assert.assertNull(slotTableCache.getLeader(13685));
-    Assert.assertNotNull(slotTableCache.getLeader(3));
+        slotTableCache.getSlot(DATACENTER, SlotFunctionRegistry.getFunc().slotOf(dataInfoId)),
+        slotTableCache.getSlot(DATACENTER, dataInfoId));
+    Assert.assertNull(slotTableCache.getLeader(DATACENTER, 13685));
+    Assert.assertNotNull(slotTableCache.getLeader(DATACENTER, 3));
   }
 
   @Test
@@ -91,7 +101,7 @@ public class SlotTableCacheImplTest extends AbstractSessionServerTestBase {
         new Runnable() {
           @Override
           public void run() {
-            slotTableCache.updateSlotTable(slotTable);
+            slotTableCache.updateLocalSlotTable(slotTable);
             latch.countDown();
           }
         });
@@ -111,7 +121,7 @@ public class SlotTableCacheImplTest extends AbstractSessionServerTestBase {
               @Override
               public void run() {
                 try {
-                  epoches.add(slotTableCache.getEpoch());
+                  epoches.add(slotTableCache.getEpoch(DATACENTER));
                 } catch (Throwable th) {
                   result.set(false);
                 }
@@ -123,7 +133,7 @@ public class SlotTableCacheImplTest extends AbstractSessionServerTestBase {
               @Override
               public void run() {
                 try {
-                  slotTableCache.updateSlotTable(randomSlotTable());
+                  slotTableCache.updateLocalSlotTable(randomSlotTable());
                 } catch (Throwable th) {
                   result.set(false);
                 }
@@ -138,29 +148,28 @@ public class SlotTableCacheImplTest extends AbstractSessionServerTestBase {
 
   @Test
   public void testCurrentSlotTable() throws InterruptedException {
-    slotTableCache.updateSlotTable(randomSlotTable());
-    Assert.assertNotSame(
-        slotTableCache.getCurrentSlotTable(), slotTableCache.getCurrentSlotTable());
-    Assert.assertEquals(slotTableCache.getCurrentSlotTable(), slotTableCache.getCurrentSlotTable());
-    SlotTable prev = slotTableCache.getCurrentSlotTable();
+    slotTableCache.updateLocalSlotTable(randomSlotTable());
+    Assert.assertNotSame(slotTableCache.getLocalSlotTable(), slotTableCache.getLocalSlotTable());
+    Assert.assertEquals(slotTableCache.getLocalSlotTable(), slotTableCache.getLocalSlotTable());
+    SlotTable prev = slotTableCache.getLocalSlotTable();
     CountDownLatch latch = new CountDownLatch(1);
     executors.execute(
         new Runnable() {
           @Override
           public void run() {
-            slotTableCache.updateSlotTable(randomSlotTable());
+            slotTableCache.updateLocalSlotTable(randomSlotTable());
             latch.countDown();
           }
         });
     latch.await();
-    Assert.assertNotEquals(prev, slotTableCache.getCurrentSlotTable());
+    Assert.assertNotEquals(prev, slotTableCache.getLocalSlotTable());
   }
 
   @Test
   public void testWillNotUpdateLowerEpoch() {
-    slotTableCache.updateSlotTable(randomSlotTable());
-    slotTableCache.updateSlotTable(new SlotTable(123, randomSlotTable().getSlots()));
-    Assert.assertNotEquals(123, slotTableCache.getCurrentSlotTable().getEpoch());
+    slotTableCache.updateLocalSlotTable(randomSlotTable());
+    slotTableCache.updateLocalSlotTable(new SlotTable(123, randomSlotTable().getSlots()));
+    Assert.assertNotEquals(123, slotTableCache.getLocalSlotTable().getEpoch());
   }
 
   @Test
@@ -169,6 +178,6 @@ public class SlotTableCacheImplTest extends AbstractSessionServerTestBase {
     List<Slot> incorrect = correct.getSlots();
     incorrect.add(new Slot(13684, "", DatumVersionUtil.nextId(), Lists.newArrayList()));
     SlotTable slotTable = new SlotTable(correct.getEpoch(), incorrect);
-    slotTableCache.updateSlotTable(slotTable);
+    slotTableCache.updateLocalSlotTable(slotTable);
   }
 }

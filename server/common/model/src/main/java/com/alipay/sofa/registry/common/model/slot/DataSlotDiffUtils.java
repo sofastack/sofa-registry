@@ -21,9 +21,10 @@ import com.alipay.sofa.registry.common.model.PublisherUtils;
 import com.alipay.sofa.registry.common.model.RegisterVersion;
 import com.alipay.sofa.registry.common.model.dataserver.DatumDigest;
 import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
+import com.alipay.sofa.registry.common.model.slot.filter.SyncAcceptorRequest;
+import com.alipay.sofa.registry.common.model.slot.filter.SyncSlotAcceptorManager;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.util.*;
@@ -33,14 +34,15 @@ import java.util.*;
  * @version v 0.1 2020-11-24 15:46 yuzhi.lyz Exp $
  */
 public final class DataSlotDiffUtils {
-  private static final Logger SYNC_LOGGER = LoggerFactory.getLogger("SYNC-SRV");
 
   private DataSlotDiffUtils() {}
 
   public static DataSlotDiffDigestResult diffDigestResult(
       Map<String, DatumDigest> targetDigestMap,
-      Map<String, Map<String, Publisher>> sourcePublishers) {
-    Map<String, DatumSummary> sourceSummaryMap = PublisherUtils.getDatumSummary(sourcePublishers);
+      Map<String, Map<String, Publisher>> sourcePublishers,
+      SyncSlotAcceptorManager acceptorManager) {
+    Map<String, DatumSummary> sourceSummaryMap =
+        PublisherUtils.getDatumSummary(sourcePublishers, acceptorManager);
     Map<String, DatumDigest> digestMap = PublisherDigestUtil.digest(sourceSummaryMap);
     return diffDigest(targetDigestMap, digestMap);
   }
@@ -75,7 +77,8 @@ public final class DataSlotDiffUtils {
   public static DataSlotDiffPublisherResult diffPublishersResult(
       Collection<DatumSummary> targetDatumSummaries,
       Map<String, Map<String, Publisher>> sourcePublishers,
-      int publisherMaxNum) {
+      int publisherMaxNum,
+      SyncSlotAcceptorManager acceptorManager) {
     Map<String, List<Publisher>> updatePublishers =
         Maps.newHashMapWithExpectedSize(targetDatumSummaries.size());
     Map<String, List<String>> removedPublishers = new HashMap<>();
@@ -100,6 +103,12 @@ public final class DataSlotDiffUtils {
       List<Publisher> publishers = new ArrayList<>();
       Map<String, RegisterVersion> versions = summary.getPublisherVersions();
       for (Map.Entry<String, Publisher> p : publisherMap.entrySet()) {
+
+        // filter publishers
+        if (!acceptorManager.accept(
+            SyncAcceptorRequest.buildRequest(dataInfoId, p.getValue().getPublishSource()))) {
+          continue;
+        }
         final String registerId = p.getKey();
         if (!versions.containsKey(registerId)) {
           publishers.add(p.getValue());
@@ -128,10 +137,13 @@ public final class DataSlotDiffUtils {
     return result;
   }
 
-  public static void logDiffResult(DataSlotDiffPublisherResult result, int slotId) {
+  public static void logDiffResult(
+      String requestDataCenter, DataSlotDiffPublisherResult result, int slotId, Logger logger) {
     if (!result.isEmpty()) {
-      SYNC_LOGGER.info(
-          "DiffPublisher, slotId={}, remain={}, update={}/{}, remove={}/{}, removes={}",
+
+      logger.info(
+          "DiffPublisher, requestDataCenter={}, slotId={}, remain={}, update={}/{}, remove={}/{}, removes={}",
+          requestDataCenter,
           slotId,
           result.isHasRemain(),
           result.getUpdatedPublishers().size(),
@@ -142,10 +154,12 @@ public final class DataSlotDiffUtils {
     }
   }
 
-  public static void logDiffResult(DataSlotDiffDigestResult result, int slotId) {
+  public static void logDiffResult(
+      String requestDataCenter, DataSlotDiffDigestResult result, int slotId, Logger logger) {
     if (!result.isEmpty()) {
-      SYNC_LOGGER.info(
-          "DiffDigest, slotId={}, update={}, add={}, remove={}, adds={}, removes={}",
+      logger.info(
+          "DiffDigest, requestDataCenter={}, slotId={}, update={}, add={}, remove={}, adds={}, removes={}",
+          requestDataCenter,
           slotId,
           result.getUpdatedDataInfoIds().size(),
           result.getAddedDataInfoIds().size(),

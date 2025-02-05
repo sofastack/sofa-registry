@@ -29,32 +29,32 @@ public interface ProvideDataService extends MetaLeaderElectorListener {
   /**
    * save or update provideData
    *
-   * @param persistenceData
-   * @return
+   * @param persistenceData persistenceData
+   * @return boolean
    */
   boolean saveProvideData(PersistenceData persistenceData);
 
   /**
    * save or update provideData with expectVersion
    *
-   * @param persistenceData
-   * @return
+   * @param persistenceData persistenceData
+   * @return boolean
    */
   boolean saveProvideData(PersistenceData persistenceData, long expectVersion);
 
   /**
    * query provideData by key
    *
-   * @param key
-   * @return
+   * @param key key
+   * @return DBResponse
    */
   DBResponse<PersistenceData> queryProvideData(String key);
 
   /**
    * delete provideData
    *
-   * @param key
-   * @return
+   * @param key key
+   * @return boolean
    */
   boolean removeProvideData(String key);
 }

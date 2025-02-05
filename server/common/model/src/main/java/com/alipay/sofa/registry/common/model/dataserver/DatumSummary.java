@@ -17,6 +17,8 @@
 package com.alipay.sofa.registry.common.model.dataserver;
 
 import com.alipay.sofa.registry.common.model.RegisterVersion;
+import com.alipay.sofa.registry.common.model.slot.filter.SyncAcceptorRequest;
+import com.alipay.sofa.registry.common.model.slot.filter.SyncSlotAcceptorManager;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.google.common.collect.Maps;
 import java.io.Serializable;
@@ -43,9 +45,18 @@ public class DatumSummary implements Serializable {
     this.publisherVersions = new HashMap<>();
   }
 
-  public static DatumSummary of(String dataInfoId, Map<String, Publisher> publisherMap) {
+  public static DatumSummary of(
+      String dataInfoId,
+      Map<String, Publisher> publisherMap,
+      SyncSlotAcceptorManager acceptorManager) {
     Map<String, RegisterVersion> versionMap = Maps.newHashMapWithExpectedSize(publisherMap.size());
     for (Map.Entry<String, Publisher> e : publisherMap.entrySet()) {
+      // filter publisher
+      if (!acceptorManager.accept(
+          SyncAcceptorRequest.buildRequest(dataInfoId, e.getValue().getPublishSource()))) {
+        continue;
+      }
+
       versionMap.put(e.getKey(), e.getValue().registerVersion());
     }
     return new DatumSummary(dataInfoId, versionMap);

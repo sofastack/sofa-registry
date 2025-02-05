@@ -21,7 +21,6 @@ import java.util.Collection;
 
 /** A storage engine that supports aggregation by a specific key. */
 public interface SlotStoreEngine<T extends StoreData<String>> extends StoreEngine<T> {
-
   /**
    * All StoreData belonging to the same slot.
    *

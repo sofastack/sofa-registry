@@ -17,7 +17,10 @@
 package com.alipay.sofa.registry.server.session.cache;
 
 import com.alipay.sofa.registry.common.model.store.WordCache;
+import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.alipay.sofa.registry.util.StringFormatter;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @author shangyu.wh
@@ -27,13 +30,15 @@ public class DatumKey implements EntityType {
 
   private final String dataInfoId;
 
-  private final String dataCenter;
+  private final Set<String> dataCenters;
 
   private final String uniqueKey;
 
-  public DatumKey(String dataInfoId, String dataCenter) {
+  public DatumKey(String dataInfoId, Set<String> dataCenters) {
+    ParaCheckUtil.checkNotEmpty(dataCenters, "dataCenters");
     this.dataInfoId = WordCache.getWordCache(dataInfoId);
-    this.dataCenter = WordCache.getWordCache(dataCenter);
+    this.dataCenters =
+        dataCenters.stream().map(WordCache::getWordCache).collect(Collectors.toSet());
     this.uniqueKey = WordCache.getWordCache(createUniqueKey());
   }
 
@@ -43,8 +48,14 @@ public class DatumKey implements EntityType {
   }
 
   private String createUniqueKey() {
-    StringBuilder sb = new StringBuilder(dataCenter.length() + dataInfoId.length() + 1);
-    sb.append(dataCenter).append(COMMA).append(dataInfoId);
+    int dataCenterSize = 0;
+    StringBuilder builder = new StringBuilder();
+    for (String dataCenter : dataCenters) {
+      dataCenterSize += dataCenter.length();
+      builder.append(dataCenter).append(COMMA);
+    }
+    StringBuilder sb = new StringBuilder(dataCenterSize + dataInfoId.length() + 1);
+    sb.append(builder).append(dataInfoId);
     return sb.toString();
   }
 
@@ -72,12 +83,12 @@ public class DatumKey implements EntityType {
   }
 
   /**
-   * Getter method for property <tt>dataCenter</tt>.
+   * Getter method for property <tt>dataCenters</tt>.
    *
-   * @return property value of dataCenter
+   * @return property value of dataCenters
    */
-  public String getDataCenter() {
-    return dataCenter;
+  public Set<String> getDataCenters() {
+    return dataCenters;
   }
 
   @Override

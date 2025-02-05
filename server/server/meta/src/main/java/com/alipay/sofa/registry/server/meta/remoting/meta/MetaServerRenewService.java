@@ -42,7 +42,7 @@ public class MetaServerRenewService {
 
   @Autowired private NodeConfig nodeConfig;
 
-  @Autowired protected MetaNodeExchange metaNodeExchange;
+  @Autowired protected LocalMetaExchanger localMetaExchanger;
 
   @Autowired protected MetaServerConfig metaServerConfig;
 
@@ -85,13 +85,21 @@ public class MetaServerRenewService {
     final String leaderIp = metaLeaderService.getLeader();
     HeartbeatRequest heartbeatRequest =
         new HeartbeatRequest<>(
-            createNode(), -1L, nodeConfig.getLocalDataCenter(), System.currentTimeMillis(), null);
+            createNode(),
+            -1L,
+            nodeConfig.getLocalDataCenter(),
+            System.currentTimeMillis(),
+            null,
+            null);
 
     boolean success = true;
     final long startTimestamp = System.currentTimeMillis();
     try {
       GenericResponse resp =
-          (GenericResponse) metaNodeExchange.sendRequest(heartbeatRequest).getResult();
+          (GenericResponse)
+              localMetaExchanger
+                  .sendRequest(metaServerConfig.getLocalDataCenter(), heartbeatRequest)
+                  .getResult();
 
       if (resp == null || !resp.isSuccess()) {
         success = false;

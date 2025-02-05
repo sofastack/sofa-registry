@@ -35,6 +35,8 @@ public class NodeOperatingService {
 
   @Autowired protected ProvideDataService provideDataService;
 
+  protected Tuple<Long, NodeServerOperateInfo> currentVersion = null;
+
   public NodeOperatingService() {}
 
   public NodeOperatingService(ProvideDataService provideDataService) {
@@ -50,8 +52,15 @@ public class NodeOperatingService {
     }
 
     String entityData = PersistenceDataBuilder.getEntityData(response.getEntity());
-    NodeServerOperateInfo read = JsonUtils.read(entityData, NodeServerOperateInfo.class);
-    return new Tuple<>(response.getEntity().getVersion(), read);
+
+    if (null != currentVersion) {
+      if (response.getEntity().getVersion() <= currentVersion.o1) {
+        return currentVersion;
+      }
+    }
+    NodeServerOperateInfo read = JsonUtils.gsonRead(entityData, NodeServerOperateInfo.class);
+    currentVersion = new Tuple<>(response.getEntity().getVersion(), read);
+    return currentVersion;
   }
 
   /**

@@ -16,10 +16,10 @@
  */
 package com.alipay.sofa.registry.jdbc.elector;
 
+import com.alipay.sofa.registry.common.model.elector.DistributeLockInfo;
 import com.alipay.sofa.registry.jdbc.AbstractH2DbTestBase;
 import com.alipay.sofa.registry.jdbc.config.MetaElectorConfigBean;
 import com.alipay.sofa.registry.jdbc.constant.TableEnum;
-import com.alipay.sofa.registry.jdbc.domain.DistributeLockDomain;
 import com.alipay.sofa.registry.jdbc.mapper.DistributeLockMapper;
 import com.alipay.sofa.registry.store.api.config.DefaultCommonConfig;
 import com.alipay.sofa.registry.store.api.elector.AbstractLeaderElector;
@@ -76,7 +76,7 @@ public class MetaJdbcLeaderElectorTest extends AbstractH2DbTestBase {
     leaderElector.change2Follow();
     waitConditionUntilTimeOut(() -> leaderElector.amILeader(), 5000);
 
-    DistributeLockDomain domain =
+    DistributeLockInfo domain =
         distributeLockMapper.queryDistLock(
             defaultCommonConfig.getClusterId(TableEnum.DISTRIBUTE_LOCK.getTableName()),
             "META-MASTER");
@@ -86,7 +86,7 @@ public class MetaJdbcLeaderElectorTest extends AbstractH2DbTestBase {
 
   @Test
   public void testLeaderInfo() {
-    DistributeLockDomain lock = new DistributeLockDomain();
+    DistributeLockInfo lock = new DistributeLockInfo();
     lock.setOwner("testOwner");
     lock.setGmtModified(new Date());
     lock.setDuration(1000);
@@ -158,7 +158,7 @@ public class MetaJdbcLeaderElectorTest extends AbstractH2DbTestBase {
     }
     // 0(旧版) 抢到leader
     loops.get(0).runUnthrowable();
-    DistributeLockDomain domain =
+    DistributeLockInfo domain =
         distributeLockMapper.queryDistLock(
             defaultCommonConfig.getClusterId(TableEnum.DISTRIBUTE_LOCK.getTableName()),
             MetaJdbcLeaderElector.lockName);

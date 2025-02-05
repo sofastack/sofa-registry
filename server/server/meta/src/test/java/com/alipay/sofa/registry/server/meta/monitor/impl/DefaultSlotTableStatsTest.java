@@ -52,7 +52,7 @@ public class DefaultSlotTableStatsTest extends AbstractMetaServerTestBase {
     nodeConfig = mock(NodeConfig.class);
     when(nodeConfig.getLocalDataCenter()).thenReturn(getDc());
     slotManager = new SimpleSlotManager();
-    slotTableStats = new DefaultSlotTableStats(slotManager, new MetaServerConfigBean());
+    slotTableStats = new DefaultSlotTableStats(slotManager, new MetaServerConfigBean(commonConfig));
     dataNodes =
         Lists.newArrayList(
             new DataNode(randomURL(randomIp()), getDc()),
@@ -138,7 +138,7 @@ public class DefaultSlotTableStatsTest extends AbstractMetaServerTestBase {
   @Test
   public void testDataReportHeartbeatWhenInit() throws InitializeException {
     slotManager = new SimpleSlotManager();
-    slotTableStats = new DefaultSlotTableStats(slotManager, new MetaServerConfigBean());
+    slotTableStats = new DefaultSlotTableStats(slotManager, new MetaServerConfigBean(commonConfig));
     slotTableStats.initialize();
     List<BaseSlotStatus> slotStatuses = Lists.newArrayList();
     for (int slotId = 0; slotId < SlotConfig.SLOT_NUM; slotId++) {
@@ -150,7 +150,7 @@ public class DefaultSlotTableStatsTest extends AbstractMetaServerTestBase {
 
   @Test
   public void testFollowerStatus() {
-    MetaServerConfigBean configBean = new MetaServerConfigBean();
+    MetaServerConfigBean configBean = new MetaServerConfigBean(commonConfig);
     Assert.assertFalse(slotTableStats.isSlotFollowersStable());
     DataNode dataNode = new DataNode(randomURL(randomIp()), getDc());
     List<BaseSlotStatus> slotStatuses = Lists.newArrayList();
@@ -346,7 +346,7 @@ public class DefaultSlotTableStatsTest extends AbstractMetaServerTestBase {
   @Test
   public void testIsFollowerStableNPE() {
     slotManager = new SimpleSlotManager();
-    slotTableStats = new DefaultSlotTableStats(slotManager, new MetaServerConfigBean());
+    slotTableStats = new DefaultSlotTableStats(slotManager, new MetaServerConfigBean(commonConfig));
     slotTableStats.initialize();
     slotTableStats.isSlotFollowersStable();
   }
