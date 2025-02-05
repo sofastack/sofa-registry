@@ -53,6 +53,7 @@ public class BufferedDataWritingEngine implements DataWritingEngine {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(BufferedDataWritingEngine.class);
 
+  private final String sessionServerDataCenter;
   private final int avgSingleQueueBufferSize;
   private final int halfMaximumBufferSize;
   private final SlotTableCache slotTableCache;
@@ -73,6 +74,7 @@ public class BufferedDataWritingEngine implements DataWritingEngine {
    * @param maxBatchSize the max size of requests batch
    */
   public BufferedDataWritingEngine(
+      String sessionServerDataCenter,
       int threads,
       int halfMaximumBufferSize,
       int maxBatchSize,
@@ -82,6 +84,7 @@ public class BufferedDataWritingEngine implements DataWritingEngine {
     ParaCheckUtil.checkIsPositive(threads, "threads");
     ParaCheckUtil.checkIsPositive(halfMaximumBufferSize, "halfMaximumBufferSize");
 
+    this.sessionServerDataCenter = sessionServerDataCenter;
     this.workers = new SpinyWorker[threads];
     for (int i = 0; i < threads; i++) {
       this.workers[i] =
@@ -217,12 +220,12 @@ public class BufferedDataWritingEngine implements DataWritingEngine {
 
     private boolean request(BatchRequest batch) {
       try {
-        final Slot slot = slotTableCache.getSlot(batch.getSlotId());
+        final Slot slot = slotTableCache.getSlot(sessionServerDataCenter, batch.getSlotId());
         if (slot == null) {
           throw new RequestException(
               StringFormatter.format("slot not found, slotId={}", batch.getSlotId()));
         }
-        batch.setSlotTableEpoch(slotTableCache.getEpoch());
+        batch.setSlotTableEpoch(slotTableCache.getEpoch(sessionServerDataCenter));
         batch.setSlotLeaderEpoch(slot.getLeaderEpoch());
         sendRequest(
             new Request() {

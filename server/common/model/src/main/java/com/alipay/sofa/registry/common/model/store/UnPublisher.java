@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.common.model.store;
 
 import com.alipay.sofa.registry.common.model.ProcessId;
+import com.alipay.sofa.registry.common.model.RegisterVersion;
 
 /**
  * @author qian.lqlq
@@ -60,5 +61,10 @@ public class UnPublisher extends Publisher {
         publisher.getRegisterId(),
         publisher.getRegisterTimestamp(),
         publisher.getVersion());
+  }
+
+  public static UnPublisher of(String dataInfoId, String registerId, RegisterVersion version) {
+    return new UnPublisher(
+        dataInfoId, null, registerId, version.getRegisterTimestamp(), version.getVersion());
   }
 }

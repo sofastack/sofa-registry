@@ -42,8 +42,8 @@ public class Lease<T> implements Serializable {
   /**
    * constructor
    *
-   * @param renewal
-   * @param durationSECS
+   * @param renewal renewal
+   * @param durationSECS durationSECS
    */
   public Lease(T renewal, long durationSECS) {
     this.renewal = renewal;
@@ -66,7 +66,7 @@ public class Lease<T> implements Serializable {
   /**
    * verify expired or not
    *
-   * @return
+   * @return boolean
    */
   public boolean isExpired() {
     return System.currentTimeMillis() > lastUpdateTimestamp + duration;
@@ -80,7 +80,7 @@ public class Lease<T> implements Serializable {
   /**
    * refresh lastUpdateTimestamp by durationSECS
    *
-   * @param durationSECS
+   * @param durationSECS durationSECS
    */
   public void renew(long durationSECS) {
     lastUpdateTimestamp = System.currentTimeMillis();

@@ -52,14 +52,8 @@ import com.codahale.metrics.MetricRegistry;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.concurrent.ThreadPoolExecutor;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -140,7 +134,7 @@ public class SessionDigestResource {
   @GET
   @Path("/metadata/allServiceMapping")
   @Produces(MediaType.APPLICATION_JSON)
-  public Map<String, InterfaceMapping> allServiceMapping() {
+  public Map<String, Map<String, InterfaceMapping>> allServiceMapping() {
     return interfaceAppsRepository.allServiceMapping();
   }
 
@@ -274,7 +268,6 @@ public class SessionDigestResource {
         countSub.size(), countPub.size(), countSubW.size());
   }
 
-  /** return true mean push switch on */
   @GET
   @Path("pushSwitch")
   @Produces(MediaType.APPLICATION_JSON)

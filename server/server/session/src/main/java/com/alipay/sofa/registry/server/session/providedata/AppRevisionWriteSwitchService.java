@@ -28,7 +28,7 @@ import com.alipay.sofa.registry.util.JsonUtils;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
-/** @Author dzdx @Date 2022/8/8 15:11 @Version 1.0 */
+/** Author dzdx @Date 2022/8/8 15:11 @Version 1.0 */
 public class AppRevisionWriteSwitchService
     extends AbstractFetchSystemPropertyService<AppRevisionWriteSwitchService.SwitchStorage> {
   private static final Logger LOGGER = LoggerFactory.getLogger(AppRevisionWriteSwitchService.class);

@@ -36,10 +36,10 @@ public class FileUtils {
   /**
    * write file
    *
-   * @param file
-   * @param data
-   * @param append
-   * @throws IOException
+   * @param file file
+   * @param data data
+   * @param append append
+   * @throws IOException IOException
    */
   public static void writeByteArrayToFile(File file, byte[] data, boolean append)
       throws IOException {
@@ -57,9 +57,9 @@ public class FileUtils {
   /**
    * read file
    *
-   * @param file
-   * @return
-   * @throws IOException
+   * @param file file
+   * @return byte[]
+   * @throws IOException IOException
    */
   public static byte[] readFileToByteArray(File file) throws IOException {
     InputStream in = null;
@@ -74,8 +74,8 @@ public class FileUtils {
   /**
    * create dir
    *
-   * @param directory
-   * @throws IOException
+   * @param directory directory
+   * @throws IOException IOException
    */
   public static void forceMkdir(File directory) throws IOException {
     if (directory.exists()) {
@@ -102,10 +102,10 @@ public class FileUtils {
   /**
    * file output stream
    *
-   * @param file
-   * @param append
-   * @return
-   * @throws IOException
+   * @param file file
+   * @param append append
+   * @return FileOutputStream
+   * @throws IOException IOException
    */
   public static FileOutputStream openOutputStream(File file, boolean append) throws IOException {
     if (file.exists()) {
@@ -129,9 +129,9 @@ public class FileUtils {
   /**
    * file to inputStream
    *
-   * @param file
-   * @return
-   * @throws IOException
+   * @param file file
+   * @return FileInputStream
+   * @throws IOException IOException
    */
   public static FileInputStream openInputStream(File file) throws IOException {
     if (file.exists()) {
@@ -150,10 +150,10 @@ public class FileUtils {
   /**
    * transfer InputStream to byteArray
    *
-   * @param input
-   * @param size
-   * @return
-   * @throws IOException
+   * @param input input
+   * @param size size
+   * @return byte[]
+   * @throws IOException IOException
    */
   public static byte[] toByteArray(InputStream input, long size) throws IOException {
 
@@ -167,10 +167,10 @@ public class FileUtils {
   /**
    * transfer InputStream to byteArray
    *
-   * @param input
-   * @param size
-   * @return
-   * @throws IOException
+   * @param input input
+   * @param size size
+   * @return byte[]
+   * @throws IOException IOException
    */
   public static byte[] toByteArray(InputStream input, int size) throws IOException {
 
@@ -197,7 +197,7 @@ public class FileUtils {
     return data;
   }
 
-  /** @param closeable */
+  /** @param closeable closeable */
   public static void closeQuietly(Closeable closeable) {
     try {
       if (closeable != null) {

@@ -107,6 +107,7 @@ public class FetchGrayPushSwitchService
    * Setter method for property <tt>sessionServerConfig</tt>.
    *
    * @param sessionServerConfig value to be assigned to property sessionServerConfig
+   * @return FetchGrayPushSwitchService
    */
   @VisibleForTesting
   protected FetchGrayPushSwitchService setSessionServerConfig(

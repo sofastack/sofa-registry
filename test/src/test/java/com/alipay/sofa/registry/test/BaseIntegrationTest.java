@@ -46,10 +46,14 @@ import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.jersey.JerseyClient;
 import com.alipay.sofa.registry.server.data.cache.DatumStorage;
+import com.alipay.sofa.registry.server.data.cache.DatumStorageDelegate;
+import com.alipay.sofa.registry.server.meta.provide.data.DefaultProvideDataService;
 import com.alipay.sofa.registry.server.meta.resource.ClientManagerResource;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfigBean;
+import com.alipay.sofa.registry.server.session.multi.cluster.DataCenterMetadataCache;
 import com.alipay.sofa.registry.server.session.providedata.FetchClientOffAddressService;
+import com.alipay.sofa.registry.server.session.push.PushSwitchService;
 import com.alipay.sofa.registry.server.session.registry.SessionRegistry;
 import com.alipay.sofa.registry.server.session.remoting.console.SessionConsoleExchanger;
 import com.alipay.sofa.registry.server.session.resource.PersistenceClientManagerResource;
@@ -117,6 +121,11 @@ public class BaseIntegrationTest extends AbstractTest {
 
   protected static volatile SessionServerConfigBean sessionServerConfig;
 
+  protected static volatile PushSwitchService pushSwitchService;
+  protected static volatile DataCenterMetadataCache dataCenterMetadataCache;
+
+  protected static volatile DefaultProvideDataService provideDataService;
+
   protected static int sessionPort = 9603;
   protected static int consolePort = 9604;
   protected static int metaPort = 9615;
@@ -180,6 +189,7 @@ public class BaseIntegrationTest extends AbstractTest {
       configs.put("nodes.metaNode", LOCAL_DATACENTER + ":" + LOCAL_ADDRESS);
       configs.put("nodes.localDataCenter", LOCAL_DATACENTER);
       configs.put("nodes.localRegion", LOCAL_REGION);
+      configs.put("nodes.localSegmentRegions", LOCAL_REGION);
 
       TestRegistryMain testRegistryMain = new TestRegistryMain();
       testRegistryMain.startRegistryWithConfig(configs);
@@ -193,6 +203,9 @@ public class BaseIntegrationTest extends AbstractTest {
 
       clientManagerResource =
           metaApplicationContext.getBean("clientManagerResource", ClientManagerResource.class);
+      provideDataService =
+          metaApplicationContext.getBean("provideDataService", DefaultProvideDataService.class);
+
       sessionDigestResource =
           sessionApplicationContext.getBean("sessionDigestResource", SessionDigestResource.class);
       fetchClientOffAddressService =
@@ -208,12 +221,18 @@ public class BaseIntegrationTest extends AbstractTest {
       sessionConsoleExchanger =
           sessionApplicationContext.getBean(
               "sessionConsoleExchanger", SessionConsoleExchanger.class);
+      pushSwitchService =
+          sessionApplicationContext.getBean("pushSwitchService", PushSwitchService.class);
+      dataCenterMetadataCache =
+          sessionApplicationContext.getBean(
+              "dataCenterMetadataCache", DataCenterMetadataCache.class);
 
       sessionServerConfig =
           (SessionServerConfigBean)
               sessionApplicationContext.getBean("sessionServerConfig", SessionServerConfig.class);
       sessionServerConfig.setScanSubscriberIntervalMillis(1000);
-      localDatumStorage = dataApplicationContext.getBean("localDatumStorage", DatumStorage.class);
+      localDatumStorage =
+          dataApplicationContext.getBean("datumStorageDelegate", DatumStorageDelegate.class);
       LOGGER.info(
           "startServerNecessary, {} loaded by {}",
           BaseIntegrationTest.class,
@@ -446,5 +465,13 @@ public class BaseIntegrationTest extends AbstractTest {
       }
     }
     return false;
+  }
+
+  protected static boolean isOpenPush() {
+    return pushSwitchService.canLocalDataCenterPush();
+  }
+
+  protected static boolean isClosePush() {
+    return !pushSwitchService.canLocalDataCenterPush();
   }
 }

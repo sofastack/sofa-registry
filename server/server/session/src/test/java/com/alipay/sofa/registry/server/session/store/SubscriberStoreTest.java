@@ -17,13 +17,13 @@
 package com.alipay.sofa.registry.server.session.store;
 
 import com.alipay.sofa.registry.common.model.ConnectId;
-import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import java.util.List;
+import com.alipay.sofa.registry.server.session.registry.SessionRegistry;
+import java.util.Collections;
 import java.util.Map;
 import org.junit.Assert;
 import org.junit.Test;
@@ -79,24 +79,24 @@ public class SubscriberStoreTest {
 
     subscriberStore.add(subscriber00);
 
-    Tuple<Map<String, DatumVersion>, List<Subscriber>> result =
-        subscriberStore.selectSubscribers("!localDataCenter");
-    Assert.assertEquals(2, result.o1.size());
-    Map<String, DatumVersion> map = result.getFirst();
+    SessionRegistry.SelectSubscriber result =
+        subscriberStore.selectSubscribers(Collections.singleton("!localDataCenter"));
+    Assert.assertEquals(2, result.getVersions().size());
+    Map<String, DatumVersion> map = result.getVersions().get("!localDataCenter");
     for (Map.Entry<String, DatumVersion> entry : map.entrySet()) {
       Assert.assertTrue(entry.getKey().equals(dataInfoId) || entry.getKey().equals(dataInfoId00));
       Assert.assertEquals(0, entry.getValue().getValue());
     }
-    Assert.assertEquals(0, result.o2.size());
+    Assert.assertEquals(0, result.getToPushEmpty().get("!localDataCenter").size());
 
-    result = subscriberStore.selectSubscribers("localDataCenter");
-    Assert.assertEquals(2, result.o1.size());
-    map = result.getFirst();
+    result = subscriberStore.selectSubscribers(Collections.singleton("localDataCenter"));
+    Assert.assertEquals(2, result.getVersions().size());
+    map = result.getVersions().get("localDataCenter");
     for (Map.Entry<String, DatumVersion> entry : map.entrySet()) {
       Assert.assertTrue(entry.getKey().equals(dataInfoId) || entry.getKey().equals(dataInfoId00));
       Assert.assertEquals(0, entry.getValue().getValue());
     }
-    Assert.assertEquals(1, result.o2.size());
+    Assert.assertEquals(1, result.getToPushEmpty().get("localDataCenter").size());
   }
 
   @Test

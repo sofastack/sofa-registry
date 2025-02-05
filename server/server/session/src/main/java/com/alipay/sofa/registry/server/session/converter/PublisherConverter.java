@@ -73,8 +73,8 @@ public final class PublisherConverter {
   /**
    * PublisherRegister to Publisher
    *
-   * @param publisherRegister
-   * @return
+   * @param publisherRegister publisherRegister
+   * @return Publisher
    */
   public static Publisher convert(PublisherRegister publisherRegister) {
     return publisherConverter.convert(publisherRegister);

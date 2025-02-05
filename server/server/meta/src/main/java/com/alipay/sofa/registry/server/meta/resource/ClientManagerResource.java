@@ -59,7 +59,12 @@ public class ClientManagerResource {
 
   @Resource private ClientManagerService clientManagerService;
 
-  /** Client off */
+  /**
+   * Client off
+   *
+   * @param ips ips
+   * @return CommonResponse
+   */
   @POST
   @Path("/clientOff")
   public CommonResponse clientOff(@FormParam("ips") String ips) {
@@ -77,7 +82,12 @@ public class ClientManagerResource {
     return response;
   }
 
-  /** Client off */
+  /**
+   * Client off
+   *
+   * @param ips
+   * @return CommonResponse
+   */
   @POST
   @Path("/clientOffWithSub")
   public CommonResponse clientOffWithSub(@FormParam("ips") String ips) {
@@ -112,7 +122,12 @@ public class ClientManagerResource {
     return true;
   }
 
-  /** Client Open */
+  /**
+   * Client Open
+   *
+   * @param ips
+   * @return CommonResponse
+   */
   @POST
   @Path("/clientOpen")
   public CommonResponse clientOpen(@FormParam("ips") String ips) {
@@ -130,7 +145,12 @@ public class ClientManagerResource {
     return response;
   }
 
-  /** Client Open */
+  /**
+   * Client Open
+   *
+   * @param ips ips
+   * @return CommonResponse
+   */
   @POST
   @Path("/reduce")
   public CommonResponse reduce(@FormParam("ips") String ips) {
@@ -148,7 +168,11 @@ public class ClientManagerResource {
     return response;
   }
 
-  /** Client Open */
+  /**
+   * Client Open
+   *
+   * @return GenericResponse
+   */
   @GET
   @Path("/query")
   public GenericResponse<ClientManagerAddress> query() {
@@ -165,6 +189,7 @@ public class ClientManagerResource {
    * Setter method for property <tt>clientManagerService</tt>.
    *
    * @param clientManagerService value to be assigned to property clientManagerService
+   * @return ClientManagerResource
    */
   @VisibleForTesting
   public ClientManagerResource setClientManagerService(ClientManagerService clientManagerService) {

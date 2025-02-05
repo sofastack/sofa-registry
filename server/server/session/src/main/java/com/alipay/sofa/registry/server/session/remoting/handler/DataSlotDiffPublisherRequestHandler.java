@@ -22,6 +22,7 @@ import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
 import com.alipay.sofa.registry.common.model.slot.DataSlotDiffPublisherRequest;
 import com.alipay.sofa.registry.common.model.slot.DataSlotDiffPublisherResult;
 import com.alipay.sofa.registry.common.model.slot.DataSlotDiffUtils;
+import com.alipay.sofa.registry.common.model.slot.filter.SyncSlotAcceptorManager;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -39,6 +40,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
+import javax.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -58,6 +60,8 @@ public class DataSlotDiffPublisherRequestHandler
   @Autowired PublisherStore publisherStore;
 
   @Autowired SlotTableCache slotTableCache;
+
+  @Resource SyncSlotAcceptorManager syncSlotAcceptAllManager;
 
   @Override
   public void checkParam(DataSlotDiffPublisherRequest request) {
@@ -79,8 +83,12 @@ public class DataSlotDiffPublisherRequestHandler
         }
       }
       DataSlotDiffPublisherResult result =
-          calcDiffResult(slotId, request.getDatumSummaries(), existingPublishers);
-      result.setSlotTableEpoch(slotTableCache.getEpoch());
+          calcDiffResult(
+              request.getLocalDataCenter(),
+              slotId,
+              request.getDatumSummaries(),
+              existingPublishers);
+      result.setSlotTableEpoch(slotTableCache.getEpoch(request.getLocalDataCenter()));
       result.setSessionProcessId(ServerEnv.PROCESS_ID);
       return new GenericResponse().fillSucceed(result);
     } catch (Throwable e) {
@@ -93,13 +101,17 @@ public class DataSlotDiffPublisherRequestHandler
   }
 
   private DataSlotDiffPublisherResult calcDiffResult(
+      String requestDataCenter,
       int targetSlot,
       List<DatumSummary> datumSummaries,
       Map<String, Map<String, Publisher>> existingPublishers) {
     DataSlotDiffPublisherResult result =
         DataSlotDiffUtils.diffPublishersResult(
-            datumSummaries, existingPublishers, sessionServerConfig.getSlotSyncPublisherMaxNum());
-    DataSlotDiffUtils.logDiffResult(result, targetSlot);
+            datumSummaries,
+            existingPublishers,
+            sessionServerConfig.getSlotSyncPublisherMaxNum(),
+            syncSlotAcceptAllManager);
+    DataSlotDiffUtils.logDiffResult(requestDataCenter, result, targetSlot, LOGGER);
     return result;
   }
 

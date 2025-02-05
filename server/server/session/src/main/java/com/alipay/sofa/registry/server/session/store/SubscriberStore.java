@@ -16,12 +16,11 @@
  */
 package com.alipay.sofa.registry.server.session.store;
 
-import com.alipay.sofa.registry.common.model.Tuple;
-import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
+import com.alipay.sofa.registry.server.session.registry.SessionRegistry;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /** Used to store subscriber information. */
 public interface SubscriberStore extends ClientStore<Subscriber> {
@@ -41,7 +40,9 @@ public interface SubscriberStore extends ClientStore<Subscriber> {
    * @param dataCenter target data center
    * @return subscriber collection
    */
-  Tuple<Map<String, DatumVersion>, List<Subscriber>> selectSubscribers(String dataCenter);
+  //  Tuple<Map<String, DatumVersion>, List<Subscriber>> selectSubscribers(String dataCenter);
+
+  SessionRegistry.SelectSubscriber selectSubscribers(Set<String> dataCenters);
 
   /**
    * Check if there is subscriber that interest the data and has correct version.

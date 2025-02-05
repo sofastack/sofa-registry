@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.registry.server.meta.resource;
 
-import com.alipay.sofa.common.profile.StringUtil;
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.metrics.ReporterUtils;
 import com.alipay.sofa.registry.server.meta.MetaLeaderService;
@@ -33,6 +32,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -89,7 +89,11 @@ public class HealthResource {
     ret = ret && start;
     sb.append(", httpServerStart:").append(start);
 
-    boolean leaderNotEmpty = StringUtil.isNotBlank(metaLeaderService.getLeader());
+    start = metaServerBootstrap.isRpcServerForRemoteMetaStarted();
+    ret = ret && start;
+    sb.append(", remoteMetaRegisterServerStart:").append(start);
+
+    boolean leaderNotEmpty = StringUtils.isNotBlank(metaLeaderService.getLeader());
     ret = ret && leaderNotEmpty;
 
     sb.append(", role:").append(metaLeaderService.amILeader() ? "leader" : "follower");

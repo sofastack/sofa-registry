@@ -16,12 +16,15 @@
  */
 package com.alipay.sofa.registry.server.session.resource;
 
+import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 import com.alipay.sofa.registry.common.model.slot.Slot;
+import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.google.common.base.Joiner;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.ws.rs.*;
@@ -42,6 +45,8 @@ public class SessionOpenResource {
 
   @Autowired private SlotTableCache slotTableCache;
 
+  @Autowired private Exchange boltExchange;
+
   @GET
   @Path("query.json")
   @Produces(MediaType.APPLICATION_JSON)
@@ -61,6 +66,27 @@ public class SessionOpenResource {
   @Produces(MediaType.TEXT_PLAIN)
   public String getSessionServerList(@QueryParam("zone") String zone) {
     return Joiner.on(";").join(getSessionServerListJson(zone));
+  }
+
+  @GET
+  @Path("queryWithWeight")
+  @Produces(MediaType.TEXT_PLAIN)
+  public String getSessionServerListWithConnNum(@QueryParam("zone") String zone) {
+    if (StringUtils.isBlank(zone)) {
+      zone = sessionServerConfig.getSessionServerRegion();
+    }
+
+    if (StringUtils.isNotBlank(zone)) {
+      zone = zone.toUpperCase();
+    }
+    return Joiner.on(";").join(getSessionServersWithConnNum(zone));
+  }
+
+  @GET
+  @Path("connectionNum")
+  @Produces(MediaType.TEXT_PLAIN)
+  public int getCurrentSessionConnNum() {
+    return boltExchange.getServer(sessionServerConfig.getServerPort()).getChannels().size();
   }
 
   @GET
@@ -91,11 +117,26 @@ public class SessionOpenResource {
     return serverList;
   }
 
+  private List<String> getSessionServersWithConnNum(String zone) {
+    List<SessionNode> serverList = metaNodeService.getSessionNodeWithConnNumList(zone);
+    List<String> serverWithConnNumList = new ArrayList<>();
+    serverList.forEach(
+        item -> {
+          serverWithConnNumList.add(
+              item.getNodeUrl().getIpAddress()
+                  + ":"
+                  + sessionServerConfig.getServerPort()
+                  + "?weight="
+                  + item.getWeight());
+        });
+    return serverWithConnNumList;
+  }
+
   @GET
   @Path("slot")
   @Produces(MediaType.APPLICATION_JSON)
   public Slot getSlot(@QueryParam("dataInfoId") String dataInfoId) {
     ParaCheckUtil.checkNotBlank(dataInfoId, "dataInfoId");
-    return slotTableCache.getSlot(dataInfoId);
+    return slotTableCache.getSlot(sessionServerConfig.getSessionServerDataCenter(), dataInfoId);
   }
 }

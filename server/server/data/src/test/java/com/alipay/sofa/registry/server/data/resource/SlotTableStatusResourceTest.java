@@ -16,12 +16,15 @@
  */
 package com.alipay.sofa.registry.server.data.resource;
 
+import static org.mockito.Matchers.anyString;
+
 import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.slot.BaseSlotStatus;
 import com.alipay.sofa.registry.common.model.slot.FollowerSlotStatus;
 import com.alipay.sofa.registry.common.model.slot.LeaderSlotStatus;
-import com.alipay.sofa.registry.server.data.slot.SlotManager;
+import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
+import com.alipay.sofa.registry.server.data.slot.SlotAccessorDelegate;
 import com.google.common.collect.Lists;
 import java.util.List;
 import org.junit.Assert;
@@ -32,7 +35,8 @@ public class SlotTableStatusResourceTest {
   @Test
   public void test() {
     SlotTableStatusResource resource = new SlotTableStatusResource();
-    resource.slotManager = Mockito.mock(SlotManager.class);
+    resource.slotAccessorDelegate = Mockito.mock(SlotAccessorDelegate.class);
+    resource.dataServerConfig = Mockito.mock(DataServerConfig.class);
 
     LeaderSlotStatus leaderSlotStatus =
         new LeaderSlotStatus(10, 20, "xxx", BaseSlotStatus.LeaderStatus.UNHEALTHY);
@@ -41,7 +45,7 @@ public class SlotTableStatusResourceTest {
             11, 30, "yyy", System.currentTimeMillis(), System.currentTimeMillis());
 
     List<BaseSlotStatus> list = Lists.newArrayList(leaderSlotStatus, followerSlotStatus);
-    Mockito.when(resource.slotManager.getSlotTableEpochAndStatuses())
+    Mockito.when(resource.slotAccessorDelegate.getSlotTableEpochAndStatuses(anyString()))
         .thenReturn(Tuple.of(100L, list));
 
     GenericResponse resp = resource.getSlotTableSyncTaskStatus();

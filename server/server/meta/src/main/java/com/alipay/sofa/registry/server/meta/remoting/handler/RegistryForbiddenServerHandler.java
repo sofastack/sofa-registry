@@ -24,6 +24,7 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.meta.MetaLeaderService;
 import com.alipay.sofa.registry.server.meta.lease.filter.RegistryForbiddenServerManager;
+import com.alipay.sofa.registry.util.ParaCheckUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -39,6 +40,12 @@ public class RegistryForbiddenServerHandler
   @Autowired private RegistryForbiddenServerManager registryForbiddenServerManager;
 
   @Autowired private MetaLeaderService metaLeaderService;
+
+  @Override
+  public void checkParam(RegistryForbiddenServerRequest request) {
+    ParaCheckUtil.checkNotBlank(request.getCell(), "cell");
+    ParaCheckUtil.checkNotBlank(request.getIp(), "ip");
+  }
 
   @Override
   public Object doHandle(Channel channel, RegistryForbiddenServerRequest request) {

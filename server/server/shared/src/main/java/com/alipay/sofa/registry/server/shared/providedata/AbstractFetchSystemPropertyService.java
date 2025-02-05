@@ -160,4 +160,9 @@ public abstract class AbstractFetchSystemPropertyService<T extends SystemDataSto
   public void setMetaNodeService(MetaServerService metaNodeService) {
     this.metaNodeService = metaNodeService;
   }
+
+  @VisibleForTesting
+  public AtomicReference<T> getStorage() {
+    return storage;
+  }
 }

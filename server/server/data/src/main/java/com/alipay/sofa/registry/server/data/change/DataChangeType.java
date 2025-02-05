@@ -22,4 +22,6 @@ public enum DataChangeType {
   SYNC,
   MIGRATED,
   LEASE,
+  SYNC_REMOTE,
+  CLEAR
 }

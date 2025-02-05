@@ -27,28 +27,35 @@ import java.util.function.Predicate;
 public final class ZonePredicate {
   private ZonePredicate() {}
 
-  public static Predicate<String> zonePredicate(
+  public static Predicate<String> pushDataPredicate(
       String dataId,
       String clientCell,
       ScopeEnum scopeEnum,
       SessionServerConfig sessionServerConfig) {
     Predicate<String> zonePredicate =
-        (zone) -> {
-          if (!clientCell.equals(zone)) {
-            if (ScopeEnum.zone == scopeEnum) {
-              // zone scope subscribe only return zone list
-              return true;
-
-            } else if (ScopeEnum.dataCenter == scopeEnum || ScopeEnum.global == scopeEnum) {
-              // disable zone config
-              if (sessionServerConfig.isInvalidForeverZone(zone)
-                  && !sessionServerConfig.isInvalidIgnored(dataId)) {
-                return true;
-              }
-            }
-          }
-          return false;
-        };
+        (zone) -> zoneFilter(dataId, clientCell, scopeEnum, sessionServerConfig, zone);
     return zonePredicate;
+  }
+
+  private static boolean zoneFilter(
+      String dataId,
+      String clientCell,
+      ScopeEnum scopeEnum,
+      SessionServerConfig sessionServerConfig,
+      String zone) {
+    if (!clientCell.equals(zone)) {
+      if (ScopeEnum.zone == scopeEnum) {
+        // zone scope subscribe only return zone list
+        return true;
+
+      } else if (ScopeEnum.dataCenter == scopeEnum || ScopeEnum.global == scopeEnum) {
+        // disable zone config
+        if (sessionServerConfig.isInvalidForeverZone(zone)
+            && !sessionServerConfig.isInvalidIgnored(dataId)) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 }

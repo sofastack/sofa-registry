@@ -16,17 +16,17 @@
  */
 package com.alipay.sofa.registry.server.session.store;
 
-import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
-import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
+import com.alipay.sofa.registry.server.session.registry.SessionRegistry;
 import com.alipay.sofa.registry.server.session.store.engine.SimpleMemoryStoreEngine;
-import java.util.ArrayList;
+import com.google.common.collect.Lists;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.springframework.util.CollectionUtils;
 
 /** Implementation of SubscriberStore. */
@@ -46,43 +46,61 @@ public class SubscriberStoreImpl extends AbstractClientStore<Subscriber>
   }
 
   @Override
-  public Tuple<Map<String, DatumVersion>, List<Subscriber>> selectSubscribers(String dataCenter) {
+  public SessionRegistry.SelectSubscriber selectSubscribers(Set<String> dataCenters) {
     final String localDataCenter = sessionServerConfig.getSessionServerDataCenter();
-    final boolean isLocalDataCenter = localDataCenter.equals(dataCenter);
 
-    final Map<String, DatumVersion> versions = new HashMap<>();
-    final List<Subscriber> toPushEmptySubscribers = new ArrayList<>();
+    final Map<String, Map<String, DatumVersion>> versions = new HashMap<>();
+    final Map<String, List<Subscriber>> toPushEmptySubscribers = new HashMap<>();
+    final List<Subscriber> toRegisterMultiSubscribers = Lists.newArrayListWithCapacity(128);
+
+    for (String dataCenter : dataCenters) {
+      versions.put(dataCenter, new HashMap<>());
+      toPushEmptySubscribers.put(dataCenter, Lists.newArrayListWithCapacity(256));
+    }
 
     Collection<String> dataInfoIdCollection = getNonEmptyDataInfoId();
-    if (dataInfoIdCollection == null || dataInfoIdCollection.size() == 0) {
-      return Tuple.of(versions, toPushEmptySubscribers);
+    if (dataInfoIdCollection == null || dataInfoIdCollection.isEmpty()) {
+      return new SessionRegistry.SelectSubscriber(
+          versions, toPushEmptySubscribers, toRegisterMultiSubscribers);
     }
+
     for (String dataInfoId : dataInfoIdCollection) {
       Collection<Subscriber> subscribers = getByDataInfoId(dataInfoId);
       if (CollectionUtils.isEmpty(subscribers)) {
         continue;
       }
 
-      long maxVersion = 0;
       for (Subscriber sub : subscribers) {
-        // not global sub and not local dataCenter, not interest the other dataCenter's pub
-        if (sub.getScope() != ScopeEnum.global && !isLocalDataCenter) {
+        if (!sub.hasPushed()) {
+          toRegisterMultiSubscribers.add(sub);
           continue;
         }
-        if (sub.isMarkedPushEmpty(dataCenter)) {
-          if (sub.needPushEmpty(dataCenter)) {
-            toPushEmptySubscribers.add(sub);
+        for (String dataCenter : dataCenters) {
+          Map<String, DatumVersion> vers = versions.get(dataCenter);
+          List<Subscriber> pushEmpty = toPushEmptySubscribers.get(dataCenter);
+
+          final boolean isLocalDataCenter = localDataCenter.equals(dataCenter);
+          // not multi sub and not local dataCenter, not interest the other dataCenter's pub
+          if (!sub.acceptMulti() && !isLocalDataCenter) {
+            continue;
           }
-          continue;
-        }
-        final long pushVersion = sub.getPushedVersion(dataCenter);
-        if (maxVersion < pushVersion) {
-          maxVersion = pushVersion;
+
+          if (sub.isMarkedPushEmpty(dataCenter)) {
+            if (sub.needPushEmpty(dataCenter)) {
+              pushEmpty.add(sub);
+            }
+            continue;
+          }
+          final long pushVersion = sub.getPushedVersion(dataCenter);
+          DatumVersion maxVersion = vers.computeIfAbsent(dataInfoId, k -> new DatumVersion(0));
+          if (maxVersion.getValue() < pushVersion) {
+            vers.put(dataInfoId, new DatumVersion(pushVersion));
+          }
         }
       }
-      versions.put(dataInfoId, new DatumVersion(maxVersion));
     }
-    return Tuple.of(versions, toPushEmptySubscribers);
+    return new SessionRegistry.SelectSubscriber(
+        versions, toPushEmptySubscribers, toRegisterMultiSubscribers);
   }
 
   @Override

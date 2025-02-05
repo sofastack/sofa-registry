@@ -18,10 +18,11 @@ package com.alipay.sofa.registry.server.session.node.service;
 
 import com.alipay.sofa.registry.common.model.ClientOffPublishers;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
+import com.alipay.sofa.registry.common.model.store.MultiSubDatum;
 import com.alipay.sofa.registry.common.model.store.Publisher;
-import com.alipay.sofa.registry.common.model.store.SubDatum;
 import com.alipay.sofa.registry.remoting.exchange.ExchangeCallback;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author shangyu.wh
@@ -32,14 +33,14 @@ public interface DataNodeService {
   /**
    * new publisher data transform to data server
    *
-   * @param publisher
+   * @param publisher publisher
    */
   void register(Publisher publisher);
 
   /**
    * remove publisher data from data server
    *
-   * @param publisher
+   * @param publisher publisher
    */
   void unregister(Publisher publisher);
 
@@ -47,7 +48,7 @@ public interface DataNodeService {
    * session server support api to stop some client node,all register data on data server will be
    * removed data on session server will be remove too
    *
-   * @param clientOffPublishers
+   * @param clientOffPublishers clientOffPublishers
    */
   void clientOff(ClientOffPublishers clientOffPublishers);
 
@@ -59,9 +60,9 @@ public interface DataNodeService {
   /**
    * fetch one dataCenter publisher data from data server
    *
-   * @param dataInfoId
-   * @param dataCenterId
-   * @return
+   * @param dataInfoId dataInfoId
+   * @param dataCenters dataCenters
+   * @return MultiSubDatum
    */
-  SubDatum fetch(String dataInfoId, String dataCenterId);
+  MultiSubDatum fetch(String dataInfoId, Set<String> dataCenters);
 }

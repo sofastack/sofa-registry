@@ -60,7 +60,12 @@ public class PersistenceClientManagerResource {
 
   @Autowired private CheckClientManagerService checkClientManagerService;
 
-  /** Client off */
+  /**
+   * Client off
+   *
+   * @param ips ips
+   * @return GenericResponse
+   */
   @POST
   @Path("/clientOff")
   public GenericResponse<Long> clientOff(@FormParam("ips") String ips) {
@@ -78,7 +83,12 @@ public class PersistenceClientManagerResource {
     return response;
   }
 
-  /** Client off */
+  /**
+   * Client off
+   *
+   * @param ips ips
+   * @return GenericResponse
+   */
   @POST
   @Path("/clientOffWithSub")
   public GenericResponse<Long> clientOffWithSub(@FormParam("ips") String ips) {
@@ -114,7 +124,12 @@ public class PersistenceClientManagerResource {
     return true;
   }
 
-  /** Client Open */
+  /**
+   * Client Open
+   *
+   * @param ips ips
+   * @return GenericResponse
+   */
   @POST
   @Path("/clientOpen")
   public GenericResponse<Long> clientOpen(@FormParam("ips") String ips) {
@@ -133,7 +148,12 @@ public class PersistenceClientManagerResource {
     return response;
   }
 
-  /** Client Open */
+  /**
+   * Client Open
+   *
+   * @param ips ips
+   * @return GenericResponse
+   */
   @POST
   @Path("/reduce")
   public GenericResponse<Long> reduce(@FormParam("ips") String ips) {
@@ -185,6 +205,7 @@ public class PersistenceClientManagerResource {
    * Setter method for property <tt>clientManagerService</tt>.
    *
    * @param clientManagerService value to be assigned to property clientManagerService
+   * @return PersistenceClientManagerResource
    */
   @VisibleForTesting
   public PersistenceClientManagerResource setClientManagerService(

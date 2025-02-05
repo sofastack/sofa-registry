@@ -58,6 +58,9 @@ public class SingleFlight {
    * @throws Exception The {@link Exception} which was thrown by the {@link Callable}. Alternatively
    *     a {@link InterruptedException} can be thrown if the executing {@link Thread} was
    *     interrupted while waiting for the result.
+   * @param key Object
+   * @param callable Callable
+   * @return V V
    */
   @SuppressWarnings("unchecked")
   public <V> V execute(Object key, Callable<V> callable) throws Exception {

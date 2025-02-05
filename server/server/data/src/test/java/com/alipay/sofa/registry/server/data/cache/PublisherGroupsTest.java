@@ -20,11 +20,14 @@ import com.alipay.sofa.registry.common.model.ProcessId;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
+import com.alipay.sofa.registry.common.model.slot.filter.SyncSlotAcceptorManager;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.common.model.store.UnPublisher;
 import com.alipay.sofa.registry.server.data.TestBaseUtils;
+import com.alipay.sofa.registry.server.data.pubiterator.DatumBiConsumer;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.util.Collections;
 import java.util.List;
@@ -37,6 +40,8 @@ public class PublisherGroupsTest {
   private final String testDataId = TestBaseUtils.TEST_DATA_ID;
   private final String testDataInfoId = TestBaseUtils.TEST_DATA_INFO_ID;
   private final String testDc = "testDc";
+
+  private static final SyncSlotAcceptorManager ACCEPT_ALL = request -> true;
 
   @Test
   public void testEmpty() {
@@ -87,12 +92,17 @@ public class PublisherGroupsTest {
     Assert.assertEquals(publishers.get(publisher.getDataInfoId()).get(0), publisher);
 
     String sessionIp = "noFound";
-    Map<String, Map<String, DatumSummary>> sessionSummary =
-        groups.getSummary(Sets.newHashSet(sessionIp));
+    Map<String, Map<String, DatumSummary>> sessionSummary = Maps.newHashMap();
+    groups.foreach(
+        DatumBiConsumer.publisherGroupsBiConsumer(
+            sessionSummary, Sets.newHashSet(sessionIp), ACCEPT_ALL));
+
     Map<String, DatumSummary> summaryMap = sessionSummary.get(sessionIp);
     Assert.assertEquals(summaryMap.size(), 0);
 
-    summaryMap = groups.getAllSummary();
+    summaryMap = Maps.newHashMap();
+    groups.foreach(DatumBiConsumer.publisherGroupsBiConsumer(summaryMap, ACCEPT_ALL));
+
     Assert.assertEquals(summaryMap.size(), 1);
     Assert.assertEquals(
         summaryMap
@@ -102,7 +112,12 @@ public class PublisherGroupsTest {
         publisher.registerVersion());
 
     sessionIp = publisher.getTargetAddress().getIpAddress();
-    sessionSummary = groups.getSummary(Sets.newHashSet(sessionIp));
+
+    sessionSummary = Maps.newHashMap();
+    groups.foreach(
+        DatumBiConsumer.publisherGroupsBiConsumer(
+            sessionSummary, Sets.newHashSet(sessionIp), ACCEPT_ALL));
+
     summaryMap = sessionSummary.get(sessionIp);
 
     Assert.assertEquals(summaryMap.size(), 1);
@@ -145,11 +160,16 @@ public class PublisherGroupsTest {
     Assert.assertEquals(publishers.get(publisher2.getDataInfoId()).get(0), publisher2);
 
     sessionIp = "noFound";
-    sessionSummary = groups.getSummary(Sets.newHashSet(sessionIp));
+    sessionSummary = Maps.newHashMap();
+    groups.foreach(
+        DatumBiConsumer.publisherGroupsBiConsumer(
+            sessionSummary, Sets.newHashSet(sessionIp), ACCEPT_ALL));
+
     summaryMap = sessionSummary.get(sessionIp);
     Assert.assertEquals(summaryMap.size(), 0);
 
-    summaryMap = groups.getAllSummary();
+    groups.foreach(DatumBiConsumer.publisherGroupsBiConsumer(summaryMap, ACCEPT_ALL));
+
     Assert.assertEquals(summaryMap.size(), 2);
     Assert.assertEquals(
         summaryMap
@@ -165,7 +185,11 @@ public class PublisherGroupsTest {
         publisher2.registerVersion());
 
     sessionIp = publisher.getTargetAddress().getIpAddress();
-    sessionSummary = groups.getSummary(Sets.newHashSet(sessionIp));
+    sessionSummary = Maps.newHashMap();
+    groups.foreach(
+        DatumBiConsumer.publisherGroupsBiConsumer(
+            sessionSummary, Sets.newHashSet(sessionIp), ACCEPT_ALL));
+
     summaryMap = sessionSummary.get(sessionIp);
 
     Assert.assertEquals(summaryMap.size(), 2);

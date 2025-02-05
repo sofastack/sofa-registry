@@ -1,0 +1,20 @@
+syntax = "proto3";
+option java_package = "com.alipay.sofa.registry.common.model.client.pb";
+option java_multiple_files = true;
+option go_package = "proto";
+
+import "MultiSegmentDataPb.proto";
+
+message MultiReceivedDataPb {
+  string dataId = 1;
+  string group = 2;
+  string instanceId = 3;
+  string scope = 4;
+  repeated string subscriberRegistIds = 5;
+
+  string localSegment = 6;
+  string localZone = 7;
+
+  map<string, MultiSegmentDataPb> multiData = 8;
+}
+

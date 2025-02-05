@@ -23,11 +23,13 @@ import java.io.Serializable;
  * @version v 0.1 2020-10-30 10:34 yuzhi.lyz Exp $
  */
 public final class SlotAccess implements Serializable {
+
   public enum Status {
     Accept,
     Migrating,
     Moved,
     MisMatch,
+    UnSupport,
   }
 
   private final int slotId;

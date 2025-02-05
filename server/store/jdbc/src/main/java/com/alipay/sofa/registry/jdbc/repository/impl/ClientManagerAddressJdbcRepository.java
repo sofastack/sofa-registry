@@ -60,7 +60,7 @@ import org.springframework.util.CollectionUtils;
 public class ClientManagerAddressJdbcRepository
     implements ClientManagerAddressRepository, RecoverConfig {
 
-  private static final Logger LOG = LoggerFactory.getLogger("META-PROVIDEDATA", "[ClientManager]");
+  private static final Logger LOG = LoggerFactory.getLogger("CLIENT-MANAGER", "[ClientManager]");
 
   @Autowired private DefaultCommonConfig defaultCommonConfig;
 
@@ -251,6 +251,7 @@ public class ClientManagerAddressJdbcRepository
    * Setter method for property <tt>clientManagerAddressMapper</tt>.
    *
    * @param clientManagerAddressMapper value to be assigned to property clientManagerAddressMapper
+   * @return ClientManagerAddressJdbcRepository
    */
   @VisibleForTesting
   public ClientManagerAddressJdbcRepository setClientManagerAddressMapper(
@@ -263,6 +264,7 @@ public class ClientManagerAddressJdbcRepository
    * Setter method for property <tt>defaultCommonConfig</tt>.
    *
    * @param defaultCommonConfig value to be assigned to property defaultCommonConfig
+   * @return ClientManagerAddressJdbcRepository
    */
   @VisibleForTesting
   public ClientManagerAddressJdbcRepository setDefaultCommonConfig(

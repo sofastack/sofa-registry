@@ -71,20 +71,38 @@ public final class Metrics {
           .help("publisher dataID cache num")
           .register();
 
-  static final Gauge SUB_GAUGE =
+  static final Gauge NOT_MULTI_SUB_GAUGE =
       Gauge.build()
           .namespace("session")
           .subsystem("cache")
-          .name("sub_total")
+          .name("not_multi_sub_total")
           .labelNames("instanceId", "group")
           .help("subscriber cache num")
           .register();
 
-  static final Gauge SUB_DATA_ID_GAUGE =
+  static final Gauge MULTI_SUB_GAUGE =
       Gauge.build()
           .namespace("session")
           .subsystem("cache")
-          .name("sub_dataID_total")
+          .name("multi_sub_total")
+          .labelNames("instanceId", "group")
+          .help("subscriber cache num")
+          .register();
+
+  static final Gauge NOT_MULTI_SUB_DATA_ID_GAUGE =
+      Gauge.build()
+          .namespace("session")
+          .subsystem("cache")
+          .name("not_multi_sub_dataID_total")
+          .labelNames("instanceId", "group")
+          .help("subscriber dataID cache num")
+          .register();
+
+  static final Gauge MULTI_SUB_DATA_ID_GAUGE =
+      Gauge.build()
+          .namespace("session")
+          .subsystem("cache")
+          .name("multi_sub_dataID_total")
           .labelNames("instanceId", "group")
           .help("subscriber dataID cache num")
           .register();

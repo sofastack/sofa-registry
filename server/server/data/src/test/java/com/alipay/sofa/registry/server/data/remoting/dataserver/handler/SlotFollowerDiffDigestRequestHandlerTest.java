@@ -24,16 +24,21 @@ import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.dataserver.DatumDigest;
 import com.alipay.sofa.registry.common.model.slot.DataSlotDiffDigestRequest;
+import com.alipay.sofa.registry.common.model.slot.filter.SyncSlotAcceptorManager;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.server.data.TestBaseUtils;
-import com.alipay.sofa.registry.server.data.cache.DatumCache;
+import com.alipay.sofa.registry.server.data.cache.DatumStorageDelegate;
 import com.alipay.sofa.registry.server.data.slot.SlotManager;
 import java.util.Collections;
 import java.util.Map;
 import org.junit.Assert;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 public class SlotFollowerDiffDigestRequestHandlerTest {
+
+  private static final String DC = "DC";
+  private static final SyncSlotAcceptorManager ACCEPT_ALL = request -> true;
 
   @Test
   public void testCheckParam() {
@@ -58,9 +63,13 @@ public class SlotFollowerDiffDigestRequestHandlerTest {
     GenericResponse failed = (GenericResponse) handler.buildFailedResponse("msg");
     Assert.assertFalse(failed.isSuccess());
     SlotManager slotManager = mock(SlotManager.class);
-    handler.setSlotManager(slotManager);
-    DatumCache datumCache = TestBaseUtils.newLocalDatumCache("testDc", true);
-    handler.setLocalDatumStorage(datumCache.getLocalDatumStorage());
+    DatumStorageDelegate datumStorageDelegate = TestBaseUtils.newLocalDatumDelegate("testDc", true);
+
+    handler
+        .setSlotManager(slotManager)
+        .setDatumStorageDelegate(datumStorageDelegate)
+        .setDataServerConfig(TestBaseUtils.newDataConfig(DC));
+
     return handler;
   }
 
@@ -72,13 +81,13 @@ public class SlotFollowerDiffDigestRequestHandlerTest {
     DataSlotDiffDigestRequest request = request(1, Collections.emptyMap());
 
     // not leader
-    when(handler.getSlotManager().isLeader(anyInt())).thenReturn(false);
+    when(handler.getSlotManager().isLeader(Mockito.eq(DC), anyInt())).thenReturn(false);
     GenericResponse resp = (GenericResponse) handler.doHandle(channel, request);
     Assert.assertFalse(resp.isSuccess());
     Assert.assertNull(resp.getData());
 
     // is leader
-    when(handler.getSlotManager().isLeader(anyInt())).thenReturn(true);
+    when(handler.getSlotManager().isLeader(Mockito.eq(DC), anyInt())).thenReturn(true);
     resp = (GenericResponse) handler.doHandle(channel, request);
     Assert.assertTrue(resp.isSuccess());
     Assert.assertNotNull(resp.getData());
@@ -92,6 +101,6 @@ public class SlotFollowerDiffDigestRequestHandlerTest {
 
   private static DataSlotDiffDigestRequest request(
       int slotId, Map<String, DatumDigest> datumDigest) {
-    return new DataSlotDiffDigestRequest(1, slotId, datumDigest);
+    return new DataSlotDiffDigestRequest(DC, 1, slotId, 1, datumDigest, ACCEPT_ALL);
   }
 }

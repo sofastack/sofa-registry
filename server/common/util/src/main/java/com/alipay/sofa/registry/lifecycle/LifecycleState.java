@@ -48,7 +48,11 @@ public interface LifecycleState {
 
   void setPhase(LifecyclePhase phase);
 
-  /** rollback to previous state */
+  /**
+   * rollback to previous state
+   *
+   * @param e Exception
+   */
   void rollback(Exception e);
 
   boolean canInitialize();

@@ -19,11 +19,14 @@ package com.alipay.sofa.registry.common.model.store;
 import com.alipay.sofa.registry.common.model.ElementType;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
+import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.util.CollectionUtils;
@@ -43,8 +46,14 @@ public class Subscriber extends BaseInfo {
   /** */
   private String[] acceptEncodes;
 
+  private boolean acceptMulti;
+
   /** last push context */
   private Map<String /*dataCenter*/, PushContext> lastPushContexts;
+
+  private int pushedFailCount = 0;
+
+  private long lastPushedFailTimeStamp = 0;
 
   /**
    * Getter method for property <tt>scope</tt>.
@@ -68,6 +77,28 @@ public class Subscriber extends BaseInfo {
     return elementType;
   }
 
+  public boolean acceptMulti() {
+    return this.acceptMulti;
+  }
+
+  /**
+   * Getter method for property <tt>lastPushContexts</tt>.
+   *
+   * @return property value of lastPushContexts
+   */
+  public Map<String, PushContext> getLastPushContexts() {
+    return lastPushContexts;
+  }
+
+  /**
+   * Setter method for property <tt>acceptMulti</tt>.
+   *
+   * @param acceptMulti value to be assigned to property acceptMulti
+   */
+  public void setAcceptMulti(boolean acceptMulti) {
+    this.acceptMulti = acceptMulti;
+  }
+
   private PushContext getPushContext(String dataCenter) {
     PushContext ctx;
     if (lastPushContexts == null) {
@@ -86,6 +117,7 @@ public class Subscriber extends BaseInfo {
     }
     return ctx;
   }
+
   // check the version
   public synchronized boolean checkVersion(String dataCenter, long version) {
     final PushContext ctx = getPushContext(dataCenter);
@@ -93,28 +125,81 @@ public class Subscriber extends BaseInfo {
     return ctx.pushedVersion < version && ctx.emptyVersion == 0;
   }
 
-  public synchronized boolean checkAndUpdateCtx(String dataCenter, long pushVersion, int num) {
+  /**
+   * return true if one of any dataCenter need to update
+   *
+   * @param versions
+   * @return
+   */
+  public synchronized boolean checkVersion(Map<String, Long> versions) {
+    ParaCheckUtil.checkNotEmpty(versions, "versions");
+    for (Entry<String, Long> entry : versions.entrySet()) {
+      if (checkVersion(entry.getKey(), entry.getValue())) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public synchronized boolean checkAndUpdateCtx(
+      Map<String, Long> versions, Map<String, Integer> nums) {
+    ParaCheckUtil.checkEquals(versions.keySet(), nums.keySet(), "checkAndUpdateCtx.datacenters");
+    for (Entry<String, Long> entry : versions.entrySet()) {
+      checkAndUpdateCtx(entry.getKey(), entry.getValue(), nums.get(entry.getKey()));
+    }
+    return true;
+  }
+
+  private synchronized boolean checkAndUpdateCtx(String dataCenter, long pushVersion, int num) {
     final PushContext ctx = getPushContext(dataCenter);
 
     if (ctx.pushedVersion < pushVersion) {
       ctx.pushedVersion = pushVersion;
       ctx.pushedNum = num;
-      ctx.pushedFailCount = 0;
-      ctx.lastPushedFailTimeStamp = 0;
+      pushedFailCount = 0;
+      lastPushedFailTimeStamp = 0;
       return true;
     }
     return false;
   }
 
-  public synchronized boolean onPushFail(String dataCenter, long pushVersion) {
+  public synchronized boolean onPushFail(Map<String, Long> versions) {
+    for (Entry<String, Long> entry : versions.entrySet()) {
+      if (onPushFail(entry.getKey(), entry.getValue())) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private synchronized boolean onPushFail(String dataCenter, long pushVersion) {
     final PushContext ctx = getPushContext(dataCenter);
 
     if (ctx.pushedVersion < pushVersion) {
-      ctx.pushedFailCount += 1;
-      ctx.lastPushedFailTimeStamp = System.currentTimeMillis();
+      pushedFailCount += 1;
+      lastPushedFailTimeStamp = System.currentTimeMillis();
       return true;
     }
     return false;
+  }
+
+  /**
+   * return true if all datacenter check skip
+   *
+   * @param versions
+   * @param nums
+   * @return
+   */
+  public synchronized boolean checkSkipPushEmpty(
+      Map<String, Long> versions, Map<String, Integer> nums) {
+    ParaCheckUtil.checkEquals(versions.keySet(), nums.keySet(), "checkSkipPushEmpty.datacenters");
+
+    for (Entry<String, Long> entry : versions.entrySet()) {
+      if (!checkSkipPushEmpty(entry.getKey(), entry.getValue(), nums.get(entry.getKey()))) {
+        return false;
+      }
+    }
+    return true;
   }
 
   public synchronized boolean checkSkipPushEmpty(String dataCenter, long pushVersion, int num) {
@@ -132,6 +217,21 @@ public class Subscriber extends BaseInfo {
     return lastPushVersion == lastPushMaxVersion
         && lastPushMaxVersion == ctx.pushedVersion
         && ctx.pushedNum == 0;
+  }
+
+  /**
+   * return true if one of any dataCenter need push empty
+   *
+   * @param dataCenters
+   * @return
+   */
+  public synchronized boolean needPushEmpty(Set<String> dataCenters) {
+    for (String dataCenter : dataCenters) {
+      if (needPushEmpty(dataCenter)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   public synchronized boolean needPushEmpty(String dataCenter) {
@@ -153,7 +253,6 @@ public class Subscriber extends BaseInfo {
   }
 
   public synchronized boolean hasPushed() {
-    // TODO now not care multi-datacenter
     if (CollectionUtils.isEmpty(lastPushContexts)) {
       return false;
     }
@@ -196,7 +295,11 @@ public class Subscriber extends BaseInfo {
   @Override
   protected synchronized String getOtherInfo() {
     return StringFormatter.format(
-        "scope={},elementType={},ctx={}", scope, elementType, lastPushContexts);
+        "scope={},elementType={},multi={},ctx={}",
+        scope,
+        elementType,
+        acceptMulti,
+        lastPushContexts);
   }
 
   public synchronized String printPushContext() {
@@ -223,14 +326,13 @@ public class Subscriber extends BaseInfo {
     return emptyVersion;
   }
 
-  public synchronized CircuitBreakerStatistic getStatistic(String dataCenter) {
-    final PushContext ctx = getPushContext(dataCenter);
+  public synchronized CircuitBreakerStatistic getStatistic() {
     return new CircuitBreakerStatistic(
         getGroup(),
         getSourceAddress().getIpAddress(),
         getSourceAddress().buildAddressString(),
-        ctx.pushedFailCount,
-        ctx.lastPushedFailTimeStamp);
+        pushedFailCount,
+        lastPushedFailTimeStamp);
   }
 
   protected Map<String, String> internAttributes(Map<String, String> attributes) {
@@ -263,19 +365,60 @@ public class Subscriber extends BaseInfo {
     long lastPushVersion = -1;
     long emptyVersion;
     int pushedNum = -1;
-    int pushedFailCount = 0;
-    long lastPushedFailTimeStamp = 0;
 
     @Override
     public String toString() {
       return StringFormatter.format(
-          "PushCtx{pushedVer={},lastMaxPushVer={},num={},empty={},failCount={},failTs={}}",
+          "PushCtx{pushedVer={},lastMaxPushVer={},num={},empty={}}",
           pushedVersion,
           lastMaxPushVersion,
           pushedNum,
-          emptyVersion,
-          pushedFailCount,
-          lastPushedFailTimeStamp);
+          emptyVersion);
+    }
+
+    /**
+     * Getter method for property <tt>pushedVersion</tt>.
+     *
+     * @return property value of pushedVersion
+     */
+    public long getPushedVersion() {
+      return pushedVersion;
+    }
+
+    /**
+     * Getter method for property <tt>lastMaxPushVersion</tt>.
+     *
+     * @return property value of lastMaxPushVersion
+     */
+    public long getLastMaxPushVersion() {
+      return lastMaxPushVersion;
+    }
+
+    /**
+     * Getter method for property <tt>lastPushVersion</tt>.
+     *
+     * @return property value of lastPushVersion
+     */
+    public long getLastPushVersion() {
+      return lastPushVersion;
+    }
+
+    /**
+     * Getter method for property <tt>emptyVersion</tt>.
+     *
+     * @return property value of emptyVersion
+     */
+    public long getEmptyVersion() {
+      return emptyVersion;
+    }
+
+    /**
+     * Getter method for property <tt>pushedNum</tt>.
+     *
+     * @return property value of pushedNum
+     */
+    public int getPushedNum() {
+      return pushedNum;
     }
   }
 }

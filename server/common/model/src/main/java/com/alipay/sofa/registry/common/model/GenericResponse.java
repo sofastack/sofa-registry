@@ -31,8 +31,8 @@ public class GenericResponse<T> extends CommonResponse {
   /**
    * get success response
    *
-   * @param data
-   * @return
+   * @param data data
+   * @return GenericResponse
    */
   public GenericResponse<T> fillSucceed(T data) {
     this.setSuccess(true);
@@ -43,8 +43,8 @@ public class GenericResponse<T> extends CommonResponse {
   /**
    * get fail response
    *
-   * @param msg
-   * @return
+   * @param msg msg
+   * @return GenericResponse
    */
   public GenericResponse<T> fillFailed(String msg) {
     this.setSuccess(false);
@@ -55,8 +55,8 @@ public class GenericResponse<T> extends CommonResponse {
   /**
    * get fail response
    *
-   * @param data
-   * @return
+   * @param data data
+   * @return GenericResponse
    */
   public GenericResponse<T> fillFailData(T data) {
     this.setSuccess(false);
@@ -77,6 +77,7 @@ public class GenericResponse<T> extends CommonResponse {
    * Setter method for property <tt>data</tt>.
    *
    * @param data value to be assigned to property data
+   * @return GenericResponse
    */
   public GenericResponse<T> setData(T data) {
     this.data = data;

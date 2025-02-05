@@ -27,6 +27,7 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.provide.data.DefaultProvideDataNotifier;
 import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataService;
+import com.alipay.sofa.registry.server.meta.resource.filter.AuthRestController;
 import com.alipay.sofa.registry.server.meta.resource.filter.LeaderAwareRestController;
 import com.alipay.sofa.registry.util.JsonUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -56,10 +57,10 @@ public class StopPushDataResource {
 
   @Autowired private DefaultProvideDataNotifier provideDataNotifier;
 
-  /** close push */
   @GET
   @Path("open")
   @Produces(MediaType.APPLICATION_JSON)
+  @AuthRestController
   public Result closePush() {
     boolean ret;
     Result result = new Result();
@@ -95,6 +96,7 @@ public class StopPushDataResource {
   @GET
   @Path("close")
   @Produces(MediaType.APPLICATION_JSON)
+  @AuthRestController
   public Result openPush() {
     boolean ret;
     Result result = new Result();

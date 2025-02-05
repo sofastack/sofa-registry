@@ -38,8 +38,8 @@ public class CommonResponse implements Serializable {
   /**
    * constructor
    *
-   * @param success
-   * @param message
+   * @param success success
+   * @param message message
    */
   public CommonResponse(boolean success, String message) {
     this.success = success;
@@ -49,7 +49,7 @@ public class CommonResponse implements Serializable {
   /**
    * build success resp
    *
-   * @return
+   * @return CommonResponse
    */
   public static CommonResponse buildSuccessResponse() {
     return new CommonResponse(true, "");
@@ -58,7 +58,8 @@ public class CommonResponse implements Serializable {
   /**
    * build success resp
    *
-   * @return
+   * @param msg msg
+   * @return CommonResponse
    */
   public static CommonResponse buildSuccessResponse(String msg) {
     return new CommonResponse(true, msg);
@@ -67,8 +68,8 @@ public class CommonResponse implements Serializable {
   /**
    * build fail resp
    *
-   * @param msg
-   * @return
+   * @param msg msg
+   * @return CommonResponse
    */
   public static CommonResponse buildFailedResponse(String msg) {
     return new CommonResponse(false, msg);

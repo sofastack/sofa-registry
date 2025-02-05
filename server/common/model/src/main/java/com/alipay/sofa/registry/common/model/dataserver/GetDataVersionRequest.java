@@ -36,7 +36,6 @@ public class GetDataVersionRequest extends AbstractSlotRequest {
   // dataInfoId:max(push.version)
   private final Map<String, DatumVersion> interests;
 
-  /** constructor */
   public GetDataVersionRequest(
       String dataCenter,
       ProcessId sessionProcessId,

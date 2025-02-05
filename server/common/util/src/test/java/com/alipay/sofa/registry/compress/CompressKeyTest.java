@@ -54,8 +54,24 @@ public class CompressKeyTest {
             put("RZ00B", Lists.newArrayList(new DataBox("url"), new DataBox("url")));
           }
         });
-    CompressPushKey key1 = CompressPushKey.of(receivedData, "zstd");
-    CompressPushKey key2 = CompressPushKey.of(receivedData, "zstd");
+    CompressPushKey key1 =
+        CompressPushKey.of(
+            receivedData.getSegment(),
+            receivedData.getDataId(),
+            receivedData.getInstanceId(),
+            receivedData.getGroup(),
+            receivedData.getVersion(),
+            receivedData.getData(),
+            "zstd");
+    CompressPushKey key2 =
+        CompressPushKey.of(
+            receivedData.getSegment(),
+            receivedData.getDataId(),
+            receivedData.getInstanceId(),
+            receivedData.getGroup(),
+            receivedData.getVersion(),
+            receivedData.getData(),
+            "zstd");
     Assert.assertEquals(key1, key2);
     Assert.assertEquals(key1.hashCode(), key2.hashCode());
     Assert.assertNotNull(key1.toString());
@@ -68,7 +84,15 @@ public class CompressKeyTest {
             put("RZ00B", Lists.newArrayList(new DataBox("url")));
           }
         });
-    CompressPushKey key3 = CompressPushKey.of(receivedData, "zstd");
+    CompressPushKey key3 =
+        CompressPushKey.of(
+            receivedData.getSegment(),
+            receivedData.getDataId(),
+            receivedData.getInstanceId(),
+            receivedData.getGroup(),
+            receivedData.getVersion(),
+            receivedData.getData(),
+            "zstd");
     Assert.assertNotEquals(key1, key3);
   }
 }

@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.store.api.elector;
 
+import com.alipay.sofa.registry.store.api.elector.AbstractLeaderElector.LeaderInfo;
+
 /**
  * @author chen.zhu
  *     <p>Mar 09, 2021
@@ -26,18 +28,10 @@ public interface LeaderElector {
 
   String myself();
 
-  /**
-   * start compete leader
-   *
-   * @return
-   */
+  /** start compete leader */
   void change2Follow();
 
-  /**
-   * stop compete leader
-   *
-   * @return
-   */
+  /** stop compete leader */
   void change2Observer();
 
   /**
@@ -47,19 +41,7 @@ public interface LeaderElector {
    */
   boolean amILeader();
 
-  /**
-   * Gets get elector.
-   *
-   * @return the get elector
-   */
-  String getLeader();
-
-  /**
-   * Gets get elector epoch.
-   *
-   * @return the get elector epoch
-   */
-  long getLeaderEpoch();
+  LeaderInfo getLeaderInfo();
 
   enum ElectorRole {
     LEADER,

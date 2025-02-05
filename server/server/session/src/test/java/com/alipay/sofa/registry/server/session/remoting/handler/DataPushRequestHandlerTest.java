@@ -26,10 +26,7 @@ import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.server.session.TestUtils;
 import com.alipay.sofa.registry.server.session.bootstrap.ExecutorManager;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfigBean;
-import com.alipay.sofa.registry.server.session.providedata.FetchGrayPushSwitchService;
-import com.alipay.sofa.registry.server.session.providedata.FetchStopPushService;
 import com.alipay.sofa.registry.server.session.push.FirePushService;
-import com.alipay.sofa.registry.server.session.push.PushSwitchService;
 import java.util.Collections;
 import org.assertj.core.util.Lists;
 import org.junit.Assert;
@@ -59,18 +56,23 @@ public class DataPushRequestHandlerTest {
     DataPushRequestHandler handler = newHandler();
     SessionServerConfigBean serverConfigBean = TestUtils.newSessionConfig("testDc");
     handler.sessionServerConfig = serverConfigBean;
-    handler.pushSwitchService = new PushSwitchService();
+    handler.pushSwitchService = TestUtils.newPushSwitchService(serverConfigBean);
     handler.executorManager = new ExecutorManager(serverConfigBean);
-    handler.pushSwitchService.setFetchStopPushService(new FetchStopPushService());
-    handler.pushSwitchService.setFetchGrayPushSwitchService(new FetchGrayPushSwitchService());
+
     Assert.assertNotNull(handler.getExecutor());
 
-    handler.pushSwitchService.getFetchStopPushService().setStopPushSwitch(init, true);
+    handler
+        .pushSwitchService
+        .getFetchStopPushService()
+        .setStopPushSwitch(System.currentTimeMillis(), true);
     // no npe, stopPush skip the handle
     Object obj = handler.doHandle(null, null);
     Assert.assertNull(obj);
 
-    handler.pushSwitchService.getFetchStopPushService().setStopPushSwitch(init, false);
+    handler
+        .pushSwitchService
+        .getFetchStopPushService()
+        .setStopPushSwitch(System.currentTimeMillis(), false);
     // npe
     TestUtils.assertRunException(RuntimeException.class, () -> handler.doHandle(null, request()));
     handler.firePushService = mock(FirePushService.class);

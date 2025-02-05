@@ -40,6 +40,7 @@ public class TestRegistryMain {
     configs.put("nodes.metaNode", DEFAULT_DATA_CENTER + ":" + LOCAL_ADDRESS);
     configs.put("nodes.localDataCenter", DEFAULT_DATA_CENTER);
     configs.put("nodes.localRegion", DEFAULT_ZONE);
+    configs.put("nodes.localSegmentRegions=DEFAULT_ZONE", DEFAULT_ZONE);
   }
 
   public void startRegistry() throws Exception {

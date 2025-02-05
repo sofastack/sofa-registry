@@ -22,7 +22,6 @@ import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.ProcessId;
 import com.alipay.sofa.registry.common.model.RegisterVersion;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
-import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.common.model.store.ProcessIdCache;
@@ -40,11 +39,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import org.apache.commons.collections.MapUtils;
 
@@ -314,7 +313,7 @@ public final class PublisherGroup {
         // remove the existing <= removedVer
         if (existing.registerVersion.equals(removedVer)
             || existing.registerVersion.orderThan(removedVer)) {
-          // sync from leader
+          // sync from local-leader/remote-leader
           if (sessionProcessId == null) {
             pubMap.remove(registerId);
             modified = true;
@@ -375,46 +374,12 @@ public final class PublisherGroup {
     }
   }
 
-  DatumSummary getAllSummary() {
-    Map<String /*registerId*/, RegisterVersion> publisherVersions =
-        Maps.newHashMapWithExpectedSize(pubMap.size());
-    for (Map.Entry<String, PublisherEnvelope> e : pubMap.entrySet()) {
-      PublisherEnvelope envelope = e.getValue();
-      RegisterVersion v = envelope.getVersionIfPub();
-      if (v == null) {
-        continue;
-      }
-      publisherVersions.put(e.getKey(), v);
-    }
-
-    return new DatumSummary(dataInfoId, publisherVersions);
+  public int pubSize() {
+    return pubMap.size();
   }
 
-  Map<String, DatumSummary> getSummary(Set<String> sessionIps) {
-    Map<String, Map<String /*registerId*/, RegisterVersion>> summaryMap =
-        Maps.newHashMapWithExpectedSize(sessionIps.size());
-
-    for (String sessionIp : sessionIps) {
-      summaryMap.computeIfAbsent(sessionIp, k -> Maps.newHashMapWithExpectedSize(64));
-    }
-
-    for (Map.Entry<String, PublisherEnvelope> e : pubMap.entrySet()) {
-      PublisherEnvelope envelope = e.getValue();
-      RegisterVersion v = envelope.getVersionIfPub();
-      if (v == null) {
-        continue;
-      }
-
-      if (sessionIps.contains(envelope.sessionProcessId.getHostAddress())) {
-        summaryMap.get(envelope.sessionProcessId.getHostAddress()).put(e.getKey(), v);
-      }
-    }
-
-    Map<String, DatumSummary> result = Maps.newHashMapWithExpectedSize(summaryMap.size());
-    for (Entry<String, Map<String, RegisterVersion>> entry : summaryMap.entrySet()) {
-      result.put(entry.getKey(), new DatumSummary(dataInfoId, entry.getValue()));
-    }
-    return result;
+  public void foreach(BiConsumer<String /*registerId*/, PublisherEnvelope> f) {
+    pubMap.forEach(f);
   }
 
   Collection<ProcessId> getSessionProcessIds() {
@@ -460,5 +425,18 @@ public final class PublisherGroup {
   public String toString() {
     return StringFormatter.format(
         "PubGroup{{},size={},ver={}}", dataInfoId, pubMap.size(), version);
+  }
+
+  public DatumVersion clearPublishers() {
+    lock.writeLock().lock();
+    try {
+      if (pubSize() > 0) {
+        pubMap.clear();
+        return updateVersion();
+      }
+      return null;
+    } finally {
+      lock.writeLock().unlock();
+    }
   }
 }

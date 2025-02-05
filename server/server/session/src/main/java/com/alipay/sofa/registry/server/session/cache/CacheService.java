@@ -25,8 +25,8 @@ public interface CacheService {
   /**
    * get cache by key
    *
-   * @param key
-   * @return
+   * @param key key
+   * @return Value
    */
   Value getValue(Key key) throws CacheAccessException;
 
@@ -35,7 +35,7 @@ public interface CacheService {
   /**
    * invalidate cache by key
    *
-   * @param key
+   * @param key key
    */
   void invalidate(Key key);
 }

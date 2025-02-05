@@ -16,9 +16,9 @@
  */
 package com.alipay.sofa.registry.jdbc.elector;
 
+import com.alipay.sofa.registry.common.model.elector.DistributeLockInfo;
 import com.alipay.sofa.registry.jdbc.config.MetaElectorConfig;
 import com.alipay.sofa.registry.jdbc.constant.TableEnum;
-import com.alipay.sofa.registry.jdbc.domain.DistributeLockDomain;
 import com.alipay.sofa.registry.jdbc.domain.FollowCompeteLockDomain;
 import com.alipay.sofa.registry.jdbc.mapper.DistributeLockMapper;
 import com.alipay.sofa.registry.log.Logger;
@@ -48,27 +48,25 @@ public class MetaJdbcLeaderElector extends AbstractLeaderElector implements Reco
   /**
    * start elect, return current leader
    *
-   * @return
+   * @return LeaderInfo
    */
   @Override
   protected LeaderInfo doElect() {
-    // 1、查询锁
-    DistributeLockDomain lock =
+    DistributeLockInfo lock =
         distributeLockMapper.queryDistLock(defaultCommonConfig.getClusterId(tableName()), lockName);
 
     /** compete and return leader */
-    // 2、不存在则创建锁
     if (lock == null) {
       return competeLeader(defaultCommonConfig.getClusterId(tableName()));
     }
-    // 3、判断角色
+
     ElectorRole role = amILeader(lock.getOwner()) ? ElectorRole.LEADER : ElectorRole.FOLLOWER;
     if (role == ElectorRole.LEADER) {
-      lock = onLeaderWorking(lock, myself()); // 4、提交心跳
+      lock = onLeaderWorking(lock, myself());
     } else {
-      lock = onFollowWorking(lock, myself()); // 5、判断过期与否，如过期，则cas竞争锁
+      lock = onFollowWorking(lock, myself());
     }
-    LeaderInfo result = leaderFrom(lock); // 6、锁信息转换为LeaderInfo
+    LeaderInfo result = leaderFrom(lock);
     LOG.info("meta role : {}, leaderInfo: {}", role, result);
     return result;
   }
@@ -80,8 +78,8 @@ public class MetaJdbcLeaderElector extends AbstractLeaderElector implements Reco
    * @return
    */
   private LeaderInfo competeLeader(String dataCenter) {
-    DistributeLockDomain lock =
-        new DistributeLockDomain(
+    DistributeLockInfo lock =
+        new DistributeLockInfo(
             dataCenter, lockName, myself(), metaElectorConfig.getLockExpireDuration());
     try {
       // throw exception if insert fail
@@ -98,7 +96,7 @@ public class MetaJdbcLeaderElector extends AbstractLeaderElector implements Reco
     return leaderFrom(lock);
   }
 
-  public static LeaderInfo leaderFrom(DistributeLockDomain lock) {
+  public static LeaderInfo leaderFrom(DistributeLockInfo lock) {
     return calcLeaderInfo(
         lock.getOwner(),
         lock.getGmtModifiedUnixMillis(),
@@ -108,11 +106,11 @@ public class MetaJdbcLeaderElector extends AbstractLeaderElector implements Reco
   /**
    * query current leader
    *
-   * @return
+   * @return LeaderInfo
    */
   @Override
   protected LeaderInfo doQuery() {
-    DistributeLockDomain lock =
+    DistributeLockInfo lock =
         distributeLockMapper.queryDistLock(defaultCommonConfig.getClusterId(tableName()), lockName);
     if (lock == null) {
       return LeaderInfo.HAS_NO_LEADER;
@@ -121,7 +119,7 @@ public class MetaJdbcLeaderElector extends AbstractLeaderElector implements Reco
     return leaderFrom(lock);
   }
 
-  private DistributeLockDomain onLeaderWorking(DistributeLockDomain lock, String myself) {
+  private DistributeLockInfo onLeaderWorking(DistributeLockInfo lock, String myself) {
 
     try {
       /** as leader, do heartbeat */
@@ -134,7 +132,7 @@ public class MetaJdbcLeaderElector extends AbstractLeaderElector implements Reco
     return lock;
   }
 
-  public DistributeLockDomain onFollowWorking(DistributeLockDomain lock, String myself) {
+  public DistributeLockInfo onFollowWorking(DistributeLockInfo lock, String myself) {
     /** as follow, do compete if lock expire */
     if (lock.expire()) {
       LOG.info("lock expire: {}, meta elector start: {}", lock, myself);
@@ -148,7 +146,7 @@ public class MetaJdbcLeaderElector extends AbstractLeaderElector implements Reco
               lock.getDuration(),
               lock.getTerm(),
               lock.getTermDuration()));
-      DistributeLockDomain newLock =
+      DistributeLockInfo newLock =
           distributeLockMapper.queryDistLock(lock.getDataCenter(), lock.getLockName());
       LOG.info("elector finish, new lock: {}", lock);
       return newLock;

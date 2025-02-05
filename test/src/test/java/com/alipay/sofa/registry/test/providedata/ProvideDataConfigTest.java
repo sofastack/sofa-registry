@@ -25,6 +25,8 @@ import com.alipay.sofa.registry.jdbc.repository.impl.RecoverConfigJdbcRepository
 import com.alipay.sofa.registry.server.meta.resource.StopPushDataResource;
 import com.alipay.sofa.registry.store.api.meta.RecoverConfigRepository;
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
+import com.alipay.sofa.registry.util.ConcurrentUtils;
+import java.util.concurrent.TimeUnit;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -71,12 +73,17 @@ public class ProvideDataConfigTest extends BaseIntegrationTest {
         TableEnum.PROVIDE_DATA.getTableName(),
         ValueConstants.PUSH_SWITCH_GRAY_OPEN_DATA_ID,
         RECOVER_CLUSTER_ID);
+
+    ((RecoverConfigJdbcRepository) recoverConfigRepository).doRefresh();
+
+    // refresh provide data cache
+    provideDataService.becomeLeader();
+    ConcurrentUtils.sleepUninterruptibly(1000, TimeUnit.MILLISECONDS);
   }
 
   @Test
   public void testClosePush() {
 
-    ((RecoverConfigJdbcRepository) recoverConfigRepository).doRefresh();
     Result result = stopPushDataResource.closePush();
     Assert.assertTrue(result.isSuccess());
 

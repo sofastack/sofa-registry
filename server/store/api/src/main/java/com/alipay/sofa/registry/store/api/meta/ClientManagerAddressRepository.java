@@ -32,24 +32,24 @@ public interface ClientManagerAddressRepository {
   /**
    * client open
    *
-   * @param ipSet
-   * @return
+   * @param ipSet ipSet
+   * @return ClientManagerResult
    */
   ClientManagerResult clientOpen(Set<AddressVersion> ipSet);
 
   /**
    * client off
    *
-   * @param ipSet
-   * @return
+   * @param ipSet ipSet
+   * @return ClientManagerResult
    */
   ClientManagerResult clientOff(Set<AddressVersion> ipSet);
 
   /**
    * reduce
    *
-   * @param ipSet
-   * @return
+   * @param ipSet ipSet
+   * @return ClientManagerResult
    */
   ClientManagerResult reduce(Set<AddressVersion> ipSet);
 

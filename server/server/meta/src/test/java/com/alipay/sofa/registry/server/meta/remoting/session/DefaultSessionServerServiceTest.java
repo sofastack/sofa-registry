@@ -91,9 +91,9 @@ public class DefaultSessionServerServiceTest extends AbstractMetaServerTestBase 
             new VersionedList<>(
                 DatumVersionUtil.nextId(),
                 Lists.newArrayList(
-                    new SessionNode(randomURL(ip1), getDc(), ServerEnv.PROCESS_ID),
-                    new SessionNode(randomURL(ip2), getDc(), ServerEnv.PROCESS_ID),
-                    new SessionNode(randomURL(randomIp()), getDc(), ServerEnv.PROCESS_ID))));
+                    new SessionNode(randomURL(ip1), getDc(), ServerEnv.PROCESS_ID, 0),
+                    new SessionNode(randomURL(ip2), getDc(), ServerEnv.PROCESS_ID, 0),
+                    new SessionNode(randomURL(randomIp()), getDc(), ServerEnv.PROCESS_ID, 0))));
     notifier.notifyProvideDataChange(
         new ProvideDataChangeEvent(ValueConstants.BLACK_LIST_DATA_ID, System.currentTimeMillis()));
     Thread.sleep(100);
@@ -114,9 +114,9 @@ public class DefaultSessionServerServiceTest extends AbstractMetaServerTestBase 
             new VersionedList<>(
                 DatumVersionUtil.nextId(),
                 Lists.newArrayList(
-                    new SessionNode(randomURL(ip1), getDc(), ServerEnv.PROCESS_ID),
-                    new SessionNode(randomURL(ip2), getDc(), ServerEnv.PROCESS_ID),
-                    new SessionNode(randomURL(randomIp()), getDc(), ServerEnv.PROCESS_ID))));
+                    new SessionNode(randomURL(ip1), getDc(), ServerEnv.PROCESS_ID, 0),
+                    new SessionNode(randomURL(ip2), getDc(), ServerEnv.PROCESS_ID, 0),
+                    new SessionNode(randomURL(randomIp()), getDc(), ServerEnv.PROCESS_ID, 0))));
     Client client2 = spy(getRpcClient(scheduled, 10, "Response"));
     SessionNodeExchanger otherNodeExchanger = mock(SessionNodeExchanger.class);
     when(otherNodeExchanger.request(any(Request.class)))
@@ -154,9 +154,9 @@ public class DefaultSessionServerServiceTest extends AbstractMetaServerTestBase 
             new VersionedList<>(
                 DatumVersionUtil.nextId(),
                 Lists.newArrayList(
-                    new SessionNode(randomURL(ip1), getDc(), ServerEnv.PROCESS_ID),
-                    new SessionNode(randomURL(ip2), getDc(), ServerEnv.PROCESS_ID),
-                    new SessionNode(randomURL(randomIp()), getDc(), ServerEnv.PROCESS_ID))));
+                    new SessionNode(randomURL(ip1), getDc(), ServerEnv.PROCESS_ID, 0),
+                    new SessionNode(randomURL(ip2), getDc(), ServerEnv.PROCESS_ID, 0),
+                    new SessionNode(randomURL(randomIp()), getDc(), ServerEnv.PROCESS_ID, 0))));
 
     SessionNodeExchanger otherNodeExchanger = mock(SessionNodeExchanger.class);
     when(otherNodeExchanger.request(any(Request.class))).thenReturn(Object::new);

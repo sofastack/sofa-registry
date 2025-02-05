@@ -19,6 +19,7 @@ package com.alipay.sofa.registry.jdbc.mapper;
 import com.alipay.sofa.registry.jdbc.domain.InterfaceAppsIndexDomain;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 import org.apache.ibatis.annotations.Param;
 
 /**
@@ -28,27 +29,17 @@ import org.apache.ibatis.annotations.Param;
 public interface InterfaceAppsIndexMapper {
 
   /**
-   * batch query by interfaceName
-   *
-   * @param dataCenter
-   * @param interfaceNames
-   * @return
-   */
-  List<InterfaceAppsIndexDomain> batchQueryByInterface(
-      @Param("dataCenter") String dataCenter, @Param("interfaceNames") List<String> interfaceNames);
-
-  /**
    * insert on replace
    *
-   * @param domain
-   * @return
+   * @param domain domain
+   * @return int
    */
   int replace(InterfaceAppsIndexDomain domain);
 
   /**
    * insert
    *
-   * @param domain
+   * @param domain domain
    * @return effect rows number
    */
   int update(InterfaceAppsIndexDomain domain);
@@ -56,16 +47,17 @@ public interface InterfaceAppsIndexMapper {
   /**
    * query domains which gmt_modified is after than maxUpdate
    *
-   * @param dataCenter
-   * @param maxId
-   * @returns
+   * @param dataCenters dataCenters
+   * @param maxId maxId
+   * @param limitCount limitCount
+   * @return List
    */
   List<InterfaceAppsIndexDomain> queryLargeThan(
-      @Param("dataCenter") String dataCenter,
+      @Param("dataCenters") Set<String> dataCenters,
       @Param("maxId") long maxId,
       @Param("limitCount") int limitCount);
 
-  List<InterfaceAppsIndexDomain> getExpired(
+  int cleanDeleted(
       @Param("dataCenter") String dataCenter,
       @Param("beforeTime") Date beforeTime,
       @Param("limit") int limit);

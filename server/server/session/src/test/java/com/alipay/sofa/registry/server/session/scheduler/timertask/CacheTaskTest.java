@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.scheduler.timertask;
 
+import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.common.model.store.Watcher;
@@ -28,22 +29,23 @@ import com.alipay.sofa.registry.server.session.store.SubscriberStore;
 import com.alipay.sofa.registry.server.session.store.WatcherStore;
 import com.alipay.sofa.registry.server.session.store.engine.StoreEngine;
 import com.google.common.collect.Lists;
+import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
 
 public class CacheTaskTest {
 
+  private String app = "app";
+  private String group = "group";
+  private String instanceId = "instanceId";
+  private String dataInfoId = "dataInfoId";
+
   private WatcherStore watcherStore;
   private SubscriberStore subscriberStore;
   private PublisherStore publisherStore;
 
   private void init() {
-    final String app = "app";
-    final String group = "group";
-    final String instanceId = "instanceId";
-    final String dataInfoId = "dataInfoId";
-
     this.watcherStore = Mockito.mock(WatcherStore.class);
     Watcher watcher = new Watcher();
     watcher.setAppName(app);
@@ -133,5 +135,36 @@ public class CacheTaskTest {
     task.boltExchange = Mockito.mock(BoltExchange.class);
     task.executorManager = new ExecutorManager(serverConfigBean);
     task.syncCount();
+  }
+
+  @Test
+  public void testSplitMultiSub() {
+    List<Subscriber> subs = Lists.newArrayList();
+    Tuple<List<Subscriber>, List<Subscriber>> tuple = CacheCountTask.splitMultiSub(subs);
+    Assert.assertEquals(0, tuple.o1.size());
+    Assert.assertEquals(0, tuple.o2.size());
+
+    Subscriber subscriber = new Subscriber();
+    subscriber.setAppName(app);
+    subscriber.setGroup(group);
+    subscriber.setInstanceId(instanceId);
+    subscriber.setDataInfoId(dataInfoId);
+    subs.add(subscriber);
+
+    tuple = CacheCountTask.splitMultiSub(subs);
+    Assert.assertEquals(1, tuple.o1.size());
+    Assert.assertEquals(0, tuple.o2.size());
+
+    Subscriber multiSubscriber = new Subscriber();
+    subscriber.setAppName(app);
+    subscriber.setGroup(group);
+    subscriber.setInstanceId(instanceId);
+    subscriber.setDataInfoId(dataInfoId);
+    subscriber.setAcceptMulti(true);
+    subs.add(multiSubscriber);
+
+    tuple = CacheCountTask.splitMultiSub(subs);
+    Assert.assertEquals(1, tuple.o1.size());
+    Assert.assertEquals(1, tuple.o2.size());
   }
 }

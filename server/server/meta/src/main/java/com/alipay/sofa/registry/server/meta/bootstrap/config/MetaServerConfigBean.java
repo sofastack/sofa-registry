@@ -16,10 +16,11 @@
  */
 package com.alipay.sofa.registry.server.meta.bootstrap.config;
 
-import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.Lease;
+import com.alipay.sofa.registry.server.shared.config.CommonConfig;
 import com.alipay.sofa.registry.util.OsUtils;
 import com.alipay.sofa.registry.util.SystemUtils;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
@@ -73,6 +74,8 @@ public class MetaServerConfigBean implements MetaServerConfig {
   private int clientManagerExpireDays = 1;
 
   private int appRevisionMaxRemove = 2000;
+
+  private int interfaceMaxRemove = 2000;
   private int appRevisionCountAlarmThreshold = 20;
 
   private long metaLeaderWarmupMillis =
@@ -88,6 +91,27 @@ public class MetaServerConfigBean implements MetaServerConfig {
   // <=0 means no protection
   private int dataNodeProtectionNum =
       SystemUtils.getSystemInteger("registry.data.protection.num", 0);
+
+  private CommonConfig commonConfig;
+
+  public MetaServerConfigBean(CommonConfig commonConfig) {
+    this.commonConfig = commonConfig;
+  }
+
+  @Override
+  public String getLocalDataCenter() {
+    return commonConfig.getLocalDataCenter();
+  }
+
+  @Override
+  public boolean isLocalDataCenter(String dataCenter) {
+    return commonConfig.getLocalDataCenter().equals(dataCenter);
+  }
+
+  @Override
+  public Set<String> getLocalDataCenterZones() {
+    return commonConfig.getLocalSegmentRegions();
+  }
 
   /**
    * Gets get session server port.
@@ -242,16 +266,6 @@ public class MetaServerConfigBean implements MetaServerConfig {
    */
   public void setMetaNodeExchangeTimeoutMillis(int metaNodeExchangeTimeoutMillis) {
     this.metaNodeExchangeTimeoutMillis = metaNodeExchangeTimeoutMillis;
-  }
-
-  /**
-   * Gets get cross dc meta sync interval milli.
-   *
-   * @return the get cross dc meta sync interval milli
-   */
-  @Override
-  public int getCrossDcMetaSyncIntervalMillis() {
-    return ValueConstants.CROSS_DC_META_SYNC_INTERVAL_MILLI;
   }
 
   /**
@@ -506,8 +520,17 @@ public class MetaServerConfigBean implements MetaServerConfig {
     return appRevisionMaxRemove;
   }
 
+  @Override
+  public int getInterfaceMaxRemove() {
+    return interfaceMaxRemove;
+  }
+
   public void setAppRevisionMaxRemove(int appRevisionMaxRemove) {
     this.appRevisionMaxRemove = appRevisionMaxRemove;
+  }
+
+  public void setInterfaceMaxRemove(int interfaceMaxRemove) {
+    this.interfaceMaxRemove = interfaceMaxRemove;
   }
   /**
    * Setter method for property <tt>clientManagerCleanSecs</tt>.

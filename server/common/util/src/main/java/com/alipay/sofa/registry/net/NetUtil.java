@@ -109,7 +109,7 @@ public class NetUtil {
   }
 
   /**
-   * @param ip
+   * @param ip ip
    * @return String
    */
   public static String getDomainFromIP(String ip) {

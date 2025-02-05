@@ -18,6 +18,7 @@ package com.alipay.sofa.registry.server.session.push;
 
 import static org.mockito.Mockito.*;
 
+import com.alipay.sofa.registry.common.model.DataCenterPushInfo;
 import com.alipay.sofa.registry.common.model.client.pb.ReceivedConfigDataPb;
 import com.alipay.sofa.registry.common.model.client.pb.ReceivedDataPb;
 import com.alipay.sofa.registry.common.model.metaserver.CompressPushSwitch;
@@ -56,12 +57,20 @@ public class PushDataGeneratorTest {
 
     SubDatum emptyDatum = DatumUtils.newEmptySubDatum(sub1, "testDc", 1);
     TestUtils.assertRunException(
-        RuntimeException.class, () -> generator.createPushData(emptyDatum, subscriberMap));
+        IllegalArgumentException.class,
+        () -> generator.createPushData(MultiSubDatum.of(emptyDatum), subscriberMap));
+
+    sub1.setDataInfoId(TestUtils.newDataInfoId("test-dataid"));
+    SubDatum emptyDatum1 = DatumUtils.newEmptySubDatum(sub1, "testDc", 1);
+    TestUtils.assertRunException(
+        RuntimeException.class,
+        () -> generator.createPushData(MultiSubDatum.of(emptyDatum1), subscriberMap));
 
     sub2.setScope(ScopeEnum.zone);
     sub2.setClientVersion(BaseInfo.ClientVersion.MProtocolpackage);
     TestUtils.assertRunException(
-        IllegalArgumentException.class, () -> generator.createPushData(emptyDatum, subscriberMap));
+        IllegalArgumentException.class,
+        () -> generator.createPushData(MultiSubDatum.of(emptyDatum1), subscriberMap));
 
     sub2.setClientVersion(BaseInfo.ClientVersion.StoreData);
     TestUtils.assertRunException(
@@ -80,13 +89,21 @@ public class PushDataGeneratorTest {
     SubPublisher pub = TestUtils.newSubPublisher(10, 20, "TESTZONE");
     SubPublisher pub2 = TestUtils.newSubPublisher(10, 20, "TESTZONE");
     List<SubPublisher> list = Lists.newArrayList(pub, pub2);
-    SubDatum subDatum = TestUtils.newSubDatum("testDataId", 200, list);
-    PushData<ReceivedData> pushData = generator.createPushData(subDatum, subscriberMap);
+    SubDatum subDatum = TestUtils.newSubDatum("testDc", "testDataId", 200, list);
+    PushData<ReceivedData> pushData =
+        generator.createPushData(MultiSubDatum.of(subDatum), subscriberMap);
     ReceivedData receivedData = pushData.getPayload();
     Assert.assertEquals(receivedData.getVersion().longValue(), subDatum.getVersion());
     Assert.assertEquals(
         Sets.newHashSet(receivedData.getSubscriberRegistIds()), subscriberMap.keySet());
-    Assert.assertEquals(2, pushData.getDataCount());
+    Assert.assertEquals(
+        2,
+        pushData
+            .getDataCenterPushInfo()
+            .get(subDatum.getDataCenter())
+            .getPushNum()
+            .get("testDc")
+            .intValue());
     Assert.assertEquals(2, receivedData.getData().values().stream().mapToInt(List::size).sum());
   }
 
@@ -100,7 +117,12 @@ public class PushDataGeneratorTest {
         ReceivedDataConverter.createReceivedConfigData(
             w, new ProvideData(null, w.getDataInfoId(), null));
     PushData pushData = generator.createPushData(w, data);
-    Assert.assertEquals(1, pushData.getDataCount());
+    Assert.assertEquals(
+        1,
+        ((DataCenterPushInfo) pushData.getDataCenterPushInfo().get("testDc"))
+            .getPushNum()
+            .get("testDc")
+            .intValue());
     Assert.assertTrue(data == pushData.getPayload());
     Assert.assertTrue(data.getVersion() >= start);
     Assert.assertTrue(data.getVersion() <= DatumVersionUtil.nextId());
@@ -148,8 +170,9 @@ public class PushDataGeneratorTest {
       SubPublisher pub = TestUtils.newSubPublisher(10, 20, "TESTZONE");
       list.add(pub);
     }
-    SubDatum subDatum = TestUtils.newSubDatum("testDataId", 200, list);
-    PushData<ReceivedDataPb> pushData = generator.createPushData(subDatum, subscriberMap);
+    SubDatum subDatum = TestUtils.newSubDatum("testDc", "testDataId", 200, list);
+    PushData<ReceivedDataPb> pushData =
+        generator.createPushData(MultiSubDatum.of(subDatum), subscriberMap);
     Assert.assertEquals(0, pushData.getPayload().getDataMap().size());
     Assert.assertNotEquals(0, pushData.getPayload().getBody().size());
     Assert.assertNotEquals(0, pushData.getPayload().getOriginBodySize());

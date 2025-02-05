@@ -55,6 +55,9 @@ public class BlacklistDataResource {
    * update blacklist e.g. curl -d
    * '{"FORBIDDEN_PUB":{"IP_FULL":["1.1.1.1","10.15.233.150"]},"FORBIDDEN_SUB_BY_PREFIX":{"IP_FULL":["1.1.1.1"]}}'
    * -H "Content-Type: application/json" -X POST http://localhost:9615/blacklist/update
+   *
+   * @param config config
+   * @return Result
    */
   @POST
   @Path("update")

@@ -19,6 +19,7 @@ package com.alipay.sofa.registry.server.meta.lease.session;
 import static org.mockito.Mockito.when;
 
 import com.alipay.sofa.registry.common.model.ProcessId;
+import com.alipay.sofa.registry.common.model.metaserver.Lease;
 import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.HeartbeatRequest;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 import com.alipay.sofa.registry.common.model.slot.SlotConfig;
@@ -29,6 +30,7 @@ import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.slot.SlotManager;
 import com.alipay.sofa.registry.server.meta.slot.manager.SimpleSlotManager;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 import org.assertj.core.util.Lists;
@@ -65,7 +67,7 @@ public class DefaultSessionServerManagerTest extends AbstractMetaServerTestBase 
   public void testGetEpoch() throws TimeoutException, InterruptedException {
     Assert.assertEquals(0, sessionManager.getEpoch());
     sessionManager.renew(
-        new SessionNode(randomURL(randomIp()), getDc(), ServerEnv.PROCESS_ID), 1000);
+        new SessionNode(randomURL(randomIp()), getDc(), ServerEnv.PROCESS_ID, 0), 1000);
     waitConditionUntilTimeOut(() -> sessionManager.getEpoch() > 0, 100);
     Assert.assertNotEquals(0, sessionManager.getEpoch());
   }
@@ -81,7 +83,8 @@ public class DefaultSessionServerManagerTest extends AbstractMetaServerTestBase 
     String ip = randomIp();
     long timestamp = System.currentTimeMillis();
     SessionNode sessionNode =
-        new SessionNode(randomURL(ip), getDc(), new ProcessId(ip, timestamp, 1, random.nextInt()));
+        new SessionNode(
+            randomURL(ip), getDc(), new ProcessId(ip, timestamp, 1, random.nextInt()), 0);
     NotifyObserversCounter counter = new NotifyObserversCounter();
     sessionManager.addObserver(counter);
 
@@ -99,7 +102,8 @@ public class DefaultSessionServerManagerTest extends AbstractMetaServerTestBase 
         new SessionNode(
             sessionNode.getNodeUrl(),
             getDc(),
-            new ProcessId(sessionNode.getIp(), timestamp, 2, random.nextInt()));
+            new ProcessId(sessionNode.getIp(), timestamp, 2, random.nextInt()),
+            0);
     Assert.assertFalse(sessionManager.renew(sessionNode2, 1));
     Assert.assertEquals(2, counter.getCounter());
   }
@@ -108,7 +112,7 @@ public class DefaultSessionServerManagerTest extends AbstractMetaServerTestBase 
   public void testSessionServerManagerRefreshEpochOnlyOnceWhenNewRegistered()
       throws TimeoutException, InterruptedException {
     makeMetaLeader();
-    SessionNode node = new SessionNode(randomURL(randomIp()), getDc(), ServerEnv.PROCESS_ID);
+    SessionNode node = new SessionNode(randomURL(randomIp()), getDc(), ServerEnv.PROCESS_ID, 0);
     sessionManager.renew(node, 1000);
     Assert.assertEquals(1, sessionManager.getSessionServerMetaInfo().getClusterMembers().size());
   }
@@ -129,7 +133,7 @@ public class DefaultSessionServerManagerTest extends AbstractMetaServerTestBase 
   protected List<SessionNode> randomSessionNodes(int num) {
     List<SessionNode> result = Lists.newArrayList();
     for (int i = 0; i < num; i++) {
-      result.add(new SessionNode(randomURL(randomIp()), getDc(), ServerEnv.PROCESS_ID));
+      result.add(new SessionNode(randomURL(randomIp()), getDc(), ServerEnv.PROCESS_ID, 0));
     }
     return result;
   }
@@ -140,7 +144,8 @@ public class DefaultSessionServerManagerTest extends AbstractMetaServerTestBase 
     for (SessionNode sessionNode : sessionNodes) {
       sessionManager.renew(sessionNode, 1000);
     }
-    SessionNode sessionNode = new SessionNode(new URL(randomIp()), getDc(), ServerEnv.PROCESS_ID);
+    SessionNode sessionNode =
+        new SessionNode(new URL(randomIp()), getDc(), ServerEnv.PROCESS_ID, 0);
     sessionManager.renew(sessionNode, 1000);
     SlotTable slotTable = randomSlotTable();
 
@@ -151,8 +156,25 @@ public class DefaultSessionServerManagerTest extends AbstractMetaServerTestBase 
                 slotTable.getEpoch(),
                 getDc(),
                 System.currentTimeMillis(),
-                SlotConfig.slotBasicInfo())
+                SlotConfig.slotBasicInfo(),
+                Collections.emptyMap())
             .setSlotTable(slotTable));
     Assert.assertNotEquals(SlotTable.INIT, slotManager.getSlotTable());
+  }
+
+  @Test
+  public void testWeightChange() {
+    List<SessionNode> sessionNodes = randomSessionNodes(10);
+    for (SessionNode sessionNode : sessionNodes) {
+      sessionManager.register(new Lease<>(sessionNode, 10000));
+    }
+    SessionNode sessionNode =
+        new SessionNode(
+            sessionNodes.get(0).getNodeUrl(),
+            sessionNodes.get(0).getRegionId(),
+            sessionNodes.get(0).getProcessId(),
+            1);
+    sessionManager.renew(sessionNode, 1000);
+    Assert.assertEquals(10, sessionManager.getSessionServerMetaInfo().getClusterMembers().size());
   }
 }

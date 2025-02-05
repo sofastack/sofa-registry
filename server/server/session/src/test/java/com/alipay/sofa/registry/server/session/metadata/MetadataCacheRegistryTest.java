@@ -22,16 +22,22 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.alipay.sofa.registry.common.model.appmeta.InterfaceMapping;
+import com.alipay.sofa.registry.common.model.metaserver.MultiClusterSyncInfo;
 import com.alipay.sofa.registry.common.model.store.AppRevision;
 import com.alipay.sofa.registry.core.model.AppRevisionInterface;
 import com.alipay.sofa.registry.exception.SofaRegistryRuntimeException;
 import com.alipay.sofa.registry.server.session.AbstractSessionServerTestBase;
 import com.alipay.sofa.registry.server.session.bootstrap.ExecutorManager;
+import com.alipay.sofa.registry.server.session.bootstrap.MultiClusterSessionServerConfig;
+import com.alipay.sofa.registry.store.api.config.DefaultCommonConfig;
+import com.alipay.sofa.registry.store.api.meta.MultiClusterSyncRepository;
 import com.alipay.sofa.registry.store.api.repository.AppRevisionRepository;
 import com.alipay.sofa.registry.task.MetricsableThreadPoolExecutor;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -44,6 +50,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.util.CollectionUtils;
 
 /**
  * @author xiaojian.xj
@@ -58,7 +65,13 @@ public class MetadataCacheRegistryTest extends AbstractSessionServerTestBase {
 
   @Spy private InMemoryInterfaceAppsRepository interfaceAppsRepository;
 
+  @Mock private MultiClusterSyncRepository multiClusterSyncRepository;
+
   @Mock private ExecutorManager executorManager;
+
+  @Mock private DefaultCommonConfig defaultCommonConfig;
+
+  @Mock private MultiClusterSessionServerConfig multiClusterSessionServerConfig;
 
   private static List<AppRevision> appRevisionList;
 
@@ -82,6 +95,10 @@ public class MetadataCacheRegistryTest extends AbstractSessionServerTestBase {
     appRevisionRepository.setInterfaceAppsRepository(interfaceAppsRepository);
 
     when(executorManager.getAppRevisionRegisterExecutor()).thenReturn(EXECUTOR);
+    when(sessionServerConfig.getSessionServerDataCenter()).thenReturn("testdc");
+    when(multiClusterSyncRepository.queryLocalSyncInfos())
+        .thenReturn(Collections.singleton(new MultiClusterSyncInfo()));
+    when(multiClusterSessionServerConfig.getMultiClusterConfigReloadSecs()).thenReturn(1L);
     metadataCacheRegistry.init();
     metadataCacheRegistry.waitSynced();
   }
@@ -128,7 +145,36 @@ public class MetadataCacheRegistryTest extends AbstractSessionServerTestBase {
     metadataCacheRegistry
         .setAppRevisionRepository(mockAppRevisionRepository)
         .setInterfaceAppsRepository(interfaceAppsRepository)
-        .setExecutorManager(executorManager);
+        .setExecutorManager(executorManager)
+        .setDefaultCommonConfig(defaultCommonConfig)
+        .setMultiClusterSessionServerConfig(multiClusterSessionServerConfig)
+        .setMultiClusterSyncRepository(
+            new MultiClusterSyncRepository() {
+              @Override
+              public boolean insert(MultiClusterSyncInfo syncInfo) {
+                return true;
+              }
+
+              @Override
+              public boolean update(MultiClusterSyncInfo syncInfo, long expectVersion) {
+                return true;
+              }
+
+              @Override
+              public Set<MultiClusterSyncInfo> queryLocalSyncInfos() {
+                return Collections.singleton(new MultiClusterSyncInfo());
+              }
+
+              @Override
+              public int remove(String remoteDataCenter, long dataVersion) {
+                return 0;
+              }
+
+              @Override
+              public MultiClusterSyncInfo query(String remoteDataCenter) {
+                return new MultiClusterSyncInfo();
+              }
+            });
 
     metadataCacheRegistry.init();
     doThrow(new SofaRegistryRuntimeException("expected exception"))
@@ -144,11 +190,13 @@ public class MetadataCacheRegistryTest extends AbstractSessionServerTestBase {
       for (Map.Entry<String, AppRevisionInterface> entry :
           appRevisionRegister.getInterfaceMap().entrySet()) {
         String dataInfoId = entry.getKey();
-        InterfaceMapping appNames = metadataCacheRegistry.getAppNames(dataInfoId);
-        Assert.assertNull(appNames);
+        InterfaceMapping mapping = metadataCacheRegistry.getAppNames(dataInfoId);
+        Assert.assertEquals(-1L, mapping.getNanosVersion());
+        Assert.assertTrue(CollectionUtils.isEmpty(mapping.getApps()));
       }
     }
 
+    Thread.sleep(3000);
     metadataCacheRegistry.setAppRevisionRepository(appRevisionRepository);
 
     waitConditionUntilTimeOut(MetadataCacheRegistryTest::check, 3000);

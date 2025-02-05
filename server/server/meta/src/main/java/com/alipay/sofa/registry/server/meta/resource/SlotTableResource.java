@@ -24,11 +24,15 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.MetaLeaderService;
 import com.alipay.sofa.registry.server.meta.lease.data.DataServerManager;
+import com.alipay.sofa.registry.server.meta.multi.cluster.DefaultMultiClusterSlotTableSyncer.RemoteClusterSlotState;
+import com.alipay.sofa.registry.server.meta.multi.cluster.MultiClusterSlotTableSyncer;
 import com.alipay.sofa.registry.server.meta.resource.filter.LeaderAwareRestController;
 import com.alipay.sofa.registry.server.meta.slot.SlotManager;
 import com.alipay.sofa.registry.server.meta.slot.arrange.ScheduledSlotArranger;
 import com.alipay.sofa.registry.server.meta.slot.status.SlotTableStatusService;
 import com.alipay.sofa.registry.server.meta.slot.tasks.BalanceTask;
+import java.util.Map;
+import javax.annotation.Resource;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -54,6 +58,8 @@ public class SlotTableResource {
   @Autowired private MetaLeaderService metaLeaderService;
 
   @Autowired private SlotTableStatusService slotTableStatusService;
+
+  @Resource private MultiClusterSlotTableSyncer multiClusterSlotTableSyncer;
 
   @PUT
   @Path("force/refresh")
@@ -162,6 +168,24 @@ public class SlotTableResource {
       return new GenericResponse<>().fillFailed(th.getMessage());
     } finally {
       logger.info("[getSlotTableStatus] end");
+    }
+  }
+
+  @GET
+  @Path("/multi/slottable")
+  @Produces(MediaType.APPLICATION_JSON)
+  @LeaderAwareRestController
+  public GenericResponse<Object> getMultiSlottable() {
+    logger.info("[getSyncSlottableStatus] begin");
+    try {
+      Map<String, RemoteClusterSlotState> multiClusterSlotTable =
+          multiClusterSlotTableSyncer.getMultiClusterSlotTable();
+      return new GenericResponse<>().fillSucceed(multiClusterSlotTable);
+    } catch (Throwable th) {
+      logger.error("[getSyncSlottableStatus]", th);
+      return new GenericResponse<>().fillFailed(th.getMessage());
+    } finally {
+      logger.info("[getSyncSlottableStatus] end");
     }
   }
 

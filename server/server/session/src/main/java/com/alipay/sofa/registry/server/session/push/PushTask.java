@@ -16,24 +16,28 @@
  */
 package com.alipay.sofa.registry.server.session.push;
 
+import com.alipay.sofa.registry.common.model.DataCenterPushInfo;
+import com.alipay.sofa.registry.common.model.SegmentPushInfo;
 import com.alipay.sofa.registry.common.model.SubscriberUtils;
 import com.alipay.sofa.registry.common.model.store.BaseInfo;
+import com.alipay.sofa.registry.common.model.store.MultiSubDatum;
 import com.alipay.sofa.registry.common.model.store.PushData;
-import com.alipay.sofa.registry.common.model.store.SubDatum;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.trace.TraceID;
 import com.alipay.sofa.registry.util.StringFormatter;
+import com.google.common.collect.Maps;
 import java.net.InetSocketAddress;
+import java.util.Collections;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
-import org.apache.commons.lang.StringUtils;
 
 public abstract class PushTask {
   protected final TraceID taskID;
   protected volatile long expireTimestamp;
 
-  protected final SubDatum datum;
+  protected final MultiSubDatum datum;
   protected final Map<String, Subscriber> subscriberMap;
   protected final Subscriber subscriber;
 
@@ -41,15 +45,13 @@ public abstract class PushTask {
   protected final PushTrace trace;
 
   protected int retryCount;
-  private int pushDataCount = -1;
-  private String pushEncode = StringUtils.EMPTY;
-  private int encodeSize = 0;
+  private Map<String, DataCenterPushInfo> dataCenterPushInfos;
 
   protected PushTask(
       PushCause pushCause,
       InetSocketAddress addr,
       Map<String, Subscriber> subscriberMap,
-      SubDatum datum) {
+      MultiSubDatum datum) {
     this.taskID = TraceID.newTraceID();
     this.datum = datum;
     this.subscriberMap = subscriberMap;
@@ -95,11 +97,13 @@ public abstract class PushTask {
     if (isSingletonReg() && t.isSingletonReg()) {
       return subscriber.getVersion() > t.subscriber.getVersion();
     }
-    return datum.getVersion() > t.datum.getVersion();
-  }
-
-  protected long getMaxPushedVersion() {
-    return SubscriberUtils.getMaxPushedVersion(datum.getDataCenter(), subscriberMap.values());
+    for (Entry<String, Long> entry : datum.getVersion().entrySet()) {
+      // return true if one of any datum.version > t.datum.version
+      if (entry.getValue() > t.datum.getVersion(entry.getKey())) {
+        return true;
+      }
+    }
+    return false;
   }
 
   @Override
@@ -114,7 +118,7 @@ public abstract class PushTask {
         .append(",expireT=")
         .append(expireTimestamp)
         .append(",DC=")
-        .append(datum.getDataCenter())
+        .append(datum.dataCenters())
         .append(",ver=")
         .append(datum.getVersion())
         .append(",addr=")
@@ -130,28 +134,62 @@ public abstract class PushTask {
     return sb.toString();
   }
 
-  public int getPushDataCount() {
+  /**
+   * Getter method for property <tt>dataCenterPushInfos</tt>.
+   *
+   * @return property value of dataCenterPushInfos
+   */
+  public Map<String, DataCenterPushInfo> getDataCenterPushInfos() {
+    return dataCenterPushInfos;
+  }
+
+  /**
+   * Setter method for property <tt>dataCenterPushInfos</tt>.
+   *
+   * @param dataCenterPushInfos value to be assigned to property dataCenterPushInfos
+   */
+  public void setDataCenterPushInfos(Map<String, DataCenterPushInfo> dataCenterPushInfos) {
+    this.dataCenterPushInfos = dataCenterPushInfos;
+  }
+
+  public Map<String, Integer> getDataCenterPushCount() {
+    if (dataCenterPushInfos == null) {
+      return Collections.EMPTY_MAP;
+    }
+    Map<String, Integer> pushDataCount =
+        Maps.newHashMapWithExpectedSize(dataCenterPushInfos.size());
+    for (Entry<String, DataCenterPushInfo> entry : dataCenterPushInfos.entrySet()) {
+
+      int dataCenterPushCount = 0;
+      if (entry.getValue().getSegmentPushInfos() != null) {
+        dataCenterPushCount =
+            entry.getValue().getSegmentPushInfos().values().stream()
+                .mapToInt(SegmentPushInfo::getDataCount)
+                .sum();
+      }
+      pushDataCount.put(entry.getKey(), dataCenterPushCount);
+    }
     return pushDataCount;
   }
 
-  public void setPushDataCount(int pushDataCount) {
-    this.pushDataCount = pushDataCount;
-  }
+  public Map<String, Map<String, Integer>> getPushDataCount() {
+    if (dataCenterPushInfos == null) {
+      return Collections.EMPTY_MAP;
+    }
 
-  public void setPushEncode(String pushEncode) {
-    this.pushEncode = pushEncode;
-  }
-
-  public void setEncodeSize(int encodeSize) {
-    this.encodeSize = encodeSize;
-  }
-
-  public String getPushEncode() {
-    return pushEncode;
-  }
-
-  public int getEncodeSize() {
-    return encodeSize;
+    Map<String, Map<String, Integer>> pushDataCount =
+        Maps.newHashMapWithExpectedSize(dataCenterPushInfos.size());
+    for (Entry<String, DataCenterPushInfo> entry : dataCenterPushInfos.entrySet()) {
+      Map<String, Integer> map =
+          pushDataCount.computeIfAbsent(entry.getKey(), k -> Maps.newHashMap());
+      if (entry.getValue().getSegmentPushInfos() == null) {
+        continue;
+      }
+      for (SegmentPushInfo info : entry.getValue().getSegmentPushInfos().values()) {
+        map.put(info.getSegment(), info.getDataCount());
+      }
+    }
+    return pushDataCount;
   }
 
   protected static final class PushingTaskKey {

@@ -36,6 +36,7 @@ public final class RegProcessor {
   private static final Logger LOGGER = LoggerFactory.getLogger(RegProcessor.class);
   final BufferWorker[] workers;
   final RegHandler regHandler;
+  private PushEfficiencyImproveConfig pushEfficiencyImproveConfig;
 
   RegProcessor(int workerSize, RegHandler regHandler) {
     this.regHandler = regHandler;
@@ -47,6 +48,13 @@ public final class RegProcessor {
     }
   }
 
+  public void setWorkDelayTime(PushEfficiencyImproveConfig pushEfficiencyImproveConfig) {
+    this.pushEfficiencyImproveConfig = pushEfficiencyImproveConfig;
+    for (BufferWorker worker : this.workers) {
+      worker.setRegWorkWaitingMillis(pushEfficiencyImproveConfig.getRegWorkWaitingMillis());
+    }
+  }
+
   interface RegHandler {
     boolean onReg(String dataInfoId, List<Subscriber> subscribers);
   }
@@ -55,7 +63,12 @@ public final class RegProcessor {
     final String dataInfoId = subscriber.getDataInfoId();
     BufferWorker worker = indexOf(subscriber.getDataInfoId());
     SubBuffer buffer = worker.subMap.computeIfAbsent(dataInfoId, k -> new SubBuffer());
-    return buffer.add(subscriber);
+    boolean result = buffer.add(subscriber);
+    if (null != pushEfficiencyImproveConfig
+        && pushEfficiencyImproveConfig.fetchRegWorkWake(subscriber.getAppName())) {
+      worker.wakeup();
+    }
+    return result;
   }
 
   private BufferWorker indexOf(String dataInfoId) {
@@ -147,6 +160,12 @@ public final class RegProcessor {
   final class BufferWorker extends WakeUpLoopRunnable {
     final Map<String, SubBuffer> subMap = new ConcurrentHashMap<>(1024 * 8);
 
+    private int regWorkWaitingMillis = 200;
+
+    public void setRegWorkWaitingMillis(int regWorkWaitingMillis) {
+      this.regWorkWaitingMillis = regWorkWaitingMillis;
+    }
+
     @Override
     public void runUnthrowable() {
       watchBuffer();
@@ -154,7 +173,7 @@ public final class RegProcessor {
 
     @Override
     public int getWaitingMillis() {
-      return 200;
+      return regWorkWaitingMillis;
     }
 
     List<Ref> getAndResetBuffer() {

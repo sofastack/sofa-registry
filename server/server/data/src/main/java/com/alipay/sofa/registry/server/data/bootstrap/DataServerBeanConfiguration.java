@@ -16,15 +16,16 @@
  */
 package com.alipay.sofa.registry.server.data.bootstrap;
 
+import com.alipay.sofa.registry.common.model.slot.filter.SyncSlotAcceptAllManager;
+import com.alipay.sofa.registry.common.model.slot.filter.SyncSlotAcceptorManager;
 import com.alipay.sofa.registry.jdbc.config.JdbcConfiguration;
 import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.remoting.jersey.exchange.JerseyExchange;
-import com.alipay.sofa.registry.server.data.cache.DatumCache;
-import com.alipay.sofa.registry.server.data.cache.DatumStorage;
-import com.alipay.sofa.registry.server.data.cache.LocalDatumStorage;
+import com.alipay.sofa.registry.server.data.cache.DatumStorageDelegate;
 import com.alipay.sofa.registry.server.data.change.DataChangeEventCenter;
 import com.alipay.sofa.registry.server.data.lease.SessionLeaseManager;
+import com.alipay.sofa.registry.server.data.multi.cluster.sync.info.FetchMultiSyncService;
 import com.alipay.sofa.registry.server.data.providedata.CompressDatumService;
 import com.alipay.sofa.registry.server.data.providedata.FetchStopPushService;
 import com.alipay.sofa.registry.server.data.remoting.DataMetaServerManager;
@@ -34,6 +35,7 @@ import com.alipay.sofa.registry.server.data.remoting.dataserver.handler.SlotFoll
 import com.alipay.sofa.registry.server.data.remoting.dataserver.handler.SlotFollowerDiffPublisherRequestHandler;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.MetaServerServiceImpl;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.handler.NotifyProvideDataChangeHandler;
+import com.alipay.sofa.registry.server.data.remoting.metaserver.handler.RemoteDatumClearEventHandler;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.provideData.ProvideDataProcessorManager;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.provideData.processor.SessionLeaseProvideDataProcessor;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.*;
@@ -41,11 +43,14 @@ import com.alipay.sofa.registry.server.data.resource.DataDigestResource;
 import com.alipay.sofa.registry.server.data.resource.DatumApiResource;
 import com.alipay.sofa.registry.server.data.resource.HealthResource;
 import com.alipay.sofa.registry.server.data.resource.SlotTableStatusResource;
+import com.alipay.sofa.registry.server.data.slot.SlotAccessorDelegate;
+import com.alipay.sofa.registry.server.data.slot.SlotChangeListenerManager;
 import com.alipay.sofa.registry.server.data.slot.SlotManager;
 import com.alipay.sofa.registry.server.data.slot.SlotManagerImpl;
 import com.alipay.sofa.registry.server.data.timer.CacheCountTask;
 import com.alipay.sofa.registry.server.data.timer.CacheDigestTask;
-import com.alipay.sofa.registry.server.shared.meta.MetaServerManager;
+import com.alipay.sofa.registry.server.shared.config.CommonConfig;
+import com.alipay.sofa.registry.server.shared.meta.MetaLeaderExchanger;
 import com.alipay.sofa.registry.server.shared.providedata.FetchSystemPropertyService;
 import com.alipay.sofa.registry.server.shared.providedata.ProvideDataProcessor;
 import com.alipay.sofa.registry.server.shared.providedata.SystemPropertyProcessorManager;
@@ -118,20 +123,31 @@ public class DataServerBeanConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public DatumCache datumCache() {
-      return new DatumCache();
-    }
-
-    @Bean
-    @ConditionalOnMissingBean
-    public DatumStorage localDatumStorage() {
-      return new LocalDatumStorage();
+    public DatumStorageDelegate datumStorageDelegate(DataServerConfig dataServerConfig) {
+      return new DatumStorageDelegate(dataServerConfig);
     }
 
     @Bean
     @ConditionalOnMissingBean
     public SlotManager slotManager() {
       return new SlotManagerImpl();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public SlotChangeListenerManager slotChangeListenerManager() {
+      return new SlotChangeListenerManager();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public SlotAccessorDelegate slotAccessorDelegate() {
+      return new SlotAccessorDelegate();
+    }
+
+    @Bean
+    public SyncSlotAcceptorManager syncSlotAcceptAllManager() {
+      return new SyncSlotAcceptAllManager();
     }
 
     @Bean
@@ -187,6 +203,7 @@ public class DataServerBeanConfiguration {
     public Collection<AbstractServerHandler> serverHandlers() {
       Collection<AbstractServerHandler> list = new ArrayList<>();
       list.add(getDataHandler());
+      list.add(getMultiDataHandler());
       list.add(batchPutDataHandler());
       list.add(getDataVersionsHandler());
       return list;
@@ -205,12 +222,18 @@ public class DataServerBeanConfiguration {
       Collection<AbstractClientHandler> list = new ArrayList<>();
       list.add(notifyProvideDataChangeHandler());
       list.add(slotTableChangeEventHandler());
+      list.add(remoteDatumClearEventHandler());
       return list;
     }
 
     @Bean
     public AbstractServerHandler getDataHandler() {
       return new GetDataHandler();
+    }
+
+    @Bean
+    public AbstractServerHandler getMultiDataHandler() {
+      return new GetMultiDataHandler();
     }
 
     @Bean
@@ -242,6 +265,11 @@ public class DataServerBeanConfiguration {
     public SlotTableChangeEventHandler slotTableChangeEventHandler() {
       return new SlotTableChangeEventHandler();
     }
+
+    @Bean
+    public RemoteDatumClearEventHandler remoteDatumClearEventHandler() {
+      return new RemoteDatumClearEventHandler();
+    }
   }
 
   @Configuration
@@ -257,13 +285,18 @@ public class DataServerBeanConfiguration {
   public static class DataServerRemotingBeanConfiguration {
 
     @Bean
-    public MetaServerManager metaServerManager() {
+    public MetaLeaderExchanger metaLeaderExchanger() {
       return new DataMetaServerManager();
     }
 
     @Bean
     public MetaServerServiceImpl metaServerService() {
       return new MetaServerServiceImpl();
+    }
+
+    @Bean
+    public FetchMultiSyncService fetchMultiSyncService() {
+      return new FetchMultiSyncService();
     }
   }
 

@@ -29,7 +29,6 @@ import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfigBean
 import com.alipay.sofa.registry.server.session.providedata.FetchGrayPushSwitchService;
 import com.alipay.sofa.registry.server.session.providedata.FetchStopPushService;
 import com.alipay.sofa.registry.server.session.push.FirePushService;
-import com.alipay.sofa.registry.server.session.push.PushSwitchService;
 import com.alipay.sofa.registry.server.session.store.SubscriberStore;
 import java.util.HashMap;
 import java.util.Map;
@@ -37,8 +36,6 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class DataChangeRequestHandlerTest {
-
-  private long init = -1L;
 
   @Test
   public void testCheckParam() {
@@ -60,13 +57,14 @@ public class DataChangeRequestHandlerTest {
     DataChangeRequestHandler handler = newHandler();
     SessionServerConfigBean serverConfigBean = TestUtils.newSessionConfig("testDc");
     handler.sessionServerConfig = serverConfigBean;
-    handler.pushSwitchService = new PushSwitchService();
+    handler.pushSwitchService = TestUtils.newPushSwitchService(serverConfigBean);
     handler.executorManager = new ExecutorManager(serverConfigBean);
     handler.firePushService = mock(FirePushService.class);
     handler.subscriberStore = mock(SubscriberStore.class);
     handler.pushSwitchService.setFetchStopPushService(new FetchStopPushService());
     handler.pushSwitchService.setFetchGrayPushSwitchService(new FetchGrayPushSwitchService());
 
+    long init = -1L;
     handler.pushSwitchService.getFetchStopPushService().setStopPushSwitch(init, true);
     // no npe, stopPush skip the handle
     Object obj = handler.doHandle(null, null);

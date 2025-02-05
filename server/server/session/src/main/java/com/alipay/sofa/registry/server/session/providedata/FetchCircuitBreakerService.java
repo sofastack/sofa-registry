@@ -29,7 +29,6 @@ import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
 import com.alipay.sofa.registry.util.JsonUtils;
 import java.util.Collections;
 import java.util.Set;
-import javax.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -43,7 +42,7 @@ public class FetchCircuitBreakerService
 
   @Autowired private SessionServerConfig sessionServerConfig;
 
-  @Resource private ProvideDataRepository provideDataRepository;
+  @Autowired private ProvideDataRepository provideDataRepository;
 
   private static final CircuitBreakerStorage INIT =
       new CircuitBreakerStorage(

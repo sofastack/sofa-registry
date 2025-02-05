@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.server.session.push;
 
+import com.alipay.sofa.registry.common.model.DataCenterPushInfo;
+import com.alipay.sofa.registry.common.model.store.MultiSubDatum;
 import com.alipay.sofa.registry.common.model.store.SubDatum;
 import com.alipay.sofa.registry.common.model.store.SubPublisher;
 import com.alipay.sofa.registry.net.NetUtil;
@@ -45,10 +47,11 @@ public class PushTraceTest {
     TriggerPushContext ctx = new TriggerPushContext("testDc", 100, null, now1);
     PushTrace trace =
         PushTrace.trace(
-            subDatum,
+            MultiSubDatum.of(subDatum),
             NetUtil.getLocalSocketAddress(),
             "subApp",
-            new PushCause(ctx, PushType.Sub, now1),
+            new PushCause(
+                ctx, PushType.Sub, Collections.singletonMap(subDatum.getDataCenter(), now1)),
             1,
             System.currentTimeMillis() - 100);
     long now2 = System.currentTimeMillis();
@@ -56,7 +59,11 @@ public class PushTraceTest {
     // new.sub=2
     trace.startPush();
     long finish = now2 + 100;
-    trace.finishPush(PushTrace.PushStatus.OK, null, finish, 1, 0, "", 0);
+
+    DataCenterPushInfo pushInfo = new DataCenterPushInfo(finish);
+    pushInfo.addSegmentInfo("testDc", "", 0);
+    trace.finishPush(
+        PushTrace.PushStatus.OK, null, Collections.singletonMap("testDc", pushInfo), 0);
   }
 
   @Test
@@ -75,10 +82,10 @@ public class PushTraceTest {
     TriggerPushContext ctx = new TriggerPushContext("testDc", 100, null, now1);
     PushTrace trace =
         PushTrace.trace(
-            subDatum,
+            MultiSubDatum.of(subDatum),
             NetUtil.getLocalSocketAddress(),
             "subApp",
-            new PushCause(ctx, PushType.Reg, now1),
+            new PushCause(ctx, PushType.Reg, Collections.singletonMap("testDc", now1)),
             1,
             System.currentTimeMillis() - 100);
     long now2 = System.currentTimeMillis();
@@ -86,7 +93,11 @@ public class PushTraceTest {
     // new.sub=2
     trace.startPush();
     long finish = now2 + 100;
-    trace.finishPush(PushTrace.PushStatus.OK, null, finish, 1, 0, "", 0);
+
+    DataCenterPushInfo pushInfo = new DataCenterPushInfo(finish);
+    pushInfo.addSegmentInfo("testDc", "", 0);
+    trace.finishPush(
+        PushTrace.PushStatus.OK, null, Collections.singletonMap("testDc", pushInfo), 0);
   }
 
   @Test

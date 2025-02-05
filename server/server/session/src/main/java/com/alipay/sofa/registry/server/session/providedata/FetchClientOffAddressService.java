@@ -362,6 +362,7 @@ public class FetchClientOffAddressService
    * Setter method for property <tt>connectionsService</tt>.
    *
    * @param connectionsService value to be assigned to property connectionsService
+   * @return FetchClientOffAddressService
    */
   @VisibleForTesting
   public FetchClientOffAddressService setConnectionsService(ConnectionsService connectionsService) {
@@ -373,6 +374,7 @@ public class FetchClientOffAddressService
    * Setter method for property <tt>sessionRegistry</tt>.
    *
    * @param sessionRegistry value to be assigned to property sessionRegistry
+   * @return FetchClientOffAddressService
    */
   @VisibleForTesting
   public FetchClientOffAddressService setSessionRegistry(Registry sessionRegistry) {

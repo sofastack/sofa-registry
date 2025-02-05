@@ -16,7 +16,7 @@
  */
 package com.alipay.sofa.registry.server.meta.bootstrap;
 
-import com.alipay.sofa.common.profile.StringUtil;
+import com.alipay.sofa.registry.common.model.elector.LeaderInfo;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -27,11 +27,13 @@ import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
-import com.alipay.sofa.registry.server.meta.remoting.meta.MetaNodeExchange;
+import com.alipay.sofa.registry.server.meta.bootstrap.config.MultiClusterMetaServerConfig;
+import com.alipay.sofa.registry.server.meta.remoting.meta.LocalMetaExchanger;
 import com.alipay.sofa.registry.server.meta.remoting.meta.MetaServerRenewService;
 import com.alipay.sofa.registry.server.shared.client.manager.ClientManagerService;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
+import com.alipay.sofa.registry.store.api.elector.AbstractLeaderElector;
 import com.alipay.sofa.registry.store.api.elector.LeaderElector;
 import com.alipay.sofa.registry.store.api.meta.RecoverConfigRepository;
 import com.github.rholder.retry.Retryer;
@@ -63,6 +65,8 @@ public class MetaServerBootstrap {
 
   @Autowired private MetaServerConfig metaServerConfig;
 
+  @Autowired private MultiClusterMetaServerConfig multiClusterMetaServerConfig;
+
   @Autowired private Exchange boltExchange;
 
   @Autowired private Exchange jerseyExchange;
@@ -78,6 +82,9 @@ public class MetaServerBootstrap {
   @Resource(name = "metaServerHandlers")
   private Collection<AbstractServerHandler> metaServerHandlers;
 
+  @Resource(name = "remoteMetaServerHandlers")
+  private Collection<AbstractServerHandler> remoteMetaServerHandlers;
+
   @Autowired private ResourceConfig jerseyResourceConfig;
 
   @Autowired private ApplicationContext applicationContext;
@@ -86,7 +93,7 @@ public class MetaServerBootstrap {
 
   @Autowired private MetaServerRenewService metaServerRenewService;
 
-  @Autowired private MetaNodeExchange metaNodeExchange;
+  @Autowired private LocalMetaExchanger localMetaExchanger;
 
   @Resource private ClientManagerService clientManagerService;
 
@@ -100,6 +107,8 @@ public class MetaServerBootstrap {
 
   private Server httpServer;
 
+  private Server remoteMetaServer;
+
   private final AtomicBoolean rpcServerForSessionStarted = new AtomicBoolean(false);
 
   private final AtomicBoolean rpcServerForDataStarted = new AtomicBoolean(false);
@@ -107,6 +116,8 @@ public class MetaServerBootstrap {
   private final AtomicBoolean rpcServerForMetaStarted = new AtomicBoolean(false);
 
   private final AtomicBoolean httpServerStarted = new AtomicBoolean(false);
+
+  private final AtomicBoolean rpcServerForRemoteMetaStarted = new AtomicBoolean(false);
 
   private final AtomicBoolean schedulerStart = new AtomicBoolean(false);
 
@@ -140,16 +151,19 @@ public class MetaServerBootstrap {
 
       openHttpServer();
 
+      openRemoteMetaServer();
+
       // meta start loop to elector leader
       startElectorLoop();
 
       retryer.call(
           () -> {
+            AbstractLeaderElector.LeaderInfo leaderInfo = leaderElector.getLeaderInfo();
             LOGGER.info(
                 "[MetaBootstrap] retry elector meta leader: {}, epoch:{}",
-                leaderElector.getLeader(),
-                leaderElector.getLeaderEpoch());
-            return !StringUtils.isEmpty(leaderElector.getLeader());
+                leaderInfo.getLeader(),
+                leaderInfo.getEpoch());
+            return !StringUtils.isEmpty(leaderInfo.getLeader());
           });
 
       startScheduler();
@@ -158,19 +172,20 @@ public class MetaServerBootstrap {
       renewNode();
       retryer.call(
           () -> {
+            LeaderInfo leader = localMetaExchanger.getLeader(metaServerConfig.getLocalDataCenter());
             LOGGER.info(
                 "[MetaBootstrap] retry connect to meta leader: {}, client:{}",
-                metaNodeExchange.getMetaLeader(),
-                metaNodeExchange.getClient());
-            return StringUtil.isNotEmpty(metaNodeExchange.getMetaLeader())
-                && metaNodeExchange.getClient() != null;
+                leader.getLeader(),
+                localMetaExchanger.getClient());
+            return StringUtils.isNotEmpty(leader.getLeader())
+                && localMetaExchanger.getClient() != null;
           });
 
       TaskMetrics.getInstance().registerBolt();
+      AbstractLeaderElector.LeaderInfo leaderInfo = leaderElector.getLeaderInfo();
+
       LOGGER.info(
-          "[MetaBootstrap] leader info: {}, [{}]",
-          leaderElector.getLeader(),
-          leaderElector.getLeaderEpoch());
+          "[MetaBootstrap] leader info: {}, [{}]", leaderInfo.getLeader(), leaderInfo.getEpoch());
       Runtime.getRuntime().addShutdownHook(new Thread(this::doStop));
     } catch (Throwable e) {
       LOGGER.error("Bootstrap Meta Server got error!", e);
@@ -302,6 +317,31 @@ public class MetaServerBootstrap {
     }
   }
 
+  private void openRemoteMetaServer() {
+    try {
+      if (rpcServerForRemoteMetaStarted.compareAndSet(false, true)) {
+        remoteMetaServer =
+            boltExchange.open(
+                new URL(
+                    NetUtil.getLocalAddress().getHostAddress(),
+                    multiClusterMetaServerConfig.getRemoteMetaServerPort()),
+                remoteMetaServerHandlers.toArray(
+                    new ChannelHandler[remoteMetaServerHandlers.size()]));
+
+        LOGGER.info(
+            "Open remote meta server port {} success!",
+            multiClusterMetaServerConfig.getRemoteMetaServerPort());
+      }
+    } catch (Exception e) {
+      rpcServerForRemoteMetaStarted.set(false);
+      LOGGER.error(
+          "Open remote meta server port {} error!",
+          multiClusterMetaServerConfig.getRemoteMetaServerPort(),
+          e);
+      throw new RuntimeException("Open remote meta server error!", e);
+    }
+  }
+
   private void bindResourceConfig() {
     registerInstances(Path.class);
     registerInstances(Provider.class);
@@ -326,6 +366,10 @@ public class MetaServerBootstrap {
     }
     if (httpServer != null && httpServer.isOpen()) {
       httpServer.close();
+    }
+
+    if (remoteMetaServer != null && remoteMetaServer.isOpen()) {
+      remoteMetaServer.isOpen();
     }
   }
 
@@ -363,5 +407,9 @@ public class MetaServerBootstrap {
    */
   public boolean isHttpServerStarted() {
     return httpServerStarted.get();
+  }
+
+  public boolean isRpcServerForRemoteMetaStarted() {
+    return rpcServerForRemoteMetaStarted.get();
   }
 }

@@ -57,8 +57,8 @@ public class Datum implements Serializable {
   /**
    * constructor
    *
-   * @param dataInfoId
-   * @param dataCenter
+   * @param dataInfoId dataInfoId
+   * @param dataCenter dataCenter
    */
   public Datum(String dataInfoId, String dataCenter) {
     this.dataInfoId = WordCache.getWordCache(dataInfoId);
@@ -70,8 +70,8 @@ public class Datum implements Serializable {
   /**
    * constructor
    *
-   * @param publisher
-   * @param dataCenter
+   * @param publisher publisher
+   * @param dataCenter dataCenter
    */
   public Datum(Publisher publisher, String dataCenter) {
     this(publisher.getDataInfoId(), dataCenter);
@@ -84,9 +84,9 @@ public class Datum implements Serializable {
   /**
    * constructor
    *
-   * @param publisher
-   * @param dataCenter
-   * @param version
+   * @param publisher publisher
+   * @param dataCenter dataCenter
+   * @param version version
    */
   public Datum(Publisher publisher, String dataCenter, long version) {
     this.dataInfoId = publisher.getDataInfoId();
@@ -256,7 +256,11 @@ public class Datum implements Serializable {
     return Collections.unmodifiableMap(Maps.newHashMap(pubMap));
   }
 
-  /** should not call that, just for json serde */
+  /**
+   * should not call that, just for json serde
+   *
+   * @param pubMap pubMap
+   */
   public synchronized void setPubMap(Map<String, Publisher> pubMap) {
     this.pubMap.clear();
     if (pubMap != null) {

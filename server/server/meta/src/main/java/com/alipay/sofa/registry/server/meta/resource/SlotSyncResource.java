@@ -40,7 +40,6 @@ public class SlotSyncResource {
 
   @Autowired private ProvideDataService provideDataService;
 
-  /** get */
   @GET
   @Path("get")
   @Produces(MediaType.APPLICATION_JSON)

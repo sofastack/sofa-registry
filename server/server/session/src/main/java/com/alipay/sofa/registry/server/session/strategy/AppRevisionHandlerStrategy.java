@@ -28,8 +28,8 @@ public interface AppRevisionHandlerStrategy {
   /**
    * appRevision register
    *
-   * @param appRevision
-   * @param response
+   * @param appRevision appRevision
+   * @param response response
    */
   void handleAppRevisionRegister(
       AppRevision appRevision, RegisterResponse response, String remoteAddress);
@@ -37,24 +37,24 @@ public interface AppRevisionHandlerStrategy {
   /**
    * query apps by services
    *
-   * @param services
-   * @return
+   * @param services services
+   * @return ServiceAppMappingResponse
    */
   ServiceAppMappingResponse queryApps(List<String> services, String remoteIp);
 
   /**
    * query appRevision
    *
-   * @param revisions
-   * @return
+   * @param revisions revisions
+   * @return GetRevisionsResponse
    */
   GetRevisionsResponse queryRevision(List<String> revisions);
 
   /**
    * revision heartbeat
    *
-   * @param revisions
-   * @return
+   * @param revisions revisions
+   * @return MetaHeartbeatResponse
    */
   MetaHeartbeatResponse heartbeat(List<String> revisions);
 }

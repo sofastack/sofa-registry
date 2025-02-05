@@ -74,7 +74,7 @@ public class DefaultClientRegistrationHookTest extends AbstractSessionServerTest
 
     verify(clientRegistrationHook.firePushService, times(0)).fireOnWatcher(any(), any());
 
-    when(clientRegistrationHook.pushSwitchService.canIpPush(anyString())).thenReturn(true);
+    when(clientRegistrationHook.pushSwitchService.canIpPushLocal(anyString())).thenReturn(true);
     clientRegistrationHook.afterClientRegister(w);
     verify(clientRegistrationHook.firePushService, times(1)).fireOnWatcher(any(), any());
     verify(clientRegistrationHook.configProvideDataWatcher, times(0)).watch(any());
@@ -89,7 +89,7 @@ public class DefaultClientRegistrationHookTest extends AbstractSessionServerTest
     verify(clientRegistrationHook.configProvideDataWatcher, times(1)).watch(any());
     verify(clientRegistrationHook.firePushService, times(0)).fireOnWatcher(any(), any());
 
-    when(clientRegistrationHook.pushSwitchService.canIpPush(anyString())).thenReturn(true);
+    when(clientRegistrationHook.pushSwitchService.canIpPushLocal(anyString())).thenReturn(true);
     clientRegistrationHook.afterClientRegister(w);
     verify(clientRegistrationHook.firePushService, times(0)).fireOnWatcher(any(), any());
 
