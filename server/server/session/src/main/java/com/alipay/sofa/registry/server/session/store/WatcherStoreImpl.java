@@ -16,33 +16,13 @@
  */
 package com.alipay.sofa.registry.server.session.store;
 
-import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.store.Watcher;
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.server.session.store.engine.SimpleMemoryStoreEngine;
 
-/**
- * @author shangyu.wh
- * @version $Id: SessionWatchers.java, v 0.1 2018-04-17 19:00 shangyu.wh Exp $
- */
-public class SessionWatchers extends AbstractDataManager<Watcher> implements Watchers {
-  private static final Logger LOGGER = LoggerFactory.getLogger(SessionWatchers.class);
+/** Implementation of WatcherStore. */
+public class WatcherStoreImpl extends AbstractClientStore<Watcher> implements WatcherStore {
 
-  private final Store<Watcher> store = new SimpleStore<>(1024 * 16, 32);
-
-  public SessionWatchers() {
-    super(LOGGER);
-  }
-
-  @Override
-  public boolean add(Watcher watcher) {
-    Watcher.internWatcher(watcher);
-    Tuple<Watcher, Boolean> ret = addData(watcher);
-    return ret.o2;
-  }
-
-  @Override
-  protected Store<Watcher> getStore() {
-    return store;
+  public WatcherStoreImpl() {
+    super(new SimpleMemoryStoreEngine<>(1024 * 16));
   }
 }

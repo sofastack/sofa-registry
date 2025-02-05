@@ -31,7 +31,7 @@ import com.alipay.sofa.registry.server.session.cache.DatumKey;
 import com.alipay.sofa.registry.server.session.cache.Key;
 import com.alipay.sofa.registry.server.session.cache.Value;
 import com.alipay.sofa.registry.server.session.circuit.breaker.CircuitBreakerService;
-import com.alipay.sofa.registry.server.session.store.Interests;
+import com.alipay.sofa.registry.server.session.store.SubscriberStore;
 import com.alipay.sofa.registry.server.shared.util.DatumUtils;
 import com.alipay.sofa.registry.task.FastRejectedExecutionException;
 import com.alipay.sofa.registry.task.KeyedThreadPoolExecutor;
@@ -54,7 +54,7 @@ public class FirePushService {
 
   @Autowired CacheService sessionCacheService;
 
-  @Autowired Interests sessionInterests;
+  @Autowired SubscriberStore subscriberStore;
 
   @Autowired CircuitBreakerService circuitBreakerService;
 
@@ -151,7 +151,8 @@ public class FirePushService {
   public boolean fireOnDatum(SubDatum datum, String dataNode) {
     try {
       DataInfo dataInfo = DataInfo.valueOf(datum.getDataInfoId());
-      Collection<Subscriber> subscribers = sessionInterests.getInterests(dataInfo.getDataInfoId());
+      Collection<Subscriber> subscribers =
+          subscriberStore.getByDataInfoId(dataInfo.getDataInfoId());
       final long now = System.currentTimeMillis();
       TriggerPushContext pushCtx =
           new TriggerPushContext(datum.getDataCenter(), datum.getVersion(), dataNode, now);
@@ -189,7 +190,7 @@ public class FirePushService {
 
   private void onDatumChange(TriggerPushContext changeCtx, SubDatum datum) {
     Map<ScopeEnum, List<Subscriber>> scopes =
-        SubscriberUtils.groupByScope(sessionInterests.getDatas(datum.getDataInfoId()));
+        SubscriberUtils.groupByScope(subscriberStore.getByDataInfoId(datum.getDataInfoId()));
     final long datumTimestamp = PushTrace.getTriggerPushTimestamp(datum);
     final PushCause cause = new PushCause(changeCtx, PushType.Sub, datumTimestamp);
     for (Map.Entry<ScopeEnum, List<Subscriber>> scope : scopes.entrySet()) {

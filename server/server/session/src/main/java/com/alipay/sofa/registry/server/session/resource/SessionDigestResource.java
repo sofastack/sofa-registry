@@ -21,7 +21,6 @@ import static com.alipay.sofa.registry.common.model.constants.ValueConstants.CON
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.GenericResponse;
-import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.appmeta.InterfaceMapping;
 import com.alipay.sofa.registry.common.model.sessionserver.PubSubDataInfoIdRequest;
 import com.alipay.sofa.registry.common.model.sessionserver.PubSubDataInfoIdResp;
@@ -38,10 +37,11 @@ import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
 import com.alipay.sofa.registry.remoting.exchange.message.SimpleRequest;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.providedata.FetchStopPushService;
-import com.alipay.sofa.registry.server.session.store.DataStore;
 import com.alipay.sofa.registry.server.session.store.FetchPubSubDataInfoIdService;
-import com.alipay.sofa.registry.server.session.store.Interests;
-import com.alipay.sofa.registry.server.session.store.Watchers;
+import com.alipay.sofa.registry.server.session.store.PublisherStore;
+import com.alipay.sofa.registry.server.session.store.SubscriberStore;
+import com.alipay.sofa.registry.server.session.store.WatcherStore;
+import com.alipay.sofa.registry.server.session.store.engine.StoreEngine;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.store.api.repository.AppRevisionRepository;
 import com.alipay.sofa.registry.store.api.repository.InterfaceAppsRepository;
@@ -82,14 +82,9 @@ public class SessionDigestResource {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(ClientManagerResource.class);
 
-  /** store subscribers */
-  @Autowired private Interests sessionInterests;
-
-  /** store watchers */
-  @Autowired private Watchers sessionWatchers;
-
-  /** store publishers */
-  @Autowired private DataStore sessionDataStore;
+  @Autowired private SubscriberStore subscriberStore;
+  @Autowired private WatcherStore watcherStore;
+  @Autowired private PublisherStore publisherStore;
 
   @Autowired private MetaServerService metaNodeService;
 
@@ -156,9 +151,9 @@ public class SessionDigestResource {
       @QueryParam("dataInfoId") String dataInfoId, @PathParam("type") String type) {
     Map<String, Collection<? extends StoreData>> serverList = new HashMap<>();
     if (dataInfoId != null) {
-      Collection<Publisher> publishers = sessionDataStore.getDatas(dataInfoId);
-      Collection<Subscriber> subscribers = sessionInterests.getDatas(dataInfoId);
-      Collection<Watcher> watchers = sessionWatchers.getDatas(dataInfoId);
+      Collection<Publisher> publishers = publisherStore.getByDataInfoId(dataInfoId);
+      Collection<Subscriber> subscribers = subscriberStore.getByDataInfoId(dataInfoId);
+      Collection<Watcher> watchers = watcherStore.getByDataInfoId(dataInfoId);
       fillServerList(type, serverList, publishers, subscribers, watchers);
     }
 
@@ -188,16 +183,9 @@ public class SessionDigestResource {
 
     connectIds.forEach(
         connectId -> {
-          Map pubMap = sessionDataStore.queryByConnectId(connectId);
-          Map subMap = sessionInterests.queryByConnectId(connectId);
-          Map watcherMap = sessionWatchers.queryByConnectId(connectId);
-
-          Collection<Publisher> publishers =
-              pubMap != null && !pubMap.isEmpty() ? pubMap.values() : new ArrayList<>();
-          Collection<Subscriber> subscribers =
-              subMap != null && !subMap.isEmpty() ? subMap.values() : new ArrayList<>();
-          Collection<Watcher> watchers =
-              watcherMap != null && !watcherMap.isEmpty() ? watcherMap.values() : new ArrayList<>();
+          Collection<Publisher> publishers = publisherStore.getByConnectId(connectId);
+          Collection<Subscriber> subscribers = subscriberStore.getByConnectId(connectId);
+          Collection<Watcher> watchers = watcherStore.getByConnectId(connectId);
           fillServerList(type, serverList, publishers, subscribers, watchers);
         });
 
@@ -277,13 +265,13 @@ public class SessionDigestResource {
   @Path("/data/count")
   @Produces(MediaType.APPLICATION_JSON)
   public String getSessionDataCount() {
-    Tuple<Long, Long> countSub = sessionInterests.count();
-    Tuple<Long, Long> countPub = sessionDataStore.count();
-    Tuple<Long, Long> countSubW = sessionWatchers.count();
+    StoreEngine.StoreStat countSub = subscriberStore.stat();
+    StoreEngine.StoreStat countPub = publisherStore.stat();
+    StoreEngine.StoreStat countSubW = watcherStore.stat();
 
     return String.format(
         "Subscriber count: %s, Publisher count: %s, Watcher count: %s",
-        countSub.o2, countPub.o2, countSubW.o2);
+        countSub.size(), countPub.size(), countSubW.size());
   }
 
   /** return true mean push switch on */
@@ -301,8 +289,8 @@ public class SessionDigestResource {
   @Produces(MediaType.APPLICATION_JSON)
   public Collection<String> getDataInfoIdList() {
     Collection<String> ret = new HashSet<>();
-    ret.addAll(sessionInterests.getDataInfoIds());
-    ret.addAll(sessionDataStore.getDataInfoIds());
+    ret.addAll(subscriberStore.getNonEmptyDataInfoId());
+    ret.addAll(publisherStore.getNonEmptyDataInfoId());
     return ret;
   }
 

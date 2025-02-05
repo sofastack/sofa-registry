@@ -14,22 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.strategy.impl;
+package com.alipay.sofa.registry.server.session.store;
 
-import com.alipay.sofa.registry.common.model.constants.ValueConstants;
-import com.alipay.sofa.registry.core.model.SyncConfigResponse;
-import com.alipay.sofa.registry.server.session.strategy.SyncConfigHandlerStrategy;
-import com.google.common.collect.Lists;
-import java.util.List;
+import com.alipay.sofa.registry.common.model.store.Publisher;
+import java.util.Collection;
 
-/**
- * @author xuanbei
- * @since 2019/2/15
- */
-public class DefaultSyncConfigHandlerStrategy implements SyncConfigHandlerStrategy {
-  @Override
-  public void handleSyncConfigResponse(SyncConfigResponse syncConfigResponse) {
-    List<String> list = Lists.newArrayList(ValueConstants.DEFAULT_DATA_CENTER);
-    syncConfigResponse.setAvailableSegments(list);
-  }
+/** Used to store publisher information */
+public interface PublisherStore extends ClientStore<Publisher> {
+
+  /**
+   * Get publisher with slot.
+   *
+   * @param slotId slot id
+   * @return publisher collection
+   */
+  Collection<Publisher> getBySlotId(int slotId);
 }

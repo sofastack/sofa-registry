@@ -18,12 +18,19 @@ package com.alipay.sofa.registry.server.session.remoting.console.handler;
 
 import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.sessionserver.FilterSubscriberIPsRequest;
+import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.server.session.store.Interests;
+import com.alipay.sofa.registry.server.session.store.SubscriberStore;
+import com.google.common.collect.Maps;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class FilterSubscriberIPsHandler extends AbstractConsoleHandler<FilterSubscriberIPsRequest> {
-  @Autowired protected Interests sessionInterests;
+  @Autowired protected SubscriberStore subscriberStore;
 
   @Override
   public Class interest() {
@@ -32,7 +39,19 @@ public class FilterSubscriberIPsHandler extends AbstractConsoleHandler<FilterSub
 
   @Override
   public Object doHandle(Channel channel, FilterSubscriberIPsRequest request) {
-    return new GenericResponse()
-        .fillSucceed(sessionInterests.filterIPs(request.getGroup(), request.getIpLimit()));
+    Map<String, Collection<Subscriber>> subscribers =
+        subscriberStore.query(request.getGroup(), request.getIpLimit());
+    if (subscribers == null || subscribers.size() == 0) {
+      return new GenericResponse().fillSucceed(Collections.emptyMap());
+    }
+    Map<String, List<String>> ret = Maps.newHashMapWithExpectedSize(subscribers.size());
+    for (Map.Entry<String, Collection<Subscriber>> entry : subscribers.entrySet()) {
+      ret.put(
+          entry.getKey(),
+          entry.getValue().stream()
+              .map(subscriber -> subscriber.getSourceAddress().getIpAddress())
+              .collect(Collectors.toList()));
+    }
+    return new GenericResponse().fillSucceed(ret);
   }
 }

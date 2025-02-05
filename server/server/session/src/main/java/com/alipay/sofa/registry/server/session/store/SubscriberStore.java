@@ -23,29 +23,36 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-/**
- * @author shangyu.wh
- * @version $Id: SessionInterests.java, v 0.1 2017-11-30 15:53 shangyu.wh Exp $
- */
-public interface Interests extends DataManager<Subscriber, String, String> {
+/** Used to store subscriber information. */
+public interface SubscriberStore extends ClientStore<Subscriber> {
 
   /**
-   * check subscribers interest dataInfoId version,very dataCenter dataInfoId version different if
-   * return false else check return bigger version
+   * Group subscriber by group and returns a limit of elements.
    *
-   * @param dataCenter
-   * @param datumDataInfoId
-   * @param version
-   * @return
+   * @param group target group of Subscriber
+   * @param limit maximum number to return, returns empty if negative
+   * @return subscriber collection
+   */
+  Map<String, Collection<Subscriber>> query(String group, int limit);
+
+  /**
+   * Select subscriber with target data center.
+   *
+   * @param dataCenter target data center
+   * @return subscriber collection
+   */
+  Tuple<Map<String, DatumVersion>, List<Subscriber>> selectSubscribers(String dataCenter);
+
+  /**
+   * Check if there is subscriber that interest the data and has correct version.
+   *
+   * @param dataCenter data center
+   * @param datumDataInfoId data id
+   * @param version required version
+   * @return InterestVersionCheck
    */
   InterestVersionCheck checkInterestVersion(
       String dataCenter, String datumDataInfoId, long version);
-
-  Collection<Subscriber> getInterests(String datumDataInfoId);
-
-  Tuple<Map<String, DatumVersion>, List<Subscriber>> selectSubscribers(String dataCenter);
-
-  Map<String, List<String>> filterIPs(String group, int limit);
 
   enum InterestVersionCheck {
     NoSub(false),

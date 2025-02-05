@@ -127,7 +127,7 @@ public class BatchPutDataHandlerTest {
     Publisher pub1 = TestBaseUtils.createTestPublisher("testDataId");
     Publisher pub2 = TestBaseUtils.createTestPublisher("testDataId");
 
-    ClientOffPublisher off = new ClientOffPublisher(connectId);
+    ClientOffPublisher off = new ClientOffPublisher(pub2.getDataInfoId(), connectId);
     off.addPublisher(pub2);
     Assert.assertFalse(off.isEmpty());
     Assert.assertEquals(off.getConnectId(), connectId);

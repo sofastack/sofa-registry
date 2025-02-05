@@ -54,8 +54,8 @@ import com.alipay.sofa.registry.server.session.registry.SessionRegistry;
 import com.alipay.sofa.registry.server.session.remoting.console.SessionConsoleExchanger;
 import com.alipay.sofa.registry.server.session.resource.PersistenceClientManagerResource;
 import com.alipay.sofa.registry.server.session.resource.SessionDigestResource;
-import com.alipay.sofa.registry.server.session.store.DataStore;
-import com.alipay.sofa.registry.server.session.store.Interests;
+import com.alipay.sofa.registry.server.session.store.PublisherStore;
+import com.alipay.sofa.registry.server.session.store.SubscriberStore;
 import com.alipay.sofa.registry.server.test.TestRegistryMain;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.alipay.sofa.registry.util.StringFormatter;
@@ -103,8 +103,8 @@ public class BaseIntegrationTest extends AbstractTest {
   protected static volatile Channel metaChannel;
 
   protected static volatile SessionRegistry sessionRegistry;
-  protected static volatile Interests sessionInterests;
-  protected static volatile DataStore sessionDataStore;
+  protected static volatile SubscriberStore subscriberStore;
+  protected static volatile PublisherStore publisherStore;
   protected static volatile DatumStorage localDatumStorage;
 
   protected static volatile ClientManagerResource clientManagerResource;
@@ -188,8 +188,8 @@ public class BaseIntegrationTest extends AbstractTest {
       dataApplicationContext = testRegistryMain.getDataApplicationContext();
       initRegistryClientAndChannel();
       sessionRegistry = sessionApplicationContext.getBean("sessionRegistry", SessionRegistry.class);
-      sessionInterests = sessionApplicationContext.getBean("sessionInterests", Interests.class);
-      sessionDataStore = sessionApplicationContext.getBean("sessionDataStore", DataStore.class);
+      subscriberStore = sessionApplicationContext.getBean("subscriberStore", SubscriberStore.class);
+      publisherStore = sessionApplicationContext.getBean("publisherStore", PublisherStore.class);
 
       clientManagerResource =
           metaApplicationContext.getBean("clientManagerResource", ClientManagerResource.class);

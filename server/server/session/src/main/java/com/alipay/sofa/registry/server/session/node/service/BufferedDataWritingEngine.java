@@ -113,13 +113,17 @@ public class BufferedDataWritingEngine implements DataWritingEngine {
     */
     if ((singleWorkerCachedRequest = worker.cachedRequests()) <= avgSingleQueueBufferSize
         || (totalCachedRequests = totalCachedRequests()) <= halfMaximumBufferSize) {
-      failed = worker.offer(new Req(slotId, dataServerReq));
+      failed = !worker.offer(new Req(slotId, dataServerReq));
     }
     if (failed) {
       throw new FastRejectedExecutionException(
           String.format(
-              "BlockingQueues.put overflow, idx=%d, totalSize=%d, queueSize=%d",
-              idx, totalCachedRequests, singleWorkerCachedRequest));
+              "BlockingQueues.put overflow, idx=%d, totalCachedRequests=%d, singleWorkerCachedRequests=%d, halfMaximumBufferSize=%d, avgSingleQueueBufferSize=%d",
+              idx,
+              totalCachedRequests,
+              singleWorkerCachedRequest,
+              halfMaximumBufferSize,
+              avgSingleQueueBufferSize));
     }
   }
 

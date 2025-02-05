@@ -22,9 +22,6 @@ import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.session.TestUtils;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfigBean;
 import com.alipay.sofa.registry.server.session.mapper.ConnectionMapper;
-import com.alipay.sofa.registry.server.session.store.DataStore;
-import com.alipay.sofa.registry.server.session.store.SessionInterests;
-import com.alipay.sofa.registry.server.session.store.SessionWatchers;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.util.List;
@@ -39,10 +36,6 @@ public class ConnectionsServiceTest {
     ConnectionsService connectionsService = new ConnectionsService();
     connectionsService.sessionServerConfig = configBean;
     connectionsService.connectionMapper = new ConnectionMapper();
-    connectionsService.sessionDataStore = Mockito.mock(DataStore.class);
-
-    connectionsService.sessionInterests = new SessionInterests();
-    connectionsService.sessionWatchers = new SessionWatchers();
 
     connectionsService.boltExchange = Mockito.mock(Exchange.class);
     String remoteIp = "192.168.8.8";
@@ -55,8 +48,6 @@ public class ConnectionsServiceTest {
     TestUtils.MockBlotChannel channel = TestUtils.newChannel(9600, remoteIp, 1234);
     Mockito.when(server.getChannels()).thenReturn(Lists.newArrayList(channel));
     ConnectId connectId = ConnectId.of(channel.getRemoteAddress(), channel.getLocalAddress());
-    Mockito.when(connectionsService.sessionDataStore.getConnectIds())
-        .thenReturn(Sets.newHashSet(connectId));
 
     List<String> list = connectionsService.getConnections();
     Assert.assertEquals(list, Lists.newArrayList(remoteIp + ":1234"));

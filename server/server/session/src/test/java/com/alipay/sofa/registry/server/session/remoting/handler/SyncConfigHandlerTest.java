@@ -24,7 +24,6 @@ import com.alipay.sofa.registry.core.model.SyncConfigResponse;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.server.session.TestUtils;
 import com.alipay.sofa.registry.server.session.bootstrap.ExecutorManager;
-import com.alipay.sofa.registry.server.session.strategy.impl.DefaultSyncConfigHandlerStrategy;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -38,7 +37,6 @@ public class SyncConfigHandlerTest {
     Assert.assertEquals(handler.getConnectNodeType(), Node.NodeType.CLIENT);
     Assert.assertEquals(handler.getType(), ChannelHandler.HandlerType.PROCESSER);
     Assert.assertEquals(handler.getInvokeType(), ChannelHandler.InvokeType.SYNC);
-    handler.syncConfigHandlerStrategy = new DefaultSyncConfigHandlerStrategy();
     return handler;
   }
 

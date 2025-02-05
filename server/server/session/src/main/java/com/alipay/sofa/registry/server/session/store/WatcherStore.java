@@ -18,8 +18,5 @@ package com.alipay.sofa.registry.server.session.store;
 
 import com.alipay.sofa.registry.common.model.store.Watcher;
 
-/**
- * @author shangyu.wh
- * @version $Id: SessionInterests.java, v 0.1 2017-11-30 15:53 shangyu.wh Exp $
- */
-public interface Watchers extends DataManager<Watcher, String, String> {}
+/** Used to store observer information */
+public interface WatcherStore extends ClientStore<Watcher> {}

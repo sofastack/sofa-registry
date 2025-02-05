@@ -18,6 +18,7 @@ package com.alipay.sofa.registry.common.model;
 
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.google.common.collect.Lists;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -25,7 +26,7 @@ public class ClientOffPublishers {
   private final ConnectId connectId;
   private final List<Publisher> publishers;
 
-  public ClientOffPublishers(ConnectId connectId, List<Publisher> publishers) {
+  public ClientOffPublishers(ConnectId connectId, Collection<Publisher> publishers) {
     this.connectId = connectId;
     this.publishers = Collections.unmodifiableList(Lists.newArrayList(publishers));
   }

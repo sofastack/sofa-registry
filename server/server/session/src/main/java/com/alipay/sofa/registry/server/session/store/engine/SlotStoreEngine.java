@@ -14,23 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.store;
+package com.alipay.sofa.registry.server.session.store.engine;
 
-import com.alipay.sofa.registry.common.model.Tuple;
+import com.alipay.sofa.registry.common.model.store.StoreData;
 import java.util.Collection;
-import java.util.Map;
-import java.util.function.BiConsumer;
 
-public interface Store<T> {
-  Map<String, T> get(String dataInfoId);
+/** A storage engine that supports aggregation by a specific key. */
+public interface SlotStoreEngine<T extends StoreData<String>> extends StoreEngine<T> {
 
-  Map<String, T> getOrCreate(String dataInfoId);
-
-  void forEach(BiConsumer<String, Map<String, T>> consumer);
-
-  Map<String, Map<String, T>> copyMap();
-
-  Tuple<Long, Long> count();
-
-  Collection<String> getDataInfoIds();
+  /**
+   * All StoreData belonging to the same slot.
+   *
+   * @param slotId slot id
+   * @return StoreData belonging to the same slot
+   */
+  Collection<T> getSlotStoreData(int slotId);
 }

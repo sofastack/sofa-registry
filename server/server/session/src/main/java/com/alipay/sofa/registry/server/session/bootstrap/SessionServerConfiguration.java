@@ -44,6 +44,8 @@ import com.alipay.sofa.registry.server.session.metadata.MetadataCacheRegistry;
 import com.alipay.sofa.registry.server.session.node.service.*;
 import com.alipay.sofa.registry.server.session.providedata.*;
 import com.alipay.sofa.registry.server.session.push.*;
+import com.alipay.sofa.registry.server.session.registry.ClientRegistrationHook;
+import com.alipay.sofa.registry.server.session.registry.DefaultClientRegistrationHook;
 import com.alipay.sofa.registry.server.session.registry.Registry;
 import com.alipay.sofa.registry.server.session.registry.SessionRegistry;
 import com.alipay.sofa.registry.server.session.remoting.ClientNodeExchanger;
@@ -59,8 +61,13 @@ import com.alipay.sofa.registry.server.session.scheduler.timertask.SyncClientsHe
 import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
 import com.alipay.sofa.registry.server.session.slot.SlotTableCacheImpl;
 import com.alipay.sofa.registry.server.session.store.*;
+import com.alipay.sofa.registry.server.session.store.PublisherStore;
+import com.alipay.sofa.registry.server.session.store.PublisherStoreImpl;
+import com.alipay.sofa.registry.server.session.store.SubscriberStore;
+import com.alipay.sofa.registry.server.session.store.SubscriberStoreImpl;
+import com.alipay.sofa.registry.server.session.store.WatcherStore;
+import com.alipay.sofa.registry.server.session.store.WatcherStoreImpl;
 import com.alipay.sofa.registry.server.session.strategy.*;
-import com.alipay.sofa.registry.server.session.strategy.impl.*;
 import com.alipay.sofa.registry.server.shared.client.manager.BaseClientManagerService;
 import com.alipay.sofa.registry.server.shared.client.manager.ClientManagerService;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerManager;
@@ -475,20 +482,20 @@ public class SessionServerConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public Interests sessionInterests() {
-      return new SessionInterests();
+    public PublisherStore publisherStore(SlotTableCache slotTableCache) {
+      return new PublisherStoreImpl(slotTableCache);
     }
 
     @Bean
     @ConditionalOnMissingBean
-    public Watchers sessionWatchers() {
-      return new SessionWatchers();
+    public SubscriberStore subscriberStore(SessionServerConfig sessionServerConfig) {
+      return new SubscriberStoreImpl(sessionServerConfig);
     }
 
     @Bean
     @ConditionalOnMissingBean
-    public DataStore sessionDataStore() {
-      return new SessionDataStore();
+    public WatcherStore watcherStore() {
+      return new WatcherStoreImpl();
     }
   }
 
@@ -626,16 +633,11 @@ public class SessionServerConfiguration {
 
   @Configuration
   public static class SessionStrategyConfiguration {
-    @Bean
-    @ConditionalOnMissingBean
-    public SessionRegistryStrategy sessionRegistryStrategy() {
-      return new DefaultSessionRegistryStrategy();
-    }
 
     @Bean
     @ConditionalOnMissingBean
-    public SyncConfigHandlerStrategy syncConfigHandlerStrategy() {
-      return new DefaultSyncConfigHandlerStrategy();
+    public ClientRegistrationHook clientRegistrationHook() {
+      return new DefaultClientRegistrationHook();
     }
 
     @Bean

@@ -17,14 +17,21 @@
 package com.alipay.sofa.registry.server.session.store;
 
 import com.alipay.sofa.registry.common.model.store.Publisher;
-import java.util.Map;
+import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
+import com.alipay.sofa.registry.server.session.store.engine.SlotMemoryStoreEngine;
+import java.util.Collection;
 
-/**
- * @author shangyu.wh
- * @version $Id: DataStore.java, v 0.1 2017-12-01 18:13 shangyu.wh Exp $
- */
-public interface DataStore extends DataManager<Publisher, String, String> {
+/** Implementation of PublisherStore. */
+public class PublisherStoreImpl extends AbstractClientStore<Publisher> implements PublisherStore {
 
-  Map<String /*dataInfoId*/, Map<String /*registerId*/, Publisher>> getDataInfoIdPublishers(
-      int slotId);
+  public PublisherStoreImpl(SlotTableCache slotTableCache) {
+    super(new SlotMemoryStoreEngine<>(slotTableCache::slotOf));
+  }
+
+  @Override
+  public Collection<Publisher> getBySlotId(int slotId) {
+    SlotMemoryStoreEngine<Publisher> slotStoreEngine =
+        (SlotMemoryStoreEngine<Publisher>) storeEngine;
+    return slotStoreEngine.getSlotStoreData(slotId);
+  }
 }
