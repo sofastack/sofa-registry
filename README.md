@@ -5,6 +5,7 @@
 ![license](https://img.shields.io/badge/license-Apache--2.0-green.svg)
 [![codecov](https://codecov.io/gh/sofastack/sofa-registry/branch/master/graph/badge.svg?token=K6x7h4Uxkn)](https://codecov.io/gh/sofastack/sofa-registry)
 ![maven](https://img.shields.io/github/release/sofastack/sofa-registry.svg)
+[![libs.tech recommends](https://libs.tech/project/177104472/badge.svg)](https://libs.tech/project/177104472/sofa-registry)
 
 SOFARegistry 是蚂蚁金服开源的一个生产级、高时效、高可用的服务注册中心。SOFARegistry 最早源自于淘宝的 ConfigServer，十年来，随着蚂蚁金服的业务发展，注册中心架构已经演进至第六代。目前 SOFARegistry 不仅全面服务于蚂蚁金服的自有业务，还随着蚂蚁金融科技服务众多合作伙伴，同时也兼容开源生态。SOFARegistry 采用 AP 架构，支持秒级时效性推送，同时采用分层架构支持无限水平扩展。
 
