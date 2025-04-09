@@ -8,15 +8,15 @@
 
 [中文版本](./README_ZH.md)
 
-SOFARegistry is a production-level, low-latency, high-availability service registry powered by Ant Financial.SOFARegistry originated from Taobao's ConfigServer. Over the past decade, as Ant Group's business has grown, its registry architecture has evolved to its sixth generation. Currently, SOFARegistry not only fully supports Ant Group's internal services, but also serves numerous partners through Ant Financial Technology while maintaining compatibility with the open-source ecosystem. Adopting an AP architecture, SOFARegistry enables millisecond-level real-time push notifications. Additionally, its layered architecture supports unlimited horizontal scalability.
+SOFARegistry is a production-level, low-latency, high-availability registry system for micro-services registration powered by Ant Financial.SOFARegistry originated from Taobao's ConfigServer. Over the past decade, as Ant Group's business has grown, its registry architecture has evolved to its sixth generation. Currently, SOFARegistry not only fully supports Ant Group's internal services, but also serves numerous partners through Ant Financial Technology while maintaining compatibility with the open-source ecosystem. Adopting an AP architecture, SOFARegistry enables millisecond-level real-time push notifications. Additionally, its layered architecture supports unlimited horizontal scalability.
 
 ## Functionality 
 
 - Supports service publishing and subscription
-- Provides active push notifications upon service changes
-- Offers comprehensive RESTful APIs
-- Employs layered architecture with data sharding to handle massive connections and large-scale datasets
-- Ensures high data availability through multi-replica backups
+- Provides real-time notifications upon service change
+- Offers enhanced service governance API endpoints
+- Employs multi-tier architecture for traffic and data wise to handle massive connections and large-scale datasets
+- Ensures high data availability through facility replication capabilities
 - Enables millisecond-level notifications for service registration/deregistration via [SOFABolt](https://github.com/alipay/sofa-bolt) communication framework
 - AP architecture guarantees availability under network partitions
 
