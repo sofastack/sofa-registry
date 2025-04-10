@@ -1,0 +1,14 @@
+syntax = "proto3";
+option java_package = "com.alipay.sofa.registry.common.model.client.pb";
+option java_multiple_files = true;
+option go_package = "proto";
+
+import "PushResourcesPb.proto";
+
+message FullReceivedDataBodyPb {
+  string encoding = 1;
+  bytes body = 2;
+  int32 originBodySize = 3;
+  map<string, PushResourcesPb> data = 4;
+}
+

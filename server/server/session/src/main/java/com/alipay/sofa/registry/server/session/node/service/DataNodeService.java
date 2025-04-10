@@ -19,6 +19,7 @@ package com.alipay.sofa.registry.server.session.node.service;
 import com.alipay.sofa.registry.common.model.ClientOffPublishers;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.store.MultiSubDatum;
+import com.alipay.sofa.registry.common.model.store.MultiSubDatumRevisions;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.remoting.exchange.ExchangeCallback;
 import java.util.Map;
@@ -65,4 +66,6 @@ public interface DataNodeService {
    * @return MultiSubDatum
    */
   MultiSubDatum fetch(String dataInfoId, Set<String> dataCenters);
+
+  MultiSubDatumRevisions fetchRevisions(String dataInfoId, Set<String> dataCenters);
 }

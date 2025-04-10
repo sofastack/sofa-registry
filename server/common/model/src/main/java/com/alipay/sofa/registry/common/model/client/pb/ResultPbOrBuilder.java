@@ -28,4 +28,7 @@ public interface ResultPbOrBuilder
   java.lang.String getMessage();
   /** <code>string message = 2;</code> */
   com.google.protobuf.ByteString getMessageBytes();
+
+  /** <code>int32 statusCode = 3;</code> */
+  int getStatusCode();
 }

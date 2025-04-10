@@ -22,10 +22,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 
 import com.alipay.remoting.rpc.exception.InvokeTimeoutException;
-import com.alipay.sofa.registry.common.model.store.BaseInfo;
-import com.alipay.sofa.registry.common.model.store.MultiSubDatum;
-import com.alipay.sofa.registry.common.model.store.SubDatum;
-import com.alipay.sofa.registry.common.model.store.Subscriber;
+import com.alipay.sofa.registry.common.model.store.*;
 import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.remoting.ChannelOverflowException;
 import com.alipay.sofa.registry.remoting.exchange.RequestChannelClosedException;
@@ -80,7 +77,8 @@ public class PushProcessorTest {
         pushCause,
         NetUtil.getLocalSocketAddress(),
         Collections.singletonMap(subscriber.getRegisterId(), subscriber),
-        MultiSubDatum.of(datum));
+        MultiSubDatum.of(datum),
+        MultiSubDatumRevisions.invalidDatumRevisions());
     long now2 = System.currentTimeMillis();
 
     Assert.assertEquals(worker.bufferMap.size(), 1);
@@ -101,7 +99,8 @@ public class PushProcessorTest {
         pushCause,
         NetUtil.getLocalSocketAddress(),
         Collections.singletonMap(subscriber.getRegisterId(), subscriber),
-        MultiSubDatum.of(datum));
+        MultiSubDatum.of(datum),
+        MultiSubDatumRevisions.invalidDatumRevisions());
     Assert.assertEquals(BUFFER_SKIP_COUNTER.get(), skip + 1, 0);
     Assert.assertEquals(worker.bufferMap.size(), 1, 0);
 
@@ -112,7 +111,8 @@ public class PushProcessorTest {
         pushCause,
         NetUtil.getLocalSocketAddress(),
         Collections.singletonMap(subscriber.getRegisterId(), subscriber),
-        MultiSubDatum.of(datum));
+        MultiSubDatum.of(datum),
+        MultiSubDatumRevisions.invalidDatumRevisions());
     Assert.assertEquals(BUFFER_REPLACE_COUNTER.get(), replace + 1, 0);
     Assert.assertEquals(worker.bufferMap.size(), 1, 0);
     PushTask replaceTask = worker.bufferMap.get(taskKey);
@@ -145,7 +145,8 @@ public class PushProcessorTest {
             ctx, PushType.Empty, Collections.singletonMap(dataCenter, System.currentTimeMillis())),
         NetUtil.getLocalSocketAddress(),
         Collections.singletonMap(subscriber.getRegisterId(), subscriber),
-        MultiSubDatum.of(datum));
+        MultiSubDatum.of(datum),
+        MultiSubDatumRevisions.invalidDatumRevisions());
 
     // noDelay=false
     processor.firePush(
@@ -153,7 +154,8 @@ public class PushProcessorTest {
             ctx, PushType.Sub, Collections.singletonMap(dataCenter, System.currentTimeMillis())),
         NetUtil.getLocalSocketAddress(),
         Collections.singletonMap(subscriber.getRegisterId() + "-test", subscriber),
-        MultiSubDatum.of(datum));
+        MultiSubDatum.of(datum),
+        MultiSubDatumRevisions.invalidDatumRevisions());
     Assert.assertEquals(worker.bufferMap.size(), 2);
     // only one, sub is not expire
     Assert.assertEquals(1, processor.taskBuffer.watchBuffer(worker));
@@ -192,7 +194,8 @@ public class PushProcessorTest {
                 pushCause,
                 NetUtil.getLocalSocketAddress(),
                 Collections.singletonMap(subscriber.getRegisterId(), subscriber),
-                MultiSubDatum.of(datum))
+                MultiSubDatum.of(datum),
+                MultiSubDatumRevisions.invalidDatumRevisions())
             .get(0);
 
     Assert.assertTrue(processor.taskBuffer.buffer(task1));
@@ -207,7 +210,8 @@ public class PushProcessorTest {
                 pushCause,
                 NetUtil.getLocalSocketAddress(),
                 Collections.singletonMap(subscriber.getRegisterId(), subscriber2),
-                MultiSubDatum.of(datum))
+                MultiSubDatum.of(datum),
+                MultiSubDatumRevisions.invalidDatumRevisions())
             .get(0);
 
     Assert.assertFalse(processor.taskBuffer.buffer(task2));
@@ -219,7 +223,8 @@ public class PushProcessorTest {
                 pushCause,
                 NetUtil.getLocalSocketAddress(),
                 Collections.singletonMap(subscriber.getRegisterId(), subscriber2),
-                MultiSubDatum.of(datum))
+                MultiSubDatum.of(datum),
+                MultiSubDatumRevisions.invalidDatumRevisions())
             .get(0);
     Assert.assertTrue(processor.taskBuffer.buffer(task2));
   }
@@ -242,7 +247,8 @@ public class PushProcessorTest {
         pushCause,
         NetUtil.getLocalSocketAddress(),
         Collections.singletonMap(subscriber.getRegisterId(), subscriber),
-        MultiSubDatum.of(datum));
+        MultiSubDatum.of(datum),
+        MultiSubDatumRevisions.invalidDatumRevisions());
 
     PushTask task = worker.bufferMap.values().iterator().next();
     worker.bufferMap.clear();
@@ -396,7 +402,8 @@ public class PushProcessorTest {
         pushCause,
         NetUtil.getLocalSocketAddress(),
         Collections.singletonMap(subscriber.getRegisterId(), subscriber),
-        MultiSubDatum.of(datum));
+        MultiSubDatum.of(datum),
+        MultiSubDatumRevisions.invalidDatumRevisions());
 
     PushTask task = worker.bufferMap.values().iterator().next();
     processor.doPush(task);
@@ -450,7 +457,8 @@ public class PushProcessorTest {
         pushCause,
         NetUtil.getLocalSocketAddress(),
         Collections.singletonMap(subscriber.getRegisterId(), subscriber),
-        MultiSubDatum.of(datum));
+        MultiSubDatum.of(datum),
+        MultiSubDatumRevisions.invalidDatumRevisions());
 
     PushTask task = worker.bufferMap.values().iterator().next();
     processor.doPush(task);
@@ -488,7 +496,8 @@ public class PushProcessorTest {
         pushCause,
         NetUtil.getLocalSocketAddress(),
         Collections.singletonMap(subscriber.getRegisterId(), subscriber),
-        MultiSubDatum.of(datum));
+        MultiSubDatum.of(datum),
+        MultiSubDatumRevisions.invalidDatumRevisions());
     PushTask task = worker.bufferMap.values().iterator().next();
     processor.doPush(task);
     // no run too long
@@ -510,7 +519,8 @@ public class PushProcessorTest {
             null,
             null,
             Collections.singletonMap(subscriber.getRegisterId(), subscriber),
-            MultiSubDatum.of(datum));
+            MultiSubDatum.of(datum),
+            MultiSubDatumRevisions.invalidDatumRevisions());
 
     Assert.assertTrue(processor.interestOfDatum(task));
     subscriber.checkAndUpdateCtx(

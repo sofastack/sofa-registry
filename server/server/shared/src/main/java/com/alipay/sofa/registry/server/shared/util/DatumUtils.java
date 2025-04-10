@@ -19,6 +19,7 @@ package com.alipay.sofa.registry.server.shared.util;
 import com.alipay.remoting.serialization.HessianSerializer;
 import com.alipay.sofa.registry.common.model.ServerDataBox;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
+import com.alipay.sofa.registry.common.model.dataserver.DatumRevisionMark;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.store.*;
 import com.alipay.sofa.registry.compress.CompressCachedExecutor;
@@ -30,10 +31,12 @@ import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.alipay.sofa.registry.util.SystemUtils;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.apache.commons.collections.CollectionUtils;
 
 /**
@@ -120,7 +123,8 @@ public final class DatumUtils {
         datum.getDataId(),
         datum.getInstanceId(),
         datum.getGroup(),
-        datum.getRecentVersions());
+        datum.getRecentVersions(),
+        convertDatumRevisionMarks(datum.getDatumRevisionMarks()));
   }
 
   public static long DataBoxListSize(List<DataBox> boxes) {
@@ -178,6 +182,7 @@ public final class DatumUtils {
         datum.getInstanceId(),
         datum.getGroup(),
         datum.getRecentVersions(),
+        datum.getDatumRevisionMarks(),
         new ZipSubPublisherList(
             compressedItem.getCompressedData(),
             compressedItem.getOriginSize(),
@@ -221,6 +226,18 @@ public final class DatumUtils {
         datum.getDataId(),
         datum.getInstanceId(),
         datum.getGroup(),
-        datum.getRecentVersions());
+        datum.getRecentVersions(),
+        datum.getDatumRevisionMarks());
+  }
+
+  private static List<SubDatumRevisionMark> convertDatumRevisionMarks(
+      List<DatumRevisionMark> datumRevisionMarks) {
+    if (CollectionUtils.isEmpty(datumRevisionMarks)) {
+      return Collections.emptyList();
+    } else {
+      return datumRevisionMarks.stream()
+          .map(SubDatumRevisionMark::from)
+          .collect(Collectors.toList());
+    }
   }
 }

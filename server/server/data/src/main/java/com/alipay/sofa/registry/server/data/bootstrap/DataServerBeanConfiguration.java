@@ -204,6 +204,7 @@ public class DataServerBeanConfiguration {
       Collection<AbstractServerHandler> list = new ArrayList<>();
       list.add(getDataHandler());
       list.add(getMultiDataHandler());
+      list.add(getMultiSubDatumRevisionsHandler());
       list.add(batchPutDataHandler());
       list.add(getDataVersionsHandler());
       return list;
@@ -234,6 +235,11 @@ public class DataServerBeanConfiguration {
     @Bean
     public AbstractServerHandler getMultiDataHandler() {
       return new GetMultiDataHandler();
+    }
+
+    @Bean
+    public AbstractServerHandler getMultiSubDatumRevisionsHandler() {
+      return new GetMultiSubDatumRevisionsHandler();
     }
 
     @Bean

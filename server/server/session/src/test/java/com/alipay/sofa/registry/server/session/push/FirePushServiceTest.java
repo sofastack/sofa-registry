@@ -68,7 +68,11 @@ public class FirePushServiceTest {
     svc.fireOnPushEmpty(subscriber, "testDc");
     Mockito.verify(svc.pushProcessor, Mockito.times(0))
         .firePush(
-            Mockito.anyObject(), Mockito.anyObject(), Mockito.anyObject(), Mockito.anyObject());
+            Mockito.anyObject(),
+            Mockito.anyObject(),
+            Mockito.anyObject(),
+            Mockito.anyObject(),
+            Mockito.anyObject());
 
     svc.pushSwitchService
         .getFetchStopPushService()
@@ -77,7 +81,11 @@ public class FirePushServiceTest {
     svc.fireOnPushEmpty(subscriber, "testDc");
     Mockito.verify(svc.pushProcessor, Mockito.times(1))
         .firePush(
-            Mockito.anyObject(), Mockito.anyObject(), Mockito.anyObject(), Mockito.anyObject());
+            Mockito.anyObject(),
+            Mockito.anyObject(),
+            Mockito.anyObject(),
+            Mockito.anyObject(),
+            Mockito.anyObject());
 
     Assert.assertFalse(svc.fireOnDatum(null, null));
     SubDatum datum = TestUtils.newSubDatum(subscriber.getDataId(), 100, Collections.emptyList());
@@ -85,7 +93,11 @@ public class FirePushServiceTest {
     // no sub
     Mockito.verify(svc.pushProcessor, Mockito.times(1))
         .firePush(
-            Mockito.anyObject(), Mockito.anyObject(), Mockito.anyObject(), Mockito.anyObject());
+            Mockito.anyObject(),
+            Mockito.anyObject(),
+            Mockito.anyObject(),
+            Mockito.anyObject(),
+            Mockito.anyObject());
 
     // registerFetchExecutor is null
     Assert.assertFalse(svc.fireOnRegister(subscriber));
@@ -164,7 +176,11 @@ public class FirePushServiceTest {
     Assert.assertTrue(svc.doExecuteOnChange("testDataId", ctx));
     Mockito.verify(svc.pushProcessor, Mockito.times(1))
         .firePush(
-            Mockito.anyObject(), Mockito.anyObject(), Mockito.anyObject(), Mockito.anyObject());
+            Mockito.anyObject(),
+            Mockito.anyObject(),
+            Mockito.anyObject(),
+            Mockito.anyObject(),
+            Mockito.anyObject());
 
     // get datum is old
     datum = TestUtils.newMultiSubDatum("testDc", "testDataId", 80, Collections.emptyList());

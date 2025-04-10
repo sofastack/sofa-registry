@@ -50,6 +50,7 @@ public class SubDatumTest {
             "dataId",
             "instanceId",
             "group",
+            Lists.newArrayList(),
             Lists.newArrayList());
     SubDatum d2 =
         SubDatum.zipOf(
@@ -59,6 +60,7 @@ public class SubDatumTest {
             "dataId",
             "instanceId",
             "group",
+            Lists.newArrayList(),
             Lists.newArrayList(),
             new ZipSubPublisherList(new byte[] {1, 2, 3, 4, 5}, 1024, "zstd", 1));
     Assert.assertEquals(d2.getDataInfoId(), "dataInfoId");

@@ -51,6 +51,8 @@ public class Datum implements Serializable {
 
   private List<Long> recentVersions;
 
+  private List<DatumRevisionMark> datumRevisionMarks;
+
   /** constructor */
   public Datum() {}
 
@@ -64,6 +66,7 @@ public class Datum implements Serializable {
     this.dataInfoId = WordCache.getWordCache(dataInfoId);
     this.dataCenter = WordCache.getWordCache(dataCenter);
     this.recentVersions = Collections.EMPTY_LIST;
+    this.datumRevisionMarks = Collections.emptyList();
     updateVersion();
   }
 
@@ -96,6 +99,7 @@ public class Datum implements Serializable {
     this.instanceId = publisher.getInstanceId();
     this.group = publisher.getGroup();
     this.recentVersions = Collections.EMPTY_LIST;
+    this.datumRevisionMarks = Collections.emptyList();
     addPublisher(publisher);
   }
 
@@ -274,5 +278,13 @@ public class Datum implements Serializable {
 
   public void setRecentVersions(List<Long> recentVersions) {
     this.recentVersions = recentVersions;
+  }
+
+  public List<DatumRevisionMark> getDatumRevisionMarks() {
+    return datumRevisionMarks;
+  }
+
+  public void setDatumRevisionMarks(List<DatumRevisionMark> datumRevisionMarks) {
+    this.datumRevisionMarks = datumRevisionMarks;
   }
 }

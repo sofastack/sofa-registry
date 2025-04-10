@@ -22,6 +22,7 @@ import static org.mockito.Mockito.*;
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.sessionserver.DataPushRequest;
 import com.alipay.sofa.registry.common.model.store.SubDatum;
+import com.alipay.sofa.registry.common.model.store.SubDatumRevisionMark;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.server.session.TestUtils;
 import com.alipay.sofa.registry.server.session.bootstrap.ExecutorManager;
@@ -91,7 +92,8 @@ public class DataPushRequestHandlerTest {
             "testDataId",
             "testInstanceId",
             "testGroup",
-            Lists.newArrayList(System.currentTimeMillis()));
+            Lists.newArrayList(System.currentTimeMillis()),
+            Lists.newArrayList(SubDatumRevisionMark.of(System.currentTimeMillis(), false)));
     DataPushRequest request = new DataPushRequest(subDatum);
     Assert.assertTrue(request.toString(), request.toString().contains("dataInfoId"));
     Assert.assertEquals(request.getDatum(), subDatum);

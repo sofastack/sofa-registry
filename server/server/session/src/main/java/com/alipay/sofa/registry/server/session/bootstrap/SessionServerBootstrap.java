@@ -413,6 +413,10 @@ public class SessionServerBootstrap {
 
     CustomSerializerManager.registerCustomSerializer(
         MultiReceivedDataPb.class.getName(), serializer);
+
+    CustomSerializerManager.registerCustomSerializer(
+        DeltaReceivedDataPb.class.getName(), serializer);
+
     SerializerManager.addSerializer(
         ProtobufSerializer.PROTOCOL_PROTOBUF, ProtobufSerializer.getInstance());
   }

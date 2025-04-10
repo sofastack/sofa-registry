@@ -46,6 +46,7 @@ public final class SubDatum implements Serializable, Sizer {
   private final long version;
 
   private final List<Long> recentVersions;
+  private final List<SubDatumRevisionMark> datumRevisionMarks;
 
   private final ZipSubPublisherList zipPublishers;
 
@@ -68,6 +69,7 @@ public final class SubDatum implements Serializable, Sizer {
         instanceId,
         group,
         Collections.emptyList(),
+        Collections.emptyList(),
         null);
   }
 
@@ -79,7 +81,8 @@ public final class SubDatum implements Serializable, Sizer {
       String dataId,
       String instanceId,
       String group,
-      List<Long> recentVersions) {
+      List<Long> recentVersions,
+      List<SubDatumRevisionMark> datumRevisionMarks) {
     return new SubDatum(
         dataInfoId,
         dataCenter,
@@ -89,6 +92,7 @@ public final class SubDatum implements Serializable, Sizer {
         instanceId,
         group,
         recentVersions,
+        datumRevisionMarks,
         null);
   }
 
@@ -100,6 +104,7 @@ public final class SubDatum implements Serializable, Sizer {
       String instanceId,
       String group,
       List<Long> recentVersions,
+      List<SubDatumRevisionMark> datumRevisionMarks,
       ZipSubPublisherList zipPublishers) {
     return new SubDatum(
         dataInfoId,
@@ -110,6 +115,7 @@ public final class SubDatum implements Serializable, Sizer {
         instanceId,
         group,
         recentVersions,
+        datumRevisionMarks,
         zipPublishers);
   }
 
@@ -122,6 +128,7 @@ public final class SubDatum implements Serializable, Sizer {
       String instanceId,
       String group,
       List<Long> recentVersions,
+      List<SubDatumRevisionMark> datumRevisionMarks,
       ZipSubPublisherList zipPublishers) {
 
     //        only one must be not null between publishers and zipPublishers
@@ -137,6 +144,7 @@ public final class SubDatum implements Serializable, Sizer {
     this.instanceId = instanceId;
     this.group = group;
     this.recentVersions = recentVersions;
+    this.datumRevisionMarks = datumRevisionMarks;
     this.zipPublishers = zipPublishers;
 
     this.byteSize = calcSize();
@@ -241,11 +249,16 @@ public final class SubDatum implements Serializable, Sizer {
         instanceId,
         group,
         datum.recentVersions,
+        datum.datumRevisionMarks,
         datum.zipPublishers);
   }
 
   public List<Long> getRecentVersions() {
     return recentVersions;
+  }
+
+  public List<SubDatumRevisionMark> getDatumRevisionMarks() {
+    return datumRevisionMarks;
   }
 
   private int calcSize() {

@@ -19,10 +19,7 @@ package com.alipay.sofa.registry.server.session.push;
 import com.alipay.sofa.registry.common.model.DataCenterPushInfo;
 import com.alipay.sofa.registry.common.model.SegmentPushInfo;
 import com.alipay.sofa.registry.common.model.SubscriberUtils;
-import com.alipay.sofa.registry.common.model.store.BaseInfo;
-import com.alipay.sofa.registry.common.model.store.MultiSubDatum;
-import com.alipay.sofa.registry.common.model.store.PushData;
-import com.alipay.sofa.registry.common.model.store.Subscriber;
+import com.alipay.sofa.registry.common.model.store.*;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.trace.TraceID;
 import com.alipay.sofa.registry.util.StringFormatter;
@@ -38,6 +35,7 @@ public abstract class PushTask {
   protected volatile long expireTimestamp;
 
   protected final MultiSubDatum datum;
+  protected final MultiSubDatumRevisions datumRevisions;
   protected final Map<String, Subscriber> subscriberMap;
   protected final Subscriber subscriber;
 
@@ -45,15 +43,18 @@ public abstract class PushTask {
   protected final PushTrace trace;
 
   protected int retryCount;
+  protected boolean deltaPushFail;
   private Map<String, DataCenterPushInfo> dataCenterPushInfos;
 
   protected PushTask(
       PushCause pushCause,
       InetSocketAddress addr,
       Map<String, Subscriber> subscriberMap,
-      MultiSubDatum datum) {
+      MultiSubDatum datum,
+      MultiSubDatumRevisions datumRevisions) {
     this.taskID = TraceID.newTraceID();
     this.datum = datum;
+    this.datumRevisions = datumRevisions;
     this.subscriberMap = subscriberMap;
     this.subscriber = subscriberMap.values().iterator().next();
     this.trace =
@@ -75,6 +76,10 @@ public abstract class PushTask {
 
   protected void expireAfter(long intervalMs) {
     this.expireTimestamp = System.currentTimeMillis() + intervalMs;
+  }
+
+  public void markDeltaPushFail() {
+    this.deltaPushFail = true;
   }
 
   public boolean hasPushed() {

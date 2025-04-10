@@ -16,10 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.push;
 
-import com.alipay.sofa.registry.common.model.store.MultiSubDatum;
-import com.alipay.sofa.registry.common.model.store.PushData;
-import com.alipay.sofa.registry.common.model.store.SubDatum;
-import com.alipay.sofa.registry.common.model.store.Subscriber;
+import com.alipay.sofa.registry.common.model.store.*;
 import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.server.session.TestUtils;
 import java.net.InetSocketAddress;
@@ -71,7 +68,12 @@ public class PushTaskBufferTest {
         InetSocketAddress addr,
         Map<String, Subscriber> subscriberMap,
         SubDatum datum) {
-      super(pushCause, addr, subscriberMap, MultiSubDatum.of(datum));
+      super(
+          pushCause,
+          addr,
+          subscriberMap,
+          MultiSubDatum.of(datum),
+          MultiSubDatumRevisions.invalidDatumRevisions());
     }
 
     @Override

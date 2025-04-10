@@ -1,0 +1,22 @@
+syntax = "proto3";
+option java_package = "com.alipay.sofa.registry.common.model.client.pb";
+option java_multiple_files = true;
+option go_package = "proto";
+
+import "DeltaReceivedDataBodyPb.proto";
+import "FullReceivedDataBodyPb.proto";
+
+message DeltaReceivedDataPb {
+  string dataId = 1;
+  string group = 2;
+  string instanceId = 3;
+  string segment = 4;
+  string scope = 5;
+  repeated string subscriberRegisterIds = 6;
+  int64 version = 7;
+  string localZone = 8;
+  bool isDelta = 9;
+  DeltaReceivedDataBodyPb deltaBody = 10;
+  FullReceivedDataBodyPb fullBody = 11;
+}
+

@@ -16,7 +16,8 @@
  */
 package com.alipay.sofa.registry.server.session.push;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
 
 import com.alipay.sofa.registry.common.model.DataCenterPushInfo;
 import com.alipay.sofa.registry.common.model.client.pb.ReceivedConfigDataPb;
@@ -58,23 +59,38 @@ public class PushDataGeneratorTest {
     SubDatum emptyDatum = DatumUtils.newEmptySubDatum(sub1, "testDc", 1);
     TestUtils.assertRunException(
         IllegalArgumentException.class,
-        () -> generator.createPushData(MultiSubDatum.of(emptyDatum), subscriberMap));
+        () ->
+            generator.createPushData(
+                MultiSubDatum.of(emptyDatum),
+                MultiSubDatumRevisions.invalidDatumRevisions(),
+                subscriberMap));
 
     sub1.setDataInfoId(TestUtils.newDataInfoId("test-dataid"));
     SubDatum emptyDatum1 = DatumUtils.newEmptySubDatum(sub1, "testDc", 1);
     TestUtils.assertRunException(
         RuntimeException.class,
-        () -> generator.createPushData(MultiSubDatum.of(emptyDatum1), subscriberMap));
+        () ->
+            generator.createPushData(
+                MultiSubDatum.of(emptyDatum1),
+                MultiSubDatumRevisions.invalidDatumRevisions(),
+                subscriberMap));
 
     sub2.setScope(ScopeEnum.zone);
     sub2.setClientVersion(BaseInfo.ClientVersion.MProtocolpackage);
     TestUtils.assertRunException(
         IllegalArgumentException.class,
-        () -> generator.createPushData(MultiSubDatum.of(emptyDatum1), subscriberMap));
+        () ->
+            generator.createPushData(
+                MultiSubDatum.of(emptyDatum1),
+                MultiSubDatumRevisions.invalidDatumRevisions(),
+                subscriberMap));
 
     sub2.setClientVersion(BaseInfo.ClientVersion.StoreData);
     TestUtils.assertRunException(
-        NullPointerException.class, () -> generator.createPushData(null, subscriberMap));
+        NullPointerException.class,
+        () ->
+            generator.createPushData(
+                null, MultiSubDatumRevisions.invalidDatumRevisions(), subscriberMap));
   }
 
   @Test
@@ -91,7 +107,10 @@ public class PushDataGeneratorTest {
     List<SubPublisher> list = Lists.newArrayList(pub, pub2);
     SubDatum subDatum = TestUtils.newSubDatum("testDc", "testDataId", 200, list);
     PushData<ReceivedData> pushData =
-        generator.createPushData(MultiSubDatum.of(subDatum), subscriberMap);
+        generator.createPushData(
+            MultiSubDatum.of(subDatum),
+            MultiSubDatumRevisions.invalidDatumRevisions(),
+            subscriberMap);
     ReceivedData receivedData = pushData.getPayload();
     Assert.assertEquals(receivedData.getVersion().longValue(), subDatum.getVersion());
     Assert.assertEquals(
@@ -172,7 +191,10 @@ public class PushDataGeneratorTest {
     }
     SubDatum subDatum = TestUtils.newSubDatum("testDc", "testDataId", 200, list);
     PushData<ReceivedDataPb> pushData =
-        generator.createPushData(MultiSubDatum.of(subDatum), subscriberMap);
+        generator.createPushData(
+            MultiSubDatum.of(subDatum),
+            MultiSubDatumRevisions.invalidDatumRevisions(),
+            subscriberMap);
     Assert.assertEquals(0, pushData.getPayload().getDataMap().size());
     Assert.assertNotEquals(0, pushData.getPayload().getBody().size());
     Assert.assertNotEquals(0, pushData.getPayload().getOriginBodySize());

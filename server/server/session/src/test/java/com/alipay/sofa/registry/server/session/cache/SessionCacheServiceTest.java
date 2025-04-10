@@ -18,6 +18,7 @@ package com.alipay.sofa.registry.server.session.cache;
 
 import com.alipay.sofa.registry.common.model.store.MultiSubDatum;
 import com.alipay.sofa.registry.common.model.store.SubDatum;
+import com.alipay.sofa.registry.common.model.store.SubDatumRevisionMark;
 import com.alipay.sofa.registry.server.session.TestUtils;
 import com.alipay.sofa.registry.server.session.node.service.DataNodeService;
 import java.util.Collections;
@@ -64,7 +65,8 @@ public class SessionCacheServiceTest {
                 "testDataId",
                 "testInstanceId",
                 "testGroup",
-                Lists.newArrayList(System.currentTimeMillis())));
+                Lists.newArrayList(System.currentTimeMillis()),
+                Lists.newArrayList(SubDatumRevisionMark.of(System.currentTimeMillis(), false))));
 
     Mockito.when(
             generator.dataNodeService.fetch(Mockito.anyString(), Mockito.anySetOf(String.class)))

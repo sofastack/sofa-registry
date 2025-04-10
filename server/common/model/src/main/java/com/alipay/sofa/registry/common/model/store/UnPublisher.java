@@ -36,10 +36,21 @@ public class UnPublisher extends Publisher {
       String registerId,
       long registerTimeStamp,
       long version) {
+    this(dataInfoId, sessionProcessId, registerId, null, registerTimeStamp, version);
+  }
+
+  public UnPublisher(
+      String dataInfoId,
+      ProcessId sessionProcessId,
+      String registerId,
+      String cell,
+      long registerTimeStamp,
+      long version) {
     setDataInfoId(dataInfoId);
     setRegisterId(registerId);
     setRegisterTimestamp(registerTimeStamp);
     setVersion(version);
+    setCell(cell);
     // avoid new datum dataId is null
     DataInfo dataInfo = DataInfo.valueOf(dataInfoId);
     setDataId(dataInfo.getDataId());
@@ -59,6 +70,7 @@ public class UnPublisher extends Publisher {
         publisher.getDataInfoId(),
         publisher.getSessionProcessId(),
         publisher.getRegisterId(),
+        publisher.getCell(),
         publisher.getRegisterTimestamp(),
         publisher.getVersion());
   }

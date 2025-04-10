@@ -30,6 +30,7 @@ public final class ResultPb extends com.google.protobuf.GeneratedMessageV3
   private ResultPb() {
     success_ = false;
     message_ = "";
+    statusCode_ = 0;
   }
 
   @java.lang.Override
@@ -73,6 +74,11 @@ public final class ResultPb extends com.google.protobuf.GeneratedMessageV3
               java.lang.String s = input.readStringRequireUtf8();
 
               message_ = s;
+              break;
+            }
+          case 24:
+            {
+              statusCode_ = input.readInt32();
               break;
             }
         }
@@ -135,6 +141,13 @@ public final class ResultPb extends com.google.protobuf.GeneratedMessageV3
     }
   }
 
+  public static final int STATUSCODE_FIELD_NUMBER = 3;
+  private int statusCode_;
+  /** <code>int32 statusCode = 3;</code> */
+  public int getStatusCode() {
+    return statusCode_;
+  }
+
   private byte memoizedIsInitialized = -1;
 
   public final boolean isInitialized() {
@@ -153,6 +166,9 @@ public final class ResultPb extends com.google.protobuf.GeneratedMessageV3
     if (!getMessageBytes().isEmpty()) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 2, message_);
     }
+    if (statusCode_ != 0) {
+      output.writeInt32(3, statusCode_);
+    }
     unknownFields.writeTo(output);
   }
 
@@ -166,6 +182,9 @@ public final class ResultPb extends com.google.protobuf.GeneratedMessageV3
     }
     if (!getMessageBytes().isEmpty()) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, message_);
+    }
+    if (statusCode_ != 0) {
+      size += com.google.protobuf.CodedOutputStream.computeInt32Size(3, statusCode_);
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -186,6 +205,7 @@ public final class ResultPb extends com.google.protobuf.GeneratedMessageV3
     boolean result = true;
     result = result && (getSuccess() == other.getSuccess());
     result = result && getMessage().equals(other.getMessage());
+    result = result && (getStatusCode() == other.getStatusCode());
     result = result && unknownFields.equals(other.unknownFields);
     return result;
   }
@@ -201,6 +221,8 @@ public final class ResultPb extends com.google.protobuf.GeneratedMessageV3
     hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(getSuccess());
     hash = (37 * hash) + MESSAGE_FIELD_NUMBER;
     hash = (53 * hash) + getMessage().hashCode();
+    hash = (37 * hash) + STATUSCODE_FIELD_NUMBER;
+    hash = (53 * hash) + getStatusCode();
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -339,6 +361,8 @@ public final class ResultPb extends com.google.protobuf.GeneratedMessageV3
 
       message_ = "";
 
+      statusCode_ = 0;
+
       return this;
     }
 
@@ -364,6 +388,7 @@ public final class ResultPb extends com.google.protobuf.GeneratedMessageV3
           new com.alipay.sofa.registry.common.model.client.pb.ResultPb(this);
       result.success_ = success_;
       result.message_ = message_;
+      result.statusCode_ = statusCode_;
       onBuilt();
       return result;
     }
@@ -413,6 +438,9 @@ public final class ResultPb extends com.google.protobuf.GeneratedMessageV3
       if (!other.getMessage().isEmpty()) {
         message_ = other.message_;
         onChanged();
+      }
+      if (other.getStatusCode() != 0) {
+        setStatusCode(other.getStatusCode());
       }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
@@ -512,6 +540,26 @@ public final class ResultPb extends com.google.protobuf.GeneratedMessageV3
       checkByteStringIsUtf8(value);
 
       message_ = value;
+      onChanged();
+      return this;
+    }
+
+    private int statusCode_;
+    /** <code>int32 statusCode = 3;</code> */
+    public int getStatusCode() {
+      return statusCode_;
+    }
+    /** <code>int32 statusCode = 3;</code> */
+    public Builder setStatusCode(int value) {
+
+      statusCode_ = value;
+      onChanged();
+      return this;
+    }
+    /** <code>int32 statusCode = 3;</code> */
+    public Builder clearStatusCode() {
+
+      statusCode_ = 0;
       onChanged();
       return this;
     }

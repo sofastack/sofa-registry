@@ -92,6 +92,17 @@ public class CompressPushService
     return CompressUtils.find(acceptEncodes, compressPushSwitch.getForbidEncodes());
   }
 
+  public Compressor getCompressor(long dataSize, String[] acceptEncodes, String clientIp) {
+    CompressPushSwitch compressPushSwitch = getCompressSwitch();
+    if (!compressEnabled(compressPushSwitch, clientIp)) {
+      return null;
+    }
+    if (dataSize < compressPushSwitch.getCompressMinSize()) {
+      return null;
+    }
+    return CompressUtils.find(acceptEncodes, compressPushSwitch.getForbidEncodes());
+  }
+
   private static boolean compressEnabled(CompressPushSwitch compressPushSwitch, String clientIp) {
     if (compressPushSwitch.isEnabled()) {
       return true;

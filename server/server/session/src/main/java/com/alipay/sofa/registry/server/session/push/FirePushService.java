@@ -26,13 +26,11 @@ import com.alipay.sofa.registry.core.model.ReceivedConfigData;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import com.alipay.sofa.registry.server.session.cache.CacheService;
-import com.alipay.sofa.registry.server.session.cache.DatumKey;
-import com.alipay.sofa.registry.server.session.cache.Key;
-import com.alipay.sofa.registry.server.session.cache.Value;
+import com.alipay.sofa.registry.server.session.cache.*;
 import com.alipay.sofa.registry.server.session.circuit.breaker.CircuitBreakerService;
 import com.alipay.sofa.registry.server.session.metadata.MetadataCacheRegistry;
 import com.alipay.sofa.registry.server.session.multi.cluster.DataCenterMetadataCache;
+import com.alipay.sofa.registry.server.session.providedata.FetchIncrementalPushSwitchService;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.shared.util.DatumUtils;
 import com.alipay.sofa.registry.task.FastRejectedExecutionException;
@@ -43,12 +41,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.net.InetSocketAddress;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,11 +56,15 @@ public class FirePushService {
 
   @Resource CacheService sessionDatumCacheService;
 
+  @Resource CacheService sessionDatumRevisionsCacheService;
+
   @Autowired Interests sessionInterests;
 
   @Autowired CircuitBreakerService circuitBreakerService;
 
   @Autowired MetadataCacheRegistry metadataCacheRegistry;
+
+  @Autowired FetchIncrementalPushSwitchService fetchIncrementalPushSwitchService;
 
   private KeyedThreadPoolExecutor watchPushExecutor;
 
@@ -130,7 +128,11 @@ public class FirePushService {
         new TriggerPushContext(dataCenter, emptyDatum.getVersion(), null, now);
     PushCause cause =
         new PushCause(pushCtx, PushType.Empty, Collections.singletonMap(dataCenter, now));
-    processPush(cause, MultiSubDatum.of(emptyDatum), Collections.singletonList(subscriber));
+    processPush(
+        cause,
+        MultiSubDatum.of(emptyDatum),
+        Collections.singletonList(subscriber),
+        MultiSubDatumRevisions.invalidDatumRevisions());
     PUSH_EMPTY_COUNTER.inc();
     return true;
   }
@@ -185,7 +187,11 @@ public class FirePushService {
               pushCtx,
               PushType.Temp,
               Collections.singletonMap(datum.getDataCenter(), datumTimestamp));
-      processPush(cause, MultiSubDatum.of(datum), subscribers);
+      processPush(
+          cause,
+          MultiSubDatum.of(datum),
+          subscribers,
+          MultiSubDatumRevisions.invalidDatumRevisions());
       PUSH_TEMP_COUNTER.inc();
       return true;
     } catch (Throwable e) {
@@ -220,11 +226,25 @@ public class FirePushService {
       }
     }
 
-    onDatumChange(changeCtx, datum);
+    MultiSubDatumRevisions multiSubDatumRevisions = null;
+    if (this.fetchIncrementalPushSwitchService.useIncrementalPush()) {
+      // Session 开启了增量推送能力，加载增量数据
+      // 这里数据有问题不需要阻塞推送流程，后续流程中如果读取不到可用的增量数据，应当降级成全量推送
+      multiSubDatumRevisions = this.getDatumRevisions(changeDataInfoId, expectVersions);
+      // todo(xidong.rxd): 检查数据完整性并记录日志，不需要阻塞流程
+      if (null == multiSubDatumRevisions) {
+        multiSubDatumRevisions = MultiSubDatumRevisions.invalidDatumRevisions();
+      }
+    }
+
+    onDatumChange(changeCtx, datum, multiSubDatumRevisions);
     return true;
   }
 
-  private void onDatumChange(TriggerPushContext changeCtx, MultiSubDatum datum) {
+  private void onDatumChange(
+      TriggerPushContext changeCtx,
+      MultiSubDatum datum,
+      MultiSubDatumRevisions multiSubDatumRevisions) {
     Map<ScopeEnum, List<Subscriber>> scopes =
         SubscriberUtils.groupByScope(sessionInterests.getDatas(datum.getDataInfoId()));
 
@@ -235,12 +255,15 @@ public class FirePushService {
     }
     final PushCause cause = new PushCause(changeCtx, PushType.Sub, datumTimestamp);
     for (Map.Entry<ScopeEnum, List<Subscriber>> scope : scopes.entrySet()) {
-      processPush(cause, datum, scope.getValue());
+      processPush(cause, datum, scope.getValue(), multiSubDatumRevisions);
     }
   }
 
   private boolean processPush(
-      PushCause pushCause, MultiSubDatum datum, Collection<Subscriber> subscriberList) {
+      PushCause pushCause,
+      MultiSubDatum datum,
+      Collection<Subscriber> subscriberList,
+      MultiSubDatumRevisions multiSubDatumRevisions) {
     if (!pushSwitchService.canLocalDataCenterPush()
         || !pushSwitchService.canPushMulti(datum.dataCenters())) {
       return false;
@@ -249,6 +272,7 @@ public class FirePushService {
       return false;
     }
     // if pushEmpty, do not check the version
+    // If the push is due to a failed incremental push, the version number will not be checked.
     if (pushCause.pushType != PushType.Empty) {
       subscriberList = subscribersPushCheck(pushCause, datum.getDatumMap(), subscriberList);
       if (CollectionUtils.isEmpty(subscriberList)) {
@@ -260,9 +284,37 @@ public class FirePushService {
     for (Map.Entry<InetSocketAddress, Map<String, Subscriber>> e : group.entrySet()) {
       final InetSocketAddress addr = e.getKey();
       final Map<String, Subscriber> subscriberMap = e.getValue();
-      pushProcessor.firePush(pushCause, addr, subscriberMap, datum);
+      pushProcessor.firePush(pushCause, addr, subscriberMap, datum, multiSubDatumRevisions);
     }
     return true;
+  }
+
+  MultiSubDatumRevisions getDatumRevisions(String dataInfoId, Map<String, Long> expectVersions) {
+    ParaCheckUtil.checkNotEmpty(expectVersions, "expectVersions");
+    Key key =
+        new Key(
+            DatumRevisionsKey.class.getName(),
+            new DatumRevisionsKey(dataInfoId, expectVersions.keySet()));
+    Value value = this.sessionDatumRevisionsCacheService.getValueIfPresent(key);
+    if (value == null) {
+      return missRevisions(key);
+    }
+
+    MultiSubDatumRevisions multiSubDatumRevisions = (MultiSubDatumRevisions) value.getPayload();
+    if (multiSubDatumRevisions == null
+        || !expectVersions.keySet().equals(multiSubDatumRevisions.getDataCenters())) {
+      return missRevisions(key);
+    }
+
+    for (Entry<String, Long> entry : expectVersions.entrySet()) {
+      SubDatumRevisions datumRevisions = multiSubDatumRevisions.getDatumRevisions(entry.getKey());
+      if (datumRevisions != null
+          && datumRevisions.latestVersionOlderThanVersion(entry.getValue())) {
+        return missRevisions(key);
+      }
+    }
+
+    return multiSubDatumRevisions;
   }
 
   MultiSubDatum getDatum(String dataInfoId, Map<String, Long> expectVersions) {
@@ -295,6 +347,12 @@ public class FirePushService {
     sessionDatumCacheService.invalidate(key);
     value = sessionDatumCacheService.getValue(key);
     return value == null ? null : (MultiSubDatum) value.getPayload();
+  }
+
+  private MultiSubDatumRevisions missRevisions(Key key) {
+    this.sessionDatumRevisionsCacheService.invalidate(key);
+    Value value = this.sessionDatumRevisionsCacheService.getValue(key);
+    return value == null ? null : (MultiSubDatumRevisions) value.getPayload();
   }
 
   private List<Subscriber> subscribersPushCheck(
@@ -387,6 +445,11 @@ public class FirePushService {
 
   private void doExecuteOnReg(
       String dataInfoId, List<Subscriber> subscribers, Set<String> dataCenters) {
+    this.doExecute(dataInfoId, subscribers, dataCenters, PushType.Reg);
+  }
+
+  private void doExecute(
+      String dataInfoId, List<Subscriber> subscribers, Set<String> dataCenters, PushType pushType) {
     if (CollectionUtils.isEmpty(subscribers)) {
       return;
     }
@@ -427,13 +490,15 @@ public class FirePushService {
                 first, dataCenter, ValueConstants.DEFAULT_NO_DATUM_VERSION));
       }
     }
+
     TriggerPushContext pushCtx =
         new TriggerPushContext(
             expectDatumVersions, null, SubscriberUtils.getMinRegisterTimestamp(subscribers));
-    PushCause cause = new PushCause(pushCtx, PushType.Reg, datumTimestamp);
+    PushCause cause = new PushCause(pushCtx, pushType, datumTimestamp);
     Map<ScopeEnum, List<Subscriber>> scopes = SubscriberUtils.groupByScope(subscribers);
     for (List<Subscriber> scopeList : scopes.values()) {
-      processPush(cause, datum, scopeList);
+      // 注册 Subscriber 触发的推送不应当使用增量推送
+      processPush(cause, datum, scopeList, MultiSubDatumRevisions.invalidDatumRevisions());
     }
   }
 

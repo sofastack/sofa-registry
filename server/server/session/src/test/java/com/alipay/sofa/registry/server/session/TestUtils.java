@@ -381,7 +381,8 @@ public class TestUtils {
             dataId,
             "testInstance",
             "testGroup",
-            Lists.newArrayList(System.currentTimeMillis()));
+            Lists.newArrayList(System.currentTimeMillis()),
+            Lists.newArrayList(SubDatumRevisionMark.of(System.currentTimeMillis(), false)));
     return subDatum;
   }
 

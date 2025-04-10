@@ -68,6 +68,17 @@ public class CompressPushKey implements CompressKey {
     return new CompressPushKey(encode, dataId, instanceId, group, segment, version, zoneCounts);
   }
 
+  public static CompressPushKey of(
+      String segment,
+      String dataId,
+      String instanceId,
+      String group,
+      long version,
+      ZoneCount[] zoneCounts,
+      String encode) {
+    return new CompressPushKey(encode, dataId, instanceId, group, segment, version, zoneCounts);
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -120,36 +131,5 @@ public class CompressPushKey implements CompressKey {
   @Override
   public int size() {
     return byteSize;
-  }
-
-  private static class ZoneCount {
-    private final String zone;
-    private final int count;
-
-    private ZoneCount(String zone, int count) {
-      this.zone = zone;
-      this.count = count;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      ZoneCount zoneCount = (ZoneCount) o;
-      return count == zoneCount.count && Objects.equals(zone, zoneCount.zone);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(zone, count);
-    }
-
-    public int size() {
-      return StringUtils.sizeof(zone) + 4;
-    }
   }
 }

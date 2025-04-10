@@ -37,10 +37,10 @@ public final class ResultPbOuterClass {
 
   static {
     java.lang.String[] descriptorData = {
-      "\n\016ResultPb.proto\",\n\010ResultPb\022\017\n\007success\030"
-          + "\001 \001(\010\022\017\n\007message\030\002 \001(\tB7\n/com.alipay.sof"
-          + "a.registry.common.model.client.pbP\001Z\002pbb"
-          + "\006proto3"
+      "\n\016ResultPb.proto\"@\n\010ResultPb\022\017\n\007success\030"
+          + "\001 \001(\010\022\017\n\007message\030\002 \001(\t\022\022\n\nstatusCode\030\003 \001"
+          + "(\005B7\n/com.alipay.sofa.registry.common.mo"
+          + "del.client.pbP\001Z\002pbb\006proto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -57,7 +57,7 @@ public final class ResultPbOuterClass {
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_ResultPb_descriptor,
             new java.lang.String[] {
-              "Success", "Message",
+              "Success", "Message", "StatusCode",
             });
   }
 

@@ -24,7 +24,6 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.session.bootstrap.ExecutorManager;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import com.alipay.sofa.registry.server.session.cache.CacheService;
 import com.alipay.sofa.registry.server.session.push.FirePushService;
 import com.alipay.sofa.registry.server.session.push.PushSwitchService;
 import com.alipay.sofa.registry.server.session.push.TriggerPushContext;
@@ -55,8 +54,6 @@ public class DataChangeRequestHandler extends AbstractClientHandler<DataChangeRe
   @Autowired FirePushService firePushService;
 
   @Autowired PushSwitchService pushSwitchService;
-
-  @Autowired CacheService sessionCacheService;
 
   @Override
   protected NodeType getConnectNodeType() {

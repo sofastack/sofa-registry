@@ -1,0 +1,10 @@
+syntax = "proto3";
+option java_package = "com.alipay.sofa.registry.common.model.client.pb";
+option java_multiple_files = true;
+option go_package = "proto";
+
+import "PushResourcePb.proto";
+
+message PushResourcesPb {
+  repeated PushResourcePb resources = 1;
+}

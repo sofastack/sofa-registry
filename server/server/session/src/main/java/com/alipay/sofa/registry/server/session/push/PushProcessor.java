@@ -21,9 +21,12 @@ import static com.alipay.sofa.registry.server.session.push.PushMetrics.Push.*;
 import com.alipay.remoting.rpc.exception.InvokeTimeoutException;
 import com.alipay.sofa.registry.common.model.DataCenterPushInfo;
 import com.alipay.sofa.registry.common.model.Tuple;
+import com.alipay.sofa.registry.common.model.client.pb.ResultPb;
 import com.alipay.sofa.registry.common.model.store.MultiSubDatum;
+import com.alipay.sofa.registry.common.model.store.MultiSubDatumRevisions;
 import com.alipay.sofa.registry.common.model.store.PushData;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
+import com.alipay.sofa.registry.exception.DeltaPushFailException;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.remoting.CallbackHandler;
 import com.alipay.sofa.registry.remoting.Channel;
@@ -48,6 +51,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.PostConstruct;
+import org.eclipse.jetty.http.HttpStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class PushProcessor {
@@ -107,8 +111,9 @@ public class PushProcessor {
       PushCause pushCause,
       InetSocketAddress addr,
       Map<String, Subscriber> subscriberMap,
-      MultiSubDatum datum) {
-    PushTask pushTask = new PushTaskImpl(pushCause, addr, subscriberMap, datum);
+      MultiSubDatum datum,
+      MultiSubDatumRevisions datumRevisions) {
+    PushTask pushTask = new PushTaskImpl(pushCause, addr, subscriberMap, datum, datumRevisions);
     // set expireTimestamp, wait to merge to debouncing
     if (null != pushEfficiencyImproveConfig) {
       pushTask.expireAfter(
@@ -124,14 +129,16 @@ public class PushProcessor {
       PushCause pushCause,
       InetSocketAddress addr,
       Map<String, Subscriber> subscriberMap,
-      MultiSubDatum datum) {
+      MultiSubDatum datum,
+      MultiSubDatumRevisions multiSubDatumRevisions) {
     if (!pushSwitchService.canIpPushMulti(
         addr.getAddress().getHostAddress(), datum.dataCenters())) {
       return;
     }
     // most of the time, element size is 1, SingleMap to save the memory
     subscriberMap = CollectionUtils.toSingletonMap(subscriberMap);
-    List<PushTask> fires = createPushTask(pushCause, addr, subscriberMap, datum);
+    List<PushTask> fires =
+        createPushTask(pushCause, addr, subscriberMap, datum, multiSubDatumRevisions);
     for (PushTask task : fires) {
       taskBuffer.bufferWakeUp(task);
     }
@@ -409,13 +416,22 @@ public class PushProcessor {
         PushCause pushCause,
         InetSocketAddress addr,
         Map<String, Subscriber> subscriberMap,
-        MultiSubDatum datum) {
-      super(pushCause, addr, subscriberMap, datum);
+        MultiSubDatum datum,
+        MultiSubDatumRevisions datumRevisions) {
+      super(pushCause, addr, subscriberMap, datum, datumRevisions);
     }
 
     protected PushData createPushData() {
-      return pushDataGenerator.createPushData(
-          DatumUtils.decompressMultiSubDatum(datum), subscriberMap);
+      if (this.deltaPushFail) {
+        // 增量推送失败，需要强制推送全量数据，因此参数中不再传递增量数据了
+        return pushDataGenerator.createPushData(
+            DatumUtils.decompressMultiSubDatum(datum),
+            MultiSubDatumRevisions.invalidDatumRevisions(),
+            subscriberMap);
+      } else {
+        return pushDataGenerator.createPushData(
+            DatumUtils.decompressMultiSubDatum(datum), this.datumRevisions, subscriberMap);
+      }
     }
 
     @Override
@@ -453,6 +469,18 @@ public class PushProcessor {
 
     @Override
     public void onCallback(Channel channel, Object message) {
+      if (message instanceof ResultPb) {
+        ResultPb resultPb = (ResultPb) message;
+        if (!resultPb.getSuccess() && resultPb.getStatusCode() == HttpStatus.CONFLICT_409) {
+          // 增量推送返回 409 的场景，需要全量推送
+          this.pushTask.markDeltaPushFail();
+          this.onException(
+              channel,
+              new DeltaPushFailException("delta push fail, taskId: " + this.pushTask.taskID));
+          return;
+        }
+      }
+
       pushingRecords.remove(pushTask.pushingTaskKey);
       for (Subscriber subscriber : pushTask.subscriberMap.values()) {
         if (!circuitBreakerService.onPushSuccess(

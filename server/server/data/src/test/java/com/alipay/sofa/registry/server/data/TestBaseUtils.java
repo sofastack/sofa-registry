@@ -72,6 +72,8 @@ public final class TestBaseUtils {
   public static final String TEST_DATA_ID = "testDataId";
   public static final String TEST_DATA_INFO_ID;
 
+  public static final String TEST_CELL = "TEST_CELL";
+
   private static final String TEST_REGISTER_ID = "testRegisterId";
 
   private static final AtomicLong DATA_ID_SEQ = new AtomicLong();
@@ -94,6 +96,7 @@ public final class TestBaseUtils {
     publisher.setSessionProcessId(ServerEnv.PROCESS_ID);
     publisher.setRegisterTimestamp(System.currentTimeMillis());
     publisher.setVersion(100 + CLIENT_VERSION.incrementAndGet());
+    publisher.setCell(TEST_CELL);
     ConnectId connectId =
         ConnectId.of(
             ServerEnv.PROCESS_ID.getHostAddress() + ":9999",
@@ -114,6 +117,7 @@ public final class TestBaseUtils {
     publisher.setSessionProcessId(ServerEnv.PROCESS_ID);
     publisher.setRegisterTimestamp(System.currentTimeMillis());
     publisher.setVersion(100 + CLIENT_VERSION.incrementAndGet());
+    publisher.setCell(TEST_CELL);
     ConnectId connectId =
         ConnectId.of(
             ServerEnv.PROCESS_ID.getHostAddress() + ":9999",

@@ -16,13 +16,11 @@
  */
 package com.alipay.sofa.registry.server.data.cache;
 
-import static com.alipay.sofa.registry.server.data.change.ChangeMetrics.SKIP_SAME_VALUE_COUNTER;
-
 import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.ProcessId;
 import com.alipay.sofa.registry.common.model.RegisterVersion;
-import com.alipay.sofa.registry.common.model.dataserver.Datum;
-import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
+import com.alipay.sofa.registry.common.model.Tuple;
+import com.alipay.sofa.registry.common.model.dataserver.*;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.common.model.store.ProcessIdCache;
 import com.alipay.sofa.registry.common.model.store.Publisher;
@@ -34,18 +32,15 @@ import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import org.apache.commons.collections.MapUtils;
+
+import java.util.*;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
-import org.apache.commons.collections.MapUtils;
+
+import static com.alipay.sofa.registry.server.data.change.ChangeMetrics.SKIP_SAME_VALUE_COUNTER;
 
 /**
  * @author yuzhi.lyz
@@ -55,6 +50,8 @@ public final class PublisherGroup {
   private static final Logger LOGGER = LoggerFactory.getLogger(PublisherGroup.class);
 
   private final ReadWriteLock lock = new ReentrantReadWriteLock();
+
+  private DatumRevisionStorage datumRevisionStorage = DatumRevisionStorage.getInstance();
 
   final String dataInfoId;
 
@@ -73,7 +70,12 @@ public final class PublisherGroup {
 
   private static final int RECENT_VERSIONS_CAP = 10;
 
+  private static final int DATUM_REVERSIONS_CAP = 30;
+
   private final ArrayDeque<Long> recentVersions = new ArrayDeque<>(RECENT_VERSIONS_CAP);
+
+  private final ArrayDeque<DatumRevisionMark> datumRevisionMarks =
+      new ArrayDeque<>(DATUM_REVERSIONS_CAP);
 
   PublisherGroup(String dataInfoId, String dataCenter) {
     DataInfo dataInfo = DataInfo.valueOf(dataInfoId);
@@ -87,6 +89,8 @@ public final class PublisherGroup {
     } else {
       this.version = DatumVersionUtil.nextId();
     }
+    // init first version, changes is empty
+    this.upsertDatumRevision(PublisherChanges.empty());
   }
 
   DatumVersion getVersion() {
@@ -105,6 +109,11 @@ public final class PublisherGroup {
     lock.readLock().lock();
     datum.setRecentVersions(
         recentVersions.stream().filter(Objects::nonNull).collect(Collectors.toList()));
+    datum.setDatumRevisionMarks(
+        datumRevisionMarks.stream()
+            .filter(Objects::nonNull)
+            .map(DatumRevisionMark::intern)
+            .collect(Collectors.toList()));
     try {
       ver = this.version;
       for (PublisherEnvelope envelope : pubMap.values()) {
@@ -141,6 +150,10 @@ public final class PublisherGroup {
   }
 
   DatumVersion updateVersion() {
+    return this.updateVersion(PublisherChanges.empty());
+  }
+
+  DatumVersion updateVersion(PublisherChanges publisherChanges) {
     final boolean useConfreg = DatumVersionUtil.useConfregVersionGen();
     lock.writeLock().lock();
     try {
@@ -150,7 +163,8 @@ public final class PublisherGroup {
       } else {
         this.version = DatumVersionUtil.nextId();
       }
-      appendRecentVersion(lastVersion);
+      this.appendRecentVersion(lastVersion);
+      this.upsertDatumRevision(publisherChanges);
       return new DatumVersion(version);
     } finally {
       lock.writeLock().unlock();
@@ -164,13 +178,23 @@ public final class PublisherGroup {
     this.recentVersions.addLast(version);
   }
 
-  private boolean tryAddPublisher(Publisher publisher) {
+  private DatumRevisionMark appendDatumReversionMark(long version, boolean mock) {
+    if (datumRevisionMarks.size() >= DATUM_REVERSIONS_CAP) {
+      this.datumRevisionMarks.pollFirst();
+    }
+    DatumRevisionMark datumRevisionMark = DatumRevisionMark.of(version, mock);
+    this.datumRevisionMarks.addLast(datumRevisionMark);
+    return datumRevisionMark;
+  }
+
+  private Tuple<Boolean /* modified */, Boolean /* need update version */> tryAddPublisher(
+      Publisher publisher) {
     PublisherEnvelope exist = pubMap.get(publisher.getRegisterId());
     final RegisterVersion registerVersion = publisher.registerVersion();
     if (exist == null) {
       PublisherEnvelope envelope = PublisherEnvelope.of(publisher);
       pubMap.put(publisher.getRegisterId(), envelope);
-      return envelope.isPub();
+      return Tuple.of(true, envelope.isPub());
     }
 
     if (exist.registerVersion.equals(registerVersion)) {
@@ -182,7 +206,7 @@ public final class PublisherGroup {
             exist.registerVersion,
             publisher.registerVersion());
       }
-      return false;
+      return Tuple.of(false, false);
     }
     if (!exist.registerVersion.orderThan(registerVersion)) {
       LOGGER.warn(
@@ -191,7 +215,7 @@ public final class PublisherGroup {
           publisher.getRegisterId(),
           exist.registerVersion,
           publisher.registerVersion());
-      return false;
+      return Tuple.of(false, false);
     }
     PublisherEnvelope envelope = PublisherEnvelope.of(publisher);
     pubMap.put(publisher.getRegisterId(), envelope);
@@ -205,7 +229,7 @@ public final class PublisherGroup {
           exist.registerVersion,
           publisher.registerVersion(),
           envelope.isPub());
-      return envelope.isPub();
+      return Tuple.of(true, envelope.isPub());
     }
     try {
       boolean same =
@@ -221,7 +245,7 @@ public final class PublisherGroup {
             exist.registerVersion,
             publisher.registerVersion());
       }
-      return !same;
+      return Tuple.of(true, !same);
     } catch (Throwable t) {
       // unexpect run into here, if it happens,
       // return true to update version because pubMap has been put a newer version publish
@@ -232,7 +256,7 @@ public final class PublisherGroup {
           exist.registerVersion,
           publisher.registerVersion(),
           t);
-      return true;
+      return Tuple.of(true, true);
     }
   }
 
@@ -240,8 +264,19 @@ public final class PublisherGroup {
     publisher.setSessionProcessId(ProcessIdCache.cache(publisher.getSessionProcessId()));
     lock.writeLock().lock();
     try {
-      if (tryAddPublisher(publisher)) {
-        return updateVersion();
+      Tuple<Boolean, Boolean> tuple = tryAddPublisher(publisher);
+      if (tuple.o1) {
+        // 数据发生了变化，但是并不一定需要更新版本号
+        // 有一种情况是 Publisher 链接断开重连，Publisher 的 Version 和 Timestamp 会变，但是
+        // 数据不会，这种场景不需要给 Subscriber 推送，但是需要在变更记录中记录数据的变化
+        if (tuple.o2) {
+          return updateVersion(PublisherChanges.parse(Collections.singletonList(publisher)));
+        } else {
+          // 这里就是 Publisher 数据重复了，不更新版本号，但是要更新下内存中变更记录
+          this.upsertMockDatumRevision(
+              PublisherChanges.parse(Collections.singletonList(publisher)));
+          return null;
+        }
       }
       return null;
     } finally {
@@ -301,6 +336,7 @@ public final class PublisherGroup {
     lock.writeLock().lock();
     try {
       boolean modified = false;
+      Map<String /* zone */, List<String> /* register id */> removedRegisterIds = new HashMap<>();
       for (Map.Entry<String, RegisterVersion> e : removedPublishers.entrySet()) {
         final String registerId = e.getKey();
         final RegisterVersion removedVer = e.getValue();
@@ -310,20 +346,29 @@ public final class PublisherGroup {
           // the removedPublishers is from pubMap, but now notExist/unpub/pubByOtherSession
           continue;
         }
+        Publisher existingPublisher = existing.getPublisher();
+        String zone = existingPublisher.getCell();
         // remove the existing <= removedVer
         if (existing.registerVersion.equals(removedVer)
             || existing.registerVersion.orderThan(removedVer)) {
           // sync from local-leader/remote-leader
           if (sessionProcessId == null) {
             pubMap.remove(registerId);
+            List<String> zoneRemoveRegisterIds =
+                removedRegisterIds.computeIfAbsent(zone, key -> new ArrayList<>());
+            zoneRemoveRegisterIds.add(registerId);
             modified = true;
             continue;
           }
+
           if (sessionProcessId.equals(existing.sessionProcessId)) {
             // syn from session, mark unpub with higher registerTimestamp
             pubMap.put(
                 registerId,
                 PublisherEnvelope.unpubOf(removedVer.incrRegisterTimestamp(), sessionProcessId));
+            List<String> zoneRemoveRegisterIds =
+                removedRegisterIds.computeIfAbsent(zone, key -> new ArrayList<>());
+            zoneRemoveRegisterIds.add(registerId);
             modified = true;
           } else {
             LOGGER.warn(
@@ -345,7 +390,7 @@ public final class PublisherGroup {
               removedVer);
         }
       }
-      return modified ? updateVersion() : null;
+      return modified ? updateVersion(PublisherChanges.of(removedRegisterIds)) : null;
     } finally {
       lock.writeLock().unlock();
     }
@@ -357,16 +402,36 @@ public final class PublisherGroup {
       ParaCheckUtil.checkEquals(p.getDataInfoId(), dataInfoId, "publisher.dataInfoId");
       p.setSessionProcessId(ProcessIdCache.cache(p.getSessionProcessId()));
     }
+
     lock.writeLock().lock();
     try {
-      boolean modified = false;
+      // 标记数据是否发生了变化
+      boolean dataHasChanged = false;
+      // 标记是否需要更新 dataInfoId 的版本号
+      boolean updateVersion = false;
+      List<Publisher> changedPubs = new ArrayList<>();
       for (Publisher publisher : puts) {
-        if (tryAddPublisher(publisher)) {
-          modified = true;
+        Tuple<Boolean, Boolean> tuple = tryAddPublisher(publisher);
+
+        if (tuple.o1) {
+          // 数据发生了变化，记录到 changedPubs 中
+          changedPubs.add(publisher);
+          dataHasChanged = true;
+          if (tuple.o2) {
+            // 数据发生了变化，但是并不一定需要更新版本号
+            // 有一种情况是 Publisher 链接断开重连，Publisher 的 Version 和 Timestamp 会变，但是
+            // 数据不会，这种场景不需要给 Subscriber 推送，但是需要在变更记录中记录数据的变化
+            updateVersion = true;
+          }
         }
       }
-      if (modified) {
-        return updateVersion();
+
+      if (updateVersion) {
+        return updateVersion(PublisherChanges.parse(changedPubs));
+      } else {
+        if (dataHasChanged) {
+          this.upsertMockDatumRevision(PublisherChanges.parse(changedPubs));
+        }
       }
       return null;
     } finally {
@@ -438,5 +503,47 @@ public final class PublisherGroup {
     } finally {
       lock.writeLock().unlock();
     }
+  }
+
+  private void upsertMockDatumRevision(PublisherChanges publisherChanges) {
+    final boolean useConfreg = DatumVersionUtil.useConfregVersionGen();
+    lock.writeLock().lock();
+    try {
+      long lastVersion = this.version;
+      long mockVersion;
+      if (useConfreg) {
+        mockVersion = DatumVersionUtil.confregNextId(lastVersion);
+      } else {
+        mockVersion = DatumVersionUtil.nextId();
+      }
+      DatumRevisionMark datumRevisionMark = this.appendDatumReversionMark(mockVersion, true);
+      DatumRevisionKey key =
+          DatumRevisionKey.of(this.dataCenter, this.dataInfoId, datumRevisionMark);
+      this.datumRevisionStorage.upsertDatumRevision(
+          key,
+          DatumRevisionData.of(
+              this.dataCenter,
+              this.dataInfoId,
+              DatumVersion.of(mockVersion),
+              publisherChanges.getAddPublishers(),
+              publisherChanges.getDeletePublisherRegisterIds()));
+    } finally {
+      lock.writeLock().unlock();
+    }
+  }
+
+  private void upsertDatumRevision(PublisherChanges publisherChanges) {
+    DatumVersion version = this.getVersion();
+    DatumRevisionMark datumRevisionMark = this.appendDatumReversionMark(version.getValue(), false);
+
+    DatumRevisionKey key = DatumRevisionKey.of(this.dataCenter, this.dataInfoId, datumRevisionMark);
+    this.datumRevisionStorage.upsertDatumRevision(
+        key,
+        DatumRevisionData.of(
+            this.dataCenter,
+            this.dataInfoId,
+            version,
+            publisherChanges.getAddPublishers(),
+            publisherChanges.getDeletePublisherRegisterIds()));
   }
 }

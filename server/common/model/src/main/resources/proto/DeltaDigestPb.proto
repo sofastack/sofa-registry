@@ -1,0 +1,13 @@
+syntax = "proto3";
+option java_package = "com.alipay.sofa.registry.common.model.client.pb";
+option java_multiple_files = true;
+option go_package = "proto";
+
+message DeltaDigestPb {
+  int64 publisherCount = 1;
+  int64 dataCount = 2;
+  int64 registerIdHashSum = 3;
+  int64 registerIdHashXOR = 4;
+  int64 registerTimestampSum = 5;
+  int64 registerTimestampXOR = 6;
+}

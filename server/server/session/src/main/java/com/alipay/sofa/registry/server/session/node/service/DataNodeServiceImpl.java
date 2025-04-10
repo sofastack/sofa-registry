@@ -22,10 +22,7 @@ import com.alipay.sofa.registry.common.model.dataserver.*;
 import com.alipay.sofa.registry.common.model.slot.MultiSlotAccessGenericResponse;
 import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.common.model.slot.SlotAccessGenericResponse;
-import com.alipay.sofa.registry.common.model.store.MultiSubDatum;
-import com.alipay.sofa.registry.common.model.store.Publisher;
-import com.alipay.sofa.registry.common.model.store.URL;
-import com.alipay.sofa.registry.common.model.store.UnPublisher;
+import com.alipay.sofa.registry.common.model.store.*;
 import com.alipay.sofa.registry.compress.CompressConstants;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -476,5 +473,80 @@ public class DataNodeServiceImpl implements DataNodeService {
       objects.add(req.req);
     }
     return ret;
+  }
+
+  @Override
+  public MultiSubDatumRevisions fetchRevisions(String dataInfoId, Set<String> dataCenters) {
+    final Slot localSlot = getSlot(sessionServerConfig.getSessionServerDataCenter(), dataInfoId);
+    int slotId = localSlot.getId();
+    String dataNodeIp = localSlot.getLeader();
+
+    Map<String, Long> slotTableEpochs = Maps.newHashMapWithExpectedSize(dataCenters.size());
+    Map<String, Long> slotLeaderEpochs = Maps.newHashMapWithExpectedSize(dataCenters.size());
+    for (String dataCenter : dataCenters) {
+      final Slot slot = getSlot(dataCenter, dataInfoId);
+      ParaCheckUtil.checkEquals(slotId, slot.getId(), "slotId");
+      slotTableEpochs.put(dataCenter, slotTableCache.getEpoch(dataCenter));
+      slotLeaderEpochs.put(dataCenter, slot.getLeaderEpoch());
+    }
+
+    try {
+      GetMultiSubDatumRevisionsRequest getMultiSubDatumRevisionsRequest =
+          new GetMultiSubDatumRevisionsRequest(
+              ServerEnv.PROCESS_ID,
+              new ArrayList<>(dataCenters),
+              dataInfoId,
+              slotTableEpochs,
+              slotLeaderEpochs);
+
+      Request<GetMultiSubDatumRevisionsRequest> getDataRequestStringRequest =
+          new Request<GetMultiSubDatumRevisionsRequest>() {
+
+            @Override
+            public GetMultiSubDatumRevisionsRequest getRequestBody() {
+              return getMultiSubDatumRevisionsRequest;
+            }
+
+            @Override
+            public URL getRequestUrl() {
+              return getUrl(localSlot);
+            }
+
+            @Override
+            public Integer getTimeout() {
+              return sessionServerConfig.getDataNodeExchangeForFetchDatumTimeoutMillis();
+            }
+          };
+
+      Response response = dataNodeExchanger.request(getDataRequestStringRequest);
+      Object result = response.getResult();
+      MultiSlotAccessGenericResponse<MultiSubDatumRevisions> genericResponse =
+          (MultiSlotAccessGenericResponse<MultiSubDatumRevisions>) result;
+      if (genericResponse.isSuccess()) {
+        final MultiSubDatumRevisions multiSubDatumRevisions = genericResponse.getData();
+        if (multiSubDatumRevisions == null) {
+          return null;
+        }
+        return multiSubDatumRevisions.intern();
+      } else {
+        throw new RuntimeException(
+            StringFormatter.format(
+                "Get multiSubDatumRevisions got fail response {}, {}, {}, slotId={} msg:{}",
+                dataNodeIp,
+                dataInfoId,
+                dataCenters,
+                slotId,
+                genericResponse.getMessage()));
+      }
+    } catch (RequestException e) {
+      throw new RuntimeException(
+          StringFormatter.format(
+              "Get multiSubDatumRevisions fail {}, {}, {}, slotId={}",
+              dataNodeIp,
+              dataInfoId,
+              dataCenters,
+              slotId),
+          e);
+    }
   }
 }

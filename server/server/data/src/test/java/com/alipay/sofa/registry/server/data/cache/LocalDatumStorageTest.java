@@ -18,9 +18,7 @@ package com.alipay.sofa.registry.server.data.cache;
 
 import com.alipay.sofa.registry.common.model.ProcessId;
 import com.alipay.sofa.registry.common.model.RegisterVersion;
-import com.alipay.sofa.registry.common.model.dataserver.Datum;
-import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
-import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
+import com.alipay.sofa.registry.common.model.dataserver.*;
 import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.common.model.slot.SlotConfig;
 import com.alipay.sofa.registry.common.model.slot.filter.SyncSlotAcceptorManager;
@@ -29,13 +27,12 @@ import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.UnPublisher;
 import com.alipay.sofa.registry.server.data.TestBaseUtils;
 import com.alipay.sofa.registry.server.data.pubiterator.DatumBiConsumer;
+import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -344,5 +341,94 @@ public class LocalDatumStorageTest {
     Map<String, List<Publisher>> map = storage.getAllPublisher(testDc);
     Assert.assertEquals(map.size(), 1);
     Assert.assertEquals(map.get(publisher.getDataInfoId()).size(), 0);
+  }
+
+  @Test
+  public void testUpsertDatumRevision() {
+    DatumRevisionStorage datumRevisionStorage = DatumRevisionStorage.getInstance();
+    LocalDatumStorage storage = TestBaseUtils.newLocalStorage(testDc, true);
+
+    // Add Publisher
+    Publisher publisherOne = TestBaseUtils.createTestPublisher(testDataId);
+    Publisher publisherTwo = TestBaseUtils.createTestPublisher(testDataId);
+    DatumVersion versionOne = storage.putPublisher(testDc, publisherOne);
+    DatumRevisionKey keyOne =
+        DatumRevisionKey.of(
+            testDc, testDataInfoId, DatumRevisionMark.of(versionOne.getValue(), false));
+    DatumRevisionData changeOne = datumRevisionStorage.loadDatumRevision(keyOne);
+
+    List<Publisher> addPublishersOne = changeOne.getAddPublishers();
+    Map<String, List<String>> deletePubRegisterIdsOne = changeOne.getDeletePublisherRegisterIds();
+    Assert.assertFalse(null == addPublishersOne || addPublishersOne.isEmpty());
+    Assert.assertEquals(1, addPublishersOne.size());
+    Assert.assertTrue(null == deletePubRegisterIdsOne || deletePubRegisterIdsOne.isEmpty());
+
+    Publisher addPublisherOne = addPublishersOne.get(0);
+    Assert.assertEquals(publisherOne.getDataInfoId(), addPublisherOne.getDataInfoId());
+    Assert.assertEquals(publisherOne.getInstanceId(), addPublisherOne.getInstanceId());
+    Assert.assertEquals(publisherOne.getCell(), addPublisherOne.getCell());
+    Assert.assertEquals(publisherOne.getRegisterId(), addPublisherOne.getRegisterId());
+
+    DatumVersion versionTwo = storage.putPublisher(testDc, publisherTwo);
+    DatumRevisionKey keyTwo =
+        DatumRevisionKey.of(
+            testDc, testDataInfoId, DatumRevisionMark.of(versionTwo.getValue(), false));
+    DatumRevisionData changeTwo = datumRevisionStorage.loadDatumRevision(keyTwo);
+
+    List<Publisher> addPublishersTwo = changeTwo.getAddPublishers();
+    Map<String, List<String>> deletePubRegisterIdsTwo = changeTwo.getDeletePublisherRegisterIds();
+    Assert.assertFalse(null == addPublishersTwo || addPublishersTwo.isEmpty());
+    Assert.assertEquals(1, addPublishersTwo.size());
+    Assert.assertTrue(null == deletePubRegisterIdsTwo || deletePubRegisterIdsTwo.isEmpty());
+
+    Publisher addPublisherTwo = addPublishersTwo.get(0);
+    Assert.assertEquals(publisherTwo.getDataInfoId(), addPublisherTwo.getDataInfoId());
+    Assert.assertEquals(publisherTwo.getInstanceId(), addPublisherTwo.getInstanceId());
+    Assert.assertEquals(publisherTwo.getCell(), addPublisherTwo.getCell());
+    Assert.assertEquals(publisherTwo.getRegisterId(), addPublisherTwo.getRegisterId());
+
+    // Delete Publisher
+    DatumVersion deleteVersion =
+        storage.removePublishers(
+            testDc,
+            testDataInfoId,
+            ServerEnv.PROCESS_ID,
+            Collections.singletonMap(
+                publisherOne.getRegisterId(),
+                RegisterVersion.of(
+                    publisherOne.getVersion(), publisherOne.getRegisterTimestamp())));
+    DatumRevisionKey deleteKey =
+        DatumRevisionKey.of(
+            testDc, testDataInfoId, DatumRevisionMark.of(deleteVersion.getValue(), false));
+    DatumRevisionData deleteChange = datumRevisionStorage.loadDatumRevision(deleteKey);
+    List<Publisher> addPubInDeleteChange = deleteChange.getAddPublishers();
+    Map<String, List<String>> deletePubRegisterIds = deleteChange.getDeletePublisherRegisterIds();
+
+    Assert.assertTrue(null == addPubInDeleteChange || addPubInDeleteChange.isEmpty());
+    Assert.assertFalse(null == deletePubRegisterIds || deletePubRegisterIds.isEmpty());
+    Assert.assertEquals(1, deletePubRegisterIds.size());
+
+    List<String> deletePubRegisterIdsInZone = deletePubRegisterIds.get(TestBaseUtils.TEST_CELL);
+    Assert.assertNotNull(deletePubRegisterIdsInZone);
+    Assert.assertEquals(1, deletePubRegisterIdsInZone.size());
+
+    String deletePubRegisterId = deletePubRegisterIdsInZone.get(0);
+    Assert.assertEquals(publisherOne.getRegisterId(), deletePubRegisterId);
+
+    // Version queue
+    Datum datum = storage.get(testDc, testDataInfoId);
+
+    long latestVersion = datum.getVersion();
+    List<Long> recentVersions = datum.getRecentVersions();
+    List<Long> versions =
+        recentVersions.stream().filter(Objects::nonNull).collect(Collectors.toList());
+    versions.add(latestVersion);
+
+    for (Long version : versions) {
+      DatumRevisionKey key =
+          DatumRevisionKey.of(testDc, testDataInfoId, DatumRevisionMark.of(version, false));
+      DatumRevisionData data = datumRevisionStorage.loadDatumRevision(key);
+      Assert.assertNotNull(data);
+    }
   }
 }
