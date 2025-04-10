@@ -17,30 +17,28 @@
 package com.alipay.sofa.registry.server.session.remoting.console.handler;
 
 import com.alipay.sofa.registry.common.model.GenericResponse;
-import com.alipay.sofa.registry.common.model.SubscriberUtils;
-import com.alipay.sofa.registry.common.model.sessionserver.QuerySubscriberRequest;
-import com.alipay.sofa.registry.common.model.store.Subscriber;
+import com.alipay.sofa.registry.common.model.PublisherUtils;
+import com.alipay.sofa.registry.common.model.sessionserver.QueryPublisherRequest;
+import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.server.session.store.Interests;
+import com.alipay.sofa.registry.server.session.bootstrap.ExecutorManager;
+import com.alipay.sofa.registry.server.session.store.DataStore;
+import com.google.common.annotations.VisibleForTesting;
 import java.util.Collection;
-import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
-public class QuerySubscriberRequestHandler extends AbstractConsoleHandler<QuerySubscriberRequest> {
-  @Autowired protected Interests sessionInterests;
+/**
+ * @author huicha
+ * @date 2024/12/23
+ */
+public class QueryPublisherRequestHandler extends AbstractConsoleHandler<QueryPublisherRequest> {
+
+  @Autowired protected DataStore sessionDataStore;
 
   @Override
-  public Object doHandle(Channel channel, QuerySubscriberRequest request) {
-    Collection<Subscriber> subscribers;
-    if (StringUtils.isNotEmpty(request.getSuberApp()) || request.getLimit() != 0) {
-      subscribers =
-          sessionInterests.getInterestsByOption(
-              request.getDataInfoId(), request.getSuberApp(), request.getLimit());
-    } else {
-      subscribers = sessionInterests.getInterests(request.getDataInfoId());
-    }
-
-    return new GenericResponse().fillSucceed(SubscriberUtils.convert(subscribers));
+  public Object doHandle(Channel channel, QueryPublisherRequest request) {
+    Collection<Publisher> publishers = sessionDataStore.getDatas(request.getDataInfoId());
+    return new GenericResponse().fillSucceed(PublisherUtils.convert(publishers));
   }
 
   @Override
@@ -50,6 +48,18 @@ public class QuerySubscriberRequestHandler extends AbstractConsoleHandler<QueryS
 
   @Override
   public Class interest() {
-    return QuerySubscriberRequest.class;
+    return QueryPublisherRequest.class;
+  }
+
+  @VisibleForTesting
+  public QueryPublisherRequestHandler setSessionDataStore(DataStore sessionDataStore) {
+    this.sessionDataStore = sessionDataStore;
+    return this;
+  }
+
+  @VisibleForTesting
+  public QueryPublisherRequestHandler setExecutorManager(ExecutorManager executorManager) {
+    this.executorManager = executorManager;
+    return this;
   }
 }

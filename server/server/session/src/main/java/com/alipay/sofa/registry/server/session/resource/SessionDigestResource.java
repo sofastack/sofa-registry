@@ -18,18 +18,13 @@ package com.alipay.sofa.registry.server.session.resource;
 
 import static com.alipay.sofa.registry.common.model.constants.ValueConstants.CONNECT_ID_SPLIT;
 
-import com.alipay.sofa.registry.common.model.CommonResponse;
-import com.alipay.sofa.registry.common.model.ConnectId;
-import com.alipay.sofa.registry.common.model.GenericResponse;
-import com.alipay.sofa.registry.common.model.Tuple;
+import com.alipay.sofa.registry.common.model.*;
 import com.alipay.sofa.registry.common.model.appmeta.InterfaceMapping;
 import com.alipay.sofa.registry.common.model.sessionserver.PubSubDataInfoIdRequest;
 import com.alipay.sofa.registry.common.model.sessionserver.PubSubDataInfoIdResp;
-import com.alipay.sofa.registry.common.model.store.Publisher;
-import com.alipay.sofa.registry.common.model.store.StoreData;
-import com.alipay.sofa.registry.common.model.store.Subscriber;
-import com.alipay.sofa.registry.common.model.store.URL;
-import com.alipay.sofa.registry.common.model.store.Watcher;
+import com.alipay.sofa.registry.common.model.sessionserver.QueryPublisherRequest;
+import com.alipay.sofa.registry.common.model.sessionserver.SimplePublisher;
+import com.alipay.sofa.registry.common.model.store.*;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.metrics.ReporterUtils;
@@ -37,6 +32,10 @@ import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
 import com.alipay.sofa.registry.remoting.exchange.message.SimpleRequest;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
+import com.alipay.sofa.registry.server.session.cache.CacheService;
+import com.alipay.sofa.registry.server.session.cache.DatumKey;
+import com.alipay.sofa.registry.server.session.cache.Key;
+import com.alipay.sofa.registry.server.session.cache.Value;
 import com.alipay.sofa.registry.server.session.providedata.FetchStopPushService;
 import com.alipay.sofa.registry.server.session.store.DataStore;
 import com.alipay.sofa.registry.server.session.store.FetchPubSubDataInfoIdService;
@@ -55,15 +54,12 @@ import com.google.common.collect.Sets;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 
@@ -84,6 +80,8 @@ public class SessionDigestResource {
 
   /** store publishers */
   @Autowired private DataStore sessionDataStore;
+
+  @Autowired private CacheService sessionDatumCacheService;
 
   @Autowired private MetaServerService metaNodeService;
 
@@ -421,5 +419,90 @@ public class SessionDigestResource {
 
   public List<String> getMetaServerLeader() {
     return Lists.newArrayList(mataNodeService.getMetaServerLeader());
+  }
+
+  @GET
+  @Path("/data/zone/queryPublisher")
+  @Produces(MediaType.APPLICATION_JSON)
+  public GenericResponse<List<SimplePublisher>> queryZonePublisher(
+      @QueryParam("dataInfoId") String dataInfoId) {
+    Collection<Publisher> publishers = this.sessionDataStore.getDatas(dataInfoId);
+    List<SimplePublisher> allPublishers =
+        publishers.stream().map(PublisherUtils::convert).collect(Collectors.toList());
+
+    List<URL> otherSessions =
+        Sdks.getOtherConsoleServers(null, this.sessionServerConfig, this.metaNodeService);
+    if (!CollectionUtils.isEmpty(otherSessions)) {
+      Map<URL, CommonResponse> respMap =
+          Sdks.concurrentSdkSend(
+              pubSubQueryZoneExecutor,
+              otherSessions,
+              (URL url) -> {
+                final QueryPublisherRequest req = new QueryPublisherRequest(dataInfoId);
+                return (CommonResponse)
+                    sessionConsoleExchanger.request(new SimpleRequest(req, url)).getResult();
+              },
+              5000);
+
+      for (Entry<URL, CommonResponse> entry : respMap.entrySet()) {
+        CommonResponse response = entry.getValue();
+        if (response instanceof GenericResponse) {
+          GenericResponse<List<SimplePublisher>> genericResponse =
+              (GenericResponse<List<SimplePublisher>>) response;
+          if (genericResponse.isSuccess()) {
+            List<SimplePublisher> subPublishers = genericResponse.getData();
+            allPublishers.addAll(subPublishers);
+          } else {
+            LOGGER.error(
+                "url={} query publishers fail, response:{}.",
+                entry.getKey().getIpAddress(),
+                entry.getValue());
+          }
+        } else {
+          LOGGER.error(
+              "url={} query publishers fail, unexpect response type, response:{}.",
+              entry.getKey().getIpAddress(),
+              entry.getValue());
+        }
+      }
+    }
+    return new GenericResponse<List<SimplePublisher>>().fillSucceed(allPublishers);
+  }
+
+  @GET
+  @Path("/data/queryPublisher")
+  @Produces(MediaType.APPLICATION_JSON)
+  public GenericResponse<List<SimplePublisher>> queryPublisher(
+      @QueryParam("dataInfoId") String dataInfoId) {
+    try {
+      if (StringUtils.isBlank(dataInfoId)) {
+        return new GenericResponse<List<SimplePublisher>>()
+            .fillFailed("data info id can not be empty");
+      }
+
+      String dataCenter = sessionServerConfig.getSessionServerDataCenter();
+      Key key =
+          new Key(
+              DatumKey.class.getName(),
+              new DatumKey(dataInfoId, Collections.singleton(dataCenter)));
+      Value value = sessionDatumCacheService.getValue(key);
+      MultiSubDatum datum = (MultiSubDatum) value.getPayload();
+      Map<String, SubDatum> datumMap = datum.getDatumMap();
+
+      List<SimplePublisher> result = new ArrayList<>();
+      for (SubDatum subDatum : datumMap.values()) {
+        List<SubPublisher> publishers = subDatum.mustGetPublishers();
+        for (SubPublisher publisher : publishers) {
+          SimplePublisher simplePublisher =
+              new SimplePublisher(publisher.getClientId(), publisher.getSrcAddressString(), "");
+          result.add(simplePublisher);
+        }
+      }
+      return new GenericResponse<List<SimplePublisher>>().fillSucceed(result);
+    } catch (Throwable throwable) {
+      LOGGER.error("Query publisher from data exception", throwable);
+      return new GenericResponse<List<SimplePublisher>>()
+          .fillFailed("query publisher from data fail");
+    }
   }
 }

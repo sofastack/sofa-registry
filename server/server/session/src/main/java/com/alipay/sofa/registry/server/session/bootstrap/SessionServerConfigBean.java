@@ -226,6 +226,8 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
   private int scanTimeoutMills = 10 * 1000;
 
+  private int scanPublisherInDataInfoIdBlackListIntervalMillis = 5 * 60 * 1000;
+
   /**
    * constructor
    *
@@ -1453,5 +1455,16 @@ public class SessionServerConfigBean implements SessionServerConfig {
    */
   public void setScanTimeoutMills(int scanTimeoutMills) {
     this.scanTimeoutMills = scanTimeoutMills;
+  }
+
+  @Override
+  public int getScanPublisherInDataInfoIdBlackListIntervalMillis() {
+    return scanPublisherInDataInfoIdBlackListIntervalMillis;
+  }
+
+  public void setScanPublisherInDataInfoIdBlackListIntervalMillis(
+      int scanPublisherInDataInfoIdBlackListIntervalMillis) {
+    this.scanPublisherInDataInfoIdBlackListIntervalMillis =
+        scanPublisherInDataInfoIdBlackListIntervalMillis;
   }
 }

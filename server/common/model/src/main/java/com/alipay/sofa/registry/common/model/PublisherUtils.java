@@ -17,11 +17,17 @@
 package com.alipay.sofa.registry.common.model;
 
 import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
+import com.alipay.sofa.registry.common.model.sessionserver.SimplePublisher;
 import com.alipay.sofa.registry.common.model.slot.filter.SyncAcceptorRequest;
 import com.alipay.sofa.registry.common.model.slot.filter.SyncSlotAcceptorManager;
 import com.alipay.sofa.registry.common.model.store.Publisher;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import org.apache.commons.collections.CollectionUtils;
 
 /**
  * @author xiaojian.xj
@@ -91,5 +97,23 @@ public final class PublisherUtils {
     newPub.setPublishSource(publisher.getPublishSource());
     newPub.setSessionProcessId(publisher.getSessionProcessId());
     return newPub;
+  }
+
+  public static SimplePublisher convert(Publisher publisher) {
+    return new SimplePublisher(
+        publisher.getClientId(),
+        publisher.getSourceAddress().buildAddressString(),
+        publisher.getAppName());
+  }
+
+  public static List<SimplePublisher> convert(Collection<Publisher> publishers) {
+    if (CollectionUtils.isEmpty(publishers)) {
+      return Collections.emptyList();
+    }
+    List<SimplePublisher> ret = Lists.newArrayListWithCapacity(publishers.size());
+    for (Publisher publisher : publishers) {
+      ret.add(convert(publisher));
+    }
+    return ret;
   }
 }

@@ -19,39 +19,41 @@ package com.alipay.sofa.registry.common.model.sessionserver;
 import com.alipay.sofa.registry.util.StringFormatter;
 import java.io.Serializable;
 
-public final class QuerySubscriberRequest implements Serializable {
-  private static final long serialVersionUID = -8913725014328394409L;
+/**
+ * @author huicha
+ * @date 2024/12/23
+ */
+public final class SimplePublisher implements Serializable {
 
-  private final String dataInfoId;
+  private static final long serialVersionUID = 6861155219172594665L;
 
-  private String suberApp;
+  private final String clientId;
 
-  private int limit;
+  private final String sourceAddress;
 
-  public QuerySubscriberRequest(String dataInfoId) {
-    this.dataInfoId = dataInfoId;
+  private final String appName;
+
+  public SimplePublisher(String clientId, String sourceAddress, String appName) {
+    this.clientId = clientId;
+    this.sourceAddress = sourceAddress;
+    this.appName = appName;
   }
 
-  public QuerySubscriberRequest(String dataInfoId, String suberApp, int limit) {
-    this.dataInfoId = dataInfoId;
-    this.suberApp = suberApp;
-    this.limit = limit;
+  public String getClientId() {
+    return clientId;
   }
 
-  public String getDataInfoId() {
-    return dataInfoId;
+  public String getSourceAddress() {
+    return sourceAddress;
   }
 
-  public String getSuberApp() {
-    return suberApp;
-  }
-
-  public int getLimit() {
-    return limit;
+  public String getAppName() {
+    return appName;
   }
 
   @Override
   public String toString() {
-    return StringFormatter.format("QuerySubscriberRequest={}}", dataInfoId);
+    return StringFormatter.format(
+        "SimplePublisher{app={},clientId={},addr={}}", appName, clientId, sourceAddress);
   }
 }

@@ -19,35 +19,17 @@ package com.alipay.sofa.registry.common.model.sessionserver;
 import com.alipay.sofa.registry.util.StringFormatter;
 import java.io.Serializable;
 
-public final class QuerySubscriberRequest implements Serializable {
-  private static final long serialVersionUID = -8913725014328394409L;
+public final class QuerySubscriberCountByAppRequest implements Serializable {
+  private static final long serialVersionUID = -4996725014644698405L;
 
   private final String dataInfoId;
 
-  private String suberApp;
-
-  private int limit;
-
-  public QuerySubscriberRequest(String dataInfoId) {
+  public QuerySubscriberCountByAppRequest(String dataInfoId) {
     this.dataInfoId = dataInfoId;
-  }
-
-  public QuerySubscriberRequest(String dataInfoId, String suberApp, int limit) {
-    this.dataInfoId = dataInfoId;
-    this.suberApp = suberApp;
-    this.limit = limit;
   }
 
   public String getDataInfoId() {
     return dataInfoId;
-  }
-
-  public String getSuberApp() {
-    return suberApp;
-  }
-
-  public int getLimit() {
-    return limit;
   }
 
   @Override

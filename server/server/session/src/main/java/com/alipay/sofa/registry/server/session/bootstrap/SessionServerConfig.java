@@ -209,4 +209,6 @@ public interface SessionServerConfig extends ServerShareConfig {
   int getScanExecutorQueueSize();
 
   long getScanTimeoutMills();
+
+  int getScanPublisherInDataInfoIdBlackListIntervalMillis();
 }

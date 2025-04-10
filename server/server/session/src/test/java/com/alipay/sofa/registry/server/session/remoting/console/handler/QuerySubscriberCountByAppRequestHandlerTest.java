@@ -20,7 +20,7 @@ import static org.mockito.Mockito.mock;
 
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.Node;
-import com.alipay.sofa.registry.common.model.sessionserver.QuerySubscriberRequest;
+import com.alipay.sofa.registry.common.model.sessionserver.QuerySubscriberCountByAppRequest;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.server.session.TestUtils;
 import com.alipay.sofa.registry.server.session.bootstrap.ExecutorManager;
@@ -29,14 +29,14 @@ import com.alipay.sofa.registry.server.session.store.Interests;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class QuerySubscriberRequestHandlerTest {
+public class QuerySubscriberCountByAppRequestHandlerTest {
   private SessionServerConfigBean serverConfigBean = TestUtils.newSessionConfig("testDc");
 
-  private QuerySubscriberRequestHandler newHandler() {
-    QuerySubscriberRequestHandler handler = new QuerySubscriberRequestHandler();
+  private QuerySubscriberCountByAppRequestHandler newHandler() {
+    QuerySubscriberCountByAppRequestHandler handler = new QuerySubscriberCountByAppRequestHandler();
     handler.executorManager = new ExecutorManager(serverConfigBean);
     Assert.assertNotNull(handler.getExecutor());
-    Assert.assertEquals(handler.interest(), QuerySubscriberRequest.class);
+    Assert.assertEquals(handler.interest(), QuerySubscriberCountByAppRequest.class);
     Assert.assertEquals(handler.getConnectNodeType(), Node.NodeType.CONSOLE);
     Assert.assertEquals(handler.getType(), ChannelHandler.HandlerType.PROCESSER);
     Assert.assertEquals(handler.getInvokeType(), ChannelHandler.InvokeType.SYNC);
@@ -46,24 +46,15 @@ public class QuerySubscriberRequestHandlerTest {
 
   @Test
   public void testHandle() {
-    QuerySubscriberRequestHandler handler = newHandler();
+    QuerySubscriberCountByAppRequestHandler handler = newHandler();
     handler.sessionInterests = mock(Interests.class);
 
     CommonResponse obj = (CommonResponse) handler.doHandle(null, request());
     Assert.assertTrue(obj.isSuccess());
-
-    CommonResponse obj2 = (CommonResponse) handler.doHandle(null, requestByOption());
-    Assert.assertTrue(obj2.isSuccess());
   }
 
-  private static QuerySubscriberRequest request() {
-    QuerySubscriberRequest req = new QuerySubscriberRequest("testDataId");
-    Assert.assertTrue(req.toString(), req.toString().contains("testDataId"));
-    return req;
-  }
-
-  private static QuerySubscriberRequest requestByOption() {
-    QuerySubscriberRequest req = new QuerySubscriberRequest("testDataId", "testApp", 10);
+  private static QuerySubscriberCountByAppRequest request() {
+    QuerySubscriberCountByAppRequest req = new QuerySubscriberCountByAppRequest("testDataId");
     Assert.assertTrue(req.toString(), req.toString().contains("testDataId"));
     return req;
   }

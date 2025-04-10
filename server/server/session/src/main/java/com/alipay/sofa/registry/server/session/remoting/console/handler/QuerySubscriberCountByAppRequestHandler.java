@@ -17,30 +17,23 @@
 package com.alipay.sofa.registry.server.session.remoting.console.handler;
 
 import com.alipay.sofa.registry.common.model.GenericResponse;
-import com.alipay.sofa.registry.common.model.SubscriberUtils;
-import com.alipay.sofa.registry.common.model.sessionserver.QuerySubscriberRequest;
-import com.alipay.sofa.registry.common.model.store.Subscriber;
+import com.alipay.sofa.registry.common.model.sessionserver.QuerySubscriberCountByAppRequest;
+import com.alipay.sofa.registry.common.model.sessionserver.SubscriberCountByApp;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.session.store.Interests;
-import java.util.Collection;
-import org.apache.commons.lang.StringUtils;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 
-public class QuerySubscriberRequestHandler extends AbstractConsoleHandler<QuerySubscriberRequest> {
+public class QuerySubscriberCountByAppRequestHandler
+    extends AbstractConsoleHandler<QuerySubscriberCountByAppRequest> {
   @Autowired protected Interests sessionInterests;
 
   @Override
-  public Object doHandle(Channel channel, QuerySubscriberRequest request) {
-    Collection<Subscriber> subscribers;
-    if (StringUtils.isNotEmpty(request.getSuberApp()) || request.getLimit() != 0) {
-      subscribers =
-          sessionInterests.getInterestsByOption(
-              request.getDataInfoId(), request.getSuberApp(), request.getLimit());
-    } else {
-      subscribers = sessionInterests.getInterests(request.getDataInfoId());
-    }
+  public Object doHandle(Channel channel, QuerySubscriberCountByAppRequest request) {
+    List<SubscriberCountByApp> subscriberCountByAppList =
+        sessionInterests.getSubscriberCountByApp(request.getDataInfoId());
 
-    return new GenericResponse().fillSucceed(SubscriberUtils.convert(subscribers));
+    return new GenericResponse().fillSucceed(subscriberCountByAppList);
   }
 
   @Override
@@ -50,6 +43,6 @@ public class QuerySubscriberRequestHandler extends AbstractConsoleHandler<QueryS
 
   @Override
   public Class interest() {
-    return QuerySubscriberRequest.class;
+    return QuerySubscriberCountByAppRequest.class;
   }
 }
