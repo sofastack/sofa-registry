@@ -16,17 +16,20 @@
  */
 package com.alipay.sofa.registry.server.session.store;
 
+import com.alipay.sofa.registry.common.model.ElementType;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
+import com.alipay.sofa.registry.common.model.sessionserver.SubscriberCountByApp;
+import com.alipay.sofa.registry.common.model.store.BaseInfo;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
+import com.alipay.sofa.registry.common.model.store.URL;
+import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.server.session.AbstractSessionServerTestBase;
 import com.alipay.sofa.registry.server.session.registry.SessionRegistry.SelectSubscriber;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+
+import java.util.*;
 import java.util.Map.Entry;
 import org.junit.Assert;
 import org.junit.Before;
@@ -212,4 +215,102 @@ public class SessionInterestsTest extends AbstractSessionServerTestBase {
     Assert.assertEquals(
         1, interests.filterIPs(subscriber.getGroup(), 100).get(subscriber.getDataInfoId()).size());
   }
+
+  @Test
+  public void testGetInterestsByOption() {
+    String testOptionDataId = "test-option-data-id";
+    String testOptionGroup = "test-option-group";
+    String testOptionInstanceId = "test-option-instance-id";
+    String testOptionDataInfoId = DataInfo.toDataInfoId(testOptionDataId, testOptionInstanceId, testOptionGroup);
+    String testOptionAppNameOne = "test-option-app-1";
+    String testOptionAppNameTwo = "test-option-app-2";
+    int appOneNum = 3;
+    int appTwoNum = 2;
+
+    Map<String, Subscriber> appOneSubscribers = new HashMap<>();
+    for (int i = 0; i < appOneNum; i++) {
+      Subscriber subscriber = createSubscriber(testOptionDataId, testOptionGroup, testOptionInstanceId, testOptionAppNameOne);
+      appOneSubscribers.put(subscriber.getRegisterId(), subscriber);
+      this.interests.add(subscriber);
+    }
+
+    Map<String, Subscriber> appTwoSubscribers = new HashMap<>();
+    for (int i = 0; i < appTwoNum; i++) {
+      Subscriber subscriber = createSubscriber(testOptionDataId, testOptionGroup, testOptionInstanceId, testOptionAppNameTwo);
+      appTwoSubscribers.put(subscriber.getRegisterId(), subscriber);
+      this.interests.add(subscriber);
+    }
+
+    // 预期可以查询出全部的 app-1
+    Collection<Subscriber> subscribersResult1 = this.interests.getInterestsByOption(testOptionDataInfoId, testOptionAppNameOne, appOneNum);
+    Assert.assertEquals(subscribersResult1.size(), appOneNum);
+    // size 相同且每个元素都存在，那么就证明是
+    Assert.assertEquals(subscribersResult1.size(), appOneSubscribers.size());
+    for (Subscriber subscriber : subscribersResult1) {
+      Assert.assertEquals(subscriber.getAppName(), testOptionAppNameOne);
+      Assert.assertEquals(subscriber.getDataInfoId(), testOptionDataInfoId);
+      Assert.assertTrue(appOneSubscribers.containsKey(subscriber.getRegisterId()));
+    }
+
+    // 预期可以查询出 1 个 app-1
+    Collection<Subscriber> subscribersResult2 = this.interests.getInterestsByOption(testOptionDataInfoId, testOptionAppNameOne, 1);
+    Assert.assertEquals(subscribersResult2.size(), 1);
+    Subscriber oneOfSubscribers2 = subscribersResult2.iterator().next();
+    Assert.assertEquals(oneOfSubscribers2.getAppName(), testOptionAppNameOne);
+    Assert.assertEquals(oneOfSubscribers2.getDataInfoId(), testOptionDataInfoId);
+    Assert.assertTrue(appOneSubscribers.containsKey(oneOfSubscribers2.getRegisterId()));
+
+    // 不设置任何查询条件，预期可以查询出全部的 app-1 和 app-2
+    Collection<Subscriber> subscribersResult3 = this.interests.getInterestsByOption(testOptionDataInfoId, null, 0);
+    Assert.assertEquals(subscribersResult3.size(), appOneNum + appTwoNum);
+    for (Subscriber subscriber : subscribersResult3) {
+      Assert.assertTrue(appOneSubscribers.containsKey(subscriber.getRegisterId()) || appTwoSubscribers.containsKey(subscriber.getRegisterId()));
+      Assert.assertTrue(subscriber.getAppName().equals(testOptionAppNameOne) || subscriber.getAppName().equals(testOptionAppNameTwo));
+      Assert.assertEquals(subscriber.getDataInfoId(), testOptionDataInfoId);
+    }
+  }
+
+  @Test
+  public void testGetSubscriberCountByApp() {
+    String testCountDataId = "test-count-data-id";
+    String testCountGroup = "test-count-group";
+    String testCountInstanceId = "test-count-instance-id";
+    String testCountDataInfoId = DataInfo.toDataInfoId(testCountDataId, testCountInstanceId, testCountGroup);
+    String testCountAppNameOne = "test-count-app-1";
+    String testCountAppNameTwo = "test-count-app-2";
+    int appOneNum = 3;
+    int appTwoNum = 2;
+
+    for (int i = 0; i < appOneNum; i++) {
+      Subscriber subscriber = createSubscriber(testCountDataId, testCountGroup, testCountInstanceId, testCountAppNameOne);
+      this.interests.add(subscriber);
+    }
+
+    for (int i = 0; i < appTwoNum; i++) {
+      Subscriber subscriber = createSubscriber(testCountDataId, testCountGroup, testCountInstanceId, testCountAppNameTwo);
+      this.interests.add(subscriber);
+    }
+
+    List<SubscriberCountByApp> subscriberCountByApps = this.interests.getSubscriberCountByApp(testCountDataInfoId);
+    Assert.assertEquals(subscriberCountByApps.size(), 2);
+
+    for (SubscriberCountByApp subscriberCountByApp : subscriberCountByApps) {
+      if (subscriberCountByApp.getAppName().equals(testCountAppNameOne)) {
+        Assert.assertEquals(subscriberCountByApp.getCount(), appOneNum);
+      } else if (subscriberCountByApp.getAppName().equals(testCountAppNameTwo)) {
+        Assert.assertEquals(subscriberCountByApp.getCount(), appTwoNum);
+      }
+    }
+  }
+
+  private Subscriber createSubscriber(String dataInfo, String group, String instanceId, String appName) {
+    Subscriber subscriber = this.randomSubscriber(dataInfo, instanceId);
+    subscriber.setAppName(appName);
+    subscriber.setGroup(group);
+    subscriber.setDataInfoId(
+            DataInfo.toDataInfoId(
+                    subscriber.getDataId(), subscriber.getInstanceId(), subscriber.getGroup()));
+    return subscriber;
+  }
+
 }
