@@ -8,7 +8,7 @@
 
 [中文版本](./README_ZH.md)
 
-SOFARegistry is a production-level, low-latency, high-availability registry system for micro-services registration powered by Ant Financial.SOFARegistry originated from Taobao's ConfigServer. Over the past decade, as Ant Group's business has grown, its registry architecture has evolved to its sixth generation. Currently, SOFARegistry not only fully supports Ant Group's internal services, but also serves numerous partners through Ant Financial Technology while maintaining compatibility with the open-source ecosystem. Adopting an AP architecture, SOFARegistry enables millisecond-level real-time push notifications. Additionally, its layered architecture supports unlimited horizontal scalability.
+SOFARegistry is a production-level, low-latency, high-availability registry system for micro-services registration powered by Ant Group. SOFARegistry originated from Taobao's ConfigServer. Over the past decade, as Ant Group's business has grown, its registry architecture has evolved to its sixth generation. Currently, SOFARegistry not only fully supports Ant Group's internal services, but also serves numerous partners through Ant Financial Technology while maintaining compatibility with the open-source ecosystem. Adopting an AP architecture, SOFARegistry enables millisecond-level real-time push notifications. Additionally, its layered architecture supports unlimited horizontal scalability.
 
 ## Functionality 
 
