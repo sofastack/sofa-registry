@@ -40,16 +40,16 @@ import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.google.common.collect.Lists;
 import com.google.protobuf.UnsafeByteOperations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.util.StringUtils;
-
-import javax.annotation.Resource;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import javax.annotation.Resource;
+import org.apache.commons.collections.CollectionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.StringUtils;
 
 public class PushDataGenerator {
 
@@ -152,10 +152,33 @@ public class PushDataGenerator {
       return this.createFullReceivedData(unzipDatum, clientZone, subscriberMap);
     }
 
+    List<SubDatumRevisionMark> datumRevisionsInFullData = localDatum.getDatumRevisionMarks();
+
+    // 虽然我们默认是需要推送到全量数据的版本 version 的，但是实际可能还存在 mock 版本
+    // 因此这里尝试找到最后一个 mock 版本，作为计算增量推送数据的版本
+    long pushEndVersion = version;
+    if (CollectionUtils.isNotEmpty(datumRevisionsInFullData)) {
+      SubDatumRevisionMark latestDatumRevisionMarkInFullData =
+          datumRevisionsInFullData.get(datumRevisionsInFullData.size() - 1);
+      if (latestDatumRevisionMarkInFullData.isMock()) {
+        pushEndVersion = latestDatumRevisionMarkInFullData.getVersion();
+      }
+    }
+
+    LOGGER.error(
+        "XD merge == pushed version: {}, target version: {}, push end version: {}, sub datum revisions: {}",
+        pushedVersion,
+        version,
+        pushEndVersion,
+        datumRevisionsInFullData.stream()
+            .map(mark -> mark.getVersion() + " - " + mark.isMock())
+            .map(String::valueOf)
+            .collect(Collectors.joining(",")));
+
     SubDatumRevisions datumRevisions = multiDatumRevisions.getDatumRevisions(localDataCenter);
     final RevisionDataMerger merger = RevisionDataMerger.from(localDatum);
     Tuple<Boolean, String> visitResult =
-        datumRevisions.tryVisitDatumRevisionDatum(pushedVersion, version, merger::merge);
+        datumRevisions.tryVisitDatumRevisionDatum(pushedVersion, pushEndVersion, merger::merge);
 
     if (!visitResult.o1) {
       // 拼装失败，多半是缓存的增量数据丢失了，那么降级回全量推送，这里不记录日志了，记录可能会导致日志过多

@@ -18,13 +18,12 @@ package com.alipay.sofa.registry.common.model.store;
 
 import com.alipay.sofa.registry.common.model.ServerDataBox;
 import com.alipay.sofa.registry.common.model.client.pb.*;
+import java.util.*;
+import java.util.stream.Collectors;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * @author huicha
@@ -52,6 +51,11 @@ public class RevisionDataMerger {
   }
 
   public void merge(SubDatumRevisionData datumRevisionData) {
+    LOGGER.error(
+        "XD merge == target version: {}, datum revision version: {}",
+        targetDatum.getVersion(),
+        datumRevisionData.getVersion());
+
     List<SubPublisher> addPublishers = datumRevisionData.getAddPublishers();
     if (CollectionUtils.isNotEmpty(addPublishers)) {
       for (SubPublisher addPublisher : addPublishers) {
@@ -80,6 +84,12 @@ public class RevisionDataMerger {
   }
 
   private void addPublisher(SubPublisher publisher) {
+    LOGGER.error(
+        "XD merge == target version: {}, add publisher register id: {}, publisher version: {}",
+        targetDatum.getVersion(),
+        publisher.getRegisterId(),
+        publisher.getVersion());
+
     String registerId = publisher.getRegisterId();
     String zone = publisher.getCell();
     this.totalAddPublishers.put(registerId, publisher);
@@ -96,6 +106,10 @@ public class RevisionDataMerger {
     zoneDeletePubRegisterIds.addAll(registerIds);
 
     for (String registerId : registerIds) {
+      LOGGER.error(
+          "XD merge == target version: {}, delete publisher register id: {}",
+          targetDatum.getVersion(),
+          registerId);
       this.totalAddPublishers.remove(registerId);
     }
   }
@@ -158,6 +172,14 @@ public class RevisionDataMerger {
       deltaDataPbBuilder.putDeletePublisherRegisterIds(zone, deleteRegisterIdsPb);
     }
 
+    StringBuffer xdOutput = new StringBuffer();
+    xdOutput
+        .append("XD === dataInfoId: ")
+        .append(this.targetDatum.getDataInfoId())
+        .append(" Version: ")
+        .append(targetDatum.getVersion())
+        .append(" Publishers: ");
+
     // 3. 计算全量数据的签名，客户端 merge 增量推送后会检查签名是否一致
     // todo(xidong.rxd): 考虑下缓存???
     List<SubPublisher> publishers = this.targetDatum.mustGetPublishers();
@@ -182,7 +204,22 @@ public class RevisionDataMerger {
       zoneRegisterIdHashSumXOR.merge(zone, registerIdHashCode, (left, right) -> left ^ right);
       zoneRegisterTimestampSum.merge(zone, registerTimestamp, Long::sum);
       zoneRegisterTimestampSumXOR.merge(zone, registerTimestamp, (left, right) -> left ^ right);
+
+      xdOutput
+          .append("{Publisher - id: ")
+          .append(publisher.getRegisterId())
+          .append(" version: ")
+          .append(publisher.getVersion())
+          .append(" timestamp: ")
+          .append(publisher.getRegisterTimestamp())
+          .append(" zone: ")
+          .append(publisher.getCell())
+          .append(" source: ")
+          .append(publisher.getPublishSource().name())
+          .append("}");
     }
+
+    LOGGER.error(xdOutput.toString());
 
     for (String zone : zones) {
       Long publisherCount = zonePublisherCount.get(zone);

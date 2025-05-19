@@ -157,19 +157,6 @@ public class SubDatumRevisions implements Serializable {
       return Tuple.of(Boolean.FALSE, "finishDatumVersion not exist");
     }
 
-    // 这里除了最后一个版本，还需要找到之后的所有 mock 版本一起推送下去
-    for (int index = endDatumIndex + 1; index < this.datumRevisions.size(); index++) {
-      SubDatumRevision datumRevision = this.datumRevisions.get(index);
-      DatumRevisionKey datumRevisionKey = datumRevision.getDatumRevisionKey();
-      if (datumRevisionKey.isMock()) {
-        // 紧跟着的版本是 mock 版本，那么需要一起推送
-        endDatumIndex = index;
-      } else {
-        // 紧跟着的版本不是 mock 版本，那么开始推送
-        break;
-      }
-    }
-
     if (startDatumIndex >= endDatumIndex) {
       // 理应不出现
       return Tuple.of(Boolean.FALSE, "startDatumIndex >= finishDatumIndex");

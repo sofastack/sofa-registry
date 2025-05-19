@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.server.data.cache;
 
+import static com.alipay.sofa.registry.server.data.change.ChangeMetrics.SKIP_SAME_VALUE_COUNTER;
+
 import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.ProcessId;
 import com.alipay.sofa.registry.common.model.RegisterVersion;
@@ -32,15 +34,12 @@ import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import org.apache.commons.collections.MapUtils;
-
 import java.util.*;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
-
-import static com.alipay.sofa.registry.server.data.change.ChangeMetrics.SKIP_SAME_VALUE_COUNTER;
+import org.apache.commons.collections.MapUtils;
 
 /**
  * @author yuzhi.lyz
@@ -527,6 +526,22 @@ public final class PublisherGroup {
               DatumVersion.of(mockVersion),
               publisherChanges.getAddPublishers(),
               publisherChanges.getDeletePublisherRegisterIds()));
+
+      List<Publisher> publishers = publisherChanges.getAddPublishers();
+      StringBuffer sb = new StringBuffer();
+      for (Publisher publisher : publishers) {
+        sb.append("Publisher{")
+            .append("registerId: ")
+            .append(publisher.getRegisterId())
+            .append(" version: ")
+            .append(publisher.getVersion())
+            .append("}");
+      }
+
+      LOGGER.error(
+          "XD upsert mock datum revision === version {}, publishers: {}",
+          mockVersion,
+          sb.toString());
     } finally {
       lock.writeLock().unlock();
     }
@@ -545,5 +560,18 @@ public final class PublisherGroup {
             version,
             publisherChanges.getAddPublishers(),
             publisherChanges.getDeletePublisherRegisterIds()));
+
+    List<Publisher> publishers = publisherChanges.getAddPublishers();
+    StringBuffer sb = new StringBuffer();
+    for (Publisher publisher : publishers) {
+      sb.append("Publisher{")
+          .append("registerId: ")
+          .append(publisher.getRegisterId())
+          .append(" version: ")
+          .append(publisher.getVersion())
+          .append("}");
+    }
+
+    LOGGER.error("XD upsert datum revision === version {}, publishers: {}", version, sb.toString());
   }
 }
