@@ -22,6 +22,7 @@ import java.util.HashSet;
 import java.util.Set;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.builder.ToStringBuilder;
 
 /**
  * @author jiangcun.hlc@antfin.com
@@ -79,6 +80,9 @@ public class PushEfficiencyImproveConfig {
 
   /** session 处理 pushTask delay pushTaskDebouncingMillis 时间处理，可以合并相同的推送任务，避免数据连续变化触发大量推送, 默认500ms */
   private int sbfAppPushTaskDebouncingMillis = DEFAULT_PUSH_TASK_DEBOUNCING_MILLIS;
+
+  /** 自动优化的相关配置 */
+  private AutoPushEfficiencyConfig autoPushEfficiencyConfig = null;
 
   /**
    * 判断是否满足 三板斧灰度条件
@@ -251,6 +255,14 @@ public class PushEfficiencyImproveConfig {
     this.regWorkWake = regWorkWake;
   }
 
+  public AutoPushEfficiencyConfig getAutoPushEfficiencyConfig() {
+    return autoPushEfficiencyConfig;
+  }
+
+  public void setAutoPushEfficiencyConfig(AutoPushEfficiencyConfig autoPushEfficiencyConfig) {
+    this.autoPushEfficiencyConfig = autoPushEfficiencyConfig;
+  }
+
   public void setSessionServerConfig(SessionServerConfig sessionServerConfig) {
     if (null != sessionServerConfig
         && StringUtils.isNotBlank(sessionServerConfig.getSessionServerRegion())) {
@@ -272,44 +284,6 @@ public class PushEfficiencyImproveConfig {
 
   @Override
   public String toString() {
-    return "PushEfficiencyImproveConfig{"
-        + "CURRENT_ZONE='"
-        + CURRENT_ZONE
-        + '\''
-        + ", CURRENT_IP="
-        + CURRENT_IP
-        + ", inIpZoneSBF="
-        + inIpZoneSBF()
-        + ", DEFAULT_CHANGE_DEBOUNCING_MILLIS="
-        + DEFAULT_CHANGE_DEBOUNCING_MILLIS
-        + ", DEFAULT_CHANGE_DEBOUNCING_MAX_MILLIS="
-        + DEFAULT_CHANGE_DEBOUNCING_MAX_MILLIS
-        + ", DEFAULT_PUSH_TASK_DEBOUNCING_MILLIS="
-        + DEFAULT_PUSH_TASK_DEBOUNCING_MILLIS
-        + ", changeDebouncingMillis="
-        + changeDebouncingMillis
-        + ", changeDebouncingMaxMillis="
-        + changeDebouncingMaxMillis
-        + ", changeTaskWaitingMillis="
-        + changeTaskWaitingMillis
-        + ", pushTaskWaitingMillis="
-        + pushTaskWaitingMillis
-        + ", pushTaskDebouncingMillis="
-        + pushTaskDebouncingMillis
-        + ", regWorkWaitingMillis="
-        + regWorkWaitingMillis
-        + ", ipSet="
-        + ipSet
-        + ", zoneSet="
-        + zoneSet
-        + ", subAppSet="
-        + subAppSet
-        + ", sbfAppPushTaskDebouncingMillis="
-        + sbfAppPushTaskDebouncingMillis
-        + ", pushTaskWake="
-        + pushTaskWake
-        + ", regWorkWake="
-        + regWorkWake
-        + '}';
+    return ToStringBuilder.reflectionToString(this);
   }
 }

@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.alipay.sofa</groupId>
         <artifactId>registry-server-parent</artifactId>
-        <version>6.6.0</version>
+        <version>6.6.1-auto-regulator-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
