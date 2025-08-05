@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.push;
 
+import com.alipay.sofa.registry.server.session.resource.ClientManagerResource;
 import com.google.common.annotations.VisibleForTesting;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -39,6 +40,8 @@ public class PushEfficiencyConfigUpdater implements SmartLifecycle {
   @Autowired private PushProcessor pushProcessor;
 
   @Autowired private FirePushService firePushService;
+
+  @Autowired private ClientManagerResource clientManagerResource;
 
   private Lock lock;
 
@@ -110,6 +113,9 @@ public class PushEfficiencyConfigUpdater implements SmartLifecycle {
       if (this.firePushService.getRegProcessor() != null) {
         this.firePushService.getRegProcessor().setWorkDelayTime(pushEfficiencyImproveConfig);
       }
+
+      // 无论如何，先关闭掉限流
+      this.clientManagerResource.setEnableTrafficOperate(true);
     } finally {
       this.lock.unlock();
     }
@@ -123,6 +129,21 @@ public class PushEfficiencyConfigUpdater implements SmartLifecycle {
         return;
       }
       this.changeProcessor.setChangeDebouncingMillis(debouncingTime, maxDebouncingTime);
+    } finally {
+      this.lock.unlock();
+    }
+  }
+
+  public void updateTrafficOperateLimitSwitch(boolean trafficOperateLimitSwitch) {
+    this.lock.lock();
+    try {
+      if (!this.useAutoPushEfficiency) {
+        // 如果已经停止使用自动化配置了，那么这里就跳过更新，以防止最终实际使用的配置不是 ProvideData 中的配置
+        return;
+      }
+
+      // 打开限制开关，意味着开启了限流，也就是不允许操作开关流，因此这里是反的
+      this.clientManagerResource.setEnableTrafficOperate(!trafficOperateLimitSwitch);
     } finally {
       this.lock.unlock();
     }

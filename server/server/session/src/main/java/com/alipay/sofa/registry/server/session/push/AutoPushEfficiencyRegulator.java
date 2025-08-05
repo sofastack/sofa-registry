@@ -21,6 +21,8 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.LoopRunnable;
 import com.google.common.annotations.VisibleForTesting;
+import java.lang.management.ManagementFactory;
+import java.lang.management.OperatingSystemMXBean;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -52,6 +54,10 @@ public class AutoPushEfficiencyRegulator extends LoopRunnable {
   // 阈值; 推送次数高于这个阈值的时候会开始逐渐调整攒批配置
   private final long pushCountThreshold;
 
+  // 阈值; 用于调整开关流限流开关的 Load 阈值。
+  // 不影响推送攒批配置
+  private final double loadThreshold;
+
   // 预热次数，等到所有的窗口都轮换过一遍之后才能开始统计
   // 这里因为 warmupTimes 的值总是单线程读写的，因此没有加 volatile 关键字
   private int warmupTimes;
@@ -62,11 +68,19 @@ public class AutoPushEfficiencyRegulator extends LoopRunnable {
   // 推送效率配置更新器
   private final PushEfficiencyConfigUpdater pushEfficiencyConfigUpdater;
 
+  // 采集系统负载指标
+  private final OperatingSystemMXBean operatingSystemMXBean;
+
   // 攒批时长
   private final IntMetric debouncingTime;
 
   // 最大攒批时长
   private final IntMetric maxDebouncingTime;
+
+  // 开关流限流
+  // 因为命名为 enable traffic operate 在这里可能会有些歧义
+  // 可能会有人理解成 load 过高时是否操作开关流限流，因此这里命名的比较长
+  private final BooleanMetric trafficOperateLimitSwitch;
 
   public AutoPushEfficiencyRegulator(
       AutoPushEfficiencyConfig autoPushEfficiencyConfig,
@@ -83,8 +97,10 @@ public class AutoPushEfficiencyRegulator extends LoopRunnable {
     // 设置其他参数
     this.id = ID_GENERATOR.incrementAndGet();
     this.pushCountThreshold = autoPushEfficiencyConfig.getPushCountThreshold();
+    this.loadThreshold = autoPushEfficiencyConfig.getLoadThreshold();
     this.warmupTimes = 0;
     this.pushEfficiencyConfigUpdater = pushEfficiencyConfigUpdater;
+    this.operatingSystemMXBean = ManagementFactory.getOperatingSystemMXBean();
 
     // 初始化可能需要调整的指标
     this.debouncingTime =
@@ -99,6 +115,8 @@ public class AutoPushEfficiencyRegulator extends LoopRunnable {
             autoPushEfficiencyConfig.getMaxDebouncingTimeMax(),
             autoPushEfficiencyConfig.getMaxDebouncingTimeMin(),
             autoPushEfficiencyConfig.getMaxDebouncingTimeStep());
+    this.trafficOperateLimitSwitch =
+        new BooleanMetric(autoPushEfficiencyConfig.isEnableTrafficOperateLimitSwitch());
 
     // 启动定时任务
     ConcurrentUtils.createDaemonThread("AutoPushEfficiencyRegulator-" + this.id, this).start();
@@ -134,11 +152,16 @@ public class AutoPushEfficiencyRegulator extends LoopRunnable {
     this.index.set(newIndex);
   }
 
-  private boolean checkPushCountIsHigh() {
+  private long computeTotalPushCount() {
     long totalPushCount = 0;
     for (int forIndex = 0; forIndex < this.windows.length; forIndex++) {
       totalPushCount += this.windows[forIndex].get();
     }
+    return totalPushCount;
+  }
+
+  private boolean checkPushCountIsHigh() {
+    long totalPushCount = this.computeTotalPushCount();
     return totalPushCount > this.pushCountThreshold;
   }
 
@@ -152,6 +175,12 @@ public class AutoPushEfficiencyRegulator extends LoopRunnable {
         debouncingTime,
         maxDebouncingTime);
     this.pushEfficiencyConfigUpdater.updateDebouncingTime(debouncingTime, maxDebouncingTime);
+  }
+
+  private void updateTrafficOperateLimitSwitch() {
+    boolean trafficOperateLimitSwitch = this.trafficOperateLimitSwitch.load();
+    LOGGER.info("[ID: {}] trafficOperateLimitSwitch: {}", this.id, trafficOperateLimitSwitch);
+    this.pushEfficiencyConfigUpdater.updateTrafficOperateLimitSwitch(trafficOperateLimitSwitch);
   }
 
   public Long getId() {
@@ -174,43 +203,87 @@ public class AutoPushEfficiencyRegulator extends LoopRunnable {
     }
 
     // 2. 已经完成预热了，检查推送频率是否过高
-    if (this.checkPushCountIsHigh()) {
-      // 推送频率过高，尝试更新攒批时长
-      boolean dataChange = false;
+    boolean pushCountIsHigh = this.checkPushCountIsHigh();
 
-      if (debouncingTime.tryIncrement()) {
-        dataChange = true;
-      }
+    // 3. 根据推送频率调整推送配置
+    this.tryUpdatePushConfig(pushCountIsHigh);
 
-      if (maxDebouncingTime.tryIncrement()) {
-        dataChange = true;
-      }
-
-      if (dataChange) {
-        this.updateDebouncingTime("Increment");
-      }
-    } else {
-      // 推送频率正常，此时尝试逐渐降低攒批时长
-      boolean dataChange = false;
-
-      if (debouncingTime.tryDecrement()) {
-        dataChange = true;
-      }
-
-      if (maxDebouncingTime.tryDecrement()) {
-        dataChange = true;
-      }
-
-      if (dataChange) {
-        this.updateDebouncingTime("Decrement");
-      }
-    }
+    // 4. 根据推送频率以及负载情况调整开关流限流配置
+    this.tryUpdateTrafficOperateLimitSwitch(pushCountIsHigh);
 
     // 3. 滚动窗口
     // 这里放到最后滚动窗口是因为：
     // 滚动窗口时，会把最新的窗口计数清零，如果先滚动后检查推送频率，
     // 那么感知到的推送频率就会偏小一点
     this.rollWindow();
+  }
+
+  private void tryUpdateTrafficOperateLimitSwitch(boolean pushCountIsHigh) {
+    if (!this.trafficOperateLimitSwitch.isEnable()) {
+      // 如果没有开启支持操作开关流，那么就不执行后续的代码了，尽量尝试避免获取系统负载
+      return;
+    }
+
+    // 这里获取到的是过去一分钟的负载平均值，这个值有可能小于 0，小于 0 时表示无法获取平均负载
+    // 另外，这个方法的注释上写了这个方法设计上就会考虑可能较频繁调用，因此这里先不考虑做限制了
+    double loadAverage = this.operatingSystemMXBean.getSystemLoadAverage();
+    if (loadAverage < 0) {
+      return;
+    }
+
+    boolean loadIsHigh = loadAverage > loadThreshold;
+
+    if (pushCountIsHigh && loadIsHigh) {
+      if (this.trafficOperateLimitSwitch.tryTurnOn()) {
+        this.updateTrafficOperateLimitSwitch();
+      }
+    } else {
+      if (this.trafficOperateLimitSwitch.tryTurnOff()) {
+        this.updateTrafficOperateLimitSwitch();
+      }
+    }
+  }
+
+  private void tryUpdatePushConfig(boolean pushCountIsHigh) {
+    if (pushCountIsHigh) {
+      // 推送频率过高，尝试更新攒批时长
+      if (this.tryIncrementPushConfig()) {
+        this.updateDebouncingTime("Increment");
+      }
+    } else {
+      // 推送频率正常，此时尝试逐渐降低攒批时长
+      if (this.tryDecrementPushConfig()) {
+        this.updateDebouncingTime("Decrement");
+      }
+    }
+  }
+
+  private boolean tryIncrementPushConfig() {
+    boolean dataChange = false;
+
+    if (debouncingTime.tryIncrement()) {
+      dataChange = true;
+    }
+
+    if (maxDebouncingTime.tryIncrement()) {
+      dataChange = true;
+    }
+
+    return dataChange;
+  }
+
+  private boolean tryDecrementPushConfig() {
+    boolean dataChange = false;
+
+    if (debouncingTime.tryDecrement()) {
+      dataChange = true;
+    }
+
+    if (maxDebouncingTime.tryDecrement()) {
+      dataChange = true;
+    }
+
+    return dataChange;
   }
 
   @Override
@@ -296,6 +369,50 @@ class IntMetric {
   }
 
   public int load() {
+    return this.current;
+  }
+}
+
+class BooleanMetric {
+
+  private final boolean enable;
+
+  private boolean current;
+
+  public BooleanMetric(boolean enable) {
+    this.enable = enable;
+    this.current = false;
+  }
+
+  public boolean tryTurnOn() {
+    if (!this.enable) {
+      return false;
+    }
+    if (this.current) {
+      return false;
+    } else {
+      this.current = true;
+      return true;
+    }
+  }
+
+  public boolean tryTurnOff() {
+    if (!this.enable) {
+      return false;
+    }
+    if (this.current) {
+      this.current = false;
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  public boolean isEnable() {
+    return this.enable;
+  }
+
+  public boolean load() {
     return this.current;
   }
 }

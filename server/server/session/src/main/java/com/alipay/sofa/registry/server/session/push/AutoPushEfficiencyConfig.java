@@ -43,6 +43,8 @@ public class AutoPushEfficiencyConfig {
 
   private static final int DEFAULT_MAX_DEBOUNCING_TIME_STEP = 200;
 
+  private static final double DEFAULT_LOAD_THRESHOLD = 6;
+
   private boolean enableAutoPushEfficiency = false;
 
   private int windowNum = DEFAULT_WINDOW_NUM;
@@ -51,6 +53,7 @@ public class AutoPushEfficiencyConfig {
 
   private long pushCountThreshold = DEFAULT_PUSH_COUNT_THRESHOLD;
 
+  // == 攒批时长参数 ==
   // 启动攒批时长的自动化调整
   private boolean enableDebouncingTime = false;
 
@@ -76,6 +79,13 @@ public class AutoPushEfficiencyConfig {
 
   // 最大调整攒批时长的步长
   private int maxDebouncingTimeStep = DEFAULT_MAX_DEBOUNCING_TIME_STEP;
+  // == 攒批时长参数 ==
+
+  // == 开关流限流参数 ==
+  private boolean enableTrafficOperateLimitSwitch = false;
+
+  private double loadThreshold = DEFAULT_LOAD_THRESHOLD;
+  // == 开关流限流参数 ==
 
   public boolean isEnableAutoPushEfficiency() {
     return enableAutoPushEfficiency;
@@ -171,6 +181,18 @@ public class AutoPushEfficiencyConfig {
 
   public void setMaxDebouncingTimeStep(int maxDebouncingTimeStep) {
     this.maxDebouncingTimeStep = maxDebouncingTimeStep;
+  }
+
+  public boolean isEnableTrafficOperateLimitSwitch() {
+    return enableTrafficOperateLimitSwitch;
+  }
+
+  public double getLoadThreshold() {
+    return loadThreshold;
+  }
+
+  public void setLoadThreshold(double loadThreshold) {
+    this.loadThreshold = loadThreshold;
   }
 
   @Override
