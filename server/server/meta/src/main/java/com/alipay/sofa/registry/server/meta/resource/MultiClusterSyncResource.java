@@ -26,17 +26,14 @@ import com.alipay.sofa.registry.server.shared.resource.AuthChecker;
 import com.alipay.sofa.registry.store.api.meta.MultiClusterSyncRepository;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.google.common.collect.Sets;
-import java.util.Locale;
-import javax.ws.rs.FormParam;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.NumberUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
+import java.util.Locale;
+import java.util.Set;
 
 /**
  * @author xiaojian.xj
@@ -63,6 +60,16 @@ public class MultiClusterSyncResource {
     }
     MultiClusterSyncInfo query = multiClusterSyncRepository.query(remoteDataCenter);
     response.fillSucceed(query);
+    return response;
+  }
+
+  @GET
+  @Path("queryAll")
+  @Produces(MediaType.APPLICATION_JSON)
+  public GenericResponse<Set<MultiClusterSyncInfo>> queryAll() {
+    GenericResponse<Set<MultiClusterSyncInfo>> response = new GenericResponse();
+    Set<MultiClusterSyncInfo> queryResult = multiClusterSyncRepository.queryLocalSyncInfos();
+    response.fillSucceed(queryResult);
     return response;
   }
 
