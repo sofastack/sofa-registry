@@ -23,9 +23,10 @@ import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import com.google.common.collect.Maps;
-import java.util.*;
-import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import javax.annotation.PostConstruct;
+import java.util.*;
 
 public class ChangeProcessor {
   private static final Logger LOGGER = LoggerFactory.getLogger(ChangeProcessor.class);
@@ -62,6 +63,26 @@ public class ChangeProcessor {
         work.setChangeTaskWorkDelay(pushEfficiencyImproveConfig);
       }
     }
+  }
+
+  public Map<String, ChangeDebouncingTime[]> getChangeDebouncingMillis() {
+    Map<String, ChangeDebouncingTime[]> dcChangeDebouncingTimes = new HashMap<>(dataCenterWorkers.size());
+    for (Map.Entry<String, Worker[]> entry : dataCenterWorkers.entrySet()) {
+      String dataCenter = entry.getKey();
+      Worker[] workers = entry.getValue();
+      if (workers == null) {
+        dcChangeDebouncingTimes.put(dataCenter, new ChangeDebouncingTime[0]);
+        continue;
+      }
+      ChangeDebouncingTime[] changeDebouncingTimes = new ChangeDebouncingTime[workers.length];
+      for (int index = 0; index < workers.length; index++) {
+        Worker worker = workers[index];
+        ChangeDebouncingTime changeDebouncingTime = worker.getChangeDebouncingTime();
+        changeDebouncingTimes[index] = changeDebouncingTime;
+      }
+      dcChangeDebouncingTimes.put(dataCenter, changeDebouncingTimes);
+    }
+    return dcChangeDebouncingTimes;
   }
 
   public void setChangeDebouncingMillis(int changeDebouncingMillis, int changeDebouncingMaxMillis) {
@@ -135,8 +156,8 @@ public class ChangeProcessor {
       this.changeDebouncingMaxMillis = changeDebouncingMaxMillis;
     }
 
-    int changeDebouncingMillis;
-    int changeDebouncingMaxMillis;
+    volatile int changeDebouncingMillis;
+    volatile int changeDebouncingMaxMillis;
     int changeTaskWaitingMillis = 100;
 
     Worker(int changeDebouncingMillis, int changeDebouncingMaxMillis) {
@@ -219,6 +240,11 @@ public class ChangeProcessor {
     public int getWaitingMillis() {
       return changeTaskWaitingMillis;
     }
+
+    public ChangeDebouncingTime getChangeDebouncingTime() {
+      return new ChangeDebouncingTime(this.changeDebouncingMillis, this.changeDebouncingMaxMillis);
+    }
+
   }
 
   static final class ChangeKey {
