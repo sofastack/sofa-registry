@@ -23,10 +23,9 @@ import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import com.google.common.collect.Maps;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import javax.annotation.PostConstruct;
 import java.util.*;
+import javax.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Autowired;
 
 public class ChangeProcessor {
   private static final Logger LOGGER = LoggerFactory.getLogger(ChangeProcessor.class);
@@ -66,7 +65,8 @@ public class ChangeProcessor {
   }
 
   public Map<String, ChangeDebouncingTime[]> getChangeDebouncingMillis() {
-    Map<String, ChangeDebouncingTime[]> dcChangeDebouncingTimes = new HashMap<>(dataCenterWorkers.size());
+    Map<String, ChangeDebouncingTime[]> dcChangeDebouncingTimes =
+        new HashMap<>(dataCenterWorkers.size());
     for (Map.Entry<String, Worker[]> entry : dataCenterWorkers.entrySet()) {
       String dataCenter = entry.getKey();
       Worker[] workers = entry.getValue();
@@ -244,7 +244,6 @@ public class ChangeProcessor {
     public ChangeDebouncingTime getChangeDebouncingTime() {
       return new ChangeDebouncingTime(this.changeDebouncingMillis, this.changeDebouncingMaxMillis);
     }
-
   }
 
   static final class ChangeKey {
