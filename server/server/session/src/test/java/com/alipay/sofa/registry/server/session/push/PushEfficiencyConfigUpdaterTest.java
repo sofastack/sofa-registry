@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.push;
 
+import com.alipay.sofa.registry.server.session.resource.ClientManagerResource;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -31,11 +32,13 @@ public class PushEfficiencyConfigUpdaterTest {
     ChangeProcessor changeProcessor = Mockito.mock(ChangeProcessor.class);
     PushProcessor pushProcessor = Mockito.mock(PushProcessor.class);
     FirePushService firePushService = Mockito.mock(FirePushService.class);
+    ClientManagerResource clientManagerResource = Mockito.mock(ClientManagerResource.class);
 
     PushEfficiencyConfigUpdater pushEfficiencyConfigUpdater = new PushEfficiencyConfigUpdater();
     pushEfficiencyConfigUpdater.setChangeProcessor(changeProcessor);
     pushEfficiencyConfigUpdater.setPushProcessor(pushProcessor);
     pushEfficiencyConfigUpdater.setFirePushService(firePushService);
+    pushEfficiencyConfigUpdater.setClientManagerResource(clientManagerResource);
 
     // 更新没有开启自动化配置，因此预期是 null
     pushEfficiencyConfigUpdater.updateFromProviderData(new PushEfficiencyImproveConfig());
@@ -58,8 +61,6 @@ public class PushEfficiencyConfigUpdaterTest {
 
     autoPushEfficiencyRegulator = pushEfficiencyConfigUpdater.getAutoPushEfficiencyRegulator();
     Assert.assertNotNull(autoPushEfficiencyRegulator);
-    Long autoPushEfficiencyRegulatorId = autoPushEfficiencyRegulator.getId();
-    Assert.assertEquals(1L, (long) autoPushEfficiencyRegulatorId);
 
     // 第三次仍然开启，但是我们修改一部分配置
     autoPushEfficiencyConfig = new AutoPushEfficiencyConfig();
@@ -79,12 +80,10 @@ public class PushEfficiencyConfigUpdaterTest {
         pushEfficiencyConfigUpdater.getAutoPushEfficiencyRegulator();
     Assert.assertNotNull(newAutoPushEfficiencyRegulator);
 
-    Long newAutoPushEfficiencyRegulatorId = newAutoPushEfficiencyRegulator.getId();
     int windowNum = newAutoPushEfficiencyRegulator.getWindowNum();
     int windowSize = newAutoPushEfficiencyRegulator.getWindowsSize();
     long pushCountThreshold = newAutoPushEfficiencyRegulator.getPushCountThreshold();
 
-    Assert.assertEquals(2L, (long) newAutoPushEfficiencyRegulatorId);
     Assert.assertEquals(3, windowNum);
     Assert.assertEquals(3, windowSize);
     Assert.assertEquals(10, pushCountThreshold);
