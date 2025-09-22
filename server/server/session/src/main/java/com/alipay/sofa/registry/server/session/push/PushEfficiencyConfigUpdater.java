@@ -88,19 +88,21 @@ public class PushEfficiencyConfigUpdater implements SmartLifecycle {
           this.autoPushEfficiencyRegulator.close();
         }
 
-        this.autoPushEfficiencyRegulator =
-            new AutoPushEfficiencyRegulator(autoPushEfficiencyConfig, this);
-
         // 这里需要调整下初始配置的值
         if (autoPushEfficiencyConfig.isEnableDebouncingTime()) {
+          // 当自适应攒批需要调整 debouncing time 的时候，需要将 debouncing time 的初始值设置为 min
           pushEfficiencyImproveConfig.setChangeDebouncingMillis(
               autoPushEfficiencyConfig.getDebouncingTimeMin());
         }
 
         if (autoPushEfficiencyConfig.isEnableMaxDebouncingTime()) {
+          // 当自适应攒批需要调整 max debouncing time 的时候，需要将 debouncing time 的初始值设置为 min
           pushEfficiencyImproveConfig.setChangeDebouncingMaxMillis(
               autoPushEfficiencyConfig.getMaxDebouncingTimeMin());
         }
+
+        this.autoPushEfficiencyRegulator =
+            new AutoPushEfficiencyRegulator(pushEfficiencyImproveConfig, this);
       } else {
         // 新的配置中，关闭了自动化配置，此时如果还存在正在运行的 AutoPushEfficiencyRegulator 则需要关掉
         this.useAutoPushEfficiency = false;

@@ -83,8 +83,12 @@ public class AutoPushEfficiencyRegulator extends LoopRunnable {
   private final BooleanMetric trafficOperateLimitSwitch;
 
   public AutoPushEfficiencyRegulator(
-      AutoPushEfficiencyConfig autoPushEfficiencyConfig,
+      PushEfficiencyImproveConfig pushEfficiencyImproveConfig,
       PushEfficiencyConfigUpdater pushEfficiencyConfigUpdater) {
+    // 获取自适应攒批配置
+    AutoPushEfficiencyConfig autoPushEfficiencyConfig =
+        pushEfficiencyImproveConfig.getAutoPushEfficiencyConfig();
+
     // 初始化窗口相关配置
     this.windowTime = autoPushEfficiencyConfig.getWindowTimeMillis();
     this.windowNum = autoPushEfficiencyConfig.getWindowNum();
@@ -106,12 +110,14 @@ public class AutoPushEfficiencyRegulator extends LoopRunnable {
     this.debouncingTime =
         new IntMetric(
             autoPushEfficiencyConfig.isEnableDebouncingTime(),
+            pushEfficiencyImproveConfig.getChangeDebouncingMillis(),
             autoPushEfficiencyConfig.getDebouncingTimeMax(),
             autoPushEfficiencyConfig.getDebouncingTimeMin(),
             autoPushEfficiencyConfig.getDebouncingTimeStep());
     this.maxDebouncingTime =
         new IntMetric(
             autoPushEfficiencyConfig.isEnableMaxDebouncingTime(),
+            pushEfficiencyImproveConfig.getChangeDebouncingMaxMillis(),
             autoPushEfficiencyConfig.getMaxDebouncingTimeMax(),
             autoPushEfficiencyConfig.getMaxDebouncingTimeMin(),
             autoPushEfficiencyConfig.getMaxDebouncingTimeStep());
@@ -311,6 +317,9 @@ class IntMetric {
 
   private final boolean enable;
 
+  // 当不启用自适应攒批时，指标的默认值
+  private final int defaultV;
+
   // 指标的最大值
   private final int max;
 
@@ -323,8 +332,9 @@ class IntMetric {
   // 当前指标的值
   private int current;
 
-  public IntMetric(boolean enable, int max, int min, int step) {
+  public IntMetric(boolean enable, int defaultV, int max, int min, int step) {
     this.enable = enable;
+    this.defaultV = defaultV;
     this.max = max;
     this.min = min;
     this.step = step;
@@ -369,7 +379,15 @@ class IntMetric {
   }
 
   public int load() {
-    return this.current;
+    if (this.enable) {
+      return this.current;
+    } else {
+      return this.defaultV;
+    }
+  }
+
+  public int loadDefaultV() {
+    return this.defaultV;
   }
 }
 
