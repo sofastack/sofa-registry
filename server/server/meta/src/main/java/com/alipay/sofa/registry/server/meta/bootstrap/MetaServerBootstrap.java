@@ -42,14 +42,13 @@ import com.github.rholder.retry.StopStrategies;
 import com.github.rholder.retry.WaitStrategies;
 import com.google.common.base.Predicate;
 import java.lang.annotation.Annotation;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Resource;
 import javax.ws.rs.Path;
 import javax.ws.rs.ext.Provider;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -233,15 +232,36 @@ public class MetaServerBootstrap {
         metaServerConfig.getSchedulerHeartbeatIntervalSecs() * 1000);
   }
 
+  /**
+   * Opens and starts the Bolt session register server if it hasn't been started.
+   *
+   * <p>Merges the built-in sessionServerHandlers with any handlers returned by
+   * {@link #customSessionServerHandlers()}, opens a server bound to the local address and the
+   * configured session port via {@code boltExchange}, and stores the server instance in
+   * {@code sessionServer}. The method sets the internal started flag to prevent reinitialization.
+   *
+   * @throws RuntimeException if the server fails to open; the started flag is reset before
+   *     rethrowing.
+   */
   private void openSessionRegisterServer() {
     try {
       if (rpcServerForSessionStarted.compareAndSet(false, true)) {
+        List<AbstractServerHandler> mergedSessionServerHandlers =
+            new ArrayList<>(this.sessionServerHandlers);
+
+        Collection<AbstractServerHandler> customSessionServerHandlers =
+            this.customSessionServerHandlers();
+        if (CollectionUtils.isNotEmpty(customSessionServerHandlers)) {
+          mergedSessionServerHandlers.addAll(this.customSessionServerHandlers());
+        }
+
         sessionServer =
             boltExchange.open(
                 new URL(
                     NetUtil.getLocalAddress().getHostAddress(),
                     metaServerConfig.getSessionServerPort()),
-                sessionServerHandlers.toArray(new ChannelHandler[sessionServerHandlers.size()]));
+                mergedSessionServerHandlers.toArray(
+                    new ChannelHandler[mergedSessionServerHandlers.size()]));
 
         LOGGER.info(
             "Open session node register server port {} success!",
@@ -257,6 +277,26 @@ public class MetaServerBootstrap {
     }
   }
 
+  /**
+   * Hook for subclasses to supply additional session server handlers.
+   *
+   * Subclasses may override to return extra AbstractServerHandler instances that will be merged
+   * with the bootstrap's default session handlers when opening the session register server.
+   *
+   * @return a non-null collection of additional session server handlers (default: empty list)
+   */
+  protected Collection<AbstractServerHandler> customSessionServerHandlers() {
+    return Collections.emptyList();
+  }
+
+  /**
+   * Opens the Bolt data-register RPC server on the configured data port if it is not already started.
+   *
+   * <p>This method is idempotent: it uses an atomic compare-and-set to ensure the server is opened only once.
+   * On success, the created server is stored in the `dataServer` field and the started flag is set.
+   *
+   * @throws RuntimeException if the server fails to open; the underlying exception is wrapped. 
+   */
   private void openDataRegisterServer() {
     try {
       if (rpcServerForDataStarted.compareAndSet(false, true)) {

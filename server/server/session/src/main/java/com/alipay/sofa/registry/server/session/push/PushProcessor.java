@@ -67,7 +67,9 @@ public class PushProcessor {
 
   @Autowired protected ClientNodeService clientNodeService;
 
-  @Autowired protected CircuitBreakerService circuitBreakerService;;
+  @Autowired protected CircuitBreakerService circuitBreakerService;
+
+  private volatile AutoPushEfficiencyRegulator autoPushEfficiencyRegulator;
 
   private int pushDataTaskDebouncingMillis = 500;
   private PushEfficiencyImproveConfig pushEfficiencyImproveConfig;
@@ -90,6 +92,13 @@ public class PushProcessor {
     ConcurrentUtils.createDaemonThread("PushCleaner", cleaner).start();
   }
 
+  /**
+   * Update push task timing from the provided configuration.
+   *
+   * Applies the config's push task waiting and debouncing millis to the internal task buffer and processor state.
+   *
+   * @param pushEfficiencyImproveConfig configuration supplying `pushTaskWaitingMillis` and `pushTaskDebouncingMillis`
+   */
   public void setPushTaskDelayTime(PushEfficiencyImproveConfig pushEfficiencyImproveConfig) {
     this.taskBuffer.setPushTaskWorkWaitingMillis(
         pushEfficiencyImproveConfig.getPushTaskWaitingMillis());
@@ -97,6 +106,23 @@ public class PushProcessor {
     this.pushEfficiencyImproveConfig = pushEfficiencyImproveConfig;
   }
 
+  /**
+   * Injects an AutoPushEfficiencyRegulator to enable automatic push-efficiency accounting.
+   *
+   * The regulator, if non-null, will be consulted by push logic (doPush) to increment
+   * push counts for efficiency regulation. Passing null clears the regulator.
+   */
+  public void setAutoPushEfficiencyRegulator(
+      AutoPushEfficiencyRegulator autoPushEfficiencyRegulator) {
+    this.autoPushEfficiencyRegulator = autoPushEfficiencyRegulator;
+  }
+
+  /**
+   * Lazily initializes the PushTaskBuffer used to hold pending push tasks.
+   *
+   * If a buffer is not already present, creates a new PushTaskBuffer using the
+   * configured bucket size from sessionServerConfig.
+   */
   void intTaskBuffer() {
     if (this.taskBuffer == null) {
       this.taskBuffer = new PushTaskBuffer(sessionServerConfig.getPushTaskBufferBucketSize());
@@ -307,6 +333,26 @@ public class PushProcessor {
     return false;
   }
 
+  /**
+   * Attempts to execute the given push task: validates push permission and task state, prepares push
+   * payload, and initiates a remote push with a callback.
+   *
+   * <p>Returns true when the push was successfully initiated and recorded; returns false if the push
+   * was skipped (disabled by IP/data-center switch, a conflicting/obsolete in-flight task, the task
+   * determined it should not continue, it was interrupted due to an empty payload condition, the
+   * push-empty check decided to skip, or an exception occurred).
+   *
+   * <p>Side effects when returning true:
+   * - starts the task push trace,
+   * - records the push in the in-flight pushingRecords map,
+   * - may increment the AutoPushEfficiencyRegulator push counter if one is configured,
+   * - invokes the client node service to perform the remote push and registers a callback,
+   * - increments the PUSH_CLIENT_ING_COUNTER.
+   *
+   * @param task the push task to execute
+   * @return true if the push was initiated and recorded; false if the push was skipped or failed to
+   *     start
+   */
   boolean doPush(PushTask task) {
     if (!pushSwitchService.canIpPushMulti(
         task.pushingTaskKey.addr.getAddress().getHostAddress(), task.datum.dataCenters())) {
@@ -338,6 +384,13 @@ public class PushProcessor {
       // check push empty can skip (last push is also empty)
       if (checkSkipPushEmptyAndUpdateVersion(task)) {
         return false;
+      }
+
+      // 如果需要则进行推送计数，以便于可以自动化调整攒批
+      AutoPushEfficiencyRegulator currentAutoPushEfficiencyRegulator =
+          this.autoPushEfficiencyRegulator;
+      if (null != currentAutoPushEfficiencyRegulator) {
+        currentAutoPushEfficiencyRegulator.safeIncrementPushCount();
       }
 
       pushingRecords.put(

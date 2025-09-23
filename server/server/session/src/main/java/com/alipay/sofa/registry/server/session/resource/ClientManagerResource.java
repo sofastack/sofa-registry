@@ -78,11 +78,17 @@ public class ClientManagerResource {
 
   @Autowired protected ExecutorManager executorManager;
 
+  private volatile boolean enableTrafficOperate = true;
+
   /**
-   * Client off
+   * Turns off (disconnects or disables traffic for) client connections for the given IPs.
    *
-   * @param ips ips
-   * @return CommonResponse
+   * Accepts a single string of one or more IP addresses (e.g., comma- or whitespace-separated) which will be parsed into a set of IPs. For each matching connection, the method looks up ConnectId values and instructs the session registry to "client off" those connections.
+   *
+   * If the input is empty the call fails. If traffic operations are globally disabled via the feature flag, the call returns a failure indicating rate limiting.
+   *
+   * @param ips a string containing one or more IP addresses to target (will be parsed into a set)
+   * @return a CommonResponse indicating success, or a failure with a message explaining the reason
    */
   @POST
   @Path("/clientOff")
@@ -90,6 +96,12 @@ public class ClientManagerResource {
     if (StringUtils.isEmpty(ips)) {
       return CommonResponse.buildFailedResponse("ips is empty");
     }
+
+    if (!this.enableTrafficOperate) {
+      // 限流，不允许操作开关流
+      return CommonResponse.buildFailedResponse("too many request");
+    }
+
     final Set<String> ipSet = CollectionSdks.toIpSet(ips);
     List<ConnectId> conIds = connectionsService.getIpConnects(ipSet);
     sessionRegistry.clientOff(conIds);
@@ -98,10 +110,15 @@ public class ClientManagerResource {
   }
 
   /**
-   * Client on
+   * Re-opens clients (allows traffic) for the given IP addresses by closing any existing IP-level
+   * connection blocks.
    *
-   * @param ips ips
-   * @return CommonResponse
+   * The method parses the provided `ips` string into individual IPs, invokes the connections
+   * service to close IP-based connection restrictions for those IPs, and returns a success response.
+   * It will return a failure response if `ips` is empty or if traffic operations are currently disabled.
+   *
+   * @param ips a delimited string of IP addresses (e.g. comma- or newline-separated); parsed into a list internally
+   * @return a CommonResponse indicating success, or a failure response when `ips` is empty or traffic operations are disabled
    */
   @POST
   @Path("/clientOpen")
@@ -109,6 +126,12 @@ public class ClientManagerResource {
     if (StringUtils.isEmpty(ips)) {
       return CommonResponse.buildFailedResponse("ips is empty");
     }
+
+    if (!this.enableTrafficOperate) {
+      // 限流，不允许操作开关流
+      return CommonResponse.buildFailedResponse("too many request");
+    }
+
     final List<String> ipList = CollectionSdks.toIpList(ips);
     List<String> conIds = connectionsService.closeIpConnects(ipList);
     LOGGER.info("clientOn ips={}, conIds={}", ips, conIds);
@@ -117,10 +140,16 @@ public class ClientManagerResource {
   }
 
   /**
-   * Client off
+   * Disables (forces off) client connections for the given IPs across the current zone.
    *
-   * @param ips ips
-   * @return CommonResponse
+   * This call first performs the operation locally; if that succeeds it forwards the same
+   * request concurrently to other console servers in the same zone and returns success only
+   * if all servers succeed.
+   *
+   * @param ips comma-separated list of IP addresses (or any delimiter supported by CollectionSdks.toIpList)
+   * @return a CommonResponse indicating overall success; failure is returned if `ips` is empty,
+   *         if traffic operations are disabled via the enableTrafficOperate flag, or if any
+   *         target server (local or remote) reports a failure
    */
   @POST
   @Path("/zone/clientOff")
@@ -128,6 +157,12 @@ public class ClientManagerResource {
     if (StringUtils.isEmpty(ips)) {
       return CommonResponse.buildFailedResponse("ips is empty");
     }
+
+    if (!this.enableTrafficOperate) {
+      // 限流，不允许操作开关流
+      return CommonResponse.buildFailedResponse("too many request");
+    }
+
     CommonResponse resp = clientOff(ips);
     if (!resp.isSuccess()) {
       return resp;
@@ -153,10 +188,15 @@ public class ClientManagerResource {
   }
 
   /**
-   * Client on
+   * Enables (opens) client connections for the given IPs across the current zone.
    *
-   * @param ips ips
-   * @return CommonResponse
+   * <p>Validates the input and a feature-flag that gates traffic operations. If local enable succeeds,
+   * the method propagates the same "client open" request to other console servers in the same zone
+   * and returns a failure if any remote server reports failure.
+   *
+   * @param ips comma-separated list of client IP addresses to open
+   * @return a CommonResponse indicating success or failure (validation failure, traffic operations
+   *     disabled, or any remote-server failure)
    */
   @POST
   @Path("/zone/clientOpen")
@@ -164,6 +204,12 @@ public class ClientManagerResource {
     if (StringUtils.isEmpty(ips)) {
       return CommonResponse.buildFailedResponse("ips is empty");
     }
+
+    if (!this.enableTrafficOperate) {
+      // 限流，不允许操作开关流
+      return CommonResponse.buildFailedResponse("too many request");
+    }
+
     CommonResponse resp = clientOn(ips);
     if (!resp.isSuccess()) {
       return resp;
@@ -235,7 +281,34 @@ public class ClientManagerResource {
     return connectionMapper.get();
   }
 
+  /**
+   * Returns the URLs of other console servers in the same zone.
+   *
+   * Uses the configured SessionServerConfig and MetaServerService to discover console
+   * servers and excludes the local server from the result. The returned list may be
+   * empty if no other servers are found.
+   *
+   * @return a list of URLs for other console servers in the current zone (possibly empty)
+   */
   public List<URL> getOtherConsoleServersCurrentZone() {
     return Sdks.getOtherConsoleServers(null, sessionServerConfig, metaServerService);
+  }
+
+  /**
+   * Returns whether traffic operations (client on/off) are currently allowed.
+   *
+   * @return true if traffic operations are enabled; false if they are blocked (rate-limited)
+   */
+  public boolean isEnableTrafficOperate() {
+    return enableTrafficOperate;
+  }
+
+  /**
+   * Enable or disable traffic operations (client on/off endpoints).
+   *
+   * @param enableTrafficOperate true to allow traffic operations; false to reject them (requests will return a rate-limit/failure response)
+   */
+  public void setEnableTrafficOperate(boolean enableTrafficOperate) {
+    this.enableTrafficOperate = enableTrafficOperate;
   }
 }

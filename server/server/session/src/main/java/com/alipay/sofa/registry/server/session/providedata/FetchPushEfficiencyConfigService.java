@@ -21,10 +21,8 @@ import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import com.alipay.sofa.registry.server.session.push.ChangeProcessor;
-import com.alipay.sofa.registry.server.session.push.FirePushService;
+import com.alipay.sofa.registry.server.session.push.PushEfficiencyConfigUpdater;
 import com.alipay.sofa.registry.server.session.push.PushEfficiencyImproveConfig;
-import com.alipay.sofa.registry.server.session.push.PushProcessor;
 import com.alipay.sofa.registry.server.shared.providedata.AbstractFetchSystemPropertyService;
 import com.alipay.sofa.registry.server.shared.providedata.SystemDataStorage;
 import com.alipay.sofa.registry.util.JsonUtils;
@@ -43,11 +41,16 @@ public class FetchPushEfficiencyConfigService
       LoggerFactory.getLogger(FetchPushEfficiencyConfigService.class);
   @Autowired private SessionServerConfig sessionServerConfig;
 
-  @Autowired private ChangeProcessor changeProcessor;
-  @Autowired private PushProcessor pushProcessor;
+  @Autowired private PushEfficiencyConfigUpdater pushEfficiencyConfigUpdater;
 
-  @Autowired private FirePushService firePushService;
-
+  /**
+   * Creates a FetchPushEfficiencyConfigService configured to fetch the push-efficiency
+   * improvement configuration from provider data.
+   *
+   * Initializes the underlying AbstractFetchSystemPropertyService with the data id
+   * for push task delay config and an initial SwitchStorage containing the initial
+   * version and a default PushEfficiencyImproveConfig instance.
+   */
   public FetchPushEfficiencyConfigService() {
     super(
         ValueConstants.CHANGE_PUSH_TASK_DELAY_CONFIG_DATA_ID,
@@ -59,6 +62,20 @@ public class FetchPushEfficiencyConfigService
     return sessionServerConfig.getSystemPropertyIntervalMillis();
   }
 
+  /**
+   * Processes provider data to update the PushEfficiencyImproveConfig if valid.
+   *
+   * <p>Deserializes provider {@code data} into a {@link PushEfficiencyImproveConfig}, validates it,
+   * and, if applicable, atomically replaces the expected storage and applies the new configuration
+   * via {@code pushEfficiencyConfigUpdater}.
+   *
+   * @param expect the current expected {@link SwitchStorage} used for compare-and-set
+   * @param data provider data containing the config JSON
+   * @return {@code true} if processing succeeded (including the no-op case when the provided config
+   *     string is blank); {@code false} on deserialization error, validation failure, out-of-date
+   *     storage (compare-and-set failed), or when the config indicates it should not be applied
+   *     (e.g., {@code inIpZoneSBF()} is false)
+   */
   @Override
   protected boolean doProcess(SwitchStorage expect, ProvideData data) {
     final String configString = ProvideData.toString(data);
@@ -87,11 +104,9 @@ public class FetchPushEfficiencyConfigService
     if (!compareAndSet(expect, update)) {
       return false;
     }
-    changeProcessor.setWorkDelayTime(pushEfficiencyImproveConfig);
-    pushProcessor.setPushTaskDelayTime(pushEfficiencyImproveConfig);
-    if (firePushService.getRegProcessor() != null) {
-      firePushService.getRegProcessor().setWorkDelayTime(pushEfficiencyImproveConfig);
-    }
+
+    this.pushEfficiencyConfigUpdater.updateFromProviderData(pushEfficiencyImproveConfig);
+
     LOGGER.info(
         "Fetch PushEfficiencyImproveConfig success, prev={}, current={}",
         expect.pushEfficiencyImproveConfig,
@@ -99,28 +114,29 @@ public class FetchPushEfficiencyConfigService
     return true;
   }
 
-  @VisibleForTesting
-  public FetchPushEfficiencyConfigService setChangeProcessor(ChangeProcessor changeProcessor) {
-    this.changeProcessor = changeProcessor;
-    return this;
-  }
-
-  @VisibleForTesting
-  public FetchPushEfficiencyConfigService setPushProcessor(PushProcessor pushProcessor) {
-    this.pushProcessor = pushProcessor;
-    return this;
-  }
-
-  @VisibleForTesting
-  public FetchPushEfficiencyConfigService setFirePushService(FirePushService firePushService) {
-    this.firePushService = firePushService;
-    return this;
-  }
-
+  /**
+   * Injects a SessionServerConfig instance into this service (primarily for testing).
+   *
+   * <p>Returns the service instance to allow fluent/chainable setup in tests.
+   *
+   * @return this FetchPushEfficiencyConfigService instance
+   */
   @VisibleForTesting
   public FetchPushEfficiencyConfigService setSessionServerConfig(
       SessionServerConfig sessionServerConfig) {
     this.sessionServerConfig = sessionServerConfig;
+    return this;
+  }
+
+  /**
+   * Sets the PushEfficiencyConfigUpdater instance (typically used for testing) and returns this service for chaining.
+   *
+   * @return this FetchPushEfficiencyConfigService instance
+   */
+  @VisibleForTesting
+  public FetchPushEfficiencyConfigService setPushEfficiencyConfigUpdater(
+      PushEfficiencyConfigUpdater pushEfficiencyConfigUpdater) {
+    this.pushEfficiencyConfigUpdater = pushEfficiencyConfigUpdater;
     return this;
   }
 
