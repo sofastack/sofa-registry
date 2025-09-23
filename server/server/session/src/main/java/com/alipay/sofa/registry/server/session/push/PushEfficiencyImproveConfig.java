@@ -22,6 +22,7 @@ import java.util.HashSet;
 import java.util.Set;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.builder.ToStringBuilder;
 
 /**
  * @author jiangcun.hlc@antfin.com
@@ -79,6 +80,9 @@ public class PushEfficiencyImproveConfig {
 
   /** session 处理 pushTask delay pushTaskDebouncingMillis 时间处理，可以合并相同的推送任务，避免数据连续变化触发大量推送, 默认500ms */
   private int sbfAppPushTaskDebouncingMillis = DEFAULT_PUSH_TASK_DEBOUNCING_MILLIS;
+
+  /** 自动优化的相关配置 */
+  private AutoPushEfficiencyConfig autoPushEfficiencyConfig = null;
 
   /**
    * 判断是否满足 三板斧灰度条件
@@ -247,10 +251,51 @@ public class PushEfficiencyImproveConfig {
     return regWorkWake;
   }
 
+  /**
+   * Enable or disable "reg work" wake behavior for apps under SBF (push efficiency) control.
+   *
+   * When set to true, regWork tasks for apps that match SBF rules will use wake semantics; when false,
+   * they will not.
+   *
+   * @param regWorkWake true to enable regWork wake behavior for SBF apps, false to disable
+   */
   public void setRegWorkWake(boolean regWorkWake) {
     this.regWorkWake = regWorkWake;
   }
 
+  /**
+   * Returns the configured AutoPushEfficiencyConfig controlling automatic push-efficiency behavior.
+   *
+   * @return the AutoPushEfficiencyConfig instance, or {@code null} if automatic push-efficiency is not configured
+   */
+  public AutoPushEfficiencyConfig getAutoPushEfficiencyConfig() {
+    return autoPushEfficiencyConfig;
+  }
+
+  /**
+   * Set the automatic push-efficiency configuration used by this instance.
+   *
+   * Passing null disables the automatic push-efficiency behavior for this configuration.
+   */
+  public void setAutoPushEfficiencyConfig(AutoPushEfficiencyConfig autoPushEfficiencyConfig) {
+    this.autoPushEfficiencyConfig = autoPushEfficiencyConfig;
+  }
+
+  /**
+   * Apply session server overrides to this config.
+   *
+   * If {@code sessionServerConfig} is non-null and its {@code sessionServerRegion} is non-blank,
+   * sets this instance's CURRENT_ZONE (uppercased) and replaces the default debounce values
+   * with the corresponding values from {@code sessionServerConfig}.
+   *
+   * Affected fields when applied:
+   * - CURRENT_ZONE (uppercased {@code sessionServerRegion})
+   * - DEFAULT_CHANGE_DEBOUNCING_MILLIS (from {@code getDataChangeDebouncingMillis()})
+   * - DEFAULT_CHANGE_DEBOUNCING_MAX_MILLIS (from {@code getDataChangeMaxDebouncingMillis()})
+   * - DEFAULT_PUSH_TASK_DEBOUNCING_MILLIS (from {@code getPushDataTaskDebouncingMillis()})
+   *
+   * @param sessionServerConfig configuration from the session server; ignored if null or its region is blank
+   */
   public void setSessionServerConfig(SessionServerConfig sessionServerConfig) {
     if (null != sessionServerConfig
         && StringUtils.isNotBlank(sessionServerConfig.getSessionServerRegion())) {
@@ -270,46 +315,15 @@ public class PushEfficiencyImproveConfig {
     return true;
   }
 
+  /**
+   * Returns a string representation of this configuration.
+   *
+   * <p>Produces a reflection-based representation that includes the values of this object's fields.
+   *
+   * @return a string containing the reflected field names and values for this instance
+   */
   @Override
   public String toString() {
-    return "PushEfficiencyImproveConfig{"
-        + "CURRENT_ZONE='"
-        + CURRENT_ZONE
-        + '\''
-        + ", CURRENT_IP="
-        + CURRENT_IP
-        + ", inIpZoneSBF="
-        + inIpZoneSBF()
-        + ", DEFAULT_CHANGE_DEBOUNCING_MILLIS="
-        + DEFAULT_CHANGE_DEBOUNCING_MILLIS
-        + ", DEFAULT_CHANGE_DEBOUNCING_MAX_MILLIS="
-        + DEFAULT_CHANGE_DEBOUNCING_MAX_MILLIS
-        + ", DEFAULT_PUSH_TASK_DEBOUNCING_MILLIS="
-        + DEFAULT_PUSH_TASK_DEBOUNCING_MILLIS
-        + ", changeDebouncingMillis="
-        + changeDebouncingMillis
-        + ", changeDebouncingMaxMillis="
-        + changeDebouncingMaxMillis
-        + ", changeTaskWaitingMillis="
-        + changeTaskWaitingMillis
-        + ", pushTaskWaitingMillis="
-        + pushTaskWaitingMillis
-        + ", pushTaskDebouncingMillis="
-        + pushTaskDebouncingMillis
-        + ", regWorkWaitingMillis="
-        + regWorkWaitingMillis
-        + ", ipSet="
-        + ipSet
-        + ", zoneSet="
-        + zoneSet
-        + ", subAppSet="
-        + subAppSet
-        + ", sbfAppPushTaskDebouncingMillis="
-        + sbfAppPushTaskDebouncingMillis
-        + ", pushTaskWake="
-        + pushTaskWake
-        + ", regWorkWake="
-        + regWorkWake
-        + '}';
+    return ToStringBuilder.reflectionToString(this);
   }
 }

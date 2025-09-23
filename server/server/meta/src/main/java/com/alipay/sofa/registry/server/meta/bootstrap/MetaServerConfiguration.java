@@ -410,9 +410,24 @@ public class MetaServerConfiguration {
       return new MetricsResource();
     }
 
+    /**
+     * Creates and exposes a RegistryCoreOpsResource Spring bean.
+     *
+     * @return a new {@link RegistryCoreOpsResource} instance managed by the Spring container
+     */
     @Bean
     public RegistryCoreOpsResource registryCoreOpsResource() {
       return new RegistryCoreOpsResource();
+    }
+
+    /**
+     * Creates and registers a DataCenterResource as a Spring bean.
+     *
+     * <p>Exposes a new instance of DataCenterResource for dependency injection in the application context.
+     */
+    @Bean
+    public DataCenterResource dataCenterResource() {
+      return new DataCenterResource();
     }
   }
 
