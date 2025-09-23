@@ -23,11 +23,7 @@ import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import com.google.common.collect.Maps;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -64,6 +60,39 @@ public class ChangeProcessor {
       }
       for (Worker work : workers) {
         work.setChangeTaskWorkDelay(pushEfficiencyImproveConfig);
+      }
+    }
+  }
+
+  public Map<String, ChangeDebouncingTime[]> getChangeDebouncingMillis() {
+    Map<String, ChangeDebouncingTime[]> dcChangeDebouncingTimes =
+        new HashMap<>(dataCenterWorkers.size());
+    for (Map.Entry<String, Worker[]> entry : dataCenterWorkers.entrySet()) {
+      String dataCenter = entry.getKey();
+      Worker[] workers = entry.getValue();
+      if (workers == null) {
+        dcChangeDebouncingTimes.put(dataCenter, new ChangeDebouncingTime[0]);
+        continue;
+      }
+      ChangeDebouncingTime[] changeDebouncingTimes = new ChangeDebouncingTime[workers.length];
+      for (int index = 0; index < workers.length; index++) {
+        Worker worker = workers[index];
+        ChangeDebouncingTime changeDebouncingTime = worker.getChangeDebouncingTime();
+        changeDebouncingTimes[index] = changeDebouncingTime;
+      }
+      dcChangeDebouncingTimes.put(dataCenter, changeDebouncingTimes);
+    }
+    return dcChangeDebouncingTimes;
+  }
+
+  public void setChangeDebouncingMillis(int changeDebouncingMillis, int changeDebouncingMaxMillis) {
+    for (Map.Entry<String, Worker[]> entry : dataCenterWorkers.entrySet()) {
+      Worker[] workers = entry.getValue();
+      if (workers == null) {
+        return;
+      }
+      for (Worker work : workers) {
+        work.setChangeDebouncingMillis(changeDebouncingMillis, changeDebouncingMaxMillis);
       }
     }
   }
@@ -121,8 +150,14 @@ public class ChangeProcessor {
       this.changeTaskWaitingMillis = pushEfficiencyImproveConfig.getChangeTaskWaitingMillis();
     }
 
-    int changeDebouncingMillis;
-    int changeDebouncingMaxMillis;
+    public void setChangeDebouncingMillis(
+        int changeDebouncingMillis, int changeDebouncingMaxMillis) {
+      this.changeDebouncingMillis = changeDebouncingMillis;
+      this.changeDebouncingMaxMillis = changeDebouncingMaxMillis;
+    }
+
+    volatile int changeDebouncingMillis;
+    volatile int changeDebouncingMaxMillis;
     int changeTaskWaitingMillis = 100;
 
     Worker(int changeDebouncingMillis, int changeDebouncingMaxMillis) {
@@ -204,6 +239,10 @@ public class ChangeProcessor {
     @Override
     public int getWaitingMillis() {
       return changeTaskWaitingMillis;
+    }
+
+    public ChangeDebouncingTime getChangeDebouncingTime() {
+      return new ChangeDebouncingTime(this.changeDebouncingMillis, this.changeDebouncingMaxMillis);
     }
   }
 

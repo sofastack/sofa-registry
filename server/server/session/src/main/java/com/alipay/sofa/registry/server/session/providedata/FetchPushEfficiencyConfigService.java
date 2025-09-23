@@ -21,10 +21,8 @@ import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import com.alipay.sofa.registry.server.session.push.ChangeProcessor;
-import com.alipay.sofa.registry.server.session.push.FirePushService;
+import com.alipay.sofa.registry.server.session.push.PushEfficiencyConfigUpdater;
 import com.alipay.sofa.registry.server.session.push.PushEfficiencyImproveConfig;
-import com.alipay.sofa.registry.server.session.push.PushProcessor;
 import com.alipay.sofa.registry.server.shared.providedata.AbstractFetchSystemPropertyService;
 import com.alipay.sofa.registry.server.shared.providedata.SystemDataStorage;
 import com.alipay.sofa.registry.util.JsonUtils;
@@ -43,10 +41,7 @@ public class FetchPushEfficiencyConfigService
       LoggerFactory.getLogger(FetchPushEfficiencyConfigService.class);
   @Autowired private SessionServerConfig sessionServerConfig;
 
-  @Autowired private ChangeProcessor changeProcessor;
-  @Autowired private PushProcessor pushProcessor;
-
-  @Autowired private FirePushService firePushService;
+  @Autowired private PushEfficiencyConfigUpdater pushEfficiencyConfigUpdater;
 
   public FetchPushEfficiencyConfigService() {
     super(
@@ -87,11 +82,9 @@ public class FetchPushEfficiencyConfigService
     if (!compareAndSet(expect, update)) {
       return false;
     }
-    changeProcessor.setWorkDelayTime(pushEfficiencyImproveConfig);
-    pushProcessor.setPushTaskDelayTime(pushEfficiencyImproveConfig);
-    if (firePushService.getRegProcessor() != null) {
-      firePushService.getRegProcessor().setWorkDelayTime(pushEfficiencyImproveConfig);
-    }
+
+    this.pushEfficiencyConfigUpdater.updateFromProviderData(pushEfficiencyImproveConfig);
+
     LOGGER.info(
         "Fetch PushEfficiencyImproveConfig success, prev={}, current={}",
         expect.pushEfficiencyImproveConfig,
@@ -100,27 +93,16 @@ public class FetchPushEfficiencyConfigService
   }
 
   @VisibleForTesting
-  public FetchPushEfficiencyConfigService setChangeProcessor(ChangeProcessor changeProcessor) {
-    this.changeProcessor = changeProcessor;
-    return this;
-  }
-
-  @VisibleForTesting
-  public FetchPushEfficiencyConfigService setPushProcessor(PushProcessor pushProcessor) {
-    this.pushProcessor = pushProcessor;
-    return this;
-  }
-
-  @VisibleForTesting
-  public FetchPushEfficiencyConfigService setFirePushService(FirePushService firePushService) {
-    this.firePushService = firePushService;
-    return this;
-  }
-
-  @VisibleForTesting
   public FetchPushEfficiencyConfigService setSessionServerConfig(
       SessionServerConfig sessionServerConfig) {
     this.sessionServerConfig = sessionServerConfig;
+    return this;
+  }
+
+  @VisibleForTesting
+  public FetchPushEfficiencyConfigService setPushEfficiencyConfigUpdater(
+      PushEfficiencyConfigUpdater pushEfficiencyConfigUpdater) {
+    this.pushEfficiencyConfigUpdater = pushEfficiencyConfigUpdater;
     return this;
   }
 

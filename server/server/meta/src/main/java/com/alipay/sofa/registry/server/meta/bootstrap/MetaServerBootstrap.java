@@ -42,14 +42,13 @@ import com.github.rholder.retry.StopStrategies;
 import com.github.rholder.retry.WaitStrategies;
 import com.google.common.base.Predicate;
 import java.lang.annotation.Annotation;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Resource;
 import javax.ws.rs.Path;
 import javax.ws.rs.ext.Provider;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -236,12 +235,22 @@ public class MetaServerBootstrap {
   private void openSessionRegisterServer() {
     try {
       if (rpcServerForSessionStarted.compareAndSet(false, true)) {
+        List<AbstractServerHandler> mergedSessionServerHandlers =
+            new ArrayList<>(this.sessionServerHandlers);
+
+        Collection<AbstractServerHandler> customSessionServerHandlers =
+            this.customSessionServerHandlers();
+        if (CollectionUtils.isNotEmpty(customSessionServerHandlers)) {
+          mergedSessionServerHandlers.addAll(this.customSessionServerHandlers());
+        }
+
         sessionServer =
             boltExchange.open(
                 new URL(
                     NetUtil.getLocalAddress().getHostAddress(),
                     metaServerConfig.getSessionServerPort()),
-                sessionServerHandlers.toArray(new ChannelHandler[sessionServerHandlers.size()]));
+                mergedSessionServerHandlers.toArray(
+                    new ChannelHandler[mergedSessionServerHandlers.size()]));
 
         LOGGER.info(
             "Open session node register server port {} success!",
@@ -255,6 +264,10 @@ public class MetaServerBootstrap {
           e);
       throw new RuntimeException("Open session node register server error!", e);
     }
+  }
+
+  protected Collection<AbstractServerHandler> customSessionServerHandlers() {
+    return Collections.emptyList();
   }
 
   private void openDataRegisterServer() {

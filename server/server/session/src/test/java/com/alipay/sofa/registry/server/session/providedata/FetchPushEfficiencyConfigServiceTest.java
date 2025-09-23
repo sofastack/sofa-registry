@@ -22,9 +22,7 @@ import com.alipay.sofa.registry.common.model.ServerDataBox;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import com.alipay.sofa.registry.server.session.push.ChangeProcessor;
-import com.alipay.sofa.registry.server.session.push.FirePushService;
-import com.alipay.sofa.registry.server.session.push.PushProcessor;
+import com.alipay.sofa.registry.server.session.push.PushEfficiencyConfigUpdater;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -41,9 +39,7 @@ public class FetchPushEfficiencyConfigServiceTest {
   public void beforeTest() {
     fetchPushEfficiencyConfigService = new FetchPushEfficiencyConfigService();
     fetchPushEfficiencyConfigService
-        .setPushProcessor(mock(PushProcessor.class))
-        .setChangeProcessor(mock(ChangeProcessor.class))
-        .setFirePushService(mock(FirePushService.class))
+        .setPushEfficiencyConfigUpdater(mock(PushEfficiencyConfigUpdater.class))
         .setSessionServerConfig(mock(SessionServerConfig.class));
   }
 

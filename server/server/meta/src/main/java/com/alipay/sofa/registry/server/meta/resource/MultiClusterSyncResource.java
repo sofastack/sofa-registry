@@ -27,12 +27,8 @@ import com.alipay.sofa.registry.store.api.meta.MultiClusterSyncRepository;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.google.common.collect.Sets;
 import java.util.Locale;
-import javax.ws.rs.FormParam;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import java.util.Set;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.NumberUtils;
@@ -63,6 +59,16 @@ public class MultiClusterSyncResource {
     }
     MultiClusterSyncInfo query = multiClusterSyncRepository.query(remoteDataCenter);
     response.fillSucceed(query);
+    return response;
+  }
+
+  @GET
+  @Path("queryAll")
+  @Produces(MediaType.APPLICATION_JSON)
+  public GenericResponse<Set<MultiClusterSyncInfo>> queryAll() {
+    GenericResponse<Set<MultiClusterSyncInfo>> response = new GenericResponse();
+    Set<MultiClusterSyncInfo> queryResult = multiClusterSyncRepository.queryLocalSyncInfos();
+    response.fillSucceed(queryResult);
     return response;
   }
 
@@ -515,6 +521,101 @@ public class MultiClusterSyncResource {
 
     CommonResponse response = new CommonResponse();
     response.setSuccess(ret > 0);
+    return response;
+  }
+
+  @POST
+  @Path("/sync/ignoreDataInfoIds/add")
+  @Produces(MediaType.APPLICATION_JSON)
+  public CommonResponse addIgnoreSyncDataInfoIds(
+      @FormParam("remoteDataCenter") String remoteDataCenter,
+      @FormParam("ignoreDataInfoIds") String ignoreDataInfoIds,
+      @FormParam("token") String token,
+      @FormParam("expectVersion") String expectVersion) {
+    if (!AuthChecker.authCheck(token)) {
+      LOG.error(
+          "add ignoreDataInfoIds, remoteDataCenter={}, ignoreDataInfoIds={}, auth check={} fail!",
+          remoteDataCenter,
+          ignoreDataInfoIds,
+          token);
+      return GenericResponse.buildFailedResponse("auth check fail");
+    }
+
+    if (StringUtils.isBlank(remoteDataCenter)
+        || StringUtils.isBlank(ignoreDataInfoIds)
+        || StringUtils.isBlank(expectVersion)) {
+      return CommonResponse.buildFailedResponse(
+          "remoteDataCenter, ignoreDataInfoIds, expectVersion is not allow empty.");
+    }
+
+    MultiClusterSyncInfo exist = multiClusterSyncRepository.query(remoteDataCenter);
+
+    if (exist == null || exist.getDataVersion() != Long.parseLong(expectVersion)) {
+      return CommonResponse.buildFailedResponse(
+          StringFormatter.format(
+              "remoteDataCenter:{}, expectVersion:{} not exist.", remoteDataCenter, expectVersion));
+    }
+
+    exist.getIgnoreDataInfoIds().addAll(Sets.newHashSet(ignoreDataInfoIds.split(",")));
+    exist.setDataVersion(PersistenceDataBuilder.nextVersion());
+    boolean ret = multiClusterSyncRepository.update(exist, NumberUtils.toLong(expectVersion));
+
+    LOG.info(
+        "[addIgnoreSyncDataInfoIds]result:{}, remoteDataCenter:{}, ignoreDataInfoIds:{}, expectVersion:{}",
+        ret,
+        remoteDataCenter,
+        ignoreDataInfoIds,
+        expectVersion);
+
+    CommonResponse response = new CommonResponse();
+    response.setSuccess(ret);
+    return response;
+  }
+
+  @POST
+  @Path("/sync/ignoreDataInfoIds/remove")
+  @Produces(MediaType.APPLICATION_JSON)
+  public CommonResponse removeIgnoreDataInfoIds(
+      @FormParam("remoteDataCenter") String remoteDataCenter,
+      @FormParam("ignoreDataInfoIds") String ignoreDataInfoIds,
+      @FormParam("token") String token,
+      @FormParam("expectVersion") String expectVersion) {
+    if (!AuthChecker.authCheck(token)) {
+      LOG.error(
+          "remove ignoreDataInfoIds, remoteDataCenter={}, ignoreDataInfoIds={}, auth check={} fail!",
+          remoteDataCenter,
+          ignoreDataInfoIds,
+          token);
+      return GenericResponse.buildFailedResponse("auth check fail");
+    }
+    if (StringUtils.isBlank(remoteDataCenter)
+        || StringUtils.isBlank(ignoreDataInfoIds)
+        || StringUtils.isBlank(expectVersion)) {
+      return CommonResponse.buildFailedResponse(
+          "remoteDataCenter, ignoreDataInfoIds, expectVersion is not allow empty.");
+    }
+
+    MultiClusterSyncInfo exist = multiClusterSyncRepository.query(remoteDataCenter);
+
+    if (exist == null || exist.getDataVersion() != Long.parseLong(expectVersion)) {
+      return CommonResponse.buildFailedResponse(
+          StringFormatter.format(
+              "remoteDataCenter:{}, expectVersion:{} not exist.", remoteDataCenter, expectVersion));
+    }
+
+    exist.getIgnoreDataInfoIds().removeAll(Sets.newHashSet(ignoreDataInfoIds.split(",")));
+    exist.setDataVersion(PersistenceDataBuilder.nextVersion());
+    boolean ret = multiClusterSyncRepository.update(exist, NumberUtils.toLong(expectVersion));
+
+    LOG.info(
+        "[removeIgnoreDataInfoIds]result:{}, remoteDataCenter:{}, ignoreDataInfoIds:{}, expectVersion:{}",
+        ret,
+        remoteDataCenter,
+        ignoreDataInfoIds,
+        expectVersion);
+
+    CommonResponse response = new CommonResponse();
+    response.setSuccess(ret);
     return response;
   }
 }

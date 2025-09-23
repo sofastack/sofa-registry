@@ -67,7 +67,9 @@ public class PushProcessor {
 
   @Autowired protected ClientNodeService clientNodeService;
 
-  @Autowired protected CircuitBreakerService circuitBreakerService;;
+  @Autowired protected CircuitBreakerService circuitBreakerService;
+
+  private volatile AutoPushEfficiencyRegulator autoPushEfficiencyRegulator;
 
   private int pushDataTaskDebouncingMillis = 500;
   private PushEfficiencyImproveConfig pushEfficiencyImproveConfig;
@@ -95,6 +97,11 @@ public class PushProcessor {
         pushEfficiencyImproveConfig.getPushTaskWaitingMillis());
     this.pushDataTaskDebouncingMillis = pushEfficiencyImproveConfig.getPushTaskDebouncingMillis();
     this.pushEfficiencyImproveConfig = pushEfficiencyImproveConfig;
+  }
+
+  public void setAutoPushEfficiencyRegulator(
+      AutoPushEfficiencyRegulator autoPushEfficiencyRegulator) {
+    this.autoPushEfficiencyRegulator = autoPushEfficiencyRegulator;
   }
 
   void intTaskBuffer() {
@@ -338,6 +345,13 @@ public class PushProcessor {
       // check push empty can skip (last push is also empty)
       if (checkSkipPushEmptyAndUpdateVersion(task)) {
         return false;
+      }
+
+      // 如果需要则进行推送计数，以便于可以自动化调整攒批
+      AutoPushEfficiencyRegulator currentAutoPushEfficiencyRegulator =
+          this.autoPushEfficiencyRegulator;
+      if (null != currentAutoPushEfficiencyRegulator) {
+        currentAutoPushEfficiencyRegulator.safeIncrementPushCount();
       }
 
       pushingRecords.put(

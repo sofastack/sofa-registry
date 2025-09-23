@@ -78,6 +78,8 @@ public class ClientManagerResource {
 
   @Autowired protected ExecutorManager executorManager;
 
+  private volatile boolean enableTrafficOperate = true;
+
   /**
    * Client off
    *
@@ -90,6 +92,12 @@ public class ClientManagerResource {
     if (StringUtils.isEmpty(ips)) {
       return CommonResponse.buildFailedResponse("ips is empty");
     }
+
+    if (!this.enableTrafficOperate) {
+      // 限流，不允许操作开关流
+      return CommonResponse.buildFailedResponse("too many request");
+    }
+
     final Set<String> ipSet = CollectionSdks.toIpSet(ips);
     List<ConnectId> conIds = connectionsService.getIpConnects(ipSet);
     sessionRegistry.clientOff(conIds);
@@ -109,6 +117,12 @@ public class ClientManagerResource {
     if (StringUtils.isEmpty(ips)) {
       return CommonResponse.buildFailedResponse("ips is empty");
     }
+
+    if (!this.enableTrafficOperate) {
+      // 限流，不允许操作开关流
+      return CommonResponse.buildFailedResponse("too many request");
+    }
+
     final List<String> ipList = CollectionSdks.toIpList(ips);
     List<String> conIds = connectionsService.closeIpConnects(ipList);
     LOGGER.info("clientOn ips={}, conIds={}", ips, conIds);
@@ -128,6 +142,12 @@ public class ClientManagerResource {
     if (StringUtils.isEmpty(ips)) {
       return CommonResponse.buildFailedResponse("ips is empty");
     }
+
+    if (!this.enableTrafficOperate) {
+      // 限流，不允许操作开关流
+      return CommonResponse.buildFailedResponse("too many request");
+    }
+
     CommonResponse resp = clientOff(ips);
     if (!resp.isSuccess()) {
       return resp;
@@ -164,6 +184,12 @@ public class ClientManagerResource {
     if (StringUtils.isEmpty(ips)) {
       return CommonResponse.buildFailedResponse("ips is empty");
     }
+
+    if (!this.enableTrafficOperate) {
+      // 限流，不允许操作开关流
+      return CommonResponse.buildFailedResponse("too many request");
+    }
+
     CommonResponse resp = clientOn(ips);
     if (!resp.isSuccess()) {
       return resp;
@@ -237,5 +263,13 @@ public class ClientManagerResource {
 
   public List<URL> getOtherConsoleServersCurrentZone() {
     return Sdks.getOtherConsoleServers(null, sessionServerConfig, metaServerService);
+  }
+
+  public boolean isEnableTrafficOperate() {
+    return enableTrafficOperate;
+  }
+
+  public void setEnableTrafficOperate(boolean enableTrafficOperate) {
+    this.enableTrafficOperate = enableTrafficOperate;
   }
 }
