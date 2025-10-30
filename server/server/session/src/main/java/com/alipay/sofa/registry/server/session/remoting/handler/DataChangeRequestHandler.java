@@ -32,10 +32,11 @@ import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractClientHandler;
 import com.alipay.sofa.registry.server.shared.remoting.RemotingHelper;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.Executor;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author kezhu.wukz
@@ -83,6 +84,10 @@ public class DataChangeRequestHandler extends AbstractClientHandler<DataChangeRe
     final String dataNode = RemotingHelper.getRemoteHostAddress(channel);
     final String dataCenter = dataChangeRequest.getDataCenter();
     final long changeTimestamp = System.currentTimeMillis();
+    Map<String, Integer> publisherCounts = dataChangeRequest.getPublisherCounts();
+    if (null == publisherCounts) {
+      publisherCounts = Collections.emptyMap();
+    }
     for (Map.Entry<String, DatumVersion> e : dataChangeRequest.getDataInfoIds().entrySet()) {
 
       final String dataInfoId = e.getKey();
@@ -99,13 +104,15 @@ public class DataChangeRequestHandler extends AbstractClientHandler<DataChangeRe
         }
         continue;
       }
+      Integer publisherCount = publisherCounts.get(dataInfoId);
       final TriggerPushContext changeCtx =
           new TriggerPushContext(
               dataCenter,
               version.getValue(),
               dataNode,
               changeTimestamp,
-              dataChangeRequest.getTimes());
+              dataChangeRequest.getTimes(),
+              publisherCount);
       firePushService.fireOnChange(dataInfoId, changeCtx);
     }
     return null;

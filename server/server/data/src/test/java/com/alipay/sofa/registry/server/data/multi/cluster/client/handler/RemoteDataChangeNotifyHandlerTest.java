@@ -62,6 +62,7 @@ public class RemoteDataChangeNotifyHandlerTest {
             Collections.singletonMap(
                 "RemoteDataChangeNotifyHandlerTest-datainfoid",
                 new DatumVersion(System.currentTimeMillis())),
+            Collections.emptyMap(),
             new TraceTimes());
     remoteDataChangeNotifyHandler.checkParam(request);
   }
@@ -75,6 +76,7 @@ public class RemoteDataChangeNotifyHandlerTest {
             Collections.singletonMap(
                 "RemoteDataChangeNotifyHandlerTest-datainfoid",
                 new DatumVersion(System.currentTimeMillis())),
+            Collections.emptyMap(),
             new TraceTimes());
 
     when(dataServerConfig.isLocalDataCenter(anyString())).thenReturn(true);

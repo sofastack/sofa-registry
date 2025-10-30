@@ -19,6 +19,7 @@ package com.alipay.sofa.registry.common.model.sessionserver;
 import com.alipay.sofa.registry.common.model.TraceTimes;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.util.StringFormatter;
+
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.Map;
@@ -35,19 +36,26 @@ public class DataChangeRequest implements Serializable {
 
   private final Map<String, DatumVersion> dataInfoIds;
 
+  private final Map<String, Integer> publisherCounts;
+
   private final String dataCenter;
 
   private final TraceTimes times;
 
   public DataChangeRequest(
-      String dataCenter, Map<String, DatumVersion> dataInfoIds, TraceTimes times) {
+      String dataCenter, Map<String, DatumVersion> dataInfoIds, Map<String, Integer> publisherCounts, TraceTimes times) {
     this.dataCenter = dataCenter;
     this.dataInfoIds = dataInfoIds;
+    this.publisherCounts = publisherCounts;
     this.times = times;
   }
 
   public Map<String, DatumVersion> getDataInfoIds() {
     return Collections.unmodifiableMap(dataInfoIds);
+  }
+
+  public Map<String, Integer> getPublisherCounts() {
+    return Collections.unmodifiableMap(publisherCounts);
   }
 
   public String getDataCenter() {

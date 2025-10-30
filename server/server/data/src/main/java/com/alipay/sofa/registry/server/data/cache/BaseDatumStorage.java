@@ -28,13 +28,10 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.function.BiConsumer;
 import org.springframework.util.CollectionUtils;
+
+import java.util.*;
+import java.util.function.BiConsumer;
 
 /**
  * @author xiaojian.xj
@@ -104,6 +101,11 @@ public class BaseDatumStorage {
     Map<String, Integer> map = Maps.newHashMapWithExpectedSize(128);
     publisherGroupsMap.values().forEach(g -> map.putAll(g.getPubCount()));
     return map;
+  }
+
+  public Integer getPubCount(String dataInfoId) {
+    PublisherGroups groups = getPublisherGroups(dataInfoId);
+    return groups == null ? null : groups.getPubCount(dataInfoId);
   }
 
   public Map<String, Publisher> getByConnectId(ConnectId connectId) {

@@ -16,8 +16,6 @@
  */
 package com.alipay.sofa.registry.server.session.push;
 
-import static com.alipay.sofa.registry.server.session.push.PushMetrics.Fetch.*;
-
 import com.alipay.sofa.registry.common.model.SubscriberUtils;
 import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
@@ -42,17 +40,16 @@ import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import java.net.InetSocketAddress;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
+import java.net.InetSocketAddress;
+import java.util.*;
+import java.util.Map.Entry;
+
+import static com.alipay.sofa.registry.server.session.push.PushMetrics.Fetch.*;
 
 public class FirePushService {
   private static final Logger LOGGER = PushLog.LOGGER;
@@ -77,7 +74,7 @@ public class FirePushService {
   @Autowired DataCenterMetadataCache dataCenterMetadataCache;
 
   RegProcessor regProcessor;
-  final ChangeHandler changeHandler = new ChangeHandler();
+  final ChangeHandler changeHandler = new ChangeHandlerImpl();
 
   private final Set<String> localDataCenter;
 
@@ -337,8 +334,7 @@ public class FirePushService {
     return subscribersSend;
   }
 
-  final class ChangeHandler implements ChangeProcessor.ChangeHandler {
-
+  final class ChangeHandlerImpl implements ChangeHandler {
     @Override
     public boolean onChange(String dataInfoId, TriggerPushContext changeCtx) {
       try {

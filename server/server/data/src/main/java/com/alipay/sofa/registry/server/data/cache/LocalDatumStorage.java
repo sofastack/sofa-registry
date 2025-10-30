@@ -26,6 +26,7 @@ import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.data.slot.SlotChangeListener;
+
 import java.util.*;
 import java.util.function.BiConsumer;
 
@@ -80,6 +81,11 @@ public final class LocalDatumStorage implements DatumStorage {
   @Override
   public Map<String, Integer> getPubCount(String dataCenter) {
     return storage.getPubCount();
+  }
+
+  @Override
+  public Integer getPubCount(String dataCenter, String dataInfoId) {
+    return storage.getPubCount(dataInfoId);
   }
 
   @Override
