@@ -1,15 +1,30 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.alipay.sofa.registry.server.session.push;
 
 import com.alipay.sofa.registry.common.model.TraceTimes;
 import com.alipay.sofa.registry.util.StringFormatter;
-import org.junit.Assert;
-import org.junit.Test;
-import org.mockito.Mockito;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import org.junit.Assert;
+import org.junit.Test;
+import org.mockito.Mockito;
 
 /**
  * @author huicha
@@ -33,9 +48,13 @@ public class LargeChangeAdaptiveDelayWorkerTest {
 
   private LargeChangeAdaptiveDelayWorker createWorker() {
     return new LargeChangeAdaptiveDelayWorker(
-            this.changeDebouncingMillis, this.changeDebouncingMaxMillis, changeTaskWaitingMillis,
-            this.baseDelay, this.delayPerUnit, this.publisherThreshold, this.maxPublisherCount
-    );
+        this.changeDebouncingMillis,
+        this.changeDebouncingMaxMillis,
+        changeTaskWaitingMillis,
+        this.baseDelay,
+        this.delayPerUnit,
+        this.publisherThreshold,
+        this.maxPublisherCount);
   }
 
   @Test
@@ -45,9 +64,11 @@ public class LargeChangeAdaptiveDelayWorkerTest {
     ChangeKey changeKey = new ChangeKey(Collections.singleton("DataCenter"), "DataInfoId");
     ChangeHandler changeHandler = Mockito.mock(ChangeHandler.class);
     TraceTimes traceTimes = Mockito.mock(TraceTimes.class);
-    TriggerPushContext changeCtx = new TriggerPushContext("DataCenter", 1, "DataNode", 0, traceTimes, 100);
+    TriggerPushContext changeCtx =
+        new TriggerPushContext("DataCenter", 1, "DataNode", 0, traceTimes, 100);
 
-    boolean result = largeChangeAdaptiveDelayWorker.commitChange(changeKey, changeHandler, changeCtx);
+    boolean result =
+        largeChangeAdaptiveDelayWorker.commitChange(changeKey, changeHandler, changeCtx);
     Assert.assertTrue(result);
 
     List<ChangeTaskImpl> timeoutTasks = largeChangeAdaptiveDelayWorker.getExpireTasks();
@@ -77,12 +98,15 @@ public class LargeChangeAdaptiveDelayWorkerTest {
     ChangeKey changeKey = new ChangeKey(Collections.singleton("DataCenter"), "DataInfoId");
     ChangeHandler changeHandler = Mockito.mock(ChangeHandler.class);
     TraceTimes traceTimesOne = Mockito.mock(TraceTimes.class);
-    TriggerPushContext changeCtxOne = new TriggerPushContext("DataCenter", 1, "DataNode", 0, traceTimesOne, 100);
+    TriggerPushContext changeCtxOne =
+        new TriggerPushContext("DataCenter", 1, "DataNode", 0, traceTimesOne, 100);
 
     TraceTimes traceTimesTwo = Mockito.mock(TraceTimes.class);
-    TriggerPushContext changeCtxTwo = new TriggerPushContext("DataCenter", 2, "DataNode", 0, traceTimesTwo, 100);
+    TriggerPushContext changeCtxTwo =
+        new TriggerPushContext("DataCenter", 2, "DataNode", 0, traceTimesTwo, 100);
 
-    boolean result = largeChangeAdaptiveDelayWorker.commitChange(changeKey, changeHandler, changeCtxOne);
+    boolean result =
+        largeChangeAdaptiveDelayWorker.commitChange(changeKey, changeHandler, changeCtxOne);
     Assert.assertTrue(result);
 
     Thread.sleep(70);
@@ -111,27 +135,94 @@ public class LargeChangeAdaptiveDelayWorkerTest {
   }
 
   @Test
+  public void testLessChange_getExpireTasks_notEmptyQueue_sameDeadline() {
+    //    totalTaskInList:
+    // ChangeTask{com.alipay.registry.chaos-9-43#@#DEFAULT_INSTANCE_ID#@#SOFA@[REGISTRY-TEST-CZ00A],ver={REGISTRY-TEST-CZ00A=1762244497039},expire=1762244497481,deadline=1762244498381},
+    // ChangeTask{test.812dac49-e77e-48da-81b7-5eb1914bb1d5#@#DEFAULT_INSTANCE_ID#@#DEFAULT_GROUP@[REGISTRY-TEST-CZ00A],ver={REGISTRY-TEST-CZ00A=1762244497317},expire=1762244497518,deadline=1762244498418}
+
+    //    totalTaskInMap:
+    // ChangeTask{test.812dac49-e77e-48da-81b7-5eb1914bb1d5#@#DEFAULT_INSTANCE_ID#@#DEFAULT_GROUP@[REGISTRY-TEST-CZ00A],ver={REGISTRY-TEST-CZ00A=1762244497317},expire=1762244497518,deadline=1762244498418},
+    // ChangeTask{com.alipay.registry.chaos-9-43#@#DEFAULT_INSTANCE_ID#@#SOFA@[REGISTRY-TEST-CZ00A],ver={REGISTRY-TEST-CZ00A=1762244497039},expire=1762244497481,deadline=1762244498381},
+    // ChangeTask{test.db8471bd-f62f-4454-b2cf-61b5f5d70877#@#DEFAULT_INSTANCE_ID#@#DEFAULT_GROUP@[REGISTRY-TEST-CZ00A],ver={REGISTRY-TEST-CZ00A=1762244497320},expire=1762244497518,deadline=1762244498418}
+
+    ChangeTaskQueue<ChangeKey, ChangeTaskImpl> changeTaskQueue = new ChangeTaskQueue<>();
+    ChangeHandler changeHandler = Mockito.mock(ChangeHandler.class);
+
+    ChangeKey keyOne =
+        new ChangeKey(
+            Collections.singleton("REGISTRY-TEST-CZ00A"),
+            "test.812dac49-e77e-48da-81b7-5eb1914bb1d5#@#DEFAULT_INSTANCE_ID#@#DEFAULT_GROUP");
+    TraceTimes traceTimesOne = Mockito.mock(TraceTimes.class);
+    TriggerPushContext changeCtxOne =
+        new TriggerPushContext(
+            "REGISTRY-TEST-CZ00A", 1762244497317L, "data_node", 0, traceTimesOne, 100);
+    ChangeTaskImpl taskOne =
+        new ChangeTaskImpl(keyOne, changeCtxOne, changeHandler, 1762244497518L);
+    taskOne.expireDeadlineTimestamp = 1762244498418L;
+
+    ChangeKey keyTwo =
+        new ChangeKey(
+            Collections.singleton("REGISTRY-TEST-CZ00A"),
+            "com.alipay.registry.chaos-9-43#@#DEFAULT_INSTANCE_ID#@#SOFA");
+    TraceTimes traceTimesTwo = Mockito.mock(TraceTimes.class);
+    TriggerPushContext changeCtxTwo =
+        new TriggerPushContext(
+            "REGISTRY-TEST-CZ00A", 1762244497039L, "data_node", 0, traceTimesTwo, 100);
+    ChangeTaskImpl taskTwo =
+        new ChangeTaskImpl(keyTwo, changeCtxTwo, changeHandler, 1762244497481L);
+    taskTwo.expireDeadlineTimestamp = 1762244498381L;
+
+    ChangeKey keyThree =
+        new ChangeKey(
+            Collections.singleton("REGISTRY-TEST-CZ00A"),
+            "test.db8471bd-f62f-4454-b2cf-61b5f5d70877#@#DEFAULT_INSTANCE_ID#@#DEFAULT_GROUP");
+    TraceTimes traceTimesThree = Mockito.mock(TraceTimes.class);
+    TriggerPushContext changeCtxThree =
+        new TriggerPushContext(
+            "REGISTRY-TEST-CZ00A", 1762244497320L, "data_node", 0, traceTimesThree, 100);
+    ChangeTaskImpl taskThree =
+        new ChangeTaskImpl(keyThree, changeCtxThree, changeHandler, 1762244497518L);
+    taskThree.expireDeadlineTimestamp = 1762244498418L;
+
+    Assert.assertTrue(changeTaskQueue.pushTask(taskOne));
+    Assert.assertTrue(changeTaskQueue.pushTask(taskTwo));
+    Assert.assertTrue(changeTaskQueue.pushTask(taskThree));
+  }
+
+  @Test
   public void testLessChange_deadline() throws InterruptedException {
     LargeChangeAdaptiveDelayWorker largeChangeAdaptiveDelayWorker = this.createWorker();
 
     ChangeKey changeKey = new ChangeKey(Collections.singleton("DataCenter"), "DataInfoId");
     ChangeHandler changeHandler = Mockito.mock(ChangeHandler.class);
     TraceTimes traceTimesOne = Mockito.mock(TraceTimes.class);
-    TriggerPushContext changeCtxOne = new TriggerPushContext("DataCenter", 1, "DataNode", 0, traceTimesOne, 100);
+    TriggerPushContext changeCtxOne =
+        new TriggerPushContext("DataCenter", 1, "DataNode", 0, traceTimesOne, 100);
 
     TraceTimes traceTimesTwo = Mockito.mock(TraceTimes.class);
-    TriggerPushContext changeCtxTwo = new TriggerPushContext("DataCenter", 2, "DataNode", 0, traceTimesTwo, 100);
+    TriggerPushContext changeCtxTwo =
+        new TriggerPushContext("DataCenter", 2, "DataNode", 0, traceTimesTwo, 100);
 
     long firstTimeNow1 = System.currentTimeMillis();
-    boolean result = largeChangeAdaptiveDelayWorker.commitChange(changeKey, changeHandler, changeCtxOne);
+    boolean result =
+        largeChangeAdaptiveDelayWorker.commitChange(changeKey, changeHandler, changeCtxOne);
     long firstTimeNow2 = System.currentTimeMillis();
     Assert.assertTrue(result);
 
     ChangeTaskImpl changeTaskOne = largeChangeAdaptiveDelayWorker.findTask(changeKey);
     Assert.assertNotNull(changeTaskOne);
-    this.assertBetween(changeTaskOne.deadline(), firstTimeNow1 + this.changeDebouncingMillis, firstTimeNow2 + this.changeDebouncingMillis);
-    this.assertBetween(changeTaskOne.expireTimestamp, firstTimeNow1 + this.changeDebouncingMillis, firstTimeNow2 + this.changeDebouncingMillis);
-    this.assertBetween(changeTaskOne.expireDeadlineTimestamp, firstTimeNow1 + this.changeDebouncingMaxMillis, firstTimeNow2 + this.changeDebouncingMaxMillis);
+    this.assertBetween(
+        changeTaskOne.deadline(),
+        firstTimeNow1 + this.changeDebouncingMillis,
+        firstTimeNow2 + this.changeDebouncingMillis);
+    this.assertBetween(
+        changeTaskOne.expireTimestamp,
+        firstTimeNow1 + this.changeDebouncingMillis,
+        firstTimeNow2 + this.changeDebouncingMillis);
+    this.assertBetween(
+        changeTaskOne.expireDeadlineTimestamp,
+        firstTimeNow1 + this.changeDebouncingMaxMillis,
+        firstTimeNow2 + this.changeDebouncingMaxMillis);
 
     long expireDeadlineTimestamp = changeTaskOne.expireDeadlineTimestamp;
 
@@ -142,8 +233,14 @@ public class LargeChangeAdaptiveDelayWorkerTest {
 
     ChangeTaskImpl changeTaskTwo = largeChangeAdaptiveDelayWorker.findTask(changeKey);
     Assert.assertNotNull(changeTaskTwo);
-    this.assertBetween(changeTaskTwo.deadline(), secondTimeNow1 + this.changeDebouncingMillis, secondTimeNow2 + this.changeDebouncingMillis);
-    this.assertBetween(changeTaskTwo.expireTimestamp, secondTimeNow1 + this.changeDebouncingMillis, secondTimeNow2 + this.changeDebouncingMillis);
+    this.assertBetween(
+        changeTaskTwo.deadline(),
+        secondTimeNow1 + this.changeDebouncingMillis,
+        secondTimeNow2 + this.changeDebouncingMillis);
+    this.assertBetween(
+        changeTaskTwo.expireTimestamp,
+        secondTimeNow1 + this.changeDebouncingMillis,
+        secondTimeNow2 + this.changeDebouncingMillis);
     // expireDeadlineTimestamp 肯定一直保持原样的
     Assert.assertEquals(expireDeadlineTimestamp, changeTaskTwo.expireDeadlineTimestamp);
 
@@ -152,7 +249,8 @@ public class LargeChangeAdaptiveDelayWorkerTest {
 
     // 然后再推送一次，这次预期会 merge，不调整 debouncing time
     TraceTimes traceTimesThree = Mockito.mock(TraceTimes.class);
-    TriggerPushContext changeCtxThree = new TriggerPushContext("DataCenter", 3, "DataNode", 0, traceTimesThree, 100);
+    TriggerPushContext changeCtxThree =
+        new TriggerPushContext("DataCenter", 3, "DataNode", 0, traceTimesThree, 100);
 
     result = largeChangeAdaptiveDelayWorker.commitChange(changeKey, changeHandler, changeCtxThree);
     Assert.assertTrue(result);
@@ -160,8 +258,14 @@ public class LargeChangeAdaptiveDelayWorkerTest {
     Assert.assertNotNull(changeTaskThree);
 
     // 这里预期任务会自动 merge，因此 deadline 还是上一次的 deadline
-    this.assertBetween(changeTaskThree.deadline(), secondTimeNow1 + this.changeDebouncingMillis, secondTimeNow2 + this.changeDebouncingMillis);
-    this.assertBetween(changeTaskThree.expireTimestamp, secondTimeNow1 + this.changeDebouncingMillis, secondTimeNow2 + this.changeDebouncingMillis);
+    this.assertBetween(
+        changeTaskThree.deadline(),
+        secondTimeNow1 + this.changeDebouncingMillis,
+        secondTimeNow2 + this.changeDebouncingMillis);
+    this.assertBetween(
+        changeTaskThree.expireTimestamp,
+        secondTimeNow1 + this.changeDebouncingMillis,
+        secondTimeNow2 + this.changeDebouncingMillis);
     // expireDeadlineTimestamp 肯定一直保持原样的
     Assert.assertEquals(expireDeadlineTimestamp, changeTaskThree.expireDeadlineTimestamp);
 
@@ -179,17 +283,20 @@ public class LargeChangeAdaptiveDelayWorkerTest {
     ChangeKey changeKey = new ChangeKey(Collections.singleton("DataCenter"), "DataInfoId");
     ChangeHandler changeHandler = Mockito.mock(ChangeHandler.class);
     TraceTimes traceTimes = Mockito.mock(TraceTimes.class);
-    TriggerPushContext changeCtx = new TriggerPushContext("DataCenter", 1, "DataNode", 0, traceTimes, 1001);
+    TriggerPushContext changeCtx =
+        new TriggerPushContext("DataCenter", 1, "DataNode", 0, traceTimes, 1001);
 
     long now1 = System.currentTimeMillis();
-    boolean result = largeChangeAdaptiveDelayWorker.commitChange(changeKey, changeHandler, changeCtx);
+    boolean result =
+        largeChangeAdaptiveDelayWorker.commitChange(changeKey, changeHandler, changeCtx);
     long now2 = System.currentTimeMillis();
     Assert.assertTrue(result);
 
     ChangeTaskImpl changeTask = largeChangeAdaptiveDelayWorker.findTask(changeKey);
     Assert.assertNotNull(changeTask);
 
-    long expectDelay = this.computeDelay(this.baseDelay, this.delayPerUnit, this.publisherThreshold, 1001);
+    long expectDelay =
+        this.computeDelay(this.baseDelay, this.delayPerUnit, this.publisherThreshold, 1001);
     this.assertBetween(changeTask.deadline(), now1 + expectDelay, now2 + expectDelay);
 
     List<ChangeTaskImpl> timeoutTasks = largeChangeAdaptiveDelayWorker.getExpireTasks();
@@ -218,12 +325,15 @@ public class LargeChangeAdaptiveDelayWorkerTest {
     ChangeKey changeKey = new ChangeKey(Collections.singleton("DataCenter"), "DataInfoId");
     ChangeHandler changeHandler = Mockito.mock(ChangeHandler.class);
     TraceTimes traceTimesOne = Mockito.mock(TraceTimes.class);
-    TriggerPushContext changeCtxOne = new TriggerPushContext("DataCenter", 1, "DataNode", 0, traceTimesOne, 1001);
+    TriggerPushContext changeCtxOne =
+        new TriggerPushContext("DataCenter", 1, "DataNode", 0, traceTimesOne, 1001);
 
     TraceTimes traceTimesTwo = Mockito.mock(TraceTimes.class);
-    TriggerPushContext changeCtxTwo = new TriggerPushContext("DataCenter", 2, "DataNode", 0, traceTimesTwo, 1001);
+    TriggerPushContext changeCtxTwo =
+        new TriggerPushContext("DataCenter", 2, "DataNode", 0, traceTimesTwo, 1001);
 
-    boolean result = largeChangeAdaptiveDelayWorker.commitChange(changeKey, changeHandler, changeCtxOne);
+    boolean result =
+        largeChangeAdaptiveDelayWorker.commitChange(changeKey, changeHandler, changeCtxOne);
     Assert.assertTrue(result);
 
     Thread.sleep(100);
@@ -237,7 +347,8 @@ public class LargeChangeAdaptiveDelayWorkerTest {
     Assert.assertNotNull(timeoutTasks);
     Assert.assertTrue(timeoutTasks.isEmpty());
 
-    long expectDelay = this.computeDelay(this.baseDelay, this.delayPerUnit, this.publisherThreshold, 1001);
+    long expectDelay =
+        this.computeDelay(this.baseDelay, this.delayPerUnit, this.publisherThreshold, 1001);
     Thread.sleep(expectDelay);
 
     timeoutTasks = largeChangeAdaptiveDelayWorker.getExpireTasks();
@@ -260,15 +371,19 @@ public class LargeChangeAdaptiveDelayWorkerTest {
     ChangeKey changeKey = new ChangeKey(Collections.singleton("DataCenter"), "DataInfoId");
     ChangeHandler changeHandler = Mockito.mock(ChangeHandler.class);
     TraceTimes traceTimesOne = Mockito.mock(TraceTimes.class);
-    TriggerPushContext changeCtxOne = new TriggerPushContext("DataCenter", 1, "DataNode", 0, traceTimesOne, 1001);
+    TriggerPushContext changeCtxOne =
+        new TriggerPushContext("DataCenter", 1, "DataNode", 0, traceTimesOne, 1001);
 
     TraceTimes traceTimesTwo = Mockito.mock(TraceTimes.class);
-    TriggerPushContext changeCtxTwo = new TriggerPushContext("DataCenter", 2, "DataNode", 0, traceTimesTwo, 1001);
+    TriggerPushContext changeCtxTwo =
+        new TriggerPushContext("DataCenter", 2, "DataNode", 0, traceTimesTwo, 1001);
 
-    long expectDelay = this.computeDelay(this.baseDelay, this.delayPerUnit, this.publisherThreshold, 1001);
+    long expectDelay =
+        this.computeDelay(this.baseDelay, this.delayPerUnit, this.publisherThreshold, 1001);
 
     long now1 = System.currentTimeMillis();
-    boolean result = largeChangeAdaptiveDelayWorker.commitChange(changeKey, changeHandler, changeCtxOne);
+    boolean result =
+        largeChangeAdaptiveDelayWorker.commitChange(changeKey, changeHandler, changeCtxOne);
     long now2 = System.currentTimeMillis();
     Assert.assertTrue(result);
 
@@ -293,7 +408,8 @@ public class LargeChangeAdaptiveDelayWorkerTest {
 
     // 然后再推送一次
     TraceTimes traceTimesThree = Mockito.mock(TraceTimes.class);
-    TriggerPushContext changeCtxThree = new TriggerPushContext("DataCenter", 3, "DataNode", 0, traceTimesThree, 1001);
+    TriggerPushContext changeCtxThree =
+        new TriggerPushContext("DataCenter", 3, "DataNode", 0, traceTimesThree, 1001);
 
     result = largeChangeAdaptiveDelayWorker.commitChange(changeKey, changeHandler, changeCtxThree);
     Assert.assertTrue(result);
@@ -317,15 +433,19 @@ public class LargeChangeAdaptiveDelayWorkerTest {
     ChangeKey changeKey = new ChangeKey(Collections.singleton("DataCenter"), "DataInfoId");
     ChangeHandler changeHandler = Mockito.mock(ChangeHandler.class);
     TraceTimes traceTimesOne = Mockito.mock(TraceTimes.class);
-    TriggerPushContext changeCtxOne = new TriggerPushContext("DataCenter", 1, "DataNode", 0, traceTimesOne, 100);
+    TriggerPushContext changeCtxOne =
+        new TriggerPushContext("DataCenter", 1, "DataNode", 0, traceTimesOne, 100);
 
-    boolean result = largeChangeAdaptiveDelayWorker.commitChange(changeKey, changeHandler, changeCtxOne);
+    boolean result =
+        largeChangeAdaptiveDelayWorker.commitChange(changeKey, changeHandler, changeCtxOne);
     Assert.assertTrue(result);
 
     // 第二次推送为大推送
     TraceTimes traceTimesTwo = Mockito.mock(TraceTimes.class);
-    TriggerPushContext changeCtxTwo = new TriggerPushContext("DataCenter", 2, "DataNode", 0, traceTimesTwo, 1001);
-    long expectDelay = this.computeDelay(this.baseDelay, this.delayPerUnit, this.publisherThreshold, 1001);
+    TriggerPushContext changeCtxTwo =
+        new TriggerPushContext("DataCenter", 2, "DataNode", 0, traceTimesTwo, 1001);
+    long expectDelay =
+        this.computeDelay(this.baseDelay, this.delayPerUnit, this.publisherThreshold, 1001);
 
     long now1 = System.currentTimeMillis();
     result = largeChangeAdaptiveDelayWorker.commitChange(changeKey, changeHandler, changeCtxTwo);
@@ -377,14 +497,17 @@ public class LargeChangeAdaptiveDelayWorkerTest {
     ChangeKey changeKey = new ChangeKey(Collections.singleton("DataCenter"), "DataInfoId");
     ChangeHandler changeHandler = Mockito.mock(ChangeHandler.class);
     TraceTimes traceTimesOne = Mockito.mock(TraceTimes.class);
-    TriggerPushContext changeCtxOne = new TriggerPushContext("DataCenter", 1, "DataNode", 0, traceTimesOne, 1001);
+    TriggerPushContext changeCtxOne =
+        new TriggerPushContext("DataCenter", 1, "DataNode", 0, traceTimesOne, 1001);
 
-    boolean result = largeChangeAdaptiveDelayWorker.commitChange(changeKey, changeHandler, changeCtxOne);
+    boolean result =
+        largeChangeAdaptiveDelayWorker.commitChange(changeKey, changeHandler, changeCtxOne);
     Assert.assertTrue(result);
 
     // 第二次推送为小推送
     TraceTimes traceTimesTwo = Mockito.mock(TraceTimes.class);
-    TriggerPushContext changeCtxTwo = new TriggerPushContext("DataCenter", 2, "DataNode", 0, traceTimesTwo, 100);
+    TriggerPushContext changeCtxTwo =
+        new TriggerPushContext("DataCenter", 2, "DataNode", 0, traceTimesTwo, 100);
 
     long now1 = System.currentTimeMillis();
     result = largeChangeAdaptiveDelayWorker.commitChange(changeKey, changeHandler, changeCtxTwo);
@@ -396,9 +519,18 @@ public class LargeChangeAdaptiveDelayWorkerTest {
     Assert.assertNotNull(changeTask);
 
     // 首先推送时间是第二次小推送的推送时间
-    this.assertBetween(changeTask.deadline(), now1 + this.changeDebouncingMillis, now2 + this.changeDebouncingMillis);
-    this.assertBetween(changeTask.expireTimestamp, now1 + this.changeDebouncingMillis, now2 + this.changeDebouncingMillis);
-    this.assertBetween(changeTask.expireDeadlineTimestamp, now1 + this.changeDebouncingMaxMillis, now2 + this.changeDebouncingMaxMillis);
+    this.assertBetween(
+        changeTask.deadline(),
+        now1 + this.changeDebouncingMillis,
+        now2 + this.changeDebouncingMillis);
+    this.assertBetween(
+        changeTask.expireTimestamp,
+        now1 + this.changeDebouncingMillis,
+        now2 + this.changeDebouncingMillis);
+    this.assertBetween(
+        changeTask.expireDeadlineTimestamp,
+        now1 + this.changeDebouncingMaxMillis,
+        now2 + this.changeDebouncingMaxMillis);
 
     // 其次版本号应当是第二次小推送的版本号
     Map<String, Long> expectDatumVersion = changeTask.changeCtx.getExpectDatumVersion();
@@ -418,9 +550,18 @@ public class LargeChangeAdaptiveDelayWorkerTest {
 
     ChangeTaskImpl timeoutTask = timeoutTasks.get(0);
     Assert.assertNotNull(timeoutTask);
-    this.assertBetween(timeoutTask.deadline(), now1 + this.changeDebouncingMillis, now2 + this.changeDebouncingMillis);
-    this.assertBetween(timeoutTask.expireTimestamp, now1 + this.changeDebouncingMillis, now2 + this.changeDebouncingMillis);
-    this.assertBetween(timeoutTask.expireDeadlineTimestamp, now1 + this.changeDebouncingMaxMillis, now2 + this.changeDebouncingMaxMillis);
+    this.assertBetween(
+        timeoutTask.deadline(),
+        now1 + this.changeDebouncingMillis,
+        now2 + this.changeDebouncingMillis);
+    this.assertBetween(
+        timeoutTask.expireTimestamp,
+        now1 + this.changeDebouncingMillis,
+        now2 + this.changeDebouncingMillis);
+    this.assertBetween(
+        timeoutTask.expireDeadlineTimestamp,
+        now1 + this.changeDebouncingMaxMillis,
+        now2 + this.changeDebouncingMaxMillis);
 
     Map<String, Long> timeoutExpectDatumVersion = timeoutTask.changeCtx.getExpectDatumVersion();
     Assert.assertNotNull(timeoutExpectDatumVersion);
@@ -433,7 +574,8 @@ public class LargeChangeAdaptiveDelayWorkerTest {
     Assert.assertTrue(StringFormatter.format("v={}, high={}", v, high), v <= high);
   }
 
-  private long computeDelay(long baseDelay, long delayPerUnit, long publisherThreshold, long publisherCount) {
+  private long computeDelay(
+      long baseDelay, long delayPerUnit, long publisherThreshold, long publisherCount) {
     return baseDelay + (delayPerUnit * (publisherCount - publisherThreshold));
   }
 
@@ -444,29 +586,35 @@ public class LargeChangeAdaptiveDelayWorkerTest {
     ChangeKey changeKeyOne = new ChangeKey(Collections.singleton("DataCenter"), "DataInfoIdOne");
     ChangeHandler changeHandler = Mockito.mock(ChangeHandler.class);
     TraceTimes traceTimesOne = Mockito.mock(TraceTimes.class);
-    TriggerPushContext changeCtxOne = new TriggerPushContext("DataCenter", 1, "DataNode", 0, traceTimesOne, 1001);
+    TriggerPushContext changeCtxOne =
+        new TriggerPushContext("DataCenter", 1, "DataNode", 0, traceTimesOne, 1001);
 
     largeChangeAdaptiveDelayWorker.commitChange(changeKeyOne, changeHandler, changeCtxOne);
 
     ChangeKey changeKeyTwo = new ChangeKey(Collections.singleton("DataCenter"), "DataInfoIdTwo");
     TraceTimes traceTimesTwo = Mockito.mock(TraceTimes.class);
-    TriggerPushContext changeCtxTwo = new TriggerPushContext("DataCenter", 2, "DataNode", 0, traceTimesTwo, 1003);
+    TriggerPushContext changeCtxTwo =
+        new TriggerPushContext("DataCenter", 2, "DataNode", 0, traceTimesTwo, 1003);
 
     largeChangeAdaptiveDelayWorker.commitChange(changeKeyTwo, changeHandler, changeCtxTwo);
 
-    ChangeKey changeKeyThree = new ChangeKey(Collections.singleton("DataCenter"), "DataInfoIdThree");
+    ChangeKey changeKeyThree =
+        new ChangeKey(Collections.singleton("DataCenter"), "DataInfoIdThree");
     TraceTimes traceTimesThree = Mockito.mock(TraceTimes.class);
-    TriggerPushContext changeCtxThree = new TriggerPushContext("DataCenter", 3, "DataNode", 0, traceTimesThree, 1002);
+    TriggerPushContext changeCtxThree =
+        new TriggerPushContext("DataCenter", 3, "DataNode", 0, traceTimesThree, 1002);
 
     largeChangeAdaptiveDelayWorker.commitChange(changeKeyThree, changeHandler, changeCtxThree);
 
     ChangeKey changeKeyFour = new ChangeKey(Collections.singleton("DataCenter"), "DataInfoIdFour");
     TraceTimes traceTimesFour = Mockito.mock(TraceTimes.class);
-    TriggerPushContext changeCtxFour = new TriggerPushContext("DataCenter", 4, "DataNode", 0, traceTimesFour, 2000);
+    TriggerPushContext changeCtxFour =
+        new TriggerPushContext("DataCenter", 4, "DataNode", 0, traceTimesFour, 2000);
 
     largeChangeAdaptiveDelayWorker.commitChange(changeKeyFour, changeHandler, changeCtxFour);
 
-    ChangeTaskQueue<ChangeKey, ChangeTaskImpl> taskQueue = largeChangeAdaptiveDelayWorker.getTaskQueue();
+    ChangeTaskQueue<ChangeKey, ChangeTaskImpl> taskQueue =
+        largeChangeAdaptiveDelayWorker.getTaskQueue();
     List<ChangeTaskImpl> tasks = new ArrayList<>();
     taskQueue.visitTasks(tasks::add);
 
@@ -478,5 +626,4 @@ public class LargeChangeAdaptiveDelayWorkerTest {
     Assert.assertEquals(changeKeyTwo, tasks.get(2).key());
     Assert.assertEquals(changeKeyFour, tasks.get(3).key());
   }
-
 }

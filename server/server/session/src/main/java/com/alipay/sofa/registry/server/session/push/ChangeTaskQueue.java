@@ -1,8 +1,23 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.alipay.sofa.registry.server.session.push;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -15,38 +30,28 @@ import java.util.function.Consumer;
 
 /**
  * 变更任务队列实现类
- * <p>
- * 基于跳表数据结构实现的线程安全任务队列，支持按键查找和按截止时间排序：
- * 1. 使用 ConcurrentHashMap 保存键到任务的映射，实现O(1)查找
- * 2. 使用 ConcurrentSkipListSet 按截止时间维护任务排序
- * 3. 通过读写锁分离读写操作，提高并发性能
  *
- * @param <Key>  任务键类型
+ * <p>基于跳表数据结构实现的线程安全任务队列，支持按键查找和按截止时间排序： 1. 使用 ConcurrentHashMap 保存键到任务的映射，实现O(1)查找 2. 使用
+ * ConcurrentSkipListSet 按截止时间维护任务排序 3. 通过读写锁分离读写操作，提高并发性能
+ *
+ * @param <Key> 任务键类型
  * @param <Task> 任务类型，必须实现 ChangeTask 接口
  */
-public class ChangeTaskQueue<Key, Task extends ChangeTask<Key>> {
+public class ChangeTaskQueue<Key extends Comparable<Key>, Task extends ChangeTask<Key>> {
 
-  /**
-   * 读写锁实例，用于保护并发访问
-   */
+  /** 读写锁实例，用于保护并发访问 */
   private final ReadWriteLock lock;
+
   private final Lock readLock;
   private final Lock writeLock;
 
-  /**
-   * 任务映射表，用于快速按键查找任务
-   */
+  /** 任务映射表，用于快速按键查找任务 */
   private final Map<Key, Task> taskMap;
 
-  /**
-   * 跳表集合，按截止时间排序维护所有任务
-   */
+  /** 跳表集合，按截止时间排序维护所有任务 */
   private final ConcurrentSkipListSet<Task> taskLinkList;
 
-  /**
-   * 默认构造函数
-   * 初始化读写锁和数据结构
-   */
+  /** 默认构造函数 初始化读写锁和数据结构 */
   public ChangeTaskQueue() {
     this.lock = new ReentrantReadWriteLock();
     this.readLock = lock.readLock();
@@ -74,8 +79,9 @@ public class ChangeTaskQueue<Key, Task extends ChangeTask<Key>> {
    * 添加或更新任务
    *
    * @param task 要添加或更新的任务对象
+   * @return 添加或更新操作的结果，具体含义由子类定义： - 当添加新任务时返回特定值 - 当更新已有任务时返回另一特定值 - 操作失败时返回失败标识
    */
-  public void pushTask(Task task) {
+  public boolean pushTask(Task task) {
     this.writeLock.lock();
     try {
       Key key = task.key();
@@ -85,13 +91,20 @@ public class ChangeTaskQueue<Key, Task extends ChangeTask<Key>> {
       Task existTask = this.taskMap.get(key);
       if (null == existTask) {
         // 新增任务
-        this.taskLinkList.add(task);
+        if (!this.taskLinkList.add(task)) {
+          return false;
+        }
       } else {
         // 更新任务，先移除旧任务再添加新任务
-        this.taskLinkList.remove(existTask);
-        this.taskLinkList.add(task);
+        if (!this.taskLinkList.remove(existTask)) {
+          return false;
+        }
+        if (!this.taskLinkList.add(task)) {
+          return false;
+        }
       }
       this.taskMap.put(key, task);
+      return true;
     } finally {
       this.writeLock.unlock();
     }
@@ -156,8 +169,8 @@ public class ChangeTaskQueue<Key, Task extends ChangeTask<Key>> {
 
   /**
    * 清空队列中的所有任务
-   * <p>
-   * 线程安全：通过写锁保证并发操作的原子性
+   *
+   * <p>线程安全：通过写锁保证并发操作的原子性
    */
   public void clear() {
     this.writeLock.lock();

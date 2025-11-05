@@ -19,12 +19,11 @@ package com.alipay.sofa.registry.server.session.push;
 import com.alipay.sofa.registry.common.model.TraceTimes;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.alipay.sofa.registry.util.StringFormatter;
-import org.springframework.util.CollectionUtils;
-
 import java.util.Collections;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import org.springframework.util.CollectionUtils;
 
 public final class TriggerPushContext {
   public final String dataNode;

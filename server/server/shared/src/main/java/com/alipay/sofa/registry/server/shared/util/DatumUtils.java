@@ -30,12 +30,11 @@ import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.alipay.sofa.registry.util.SystemUtils;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import org.apache.commons.collections.CollectionUtils;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import org.apache.commons.collections.CollectionUtils;
 
 /**
  * @author xuanbei

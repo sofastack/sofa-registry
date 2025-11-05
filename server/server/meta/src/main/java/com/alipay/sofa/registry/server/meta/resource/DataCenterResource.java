@@ -53,5 +53,4 @@ public class DataCenterResource {
       return Result.failed("Query meta local datacenter exception");
     }
   }
-
 }

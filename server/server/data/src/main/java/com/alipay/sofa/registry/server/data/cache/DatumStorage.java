@@ -23,7 +23,6 @@ import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.server.data.slot.SlotChangeListener;
-
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;

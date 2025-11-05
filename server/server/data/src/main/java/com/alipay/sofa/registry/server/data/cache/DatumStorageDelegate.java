@@ -28,10 +28,9 @@ import com.alipay.sofa.registry.server.data.slot.SlotChangeListener;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import org.apache.commons.lang.StringUtils;
-
 import java.util.*;
 import java.util.function.BiConsumer;
+import org.apache.commons.lang.StringUtils;
 
 /**
  * cache of datum, providing query function to the upper module

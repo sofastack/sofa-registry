@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.server.session.remoting.handler;
 
+import static org.mockito.Mockito.*;
+
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.TraceTimes;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
@@ -26,14 +28,11 @@ import com.alipay.sofa.registry.server.session.bootstrap.ExecutorManager;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfigBean;
 import com.alipay.sofa.registry.server.session.push.FirePushService;
 import com.alipay.sofa.registry.server.session.store.Interests;
-import org.junit.Assert;
-import org.junit.Test;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-
-import static org.mockito.Mockito.*;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class DataChangeRequestHandlerTest {
 
@@ -91,7 +90,8 @@ public class DataChangeRequestHandlerTest {
     Map<String, DatumVersion> dataInfoIds = new HashMap<>();
     dataInfoIds.put("testId1", new DatumVersion(100));
     dataInfoIds.put("testId2", new DatumVersion(200));
-    DataChangeRequest request = new DataChangeRequest("testDc", dataInfoIds, Collections.emptyMap(), new TraceTimes());
+    DataChangeRequest request =
+        new DataChangeRequest("testDc", dataInfoIds, Collections.emptyMap(), new TraceTimes());
     Assert.assertTrue(request.toString(), request.toString().contains("testDc"));
     return request;
   }

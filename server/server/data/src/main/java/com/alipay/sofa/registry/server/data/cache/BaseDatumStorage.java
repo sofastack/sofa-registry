@@ -28,10 +28,9 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import org.springframework.util.CollectionUtils;
-
 import java.util.*;
 import java.util.function.BiConsumer;
+import org.springframework.util.CollectionUtils;
 
 /**
  * @author xiaojian.xj
@@ -105,7 +104,7 @@ public class BaseDatumStorage {
 
   public Integer getPubCount(String dataInfoId) {
     PublisherGroups groups = getPublisherGroups(dataInfoId);
-    return groups == null ? null : groups.getPubCount(dataInfoId);
+    return groups == null ? null : groups.getRealPubNum(dataInfoId);
   }
 
   public Map<String, Publisher> getByConnectId(ConnectId connectId) {

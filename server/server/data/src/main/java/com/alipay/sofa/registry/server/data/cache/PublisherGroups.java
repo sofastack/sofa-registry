@@ -25,15 +25,14 @@ import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.google.common.collect.Maps;
-import org.apache.commons.lang.StringUtils;
-import org.glassfish.jersey.internal.guava.Sets;
-import org.springframework.util.CollectionUtils;
-
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
+import org.apache.commons.lang.StringUtils;
+import org.glassfish.jersey.internal.guava.Sets;
+import org.springframework.util.CollectionUtils;
 
 /**
  * @author yuzhi.lyz
@@ -98,9 +97,9 @@ public final class PublisherGroups {
     return map;
   }
 
-  Integer getPubCount(String dataInfoId) {
+  Integer getRealPubNum(String dataInfoId) {
     PublisherGroup group = publisherGroupMap.get(dataInfoId);
-    return group == null ? null : group.pubMap.size();
+    return group == null ? null : group.getRealPubNum();
   }
 
   Map<String, Publisher> getByConnectId(ConnectId connectId) {

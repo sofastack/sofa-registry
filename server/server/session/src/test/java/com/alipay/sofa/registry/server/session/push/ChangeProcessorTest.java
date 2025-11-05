@@ -16,18 +16,17 @@
  */
 package com.alipay.sofa.registry.server.session.push;
 
+import static org.mockito.Mockito.*;
+
 import com.alipay.sofa.registry.server.session.TestUtils;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfigBean;
 import com.alipay.sofa.registry.server.session.push.ChangeProcessor.Worker;
-import org.junit.Assert;
-import org.junit.Test;
-
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import static org.mockito.Mockito.*;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class ChangeProcessorTest {
 
@@ -43,15 +42,16 @@ public class ChangeProcessorTest {
 
     Assert.assertTrue(worker.getWaitingMillis() <= 200);
 
-    Assert.assertEquals(worker.getChangeDebouncingTime().getChangeDebouncingMillis(), changeDebouncingMillis);
-    Assert.assertEquals(worker.getChangeDebouncingTime().getChangeDebouncingMaxMillis(), changeDebouncingMaxMillis);
+    Assert.assertEquals(
+        worker.getChangeDebouncingTime().getChangeDebouncingMillis(), changeDebouncingMillis);
+    Assert.assertEquals(
+        worker.getChangeDebouncingTime().getChangeDebouncingMaxMillis(), changeDebouncingMaxMillis);
     List<ChangeTaskImpl> timeoutTasks = worker.getExpires();
     Assert.assertTrue(null == timeoutTasks || timeoutTasks.isEmpty());
     worker.runUnthrowable();
 
     ChangeHandler handler = mock(ChangeHandler.class);
-    ChangeKey key =
-        new ChangeKey(Collections.singleton(dataCenter), dataInfoId);
+    ChangeKey key = new ChangeKey(Collections.singleton(dataCenter), dataInfoId);
     Assert.assertTrue(key.toString(), key.toString().contains(dataInfoId));
 
     long now1 = System.currentTimeMillis();
@@ -114,8 +114,7 @@ public class ChangeProcessorTest {
         processor.sessionServerConfig.getDataChangeMaxDebouncingMillis());
 
     ChangeHandler handler = mock(ChangeHandler.class);
-    ChangeKey key =
-        new ChangeKey(Collections.singleton(dataCenter), dataInfoId);
+    ChangeKey key = new ChangeKey(Collections.singleton(dataCenter), dataInfoId);
     Assert.assertNotNull(processor.workerOf(key));
     TriggerPushContext ctx =
         new TriggerPushContext(dataCenter, 100, null, System.currentTimeMillis());
@@ -126,15 +125,12 @@ public class ChangeProcessorTest {
 
   @Test
   public void testChangeKey() {
-    ChangeKey key1 =
-        new ChangeKey(Collections.singleton(dataCenter), dataInfoId);
-    ChangeKey key2 =
-        new ChangeKey(Collections.singleton(dataCenter), dataInfoId);
+    ChangeKey key1 = new ChangeKey(Collections.singleton(dataCenter), dataInfoId);
+    ChangeKey key2 = new ChangeKey(Collections.singleton(dataCenter), dataInfoId);
     Assert.assertEquals(key1, key2);
     Assert.assertEquals(key1.hashCode(), key2.hashCode());
 
-    ChangeKey key3 =
-        new ChangeKey(Collections.singleton(dataCenter + "1"), dataInfoId);
+    ChangeKey key3 = new ChangeKey(Collections.singleton(dataCenter + "1"), dataInfoId);
     Assert.assertNotEquals(key1, key3);
   }
 

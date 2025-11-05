@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.server.data.change;
 
+import static com.alipay.sofa.registry.server.data.change.ChangeMetrics.*;
+
 import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.TraceTimes;
 import com.alipay.sofa.registry.common.model.Tuple;
@@ -45,14 +47,11 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-
-import static com.alipay.sofa.registry.server.data.change.ChangeMetrics.*;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author qian.lqlq
@@ -202,7 +201,8 @@ public class DataChangeEventCenter {
           LOGGER.info("change notify failed, conn is closed, {}", channel);
           return;
         }
-        DataChangeRequest request = new DataChangeRequest(dataCenter, dataInfoIds, publisherCounts, times);
+        DataChangeRequest request =
+            new DataChangeRequest(dataCenter, dataInfoIds, publisherCounts, times);
         request.getTimes().setDatumNotifySend(System.currentTimeMillis());
         doNotify(request, channel, notifyPort);
         LOGGER.info("success to notify {}, {}", channel.getRemoteAddress(), this);
@@ -409,7 +409,7 @@ public class DataChangeEventCenter {
           changes.put(dataInfoId, datumVersion);
         }
         Integer publisherCount =
-                datumStorageDelegate.getPubCount(event.getDataCenter(), dataInfoId);
+            datumStorageDelegate.getPubCount(event.getDataCenter(), dataInfoId);
         if (publisherCount != null) {
           pubCounts.put(dataInfoId, publisherCount);
         }
@@ -425,7 +425,8 @@ public class DataChangeEventCenter {
         try {
           notifyExecutor.execute(
               channel.getRemoteAddress(),
-              new ChangeNotifier(channel, notifyPort, dataCenter, changes, pubCounts, event.getTraceTimes()));
+              new ChangeNotifier(
+                  channel, notifyPort, dataCenter, changes, pubCounts, event.getTraceTimes()));
           CHANGE_COMMIT_COUNTER.inc();
         } catch (FastRejectedExecutionException e) {
           CHANGE_SKIP_COUNTER.inc();
@@ -543,7 +544,8 @@ public class DataChangeEventCenter {
   @VisibleForTesting
   ChangeNotifier newChangeNotifier(
       Channel channel, int notifyPort, String dataCenter, Map<String, DatumVersion> dataInfoIds) {
-    return new ChangeNotifier(channel, notifyPort, dataCenter, dataInfoIds, Collections.emptyMap(), new TraceTimes());
+    return new ChangeNotifier(
+        channel, notifyPort, dataCenter, dataInfoIds, Collections.emptyMap(), new TraceTimes());
   }
 
   @VisibleForTesting

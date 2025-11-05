@@ -18,14 +18,13 @@ package com.alipay.sofa.registry.server.session.push;
 
 import com.alipay.sofa.registry.server.session.resource.ClientManagerResource;
 import com.google.common.annotations.VisibleForTesting;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.stereotype.Component;
-
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * @author huicha
@@ -118,7 +117,8 @@ public class PushEfficiencyConfigUpdater implements SmartLifecycle {
         this.autoPushEfficiencyRegulator = null;
       }
 
-      LargeChangeAdaptiveDelayConfig largeChangeAdaptiveDelayConfig = pushEfficiencyImproveConfig.getLargeChangeAdaptiveDelayConfig();
+      LargeChangeAdaptiveDelayConfig largeChangeAdaptiveDelayConfig =
+          pushEfficiencyImproveConfig.getLargeChangeAdaptiveDelayConfig();
       if (null == largeChangeAdaptiveDelayConfig) {
         // 使用默认值
         largeChangeAdaptiveDelayConfig = new LargeChangeAdaptiveDelayConfig();

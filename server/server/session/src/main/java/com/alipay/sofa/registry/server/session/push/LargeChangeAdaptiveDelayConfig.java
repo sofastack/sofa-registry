@@ -1,4 +1,22 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.alipay.sofa.registry.server.session.push;
+
+import org.apache.commons.lang.builder.ToStringBuilder;
 
 /**
  * @author huicha
@@ -16,29 +34,19 @@ public class LargeChangeAdaptiveDelayConfig {
 
   public static final long DEFAULT_DELAY_PER_UNIT = 10;
 
-  /**
-   * 是否开启使用 LargeChangeAdaptiveDelayWorker
-   */
+  /** 是否开启使用 LargeChangeAdaptiveDelayWorker */
   private boolean useLargeAdapterDelayChangeWorker = DEFAULT_USE_LARGE_ADAPTER_DELAY_CHANGE_WORKER;
 
-  /**
-   * Publisher 数量阈值，超过此值开始计算动态延迟
-   */
+  /** Publisher 数量阈值，超过此值开始计算动态延迟 */
   private long publisherThreshold = DEFAULT_PUBLISHER_THRESHOLD;
 
-  /**
-   * Publisher 数量上限，达到此值后延迟固定为最大值
-   */
+  /** Publisher 数量上限，达到此值后延迟固定为最大值 */
   private long maxPublisherCount = DEFAULT_MAX_PUBLISHER_COUNT;
 
-  /**
-   * 基础延迟时间（毫秒），用于 Publisher 数量较少的情况
-   */
+  /** 基础延迟时间（毫秒），用于 Publisher 数量较少的情况 */
   private long baseDelay = DEFAULT_BASE_DELAY;
 
-  /**
-   * 每个 Publisher 单位的延迟增量（毫秒）
-   */
+  /** 每个 Publisher 单位的延迟增量（毫秒） */
   private long delayPerUnit = DEFAULT_DELAY_PER_UNIT;
 
   public boolean isUseLargeAdapterDelayChangeWorker() {
@@ -79,5 +87,10 @@ public class LargeChangeAdaptiveDelayConfig {
 
   public void setDelayPerUnit(long delayPerUnit) {
     this.delayPerUnit = delayPerUnit;
+  }
+
+  @Override
+  public String toString() {
+    return ToStringBuilder.reflectionToString(this);
   }
 }

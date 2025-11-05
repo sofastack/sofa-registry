@@ -18,7 +18,6 @@ package com.alipay.sofa.registry.common.model.store;
 
 import com.alipay.sofa.registry.cache.Sizer;
 import com.alipay.sofa.registry.util.CollectionUtils;
-
 import java.io.Serializable;
 import java.util.List;
 

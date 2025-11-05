@@ -33,7 +33,6 @@ import com.alipay.sofa.registry.server.data.cache.PublisherGroup;
 import com.alipay.sofa.registry.server.data.slot.SlotChangeListener;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.google.common.collect.Maps;
-
 import java.util.*;
 import java.util.function.BiConsumer;
 

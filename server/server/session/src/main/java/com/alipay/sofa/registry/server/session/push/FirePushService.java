@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.server.session.push;
 
+import static com.alipay.sofa.registry.server.session.push.PushMetrics.Fetch.*;
+
 import com.alipay.sofa.registry.common.model.SubscriberUtils;
 import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
@@ -40,16 +42,13 @@ import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.util.CollectionUtils;
-
-import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
 import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.Map.Entry;
-
-import static com.alipay.sofa.registry.server.session.push.PushMetrics.Fetch.*;
+import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
 
 public class FirePushService {
   private static final Logger LOGGER = PushLog.LOGGER;
@@ -101,7 +100,10 @@ public class FirePushService {
 
   public boolean fireOnChange(String dataInfoId, TriggerPushContext changeCtx) {
     try {
-      changeProcessor.fireChange(dataInfoId, changeHandler, changeCtx);
+      if (!changeProcessor.fireChange(dataInfoId, changeHandler, changeCtx)) {
+        LOGGER.error(
+            "process fire change fail, dataInfoId: {}, changeCtx={}", dataInfoId, changeCtx);
+      }
       CHANGE_TASK_COUNTER.inc();
       return true;
     } catch (Throwable e) {

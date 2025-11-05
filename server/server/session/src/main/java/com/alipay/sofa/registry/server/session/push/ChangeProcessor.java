@@ -22,12 +22,11 @@ import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import com.google.common.collect.Maps;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import javax.annotation.PostConstruct;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Autowired;
 
 public class ChangeProcessor {
   private static final Logger LOGGER = LoggerFactory.getLogger(ChangeProcessor.class);
@@ -66,7 +65,8 @@ public class ChangeProcessor {
     }
   }
 
-  public void setLargeChangeAdaptiveDelayConfig(LargeChangeAdaptiveDelayConfig largeChangeAdaptiveDelayConfig) {
+  public void setLargeChangeAdaptiveDelayConfig(
+      LargeChangeAdaptiveDelayConfig largeChangeAdaptiveDelayConfig) {
     for (Map.Entry<String, Worker[]> entry : dataCenterWorkers.entrySet()) {
       Worker[] workers = entry.getValue();
       if (workers == null) {
@@ -111,6 +111,27 @@ public class ChangeProcessor {
     }
   }
 
+  public Map<String, boolean[]> isUseLargeAdapterDelayChangeWorker() {
+    Map<String, boolean[]> dcUseLargeAdapterDelayChangeWorker =
+        new HashMap<>(dataCenterWorkers.size());
+    for (Map.Entry<String, Worker[]> entry : dataCenterWorkers.entrySet()) {
+      String dataCenter = entry.getKey();
+      Worker[] workers = entry.getValue();
+      if (workers == null) {
+        dcUseLargeAdapterDelayChangeWorker.put(dataCenter, new boolean[0]);
+        continue;
+      }
+      boolean[] useLargeAdapterDelayChangeWorkers = new boolean[workers.length];
+      for (int index = 0; index < workers.length; index++) {
+        Worker worker = workers[index];
+        boolean useLargeAdapterDelayChangeWorker = worker.isUseLargeAdapterDelayChangeWorker();
+        useLargeAdapterDelayChangeWorkers[index] = useLargeAdapterDelayChangeWorker;
+      }
+      dcUseLargeAdapterDelayChangeWorker.put(dataCenter, useLargeAdapterDelayChangeWorkers);
+    }
+    return dcUseLargeAdapterDelayChangeWorker;
+  }
+
   boolean fireChange(String dataInfoId, ChangeHandler handler, TriggerPushContext changeCtx) {
     ChangeKey key = new ChangeKey(changeCtx.dataCenters(), dataInfoId);
     Worker worker = workerOf(key);
@@ -126,13 +147,20 @@ public class ChangeProcessor {
 
     Worker(int changeDebouncingMillis, int changeDebouncingMaxMillis) {
       int changeTaskWaitingMillis = 100;
-      this.useLargeAdapterDelayChangeWorker = LargeChangeAdaptiveDelayConfig.DEFAULT_USE_LARGE_ADAPTER_DELAY_CHANGE_WORKER;
-      this.defaultChangeWorker = new DefaultChangeWorker(changeDebouncingMillis, changeDebouncingMaxMillis, changeTaskWaitingMillis);
-      this.largeAdaptiveDelayChangeWorker = new LargeChangeAdaptiveDelayWorker(
-              changeDebouncingMillis, changeDebouncingMaxMillis, changeTaskWaitingMillis,
-              LargeChangeAdaptiveDelayConfig.DEFAULT_BASE_DELAY, LargeChangeAdaptiveDelayConfig.DEFAULT_DELAY_PER_UNIT,
-              LargeChangeAdaptiveDelayConfig.DEFAULT_PUBLISHER_THRESHOLD, LargeChangeAdaptiveDelayConfig.DEFAULT_MAX_PUBLISHER_COUNT
-      );
+      this.useLargeAdapterDelayChangeWorker =
+          LargeChangeAdaptiveDelayConfig.DEFAULT_USE_LARGE_ADAPTER_DELAY_CHANGE_WORKER;
+      this.defaultChangeWorker =
+          new DefaultChangeWorker(
+              changeDebouncingMillis, changeDebouncingMaxMillis, changeTaskWaitingMillis);
+      this.largeAdaptiveDelayChangeWorker =
+          new LargeChangeAdaptiveDelayWorker(
+              changeDebouncingMillis,
+              changeDebouncingMaxMillis,
+              changeTaskWaitingMillis,
+              LargeChangeAdaptiveDelayConfig.DEFAULT_BASE_DELAY,
+              LargeChangeAdaptiveDelayConfig.DEFAULT_DELAY_PER_UNIT,
+              LargeChangeAdaptiveDelayConfig.DEFAULT_PUBLISHER_THRESHOLD,
+              LargeChangeAdaptiveDelayConfig.DEFAULT_MAX_PUBLISHER_COUNT);
     }
 
     public void setChangeTaskWorkDelay(PushEfficiencyImproveConfig pushEfficiencyImproveConfig) {
@@ -140,14 +168,19 @@ public class ChangeProcessor {
       this.largeAdaptiveDelayChangeWorker.setChangeTaskWorkDelay(pushEfficiencyImproveConfig);
     }
 
-    public void setChangeDebouncingMillis(int changeDebouncingMillis, int changeDebouncingMaxMillis) {
-      this.defaultChangeWorker.setChangeDebouncingMillis(changeDebouncingMillis, changeDebouncingMaxMillis);
-      this.largeAdaptiveDelayChangeWorker.setChangeDebouncingMillis(changeDebouncingMillis, changeDebouncingMaxMillis);
+    public void setChangeDebouncingMillis(
+        int changeDebouncingMillis, int changeDebouncingMaxMillis) {
+      this.defaultChangeWorker.setChangeDebouncingMillis(
+          changeDebouncingMillis, changeDebouncingMaxMillis);
+      this.largeAdaptiveDelayChangeWorker.setChangeDebouncingMillis(
+          changeDebouncingMillis, changeDebouncingMaxMillis);
     }
 
-    public void setLargeChangeAdaptiveDelayConfig(LargeChangeAdaptiveDelayConfig largeChangeAdaptiveDelayConfig) {
+    public void setLargeChangeAdaptiveDelayConfig(
+        LargeChangeAdaptiveDelayConfig largeChangeAdaptiveDelayConfig) {
       this.largeAdaptiveDelayChangeWorker.reset(largeChangeAdaptiveDelayConfig);
-      this.useLargeAdapterDelayChangeWorker = largeChangeAdaptiveDelayConfig.isUseLargeAdapterDelayChangeWorker();
+      this.useLargeAdapterDelayChangeWorker =
+          largeChangeAdaptiveDelayConfig.isUseLargeAdapterDelayChangeWorker();
       if (this.useLargeAdapterDelayChangeWorker) {
         this.defaultChangeWorker.clear();
       } else {
@@ -181,18 +214,26 @@ public class ChangeProcessor {
 
     @Override
     public void runUnthrowable() {
-      for (; ; ) {
-        List<ChangeTaskImpl> timeoutTasks = this.getExpires();
-        if (null == timeoutTasks || timeoutTasks.isEmpty()) {
-          break;
-        }
-        for (ChangeTaskImpl task : timeoutTasks) {
-          try {
-            task.doChange();
-          } catch (Throwable e) {
-            LOGGER.error("failed to doChange, {}", task);
+      try {
+        for (; ; ) {
+          List<ChangeTaskImpl> timeoutTasks = this.getExpires();
+          if (null == timeoutTasks || timeoutTasks.isEmpty()) {
+            break;
+          }
+          for (ChangeTaskImpl task : timeoutTasks) {
+            this.safeProcessTask(task);
           }
         }
+      } catch (Throwable throwable) {
+        LOGGER.error("Change processor try execute task exception", throwable);
+      }
+    }
+
+    private void safeProcessTask(ChangeTaskImpl task) {
+      try {
+        task.doChange();
+      } catch (Throwable e) {
+        LOGGER.error("failed to doChange, {}", task);
       }
     }
 
@@ -211,6 +252,10 @@ public class ChangeProcessor {
       } else {
         return this.defaultChangeWorker.getChangeDebouncingTime();
       }
+    }
+
+    public boolean isUseLargeAdapterDelayChangeWorker() {
+      return useLargeAdapterDelayChangeWorker;
     }
   }
 

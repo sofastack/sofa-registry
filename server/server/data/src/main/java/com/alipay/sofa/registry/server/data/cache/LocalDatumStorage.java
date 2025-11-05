@@ -26,7 +26,6 @@ import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.data.slot.SlotChangeListener;
-
 import java.util.*;
 import java.util.function.BiConsumer;
 

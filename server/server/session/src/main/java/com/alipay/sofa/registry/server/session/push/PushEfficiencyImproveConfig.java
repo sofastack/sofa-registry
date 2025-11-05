@@ -18,12 +18,11 @@ package com.alipay.sofa.registry.server.session.push;
 
 import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
+import java.util.HashSet;
+import java.util.Set;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.builder.ToStringBuilder;
-
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * @author jiangcun.hlc@antfin.com
@@ -59,9 +58,7 @@ public class PushEfficiencyImproveConfig {
   private int changeDebouncingMaxMillis = DEFAULT_CHANGE_DEBOUNCING_MAX_MILLIS;
   /** session 异步处理 changeTask 的 Looper 间隔时间, 默认 100ms */
   private int changeTaskWaitingMillis = DEFAULT_CHANGE_TASK_WAITING_MILLIS;
-  /**
-   * session 异步处理 largeChangeTask (大推送) 的 Looper 间隔时间, 默认 1000ms
-   */
+  /** session 异步处理 largeChangeTask (大推送) 的 Looper 间隔时间, 默认 1000ms */
   private int largeChangeTaskWaitingMillis = DEFAULT_LARGE_CHANGE_TASK_WAITING_MILLIS;
   /** session 异步处理 pushTask 的 Looper 间隔时间, 默认 200ms */
   private int pushTaskWaitingMillis = DEFAULT_PUSH_TASK_WAITING_MILLIS;
@@ -90,9 +87,7 @@ public class PushEfficiencyImproveConfig {
   /** 自动优化的相关配置 */
   private AutoPushEfficiencyConfig autoPushEfficiencyConfig = null;
 
-  /**
-   * 针对大推送的延迟推送策略配置
-   */
+  /** 针对大推送的延迟推送策略配置 */
   private LargeChangeAdaptiveDelayConfig largeChangeAdaptiveDelayConfig = null;
 
   /**
@@ -285,7 +280,8 @@ public class PushEfficiencyImproveConfig {
     return largeChangeAdaptiveDelayConfig;
   }
 
-  public void setLargeChangeAdaptiveDelayConfig(LargeChangeAdaptiveDelayConfig largeChangeAdaptiveDelayConfig) {
+  public void setLargeChangeAdaptiveDelayConfig(
+      LargeChangeAdaptiveDelayConfig largeChangeAdaptiveDelayConfig) {
     this.largeChangeAdaptiveDelayConfig = largeChangeAdaptiveDelayConfig;
   }
 
