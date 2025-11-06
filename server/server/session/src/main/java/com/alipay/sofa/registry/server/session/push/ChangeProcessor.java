@@ -22,11 +22,12 @@ import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import com.google.common.collect.Maps;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import javax.annotation.PostConstruct;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.annotation.PostConstruct;
-import org.springframework.beans.factory.annotation.Autowired;
 
 public class ChangeProcessor {
   private static final Logger LOGGER = LoggerFactory.getLogger(ChangeProcessor.class);
@@ -34,6 +35,8 @@ public class ChangeProcessor {
   @Autowired SessionServerConfig sessionServerConfig;
 
   Map<String, Worker[]> dataCenterWorkers = Maps.newConcurrentMap();
+
+  volatile LargeChangeAdaptiveDelayConfig largeChangeAdaptiveDelayConfig;
 
   @PostConstruct
   public void init() {
@@ -48,6 +51,10 @@ public class ChangeProcessor {
           new Worker(
               sessionServerConfig.getDataChangeDebouncingMillis(),
               sessionServerConfig.getDataChangeMaxDebouncingMillis());
+      LargeChangeAdaptiveDelayConfig currentLargeChangeAdaptiveDelayConfig = this.largeChangeAdaptiveDelayConfig;
+      if (currentLargeChangeAdaptiveDelayConfig != null) {
+        workers[i].setLargeChangeAdaptiveDelayConfig(currentLargeChangeAdaptiveDelayConfig);
+      }
       ConcurrentUtils.createDaemonThread("ChangeExecutor-" + i, workers[i]).start();
     }
     return workers;
@@ -67,6 +74,7 @@ public class ChangeProcessor {
 
   public void setLargeChangeAdaptiveDelayConfig(
       LargeChangeAdaptiveDelayConfig largeChangeAdaptiveDelayConfig) {
+    this.largeChangeAdaptiveDelayConfig = largeChangeAdaptiveDelayConfig;
     for (Map.Entry<String, Worker[]> entry : dataCenterWorkers.entrySet()) {
       Worker[] workers = entry.getValue();
       if (workers == null) {
