@@ -122,11 +122,7 @@ public abstract class AbstractChangeWorker implements ChangeWorker<ChangeKey, Ch
    * @return 是否成功提交变更
    */
   protected boolean doCommitChange(
-      ChangeKey key,
-      ChangeTaskImpl task,
-      ChangeHandler handler,
-      TriggerPushContext changeCtx,
-      long now) {
+      ChangeKey key, ChangeTaskImpl task, TriggerPushContext changeCtx) {
     final ChangeTaskImpl exist = this.findTask(key);
     if (exist == null) {
       return this.pushTask(key, task);
@@ -212,7 +208,7 @@ public abstract class AbstractChangeWorker implements ChangeWorker<ChangeKey, Ch
     final long now = System.currentTimeMillis();
     final ChangeTaskImpl task = this.createTask(key, changeCtx, handler, now);
     synchronized (this.lock) {
-      return this.doCommitChange(key, task, handler, changeCtx, now);
+      return this.doCommitChange(key, task, changeCtx);
     }
   }
 

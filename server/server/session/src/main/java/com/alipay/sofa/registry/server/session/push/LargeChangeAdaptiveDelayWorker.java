@@ -22,8 +22,7 @@ import java.util.List;
 /**
  * 大变更自适应延迟工作器
  *
- * <p>专为处理大量发布者(Publisher)的变更任务而设计，具有以下特性： 1. 根据发布者数量动态调整任务执行延迟 2. 使用跳表实现的任务队列，支持按截止时间排序 3.
- * 实现大任务特有的版本合并策略
+ * <p>专为处理大量发布者(Publisher)的变更任务而设计，具有以下特性： 1. 根据发布者数量动态调整任务执行延迟 2. 使用跳表实现的任务队列，支持按截止时间排序
  *
  * <p>延迟计算策略： - 发布者数量 <= 阈值：使用父类默认延迟策略 - 阈值 < 发布者数量 <= 上限：线性增长延迟 - 发布者数量 > 上限：固定最大延迟
  */
@@ -194,99 +193,6 @@ public class LargeChangeAdaptiveDelayWorker extends AbstractChangeWorker {
     ChangeTaskImpl changeTask = new ChangeTaskImpl(key, changeCtx, handler, deadline);
     changeTask.expireDeadlineTimestamp = deadline;
     return changeTask;
-  }
-
-  /**
-   * 重写 AbstractChangeWorker 的任务合并方法 实现大任务特有的合并策略： 1. 根据任务类型（大/小推送）采用不同的合并逻辑 2.
-   * 大推送任务之间只更新版本号，不调整截止时间
-   *
-   * @param key 任务键
-   * @param task 新任务对象
-   * @param handler 任务处理器
-   * @param changeCtx 变更上下文
-   * @param now 当前时间戳
-   * @return 是否成功提交变更
-   */
-  @Override
-  protected boolean doCommitChange(
-      ChangeKey key,
-      ChangeTaskImpl task,
-      ChangeHandler handler,
-      TriggerPushContext changeCtx,
-      long now) {
-    // 1. 检查旧任务是否存在
-    final ChangeTaskImpl existTask = this.findTask(key);
-    if (existTask == null) {
-      // 不存在旧任务，直接入队
-      this.pushTask(key, task);
-      return true;
-    }
-
-    // 2. 版本号比较（新任务必须大于等于旧任务）
-    if (task.changeCtx.smallerThan(existTask.changeCtx)) {
-      return false;
-    }
-
-    // 3. 统一合并版本号（所有场景均需执行）
-    task.changeCtx.mergeVersion(existTask.changeCtx);
-
-    // 4. 获取新旧任务的 publisherCount
-    Integer oldPublisherCount = existTask.changeCtx.getPublisherCount();
-    Integer newPublisherCount = changeCtx.getPublisherCount();
-
-    // 5. 判断新旧任务类型
-    boolean isOldTaskSmall =
-        null == oldPublisherCount || oldPublisherCount <= this.publisherThreshold;
-    boolean isNewTaskSmall =
-        null == newPublisherCount || newPublisherCount <= this.publisherThreshold;
-
-    // 6. 根据新旧任务类型组合处理
-    if (isOldTaskSmall) {
-      if (isNewTaskSmall) {
-        // 小推送 → 小推送：保留较晚的 deadline 或更新版本号
-        mergeSmallTask(key, task, existTask);
-      } else {
-        // 小推送 → 大推送：直接覆盖旧任务（使用新 deadline）
-        this.pushTask(key, task);
-      }
-    } else {
-      if (isNewTaskSmall) {
-        // 大推送 → 小推送：直接覆盖旧任务（使用新 deadline）
-        this.pushTask(key, task);
-      } else {
-        // 大推送 → 大推送：仅更新版本号（保留旧 deadline）
-        mergeLargeTask(task, existTask);
-      }
-    }
-
-    return true;
-  }
-
-  /**
-   * 合并两个小推送任务
-   *
-   * @param key 任务键
-   * @param newTask 新任务
-   * @param oldTask 旧任务
-   */
-  private void mergeSmallTask(ChangeKey key, ChangeTaskImpl newTask, ChangeTaskImpl oldTask) {
-    if (newTask.expireTimestamp <= oldTask.expireDeadlineTimestamp) {
-      newTask.expireDeadlineTimestamp = oldTask.expireDeadlineTimestamp;
-      newTask.changeCtx.addTraceTime(oldTask.changeCtx.getFirstTimes());
-      this.updateTask(key, newTask);
-    } else {
-      oldTask.changeCtx.setExpectDatumVersion(newTask.changeCtx.getExpectDatumVersion());
-    }
-  }
-
-  /**
-   * 合并两个大推送任务
-   *
-   * @param newTask 新任务
-   * @param oldTask 旧任务
-   */
-  private void mergeLargeTask(ChangeTaskImpl newTask, ChangeTaskImpl oldTask) {
-    oldTask.changeCtx.setExpectDatumVersion(newTask.changeCtx.getExpectDatumVersion());
   }
 
   /**

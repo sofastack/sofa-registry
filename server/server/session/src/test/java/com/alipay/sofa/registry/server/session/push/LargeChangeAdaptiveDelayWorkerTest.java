@@ -436,8 +436,10 @@ public class LargeChangeAdaptiveDelayWorkerTest {
     TriggerPushContext changeCtxOne =
         new TriggerPushContext("DataCenter", 1, "DataNode", 0, traceTimesOne, 100);
 
+    long smallNow1 = System.currentTimeMillis();
     boolean result =
         largeChangeAdaptiveDelayWorker.commitChange(changeKey, changeHandler, changeCtxOne);
+    long smallNow2 = System.currentTimeMillis();
     Assert.assertTrue(result);
 
     // 第二次推送为大推送
@@ -447,19 +449,25 @@ public class LargeChangeAdaptiveDelayWorkerTest {
     long expectDelay =
         this.computeDelay(this.baseDelay, this.delayPerUnit, this.publisherThreshold, 1001);
 
-    long now1 = System.currentTimeMillis();
     result = largeChangeAdaptiveDelayWorker.commitChange(changeKey, changeHandler, changeCtxTwo);
-    long now2 = System.currentTimeMillis();
-
     Assert.assertTrue(result);
 
     ChangeTaskImpl changeTask = largeChangeAdaptiveDelayWorker.findTask(changeKey);
     Assert.assertNotNull(changeTask);
 
-    // 首先推送时间是第二次大推送的推送时间
-    this.assertBetween(changeTask.deadline(), now1 + expectDelay, now2 + expectDelay);
-    this.assertBetween(changeTask.expireTimestamp, now1 + expectDelay, now2 + expectDelay);
-    this.assertBetween(changeTask.expireDeadlineTimestamp, now1 + expectDelay, now2 + expectDelay);
+    // 首先推送时间仍然是第一次推送的时间以及 deadline
+    this.assertBetween(
+        changeTask.deadline(),
+        smallNow1 + this.changeDebouncingMillis,
+        smallNow2 + this.changeDebouncingMillis);
+    this.assertBetween(
+        changeTask.expireTimestamp,
+        smallNow1 + this.changeDebouncingMillis,
+        smallNow2 + this.changeDebouncingMillis);
+    this.assertBetween(
+        changeTask.expireDeadlineTimestamp,
+        smallNow1 + this.changeDebouncingMaxMillis,
+        smallNow2 + this.changeDebouncingMaxMillis);
 
     // 其次版本号应当是第二次大推送的版本号
     Map<String, Long> expectDatumVersion = changeTask.changeCtx.getExpectDatumVersion();
@@ -471,7 +479,7 @@ public class LargeChangeAdaptiveDelayWorkerTest {
     List<ChangeTaskImpl> timeoutTasks = largeChangeAdaptiveDelayWorker.getExpireTasks();
     Assert.assertTrue(timeoutTasks.isEmpty());
 
-    Thread.sleep(expectDelay);
+    Thread.sleep(this.changeDebouncingMillis);
 
     // 此时应当有超时任务了，对应大推送
     timeoutTasks = largeChangeAdaptiveDelayWorker.getExpireTasks();
@@ -479,9 +487,18 @@ public class LargeChangeAdaptiveDelayWorkerTest {
 
     ChangeTaskImpl timeoutTask = timeoutTasks.get(0);
     Assert.assertNotNull(timeoutTask);
-    this.assertBetween(timeoutTask.deadline(), now1 + expectDelay, now2 + expectDelay);
-    this.assertBetween(timeoutTask.expireTimestamp, now1 + expectDelay, now2 + expectDelay);
-    this.assertBetween(timeoutTask.expireDeadlineTimestamp, now1 + expectDelay, now2 + expectDelay);
+    this.assertBetween(
+        timeoutTask.deadline(),
+        smallNow1 + this.changeDebouncingMillis,
+        smallNow2 + this.changeDebouncingMillis);
+    this.assertBetween(
+        timeoutTask.expireTimestamp,
+        smallNow1 + this.changeDebouncingMillis,
+        smallNow2 + this.changeDebouncingMillis);
+    this.assertBetween(
+        timeoutTask.expireDeadlineTimestamp,
+        smallNow1 + this.changeDebouncingMaxMillis,
+        smallNow2 + this.changeDebouncingMaxMillis);
 
     Map<String, Long> timeoutExpectDatumVersion = timeoutTask.changeCtx.getExpectDatumVersion();
     Assert.assertNotNull(timeoutExpectDatumVersion);
@@ -499,9 +516,13 @@ public class LargeChangeAdaptiveDelayWorkerTest {
     TraceTimes traceTimesOne = Mockito.mock(TraceTimes.class);
     TriggerPushContext changeCtxOne =
         new TriggerPushContext("DataCenter", 1, "DataNode", 0, traceTimesOne, 1001);
+    long expectDelay =
+        this.computeDelay(this.baseDelay, this.delayPerUnit, this.publisherThreshold, 1001);
 
+    long largeNow1 = System.currentTimeMillis();
     boolean result =
         largeChangeAdaptiveDelayWorker.commitChange(changeKey, changeHandler, changeCtxOne);
+    long largeNow2 = System.currentTimeMillis();
     Assert.assertTrue(result);
 
     // 第二次推送为小推送
@@ -509,28 +530,26 @@ public class LargeChangeAdaptiveDelayWorkerTest {
     TriggerPushContext changeCtxTwo =
         new TriggerPushContext("DataCenter", 2, "DataNode", 0, traceTimesTwo, 100);
 
-    long now1 = System.currentTimeMillis();
+    long smallNow1 = System.currentTimeMillis();
     result = largeChangeAdaptiveDelayWorker.commitChange(changeKey, changeHandler, changeCtxTwo);
-    long now2 = System.currentTimeMillis();
+    long smallNow2 = System.currentTimeMillis();
 
     Assert.assertTrue(result);
 
     ChangeTaskImpl changeTask = largeChangeAdaptiveDelayWorker.findTask(changeKey);
     Assert.assertNotNull(changeTask);
 
-    // 首先推送时间是第二次小推送的推送时间
+    // 首先推送时间是第二次小推送的推送时间，但是 deadline 是第一次推送的 deadline
     this.assertBetween(
         changeTask.deadline(),
-        now1 + this.changeDebouncingMillis,
-        now2 + this.changeDebouncingMillis);
+        smallNow1 + this.changeDebouncingMillis,
+        smallNow2 + this.changeDebouncingMillis);
     this.assertBetween(
         changeTask.expireTimestamp,
-        now1 + this.changeDebouncingMillis,
-        now2 + this.changeDebouncingMillis);
+        smallNow1 + this.changeDebouncingMillis,
+        smallNow2 + this.changeDebouncingMillis);
     this.assertBetween(
-        changeTask.expireDeadlineTimestamp,
-        now1 + this.changeDebouncingMaxMillis,
-        now2 + this.changeDebouncingMaxMillis);
+        changeTask.expireDeadlineTimestamp, largeNow1 + expectDelay, largeNow2 + expectDelay);
 
     // 其次版本号应当是第二次小推送的版本号
     Map<String, Long> expectDatumVersion = changeTask.changeCtx.getExpectDatumVersion();
@@ -552,16 +571,14 @@ public class LargeChangeAdaptiveDelayWorkerTest {
     Assert.assertNotNull(timeoutTask);
     this.assertBetween(
         timeoutTask.deadline(),
-        now1 + this.changeDebouncingMillis,
-        now2 + this.changeDebouncingMillis);
+        smallNow1 + this.changeDebouncingMillis,
+        smallNow2 + this.changeDebouncingMillis);
     this.assertBetween(
         timeoutTask.expireTimestamp,
-        now1 + this.changeDebouncingMillis,
-        now2 + this.changeDebouncingMillis);
+        smallNow1 + this.changeDebouncingMillis,
+        smallNow2 + this.changeDebouncingMillis);
     this.assertBetween(
-        timeoutTask.expireDeadlineTimestamp,
-        now1 + this.changeDebouncingMaxMillis,
-        now2 + this.changeDebouncingMaxMillis);
+        timeoutTask.expireDeadlineTimestamp, largeNow1 + expectDelay, largeNow2 + expectDelay);
 
     Map<String, Long> timeoutExpectDatumVersion = timeoutTask.changeCtx.getExpectDatumVersion();
     Assert.assertNotNull(timeoutExpectDatumVersion);

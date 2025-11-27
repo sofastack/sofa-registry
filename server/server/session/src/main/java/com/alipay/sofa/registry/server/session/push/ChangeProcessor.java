@@ -22,12 +22,11 @@ import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import com.google.common.collect.Maps;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import javax.annotation.PostConstruct;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Autowired;
 
 public class ChangeProcessor {
   private static final Logger LOGGER = LoggerFactory.getLogger(ChangeProcessor.class);
@@ -51,7 +50,8 @@ public class ChangeProcessor {
           new Worker(
               sessionServerConfig.getDataChangeDebouncingMillis(),
               sessionServerConfig.getDataChangeMaxDebouncingMillis());
-      LargeChangeAdaptiveDelayConfig currentLargeChangeAdaptiveDelayConfig = this.largeChangeAdaptiveDelayConfig;
+      LargeChangeAdaptiveDelayConfig currentLargeChangeAdaptiveDelayConfig =
+          this.largeChangeAdaptiveDelayConfig;
       if (currentLargeChangeAdaptiveDelayConfig != null) {
         workers[i].setLargeChangeAdaptiveDelayConfig(currentLargeChangeAdaptiveDelayConfig);
       }
