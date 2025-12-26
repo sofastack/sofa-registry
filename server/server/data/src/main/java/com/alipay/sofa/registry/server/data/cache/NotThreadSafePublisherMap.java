@@ -66,8 +66,8 @@ public class NotThreadSafePublisherMap {
 
   // write method, need update real publisher number
   public PublisherEnvelope put(String registerId, PublisherEnvelope publisher) {
-    if (null == publisher) {
-      return null;
+    if (publisher == null) {
+      throw new IllegalArgumentException("publisher cannot be null");
     }
 
     PublisherEnvelope existPublisher = this.publishers.put(registerId, publisher);
@@ -121,6 +121,9 @@ public class NotThreadSafePublisherMap {
   }
 
   public boolean remove(String registerId, PublisherEnvelope expectDeletePublisher) {
+    if (expectDeletePublisher == null) {
+      throw new IllegalArgumentException("expectDeletePublisher cannot be null");
+    }
     boolean deleted = this.publishers.remove(registerId, expectDeletePublisher);
     if (deleted) {
       // 成功删除了

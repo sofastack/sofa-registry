@@ -18,6 +18,7 @@ package com.alipay.sofa.registry.server.session.push;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -98,7 +99,11 @@ public class ChangeTaskQueue<Key extends Comparable<Key>, Task extends ChangeTas
         // 更新任务，先移除旧任务再添加新任务
         if (!this.taskLinkList.remove(existTask)) {
           return false;
+        } else {
+          // 队列中的任务删除掉后，同步删除掉 Map 中的任务映射
+          this.taskMap.remove(key);
         }
+        // 尝试添加新任务
         if (!this.taskLinkList.add(task)) {
           return false;
         }

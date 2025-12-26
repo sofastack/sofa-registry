@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.server.session.push;
 
 import com.alipay.sofa.registry.util.StringFormatter;
+
 import java.util.Objects;
 
 public final class ChangeTaskImpl implements ChangeTask<ChangeKey> {
@@ -59,6 +60,11 @@ public final class ChangeTaskImpl implements ChangeTask<ChangeKey> {
   @Override
   public long deadline() {
     return this.expireTimestamp;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(this.key);
   }
 
   @Override
