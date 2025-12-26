@@ -17,9 +17,11 @@
 package com.alipay.sofa.registry.server.data.cache;
 
 import com.google.common.collect.Maps;
+
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 
 /**
@@ -28,11 +30,12 @@ import java.util.function.BiConsumer;
  */
 public class NotThreadSafePublisherMap {
 
-  private int realPubNum;
+  private final AtomicInteger realPubNum;
 
   private final Map<String, PublisherEnvelope> publishers;
 
   public NotThreadSafePublisherMap() {
+    this.realPubNum = new AtomicInteger(0);
     this.publishers = Maps.newConcurrentMap();
   }
 
@@ -58,15 +61,19 @@ public class NotThreadSafePublisherMap {
   }
 
   public int getRealPubNum() {
-    return this.realPubNum;
+    return this.realPubNum.get();
   }
 
   // write method, need update real publisher number
   public PublisherEnvelope put(String registerId, PublisherEnvelope publisher) {
+    if (null == publisher) {
+      return null;
+    }
+
     PublisherEnvelope existPublisher = this.publishers.put(registerId, publisher);
     if (null == existPublisher) {
       if (publisher.isPub()) {
-        this.realPubNum++;
+        this.realPubNum.incrementAndGet();
       }
       return null;
     }
@@ -91,9 +98,9 @@ public class NotThreadSafePublisherMap {
     //      }
     //    }
     if (isExistPub && !isPub) {
-      this.realPubNum--;
+      this.realPubNum.decrementAndGet();
     } else if (!isExistPub && isPub) {
-      this.realPubNum++;
+      this.realPubNum.incrementAndGet();
     }
 
     return existPublisher;
@@ -101,14 +108,14 @@ public class NotThreadSafePublisherMap {
 
   public void clear() {
     this.publishers.clear();
-    this.realPubNum = 0;
+    this.realPubNum.set(0);
   }
 
   public PublisherEnvelope remove(String registerId) {
     PublisherEnvelope existPublisher = this.publishers.remove(registerId);
     if (null != existPublisher && existPublisher.isPub()) {
       // 移除了 Pub，那么 Publisher 数量减少
-      this.realPubNum--;
+      this.realPubNum.decrementAndGet();
     }
     return existPublisher;
   }
@@ -119,7 +126,7 @@ public class NotThreadSafePublisherMap {
       // 成功删除了
       if (expectDeletePublisher.isPub()) {
         // 删除了一个 Publisher，计数需要减少
-        this.realPubNum--;
+        this.realPubNum.decrementAndGet();
       }
     }
     return deleted;
