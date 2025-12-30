@@ -203,4 +203,36 @@ public class ChangeTaskQueue<Key extends Comparable<Key>, Task extends ChangeTas
       this.readLock.unlock();
     }
   }
+
+  /**
+   * 提供给测试用例检查数据结构是否符合预期的方法
+   *
+   * @return 任务映射表的拷贝
+   */
+  @VisibleForTesting
+  public Map<Key, Task> getTaskMap() {
+    this.readLock.lock();
+    try {
+      Map<Key, Task> cloneMap = Maps.newConcurrentMap();
+      cloneMap.putAll(this.taskMap);
+      return cloneMap;
+    } finally {
+      this.readLock.unlock();
+    }
+  }
+
+  /**
+   * 提供给测试用例检查数据结构是否符合预期的方法
+   *
+   * @return 跳表集合的拷贝
+   */
+  @VisibleForTesting
+  public ConcurrentSkipListSet<Task> getTaskLinkList() {
+    this.readLock.lock();
+    try {
+      return taskLinkList.clone();
+    } finally {
+      this.readLock.unlock();
+    }
+  }
 }

@@ -16,10 +16,16 @@
  */
 package com.alipay.sofa.registry.server.session.push;
 
-import java.util.List;
-import java.util.concurrent.TimeUnit;
+import org.apache.commons.collections.CollectionUtils;
 import org.junit.Assert;
 import org.junit.Test;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author huicha
@@ -114,6 +120,94 @@ public class ChangeTaskQueueTest {
 
     taskThreeFromQueue = queue.findTask("Key3");
     Assert.assertNull(taskThreeFromQueue);
+  }
+
+  @Test
+  public void testConcurrentPushAndPop() throws InterruptedException {
+    ChangeTaskQueue<String, MockChangeTask> queue = new ChangeTaskQueue<>();
+
+    long timeout = TimeUnit.SECONDS.toMillis(1L);
+    int keyRange = 10000;
+
+    // 32 个 push 线程 + 1 个 pop 线程 = 33
+    CountDownLatch latch = new CountDownLatch(33);
+
+    // 这里计划单线程 pop，多线程 push
+    // 创建 push 的线程
+    ThreadGroup pushTaskGroup = new ThreadGroup("unit-test-push-task");
+    for (int index = 0; index < 32; index++) {
+      String threadName = "push-task-thread-" + index;
+      Thread pushTaskThread = new Thread(pushTaskGroup, threadName) {
+        @Override
+        public void run() {
+          try {
+            Random random = new Random();
+            while (true) {
+              int next = random.nextInt(keyRange);
+
+              String key = "Key" + next;
+              long deadline = System.currentTimeMillis() + timeout;
+
+              MockChangeTask task = new MockChangeTask(key, deadline);
+              queue.pushTask(task);
+
+              Thread.sleep(TimeUnit.MILLISECONDS.toMillis(50L));
+            }
+          } catch (InterruptedException interruptedException) {
+            // 响应中断退出
+          } finally {
+            latch.countDown();
+          }
+        }
+      };
+      pushTaskThread.start();
+    }
+
+    // 开一个 pop 的线程
+    String threadName = "pop-task-thread";
+    Thread popTaskThread = new Thread(threadName) {
+      @Override
+      public void run() {
+        try {
+          while (true) {
+            List<MockChangeTask> timeoutTasks = queue.popTimeoutTasks(System.currentTimeMillis());
+            int size = CollectionUtils.size(timeoutTasks);
+            System.out.println("pop timeout task size: " + size);
+            Thread.sleep(TimeUnit.MILLISECONDS.toMillis(50L));
+          }
+        } catch (InterruptedException interruptedException) {
+          // 响应中断退出
+        } finally {
+          latch.countDown();
+        }
+      }
+    };
+    popTaskThread.start();
+
+    // 首先保持运行一段时间
+    Thread.sleep(TimeUnit.SECONDS.toMillis(5L));
+
+    // 然后中断 push 线程
+    pushTaskGroup.interrupt();
+
+    // 等一个 timeout + 50ms 的时间，让 pop 线程处理完所有的任务
+    Thread.sleep(timeout + TimeUnit.MILLISECONDS.toMillis(50L));
+
+    // 中断 pop 线程
+    popTaskThread.interrupt();
+
+    // 等待任务都停止了
+    boolean result = latch.await(1, TimeUnit.SECONDS);
+    Assert.assertTrue(result);
+
+    // 检查队列状态，这里预期所有的任务都能正常被取出
+    Map<String, MockChangeTask> taskMap = queue.getTaskMap();
+    Assert.assertNotNull(taskMap);
+    Assert.assertTrue(taskMap.isEmpty());
+
+    ConcurrentSkipListSet<MockChangeTask> taskList = queue.getTaskLinkList();
+    Assert.assertNotNull(taskList);
+    Assert.assertTrue(taskList.isEmpty());
   }
 }
 
