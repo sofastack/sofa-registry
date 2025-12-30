@@ -18,7 +18,6 @@ package com.alipay.sofa.registry.server.session.push;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;

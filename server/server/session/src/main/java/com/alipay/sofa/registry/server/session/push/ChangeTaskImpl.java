@@ -17,7 +17,6 @@
 package com.alipay.sofa.registry.server.session.push;
 
 import com.alipay.sofa.registry.util.StringFormatter;
-
 import java.util.Objects;
 
 public final class ChangeTaskImpl implements ChangeTask<ChangeKey> {

@@ -57,9 +57,9 @@ public class DataChangeRequest implements Serializable {
   }
 
   public Map<String, Integer> getPublisherCounts() {
-    return null == publisherCounts ?
-            Collections.emptyMap() :
-            Collections.unmodifiableMap(publisherCounts);
+    return null == publisherCounts
+        ? Collections.emptyMap()
+        : Collections.unmodifiableMap(publisherCounts);
   }
 
   public String getDataCenter() {

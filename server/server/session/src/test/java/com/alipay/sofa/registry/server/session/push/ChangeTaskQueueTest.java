@@ -16,16 +16,15 @@
  */
 package com.alipay.sofa.registry.server.session.push;
 
-import org.apache.commons.collections.CollectionUtils;
-import org.junit.Assert;
-import org.junit.Test;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import org.apache.commons.collections.CollectionUtils;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author huicha
@@ -137,51 +136,54 @@ public class ChangeTaskQueueTest {
     ThreadGroup pushTaskGroup = new ThreadGroup("unit-test-push-task");
     for (int index = 0; index < 32; index++) {
       String threadName = "push-task-thread-" + index;
-      Thread pushTaskThread = new Thread(pushTaskGroup, threadName) {
-        @Override
-        public void run() {
-          try {
-            Random random = new Random();
-            while (true) {
-              int next = random.nextInt(keyRange);
+      Thread pushTaskThread =
+          new Thread(pushTaskGroup, threadName) {
+            @Override
+            public void run() {
+              try {
+                Random random = new Random();
+                while (true) {
+                  int next = random.nextInt(keyRange);
 
-              String key = "Key" + next;
-              long deadline = System.currentTimeMillis() + timeout;
+                  String key = "Key" + next;
+                  long deadline = System.currentTimeMillis() + timeout;
 
-              MockChangeTask task = new MockChangeTask(key, deadline);
-              queue.pushTask(task);
+                  MockChangeTask task = new MockChangeTask(key, deadline);
+                  queue.pushTask(task);
 
-              Thread.sleep(TimeUnit.MILLISECONDS.toMillis(50L));
+                  Thread.sleep(TimeUnit.MILLISECONDS.toMillis(50L));
+                }
+              } catch (InterruptedException interruptedException) {
+                // 响应中断退出
+              } finally {
+                latch.countDown();
+              }
             }
-          } catch (InterruptedException interruptedException) {
-            // 响应中断退出
-          } finally {
-            latch.countDown();
-          }
-        }
-      };
+          };
       pushTaskThread.start();
     }
 
     // 开一个 pop 的线程
     String threadName = "pop-task-thread";
-    Thread popTaskThread = new Thread(threadName) {
-      @Override
-      public void run() {
-        try {
-          while (true) {
-            List<MockChangeTask> timeoutTasks = queue.popTimeoutTasks(System.currentTimeMillis());
-            int size = CollectionUtils.size(timeoutTasks);
-            System.out.println("pop timeout task size: " + size);
-            Thread.sleep(TimeUnit.MILLISECONDS.toMillis(50L));
+    Thread popTaskThread =
+        new Thread(threadName) {
+          @Override
+          public void run() {
+            try {
+              while (true) {
+                List<MockChangeTask> timeoutTasks =
+                    queue.popTimeoutTasks(System.currentTimeMillis());
+                int size = CollectionUtils.size(timeoutTasks);
+                System.out.println("pop timeout task size: " + size);
+                Thread.sleep(TimeUnit.MILLISECONDS.toMillis(50L));
+              }
+            } catch (InterruptedException interruptedException) {
+              // 响应中断退出
+            } finally {
+              latch.countDown();
+            }
           }
-        } catch (InterruptedException interruptedException) {
-          // 响应中断退出
-        } finally {
-          latch.countDown();
-        }
-      }
-    };
+        };
     popTaskThread.start();
 
     // 首先保持运行一段时间

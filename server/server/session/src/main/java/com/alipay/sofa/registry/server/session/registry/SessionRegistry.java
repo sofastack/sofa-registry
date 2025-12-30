@@ -426,7 +426,7 @@ public class SessionRegistry implements Registry {
                                       callableInfo.getCurrentTs());
                               firePushService.fireOnChange(callableInfo.getDataInfoId(), ctx);
                               SCAN_VER_LOGGER.info(
-                                    "[fetchSlotVerNotify]round={},{},{},{},{}",
+                                  "[fetchSlotVerNotify]round={},{},{},{},{}",
                                   callableInfo.getRound(),
                                   callableInfo.getVersion(),
                                   callableInfo.getDataInfoId(),
