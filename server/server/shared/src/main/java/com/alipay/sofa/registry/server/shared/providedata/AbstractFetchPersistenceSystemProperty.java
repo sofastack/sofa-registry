@@ -22,6 +22,7 @@ import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
+import com.google.common.annotations.VisibleForTesting;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import org.apache.commons.lang.StringUtils;
@@ -125,4 +126,9 @@ public abstract class AbstractFetchPersistenceSystemProperty<
   protected abstract E fetchFromPersistence();
 
   protected abstract boolean doProcess(T expect, E data);
+
+  @VisibleForTesting
+  public void shutdownWatchDog() {
+    this.watchDog.close();
+  }
 }

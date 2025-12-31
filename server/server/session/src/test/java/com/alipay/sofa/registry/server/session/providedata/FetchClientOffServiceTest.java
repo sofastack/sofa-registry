@@ -92,6 +92,7 @@ public class FetchClientOffServiceTest {
   @AfterClass
   public static void after() {
     server.close();
+    fetchClientOffAddressService.shutdownWatchDog();
   }
 
   @Test

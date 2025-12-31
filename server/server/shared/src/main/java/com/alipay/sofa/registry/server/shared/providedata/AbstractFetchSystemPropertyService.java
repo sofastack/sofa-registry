@@ -165,4 +165,9 @@ public abstract class AbstractFetchSystemPropertyService<T extends SystemDataSto
   public AtomicReference<T> getStorage() {
     return storage;
   }
+
+  @VisibleForTesting
+  public void shutdownWatchDog() {
+    this.watchDog.close();
+  }
 }

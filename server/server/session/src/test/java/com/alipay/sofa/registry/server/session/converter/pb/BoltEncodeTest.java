@@ -28,6 +28,7 @@ import com.alipay.sofa.registry.core.model.DataBox;
 import com.alipay.sofa.registry.core.model.PublisherRegister;
 import com.alipay.sofa.registry.remoting.bolt.serializer.ProtobufCustomSerializer;
 import com.alipay.sofa.registry.remoting.bolt.serializer.ProtobufSerializer;
+import com.alipay.sofa.registry.server.session.utils.UnitTestGCMonitor;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
@@ -43,6 +44,11 @@ import org.junit.Test;
  * @version $Id: BoltEncodeTest.java, v 0.1 2018年03月21日 5:26 PM bystander Exp $
  */
 public class BoltEncodeTest {
+
+  public BoltEncodeTest() {
+    UnitTestGCMonitor unitTestGCMonitor = UnitTestGCMonitor.getInstance();
+    unitTestGCMonitor.startMonitoring();
+  }
 
   @Test
   public void test() {
