@@ -43,12 +43,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.net.InetSocketAddress;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -77,7 +73,7 @@ public class FirePushService {
   @Autowired DataCenterMetadataCache dataCenterMetadataCache;
 
   RegProcessor regProcessor;
-  final ChangeHandler changeHandler = new ChangeHandler();
+  final ChangeHandler changeHandler = new ChangeHandlerImpl();
 
   private final Set<String> localDataCenter;
 
@@ -104,7 +100,10 @@ public class FirePushService {
 
   public boolean fireOnChange(String dataInfoId, TriggerPushContext changeCtx) {
     try {
-      changeProcessor.fireChange(dataInfoId, changeHandler, changeCtx);
+      if (!changeProcessor.fireChange(dataInfoId, changeHandler, changeCtx)) {
+        LOGGER.error(
+            "process fire change fail, dataInfoId: {}, changeCtx={}", dataInfoId, changeCtx);
+      }
       CHANGE_TASK_COUNTER.inc();
       return true;
     } catch (Throwable e) {
@@ -337,8 +336,7 @@ public class FirePushService {
     return subscribersSend;
   }
 
-  final class ChangeHandler implements ChangeProcessor.ChangeHandler {
-
+  final class ChangeHandlerImpl implements ChangeHandler {
     @Override
     public boolean onChange(String dataInfoId, TriggerPushContext changeCtx) {
       try {

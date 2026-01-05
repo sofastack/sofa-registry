@@ -26,6 +26,7 @@ import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.slot.filter.SyncSlotAcceptorManager;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.URL;
+import com.alipay.sofa.registry.common.model.store.UnPublisher;
 import com.alipay.sofa.registry.server.data.TestBaseUtils;
 import com.alipay.sofa.registry.server.data.pubiterator.DatumBiConsumer;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
@@ -33,9 +34,7 @@ import com.alipay.sofa.registry.util.DatumVersionUtil;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
 import org.junit.Assert;
 import org.junit.Test;
@@ -386,5 +385,74 @@ public class PublisherGroupTest {
     conns = group.getByConnectId(newer.connectId());
     Assert.assertEquals(conns.size(), 1);
     Assert.assertEquals(conns.get(newer.getRegisterId()), newer);
+  }
+
+  @Test
+  public void testPublisherCount() {
+    PublisherGroup publisherGroup =
+        new PublisherGroup("DataID#@#INSTANCE_ID#@#Group", "DataCenter");
+    int realPubNum = publisherGroup.getRealPubNum();
+    Assert.assertEquals(realPubNum, 0);
+
+    Publisher publisherOne = TestBaseUtils.createTestPublisher("DataID", "INSTANCE_ID", "Group");
+    publisherGroup.addPublisher(publisherOne);
+    realPubNum = publisherGroup.getRealPubNum();
+    Assert.assertEquals(realPubNum, 1);
+
+    Collection<ProcessId> sessionProcessIds = publisherGroup.getSessionProcessIds();
+    Assert.assertNotNull(sessionProcessIds);
+    Assert.assertEquals(sessionProcessIds.size(), 1);
+    ProcessId publisherOneProcessId = sessionProcessIds.iterator().next();
+
+    publisherGroup.addPublisher(publisherOne);
+    realPubNum = publisherGroup.getRealPubNum();
+    Assert.assertEquals(realPubNum, 1);
+
+    long oldPublisherOneVersion = publisherOne.getVersion();
+    long newPublisherOneVersion = oldPublisherOneVersion + 1;
+    publisherOne.setVersion(newPublisherOneVersion);
+    publisherGroup.addPublisher(publisherOne);
+    realPubNum = publisherGroup.getRealPubNum();
+    Assert.assertEquals(realPubNum, 1);
+
+    List<Publisher> publishers =
+        Arrays.asList(
+            TestBaseUtils.createTestPublisher("DataID", "INSTANCE_ID", "Group"),
+            TestBaseUtils.createTestPublisher("DataID", "INSTANCE_ID", "Group"));
+    publisherGroup.put(publishers);
+    realPubNum = publisherGroup.getRealPubNum();
+    Assert.assertEquals(realPubNum, 3);
+
+    publisherGroup.remove(
+        publisherOneProcessId,
+        Collections.singletonMap(
+            publisherOne.getRegisterId(),
+            RegisterVersion.of(newPublisherOneVersion, publisherOne.getRegisterTimestamp())));
+    realPubNum = publisherGroup.getRealPubNum();
+    Assert.assertEquals(realPubNum, 2);
+
+    Collection<ProcessId> processIds = publisherGroup.getSessionProcessIds();
+    for (ProcessId processId : processIds) {
+      publisherGroup.clean(processId, CleanContinues.ALWAYS);
+    }
+    realPubNum = publisherGroup.getRealPubNum();
+    Assert.assertEquals(realPubNum, 0);
+
+    Publisher publisherTwo = TestBaseUtils.createTestPublisher("DataID", "INSTANCE_ID", "Group");
+    publisherGroup.addPublisher(publisherTwo);
+    realPubNum = publisherGroup.getRealPubNum();
+    Assert.assertEquals(realPubNum, 1);
+
+    long oldPublisherTwoVersion = publisherTwo.getVersion();
+    UnPublisher unPublisher = UnPublisher.of(publisherTwo);
+
+    publisherGroup.addPublisher(unPublisher);
+    realPubNum = publisherGroup.getRealPubNum();
+    Assert.assertEquals(realPubNum, 1);
+
+    unPublisher.setVersion(oldPublisherTwoVersion + 1);
+    publisherGroup.addPublisher(unPublisher);
+    realPubNum = publisherGroup.getRealPubNum();
+    Assert.assertEquals(realPubNum, 0);
   }
 }

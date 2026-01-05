@@ -31,6 +31,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class PushEfficiencyImproveConfig {
 
   public static final int DEFAULT_CHANGE_TASK_WAITING_MILLIS = 100;
+  public static final int DEFAULT_LARGE_CHANGE_TASK_WAITING_MILLIS = 1000;
   public static final int DEFAULT_PUSH_TASK_WAITING_MILLIS = 200;
   public static final int DEFAULT_REG_WORK_WAITING_MILLIS = 200;
   public static final String CURRENT_DATA_CENTER_ALL_ZONE = "ALL_ZONE";
@@ -57,6 +58,8 @@ public class PushEfficiencyImproveConfig {
   private int changeDebouncingMaxMillis = DEFAULT_CHANGE_DEBOUNCING_MAX_MILLIS;
   /** session 异步处理 changeTask 的 Looper 间隔时间, 默认 100ms */
   private int changeTaskWaitingMillis = DEFAULT_CHANGE_TASK_WAITING_MILLIS;
+  /** session 异步处理 largeChangeTask (大推送) 的 Looper 间隔时间, 默认 1000ms */
+  private int largeChangeTaskWaitingMillis = DEFAULT_LARGE_CHANGE_TASK_WAITING_MILLIS;
   /** session 异步处理 pushTask 的 Looper 间隔时间, 默认 200ms */
   private int pushTaskWaitingMillis = DEFAULT_PUSH_TASK_WAITING_MILLIS;
   /** session 处理 pushTask delay pushTaskDebouncingMillis 时间处理，可以合并相同的推送任务，避免数据连续变化触发大量推送, 默认500ms */
@@ -83,6 +86,9 @@ public class PushEfficiencyImproveConfig {
 
   /** 自动优化的相关配置 */
   private AutoPushEfficiencyConfig autoPushEfficiencyConfig = null;
+
+  /** 针对大推送的延迟推送策略配置 */
+  private LargeChangeAdaptiveDelayConfig largeChangeAdaptiveDelayConfig = null;
 
   /**
    * 判断是否满足 三板斧灰度条件
@@ -147,6 +153,13 @@ public class PushEfficiencyImproveConfig {
       return changeTaskWaitingMillis;
     }
     return DEFAULT_CHANGE_TASK_WAITING_MILLIS;
+  }
+
+  public int getLargeChangeTaskWaitingMillis() {
+    if (inIpZoneSBF()) {
+      return largeChangeTaskWaitingMillis;
+    }
+    return DEFAULT_LARGE_CHANGE_TASK_WAITING_MILLIS;
   }
 
   public void setChangeTaskWaitingMillis(int changeTaskWaitingMillis) {
@@ -261,6 +274,15 @@ public class PushEfficiencyImproveConfig {
 
   public void setAutoPushEfficiencyConfig(AutoPushEfficiencyConfig autoPushEfficiencyConfig) {
     this.autoPushEfficiencyConfig = autoPushEfficiencyConfig;
+  }
+
+  public LargeChangeAdaptiveDelayConfig getLargeChangeAdaptiveDelayConfig() {
+    return largeChangeAdaptiveDelayConfig;
+  }
+
+  public void setLargeChangeAdaptiveDelayConfig(
+      LargeChangeAdaptiveDelayConfig largeChangeAdaptiveDelayConfig) {
+    this.largeChangeAdaptiveDelayConfig = largeChangeAdaptiveDelayConfig;
   }
 
   public void setSessionServerConfig(SessionServerConfig sessionServerConfig) {

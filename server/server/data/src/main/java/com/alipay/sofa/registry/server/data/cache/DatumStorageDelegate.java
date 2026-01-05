@@ -153,6 +153,11 @@ public class DatumStorageDelegate implements DatumStorage {
   }
 
   @Override
+  public Integer getPubCount(String dataCenter, String dataInfoId) {
+    return storageOf(dataCenter).getPubCount(dataCenter, dataInfoId);
+  }
+
+  @Override
   public void putPublisherGroups(String dataCenter, int slotId) {
     storageOf(dataCenter).putPublisherGroups(dataCenter, slotId);
   }

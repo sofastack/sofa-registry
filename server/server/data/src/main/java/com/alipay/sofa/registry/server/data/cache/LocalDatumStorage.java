@@ -83,6 +83,11 @@ public final class LocalDatumStorage implements DatumStorage {
   }
 
   @Override
+  public Integer getPubCount(String dataCenter, String dataInfoId) {
+    return storage.getPubCount(dataInfoId);
+  }
+
+  @Override
   public void putPublisherGroups(String dataCenter, int slotId) {
     storage.putPublisherGroups(slotId);
   }

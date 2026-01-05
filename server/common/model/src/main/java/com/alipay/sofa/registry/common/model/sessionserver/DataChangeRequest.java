@@ -35,19 +35,31 @@ public class DataChangeRequest implements Serializable {
 
   private final Map<String, DatumVersion> dataInfoIds;
 
+  private final Map<String, Integer> publisherCounts;
+
   private final String dataCenter;
 
   private final TraceTimes times;
 
   public DataChangeRequest(
-      String dataCenter, Map<String, DatumVersion> dataInfoIds, TraceTimes times) {
+      String dataCenter,
+      Map<String, DatumVersion> dataInfoIds,
+      Map<String, Integer> publisherCounts,
+      TraceTimes times) {
     this.dataCenter = dataCenter;
     this.dataInfoIds = dataInfoIds;
+    this.publisherCounts = publisherCounts;
     this.times = times;
   }
 
   public Map<String, DatumVersion> getDataInfoIds() {
     return Collections.unmodifiableMap(dataInfoIds);
+  }
+
+  public Map<String, Integer> getPublisherCounts() {
+    return null == publisherCounts
+        ? Collections.emptyMap()
+        : Collections.unmodifiableMap(publisherCounts);
   }
 
   public String getDataCenter() {

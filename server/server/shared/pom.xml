@@ -5,7 +5,7 @@
     <parent>
         <artifactId>registry-server</artifactId>
         <groupId>com.alipay.sofa</groupId>
-        <version>6.6.1-auto-regulator</version>
+        <version>6.6.2</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -101,6 +101,16 @@
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.openjdk.jmh</groupId>
+            <artifactId>jmh-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.openjdk.jmh</groupId>
+            <artifactId>jmh-generator-annprocess</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

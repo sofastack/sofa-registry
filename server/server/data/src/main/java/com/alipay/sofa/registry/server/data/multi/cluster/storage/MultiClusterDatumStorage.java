@@ -33,11 +33,7 @@ import com.alipay.sofa.registry.server.data.cache.PublisherGroup;
 import com.alipay.sofa.registry.server.data.slot.SlotChangeListener;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.google.common.collect.Maps;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.BiConsumer;
 
 /**
@@ -155,6 +151,16 @@ public class MultiClusterDatumStorage implements DatumStorage {
       return Collections.emptyMap();
     }
     return storage.getPubCount();
+  }
+
+  @Override
+  public Integer getPubCount(String dataCenter, String dataInfoId) {
+    BaseDatumStorage storage = storageMap.get(dataCenter);
+    if (storage == null) {
+      LOGGER.warn("[nullStorage]getPubCount dataCenter={}, dataInfoId={}", dataCenter, dataInfoId);
+      return 0;
+    }
+    return storage.getPubCount(dataInfoId);
   }
 
   @Override

@@ -27,6 +27,7 @@ import org.springframework.util.CollectionUtils;
 
 public final class TriggerPushContext {
   public final String dataNode;
+  private Integer publisherCount;
   private Map<String, Long> expectDatumVersion;
   private TraceTimes firstTraceTimes;
   private TraceTimes lastTraceTimes;
@@ -37,7 +38,8 @@ public final class TriggerPushContext {
         Collections.singletonMap(dataCenter, expectDatumVersion),
         dataNode,
         triggerSessionTimestamp,
-        new TraceTimes());
+        new TraceTimes(),
+        null);
   }
 
   public TriggerPushContext(
@@ -45,25 +47,29 @@ public final class TriggerPushContext {
       long expectDatumVersion,
       String dataNode,
       long triggerSessionTimestamp,
-      TraceTimes traceTimes) {
+      TraceTimes traceTimes,
+      Integer publisherCount) {
     this(
         Collections.singletonMap(dataCenter, expectDatumVersion),
         dataNode,
         triggerSessionTimestamp,
-        traceTimes);
+        traceTimes,
+        publisherCount);
   }
 
   public TriggerPushContext(
       Map<String, Long> expectDatumVersion, String dataNode, long triggerSessionTimestamp) {
-    this(expectDatumVersion, dataNode, triggerSessionTimestamp, new TraceTimes());
+    this(expectDatumVersion, dataNode, triggerSessionTimestamp, new TraceTimes(), null);
   }
 
   public TriggerPushContext(
       Map<String, Long> expectDatumVersion,
       String dataNode,
       long triggerSessionTimestamp,
-      TraceTimes traceTimes) {
+      TraceTimes traceTimes,
+      Integer publisherCount) {
     this.dataNode = dataNode;
+    this.publisherCount = publisherCount;
     this.expectDatumVersion = expectDatumVersion;
     traceTimes.setTriggerSession(triggerSessionTimestamp);
     this.firstTraceTimes = traceTimes;
@@ -111,6 +117,14 @@ public final class TriggerPushContext {
           firstTraceTimes.format(pushFinishTimestamp),
           lastTraceTimes.format(pushFinishTimestamp));
     }
+  }
+
+  public boolean hasPublisherCount() {
+    return publisherCount != null;
+  }
+
+  public Integer getPublisherCount() {
+    return publisherCount;
   }
 
   @Override

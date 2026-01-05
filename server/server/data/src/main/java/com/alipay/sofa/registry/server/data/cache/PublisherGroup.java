@@ -34,13 +34,7 @@ import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.BiConsumer;
@@ -67,7 +61,8 @@ public final class PublisherGroup {
   final String group;
 
   // if the delete publisher from session, mark unpub
-  final Map<String /*registerId*/, PublisherEnvelope> pubMap = Maps.newConcurrentMap();
+  //  final Map<String /*registerId*/, PublisherEnvelope> pubMap = Maps.newConcurrentMap();
+  final NotThreadSafePublisherMap pubMap = new NotThreadSafePublisherMap();
 
   private volatile long version;
 
@@ -425,6 +420,10 @@ public final class PublisherGroup {
   public String toString() {
     return StringFormatter.format(
         "PubGroup{{},size={},ver={}}", dataInfoId, pubMap.size(), version);
+  }
+
+  public int getRealPubNum() {
+    return this.pubMap.getRealPubNum();
   }
 
   public DatumVersion clearPublishers() {

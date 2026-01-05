@@ -18,14 +18,13 @@ package com.alipay.sofa.registry.server.session.push;
 
 import com.alipay.sofa.registry.server.session.resource.ClientManagerResource;
 import com.google.common.annotations.VisibleForTesting;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.stereotype.Component;
-
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * @author huicha
@@ -118,11 +117,19 @@ public class PushEfficiencyConfigUpdater implements SmartLifecycle {
         this.autoPushEfficiencyRegulator = null;
       }
 
+      LargeChangeAdaptiveDelayConfig largeChangeAdaptiveDelayConfig =
+          pushEfficiencyImproveConfig.getLargeChangeAdaptiveDelayConfig();
+      if (null == largeChangeAdaptiveDelayConfig) {
+        // 使用默认值
+        largeChangeAdaptiveDelayConfig = new LargeChangeAdaptiveDelayConfig();
+      }
+
       // 更新一下 PushProcessor 中的 AutoPushEfficiencyRegulator，以便于统计推送次数
       this.pushProcessor.setAutoPushEfficiencyRegulator(this.autoPushEfficiencyRegulator);
 
       // 更新配置
       this.changeProcessor.setWorkDelayTime(pushEfficiencyImproveConfig);
+      this.changeProcessor.setLargeChangeAdaptiveDelayConfig(largeChangeAdaptiveDelayConfig);
       this.pushProcessor.setPushTaskDelayTime(pushEfficiencyImproveConfig);
       if (this.firePushService.getRegProcessor() != null) {
         this.firePushService.getRegProcessor().setWorkDelayTime(pushEfficiencyImproveConfig);

@@ -97,6 +97,11 @@ public final class PublisherGroups {
     return map;
   }
 
+  Integer getRealPubNum(String dataInfoId) {
+    PublisherGroup group = publisherGroupMap.get(dataInfoId);
+    return group == null ? null : group.getRealPubNum();
+  }
+
   Map<String, Publisher> getByConnectId(ConnectId connectId) {
     Map<String, Publisher> map = Maps.newHashMapWithExpectedSize(64);
     publisherGroupMap.values().forEach(v -> map.putAll(v.getByConnectId(connectId)));

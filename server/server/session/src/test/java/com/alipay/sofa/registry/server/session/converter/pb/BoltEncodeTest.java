@@ -31,19 +31,20 @@ import com.alipay.sofa.registry.remoting.bolt.serializer.ProtobufSerializer;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
+import org.junit.Assert;
+import org.junit.Test;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.junit.Assert;
-import org.junit.Test;
 
 /**
  * @author bystander
  * @version $Id: BoltEncodeTest.java, v 0.1 2018年03月21日 5:26 PM bystander Exp $
  */
 public class BoltEncodeTest {
-
+  
   @Test
   public void test() {
 

@@ -67,6 +67,8 @@ public interface DatumStorage {
 
   Map<String, Integer> getPubCount(String dataCenter);
 
+  Integer getPubCount(String dataCenter, String dataInfoId);
+
   void putPublisherGroups(String dataCenter, int slotId);
 
   DatumVersion putPublisher(String dataCenter, Publisher publisher);

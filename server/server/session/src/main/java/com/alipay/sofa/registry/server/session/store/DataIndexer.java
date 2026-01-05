@@ -23,7 +23,11 @@ import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
-import java.util.*;
+
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
@@ -140,5 +144,10 @@ public abstract class DataIndexer<K, V> {
     public int getWaitingMillis() {
       return (int) ((ThreadLocalRandom.current().nextDouble() * 30 + 30) * 1000);
     }
+  }
+
+  @VisibleForTesting
+  public void shutdownWatchDog() {
+    this.indexerRefresher.close();
   }
 }

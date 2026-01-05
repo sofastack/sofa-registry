@@ -64,4 +64,27 @@ public class PushEfficiencyConfigResource {
       return new GenericResponse().fillFailed("getChangeDebouncingMillis exception");
     }
   }
+
+  @GET
+  @Path("/isUseLargeAdapterDelayChangeWorker")
+  @Produces(MediaType.APPLICATION_JSON)
+  public GenericResponse<Map<String, boolean[]>> isUseLargeAdapterDelayChangeWorker(
+      @HeaderParam("token") String token) {
+    try {
+      if (!AuthChecker.authCheck(token)) {
+        LOGGER.error(
+            "[module=PushEfficiencyConfigResource][method=isUseLargeAdapterDelayChangeWorker] auth check={} fail!",
+            token);
+        return new GenericResponse().fillFailed("auth check fail");
+      }
+      Map<String, boolean[]> dcUseLargeAdapterDelayChangeWorker =
+          this.changeProcessor.isUseLargeAdapterDelayChangeWorker();
+      return new GenericResponse().fillSucceed(dcUseLargeAdapterDelayChangeWorker);
+    } catch (Throwable throwable) {
+      LOGGER.error(
+          "[module=PushEfficiencyConfigResource][method=isUseLargeAdapterDelayChangeWorker] isUseLargeAdapterDelayChangeWorker exception",
+          throwable);
+      return new GenericResponse().fillFailed("isUseLargeAdapterDelayChangeWorker exception");
+    }
+  }
 }
