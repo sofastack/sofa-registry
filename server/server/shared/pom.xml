@@ -5,7 +5,7 @@
     <parent>
         <artifactId>registry-server</artifactId>
         <groupId>com.alipay.sofa</groupId>
-        <version>6.6.2</version>
+        <version>6.6.2-release</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
