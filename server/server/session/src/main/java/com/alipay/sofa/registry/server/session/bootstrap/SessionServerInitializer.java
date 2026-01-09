@@ -74,6 +74,6 @@ public class SessionServerInitializer implements SmartLifecycle {
   @Override
   public void stop(Runnable callback) {
     callback.run();
-    this.running.set(false);
+    stop();
   }
 }

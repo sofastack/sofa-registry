@@ -40,7 +40,7 @@ public class DataServerInitializer implements SmartLifecycle {
   @Override
   public void stop(Runnable runnable) {
     runnable.run();
-    this.isRunning = false;
+    stop();
   }
 
   @Override
