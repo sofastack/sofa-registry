@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.server.session.store;
 
+import static org.mockito.Mockito.*;
+
 import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.SubscriberUtils;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
@@ -29,17 +31,14 @@ import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
 import com.alipay.sofa.registry.server.shared.config.CommonConfig;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import org.junit.Assert;
-import org.junit.Test;
-
 import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
-
-import static org.mockito.Mockito.*;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author shangyu.wh
@@ -68,15 +67,15 @@ public class DataCacheTest extends BaseTest {
       sessionInterests.add(getSub(dataId, ScopeEnum.zone, null, new URL("192.168.1.9", 8000)));
 
       Map<InetSocketAddress, Map<String, Subscriber>> map =
-              getCacheSub(
-                      DataInfo.toDataInfoId(dataId, "instance2", "rpc"), ScopeEnum.zone, sessionInterests);
+          getCacheSub(
+              DataInfo.toDataInfoId(dataId, "instance2", "rpc"), ScopeEnum.zone, sessionInterests);
       Assert.assertTrue(getCacheSub(sessionInterests, connectId));
 
       sessionInterests.deleteByConnectId(ConnectId.parse(connectId));
 
       Map<InetSocketAddress, Map<String, Subscriber>> map2 =
-              getCacheSub(
-                      DataInfo.toDataInfoId(dataId, "instance2", "rpc"), ScopeEnum.zone, sessionInterests);
+          getCacheSub(
+              DataInfo.toDataInfoId(dataId, "instance2", "rpc"), ScopeEnum.zone, sessionInterests);
 
       Assert.assertFalse(getCacheSub(sessionInterests, connectId));
 
@@ -86,7 +85,7 @@ public class DataCacheTest extends BaseTest {
       // get cache change,just remain 192.168.1.9:8000
       Assert.assertEquals(map2.keySet().size(), 1);
       Assert.assertEquals(
-              NetUtil.toAddressString(map2.keySet().iterator().next()), "192.168.1.9:8000");
+          NetUtil.toAddressString(map2.keySet().iterator().next()), "192.168.1.9:8000");
     } finally {
       if (null != sessionInterests) {
         sessionInterests.shutdownWatchDog();
@@ -109,20 +108,20 @@ public class DataCacheTest extends BaseTest {
       }
       // add other ip
       sessionInterests.add(
-              getSub(dataId, ScopeEnum.zone, "xxregist123", new URL("192.168.1.9", 8000)));
+          getSub(dataId, ScopeEnum.zone, "xxregist123", new URL("192.168.1.9", 8000)));
       // sessionInterests.add(getSub(dataId,ScopeEnum.zone,"xxregist456",new URL("192.168.1.10",
       // 7000)));
 
       Map<InetSocketAddress, Map<String, Subscriber>> map =
-              getCacheSub(
-                      DataInfo.toDataInfoId(dataId, "instance2", "rpc"), ScopeEnum.zone, sessionInterests);
+          getCacheSub(
+              DataInfo.toDataInfoId(dataId, "instance2", "rpc"), ScopeEnum.zone, sessionInterests);
       Assert.assertTrue(getCacheSub(sessionInterests, "192.168.1.9:8000_127.0.0.1:34567"));
 
       sessionInterests.deleteById("xxregist123", DataInfo.toDataInfoId(dataId, "instance2", "rpc"));
 
       Map<InetSocketAddress, Map<String, Subscriber>> map2 =
-              getCacheSub(
-                      DataInfo.toDataInfoId(dataId, "instance2", "rpc"), ScopeEnum.zone, sessionInterests);
+          getCacheSub(
+              DataInfo.toDataInfoId(dataId, "instance2", "rpc"), ScopeEnum.zone, sessionInterests);
 
       Assert.assertFalse(getCacheSub(sessionInterests, "192.168.1.9:8000_127.0.0.1:34567"));
       // map no change
@@ -189,15 +188,15 @@ public class DataCacheTest extends BaseTest {
         sessionDataStore.add(p);
         publisherList.add(p);
         Assert.assertTrue(
-                getCachePub(
-                        sessionDataStore,
-                        connectIdss
-                                + ValueConstants.CONNECT_ID_SPLIT
-                                + p.getTargetAddress().buildAddressString()));
+            getCachePub(
+                sessionDataStore,
+                connectIdss
+                    + ValueConstants.CONNECT_ID_SPLIT
+                    + p.getTargetAddress().buildAddressString()));
       }
       for (Publisher p : publisherList) {
         String c =
-                connectId + ValueConstants.CONNECT_ID_SPLIT + p.getTargetAddress().buildAddressString();
+            connectId + ValueConstants.CONNECT_ID_SPLIT + p.getTargetAddress().buildAddressString();
         Assert.assertFalse(getCachePub(sessionDataStore, c));
       }
     } finally {
@@ -334,17 +333,17 @@ public class DataCacheTest extends BaseTest {
       Assert.assertTrue(sessionDataStore.add(publisher2));
 
       Assert.assertEquals(
-              sessionDataStore
-                      .queryByConnectId(ConnectId.parse("192.168.1.1:12345_192.168.1.2:9600"))
-                      .size(),
-              2);
+          sessionDataStore
+              .queryByConnectId(ConnectId.parse("192.168.1.1:12345_192.168.1.2:9600"))
+              .size(),
+          2);
       Assert.assertFalse(sessionDataStore.add(publisher2));
 
       Assert.assertEquals(
-              sessionDataStore
-                      .queryByConnectId(ConnectId.parse("192.168.1.1:12345_192.168.1.2:9600"))
-                      .size(),
-              2);
+          sessionDataStore
+              .queryByConnectId(ConnectId.parse("192.168.1.1:12345_192.168.1.2:9600"))
+              .size(),
+          2);
 
       Publisher publisher3 = new Publisher();
       publisher3.setDataInfoId(publisher1.getDataInfoId());
@@ -368,15 +367,15 @@ public class DataCacheTest extends BaseTest {
       Assert.assertTrue(sessionDataStore.add(publisher4));
 
       Assert.assertEquals(
-              sessionDataStore
-                      .queryByConnectId(ConnectId.parse("192.168.1.1:12345_192.168.1.2:9600"))
-                      .size(),
-              0);
+          sessionDataStore
+              .queryByConnectId(ConnectId.parse("192.168.1.1:12345_192.168.1.2:9600"))
+              .size(),
+          0);
       Assert.assertEquals(
-              sessionDataStore
-                      .queryByConnectId(ConnectId.parse("192.168.1.1:12346_192.168.1.2:9600"))
-                      .size(),
-              2);
+          sessionDataStore
+              .queryByConnectId(ConnectId.parse("192.168.1.1:12346_192.168.1.2:9600"))
+              .size(),
+          2);
     } finally {
       if (null != sessionDataStore) {
         sessionDataStore.shutdownWatchDog();
@@ -417,17 +416,17 @@ public class DataCacheTest extends BaseTest {
       Assert.assertTrue(sessionInterests.add(subscriber2));
 
       Assert.assertEquals(
-              sessionInterests
-                      .queryByConnectId(ConnectId.parse("192.168.1.1:12345_192.168.1.2:9600"))
-                      .size(),
-              2);
+          sessionInterests
+              .queryByConnectId(ConnectId.parse("192.168.1.1:12345_192.168.1.2:9600"))
+              .size(),
+          2);
       sessionInterests.add(subscriber2);
 
       Assert.assertEquals(
-              sessionInterests
-                      .queryByConnectId(ConnectId.parse("192.168.1.1:12345_192.168.1.2:9600"))
-                      .size(),
-              2);
+          sessionInterests
+              .queryByConnectId(ConnectId.parse("192.168.1.1:12345_192.168.1.2:9600"))
+              .size(),
+          2);
 
       Subscriber subscriber3 = createSubscriber();
       subscriber3.setScope(ScopeEnum.dataCenter);
@@ -453,15 +452,15 @@ public class DataCacheTest extends BaseTest {
       Assert.assertTrue(sessionInterests.add(subscriber4));
 
       Assert.assertEquals(
-              sessionInterests
-                      .queryByConnectId(ConnectId.parse("192.168.1.1:12345_192.168.1.2:9600"))
-                      .size(),
-              0);
+          sessionInterests
+              .queryByConnectId(ConnectId.parse("192.168.1.1:12345_192.168.1.2:9600"))
+              .size(),
+          0);
       Assert.assertEquals(
-              sessionInterests
-                      .queryByConnectId(ConnectId.parse("192.168.1.1:12346_192.168.1.2:9600"))
-                      .size(),
-              2);
+          sessionInterests
+              .queryByConnectId(ConnectId.parse("192.168.1.1:12346_192.168.1.2:9600"))
+              .size(),
+          2);
     } finally {
       if (null != sessionInterests) {
         sessionInterests.shutdownWatchDog();
@@ -493,17 +492,17 @@ public class DataCacheTest extends BaseTest {
       Assert.assertTrue(sessionWatchers.add(watcher2));
 
       Assert.assertEquals(
-              sessionWatchers
-                      .queryByConnectId(ConnectId.parse("192.168.1.1:12345_192.168.1.2:9600"))
-                      .size(),
-              2);
+          sessionWatchers
+              .queryByConnectId(ConnectId.parse("192.168.1.1:12345_192.168.1.2:9600"))
+              .size(),
+          2);
       sessionWatchers.add(watcher2);
 
       Assert.assertEquals(
-              sessionWatchers
-                      .queryByConnectId(ConnectId.parse("192.168.1.1:12345_192.168.1.2:9600"))
-                      .size(),
-              2);
+          sessionWatchers
+              .queryByConnectId(ConnectId.parse("192.168.1.1:12345_192.168.1.2:9600"))
+              .size(),
+          2);
 
       Watcher watcher3 = createWatcher();
       watcher3.setDataInfoId(watcher1.getDataInfoId());
@@ -525,15 +524,15 @@ public class DataCacheTest extends BaseTest {
       Assert.assertTrue(sessionWatchers.add(watcher4));
 
       Assert.assertEquals(
-              sessionWatchers
-                      .queryByConnectId(ConnectId.parse("192.168.1.1:12345_192.168.1.2:9600"))
-                      .size(),
-              0);
+          sessionWatchers
+              .queryByConnectId(ConnectId.parse("192.168.1.1:12345_192.168.1.2:9600"))
+              .size(),
+          0);
       Assert.assertEquals(
-              sessionWatchers
-                      .queryByConnectId(ConnectId.parse("192.168.1.1:12346_192.168.1.2:9600"))
-                      .size(),
-              2);
+          sessionWatchers
+              .queryByConnectId(ConnectId.parse("192.168.1.1:12346_192.168.1.2:9600"))
+              .size(),
+          2);
     } finally {
       if (null != sessionWatchers) {
         sessionWatchers.shutdownWatchDog();
@@ -572,28 +571,29 @@ public class DataCacheTest extends BaseTest {
       Assert.assertTrue(sessionInterests.add(subscriber2));
 
       sessionInterests.deleteByConnectId(
-              ConnectId.parse(
-                      subscriber1.getSourceAddress().buildAddressString()
-                              + "_"
-                              + subscriber1.getTargetAddress().buildAddressString()));
+          ConnectId.parse(
+              subscriber1.getSourceAddress().buildAddressString()
+                  + "_"
+                  + subscriber1.getTargetAddress().buildAddressString()));
 
       Assert.assertEquals(
-              sessionInterests
-                      .queryByConnectId(ConnectId.parse("192.168.1.1:12345_192.168.1.2:9600"))
-                      .isEmpty(),
-              true);
+          sessionInterests
+              .queryByConnectId(ConnectId.parse("192.168.1.1:12345_192.168.1.2:9600"))
+              .isEmpty(),
+          true);
       Assert.assertEquals(
-              sessionInterests
-                      .queryByConnectId(ConnectId.parse("192.168.1.1:12346_192.168.1.2:9600"))
-                      .size(),
-              1);
+          sessionInterests
+              .queryByConnectId(ConnectId.parse("192.168.1.1:12346_192.168.1.2:9600"))
+              .size(),
+          1);
 
       Map<InetSocketAddress, Map<String, Subscriber>> addressMap =
-              getCacheSub(subscriber1.getDataInfoId(), subscriber1.getScope(), sessionInterests);
+          getCacheSub(subscriber1.getDataInfoId(), subscriber1.getScope(), sessionInterests);
       Assert.assertEquals(addressMap.get(new InetSocketAddress("192.168.1.1", 12345)), null);
       Assert.assertEquals(addressMap.get(new InetSocketAddress("192.168.1.1", 12346)).size(), 1);
       Assert.assertEquals(sessionInterests.getDatas(subscriber1.getDataInfoId()).size(), 1);
-      Assert.assertTrue(sessionInterests.getDatas(subscriber1.getDataInfoId()).contains(subscriber2));
+      Assert.assertTrue(
+          sessionInterests.getDatas(subscriber1.getDataInfoId()).contains(subscriber2));
     } finally {
       if (null != sessionInterests) {
         sessionInterests.shutdownWatchDog();

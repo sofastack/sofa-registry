@@ -25,12 +25,11 @@ import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import java.util.*;
+import java.util.function.BiConsumer;
 import org.apache.commons.collections.MapUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
-
-import java.util.*;
-import java.util.function.BiConsumer;
 
 /**
  * @author yuzhi.lyz

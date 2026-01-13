@@ -24,14 +24,13 @@ import com.alipay.sofa.registry.server.session.AbstractSessionServerTestBase;
 import com.alipay.sofa.registry.server.session.registry.SessionRegistry.SelectSubscriber;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import java.util.*;
+import java.util.Map.Entry;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.util.CollectionUtils;
-
-import java.util.*;
-import java.util.Map.Entry;
 
 public class SessionInterestsTest extends AbstractSessionServerTestBase {
 
