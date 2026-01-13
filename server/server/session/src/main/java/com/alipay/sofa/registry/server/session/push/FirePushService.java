@@ -101,7 +101,7 @@ public class FirePushService {
   public boolean fireOnChange(String dataInfoId, TriggerPushContext changeCtx) {
     try {
       if (!changeProcessor.fireChange(dataInfoId, changeHandler, changeCtx)) {
-        LOGGER.error(
+        LOGGER.debug(
             "process fire change fail, dataInfoId: {}, changeCtx={}", dataInfoId, changeCtx);
       }
       CHANGE_TASK_COUNTER.inc();

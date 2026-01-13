@@ -27,12 +27,11 @@ import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import java.util.*;
+import java.util.concurrent.*;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
-
-import java.util.*;
-import java.util.concurrent.*;
 
 public class SessionDataStoreTest {
   @Test
@@ -116,7 +115,8 @@ public class SessionDataStoreTest {
 
       Assert.assertNull(store.deleteById("1", "2"));
 
-      Assert.assertNotNull(store.deleteById(publisher0.getRegisterId(), publisher0.getDataInfoId()));
+      Assert.assertNotNull(
+          store.deleteById(publisher0.getRegisterId(), publisher0.getDataInfoId()));
       query = store.queryById(publisher0.getRegisterId(), publisher0.getDataInfoId());
       Assert.assertNull(query);
 
@@ -182,61 +182,62 @@ public class SessionDataStoreTest {
       List<ConnectId> clientOffs = Lists.newArrayListWithExpectedSize(clientOffUrls.size());
       for (URL url : clientOffUrls) {
         clientOffs.add(
-                new ConnectId(
-                        url.getIpAddress(), url.getPort(),
-                        targetAddress.getIpAddress(), targetAddress.getPort()));
+            new ConnectId(
+                url.getIpAddress(), url.getPort(),
+                targetAddress.getIpAddress(), targetAddress.getPort()));
       }
 
       CountDownLatch latch = new CountDownLatch(pubs.size() + unpubs.size() + clientOffs.size());
       ThreadPoolExecutor pubExecutor =
-              new ThreadPoolExecutor(20, 20, 0, TimeUnit.SECONDS, new LinkedBlockingQueue<>(pubs.size()));
+          new ThreadPoolExecutor(
+              20, 20, 0, TimeUnit.SECONDS, new LinkedBlockingQueue<>(pubs.size()));
       ThreadPoolExecutor unpubExecutor =
-              new ThreadPoolExecutor(
-                      20, 20, 0, TimeUnit.SECONDS, new LinkedBlockingQueue<>(unpubs.size()));
+          new ThreadPoolExecutor(
+              20, 20, 0, TimeUnit.SECONDS, new LinkedBlockingQueue<>(unpubs.size()));
       ThreadPoolExecutor clientOffExecutor =
-              new ThreadPoolExecutor(
-                      clientOffs.size(),
-                      clientOffs.size(),
-                      0,
-                      TimeUnit.SECONDS,
-                      new LinkedBlockingDeque<>(clientOffs.size()));
+          new ThreadPoolExecutor(
+              clientOffs.size(),
+              clientOffs.size(),
+              0,
+              TimeUnit.SECONDS,
+              new LinkedBlockingDeque<>(clientOffs.size()));
       Timer refreshTimer = new Timer();
 
       for (Publisher pub : pubs) {
         pubExecutor.execute(
-                () -> {
-                  store.addData(pub);
-                  latch.countDown();
-                });
+            () -> {
+              store.addData(pub);
+              latch.countDown();
+            });
       }
       for (Publisher pub : unpubs) {
         unpubExecutor.execute(
-                () -> {
-                  store.deleteById(pub.getRegisterId(), pub.getDataInfoId());
-                  latch.countDown();
-                });
+            () -> {
+              store.deleteById(pub.getRegisterId(), pub.getDataInfoId());
+              latch.countDown();
+            });
       }
       for (ConnectId connectId : clientOffs) {
         clientOffExecutor.execute(
-                () -> {
-                  ConcurrentUtils.sleepUninterruptibly(random.nextInt(10), TimeUnit.MILLISECONDS);
-                  store.deleteByConnectId(connectId);
-                  latch.countDown();
-                });
+            () -> {
+              ConcurrentUtils.sleepUninterruptibly(random.nextInt(10), TimeUnit.MILLISECONDS);
+              store.deleteByConnectId(connectId);
+              latch.countDown();
+            });
       }
       refreshTimer.scheduleAtFixedRate(
-              new TimerTask() {
-                @Override
-                public void run() {
-                  store.connectDataIndexer.triggerRefresh();
-                }
-              },
-              0,
-              50);
+          new TimerTask() {
+            @Override
+            public void run() {
+              store.connectDataIndexer.triggerRefresh();
+            }
+          },
+          0,
+          50);
       latch.await();
       for (Publisher publisher : store.getDataList()) {
         Assert.assertTrue(
-                store.queryByConnectId(publisher.connectId()).containsKey(publisher.getRegisterId()));
+            store.queryByConnectId(publisher.connectId()).containsKey(publisher.getRegisterId()));
       }
       Assert.assertTrue(store.getConnectIds().size() >= urls.size() - clientOffs.size());
       for (ConnectId connectId : clientOffs) {
@@ -244,7 +245,7 @@ public class SessionDataStoreTest {
       }
       for (Publisher publisher : store.getDataList()) {
         Assert.assertTrue(
-                store.queryByConnectId(publisher.connectId()).containsKey(publisher.getRegisterId()));
+            store.queryByConnectId(publisher.connectId()).containsKey(publisher.getRegisterId()));
       }
       Assert.assertTrue(store.getConnectIds().size() >= urls.size() - clientOffs.size());
 
