@@ -87,6 +87,12 @@ public class ValueConstants {
       DataInfo.toDataInfoId(
           "registry.circuit.breaker", SESSION_PROVIDE_DATA_INSTANCE_ID, SESSION_PROVIDE_DATA_GROUP);
 
+  public static final String ADAPTIVE_FLOW_OPERATION_CONFIG_DATA_ID =
+      DataInfo.toDataInfoId(
+          "registry.flow.operation.throttling.config",
+          SESSION_PROVIDE_DATA_INSTANCE_ID,
+          SESSION_PROVIDE_DATA_GROUP);
+
   // registry node quit interceptor disable
   public static final String NODE_QUIT_INTERCEPTOR_DISABLE_DATA_ID =
       DataInfo.toDataInfoId(

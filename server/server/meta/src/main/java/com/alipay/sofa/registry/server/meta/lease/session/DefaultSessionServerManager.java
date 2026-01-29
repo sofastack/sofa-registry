@@ -19,6 +19,7 @@ package com.alipay.sofa.registry.server.meta.lease.session;
 import com.alipay.sofa.registry.common.model.metaserver.Lease;
 import com.alipay.sofa.registry.common.model.metaserver.cluster.VersionedList;
 import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.HeartbeatRequest;
+import com.alipay.sofa.registry.common.model.metaserver.metrics.SystemLoad;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
@@ -109,6 +110,15 @@ public class DefaultSessionServerManager
           && renewal.getWeight() != lease.getRenewal().getWeight()) {
         lease.setRenewal(renewal);
       }
+
+      // replace the session node, as it has changed system load already
+      if (renewal.getProcessId() != null
+          && lease != null
+          && lease.getRenewal() != null
+          && !SystemLoad.equals(renewal.getSystemLoad(), lease.getRenewal().getSystemLoad())) {
+        lease.setRenewal(renewal);
+      }
+
       return super.renew(renewal, duration);
     }
   }

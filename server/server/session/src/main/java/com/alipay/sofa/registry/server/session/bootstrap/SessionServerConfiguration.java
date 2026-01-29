@@ -502,6 +502,11 @@ public class SessionServerConfiguration {
     public PushEfficiencyConfigResource pushEfficiencyConfigResource() {
       return new PushEfficiencyConfigResource();
     }
+
+    @Bean
+    public FlowOperationThrottlingResource flowOperationThrottlingResource() {
+      return new FlowOperationThrottlingResource();
+    }
   }
 
   @Configuration

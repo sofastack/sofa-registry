@@ -35,6 +35,7 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.meta.MetaLeaderService;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
+import com.alipay.sofa.registry.server.meta.limit.AdaptiveFlowOperationLimiter;
 import com.alipay.sofa.registry.server.meta.metaserver.impl.DefaultCurrentDcMetaServer;
 import com.alipay.sofa.registry.server.meta.monitor.data.DataMessageListener;
 import com.alipay.sofa.registry.server.meta.monitor.heartbeat.HeartbeatListener;
@@ -77,6 +78,8 @@ public class HeartbeatRequestHandler extends BaseMetaServerHandler<HeartbeatRequ
 
   @Autowired private MultiClusterSlotTableSyncer multiClusterSlotTableSyncer;
 
+  @Autowired private AdaptiveFlowOperationLimiter adaptiveFlowOperationLimiter;
+
   /**
    * Do handle object.
    *
@@ -104,29 +107,50 @@ public class HeartbeatRequestHandler extends BaseMetaServerHandler<HeartbeatRequ
 
       switch (renewNode.getNodeType()) {
         case SESSION:
+          {
+            Map<String, RemoteSlotTableStatus> remoteSlotTableStatus = calculateStatus(heartbeat);
+            response =
+                new BaseHeartBeatResponse(
+                    true,
+                    metaServerInfo,
+                    slotTable,
+                    sessionMetaInfo,
+                    metaLeaderService.getLeader(),
+                    metaLeaderService.getLeaderEpoch(),
+                    remoteSlotTableStatus);
+            response.setFlowOperationThrottlingStatus(
+                this.adaptiveFlowOperationLimiter.getFlowOperationThrottlingStatus());
+            break;
+          }
         case DATA:
-          Map<String, RemoteSlotTableStatus> remoteSlotTableStatus = calculateStatus(heartbeat);
-          response =
-              new BaseHeartBeatResponse(
-                  true,
-                  metaServerInfo,
-                  slotTable,
-                  sessionMetaInfo,
-                  metaLeaderService.getLeader(),
-                  metaLeaderService.getLeaderEpoch(),
-                  remoteSlotTableStatus);
-          break;
+          {
+            Map<String, RemoteSlotTableStatus> remoteSlotTableStatus = calculateStatus(heartbeat);
+            response =
+                new BaseHeartBeatResponse(
+                    true,
+                    metaServerInfo,
+                    slotTable,
+                    sessionMetaInfo,
+                    metaLeaderService.getLeader(),
+                    metaLeaderService.getLeaderEpoch(),
+                    remoteSlotTableStatus);
+            break;
+          }
         case META:
-          response =
-              new BaseHeartBeatResponse(
-                  true,
-                  metaServerInfo,
-                  slotTable,
-                  metaLeaderService.getLeader(),
-                  metaLeaderService.getLeaderEpoch());
-          break;
+          {
+            response =
+                new BaseHeartBeatResponse(
+                    true,
+                    metaServerInfo,
+                    slotTable,
+                    metaLeaderService.getLeader(),
+                    metaLeaderService.getLeaderEpoch());
+            break;
+          }
         default:
-          break;
+          {
+            break;
+          }
       }
       success = true;
       return new GenericResponse<BaseHeartBeatResponse>().fillSucceed(response);

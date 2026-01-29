@@ -27,6 +27,8 @@ import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
+import com.alipay.sofa.registry.server.session.limit.FlowOperationThrottlingObserver;
+import com.alipay.sofa.registry.server.session.metrics.SessionMetricsCollector;
 import com.alipay.sofa.registry.server.session.multi.cluster.DataCenterMetadataCache;
 import com.alipay.sofa.registry.server.session.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.server.session.remoting.DataNodeNotifyExchanger;
@@ -55,6 +57,14 @@ public class MetaServerServiceImpl extends AbstractMetaServerService<BaseHeartBe
 
   @Autowired private Exchange boltExchange;
 
+  @Autowired private FlowOperationThrottlingObserver flowOperationThrottlingObserver;
+
+  private SessionMetricsCollector sessionMetricsCollector;
+
+  public MetaServerServiceImpl() {
+    this.sessionMetricsCollector = SessionMetricsCollector.getInstance();
+  }
+
   @Override
   protected long getCurrentSlotTableEpoch() {
     return slotTableCache.getEpoch(sessionServerConfig.getSessionServerDataCenter());
@@ -82,6 +92,8 @@ public class MetaServerServiceImpl extends AbstractMetaServerService<BaseHeartBe
 
     slotTableCache.updateRemoteSlotTable(result.getRemoteSlotTableStatus());
     dataCenterMetadataCache.saveDataCenterZones(result.getRemoteSlotTableStatus());
+    flowOperationThrottlingObserver.updateClusterThrottlingStatus(
+        result.getFlowOperationThrottlingStatus());
   }
 
   @Override
@@ -111,7 +123,8 @@ public class MetaServerServiceImpl extends AbstractMetaServerService<BaseHeartBe
         new URL(ServerEnv.IP),
         sessionServerConfig.getSessionServerRegion(),
         ServerEnv.PROCESS_ID,
-        getWeight());
+        getWeight(),
+        this.sessionMetricsCollector.getSystemLoad());
   }
 
   private int getWeight() {
