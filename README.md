@@ -5,6 +5,7 @@
 ![license](https://img.shields.io/badge/license-Apache--2.0-green.svg)
 [![codecov](https://codecov.io/gh/sofastack/sofa-registry/branch/master/graph/badge.svg?token=K6x7h4Uxkn)](https://codecov.io/gh/sofastack/sofa-registry)
 ![maven](https://img.shields.io/github/release/sofastack/sofa-registry.svg)
+[![libs.tech recommends](https://libs.tech/project/177104472/badge.svg)](https://libs.tech/project/177104472/sofa-registry)
 
 [中文版本](./README_ZH.md)
 
