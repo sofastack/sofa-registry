@@ -34,6 +34,7 @@ SOFARegistry is a production-level, low-latency, high-availability registry syst
 - [Operations Manual](https://www.sofastack.tech/sofa-registry/docs/Deployment)
 - [Release Notes](https://www.sofastack.tech/sofa-registry/docs/ReleaseNotes)
 - [Roadmap](https://www.sofastack.tech/sofa-registry/docs/RoadMap)
+- [Session Auto-Batching Duration](Session-Auto-Batching-Duration.md)
 - Source Code Analysis
   - [Publish-Subscribe Push](https://www.sofastack.tech/projects/sofa-registry/code-analyze/code-analyze-publish-subscription-push/)
   - [Registry Meta Leader Election](https://www.sofastack.tech/projects/sofa-registry/code-analyze/code-analyze-registry-meta/)
