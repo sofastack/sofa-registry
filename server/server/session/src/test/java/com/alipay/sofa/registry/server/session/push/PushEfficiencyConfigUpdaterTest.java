@@ -16,7 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.push;
 
-import com.alipay.sofa.registry.server.session.resource.ClientManagerResource;
+import com.alipay.sofa.registry.server.session.limit.FlowOperationThrottlingObserver;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -32,13 +32,14 @@ public class PushEfficiencyConfigUpdaterTest {
     ChangeProcessor changeProcessor = Mockito.mock(ChangeProcessor.class);
     PushProcessor pushProcessor = Mockito.mock(PushProcessor.class);
     FirePushService firePushService = Mockito.mock(FirePushService.class);
-    ClientManagerResource clientManagerResource = Mockito.mock(ClientManagerResource.class);
+    FlowOperationThrottlingObserver flowOperationThrottlingObserver =
+        new FlowOperationThrottlingObserver();
 
     PushEfficiencyConfigUpdater pushEfficiencyConfigUpdater = new PushEfficiencyConfigUpdater();
     pushEfficiencyConfigUpdater.setChangeProcessor(changeProcessor);
     pushEfficiencyConfigUpdater.setPushProcessor(pushProcessor);
     pushEfficiencyConfigUpdater.setFirePushService(firePushService);
-    pushEfficiencyConfigUpdater.setClientManagerResource(clientManagerResource);
+    pushEfficiencyConfigUpdater.setFlowOperationThrottlingObserver(flowOperationThrottlingObserver);
 
     // 更新没有开启自动化配置，因此预期是 null
     pushEfficiencyConfigUpdater.updateFromProviderData(new PushEfficiencyImproveConfig());

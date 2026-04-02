@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat;
 
 import com.alipay.sofa.registry.common.model.metaserver.cluster.VersionedList;
+import com.alipay.sofa.registry.common.model.metaserver.limit.FlowOperationThrottlingStatus;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.MetaNode;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 import com.alipay.sofa.registry.common.model.multi.cluster.RemoteSlotTableStatus;
@@ -47,6 +48,8 @@ public class BaseHeartBeatResponse implements Serializable {
   private final long metaLeaderEpoch;
 
   private final Map<String, RemoteSlotTableStatus> remoteSlotTableStatus;
+
+  private FlowOperationThrottlingStatus flowOperationThrottlingStatus;
 
   public BaseHeartBeatResponse(boolean heartbeatOnLeader, String metaLeader, long metaLeaderEpoch) {
     this(heartbeatOnLeader, null, null, metaLeader, metaLeaderEpoch);
@@ -148,5 +151,14 @@ public class BaseHeartBeatResponse implements Serializable {
       }
     }
     return ret;
+  }
+
+  public FlowOperationThrottlingStatus getFlowOperationThrottlingStatus() {
+    return flowOperationThrottlingStatus;
+  }
+
+  public void setFlowOperationThrottlingStatus(
+      FlowOperationThrottlingStatus flowOperationThrottlingStatus) {
+    this.flowOperationThrottlingStatus = flowOperationThrottlingStatus;
   }
 }

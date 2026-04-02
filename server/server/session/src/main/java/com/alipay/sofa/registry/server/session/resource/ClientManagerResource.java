@@ -32,6 +32,7 @@ import com.alipay.sofa.registry.remoting.exchange.message.SimpleRequest;
 import com.alipay.sofa.registry.server.session.bootstrap.ExecutorManager;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.connections.ConnectionsService;
+import com.alipay.sofa.registry.server.session.limit.FlowOperationThrottlingObserver;
 import com.alipay.sofa.registry.server.session.mapper.ConnectionMapper;
 import com.alipay.sofa.registry.server.session.providedata.FetchClientOffAddressService;
 import com.alipay.sofa.registry.server.session.registry.SessionRegistry;
@@ -43,11 +44,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import javax.annotation.Resource;
-import javax.ws.rs.FormParam;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -78,7 +75,7 @@ public class ClientManagerResource {
 
   @Autowired protected ExecutorManager executorManager;
 
-  private volatile boolean enableTrafficOperate = true;
+  @Autowired private FlowOperationThrottlingObserver flowOperationThrottlingObserver;
 
   /**
    * Client off
@@ -93,7 +90,7 @@ public class ClientManagerResource {
       return CommonResponse.buildFailedResponse("ips is empty");
     }
 
-    if (!this.enableTrafficOperate) {
+    if (this.flowOperationThrottlingObserver.shouldThrottle()) {
       // 限流，不允许操作开关流
       return CommonResponse.buildFailedResponse("too many request");
     }
@@ -118,7 +115,7 @@ public class ClientManagerResource {
       return CommonResponse.buildFailedResponse("ips is empty");
     }
 
-    if (!this.enableTrafficOperate) {
+    if (this.flowOperationThrottlingObserver.shouldThrottle()) {
       // 限流，不允许操作开关流
       return CommonResponse.buildFailedResponse("too many request");
     }
@@ -143,7 +140,7 @@ public class ClientManagerResource {
       return CommonResponse.buildFailedResponse("ips is empty");
     }
 
-    if (!this.enableTrafficOperate) {
+    if (this.flowOperationThrottlingObserver.shouldThrottle()) {
       // 限流，不允许操作开关流
       return CommonResponse.buildFailedResponse("too many request");
     }
@@ -185,7 +182,7 @@ public class ClientManagerResource {
       return CommonResponse.buildFailedResponse("ips is empty");
     }
 
-    if (!this.enableTrafficOperate) {
+    if (this.flowOperationThrottlingObserver.shouldThrottle()) {
       // 限流，不允许操作开关流
       return CommonResponse.buildFailedResponse("too many request");
     }
@@ -263,13 +260,5 @@ public class ClientManagerResource {
 
   public List<URL> getOtherConsoleServersCurrentZone() {
     return Sdks.getOtherConsoleServers(null, sessionServerConfig, metaServerService);
-  }
-
-  public boolean isEnableTrafficOperate() {
-    return enableTrafficOperate;
-  }
-
-  public void setEnableTrafficOperate(boolean enableTrafficOperate) {
-    this.enableTrafficOperate = enableTrafficOperate;
   }
 }

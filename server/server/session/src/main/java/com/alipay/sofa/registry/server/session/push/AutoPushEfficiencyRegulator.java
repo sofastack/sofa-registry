@@ -18,11 +18,10 @@ package com.alipay.sofa.registry.server.session.push;
 
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.server.session.metrics.SessionMetricsCollector;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.LoopRunnable;
 import com.google.common.annotations.VisibleForTesting;
-import java.lang.management.ManagementFactory;
-import java.lang.management.OperatingSystemMXBean;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -69,7 +68,7 @@ public class AutoPushEfficiencyRegulator extends LoopRunnable {
   private final PushEfficiencyConfigUpdater pushEfficiencyConfigUpdater;
 
   // 采集系统负载指标
-  private final OperatingSystemMXBean operatingSystemMXBean;
+  private final SessionMetricsCollector sessionMetricsCollector;
 
   // 攒批时长
   private final IntMetric debouncingTime;
@@ -104,7 +103,7 @@ public class AutoPushEfficiencyRegulator extends LoopRunnable {
     this.loadThreshold = autoPushEfficiencyConfig.getLoadThreshold();
     this.warmupTimes = 0;
     this.pushEfficiencyConfigUpdater = pushEfficiencyConfigUpdater;
-    this.operatingSystemMXBean = ManagementFactory.getOperatingSystemMXBean();
+    this.sessionMetricsCollector = SessionMetricsCollector.getInstance();
 
     // 初始化可能需要调整的指标
     this.debouncingTime =
@@ -232,7 +231,7 @@ public class AutoPushEfficiencyRegulator extends LoopRunnable {
 
     // 这里获取到的是过去一分钟的负载平均值，这个值有可能小于 0，小于 0 时表示无法获取平均负载
     // 另外，这个方法的注释上写了这个方法设计上就会考虑可能较频繁调用，因此这里先不考虑做限制了
-    double loadAverage = this.operatingSystemMXBean.getSystemLoadAverage();
+    double loadAverage = this.sessionMetricsCollector.getSystemLoadAverage();
     if (loadAverage < 0) {
       return;
     }
