@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.commons.lang.StringUtils;
 import org.glassfish.jersey.internal.guava.Sets;
 
@@ -40,37 +41,38 @@ public final class DataUtils {
   public static <T extends BaseInfo>
       Map<String, Map<String, Map<String, Tuple<Integer, Integer>>>> countGroupByInstanceIdGroupApp(
           Collection<T> infos) {
-    Map<String, Map<String, Map<String, List<T>>>> groupBys = Maps.newHashMap();
+    Map<String, Map<String, Map<String, Tuple<AtomicInteger, Set<String>>>>> groupBys = Maps.newHashMap();
     for (T info : infos) {
-      Map<String, Map<String, List<T>>> groupCount =
-          groupBys.computeIfAbsent(info.getInstanceId(), k -> Maps.newHashMap());
-      Map<String, List<T>> appCount =
-          groupCount.computeIfAbsent(
-              InterestGroup.normalizeGroup(info.getGroup()), k -> Maps.newHashMap());
+      String instanceId = info.getInstanceId();
+      String group = InterestGroup.normalizeGroup(info.getGroup());
       String appName = info.getAppName();
       if (StringUtils.isBlank(appName)) {
         appName = "";
       }
-      List<T> list = appCount.computeIfAbsent(appName, k -> Lists.newLinkedList());
-      list.add(info);
+      
+      Map<String, Map<String, Tuple<AtomicInteger, Set<String>>>> groupCount =
+          groupBys.computeIfAbsent(instanceId, k -> Maps.newHashMap());
+      Map<String, Tuple<AtomicInteger, Set<String>>> appCount =
+          groupCount.computeIfAbsent(group, k -> Maps.newHashMap());
+      Tuple<AtomicInteger, Set<String>> tuple =
+          appCount.computeIfAbsent(appName, k -> Tuple.of(new AtomicInteger(0), Sets.newHashSetWithExpectedSize(16)));
+      tuple.o1.incrementAndGet();
+      tuple.o2.add(info.getDataInfoId());
     }
+    
     Map<String, Map<String, Map<String, Tuple<Integer, Integer>>>> ret = Maps.newHashMap();
-    for (Map.Entry<String, Map<String, Map<String, List<T>>>> count : groupBys.entrySet()) {
+    for (Map.Entry<String, Map<String, Map<String, Tuple<AtomicInteger, Set<String>>>>> count : groupBys.entrySet()) {
       final String instanceId = count.getKey();
       Map<String, Map<String, Tuple<Integer, Integer>>> instanceCount =
           ret.computeIfAbsent(instanceId, k -> Maps.newHashMap());
-      for (Map.Entry<String, Map<String, List<T>>> e : count.getValue().entrySet()) {
+      for (Map.Entry<String, Map<String, Tuple<AtomicInteger, Set<String>>>> e : count.getValue().entrySet()) {
         final String group = e.getKey();
         Map<String, Tuple<Integer, Integer>> groupCount =
             instanceCount.computeIfAbsent(group, k -> Maps.newHashMap());
-        for (Map.Entry<String, List<T>> apps : e.getValue().entrySet()) {
-          List<T> list = apps.getValue();
-          final int infoCount = list.size();
-          Set<String> dataInfoIds = Sets.newHashSetWithExpectedSize(64);
-          for (T t : list) {
-            dataInfoIds.add(t.getDataInfoId());
-          }
-          final int dataInfoIdCount = dataInfoIds.size();
+        for (Map.Entry<String, Tuple<AtomicInteger, Set<String>>> apps : e.getValue().entrySet()) {
+          Tuple<AtomicInteger, Set<String>> tuple = apps.getValue();
+          final int infoCount = tuple.o1.get();
+          final int dataInfoIdCount = tuple.o2.size();
           groupCount.put(apps.getKey(), Tuple.of(infoCount, dataInfoIdCount));
         }
       }
@@ -89,30 +91,29 @@ public final class DataUtils {
       Map<String, Map<String, Tuple<Integer, Integer>>> countGroupByInstanceIdGroup(
           Collection<T> infos) {
 
-    Map<String, Map<String, List<T>>> groupBys = Maps.newHashMap();
+    Map<String, Map<String, Tuple<AtomicInteger, Set<String>>>> groupBys = Maps.newHashMap();
     for (T info : infos) {
-      Map<String, List<T>> groupCount =
-          groupBys.computeIfAbsent(info.getInstanceId(), k -> Maps.newHashMap());
-      List<T> infoList =
-          groupCount.computeIfAbsent(
-              InterestGroup.normalizeGroup(info.getGroup()), k -> Lists.newLinkedList());
-      infoList.add(info);
+      String instanceId = info.getInstanceId();
+      String group = InterestGroup.normalizeGroup(info.getGroup());
+      
+      Map<String, Tuple<AtomicInteger, Set<String>>> groupCount =
+          groupBys.computeIfAbsent(instanceId, k -> Maps.newHashMap());
+      Tuple<AtomicInteger, Set<String>> tuple =
+          groupCount.computeIfAbsent(group, k -> Tuple.of(new AtomicInteger(0), Sets.newHashSetWithExpectedSize(16)));
+      tuple.o1.incrementAndGet();
+      tuple.o2.add(info.getDataInfoId());
     }
+    
     Map<String, Map<String, Tuple<Integer, Integer>>> ret = Maps.newHashMap();
-    for (Map.Entry<String, Map<String, List<T>>> instances : groupBys.entrySet()) {
+    for (Map.Entry<String, Map<String, Tuple<AtomicInteger, Set<String>>>> instances : groupBys.entrySet()) {
       final String instanceId = instances.getKey();
-      for (Map.Entry<String, List<T>> groups : instances.getValue().entrySet()) {
+      Map<String, Tuple<Integer, Integer>> groupMap = ret.computeIfAbsent(instanceId, k -> Maps.newHashMap());
+      for (Map.Entry<String, Tuple<AtomicInteger, Set<String>>> groups : instances.getValue().entrySet()) {
         final String group = groups.getKey();
-        List<T> list = groups.getValue();
-        final int infoCount = list.size();
-        Set<String> dataInfoIds = Sets.newHashSetWithExpectedSize(256);
-        for (T t : list) {
-          dataInfoIds.add(t.getDataInfoId());
-        }
-        final int dataInfoIdCount = dataInfoIds.size();
-        Map<String, Tuple<Integer, Integer>> groupCount =
-            ret.computeIfAbsent(instanceId, k -> Maps.newHashMap());
-        groupCount.put(group, Tuple.of(infoCount, dataInfoIdCount));
+        Tuple<AtomicInteger, Set<String>> tuple = groups.getValue();
+        final int infoCount = tuple.o1.get();
+        final int dataInfoIdCount = tuple.o2.size();
+        groupMap.put(group, Tuple.of(infoCount, dataInfoIdCount));
       }
     }
     return ret;
