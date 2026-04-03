@@ -78,4 +78,22 @@ public class ConfiguratorRegistration extends BaseRegistration {
         + '\''
         + '}';
   }
+
+  /** @see Object#hashCode() */
+  @Override
+  public int hashCode() {
+    int result = super.hashCode();
+    result = 31 * result + (configDataObserver != null ? configDataObserver.hashCode() : 0);
+    return result;
+  }
+
+  /** @see Object#equals(Object) */
+  @Override
+  public boolean equals(Object obj) {
+    if (!super.equals(obj)) {
+      return false;
+    }
+    ConfiguratorRegistration that = (ConfiguratorRegistration) obj;
+    return (configDataObserver == null ? that.configDataObserver == null : configDataObserver.equals(that.configDataObserver));
+  }
 }
