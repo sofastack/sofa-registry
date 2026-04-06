@@ -361,5 +361,8 @@ public class SessionPersistenceClientManagerTest extends BaseIntegrationTest {
     assertEquals(dataId, configurator.getDataId());
     ConcurrentUtils.sleepUninterruptibly(2, TimeUnit.SECONDS);
     assertEquals(dataObserver.dataId, dataId);
+    
+    // Unregister the configurator to avoid duplicate registration issues
+    registryClient1.unregister(dataId, null, com.alipay.sofa.registry.client.api.model.RegistryType.CONFIGURATOR);
   }
 }
