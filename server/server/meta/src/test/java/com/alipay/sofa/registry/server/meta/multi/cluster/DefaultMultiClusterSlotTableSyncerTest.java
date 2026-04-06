@@ -95,6 +95,9 @@ public class DefaultMultiClusterSlotTableSyncerTest {
     when(multiClusterMetaServerConfig.getRemoteSlotSyncerExecutorPoolSize()).thenReturn(10);
     when(multiClusterMetaServerConfig.getRemoteSlotSyncerExecutorQueueSize()).thenReturn(10);
 
+    when(metaLeaderService.amILeader()).thenReturn(true);
+    when(metaLeaderService.amIStableAsLeader()).thenReturn(true);
+
     defaultMultiClusterSlotTableSyncer.init();
     defaultMultiClusterSlotTableSyncer.becomeLeader();
     when(executorManager.getRemoteSlotSyncerExecutor()).thenReturn(executor);
