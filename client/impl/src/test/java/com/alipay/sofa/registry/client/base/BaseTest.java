@@ -27,8 +27,10 @@ import com.alipay.sofa.registry.client.provider.DefaultRegistryClient;
 import com.alipay.sofa.registry.client.provider.DefaultRegistryClientConfig;
 import com.alipay.sofa.registry.client.provider.DefaultRegistryClientConfigBuilder;
 import com.alipay.sofa.registry.client.util.HttpClientUtils;
+import java.net.HttpURLConnection;
 import org.junit.Before;
 import org.junit.runner.RunWith;
+import org.mockito.Mockito;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
@@ -60,6 +62,8 @@ public abstract class BaseTest {
     when(HttpClientUtils.get(
             anyString(), anyMapOf(String.class, String.class), any(RegistryClientConfig.class)))
         .thenReturn(mockServer.getIp() + ":" + mockServer.getPort());
+    PowerMockito.when(HttpClientUtils.class, "create", anyString(), any(RegistryClientConfig.class))
+        .thenReturn(Mockito.mock(HttpURLConnection.class));
 
     DefaultRegistryClientConfig config =
         DefaultRegistryClientConfigBuilder.start()
