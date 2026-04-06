@@ -67,14 +67,16 @@ class SlotLeaderChecker implements CheckerAction {
   public boolean doCheck(SlotTable slotTable, List<String> dataNodes, int slotNum, int replicas) {
 
     Map<String, Integer> leaderCount = SlotTableUtils.getSlotTableLeaderCount(slotTable);
+    Map<String, Integer> slotCount = SlotTableUtils.getSlotTableSlotCount(slotTable);
     logger.info("[slot leader checker] leaderCount: " + leaderCount);
+    logger.info("[slot leader checker] slotCount: " + slotCount);
     String msg =
         StringFormatter.format(
             "datas={},counts={}",
             new TreeSet<String>(dataNodes),
-            new TreeSet<String>(leaderCount.keySet()));
-    Assert.assertEquals(msg, dataNodes.size(), leaderCount.size());
-    Assert.assertTrue(leaderCount.keySet().containsAll(dataNodes));
+            new TreeSet<String>(slotCount.keySet()));
+    Assert.assertEquals(msg, dataNodes.size(), slotCount.size());
+    Assert.assertTrue(slotCount.keySet().containsAll(dataNodes));
     Tuple<String, Integer> max = max(leaderCount);
     Tuple<String, Integer> min = min(leaderCount);
     int average = MathUtils.divideCeil(sum(leaderCount), leaderCount.size());
