@@ -398,7 +398,7 @@ public class DataChangeEventCenterTest {
     center.onChange(Lists.newArrayList(pub.getDataInfoId()), DataChangeType.PUT, DC);
     center.onTempPubChange(pub, DC);
     Thread.sleep(500);
-    Mockito.verify(server, Mockito.times(9))
+    Mockito.verify(server, Mockito.times(10))
         .sendSync(Mockito.anyObject(), Mockito.anyObject(), Mockito.anyInt());
   }
 }
