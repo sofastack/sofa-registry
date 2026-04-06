@@ -448,6 +448,30 @@ public class DefaultRegistryClient implements RegistryClient {
 
     for (Register register : registers) {
       register.unregister();
+      registerCache.remove(register.getRegistId());
+      // Remove from registration maps
+      if (register instanceof Publisher) {
+        for (Map.Entry<PublisherRegistration, Publisher> entry : registrationPublisherMap.entrySet()) {
+          if (entry.getValue() == register) {
+            registrationPublisherMap.remove(entry.getKey());
+            break;
+          }
+        }
+      } else if (register instanceof Subscriber) {
+        for (Map.Entry<SubscriberRegistration, Subscriber> entry : registrationSubscriberMap.entrySet()) {
+          if (entry.getValue() == register) {
+            registrationSubscriberMap.remove(entry.getKey());
+            break;
+          }
+        }
+      } else if (register instanceof Configurator) {
+        for (Map.Entry<ConfiguratorRegistration, Configurator> entry : registrationConfiguratorMap.entrySet()) {
+          if (entry.getValue() == register) {
+            registrationConfiguratorMap.remove(entry.getKey());
+            break;
+          }
+        }
+      }
     }
     return registers.size();
   }
