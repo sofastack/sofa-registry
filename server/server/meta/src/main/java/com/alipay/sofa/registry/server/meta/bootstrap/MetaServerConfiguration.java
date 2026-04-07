@@ -419,6 +419,11 @@ public class MetaServerConfiguration {
     public DataCenterResource dataCenterResource() {
       return new DataCenterResource();
     }
+
+    @Bean
+    public FlowOperationThrottlingResource flowOperationThrottlingResource() {
+      return new FlowOperationThrottlingResource();
+    }
   }
 
   @Configuration

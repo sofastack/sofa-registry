@@ -16,7 +16,8 @@
  */
 package com.alipay.sofa.registry.server.session.push;
 
-import com.alipay.sofa.registry.server.session.resource.ClientManagerResource;
+import com.alipay.sofa.registry.common.model.metaserver.limit.FlowOperationThrottlingStatus;
+import com.alipay.sofa.registry.server.session.limit.FlowOperationThrottlingObserver;
 import com.google.common.annotations.VisibleForTesting;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -41,7 +42,7 @@ public class PushEfficiencyConfigUpdater implements SmartLifecycle {
 
   @Autowired private FirePushService firePushService;
 
-  @Autowired private ClientManagerResource clientManagerResource;
+  @Autowired private FlowOperationThrottlingObserver flowOperationThrottlingObserver;
 
   private Lock lock;
 
@@ -136,7 +137,8 @@ public class PushEfficiencyConfigUpdater implements SmartLifecycle {
       }
 
       // 无论如何，先关闭掉限流
-      this.clientManagerResource.setEnableTrafficOperate(true);
+      this.flowOperationThrottlingObserver.updateLocalThrottlingStatus(
+          FlowOperationThrottlingStatus.disabled());
     } finally {
       this.lock.unlock();
     }
@@ -162,9 +164,14 @@ public class PushEfficiencyConfigUpdater implements SmartLifecycle {
         // 如果已经停止使用自动化配置了，那么这里就跳过更新，以防止最终实际使用的配置不是 ProvideData 中的配置
         return;
       }
-
-      // 打开限制开关，意味着开启了限流，也就是不允许操作开关流，因此这里是反的
-      this.clientManagerResource.setEnableTrafficOperate(!trafficOperateLimitSwitch);
+      // 打开开关，意味着开启限流
+      if (trafficOperateLimitSwitch) {
+        this.flowOperationThrottlingObserver.updateLocalThrottlingStatus(
+            FlowOperationThrottlingStatus.enabled(100.0));
+      } else {
+        this.flowOperationThrottlingObserver.updateLocalThrottlingStatus(
+            FlowOperationThrottlingStatus.disabled());
+      }
     } finally {
       this.lock.unlock();
     }
@@ -182,6 +189,11 @@ public class PushEfficiencyConfigUpdater implements SmartLifecycle {
         this.stop = true;
         if (null != this.autoPushEfficiencyRegulator) {
           this.autoPushEfficiencyRegulator.close();
+        }
+        // 清理本地限流状态，确保停止后不会残留限流状态
+        if (this.flowOperationThrottlingObserver != null) {
+          this.flowOperationThrottlingObserver.updateLocalThrottlingStatus(
+              FlowOperationThrottlingStatus.disabled());
         }
       }
     } finally {
@@ -220,7 +232,8 @@ public class PushEfficiencyConfigUpdater implements SmartLifecycle {
   }
 
   @VisibleForTesting
-  public void setClientManagerResource(ClientManagerResource clientManagerResource) {
-    this.clientManagerResource = clientManagerResource;
+  public void setFlowOperationThrottlingObserver(
+      FlowOperationThrottlingObserver flowOperationThrottlingObserver) {
+    this.flowOperationThrottlingObserver = flowOperationThrottlingObserver;
   }
 }

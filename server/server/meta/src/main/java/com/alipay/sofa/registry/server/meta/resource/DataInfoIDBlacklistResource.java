@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.meta.resource;
 
+import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.console.PersistenceData;
 import com.alipay.sofa.registry.common.model.console.PersistenceDataBuilder;
@@ -88,22 +89,23 @@ public class DataInfoIDBlacklistResource {
   @GET
   @Path("query")
   @Produces(MediaType.APPLICATION_JSON)
-  public Result queryBlackList() {
+  public GenericResponse<Set<String>> queryBlackList() {
     try {
       DBResponse<PersistenceData> queryResponse =
           this.provideDataService.queryProvideData(ValueConstants.SESSION_DATAID_BLACKLIST_DATA_ID);
       OperationStatus operationStatus = queryResponse.getOperationStatus();
       if (OperationStatus.SUCCESS.equals(operationStatus)) {
         PersistenceData persistenceData = queryResponse.getEntity();
-        Result result = Result.success();
-        result.setMessage(persistenceData.getData());
-        return result;
+        String blackListJson = persistenceData.getData();
+        Set<String> dataIdBlackList =
+            JsonUtils.read(blackListJson, new TypeReference<Set<String>>() {});
+        return new GenericResponse<Set<String>>().fillSucceed(dataIdBlackList);
       } else {
-        return Result.success();
+        return new GenericResponse<Set<String>>().fillSucceed(null);
       }
     } catch (Throwable throwable) {
       LOGGER.error("Query dataid black list exception", throwable);
-      return Result.failed("Query dataid black list exception");
+      return new GenericResponse<Set<String>>().fillFailed("Query dataid black list exception");
     }
   }
 

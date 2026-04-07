@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.common.model.metaserver.nodes;
 
 import com.alipay.sofa.registry.common.model.ProcessId;
+import com.alipay.sofa.registry.common.model.metaserver.metrics.SystemLoad;
 import com.alipay.sofa.registry.common.model.store.URL;
 
 /**
@@ -30,6 +31,8 @@ public class SessionNode extends AbstractNode {
   // session weight for client conn load balance
   private int weight;
 
+  private SystemLoad systemLoad;
+
   /**
    * constructor
    *
@@ -38,9 +41,15 @@ public class SessionNode extends AbstractNode {
    * @param processId processId
    */
   public SessionNode(URL nodeUrl, String regionId, ProcessId processId, int weight) {
+    this(nodeUrl, regionId, processId, weight, null);
+  }
+
+  public SessionNode(
+      URL nodeUrl, String regionId, ProcessId processId, int weight, SystemLoad systemLoad) {
     super(null, nodeUrl, regionId);
     this.processId = processId;
     this.weight = weight;
+    this.systemLoad = systemLoad;
   }
 
   @Override
@@ -67,6 +76,10 @@ public class SessionNode extends AbstractNode {
 
   public int getWeight() {
     return weight;
+  }
+
+  public SystemLoad getSystemLoad() {
+    return systemLoad;
   }
 
   /**
