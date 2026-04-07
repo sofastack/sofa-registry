@@ -18,6 +18,8 @@ package com.alipay.sofa.registry.server.session.resource;
 
 import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.metaserver.limit.FlowOperationThrottlingStatus;
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.limit.FlowOperationThrottlingObserver;
 import java.util.HashMap;
 import java.util.Map;
@@ -25,8 +27,6 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
