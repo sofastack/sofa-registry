@@ -16,28 +16,29 @@
  */
 package com.alipay.sofa.registry.server.meta.resource.filter;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
+import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.core.model.Result;
 import com.alipay.sofa.registry.remoting.jersey.JerseyClient;
 import com.alipay.sofa.registry.server.meta.AbstractH2DbTestBase;
 import com.alipay.sofa.registry.server.meta.MetaLeaderService;
-import com.alipay.sofa.registry.util.JsonUtils;
-import com.fasterxml.jackson.core.type.TypeReference;
-import java.util.Set;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.Form;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.Form;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import java.util.Collection;
+import java.util.Set;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * @author huicha
@@ -78,12 +79,11 @@ public class LeaderForwardFilterTest extends AbstractH2DbTestBase {
     amILeaderAnswer.setFirstTime(true);
     try (Response getResponse = this.sendQueryBlackListRequest()) {
       Assert.assertEquals(HttpStatus.OK_200, getResponse.getStatus());
-      Result getResult = getResponse.readEntity(Result.class);
+      GenericResponse<Set<String>> getResult = getResponse.readEntity(GenericResponse.class);
 
       Assert.assertTrue(getResult.isSuccess());
 
-      String blackListJson = getResult.getMessage();
-      Set<String> blackList = JsonUtils.read(blackListJson, new TypeReference<Set<String>>() {});
+      Collection<?> blackList = getResult.getData();
       Assert.assertEquals(1, blackList.size());
 
       DataInfo dataInfo = new DataInfo("test-instance-id", "test-data-id", "test-group");
