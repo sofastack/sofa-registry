@@ -36,9 +36,8 @@ import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.meta.AbstractMetaServerService;
 import com.google.common.annotations.VisibleForTesting;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import java.util.Set;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author yuzhi.lyz
@@ -172,7 +171,8 @@ public class MetaServerServiceImpl extends AbstractMetaServerService<BaseHeartBe
   }
 
   @VisibleForTesting
-  public void setFlowOperationThrottlingObserver(FlowOperationThrottlingObserver flowOperationThrottlingObserver) {
+  public void setFlowOperationThrottlingObserver(
+      FlowOperationThrottlingObserver flowOperationThrottlingObserver) {
     this.flowOperationThrottlingObserver = flowOperationThrottlingObserver;
   }
 }

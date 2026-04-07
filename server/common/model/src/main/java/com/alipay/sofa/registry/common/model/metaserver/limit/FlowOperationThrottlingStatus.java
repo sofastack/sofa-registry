@@ -66,7 +66,7 @@ public class FlowOperationThrottlingStatus implements Serializable {
    * Indicates whether adaptive flow throttling is enabled. When {@code false}, {@link
    * #throttlePercent} should be interpreted as 0.0.
    */
-  private final boolean enabled;
+  private boolean enabled;
 
   /**
    * The throttling percentage, ranging from 0.0 to 100.0. For example:
@@ -77,7 +77,13 @@ public class FlowOperationThrottlingStatus implements Serializable {
    *   <li>100.0 → full throttling (all non-critical flows blocked)
    * </ul>
    */
-  private final double throttlePercent;
+  private double throttlePercent;
+
+  /** Default constructor for Hessian deserialization. */
+  public FlowOperationThrottlingStatus() {
+    this.enabled = false;
+    this.throttlePercent = 0.0;
+  }
 
   /**
    * Constructs a new throttling status.
@@ -107,6 +113,24 @@ public class FlowOperationThrottlingStatus implements Serializable {
    */
   public double getThrottlePercent() {
     return throttlePercent;
+  }
+
+  /**
+   * Sets whether throttling is enabled.
+   *
+   * @param enabled {@code true} to enable, {@code false} to disable
+   */
+  public void setEnabled(boolean enabled) {
+    this.enabled = enabled;
+  }
+
+  /**
+   * Sets the throttling percentage.
+   *
+   * @param throttlePercent throttling percentage (0.0 ~ 100.0)
+   */
+  public void setThrottlePercent(double throttlePercent) {
+    this.throttlePercent = throttlePercent;
   }
 
   @Override

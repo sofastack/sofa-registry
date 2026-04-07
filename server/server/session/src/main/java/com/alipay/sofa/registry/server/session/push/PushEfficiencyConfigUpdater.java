@@ -190,6 +190,11 @@ public class PushEfficiencyConfigUpdater implements SmartLifecycle {
         if (null != this.autoPushEfficiencyRegulator) {
           this.autoPushEfficiencyRegulator.close();
         }
+        // 清理本地限流状态，确保停止后不会残留限流状态
+        if (this.flowOperationThrottlingObserver != null) {
+          this.flowOperationThrottlingObserver.updateLocalThrottlingStatus(
+              FlowOperationThrottlingStatus.disabled());
+        }
       }
     } finally {
       this.lock.unlock();

@@ -21,6 +21,7 @@ import com.alipay.sofa.registry.common.model.metaserver.limit.FlowOperationThrot
 import com.alipay.sofa.registry.core.model.Result;
 import com.alipay.sofa.registry.server.meta.limit.AdaptiveFlowOperationLimiter;
 import com.alipay.sofa.registry.server.meta.resource.filter.AuthRestController;
+import com.alipay.sofa.registry.server.meta.resource.filter.LeaderForwardRestController;
 import java.util.HashMap;
 import java.util.Map;
 import javax.ws.rs.GET;
@@ -28,8 +29,8 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -39,6 +40,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  * safe and unambiguous operations during incidents.
  */
 @Path("/flowoperation/throttling")
+@LeaderForwardRestController
 public class FlowOperationThrottlingResource {
 
   private static final Logger LOGGER =
@@ -56,7 +58,7 @@ public class FlowOperationThrottlingResource {
   @AuthRestController
   public Result enableEmergencyThrottling() {
     try {
-      adaptiveFlowOperationLimiter.setEmergencyOverrideEnabled(true);
+      adaptiveFlowOperationLimiter.setEmergencyThrottlingEnabled(true);
       LOGGER.info("[FlowOperationResource] Emergency throttling ENABLED");
       return Result.success();
     } catch (Throwable t) {
@@ -75,7 +77,7 @@ public class FlowOperationThrottlingResource {
   @AuthRestController
   public Result disableEmergencyThrottling() {
     try {
-      adaptiveFlowOperationLimiter.setEmergencyOverrideEnabled(false);
+      adaptiveFlowOperationLimiter.setEmergencyThrottlingEnabled(false);
       LOGGER.info("[FlowOperationResource] Emergency throttling DISABLED");
       return Result.success();
     } catch (Throwable t) {
@@ -108,7 +110,7 @@ public class FlowOperationThrottlingResource {
   @AuthRestController
   public GenericResponse<Map<String, Boolean>> getEmergencyStatus() {
     try {
-      boolean enabled = adaptiveFlowOperationLimiter.isEmergencyOverrideEnabled();
+      boolean enabled = adaptiveFlowOperationLimiter.isEmergencyThrottlingEnabled();
       Map<String, Boolean> response = new HashMap<>();
       response.put("emergencyEnabled", enabled);
       return new GenericResponse<Map<String, Boolean>>().fillSucceed(response);

@@ -332,8 +332,8 @@ public class AdaptiveFlowOperationLimiterTest {
       limiter.setProvideDataService(provideDataService);
       limiter.setSessionServerManager(sessionServerManager);
 
-      // Disable emergency override (force disable all throttling)
-      limiter.setEmergencyOverrideEnabled(false);
+      // Disable emergency throttling (force disable all throttling)
+      limiter.setEmergencyThrottlingEnabled(false);
 
       // Start the limiter
       this.safeStartLimiter(limiter);

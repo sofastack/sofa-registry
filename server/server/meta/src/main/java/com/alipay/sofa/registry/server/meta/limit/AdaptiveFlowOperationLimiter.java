@@ -78,10 +78,17 @@ public class AdaptiveFlowOperationLimiter extends AbstractLifecycle {
   private WatchDog watchDog;
 
   /**
-   * Emergency override switch, primarily used to forcibly disable cluster-wide throttling via Admin
-   * API when the database is unavailable.
+   * Emergency switch to control whether adaptive throttling is enabled. When set to {@code false}
+   * via Admin API, all throttling is forcibly disabled regardless of cluster load. This is
+   * primarily used in emergency scenarios when the database is unavailable or throttling causes
+   * issues.
+   *
+   * <ul>
+   *   <li>{@code true} = Throttling enabled, system operates normally (default)
+   *   <li>{@code false} = Throttling disabled, emergency override active
+   * </ul>
    */
-  private AtomicBoolean emergencyOverrideEnabled;
+  private AtomicBoolean emergencyThrottlingEnabled;
 
   /**
    * Current throttling status, updated periodically by the watchdog thread. Initialized to disabled
@@ -96,7 +103,7 @@ public class AdaptiveFlowOperationLimiter extends AbstractLifecycle {
     this.start = new AtomicBoolean(false);
     this.watchDog = new WatchDog();
     // Set to true to enable throttling by default
-    this.emergencyOverrideEnabled = new AtomicBoolean(true);
+    this.emergencyThrottlingEnabled = new AtomicBoolean(true);
     this.flowOperationThrottlingStatus =
         new AtomicReference<>(FlowOperationThrottlingStatus.disabled());
     this.config = new AdaptiveFlowOperationConfig();
@@ -131,7 +138,7 @@ public class AdaptiveFlowOperationLimiter extends AbstractLifecycle {
 
   private void safeProcess() {
     try {
-      if (!emergencyOverrideEnabled.get()) {
+      if (!emergencyThrottlingEnabled.get()) {
         // The emergency override is disabled, meaning the Admin API has forcibly turned off
         // throttling.
         // Immediately set the status to disabled.
@@ -360,9 +367,9 @@ public class AdaptiveFlowOperationLimiter extends AbstractLifecycle {
     return cpuAverage > cpuAverageThreshold;
   }
 
-  public void setEmergencyOverrideEnabled(boolean emergencyOverrideEnabled) {
-    this.emergencyOverrideEnabled.set(emergencyOverrideEnabled);
-    if (!emergencyOverrideEnabled) {
+  public void setEmergencyThrottlingEnabled(boolean emergencyThrottlingEnabled) {
+    this.emergencyThrottlingEnabled.set(emergencyThrottlingEnabled);
+    if (!emergencyThrottlingEnabled) {
       // This method is called by the Admin API in emergency scenarios.
       // Forcefully override the throttling status immediately to prevent delays caused by slow DB
       // queries.
@@ -374,8 +381,8 @@ public class AdaptiveFlowOperationLimiter extends AbstractLifecycle {
     }
   }
 
-  public boolean isEmergencyOverrideEnabled() {
-    return this.emergencyOverrideEnabled.get();
+  public boolean isEmergencyThrottlingEnabled() {
+    return this.emergencyThrottlingEnabled.get();
   }
 
   /**
