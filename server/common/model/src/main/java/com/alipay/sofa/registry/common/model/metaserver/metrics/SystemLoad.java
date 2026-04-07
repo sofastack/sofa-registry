@@ -17,8 +17,11 @@
 package com.alipay.sofa.registry.common.model.metaserver.metrics;
 
 import java.io.Serializable;
+import org.apache.commons.lang.builder.ToStringBuilder;
 
 public class SystemLoad implements Serializable {
+
+  private static final long serialVersionUID = 826118559184274124L;
 
   /**
    * 安全比较两个 SystemLoad 对象是否相等。
@@ -67,5 +70,32 @@ public class SystemLoad implements Serializable {
 
   public void setLoadAverage(double loadAverage) {
     this.loadAverage = loadAverage;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    SystemLoad that = (SystemLoad) o;
+    return Double.doubleToLongBits(cpuAverage) == Double.doubleToLongBits(that.cpuAverage)
+        && Double.doubleToLongBits(loadAverage) == Double.doubleToLongBits(that.loadAverage);
+  }
+
+  @Override
+  public int hashCode() {
+    long temp = Double.doubleToLongBits(cpuAverage);
+    int result = (int) (temp ^ (temp >>> 32));
+    temp = Double.doubleToLongBits(loadAverage);
+    result = 31 * result + (int) (temp ^ (temp >>> 32));
+    return result;
+  }
+
+  @Override
+  public String toString() {
+    return ToStringBuilder.reflectionToString(this);
   }
 }

@@ -38,6 +38,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 public class FlowOperationThrottlingStatus implements Serializable {
 
+  private static final long serialVersionUID = 6222361879788882657L;
+
   // --- Static factory methods ---
 
   /**
@@ -55,8 +57,13 @@ public class FlowOperationThrottlingStatus implements Serializable {
    *
    * @param throttlePercent the throttling percentage (0.0 ~ 100.0)
    * @return an enabled throttling status
+   * @throws IllegalArgumentException if throttlePercent is not in range [0.0, 100.0]
    */
   public static FlowOperationThrottlingStatus enabled(double throttlePercent) {
+    if (throttlePercent < 0.0 || throttlePercent > 100.0) {
+      throw new IllegalArgumentException(
+          "throttlePercent must be in range [0.0, 100.0], but was: " + throttlePercent);
+    }
     return new FlowOperationThrottlingStatus(true, throttlePercent);
   }
 
