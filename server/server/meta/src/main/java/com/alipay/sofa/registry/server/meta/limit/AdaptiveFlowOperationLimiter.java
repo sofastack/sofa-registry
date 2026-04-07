@@ -65,7 +65,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class AdaptiveFlowOperationLimiter extends AbstractLifecycle {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(AdaptiveFlowOperationLimiter.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger("ADAPTIVE-THROTTLE");
 
   @Autowired private MetaLeaderService metaLeaderService;
 
