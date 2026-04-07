@@ -133,6 +133,15 @@ public class FlowOperationThrottlingStatus implements Serializable {
     this.throttlePercent = throttlePercent;
   }
 
+  /**
+   * Creates a defensive copy of this status.
+   *
+   * @return a new instance with the same enabled and throttlePercent values
+   */
+  public FlowOperationThrottlingStatus copy() {
+    return new FlowOperationThrottlingStatus(this.enabled, this.throttlePercent);
+  }
+
   @Override
   public String toString() {
     return ToStringBuilder.reflectionToString(this);

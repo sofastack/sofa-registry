@@ -117,9 +117,8 @@ public class HeartbeatRequestHandler extends BaseMetaServerHandler<HeartbeatRequ
                     sessionMetaInfo,
                     metaLeaderService.getLeader(),
                     metaLeaderService.getLeaderEpoch(),
-                    remoteSlotTableStatus);
-            response.setFlowOperationThrottlingStatus(
-                this.adaptiveFlowOperationLimiter.getFlowOperationThrottlingStatus());
+                    remoteSlotTableStatus,
+                    this.adaptiveFlowOperationLimiter.getFlowOperationThrottlingStatus());
             break;
           }
         case DATA:

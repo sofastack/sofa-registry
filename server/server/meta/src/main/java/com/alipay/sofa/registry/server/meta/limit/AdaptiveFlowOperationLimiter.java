@@ -386,12 +386,12 @@ public class AdaptiveFlowOperationLimiter extends AbstractLifecycle {
   }
 
   /**
-   * Returns the current throttling status.
+   * Returns a copy of the current throttling status.
    *
-   * @return current {@link FlowOperationThrottlingStatus}, never null
+   * @return a defensive copy of current {@link FlowOperationThrottlingStatus}, never null
    */
   public FlowOperationThrottlingStatus getFlowOperationThrottlingStatus() {
-    return this.flowOperationThrottlingStatus.get();
+    return this.flowOperationThrottlingStatus.get().copy();
   }
 
   protected final class WatchDog extends WakeUpLoopRunnable {

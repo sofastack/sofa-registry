@@ -49,7 +49,7 @@ public class BaseHeartBeatResponse implements Serializable {
 
   private final Map<String, RemoteSlotTableStatus> remoteSlotTableStatus;
 
-  private FlowOperationThrottlingStatus flowOperationThrottlingStatus;
+  private final FlowOperationThrottlingStatus flowOperationThrottlingStatus;
 
   public BaseHeartBeatResponse(boolean heartbeatOnLeader, String metaLeader, long metaLeaderEpoch) {
     this(heartbeatOnLeader, null, null, metaLeader, metaLeaderEpoch);
@@ -68,7 +68,8 @@ public class BaseHeartBeatResponse implements Serializable {
         VersionedList.EMPTY,
         metaLeader,
         metaLeaderEpoch,
-        Collections.emptyMap());
+        Collections.emptyMap(),
+        null);
   }
 
   public BaseHeartBeatResponse(
@@ -79,6 +80,26 @@ public class BaseHeartBeatResponse implements Serializable {
       String metaLeader,
       long metaLeaderEpoch,
       Map<String, RemoteSlotTableStatus> remoteSlotTableStatus) {
+    this(
+        heartbeatOnLeader,
+        metaNodes,
+        slotTable,
+        sessionNodes,
+        metaLeader,
+        metaLeaderEpoch,
+        remoteSlotTableStatus,
+        null);
+  }
+
+  public BaseHeartBeatResponse(
+      boolean heartbeatOnLeader,
+      VersionedList<MetaNode> metaNodes,
+      SlotTable slotTable,
+      VersionedList<SessionNode> sessionNodes,
+      String metaLeader,
+      long metaLeaderEpoch,
+      Map<String, RemoteSlotTableStatus> remoteSlotTableStatus,
+      FlowOperationThrottlingStatus flowOperationThrottlingStatus) {
     this.heartbeatOnLeader = heartbeatOnLeader;
     this.slotTable = slotTable;
     this.metaNodes = metaNodes;
@@ -86,6 +107,7 @@ public class BaseHeartBeatResponse implements Serializable {
     this.metaLeader = metaLeader;
     this.metaLeaderEpoch = metaLeaderEpoch;
     this.remoteSlotTableStatus = remoteSlotTableStatus;
+    this.flowOperationThrottlingStatus = flowOperationThrottlingStatus;
   }
 
   public SlotTable getSlotTable() {
@@ -155,10 +177,5 @@ public class BaseHeartBeatResponse implements Serializable {
 
   public FlowOperationThrottlingStatus getFlowOperationThrottlingStatus() {
     return flowOperationThrottlingStatus;
-  }
-
-  public void setFlowOperationThrottlingStatus(
-      FlowOperationThrottlingStatus flowOperationThrottlingStatus) {
-    this.flowOperationThrottlingStatus = flowOperationThrottlingStatus;
   }
 }
