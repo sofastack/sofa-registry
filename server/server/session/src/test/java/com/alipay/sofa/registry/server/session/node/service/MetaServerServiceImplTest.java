@@ -28,16 +28,18 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
 import com.alipay.sofa.registry.server.session.TestUtils;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfigBean;
+import com.alipay.sofa.registry.server.session.limit.FlowOperationThrottlingObserver;
 import com.alipay.sofa.registry.server.session.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.server.session.remoting.DataNodeNotifyExchanger;
 import com.alipay.sofa.registry.server.session.slot.SlotTableCacheImpl;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.resource.SlotGenericResource;
 import com.google.common.collect.Sets;
-import java.util.Collections;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
+
+import java.util.Collections;
 
 public class MetaServerServiceImplTest {
   private static final Logger LOGGER = LoggerFactory.getLogger(MetaServerServiceImplTest.class);
@@ -150,5 +152,8 @@ public class MetaServerServiceImplTest {
     slotTableCache.updateLocalSlotTable(slotTable);
     impl.setSlotTableCache(slotTableCache);
     impl.setDataCenterMetadataCache(TestUtils.newDataCenterMetaCache(sessionServerConfigBean));
+
+    FlowOperationThrottlingObserver flowOperationThrottlingObserver = new FlowOperationThrottlingObserver();
+    impl.setFlowOperationThrottlingObserver(flowOperationThrottlingObserver);
   }
 }
