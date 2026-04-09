@@ -110,19 +110,21 @@ public class BaseRegistration {
     return "BaseRegistration{"
         + "dataId='"
         + dataId
-        + '\''
+        + "'"
         + ", group='"
         + group
-        + '\''
+        + "'"
         + ", appName='"
         + appName
-        + '\''
+        + "'"
         + ", instanceId='"
         + instanceId
-        + '\''
+        + "'"
         + ", ip='"
         + ip
-        + '\''
+        + "'"
         + '}';
   }
+
+
 }

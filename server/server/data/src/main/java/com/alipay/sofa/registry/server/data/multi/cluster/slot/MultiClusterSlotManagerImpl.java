@@ -715,7 +715,7 @@ public class MultiClusterSlotManagerImpl implements MultiClusterSlotManager {
     try {
       cur.assertSlotLessThan(update);
       if (updating != null) {
-        update.assertSlotLessThan(update);
+        updating.assertSlotLessThan(update);
       }
       return true;
     } catch (RuntimeException e) {
