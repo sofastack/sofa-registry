@@ -292,8 +292,7 @@ public class DefaultMultiClusterSlotTableSyncerTest {
         .thenReturn(() -> response);
 
     // TEST_DC_1
-    Set<String> remoteClusters = Sets.newHashSet(TEST_DC_1);
-    when(remoteClusterMetaExchanger.getAllRemoteClusters()).thenReturn(remoteClusters);
+    when(remoteClusterMetaExchanger.getAllRemoteClusters()).thenReturn(REMOTES_1);
     when(remoteClusterMetaExchanger.learn(anyString(), anyObject())).thenReturn(true);
 
     when(metaLeaderService.amILeader()).thenReturn(true);
