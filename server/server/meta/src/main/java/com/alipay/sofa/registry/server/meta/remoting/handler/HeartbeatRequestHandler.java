@@ -439,4 +439,11 @@ public class HeartbeatRequestHandler extends BaseMetaServerHandler<HeartbeatRequ
     this.multiClusterSlotTableSyncer = multiClusterSlotTableSyncer;
     return this;
   }
+
+  @VisibleForTesting
+  public HeartbeatRequestHandler setAdaptiveFlowOperationLimiter(
+      AdaptiveFlowOperationLimiter adaptiveFlowOperationLimiter) {
+    this.adaptiveFlowOperationLimiter = adaptiveFlowOperationLimiter;
+    return this;
+  }
 }

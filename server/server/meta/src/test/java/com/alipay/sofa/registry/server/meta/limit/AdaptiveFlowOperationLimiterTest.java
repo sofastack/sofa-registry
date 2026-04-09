@@ -501,4 +501,509 @@ public class AdaptiveFlowOperationLimiterTest {
     } catch (Throwable throwable) {
     }
   }
+
+  @Test
+  public void testIsEmergencyThrottlingEnabled() throws InterruptedException {
+    AdaptiveFlowOperationLimiter limiter = new AdaptiveFlowOperationLimiter();
+    // Default should be true
+    Assert.assertTrue(limiter.isEmergencyThrottlingEnabled());
+
+    limiter.setEmergencyThrottlingEnabled(false);
+    Assert.assertFalse(limiter.isEmergencyThrottlingEnabled());
+
+    limiter.setEmergencyThrottlingEnabled(true);
+    Assert.assertTrue(limiter.isEmergencyThrottlingEnabled());
+  }
+
+  @Test
+  public void testNullSessionVersionedNodes() throws InterruptedException {
+    AdaptiveFlowOperationLimiter limiter = null;
+    try {
+      MetaLeaderService metaLeaderService = Mockito.mock(MetaLeaderService.class);
+      Mockito.when(metaLeaderService.amIStableAsLeader()).thenReturn(true);
+
+      AdaptiveFlowOperationConfig config = new AdaptiveFlowOperationConfig();
+      config.setEnabled(true);
+      config.setIntervalMs(300);
+
+      String configJson = JsonUtils.writeValueAsString(config);
+      PersistenceData persistenceData =
+          PersistenceDataBuilder.createPersistenceData(
+              ValueConstants.ADAPTIVE_FLOW_OPERATION_CONFIG_DATA_ID, configJson);
+      DBResponse<PersistenceData> dbResponse = DBResponse.ok().entity(persistenceData).build();
+
+      ProvideDataService provideDataService = Mockito.mock(ProvideDataService.class);
+      Mockito.when(
+              provideDataService.queryProvideData(
+                  ValueConstants.ADAPTIVE_FLOW_OPERATION_CONFIG_DATA_ID))
+          .thenReturn(dbResponse);
+
+      // Return null for session nodes
+      SessionServerManager sessionServerManager = Mockito.mock(SessionServerManager.class);
+      Mockito.when(sessionServerManager.getSessionServerMetaInfo()).thenReturn(null);
+
+      limiter = new AdaptiveFlowOperationLimiter();
+      limiter.setMetaLeaderService(metaLeaderService);
+      limiter.setProvideDataService(provideDataService);
+      limiter.setSessionServerManager(sessionServerManager);
+
+      this.safeStartLimiter(limiter);
+      Thread.sleep(500);
+
+      // Throttling should be disabled when session nodes is null
+      FlowOperationThrottlingStatus status = limiter.getFlowOperationThrottlingStatus();
+      Assert.assertFalse(status.isEnabled());
+    } finally {
+      this.safeStopLimiter(limiter);
+    }
+  }
+
+  @Test
+  public void testEmptySessionNodesList() throws InterruptedException {
+    AdaptiveFlowOperationLimiter limiter = null;
+    try {
+      MetaLeaderService metaLeaderService = Mockito.mock(MetaLeaderService.class);
+      Mockito.when(metaLeaderService.amIStableAsLeader()).thenReturn(true);
+
+      AdaptiveFlowOperationConfig config = new AdaptiveFlowOperationConfig();
+      config.setEnabled(true);
+      config.setIntervalMs(300);
+
+      String configJson = JsonUtils.writeValueAsString(config);
+      PersistenceData persistenceData =
+          PersistenceDataBuilder.createPersistenceData(
+              ValueConstants.ADAPTIVE_FLOW_OPERATION_CONFIG_DATA_ID, configJson);
+      DBResponse<PersistenceData> dbResponse = DBResponse.ok().entity(persistenceData).build();
+
+      ProvideDataService provideDataService = Mockito.mock(ProvideDataService.class);
+      Mockito.when(
+              provideDataService.queryProvideData(
+                  ValueConstants.ADAPTIVE_FLOW_OPERATION_CONFIG_DATA_ID))
+          .thenReturn(dbResponse);
+
+      // Return empty list
+      VersionedList<SessionNode> emptyNodes = new VersionedList<>(1L, new ArrayList<>());
+      SessionServerManager sessionServerManager = Mockito.mock(SessionServerManager.class);
+      Mockito.when(sessionServerManager.getSessionServerMetaInfo()).thenReturn(emptyNodes);
+
+      limiter = new AdaptiveFlowOperationLimiter();
+      limiter.setMetaLeaderService(metaLeaderService);
+      limiter.setProvideDataService(provideDataService);
+      limiter.setSessionServerManager(sessionServerManager);
+
+      this.safeStartLimiter(limiter);
+      Thread.sleep(500);
+
+      // Throttling should be disabled when session nodes list is empty
+      FlowOperationThrottlingStatus status = limiter.getFlowOperationThrottlingStatus();
+      Assert.assertFalse(status.isEnabled());
+    } finally {
+      this.safeStopLimiter(limiter);
+    }
+  }
+
+  @Test
+  public void testInvalidConfigDisablesThrottling() throws InterruptedException {
+    AdaptiveFlowOperationLimiter limiter = null;
+    try {
+      MetaLeaderService metaLeaderService = Mockito.mock(MetaLeaderService.class);
+      Mockito.when(metaLeaderService.amIStableAsLeader()).thenReturn(true);
+
+      // Create invalid config: partial threshold >= full threshold
+      AdaptiveFlowOperationConfig config = new AdaptiveFlowOperationConfig();
+      config.setEnabled(true);
+      config.setIntervalMs(300);
+      config.setOverloadedNodePercentForPartialThrottle(80);
+      config.setOverloadedNodePercentForFullThrottle(60); // Invalid: partial >= full
+
+      String configJson = JsonUtils.writeValueAsString(config);
+      PersistenceData persistenceData =
+          PersistenceDataBuilder.createPersistenceData(
+              ValueConstants.ADAPTIVE_FLOW_OPERATION_CONFIG_DATA_ID, configJson);
+      DBResponse<PersistenceData> dbResponse = DBResponse.ok().entity(persistenceData).build();
+
+      ProvideDataService provideDataService = Mockito.mock(ProvideDataService.class);
+      Mockito.when(
+              provideDataService.queryProvideData(
+                  ValueConstants.ADAPTIVE_FLOW_OPERATION_CONFIG_DATA_ID))
+          .thenReturn(dbResponse);
+
+      VersionedList<SessionNode> sessionVersionedNodes = this.createSessionNodes(3, 7, 0);
+      SessionServerManager sessionServerManager = Mockito.mock(SessionServerManager.class);
+      Mockito.when(sessionServerManager.getSessionServerMetaInfo())
+          .thenReturn(sessionVersionedNodes);
+
+      limiter = new AdaptiveFlowOperationLimiter();
+      limiter.setMetaLeaderService(metaLeaderService);
+      limiter.setProvideDataService(provideDataService);
+      limiter.setSessionServerManager(sessionServerManager);
+
+      this.safeStartLimiter(limiter);
+      Thread.sleep(500);
+
+      // Throttling should be disabled due to invalid config
+      FlowOperationThrottlingStatus status = limiter.getFlowOperationThrottlingStatus();
+      Assert.assertFalse(status.isEnabled());
+    } finally {
+      this.safeStopLimiter(limiter);
+    }
+  }
+
+  @Test
+  public void testNotStableLeaderDisablesThrottling() throws InterruptedException {
+    AdaptiveFlowOperationLimiter limiter = null;
+    try {
+      MetaLeaderService metaLeaderService = Mockito.mock(MetaLeaderService.class);
+      // Not stable as leader
+      Mockito.when(metaLeaderService.amIStableAsLeader()).thenReturn(false);
+
+      AdaptiveFlowOperationConfig config = new AdaptiveFlowOperationConfig();
+      config.setEnabled(true);
+      config.setIntervalMs(300);
+
+      String configJson = JsonUtils.writeValueAsString(config);
+      PersistenceData persistenceData =
+          PersistenceDataBuilder.createPersistenceData(
+              ValueConstants.ADAPTIVE_FLOW_OPERATION_CONFIG_DATA_ID, configJson);
+      DBResponse<PersistenceData> dbResponse = DBResponse.ok().entity(persistenceData).build();
+
+      ProvideDataService provideDataService = Mockito.mock(ProvideDataService.class);
+      Mockito.when(
+              provideDataService.queryProvideData(
+                  ValueConstants.ADAPTIVE_FLOW_OPERATION_CONFIG_DATA_ID))
+          .thenReturn(dbResponse);
+
+      VersionedList<SessionNode> sessionVersionedNodes = this.createSessionNodes(3, 7, 0);
+      SessionServerManager sessionServerManager = Mockito.mock(SessionServerManager.class);
+      Mockito.when(sessionServerManager.getSessionServerMetaInfo())
+          .thenReturn(sessionVersionedNodes);
+
+      limiter = new AdaptiveFlowOperationLimiter();
+      limiter.setMetaLeaderService(metaLeaderService);
+      limiter.setProvideDataService(provideDataService);
+      limiter.setSessionServerManager(sessionServerManager);
+
+      this.safeStartLimiter(limiter);
+      Thread.sleep(500);
+
+      // Throttling should be disabled when not stable leader
+      FlowOperationThrottlingStatus status = limiter.getFlowOperationThrottlingStatus();
+      Assert.assertFalse(status.isEnabled());
+    } finally {
+      this.safeStopLimiter(limiter);
+    }
+  }
+
+  @Test
+  public void testInvalidCpuAverageThreshold() throws InterruptedException {
+    AdaptiveFlowOperationLimiter limiter = null;
+    try {
+      MetaLeaderService metaLeaderService = Mockito.mock(MetaLeaderService.class);
+      Mockito.when(metaLeaderService.amIStableAsLeader()).thenReturn(true);
+
+      // Invalid: cpuAverageThreshold > 100
+      AdaptiveFlowOperationConfig config = new AdaptiveFlowOperationConfig();
+      config.setEnabled(true);
+      config.setIntervalMs(300);
+      config.setCpuAverageThreshold(150); // Invalid
+
+      String configJson = JsonUtils.writeValueAsString(config);
+      PersistenceData persistenceData =
+          PersistenceDataBuilder.createPersistenceData(
+              ValueConstants.ADAPTIVE_FLOW_OPERATION_CONFIG_DATA_ID, configJson);
+      DBResponse<PersistenceData> dbResponse = DBResponse.ok().entity(persistenceData).build();
+
+      ProvideDataService provideDataService = Mockito.mock(ProvideDataService.class);
+      Mockito.when(
+              provideDataService.queryProvideData(
+                  ValueConstants.ADAPTIVE_FLOW_OPERATION_CONFIG_DATA_ID))
+          .thenReturn(dbResponse);
+
+      VersionedList<SessionNode> sessionVersionedNodes = this.createSessionNodes(3, 7, 0);
+      SessionServerManager sessionServerManager = Mockito.mock(SessionServerManager.class);
+      Mockito.when(sessionServerManager.getSessionServerMetaInfo())
+          .thenReturn(sessionVersionedNodes);
+
+      limiter = new AdaptiveFlowOperationLimiter();
+      limiter.setMetaLeaderService(metaLeaderService);
+      limiter.setProvideDataService(provideDataService);
+      limiter.setSessionServerManager(sessionServerManager);
+
+      this.safeStartLimiter(limiter);
+      Thread.sleep(500);
+
+      // Throttling should be disabled due to invalid config
+      FlowOperationThrottlingStatus status = limiter.getFlowOperationThrottlingStatus();
+      Assert.assertFalse(status.isEnabled());
+    } finally {
+      this.safeStopLimiter(limiter);
+    }
+  }
+
+  @Test
+  public void testInvalidIntervalMs() throws InterruptedException {
+    AdaptiveFlowOperationLimiter limiter = null;
+    try {
+      MetaLeaderService metaLeaderService = Mockito.mock(MetaLeaderService.class);
+      Mockito.when(metaLeaderService.amIStableAsLeader()).thenReturn(true);
+
+      // Invalid: intervalMs <= 0
+      AdaptiveFlowOperationConfig config = new AdaptiveFlowOperationConfig();
+      config.setEnabled(true);
+      config.setIntervalMs(-1); // Invalid
+
+      String configJson = JsonUtils.writeValueAsString(config);
+      PersistenceData persistenceData =
+          PersistenceDataBuilder.createPersistenceData(
+              ValueConstants.ADAPTIVE_FLOW_OPERATION_CONFIG_DATA_ID, configJson);
+      DBResponse<PersistenceData> dbResponse = DBResponse.ok().entity(persistenceData).build();
+
+      ProvideDataService provideDataService = Mockito.mock(ProvideDataService.class);
+      Mockito.when(
+              provideDataService.queryProvideData(
+                  ValueConstants.ADAPTIVE_FLOW_OPERATION_CONFIG_DATA_ID))
+          .thenReturn(dbResponse);
+
+      VersionedList<SessionNode> sessionVersionedNodes = this.createSessionNodes(3, 7, 0);
+      SessionServerManager sessionServerManager = Mockito.mock(SessionServerManager.class);
+      Mockito.when(sessionServerManager.getSessionServerMetaInfo())
+          .thenReturn(sessionVersionedNodes);
+
+      limiter = new AdaptiveFlowOperationLimiter();
+      limiter.setMetaLeaderService(metaLeaderService);
+      limiter.setProvideDataService(provideDataService);
+      limiter.setSessionServerManager(sessionServerManager);
+
+      this.safeStartLimiter(limiter);
+      Thread.sleep(500);
+
+      // Throttling should be disabled due to invalid config
+      FlowOperationThrottlingStatus status = limiter.getFlowOperationThrottlingStatus();
+      Assert.assertFalse(status.isEnabled());
+    } finally {
+      this.safeStopLimiter(limiter);
+    }
+  }
+
+  @Test
+  public void testInvalidBaseThrottlePercent() throws InterruptedException {
+    AdaptiveFlowOperationLimiter limiter = null;
+    try {
+      MetaLeaderService metaLeaderService = Mockito.mock(MetaLeaderService.class);
+      Mockito.when(metaLeaderService.amIStableAsLeader()).thenReturn(true);
+
+      // Invalid: baseThrottlePercent > 100
+      AdaptiveFlowOperationConfig config = new AdaptiveFlowOperationConfig();
+      config.setEnabled(true);
+      config.setIntervalMs(300);
+      config.setBaseThrottlePercent(150); // Invalid
+
+      String configJson = JsonUtils.writeValueAsString(config);
+      PersistenceData persistenceData =
+          PersistenceDataBuilder.createPersistenceData(
+              ValueConstants.ADAPTIVE_FLOW_OPERATION_CONFIG_DATA_ID, configJson);
+      DBResponse<PersistenceData> dbResponse = DBResponse.ok().entity(persistenceData).build();
+
+      ProvideDataService provideDataService = Mockito.mock(ProvideDataService.class);
+      Mockito.when(
+              provideDataService.queryProvideData(
+                  ValueConstants.ADAPTIVE_FLOW_OPERATION_CONFIG_DATA_ID))
+          .thenReturn(dbResponse);
+
+      VersionedList<SessionNode> sessionVersionedNodes = this.createSessionNodes(3, 7, 0);
+      SessionServerManager sessionServerManager = Mockito.mock(SessionServerManager.class);
+      Mockito.when(sessionServerManager.getSessionServerMetaInfo())
+          .thenReturn(sessionVersionedNodes);
+
+      limiter = new AdaptiveFlowOperationLimiter();
+      limiter.setMetaLeaderService(metaLeaderService);
+      limiter.setProvideDataService(provideDataService);
+      limiter.setSessionServerManager(sessionServerManager);
+
+      this.safeStartLimiter(limiter);
+      Thread.sleep(500);
+
+      // Throttling should be disabled due to invalid config
+      FlowOperationThrottlingStatus status = limiter.getFlowOperationThrottlingStatus();
+      Assert.assertFalse(status.isEnabled());
+    } finally {
+      this.safeStopLimiter(limiter);
+    }
+  }
+
+  @Test
+  public void testInvalidPartialThrottlePercent() throws InterruptedException {
+    AdaptiveFlowOperationLimiter limiter = null;
+    try {
+      MetaLeaderService metaLeaderService = Mockito.mock(MetaLeaderService.class);
+      Mockito.when(metaLeaderService.amIStableAsLeader()).thenReturn(true);
+
+      // Invalid: overloadedNodePercentForPartialThrottle > 100
+      AdaptiveFlowOperationConfig config = new AdaptiveFlowOperationConfig();
+      config.setEnabled(true);
+      config.setIntervalMs(300);
+      config.setOverloadedNodePercentForPartialThrottle(150); // Invalid
+
+      String configJson = JsonUtils.writeValueAsString(config);
+      PersistenceData persistenceData =
+          PersistenceDataBuilder.createPersistenceData(
+              ValueConstants.ADAPTIVE_FLOW_OPERATION_CONFIG_DATA_ID, configJson);
+      DBResponse<PersistenceData> dbResponse = DBResponse.ok().entity(persistenceData).build();
+
+      ProvideDataService provideDataService = Mockito.mock(ProvideDataService.class);
+      Mockito.when(
+              provideDataService.queryProvideData(
+                  ValueConstants.ADAPTIVE_FLOW_OPERATION_CONFIG_DATA_ID))
+          .thenReturn(dbResponse);
+
+      VersionedList<SessionNode> sessionVersionedNodes = this.createSessionNodes(3, 7, 0);
+      SessionServerManager sessionServerManager = Mockito.mock(SessionServerManager.class);
+      Mockito.when(sessionServerManager.getSessionServerMetaInfo())
+          .thenReturn(sessionVersionedNodes);
+
+      limiter = new AdaptiveFlowOperationLimiter();
+      limiter.setMetaLeaderService(metaLeaderService);
+      limiter.setProvideDataService(provideDataService);
+      limiter.setSessionServerManager(sessionServerManager);
+
+      this.safeStartLimiter(limiter);
+      Thread.sleep(500);
+
+      // Throttling should be disabled due to invalid config
+      FlowOperationThrottlingStatus status = limiter.getFlowOperationThrottlingStatus();
+      Assert.assertFalse(status.isEnabled());
+    } finally {
+      this.safeStopLimiter(limiter);
+    }
+  }
+
+  @Test
+  public void testInvalidFullThrottlePercent() throws InterruptedException {
+    AdaptiveFlowOperationLimiter limiter = null;
+    try {
+      MetaLeaderService metaLeaderService = Mockito.mock(MetaLeaderService.class);
+      Mockito.when(metaLeaderService.amIStableAsLeader()).thenReturn(true);
+
+      // Invalid: overloadedNodePercentForFullThrottle > 100
+      AdaptiveFlowOperationConfig config = new AdaptiveFlowOperationConfig();
+      config.setEnabled(true);
+      config.setIntervalMs(300);
+      config.setOverloadedNodePercentForFullThrottle(150); // Invalid
+
+      String configJson = JsonUtils.writeValueAsString(config);
+      PersistenceData persistenceData =
+          PersistenceDataBuilder.createPersistenceData(
+              ValueConstants.ADAPTIVE_FLOW_OPERATION_CONFIG_DATA_ID, configJson);
+      DBResponse<PersistenceData> dbResponse = DBResponse.ok().entity(persistenceData).build();
+
+      ProvideDataService provideDataService = Mockito.mock(ProvideDataService.class);
+      Mockito.when(
+              provideDataService.queryProvideData(
+                  ValueConstants.ADAPTIVE_FLOW_OPERATION_CONFIG_DATA_ID))
+          .thenReturn(dbResponse);
+
+      VersionedList<SessionNode> sessionVersionedNodes = this.createSessionNodes(3, 7, 0);
+      SessionServerManager sessionServerManager = Mockito.mock(SessionServerManager.class);
+      Mockito.when(sessionServerManager.getSessionServerMetaInfo())
+          .thenReturn(sessionVersionedNodes);
+
+      limiter = new AdaptiveFlowOperationLimiter();
+      limiter.setMetaLeaderService(metaLeaderService);
+      limiter.setProvideDataService(provideDataService);
+      limiter.setSessionServerManager(sessionServerManager);
+
+      this.safeStartLimiter(limiter);
+      Thread.sleep(500);
+
+      // Throttling should be disabled due to invalid config
+      FlowOperationThrottlingStatus status = limiter.getFlowOperationThrottlingStatus();
+      Assert.assertFalse(status.isEnabled());
+    } finally {
+      this.safeStopLimiter(limiter);
+    }
+  }
+
+  @Test
+  public void testSessionNodeWithAbnormalCpuAverage() throws InterruptedException {
+    // Test case where session node reports CPU > 100 or < 0
+    AdaptiveFlowOperationLimiter limiter = null;
+    try {
+      MetaLeaderService metaLeaderService = Mockito.mock(MetaLeaderService.class);
+      Mockito.when(metaLeaderService.amIStableAsLeader()).thenReturn(true);
+
+      AdaptiveFlowOperationConfig config = new AdaptiveFlowOperationConfig();
+      config.setEnabled(true);
+      config.setIntervalMs(300);
+      config.setCpuAverageThreshold(60);
+      config.setOverloadedNodePercentForPartialThrottle(20);
+      config.setOverloadedNodePercentForFullThrottle(60);
+      config.setBaseThrottlePercent(50);
+
+      String configJson = JsonUtils.writeValueAsString(config);
+      PersistenceData persistenceData =
+          PersistenceDataBuilder.createPersistenceData(
+              ValueConstants.ADAPTIVE_FLOW_OPERATION_CONFIG_DATA_ID, configJson);
+      DBResponse<PersistenceData> dbResponse = DBResponse.ok().entity(persistenceData).build();
+
+      ProvideDataService provideDataService = Mockito.mock(ProvideDataService.class);
+      Mockito.when(
+              provideDataService.queryProvideData(
+                  ValueConstants.ADAPTIVE_FLOW_OPERATION_CONFIG_DATA_ID))
+          .thenReturn(dbResponse);
+
+      // Create session nodes with abnormal CPU values (> 100 and < 0)
+      Random random = new Random();
+      long timestamp = System.currentTimeMillis();
+      List<SessionNode> sessionNodes = new ArrayList<>();
+
+      // Add node with CPU > 100 (should be treated as not overloaded)
+      sessionNodes.add(
+          new SessionNode(
+              URL.valueOf("1.2.3.1:9600"),
+              "RegionId",
+              new ProcessId("1.2.3.1", timestamp, 1, random.nextInt()),
+              1,
+              new SystemLoad(150.0, 2.0))); // Invalid CPU
+
+      // Add node with CPU < 0 (should be treated as not overloaded)
+      sessionNodes.add(
+          new SessionNode(
+              URL.valueOf("1.2.3.2:9600"),
+              "RegionId",
+              new ProcessId("1.2.3.2", timestamp, 1, random.nextInt()),
+              1,
+              new SystemLoad(-10.0, 2.0))); // Invalid CPU
+
+      // Add 3 normal healthy nodes
+      for (int i = 3; i <= 5; i++) {
+        sessionNodes.add(
+            new SessionNode(
+                URL.valueOf("1.2.3." + i + ":9600"),
+                "RegionId",
+                new ProcessId("1.2.3." + i, timestamp, 1, random.nextInt()),
+                1,
+                new SystemLoad(50.0, 2.0)));
+      }
+
+      VersionedList<SessionNode> sessionVersionedNodes = new VersionedList<>(1L, sessionNodes);
+      SessionServerManager sessionServerManager = Mockito.mock(SessionServerManager.class);
+      Mockito.when(sessionServerManager.getSessionServerMetaInfo())
+          .thenReturn(sessionVersionedNodes);
+
+      limiter = new AdaptiveFlowOperationLimiter();
+      limiter.setMetaLeaderService(metaLeaderService);
+      limiter.setProvideDataService(provideDataService);
+      limiter.setSessionServerManager(sessionServerManager);
+
+      this.safeStartLimiter(limiter);
+      Thread.sleep(500);
+
+      // All 5 nodes are healthy (abnormal CPU values treated as not overloaded)
+      // 0% overloaded < 20% threshold -> disabled
+      FlowOperationThrottlingStatus status = limiter.getFlowOperationThrottlingStatus();
+      Assert.assertFalse(status.isEnabled());
+    } finally {
+      this.safeStopLimiter(limiter);
+    }
+  }
 }

@@ -21,6 +21,7 @@ import static org.mockito.Mockito.when;
 import com.alipay.sofa.registry.common.model.ProcessId;
 import com.alipay.sofa.registry.common.model.metaserver.Lease;
 import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.HeartbeatRequest;
+import com.alipay.sofa.registry.common.model.metaserver.metrics.SystemLoad;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 import com.alipay.sofa.registry.common.model.slot.SlotConfig;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
@@ -176,5 +177,98 @@ public class DefaultSessionServerManagerTest extends AbstractMetaServerTestBase 
             1);
     sessionManager.renew(sessionNode, 1000);
     Assert.assertEquals(10, sessionManager.getSessionServerMetaInfo().getClusterMembers().size());
+  }
+
+  @Test
+  public void testSystemLoadChange() {
+    String ip = randomIp();
+    long timestamp = System.currentTimeMillis();
+    ProcessId processId = new ProcessId(ip, timestamp, 1, random.nextInt());
+    URL url = randomURL(ip);
+
+    // Create session node with initial SystemLoad
+    SystemLoad initialLoad = new SystemLoad(50.0, 2.0);
+    SessionNode sessionNode = new SessionNode(url, getDc(), processId, 100, initialLoad);
+
+    // Register the session node
+    sessionManager.register(new Lease<>(sessionNode, 10000));
+    Assert.assertEquals(1, sessionManager.getSessionServerMetaInfo().getClusterMembers().size());
+
+    // Verify initial system load
+    Lease<SessionNode> lease = sessionManager.getLease(sessionNode);
+    Assert.assertNotNull(lease);
+    Assert.assertNotNull(lease.getRenewal().getSystemLoad());
+    Assert.assertEquals(50.0, lease.getRenewal().getSystemLoad().getCpuAverage(), 0.001);
+    Assert.assertEquals(2.0, lease.getRenewal().getSystemLoad().getLoadAverage(), 0.001);
+
+    // Create new session node with updated SystemLoad (same URL, processId, weight)
+    SystemLoad updatedLoad = new SystemLoad(80.0, 5.0);
+    SessionNode updatedSessionNode = new SessionNode(url, getDc(), processId, 100, updatedLoad);
+
+    // Renew with updated system load
+    sessionManager.renew(updatedSessionNode, 1000);
+
+    // Verify that the system load was updated
+    Lease<SessionNode> updatedLease = sessionManager.getLease(updatedSessionNode);
+    Assert.assertNotNull(updatedLease);
+    Assert.assertNotNull(updatedLease.getRenewal().getSystemLoad());
+    Assert.assertEquals(80.0, updatedLease.getRenewal().getSystemLoad().getCpuAverage(), 0.001);
+    Assert.assertEquals(5.0, updatedLease.getRenewal().getSystemLoad().getLoadAverage(), 0.001);
+  }
+
+  @Test
+  public void testSystemLoadChangeFromNullToNonNull() {
+    String ip = randomIp();
+    long timestamp = System.currentTimeMillis();
+    ProcessId processId = new ProcessId(ip, timestamp, 1, random.nextInt());
+    URL url = randomURL(ip);
+
+    // Create session node without SystemLoad (null)
+    SessionNode sessionNode = new SessionNode(url, getDc(), processId, 100);
+
+    // Register the session node
+    sessionManager.register(new Lease<>(sessionNode, 10000));
+    Lease<SessionNode> lease = sessionManager.getLease(sessionNode);
+    Assert.assertNull(lease.getRenewal().getSystemLoad());
+
+    // Create new session node with SystemLoad
+    SystemLoad newLoad = new SystemLoad(60.0, 3.0);
+    SessionNode updatedSessionNode = new SessionNode(url, getDc(), processId, 100, newLoad);
+
+    // Renew with system load
+    sessionManager.renew(updatedSessionNode, 1000);
+
+    // Verify that the system load was updated
+    Lease<SessionNode> updatedLease = sessionManager.getLease(updatedSessionNode);
+    Assert.assertNotNull(updatedLease.getRenewal().getSystemLoad());
+    Assert.assertEquals(60.0, updatedLease.getRenewal().getSystemLoad().getCpuAverage(), 0.001);
+    Assert.assertEquals(3.0, updatedLease.getRenewal().getSystemLoad().getLoadAverage(), 0.001);
+  }
+
+  @Test
+  public void testSystemLoadChangeFromNonNullToNull() {
+    String ip = randomIp();
+    long timestamp = System.currentTimeMillis();
+    ProcessId processId = new ProcessId(ip, timestamp, 1, random.nextInt());
+    URL url = randomURL(ip);
+
+    // Create session node with SystemLoad
+    SystemLoad initialLoad = new SystemLoad(70.0, 4.0);
+    SessionNode sessionNode = new SessionNode(url, getDc(), processId, 100, initialLoad);
+
+    // Register the session node
+    sessionManager.register(new Lease<>(sessionNode, 10000));
+    Lease<SessionNode> lease = sessionManager.getLease(sessionNode);
+    Assert.assertNotNull(lease.getRenewal().getSystemLoad());
+
+    // Create new session node without SystemLoad (null)
+    SessionNode updatedSessionNode = new SessionNode(url, getDc(), processId, 100, null);
+
+    // Renew without system load
+    sessionManager.renew(updatedSessionNode, 1000);
+
+    // Verify that the system load was updated to null
+    Lease<SessionNode> updatedLease = sessionManager.getLease(updatedSessionNode);
+    Assert.assertNull(updatedLease.getRenewal().getSystemLoad());
   }
 }

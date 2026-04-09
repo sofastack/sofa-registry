@@ -18,6 +18,7 @@ package com.alipay.sofa.registry.common.model.metaserver.nodes;
 
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.ProcessId;
+import com.alipay.sofa.registry.common.model.metaserver.metrics.SystemLoad;
 import com.alipay.sofa.registry.common.model.store.URL;
 import org.junit.Assert;
 import org.junit.Test;
@@ -69,6 +70,32 @@ public class NodeTest {
 
     Assert.assertEquals(node1.getProcessId(), processId1);
     Assert.assertEquals(node1, node3);
+
+    // Test SystemLoad is null by default
+    Assert.assertNull(node1.getSystemLoad());
+  }
+
+  @Test
+  public void testSessionNodeWithSystemLoad() {
+    ProcessId processId = new ProcessId("test", 1, 2, 3);
+    SystemLoad systemLoad = new SystemLoad(75.5, 4.2);
+    SessionNode node = new SessionNode(url1, region, processId, 100, systemLoad);
+
+    Assert.assertEquals(node.getNodeType(), Node.NodeType.SESSION);
+    Assert.assertEquals(node.getProcessId(), processId);
+    Assert.assertEquals(100, node.getWeight());
+    Assert.assertNotNull(node.getSystemLoad());
+    Assert.assertEquals(75.5, node.getSystemLoad().getCpuAverage(), 0.001);
+    Assert.assertEquals(4.2, node.getSystemLoad().getLoadAverage(), 0.001);
+  }
+
+  @Test
+  public void testSessionNodeWithNullSystemLoad() {
+    ProcessId processId = new ProcessId("test", 1, 2, 3);
+    SessionNode node = new SessionNode(url1, region, processId, 100, null);
+
+    Assert.assertEquals(node.getNodeType(), Node.NodeType.SESSION);
+    Assert.assertNull(node.getSystemLoad());
   }
 
   @Test
