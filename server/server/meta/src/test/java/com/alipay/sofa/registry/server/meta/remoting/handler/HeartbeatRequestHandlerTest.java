@@ -20,18 +20,26 @@ import static org.mockito.Mockito.*;
 
 import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.Node;
+import com.alipay.sofa.registry.common.model.ProcessId;
+import com.alipay.sofa.registry.common.model.metaserver.cluster.VersionedList;
+import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.BaseHeartBeatResponse;
 import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.HeartbeatRequest;
+import com.alipay.sofa.registry.common.model.metaserver.limit.FlowOperationThrottlingStatus;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
+import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 import com.alipay.sofa.registry.common.model.slot.SlotConfig;
+import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
 import com.alipay.sofa.registry.server.meta.MetaLeaderService;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.lease.data.DataServerManager;
 import com.alipay.sofa.registry.server.meta.lease.session.SessionServerManager;
+import com.alipay.sofa.registry.server.meta.limit.AdaptiveFlowOperationLimiter;
 import com.alipay.sofa.registry.server.meta.metaserver.impl.DefaultCurrentDcMetaServer;
 import com.alipay.sofa.registry.server.meta.multi.cluster.MultiClusterSlotTableSyncer;
 import com.alipay.sofa.registry.server.meta.slot.manager.DefaultSlotManager;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.concurrent.TimeoutException;
 import org.junit.Assert;
@@ -58,6 +66,8 @@ public class HeartbeatRequestHandlerTest extends AbstractMetaServerTestBase {
 
   @Mock private MultiClusterSlotTableSyncer multiClusterSlotTableSyncer;
 
+  @Mock private AdaptiveFlowOperationLimiter adaptiveFlowOperationLimiter;
+
   private DefaultSlotManager slotManager;
 
   @Before
@@ -71,11 +81,15 @@ public class HeartbeatRequestHandlerTest extends AbstractMetaServerTestBase {
     when(currentDcMetaServer.getSessionServerManager()).thenReturn(sessionServerManager);
     when(currentDcMetaServer.getSlotTable()).thenReturn(slotManager.getSlotTable());
 
+    when(adaptiveFlowOperationLimiter.getFlowOperationThrottlingStatus())
+        .thenReturn(FlowOperationThrottlingStatus.disabled());
+
     handler
         .setNodeConfig(nodeConfig)
         .setCurrentDcMetaServer(currentDcMetaServer)
         .setMetaLeaderElector(metaLeaderService)
-        .setMultiClusterSlotTableSyncer(multiClusterSlotTableSyncer);
+        .setMultiClusterSlotTableSyncer(multiClusterSlotTableSyncer)
+        .setAdaptiveFlowOperationLimiter(adaptiveFlowOperationLimiter);
   }
 
   @Test
@@ -154,5 +168,118 @@ public class HeartbeatRequestHandlerTest extends AbstractMetaServerTestBase {
   @Test
   public void testInterest() {
     Assert.assertEquals(HeartbeatRequest.class, handler.interest());
+  }
+
+  @Test
+  public void testSessionHeartbeatWithFlowOperationThrottlingStatus()
+      throws TimeoutException, InterruptedException {
+    makeMetaLeader();
+    slotManager.refresh(randomSlotTable(randomDataNodes(3)));
+
+    // Mock session server manager to return session node meta info
+    SessionNode sessionNode =
+        new SessionNode(
+            new URL("192.168.1.1", 9600),
+            "testRegion",
+            new ProcessId("192.168.1.1", System.currentTimeMillis(), 1, 1),
+            100);
+    VersionedList<SessionNode> sessionVersionedNodes =
+        new VersionedList<>(1L, Arrays.asList(sessionNode));
+    when(sessionServerManager.getSessionServerMetaInfo()).thenReturn(sessionVersionedNodes);
+
+    // Mock throttling status - enabled with 75%
+    FlowOperationThrottlingStatus throttlingStatus = FlowOperationThrottlingStatus.enabled(75.0);
+    when(adaptiveFlowOperationLimiter.getFlowOperationThrottlingStatus())
+        .thenReturn(throttlingStatus);
+
+    // Create SESSION heartbeat request
+    HeartbeatRequest<Node> heartbeat =
+        new HeartbeatRequest<>(
+            sessionNode,
+            0,
+            getDc(),
+            System.currentTimeMillis(),
+            new SlotConfig.SlotBasicInfo(
+                SlotConfig.SLOT_NUM, SlotConfig.SLOT_REPLICAS, SlotConfig.FUNC),
+            Collections.emptyMap());
+
+    // Execute and verify
+    GenericResponse<BaseHeartBeatResponse> response =
+        (GenericResponse<BaseHeartBeatResponse>) handler.doHandle(channel, heartbeat);
+    Assert.assertTrue(response.isSuccess());
+    Assert.assertNotNull(response.getData());
+    Assert.assertNotNull(response.getData().getFlowOperationThrottlingStatus());
+    Assert.assertTrue(response.getData().getFlowOperationThrottlingStatus().isEnabled());
+    Assert.assertEquals(
+        75.0, response.getData().getFlowOperationThrottlingStatus().getThrottlePercent(), 0.001);
+  }
+
+  @Test
+  public void testSessionHeartbeatWithDisabledThrottling()
+      throws TimeoutException, InterruptedException {
+    makeMetaLeader();
+    slotManager.refresh(randomSlotTable(randomDataNodes(3)));
+
+    // Mock session server manager
+    SessionNode sessionNode =
+        new SessionNode(
+            new URL("192.168.1.1", 9600),
+            "testRegion",
+            new ProcessId("192.168.1.1", System.currentTimeMillis(), 1, 1),
+            100);
+    VersionedList<SessionNode> sessionVersionedNodes =
+        new VersionedList<>(1L, Arrays.asList(sessionNode));
+    when(sessionServerManager.getSessionServerMetaInfo()).thenReturn(sessionVersionedNodes);
+
+    // Mock throttling status - disabled
+    when(adaptiveFlowOperationLimiter.getFlowOperationThrottlingStatus())
+        .thenReturn(FlowOperationThrottlingStatus.disabled());
+
+    // Create SESSION heartbeat request
+    HeartbeatRequest<Node> heartbeat =
+        new HeartbeatRequest<>(
+            sessionNode,
+            0,
+            getDc(),
+            System.currentTimeMillis(),
+            new SlotConfig.SlotBasicInfo(
+                SlotConfig.SLOT_NUM, SlotConfig.SLOT_REPLICAS, SlotConfig.FUNC),
+            Collections.emptyMap());
+
+    // Execute and verify
+    GenericResponse<BaseHeartBeatResponse> response =
+        (GenericResponse<BaseHeartBeatResponse>) handler.doHandle(channel, heartbeat);
+    Assert.assertTrue(response.isSuccess());
+    Assert.assertNotNull(response.getData());
+    Assert.assertNotNull(response.getData().getFlowOperationThrottlingStatus());
+    Assert.assertFalse(response.getData().getFlowOperationThrottlingStatus().isEnabled());
+    Assert.assertEquals(
+        0.0, response.getData().getFlowOperationThrottlingStatus().getThrottlePercent(), 0.001);
+  }
+
+  @Test
+  public void testDataHeartbeatNoFlowOperationThrottlingStatus()
+      throws TimeoutException, InterruptedException {
+    makeMetaLeader();
+    slotManager.refresh(randomSlotTable(randomDataNodes(3)));
+
+    // Create DATA heartbeat request
+    HeartbeatRequest<Node> heartbeat =
+        new HeartbeatRequest<>(
+            new DataNode(randomURL(randomIp()), getDc()),
+            0,
+            getDc(),
+            System.currentTimeMillis(),
+            new SlotConfig.SlotBasicInfo(
+                SlotConfig.SLOT_NUM, SlotConfig.SLOT_REPLICAS, SlotConfig.FUNC),
+            Collections.emptyMap());
+
+    // Execute and verify - DATA node heartbeat should NOT include throttling status
+    GenericResponse<BaseHeartBeatResponse> response =
+        (GenericResponse<BaseHeartBeatResponse>) handler.doHandle(channel, heartbeat);
+    Assert.assertTrue(response.isSuccess());
+    Assert.assertNotNull(response.getData());
+    // DATA node heartbeat response should have null throttling status
+    Assert.assertNull(response.getData().getFlowOperationThrottlingStatus());
   }
 }
