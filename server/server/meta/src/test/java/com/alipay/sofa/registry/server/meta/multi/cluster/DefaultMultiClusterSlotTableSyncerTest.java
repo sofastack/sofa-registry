@@ -95,6 +95,9 @@ public class DefaultMultiClusterSlotTableSyncerTest {
     when(multiClusterMetaServerConfig.getRemoteSlotSyncerExecutorPoolSize()).thenReturn(10);
     when(multiClusterMetaServerConfig.getRemoteSlotSyncerExecutorQueueSize()).thenReturn(10);
 
+    when(metaLeaderService.amILeader()).thenReturn(true);
+    when(metaLeaderService.amIStableAsLeader()).thenReturn(true);
+
     defaultMultiClusterSlotTableSyncer.init();
     defaultMultiClusterSlotTableSyncer.becomeLeader();
     when(executorManager.getRemoteSlotSyncerExecutor()).thenReturn(executor);
@@ -158,11 +161,6 @@ public class DefaultMultiClusterSlotTableSyncerTest {
 
   @Test
   public void testMetaNotLeader() {
-    // TEST_DC_1
-    when(remoteClusterMetaExchanger.getAllRemoteClusters()).thenReturn(REMOTES_1);
-    when(remoteClusterMetaExchanger.sendRequest(anyString(), anyObject()))
-        .thenReturn(() -> createUpgradeGenericResponse());
-    when(remoteClusterMetaExchanger.learn(anyString(), anyObject())).thenReturn(true);
     when(metaLeaderService.amILeader()).thenReturn(false);
     when(metaLeaderService.amIStableAsLeader()).thenReturn(true);
 
@@ -294,8 +292,9 @@ public class DefaultMultiClusterSlotTableSyncerTest {
 
   @Test
   public void testHandleLeaderNotWarmupResponse() {
+    GenericResponse<RemoteClusterSlotSyncResponse> response = createLeaderNotWarmupedGenericResponse();
     when(remoteClusterMetaExchanger.sendRequest(anyString(), anyObject()))
-        .thenReturn(() -> createLeaderNotWarmupedGenericResponse());
+        .thenReturn(() -> response);
 
     // TEST_DC_1
     when(remoteClusterMetaExchanger.getAllRemoteClusters()).thenReturn(REMOTES_1);

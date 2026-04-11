@@ -213,19 +213,21 @@ public class DefaultRegistryClientTest extends BaseTest {
 
     // 1. register
     PublisherRegistration publisherRegistration1 = new PublisherRegistration(dataId);
+    publisherRegistration1.setInstanceId("instance1");
     Publisher publisher1 = registryClient.register(publisherRegistration1);
 
     PublisherRegistration publisherRegistration2 = new PublisherRegistration(dataId);
+    publisherRegistration2.setInstanceId("instance2");
     Publisher publisher2 = registryClient.register(publisherRegistration2);
 
     SubscriberDataObserver dataObserver = mock(SubscriberDataObserver.class);
-    SubscriberRegistration subscriberRegistration1 =
-        new SubscriberRegistration(dataId, dataObserver);
+    SubscriberRegistration subscriberRegistration1 = new SubscriberRegistration(dataId, dataObserver);
+    subscriberRegistration1.setInstanceId("subscriber-instance1");
 
     Subscriber subscriber1 = registryClient.register(subscriberRegistration1);
 
-    SubscriberRegistration subscriberRegistration2 =
-        new SubscriberRegistration(dataId, dataObserver);
+    SubscriberRegistration subscriberRegistration2 = new SubscriberRegistration(dataId, dataObserver);
+    subscriberRegistration2.setInstanceId("subscriber-instance2");
 
     Subscriber subscriber2 = registryClient.register(subscriberRegistration2);
 
