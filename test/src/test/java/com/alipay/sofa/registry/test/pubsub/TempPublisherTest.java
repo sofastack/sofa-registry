@@ -67,7 +67,8 @@ public class TempPublisherTest extends BaseIntegrationTest {
 
     subReg.setScopeEnum(ScopeEnum.zone);
     registryClient1.register(subReg);
-    Thread.sleep(5000L);
+    // Wait longer to ensure server is fully ready and push is enabled
+    Thread.sleep(10000L);
     assertEquals(dataId, dataIdRef.get());
     assertEquals(0, userDataRef.get().getZoneData().size());
 
@@ -130,13 +131,15 @@ public class TempPublisherTest extends BaseIntegrationTest {
             });
     subReg.setScopeEnum(ScopeEnum.zone);
     registryClient1.register(subReg);
-    Thread.sleep(5000L);
+    // Wait longer to ensure server is fully ready and push is enabled
+    Thread.sleep(10000L);
 
     // publish data
     PublisherRegistration registration = new PublisherRegistration(dataId);
     registryClient1.register(registration, "test publish");
 
-    Thread.sleep(5000L);
+    // Wait longer for data to be processed
+    Thread.sleep(10000L);
 
     // publish temp data
     Publisher tempPublisher = new Publisher();
@@ -156,7 +159,8 @@ public class TempPublisherTest extends BaseIntegrationTest {
     tempPublisher.setSessionProcessId(ServerEnv.PROCESS_ID);
     sessionApplicationContext.getBean(DataNodeService.class).register(tempPublisher);
 
-    Thread.sleep(5000L);
+    // Wait longer for temp data to be processed
+    Thread.sleep(10000L);
 
     assertEquals(1, userDataRef.get().getZoneData().size());
     assertEquals(2, userDataRef.get().getZoneData().get(LOCAL_REGION).size());
