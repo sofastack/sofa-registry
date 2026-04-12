@@ -36,6 +36,7 @@ import com.alipay.sofa.registry.task.KeyedThreadPoolExecutor;
 import com.alipay.sofa.registry.test.TestUtils;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.google.common.collect.Sets;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -98,6 +99,10 @@ public class DefaultMultiClusterSlotTableSyncerTest {
     when(executorManager.getRemoteSlotSyncerExecutor()).thenReturn(executor);
     when(metaLeaderService.amILeader()).thenReturn(true);
     when(metaLeaderService.amIStableAsLeader()).thenReturn(true);
+    
+    // Set up default mock for getAllRemoteClusters to avoid race conditions
+    when(remoteClusterMetaExchanger.getAllRemoteClusters()).thenReturn(Collections.emptySet());
+    when(remoteClusterMetaExchanger.learn(anyString(), anyObject())).thenReturn(true);
 
     defaultMultiClusterSlotTableSyncer.init();
     defaultMultiClusterSlotTableSyncer.becomeLeader();
