@@ -125,4 +125,33 @@ public class BaseRegistration {
         + '\''
         + '}';
   }
+
+  /** @see Object#hashCode() */
+  @Override
+  public int hashCode() {
+    int result = 17;
+    result = 31 * result + (dataId != null ? dataId.hashCode() : 0);
+    result = 31 * result + (group != null ? group.hashCode() : 0);
+    result = 31 * result + (appName != null ? appName.hashCode() : 0);
+    result = 31 * result + (instanceId != null ? instanceId.hashCode() : 0);
+    result = 31 * result + (ip != null ? ip.hashCode() : 0);
+    return result;
+  }
+
+  /** @see Object#equals(Object) */
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+    BaseRegistration that = (BaseRegistration) obj;
+    return (dataId == null ? that.dataId == null : dataId.equals(that.dataId))
+        && (group == null ? that.group == null : group.equals(that.group))
+        && (appName == null ? that.appName == null : appName.equals(that.appName))
+        && (instanceId == null ? that.instanceId == null : instanceId.equals(that.instanceId))
+        && (ip == null ? that.ip == null : ip.equals(that.ip));
+  }
 }

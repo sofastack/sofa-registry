@@ -107,4 +107,24 @@ public class SubscriberRegistration extends BaseRegistration {
         + subscriberDataObserver
         + '}';
   }
+
+  /** @see Object#hashCode() */
+  @Override
+  public int hashCode() {
+    int result = super.hashCode();
+    result = 31 * result + (scopeEnum != null ? scopeEnum.hashCode() : 0);
+    result = 31 * result + (subscriberDataObserver != null ? subscriberDataObserver.hashCode() : 0);
+    return result;
+  }
+
+  /** @see Object#equals(Object) */
+  @Override
+  public boolean equals(Object obj) {
+    if (!super.equals(obj)) {
+      return false;
+    }
+    SubscriberRegistration that = (SubscriberRegistration) obj;
+    return (scopeEnum == null ? that.scopeEnum == null : scopeEnum.equals(that.scopeEnum))
+        && (subscriberDataObserver == null ? that.subscriberDataObserver == null : subscriberDataObserver.equals(that.subscriberDataObserver));
+  }
 }
