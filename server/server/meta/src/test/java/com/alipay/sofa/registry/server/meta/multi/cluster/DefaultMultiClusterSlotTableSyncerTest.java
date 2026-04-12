@@ -26,6 +26,7 @@ import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.multi.cluster.DataCenterMetadata;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.exception.MetaLeaderNotWarmupException;
+import com.alipay.sofa.registry.remoting.exchange.message.Response;
 import com.alipay.sofa.registry.server.meta.MetaLeaderService;
 import com.alipay.sofa.registry.server.meta.bootstrap.ExecutorManager;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MultiClusterMetaServerConfig;
@@ -289,7 +290,12 @@ public class DefaultMultiClusterSlotTableSyncerTest {
   public void testHandleLeaderNotWarmupResponse() {
     GenericResponse<RemoteClusterSlotSyncResponse> response = createLeaderNotWarmupedGenericResponse();
     when(remoteClusterMetaExchanger.sendRequest(anyString(), anyObject()))
-        .thenReturn(() -> response);
+        .thenReturn(new Response<GenericResponse<RemoteClusterSlotSyncResponse>>() {
+          @Override
+          public GenericResponse<RemoteClusterSlotSyncResponse> getResult() {
+            return response;
+          }
+        });
 
     // TEST_DC_1
     when(remoteClusterMetaExchanger.getAllRemoteClusters()).thenReturn(REMOTES_1);
