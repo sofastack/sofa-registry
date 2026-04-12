@@ -98,10 +98,13 @@ public class DefaultMultiClusterSlotTableSyncerTest {
 
     when(metaLeaderService.amILeader()).thenReturn(true);
     when(metaLeaderService.amIStableAsLeader()).thenReturn(true);
+    when(executorManager.getRemoteSlotSyncerExecutor()).thenReturn(executor);
+
+    // Mock void method
+    org.mockito.Mockito.doNothing().when(remoteClusterMetaExchanger).refreshClusterInfos();
 
     defaultMultiClusterSlotTableSyncer.init();
     defaultMultiClusterSlotTableSyncer.becomeLeader();
-    when(executorManager.getRemoteSlotSyncerExecutor()).thenReturn(executor);
   }
 
   @Test
