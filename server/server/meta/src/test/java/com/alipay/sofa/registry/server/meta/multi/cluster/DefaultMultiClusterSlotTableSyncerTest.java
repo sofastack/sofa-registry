@@ -87,18 +87,18 @@ public class DefaultMultiClusterSlotTableSyncerTest {
 
   @Before
   public void init() {
-    when(multiClusterMetaServerConfig.getMultiClusterConfigReloadMillis()).thenReturn(100);
-    when(multiClusterMetaServerConfig.getRemoteSlotSyncerMillis()).thenReturn(100);
-    when(executorManager.getMultiClusterConfigReloadExecutor())
-        .thenReturn(
-            new ThreadPoolExecutor(10, 10, 60, TimeUnit.SECONDS, new LinkedBlockingQueue<>()));
+    org.mockito.Mockito.doReturn(100).when(multiClusterMetaServerConfig).getMultiClusterConfigReloadMillis();
+    org.mockito.Mockito.doReturn(100).when(multiClusterMetaServerConfig).getRemoteSlotSyncerMillis();
+    org.mockito.Mockito.doReturn(
+            new ThreadPoolExecutor(10, 10, 60, TimeUnit.SECONDS, new LinkedBlockingQueue<>()))
+        .when(executorManager).getMultiClusterConfigReloadExecutor();
 
-    when(multiClusterMetaServerConfig.getRemoteSlotSyncerExecutorPoolSize()).thenReturn(10);
-    when(multiClusterMetaServerConfig.getRemoteSlotSyncerExecutorQueueSize()).thenReturn(10);
+    org.mockito.Mockito.doReturn(10).when(multiClusterMetaServerConfig).getRemoteSlotSyncerExecutorPoolSize();
+    org.mockito.Mockito.doReturn(10).when(multiClusterMetaServerConfig).getRemoteSlotSyncerExecutorQueueSize();
 
-    when(metaLeaderService.amILeader()).thenReturn(true);
-    when(metaLeaderService.amIStableAsLeader()).thenReturn(true);
-    when(executorManager.getRemoteSlotSyncerExecutor()).thenReturn(executor);
+    org.mockito.Mockito.doReturn(true).when(metaLeaderService).amILeader();
+    org.mockito.Mockito.doReturn(true).when(metaLeaderService).amIStableAsLeader();
+    org.mockito.Mockito.doReturn(executor).when(executorManager).getRemoteSlotSyncerExecutor();
 
     // Mock void method
     org.mockito.Mockito.doNothing().when(remoteClusterMetaExchanger).refreshClusterInfos();
@@ -111,19 +111,18 @@ public class DefaultMultiClusterSlotTableSyncerTest {
   public void testSyncSlotTable() {
 
     // TEST_DC_1,TEST_DC_2
-    when(remoteClusterMetaExchanger.getAllRemoteClusters()).thenReturn(REMOTES_1_2);
+    org.mockito.Mockito.doReturn(REMOTES_1_2).when(remoteClusterMetaExchanger).getAllRemoteClusters();
     GenericResponse<RemoteClusterSlotSyncResponse> upgradeResponse = createUpgradeGenericResponse();
-    when(remoteClusterMetaExchanger.sendRequest(anyString(), anyObject()))
-        .thenReturn(new Response<GenericResponse<RemoteClusterSlotSyncResponse>>() {
+    org.mockito.Mockito.doReturn(new Response<GenericResponse<RemoteClusterSlotSyncResponse>>() {
           @Override
           public GenericResponse<RemoteClusterSlotSyncResponse> getResult() {
             return upgradeResponse;
           }
-        });
-    when(remoteClusterMetaExchanger.learn(anyString(), anyObject())).thenReturn(true);
+        }).when(remoteClusterMetaExchanger).sendRequest(anyString(), anyObject());
+    org.mockito.Mockito.doReturn(true).when(remoteClusterMetaExchanger).learn(anyString(), anyObject());
 
-    when(metaLeaderService.amILeader()).thenReturn(true);
-    when(metaLeaderService.amIStableAsLeader()).thenReturn(true);
+    org.mockito.Mockito.doReturn(true).when(metaLeaderService).amILeader();
+    org.mockito.Mockito.doReturn(true).when(metaLeaderService).amIStableAsLeader();
     ConcurrentUtils.sleepUninterruptibly(500, TimeUnit.MILLISECONDS);
     Map<String, RemoteClusterSlotState> multiClusterSlotTable =
         defaultMultiClusterSlotTableSyncer.getMultiClusterSlotTable();
@@ -147,7 +146,7 @@ public class DefaultMultiClusterSlotTableSyncerTest {
     Assert.assertTrue(state.task.isSuccess());
 
     // TEST_DC_1
-    when(remoteClusterMetaExchanger.getAllRemoteClusters()).thenReturn(REMOTES_1);
+    org.mockito.Mockito.doReturn(REMOTES_1).when(remoteClusterMetaExchanger).getAllRemoteClusters();
     ConcurrentUtils.sleepUninterruptibly(500, TimeUnit.MILLISECONDS);
     multiClusterSlotTable = defaultMultiClusterSlotTableSyncer.getMultiClusterSlotTable();
     Assert.assertEquals(1, multiClusterSlotTable.size());
@@ -170,8 +169,8 @@ public class DefaultMultiClusterSlotTableSyncerTest {
 
   @Test
   public void testMetaNotLeader() {
-    when(metaLeaderService.amILeader()).thenReturn(false);
-    when(metaLeaderService.amIStableAsLeader()).thenReturn(true);
+    org.mockito.Mockito.doReturn(false).when(metaLeaderService).amILeader();
+    org.mockito.Mockito.doReturn(true).when(metaLeaderService).amIStableAsLeader();
 
     ConcurrentUtils.sleepUninterruptibly(500, TimeUnit.MILLISECONDS);
     Map<String, RemoteClusterSlotState> multiClusterSlotTable =
@@ -181,26 +180,26 @@ public class DefaultMultiClusterSlotTableSyncerTest {
     Assert.assertNull(
         defaultMultiClusterSlotTableSyncer.getRemoteClusterSlotState().get(TEST_DC_1));
 
-    when(metaLeaderService.amILeader()).thenReturn(true);
+    org.mockito.Mockito.doReturn(true).when(metaLeaderService).amILeader();
   }
 
   @Test(expected = MetaLeaderNotWarmupException.class)
   public void testMetaNotWarmupException() {
-    when(metaLeaderService.amIStableAsLeader()).thenReturn(false);
+    org.mockito.Mockito.doReturn(false).when(metaLeaderService).amIStableAsLeader();
     defaultMultiClusterSlotTableSyncer.getMultiClusterSlotTable();
   }
 
   @Test
   public void testSendRequestError() {
-    when(remoteClusterMetaExchanger.sendRequest(anyString(), anyObject()))
-        .thenThrow(new RuntimeException("expected exception."));
+    org.mockito.Mockito.doThrow(new RuntimeException("expected exception."))
+        .when(remoteClusterMetaExchanger).sendRequest(anyString(), anyObject());
 
     // TEST_DC_1
-    when(remoteClusterMetaExchanger.getAllRemoteClusters()).thenReturn(REMOTES_1);
-    when(remoteClusterMetaExchanger.learn(anyString(), anyObject())).thenReturn(true);
+    org.mockito.Mockito.doReturn(REMOTES_1).when(remoteClusterMetaExchanger).getAllRemoteClusters();
+    org.mockito.Mockito.doReturn(true).when(remoteClusterMetaExchanger).learn(anyString(), anyObject());
 
-    when(metaLeaderService.amILeader()).thenReturn(true);
-    when(metaLeaderService.amIStableAsLeader()).thenReturn(true);
+    org.mockito.Mockito.doReturn(true).when(metaLeaderService).amILeader();
+    org.mockito.Mockito.doReturn(true).when(metaLeaderService).amIStableAsLeader();
 
     ConcurrentUtils.sleepUninterruptibly(500, TimeUnit.MILLISECONDS);
     Map<String, RemoteClusterSlotState> multiClusterSlotTable =
@@ -219,20 +218,19 @@ public class DefaultMultiClusterSlotTableSyncerTest {
   @Test
   public void testHandleWrongResponse() {
     RemoteClusterSlotSyncResponse wrongLeaderResponse = RemoteClusterSlotSyncResponse.wrongLeader("1.1.1.1", 1);
-    when(remoteClusterMetaExchanger.sendRequest(anyString(), anyObject()))
-        .thenReturn(new Response<RemoteClusterSlotSyncResponse>() {
+    org.mockito.Mockito.doReturn(new Response<RemoteClusterSlotSyncResponse>() {
           @Override
           public RemoteClusterSlotSyncResponse getResult() {
             return wrongLeaderResponse;
           }
-        });
+        }).when(remoteClusterMetaExchanger).sendRequest(anyString(), anyObject());
 
     // TEST_DC_1
-    when(remoteClusterMetaExchanger.getAllRemoteClusters()).thenReturn(REMOTES_1);
-    when(remoteClusterMetaExchanger.learn(anyString(), anyObject())).thenReturn(true);
+    org.mockito.Mockito.doReturn(REMOTES_1).when(remoteClusterMetaExchanger).getAllRemoteClusters();
+    org.mockito.Mockito.doReturn(true).when(remoteClusterMetaExchanger).learn(anyString(), anyObject());
 
-    when(metaLeaderService.amILeader()).thenReturn(true);
-    when(metaLeaderService.amIStableAsLeader()).thenReturn(true);
+    org.mockito.Mockito.doReturn(true).when(metaLeaderService).amILeader();
+    org.mockito.Mockito.doReturn(true).when(metaLeaderService).amIStableAsLeader();
 
     ConcurrentUtils.sleepUninterruptibly(500, TimeUnit.MILLISECONDS);
     Map<String, RemoteClusterSlotState> multiClusterSlotTable =
@@ -251,20 +249,19 @@ public class DefaultMultiClusterSlotTableSyncerTest {
   @Test
   public void testHandleNullDataResponse() {
     GenericResponse<RemoteClusterSlotSyncResponse> emptyDataResponse = createEmptyDataGenericResponse();
-    when(remoteClusterMetaExchanger.sendRequest(anyString(), anyObject()))
-        .thenReturn(new Response<GenericResponse<RemoteClusterSlotSyncResponse>>() {
+    org.mockito.Mockito.doReturn(new Response<GenericResponse<RemoteClusterSlotSyncResponse>>() {
           @Override
           public GenericResponse<RemoteClusterSlotSyncResponse> getResult() {
             return emptyDataResponse;
           }
-        });
+        }).when(remoteClusterMetaExchanger).sendRequest(anyString(), anyObject());
 
     // TEST_DC_1
-    when(remoteClusterMetaExchanger.getAllRemoteClusters()).thenReturn(REMOTES_1);
-    when(remoteClusterMetaExchanger.learn(anyString(), anyObject())).thenReturn(true);
+    org.mockito.Mockito.doReturn(REMOTES_1).when(remoteClusterMetaExchanger).getAllRemoteClusters();
+    org.mockito.Mockito.doReturn(true).when(remoteClusterMetaExchanger).learn(anyString(), anyObject());
 
-    when(metaLeaderService.amILeader()).thenReturn(true);
-    when(metaLeaderService.amIStableAsLeader()).thenReturn(true);
+    org.mockito.Mockito.doReturn(true).when(metaLeaderService).amILeader();
+    org.mockito.Mockito.doReturn(true).when(metaLeaderService).amIStableAsLeader();
 
     ConcurrentUtils.sleepUninterruptibly(500, TimeUnit.MILLISECONDS);
 
@@ -284,20 +281,19 @@ public class DefaultMultiClusterSlotTableSyncerTest {
   @Test
   public void testHandleWrongLeaderResponse() {
     GenericResponse<RemoteClusterSlotSyncResponse> wrongLeaderResponse = createWrongLeaderGenericResponse();
-    when(remoteClusterMetaExchanger.sendRequest(anyString(), anyObject()))
-        .thenReturn(new Response<GenericResponse<RemoteClusterSlotSyncResponse>>() {
+    org.mockito.Mockito.doReturn(new Response<GenericResponse<RemoteClusterSlotSyncResponse>>() {
           @Override
           public GenericResponse<RemoteClusterSlotSyncResponse> getResult() {
             return wrongLeaderResponse;
           }
-        });
+        }).when(remoteClusterMetaExchanger).sendRequest(anyString(), anyObject());
 
     // TEST_DC_1
-    when(remoteClusterMetaExchanger.getAllRemoteClusters()).thenReturn(REMOTES_1);
-    when(remoteClusterMetaExchanger.learn(anyString(), anyObject())).thenReturn(true);
+    org.mockito.Mockito.doReturn(REMOTES_1).when(remoteClusterMetaExchanger).getAllRemoteClusters();
+    org.mockito.Mockito.doReturn(true).when(remoteClusterMetaExchanger).learn(anyString(), anyObject());
 
-    when(metaLeaderService.amILeader()).thenReturn(true);
-    when(metaLeaderService.amIStableAsLeader()).thenReturn(true);
+    org.mockito.Mockito.doReturn(true).when(metaLeaderService).amILeader();
+    org.mockito.Mockito.doReturn(true).when(metaLeaderService).amIStableAsLeader();
 
     ConcurrentUtils.sleepUninterruptibly(500, TimeUnit.MILLISECONDS);
     Map<String, RemoteClusterSlotState> multiClusterSlotTable =
@@ -316,20 +312,19 @@ public class DefaultMultiClusterSlotTableSyncerTest {
   @Test
   public void testHandleLeaderNotWarmupResponse() {
     GenericResponse<RemoteClusterSlotSyncResponse> response = createLeaderNotWarmupedGenericResponse();
-    when(remoteClusterMetaExchanger.sendRequest(anyString(), anyObject()))
-        .thenReturn(new Response<GenericResponse<RemoteClusterSlotSyncResponse>>() {
+    org.mockito.Mockito.doReturn(new Response<GenericResponse<RemoteClusterSlotSyncResponse>>() {
           @Override
           public GenericResponse<RemoteClusterSlotSyncResponse> getResult() {
             return response;
           }
-        });
+        }).when(remoteClusterMetaExchanger).sendRequest(anyString(), anyObject());
 
     // TEST_DC_1
-    when(remoteClusterMetaExchanger.getAllRemoteClusters()).thenReturn(REMOTES_1);
-    when(remoteClusterMetaExchanger.learn(anyString(), anyObject())).thenReturn(true);
+    org.mockito.Mockito.doReturn(REMOTES_1).when(remoteClusterMetaExchanger).getAllRemoteClusters();
+    org.mockito.Mockito.doReturn(true).when(remoteClusterMetaExchanger).learn(anyString(), anyObject());
 
-    when(metaLeaderService.amILeader()).thenReturn(true);
-    when(metaLeaderService.amIStableAsLeader()).thenReturn(true);
+    org.mockito.Mockito.doReturn(true).when(metaLeaderService).amILeader();
+    org.mockito.Mockito.doReturn(true).when(metaLeaderService).amIStableAsLeader();
 
     ConcurrentUtils.sleepUninterruptibly(500, TimeUnit.MILLISECONDS);
     Map<String, RemoteClusterSlotState> multiClusterSlotTable =
@@ -348,20 +343,19 @@ public class DefaultMultiClusterSlotTableSyncerTest {
   @Test
   public void testResetMetaLeader() {
     GenericResponse<RemoteClusterSlotSyncResponse> wrongLeaderResponse = createWrongLeaderGenericResponse();
-    when(remoteClusterMetaExchanger.sendRequest(anyString(), anyObject()))
-        .thenReturn(new Response<GenericResponse<RemoteClusterSlotSyncResponse>>() {
+    org.mockito.Mockito.doReturn(new Response<GenericResponse<RemoteClusterSlotSyncResponse>>() {
           @Override
           public GenericResponse<RemoteClusterSlotSyncResponse> getResult() {
             return wrongLeaderResponse;
           }
-        });
+        }).when(remoteClusterMetaExchanger).sendRequest(anyString(), anyObject());
 
     // TEST_DC_1
-    when(remoteClusterMetaExchanger.getAllRemoteClusters()).thenReturn(REMOTES_1);
-    when(remoteClusterMetaExchanger.learn(anyString(), anyObject())).thenReturn(true);
+    org.mockito.Mockito.doReturn(REMOTES_1).when(remoteClusterMetaExchanger).getAllRemoteClusters();
+    org.mockito.Mockito.doReturn(true).when(remoteClusterMetaExchanger).learn(anyString(), anyObject());
 
-    when(metaLeaderService.amILeader()).thenReturn(true);
-    when(metaLeaderService.amIStableAsLeader()).thenReturn(true);
+    org.mockito.Mockito.doReturn(true).when(metaLeaderService).amILeader();
+    org.mockito.Mockito.doReturn(true).when(metaLeaderService).amIStableAsLeader();
 
     ConcurrentUtils.sleepUninterruptibly(1000, TimeUnit.MILLISECONDS);
     Map<String, RemoteClusterSlotState> multiClusterSlotTable =
