@@ -109,8 +109,14 @@ public class DefaultMultiClusterSlotTableSyncerTest {
 
     // TEST_DC_1,TEST_DC_2
     when(remoteClusterMetaExchanger.getAllRemoteClusters()).thenReturn(REMOTES_1_2);
+    GenericResponse<RemoteClusterSlotSyncResponse> upgradeResponse = createUpgradeGenericResponse();
     when(remoteClusterMetaExchanger.sendRequest(anyString(), anyObject()))
-        .thenReturn(() -> createUpgradeGenericResponse());
+        .thenReturn(new Response<GenericResponse<RemoteClusterSlotSyncResponse>>() {
+          @Override
+          public GenericResponse<RemoteClusterSlotSyncResponse> getResult() {
+            return upgradeResponse;
+          }
+        });
     when(remoteClusterMetaExchanger.learn(anyString(), anyObject())).thenReturn(true);
 
     when(metaLeaderService.amILeader()).thenReturn(true);
@@ -209,8 +215,14 @@ public class DefaultMultiClusterSlotTableSyncerTest {
 
   @Test
   public void testHandleWrongResponse() {
+    RemoteClusterSlotSyncResponse wrongLeaderResponse = RemoteClusterSlotSyncResponse.wrongLeader("1.1.1.1", 1);
     when(remoteClusterMetaExchanger.sendRequest(anyString(), anyObject()))
-        .thenReturn(() -> RemoteClusterSlotSyncResponse.wrongLeader("1.1.1.1", 1));
+        .thenReturn(new Response<RemoteClusterSlotSyncResponse>() {
+          @Override
+          public RemoteClusterSlotSyncResponse getResult() {
+            return wrongLeaderResponse;
+          }
+        });
 
     // TEST_DC_1
     when(remoteClusterMetaExchanger.getAllRemoteClusters()).thenReturn(REMOTES_1);
@@ -235,8 +247,14 @@ public class DefaultMultiClusterSlotTableSyncerTest {
 
   @Test
   public void testHandleNullDataResponse() {
+    GenericResponse<RemoteClusterSlotSyncResponse> emptyDataResponse = createEmptyDataGenericResponse();
     when(remoteClusterMetaExchanger.sendRequest(anyString(), anyObject()))
-        .thenReturn(() -> createEmptyDataGenericResponse());
+        .thenReturn(new Response<GenericResponse<RemoteClusterSlotSyncResponse>>() {
+          @Override
+          public GenericResponse<RemoteClusterSlotSyncResponse> getResult() {
+            return emptyDataResponse;
+          }
+        });
 
     // TEST_DC_1
     when(remoteClusterMetaExchanger.getAllRemoteClusters()).thenReturn(REMOTES_1);
@@ -262,8 +280,14 @@ public class DefaultMultiClusterSlotTableSyncerTest {
 
   @Test
   public void testHandleWrongLeaderResponse() {
+    GenericResponse<RemoteClusterSlotSyncResponse> wrongLeaderResponse = createWrongLeaderGenericResponse();
     when(remoteClusterMetaExchanger.sendRequest(anyString(), anyObject()))
-        .thenReturn(() -> createWrongLeaderGenericResponse());
+        .thenReturn(new Response<GenericResponse<RemoteClusterSlotSyncResponse>>() {
+          @Override
+          public GenericResponse<RemoteClusterSlotSyncResponse> getResult() {
+            return wrongLeaderResponse;
+          }
+        });
 
     // TEST_DC_1
     when(remoteClusterMetaExchanger.getAllRemoteClusters()).thenReturn(REMOTES_1);
@@ -320,8 +344,14 @@ public class DefaultMultiClusterSlotTableSyncerTest {
 
   @Test
   public void testResetMetaLeader() {
+    GenericResponse<RemoteClusterSlotSyncResponse> wrongLeaderResponse = createWrongLeaderGenericResponse();
     when(remoteClusterMetaExchanger.sendRequest(anyString(), anyObject()))
-        .thenReturn(() -> createWrongLeaderGenericResponse());
+        .thenReturn(new Response<GenericResponse<RemoteClusterSlotSyncResponse>>() {
+          @Override
+          public GenericResponse<RemoteClusterSlotSyncResponse> getResult() {
+            return wrongLeaderResponse;
+          }
+        });
 
     // TEST_DC_1
     when(remoteClusterMetaExchanger.getAllRemoteClusters()).thenReturn(REMOTES_1);
