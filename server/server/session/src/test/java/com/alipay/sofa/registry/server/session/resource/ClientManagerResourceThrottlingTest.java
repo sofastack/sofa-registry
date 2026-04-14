@@ -18,9 +18,11 @@ package com.alipay.sofa.registry.server.session.resource;
 
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.metaserver.limit.FlowOperationThrottlingStatus;
+import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.connections.ConnectionsService;
 import com.alipay.sofa.registry.server.session.limit.FlowOperationThrottlingObserver;
 import com.alipay.sofa.registry.server.session.registry.SessionRegistry;
+import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import java.lang.reflect.Field;
 import java.util.Collections;
 import org.junit.Assert;
@@ -34,6 +36,8 @@ public class ClientManagerResourceThrottlingTest {
   private FlowOperationThrottlingObserver mockObserver;
   private ConnectionsService mockConnectionsService;
   private SessionRegistry mockSessionRegistry;
+  private SessionServerConfig mockSessionServerConfig;
+  private MetaServerService mockMetaServerService;
 
   @Before
   public void setUp() throws Exception {
@@ -41,16 +45,23 @@ public class ClientManagerResourceThrottlingTest {
     mockObserver = Mockito.mock(FlowOperationThrottlingObserver.class);
     mockConnectionsService = Mockito.mock(ConnectionsService.class);
     mockSessionRegistry = Mockito.mock(SessionRegistry.class);
+    mockSessionServerConfig = Mockito.mock(SessionServerConfig.class);
+    mockMetaServerService = Mockito.mock(MetaServerService.class);
 
     // Inject mocks using reflection
     setField(resource, "flowOperationThrottlingObserver", mockObserver);
     setField(resource, "connectionsService", mockConnectionsService);
     setField(resource, "sessionRegistry", mockSessionRegistry);
+    setField(resource, "sessionServerConfig", mockSessionServerConfig);
+    setField(resource, "metaServerService", mockMetaServerService);
 
     // Default mock behavior
     Mockito.when(mockConnectionsService.getIpConnects(Mockito.anySet()))
         .thenReturn(Collections.emptyList());
     Mockito.when(mockConnectionsService.closeIpConnects(Mockito.anyList()))
+        .thenReturn(Collections.emptyList());
+    Mockito.when(mockSessionServerConfig.getSessionServerRegion()).thenReturn("DEFAULT_ZONE");
+    Mockito.when(mockMetaServerService.getSessionServerList(Mockito.anyString()))
         .thenReturn(Collections.emptyList());
   }
 
@@ -208,5 +219,26 @@ public class ClientManagerResourceThrottlingTest {
     Assert.assertFalse(response.isSuccess());
     Assert.assertEquals("ips is empty", response.getMessage());
     Mockito.verify(mockObserver, Mockito.never()).shouldThrottle();
+  }
+
+  @Test
+  public void testClientOffInZoneNotThrottled() {
+    Mockito.when(mockObserver.shouldThrottle()).thenReturn(false);
+
+    CommonResponse response = resource.clientOffInZone("192.168.1.1");
+
+    Assert.assertTrue(response.isSuccess());
+    Mockito.verify(mockConnectionsService).getIpConnects(Mockito.anySet());
+    Mockito.verify(mockSessionRegistry).clientOff(Mockito.anyList());
+  }
+
+  @Test
+  public void testClientOnInZoneNotThrottled() {
+    Mockito.when(mockObserver.shouldThrottle()).thenReturn(false);
+
+    CommonResponse response = resource.clientOnInZone("192.168.1.1");
+
+    Assert.assertTrue(response.isSuccess());
+    Mockito.verify(mockConnectionsService).closeIpConnects(Mockito.anyList());
   }
 }
