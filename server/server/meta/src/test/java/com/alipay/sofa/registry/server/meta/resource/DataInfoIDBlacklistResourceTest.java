@@ -19,6 +19,7 @@ package com.alipay.sofa.registry.server.meta.resource;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 
+import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.console.PersistenceData;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
@@ -34,6 +35,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.Assert;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 /**
  * @author huicha
@@ -138,5 +140,54 @@ public class DataInfoIDBlacklistResourceTest extends AbstractMetaServerTestBase 
     Result result = resource.addBlackList(dataId, group, instanceId);
     Assert.assertTrue(result.isSuccess());
     Assert.assertEquals(1, counter.get());
+  }
+
+  @Test
+  public void testQueryBlackListSuccess() {
+    ProvideDataService provideDataService = createProvideDataService();
+    DataInfoIDBlacklistResource resource = this.createDataIDBlacklistResource(provideDataService);
+
+    // Add some data first
+    resource.addBlackList("dataid.test1", "group1", "DEFAULT_INSTANCE_ID");
+    resource.addBlackList("dataid.test2", "group2", "DEFAULT_INSTANCE_ID");
+
+    GenericResponse<Set<String>> response = resource.queryBlackList();
+
+    Assert.assertTrue(response.isSuccess());
+    Assert.assertNotNull(response.getData());
+    Assert.assertEquals(2, response.getData().size());
+  }
+
+  @Test
+  public void testQueryBlackListNoData() {
+    ProvideDataService mockService = Mockito.mock(ProvideDataService.class);
+    Mockito.when(mockService.queryProvideData(ValueConstants.SESSION_DATAID_BLACKLIST_DATA_ID))
+        .thenReturn(new DBResponse<>(null, OperationStatus.NOTFOUND));
+
+    DataInfoIDBlacklistResource resource =
+        new DataInfoIDBlacklistResource()
+            .setProvideDataService(mockService)
+            .setProvideDataNotifier(mock(ProvideDataNotifier.class));
+
+    GenericResponse<Set<String>> response = resource.queryBlackList();
+
+    Assert.assertTrue(response.isSuccess());
+    Assert.assertNull(response.getData());
+  }
+
+  @Test
+  public void testQueryBlackListException() {
+    ProvideDataService mockService = Mockito.mock(ProvideDataService.class);
+    Mockito.when(mockService.queryProvideData(ValueConstants.SESSION_DATAID_BLACKLIST_DATA_ID))
+        .thenThrow(new RuntimeException("DB connection failed"));
+
+    DataInfoIDBlacklistResource resource =
+        new DataInfoIDBlacklistResource()
+            .setProvideDataService(mockService)
+            .setProvideDataNotifier(mock(ProvideDataNotifier.class));
+
+    GenericResponse<Set<String>> response = resource.queryBlackList();
+
+    Assert.assertFalse(response.isSuccess());
   }
 }

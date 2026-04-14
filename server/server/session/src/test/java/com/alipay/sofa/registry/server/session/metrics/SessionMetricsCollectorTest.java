@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.server.session.metrics;
 
 import com.alipay.sofa.registry.common.model.metaserver.metrics.SystemLoad;
+import java.lang.reflect.Field;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -79,5 +80,72 @@ public class SessionMetricsCollectorTest {
     // Since these are system metrics that can change, we just verify they are in valid ranges
     Assert.assertTrue(systemLoad.getCpuAverage() >= -1 && systemLoad.getCpuAverage() <= 100);
     Assert.assertTrue(systemLoad.getLoadAverage() >= -1);
+  }
+
+  @Test
+  public void testGetSystemCpuAverageWhenOpenJdkMXBeanIsNull() throws Exception {
+    SessionMetricsCollector collector = SessionMetricsCollector.getInstance();
+
+    // Save original value
+    Field openJdkField =
+        SessionMetricsCollector.class.getDeclaredField("openJdkOperatingSystemMXBean");
+    openJdkField.setAccessible(true);
+    Object original = openJdkField.get(collector);
+
+    try {
+      // Set openJdkOperatingSystemMXBean to null to cover L76
+      openJdkField.set(collector, null);
+      double cpuAverage = collector.getSystemCpuAverage();
+      Assert.assertEquals(-1, cpuAverage, 0.001);
+    } finally {
+      // Restore original value
+      openJdkField.set(collector, original);
+    }
+  }
+
+  @Test
+  public void testGetSystemLoadAverageWhenStandardMXBeanIsNull() throws Exception {
+    SessionMetricsCollector collector = SessionMetricsCollector.getInstance();
+
+    // Save original value
+    Field stdField =
+        SessionMetricsCollector.class.getDeclaredField("standardOperatingSystemMXBean");
+    stdField.setAccessible(true);
+    Object original = stdField.get(collector);
+
+    try {
+      // Set standardOperatingSystemMXBean to null to cover L94
+      stdField.set(collector, null);
+      double loadAverage = collector.getSystemLoadAverage();
+      Assert.assertEquals(-1, loadAverage, 0.001);
+    } finally {
+      // Restore original value
+      stdField.set(collector, original);
+    }
+  }
+
+  @Test
+  public void testGetSystemCpuAverageWhenCpuLoadIsNegative() throws Exception {
+    SessionMetricsCollector collector = SessionMetricsCollector.getInstance();
+
+    // Save original value
+    Field openJdkField =
+        SessionMetricsCollector.class.getDeclaredField("openJdkOperatingSystemMXBean");
+    openJdkField.setAccessible(true);
+    Object original = openJdkField.get(collector);
+
+    try {
+      // Create a mock that returns negative CPU load to cover L72
+      com.sun.management.OperatingSystemMXBean mockMXBean =
+          org.mockito.Mockito.mock(com.sun.management.OperatingSystemMXBean.class);
+      org.mockito.Mockito.when(mockMXBean.getSystemCpuLoad()).thenReturn(-1.0);
+      openJdkField.set(collector, mockMXBean);
+
+      double cpuAverage = collector.getSystemCpuAverage();
+      Assert.assertEquals(-1, cpuAverage, 0.001);
+    } finally {
+      // Restore original value
+      openJdkField.set(collector, original);
+    }
   }
 }
