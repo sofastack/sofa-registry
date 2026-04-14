@@ -169,4 +169,44 @@ public class ClientManagerResourceThrottlingTest {
         "Throttle rate should be around 50%, but was " + (throttleRate * 100) + "%",
         throttleRate > 0.35 && throttleRate < 0.65);
   }
+
+  @Test
+  public void testClientOffInZoneThrottled() {
+    Mockito.when(mockObserver.shouldThrottle()).thenReturn(true);
+
+    CommonResponse response = resource.clientOffInZone("192.168.1.1");
+
+    Assert.assertFalse(response.isSuccess());
+    Assert.assertEquals("too many request", response.getMessage());
+    Mockito.verify(mockConnectionsService, Mockito.never()).getIpConnects(Mockito.anySet());
+  }
+
+  @Test
+  public void testClientOffInZoneEmptyIps() {
+    CommonResponse response = resource.clientOffInZone("");
+
+    Assert.assertFalse(response.isSuccess());
+    Assert.assertEquals("ips is empty", response.getMessage());
+    Mockito.verify(mockObserver, Mockito.never()).shouldThrottle();
+  }
+
+  @Test
+  public void testClientOnInZoneThrottled() {
+    Mockito.when(mockObserver.shouldThrottle()).thenReturn(true);
+
+    CommonResponse response = resource.clientOnInZone("192.168.1.1");
+
+    Assert.assertFalse(response.isSuccess());
+    Assert.assertEquals("too many request", response.getMessage());
+    Mockito.verify(mockConnectionsService, Mockito.never()).closeIpConnects(Mockito.anyList());
+  }
+
+  @Test
+  public void testClientOnInZoneEmptyIps() {
+    CommonResponse response = resource.clientOnInZone("");
+
+    Assert.assertFalse(response.isSuccess());
+    Assert.assertEquals("ips is empty", response.getMessage());
+    Mockito.verify(mockObserver, Mockito.never()).shouldThrottle();
+  }
 }

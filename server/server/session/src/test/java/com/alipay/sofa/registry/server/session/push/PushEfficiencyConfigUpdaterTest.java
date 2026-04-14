@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.push;
 
+import com.alipay.sofa.registry.common.model.metaserver.limit.FlowOperationThrottlingStatus;
 import com.alipay.sofa.registry.server.session.limit.FlowOperationThrottlingObserver;
 import org.junit.Assert;
 import org.junit.Test;
@@ -97,5 +98,117 @@ public class PushEfficiencyConfigUpdaterTest {
 
     // 新的 AutoPushEfficiencyRegulator 也应当为关闭状态
     Assert.assertTrue(newAutoPushEfficiencyRegulator.isClosed());
+  }
+
+  @Test
+  public void testUpdateFromProviderDataDisablesLocalThrottle() {
+    FlowOperationThrottlingObserver observer = new FlowOperationThrottlingObserver();
+    // Pre-enable local throttling to verify it gets disabled
+    observer.updateLocalThrottlingStatus(FlowOperationThrottlingStatus.enabled(100.0));
+    Assert.assertTrue(observer.getLocalThrottlingStatus().isEnabled());
+
+    PushEfficiencyConfigUpdater updater = createUpdater(observer);
+
+    updater.updateFromProviderData(new PushEfficiencyImproveConfig());
+
+    // After updateFromProviderData, local throttling should be disabled
+    Assert.assertFalse(observer.getLocalThrottlingStatus().isEnabled());
+  }
+
+  @Test
+  public void testUpdateTrafficOperateLimitSwitchEnabled() {
+    FlowOperationThrottlingObserver observer = new FlowOperationThrottlingObserver();
+    PushEfficiencyConfigUpdater updater = createUpdater(observer);
+
+    // Enable auto push efficiency mode first
+    enableAutoPushEfficiency(updater);
+
+    // Now update traffic operate limit switch to true (enable throttling)
+    updater.updateTrafficOperateLimitSwitch(true);
+
+    FlowOperationThrottlingStatus localStatus = observer.getLocalThrottlingStatus();
+    Assert.assertTrue(localStatus.isEnabled());
+    Assert.assertEquals(100.0, localStatus.getThrottlePercent(), 0.001);
+  }
+
+  @Test
+  public void testUpdateTrafficOperateLimitSwitchDisabled() {
+    FlowOperationThrottlingObserver observer = new FlowOperationThrottlingObserver();
+    PushEfficiencyConfigUpdater updater = createUpdater(observer);
+
+    // Enable auto push efficiency mode first
+    enableAutoPushEfficiency(updater);
+
+    // Enable throttling first
+    updater.updateTrafficOperateLimitSwitch(true);
+    Assert.assertTrue(observer.getLocalThrottlingStatus().isEnabled());
+
+    // Now disable it
+    updater.updateTrafficOperateLimitSwitch(false);
+    Assert.assertFalse(observer.getLocalThrottlingStatus().isEnabled());
+  }
+
+  @Test
+  public void testUpdateTrafficOperateLimitSwitchSkipsWhenNotAutoMode() {
+    FlowOperationThrottlingObserver observer = new FlowOperationThrottlingObserver();
+    PushEfficiencyConfigUpdater updater = createUpdater(observer);
+
+    // Without enabling auto push efficiency, updateTrafficOperateLimitSwitch should be skipped
+    updater.updateTrafficOperateLimitSwitch(true);
+
+    // Local throttling should remain disabled
+    Assert.assertFalse(observer.getLocalThrottlingStatus().isEnabled());
+  }
+
+  @Test
+  public void testIsRunning() {
+    FlowOperationThrottlingObserver observer = new FlowOperationThrottlingObserver();
+    PushEfficiencyConfigUpdater updater = createUpdater(observer);
+
+    // Before stop, isRunning returns false (stop field is false)
+    Assert.assertFalse(updater.isRunning());
+
+    // After stop, isRunning returns true (stop field is true)
+    updater.stop();
+    Assert.assertTrue(updater.isRunning());
+  }
+
+  @Test
+  public void testStopCleansLocalThrottlingStatus() {
+    FlowOperationThrottlingObserver observer = new FlowOperationThrottlingObserver();
+    PushEfficiencyConfigUpdater updater = createUpdater(observer);
+
+    // Enable auto push efficiency and set local throttling
+    enableAutoPushEfficiency(updater);
+    updater.updateTrafficOperateLimitSwitch(true);
+    Assert.assertTrue(observer.getLocalThrottlingStatus().isEnabled());
+
+    // Stop should clean up local throttling status
+    updater.stop();
+    Assert.assertFalse(observer.getLocalThrottlingStatus().isEnabled());
+  }
+
+  private PushEfficiencyConfigUpdater createUpdater(FlowOperationThrottlingObserver observer) {
+    ChangeProcessor changeProcessor = Mockito.mock(ChangeProcessor.class);
+    PushProcessor pushProcessor = Mockito.mock(PushProcessor.class);
+    FirePushService firePushService = Mockito.mock(FirePushService.class);
+
+    PushEfficiencyConfigUpdater updater = new PushEfficiencyConfigUpdater();
+    updater.setChangeProcessor(changeProcessor);
+    updater.setPushProcessor(pushProcessor);
+    updater.setFirePushService(firePushService);
+    updater.setFlowOperationThrottlingObserver(observer);
+    return updater;
+  }
+
+  private void enableAutoPushEfficiency(PushEfficiencyConfigUpdater updater) {
+    AutoPushEfficiencyConfig autoPushEfficiencyConfig = new AutoPushEfficiencyConfig();
+    autoPushEfficiencyConfig.setEnableAutoPushEfficiency(true);
+    autoPushEfficiencyConfig.setWindowTimeMillis(10);
+
+    PushEfficiencyImproveConfig config = new PushEfficiencyImproveConfig();
+    config.setAutoPushEfficiencyConfig(autoPushEfficiencyConfig);
+
+    updater.updateFromProviderData(config);
   }
 }

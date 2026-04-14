@@ -1006,4 +1006,83 @@ public class AdaptiveFlowOperationLimiterTest {
       this.safeStopLimiter(limiter);
     }
   }
+
+  @Test
+  public void testSafeProcessCatchBlock() throws InterruptedException {
+    // Cover L281-282: safeProcess() catch block by making provideDataService throw after leader
+    // check
+    AdaptiveFlowOperationLimiter limiter = null;
+    try {
+      MetaLeaderService metaLeaderService = Mockito.mock(MetaLeaderService.class);
+      Mockito.when(metaLeaderService.amIStableAsLeader()).thenReturn(true);
+
+      ProvideDataService provideDataService = Mockito.mock(ProvideDataService.class);
+      // Throw exception when querying config to trigger the catch block in safeProcess
+      Mockito.when(
+              provideDataService.queryProvideData(
+                  ValueConstants.ADAPTIVE_FLOW_OPERATION_CONFIG_DATA_ID))
+          .thenThrow(new RuntimeException("Simulated DB failure"));
+
+      SessionServerManager sessionServerManager = Mockito.mock(SessionServerManager.class);
+
+      limiter = new AdaptiveFlowOperationLimiter();
+      limiter.setMetaLeaderService(metaLeaderService);
+      limiter.setProvideDataService(provideDataService);
+      limiter.setSessionServerManager(sessionServerManager);
+
+      this.safeStartLimiter(limiter);
+
+      // Wait for at least one safeProcess cycle to execute and hit the catch block
+      Thread.sleep(500);
+
+      // Limiter should remain in disabled state after the exception
+      FlowOperationThrottlingStatus status = limiter.getFlowOperationThrottlingStatus();
+      Assert.assertNotNull(status);
+      Assert.assertFalse(status.isEnabled());
+    } finally {
+      this.safeStopLimiter(limiter);
+    }
+  }
+
+  @Test
+  public void testCheckConfigWithNullConfig() throws InterruptedException {
+    // Cover L287-289: checkConfig(null) by returning JSON "null" from DB
+    AdaptiveFlowOperationLimiter limiter = null;
+    try {
+      MetaLeaderService metaLeaderService = Mockito.mock(MetaLeaderService.class);
+      Mockito.when(metaLeaderService.amIStableAsLeader()).thenReturn(true);
+
+      // Create a PersistenceData with "null" JSON to make gsonRead return null
+      PersistenceData persistenceData =
+          PersistenceDataBuilder.createPersistenceData(
+              ValueConstants.ADAPTIVE_FLOW_OPERATION_CONFIG_DATA_ID, "null");
+      DBResponse<PersistenceData> dbResponse = DBResponse.ok().entity(persistenceData).build();
+
+      ProvideDataService provideDataService = Mockito.mock(ProvideDataService.class);
+      Mockito.when(
+              provideDataService.queryProvideData(
+                  ValueConstants.ADAPTIVE_FLOW_OPERATION_CONFIG_DATA_ID))
+          .thenReturn(dbResponse);
+
+      VersionedList<SessionNode> sessionVersionedNodes = this.createSessionNodes(3, 2, 0);
+      SessionServerManager sessionServerManager = Mockito.mock(SessionServerManager.class);
+      Mockito.when(sessionServerManager.getSessionServerMetaInfo())
+          .thenReturn(sessionVersionedNodes);
+
+      limiter = new AdaptiveFlowOperationLimiter();
+      limiter.setMetaLeaderService(metaLeaderService);
+      limiter.setProvideDataService(provideDataService);
+      limiter.setSessionServerManager(sessionServerManager);
+
+      this.safeStartLimiter(limiter);
+      Thread.sleep(500);
+
+      // Config is null, so checkConfig returns false, throttling should be disabled
+      FlowOperationThrottlingStatus status = limiter.getFlowOperationThrottlingStatus();
+      Assert.assertNotNull(status);
+      Assert.assertFalse(status.isEnabled());
+    } finally {
+      this.safeStopLimiter(limiter);
+    }
+  }
 }

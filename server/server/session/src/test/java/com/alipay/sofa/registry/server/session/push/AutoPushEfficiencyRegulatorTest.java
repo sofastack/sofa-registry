@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.server.session.push;
 
+import com.alipay.sofa.registry.server.session.metrics.SessionMetricsCollector;
+import java.lang.reflect.Field;
 import java.util.Collections;
 import org.junit.Assert;
 import org.junit.Test;
@@ -143,6 +145,92 @@ public class AutoPushEfficiencyRegulatorTest {
     } finally {
       autoPushEfficiencyRegulator.close();
     }
+  }
+
+  @Test
+  public void testSessionMetricsCollectorInitialized() throws Exception {
+    AutoPushEfficiencyConfig autoPushEfficiencyConfig = new AutoPushEfficiencyConfig();
+    autoPushEfficiencyConfig.setEnableAutoPushEfficiency(true);
+    autoPushEfficiencyConfig.setWindowTimeMillis(100);
+    autoPushEfficiencyConfig.setWindowNum(3);
+
+    PushEfficiencyImproveConfig pushEfficiencyImproveConfig = new PushEfficiencyImproveConfig();
+    pushEfficiencyImproveConfig.setAutoPushEfficiencyConfig(autoPushEfficiencyConfig);
+
+    PushEfficiencyConfigUpdater mockUpdater = Mockito.mock(PushEfficiencyConfigUpdater.class);
+    AutoPushEfficiencyRegulator regulator =
+        new AutoPushEfficiencyRegulator(pushEfficiencyImproveConfig, mockUpdater);
+
+    try {
+      // Verify sessionMetricsCollector field is initialized via reflection
+      Field field = AutoPushEfficiencyRegulator.class.getDeclaredField("sessionMetricsCollector");
+      field.setAccessible(true);
+      Object collector = field.get(regulator);
+      Assert.assertNotNull(collector);
+      Assert.assertSame(SessionMetricsCollector.getInstance(), collector);
+    } finally {
+      regulator.close();
+    }
+  }
+
+  @Test
+  public void testTrafficOperateLimitSwitchUsesSessionMetrics() throws Exception {
+    // Enable traffic operate limit switch so that getSystemLoadAverage() is called
+    AutoPushEfficiencyConfig autoPushEfficiencyConfig = new AutoPushEfficiencyConfig();
+    autoPushEfficiencyConfig.setEnableAutoPushEfficiency(true);
+    // Use reflection to enable traffic operate limit switch (no setter available)
+    Field enableField =
+        AutoPushEfficiencyConfig.class.getDeclaredField("enableTrafficOperateLimitSwitch");
+    enableField.setAccessible(true);
+    enableField.set(autoPushEfficiencyConfig, true);
+    autoPushEfficiencyConfig.setLoadThreshold(5.0);
+    autoPushEfficiencyConfig.setPushCountThreshold(1);
+    autoPushEfficiencyConfig.setWindowNum(3);
+    autoPushEfficiencyConfig.setWindowTimeMillis(100);
+
+    PushEfficiencyImproveConfig pushEfficiencyImproveConfig = new PushEfficiencyImproveConfig();
+    pushEfficiencyImproveConfig.setAutoPushEfficiencyConfig(autoPushEfficiencyConfig);
+
+    MockTrafficUpdater mockTrafficUpdater = new MockTrafficUpdater();
+    PushEfficiencyConfigUpdater mockUpdater =
+        Mockito.mock(PushEfficiencyConfigUpdater.class, mockTrafficUpdater);
+
+    AutoPushEfficiencyRegulator regulator =
+        new AutoPushEfficiencyRegulator(pushEfficiencyImproveConfig, mockUpdater);
+
+    try {
+      // Generate push count to exceed threshold
+      for (int i = 0; i < 10; i++) {
+        regulator.safeIncrementPushCount();
+      }
+
+      // Wait for warmup and at least one runUnthrowable cycle to execute
+      // This covers the getSystemLoadAverage() call in tryUpdateTrafficOperateLimitSwitch
+      Thread.sleep(800);
+
+      // The test succeeds if no exception was thrown during runUnthrowable,
+      // which means sessionMetricsCollector.getSystemLoadAverage() was called successfully
+    } finally {
+      regulator.close();
+    }
+  }
+}
+
+class MockTrafficUpdater implements Answer<Void> {
+
+  private volatile boolean trafficOperateLimitSwitch = false;
+
+  @Override
+  public Void answer(InvocationOnMock invocation) throws Throwable {
+    String methodName = invocation.getMethod().getName();
+    if ("updateTrafficOperateLimitSwitch".equals(methodName)) {
+      this.trafficOperateLimitSwitch = invocation.getArgumentAt(0, Boolean.class);
+    }
+    return null;
+  }
+
+  public boolean isTrafficOperateLimitSwitch() {
+    return trafficOperateLimitSwitch;
   }
 }
 

@@ -20,6 +20,7 @@ import com.alipay.sofa.registry.common.model.metaserver.SlotTableChangeEvent;
 import com.alipay.sofa.registry.common.model.metaserver.cluster.VersionedList;
 import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.BaseHeartBeatResponse;
 import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.HeartbeatRequest;
+import com.alipay.sofa.registry.common.model.metaserver.limit.FlowOperationThrottlingStatus;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 import com.alipay.sofa.registry.common.model.slot.SlotConfig;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
@@ -87,6 +88,9 @@ public class MetaServerServiceImplTest {
         heartbeatRequest.getSlotBasicInfo().getSlotReplicas(), SlotConfig.SLOT_REPLICAS);
 
     Assert.assertNotNull(heartbeatRequest.getSlotTable());
+
+    // Verify SystemLoad is included in SessionNode
+    Assert.assertNotNull(node.getSystemLoad());
   }
 
   @Test
@@ -132,6 +136,41 @@ public class MetaServerServiceImplTest {
 
     impl.handleRenewResult(resp);
     Assert.assertEquals(slotTable, slotTableCache.getLocalSlotTable());
+  }
+
+  @Test
+  public void testHandleRenewResultUpdatesThrottlingStatus() {
+    init();
+    impl = Mockito.spy(impl);
+    DataNodeExchanger dataNodeExchanger = new DataNodeExchanger();
+    DataNodeNotifyExchanger dataNodeNotifyExchanger = new DataNodeNotifyExchanger();
+    impl.setDataNodeExchanger(dataNodeExchanger);
+    impl.setDataNodeNotifyExchanger(dataNodeNotifyExchanger);
+
+    Mockito.when(impl.getDataServerList()).thenReturn(Sets.newHashSet("d1", "d2"));
+
+    FlowOperationThrottlingStatus throttlingStatus = FlowOperationThrottlingStatus.enabled(75.0);
+    SlotTable slotTable = new SlotTable(20, Collections.emptyList());
+    BaseHeartBeatResponse resp =
+        new BaseHeartBeatResponse(
+            true,
+            new VersionedList(10, Collections.emptyList()),
+            slotTable,
+            new VersionedList(10, Collections.emptyList()),
+            "xxx",
+            100,
+            Collections.emptyMap(),
+            throttlingStatus);
+
+    FlowOperationThrottlingObserver observer = new FlowOperationThrottlingObserver();
+    impl.setFlowOperationThrottlingObserver(observer);
+
+    impl.handleRenewResult(resp);
+
+    // Verify cluster throttling status was updated
+    FlowOperationThrottlingStatus clusterStatus = observer.getClusterThrottlingStatus();
+    Assert.assertTrue(clusterStatus.isEnabled());
+    Assert.assertEquals(75.0, clusterStatus.getThrottlePercent(), 0.001);
   }
 
   private void init() {
