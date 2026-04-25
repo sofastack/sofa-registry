@@ -27,6 +27,7 @@ import com.alipay.sofa.registry.client.api.Configurator;
 import com.alipay.sofa.registry.client.api.Publisher;
 import com.alipay.sofa.registry.client.api.Subscriber;
 import com.alipay.sofa.registry.client.api.SubscriberDataObserver;
+import com.alipay.sofa.registry.client.api.exception.DuplicateException;
 import com.alipay.sofa.registry.client.api.model.ConfigData;
 import com.alipay.sofa.registry.client.api.model.RegistryType;
 import com.alipay.sofa.registry.client.api.model.UserData;
@@ -88,6 +89,12 @@ public class DefaultRegistryClientTest extends BaseTest {
     Thread.sleep(2000L);
     // register success when republish
     assertTrue(defaultPublisher.isRegistered());
+  }
+
+  @Test(expected = DuplicateException.class)
+  public void registerDuplicatePublisher() {
+    registryClient.register(new PublisherRegistration(dataId));
+    registryClient.register(new PublisherRegistration(dataId));
   }
 
   /** Register subscriber. */
@@ -216,6 +223,7 @@ public class DefaultRegistryClientTest extends BaseTest {
     Publisher publisher1 = registryClient.register(publisherRegistration1);
 
     PublisherRegistration publisherRegistration2 = new PublisherRegistration(dataId);
+    publisherRegistration2.setGroup("other-group");
     Publisher publisher2 = registryClient.register(publisherRegistration2);
 
     SubscriberDataObserver dataObserver = mock(SubscriberDataObserver.class);
@@ -233,7 +241,7 @@ public class DefaultRegistryClientTest extends BaseTest {
 
     // 2. unregister publisher
     int unregisterCount = registryClient.unregister(dataId, null, RegistryType.PUBLISHER);
-    assertEquals(2, unregisterCount);
+    assertEquals(1, unregisterCount);
 
     Thread.sleep(2000L);
 
@@ -241,6 +249,14 @@ public class DefaultRegistryClientTest extends BaseTest {
     RegisterCache registerCache = registryClient.getRegisterCache();
     Publisher tempPub = registerCache.getPublisherByRegistId(publisher1.getRegistId());
     assertNull(tempPub);
+
+    tempPub = registerCache.getPublisherByRegistId(publisher2.getRegistId());
+    assertNotNull(tempPub);
+
+    unregisterCount = registryClient.unregister(dataId, "other-group", RegistryType.PUBLISHER);
+    assertEquals(1, unregisterCount);
+
+    Thread.sleep(2000L);
 
     tempPub = registerCache.getPublisherByRegistId(publisher2.getRegistId());
     assertNull(tempPub);

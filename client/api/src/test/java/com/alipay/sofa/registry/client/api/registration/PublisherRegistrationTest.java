@@ -28,4 +28,25 @@ public class PublisherRegistrationTest {
     Assert.assertEquals("xxx", registration.getDataId());
     Assert.assertTrue(registration.toString().contains("xxx"));
   }
+
+  @Test
+  public void testEqualsAndHashCode() {
+    PublisherRegistration registration = new PublisherRegistration("dataId");
+    registration.setGroup("group");
+    registration.setAppName("appName");
+    registration.setInstanceId("instanceId");
+    registration.setIp("127.0.0.1");
+
+    PublisherRegistration sameRegistration = new PublisherRegistration("dataId");
+    sameRegistration.setGroup("group");
+    sameRegistration.setAppName("appName");
+    sameRegistration.setInstanceId("instanceId");
+    sameRegistration.setIp("127.0.0.1");
+
+    Assert.assertEquals(registration, sameRegistration);
+    Assert.assertEquals(registration.hashCode(), sameRegistration.hashCode());
+
+    sameRegistration.setGroup("otherGroup");
+    Assert.assertNotEquals(registration, sameRegistration);
+  }
 }
