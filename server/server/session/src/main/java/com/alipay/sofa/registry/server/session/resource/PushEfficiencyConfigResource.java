@@ -49,8 +49,7 @@ public class PushEfficiencyConfigResource {
     try {
       if (!AuthChecker.authCheck(token)) {
         LOGGER.error(
-            "[module=PushEfficiencyConfigResource][method=getChangeDebouncingMillis] auth check={} fail!",
-            token);
+            "[module=PushEfficiencyConfigResource][method=getChangeDebouncingMillis] auth check fail!");
         return new GenericResponse().fillFailed("auth check fail");
       }
 
@@ -73,8 +72,7 @@ public class PushEfficiencyConfigResource {
     try {
       if (!AuthChecker.authCheck(token)) {
         LOGGER.error(
-            "[module=PushEfficiencyConfigResource][method=isUseLargeAdapterDelayChangeWorker] auth check={} fail!",
-            token);
+            "[module=PushEfficiencyConfigResource][method=isUseLargeAdapterDelayChangeWorker] auth check fail!");
         return new GenericResponse().fillFailed("auth check fail");
       }
       Map<String, boolean[]> dcUseLargeAdapterDelayChangeWorker =

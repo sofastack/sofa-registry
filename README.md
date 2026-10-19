@@ -27,6 +27,28 @@ SOFARegistry is a production-level, low-latency, high-availability registry syst
 - Runtime environment requires JDK 6+ (JDK 8+ for server-side deployment)
 - **Recommended: JDK 8 (JDK 16 has not been tested and may have compatibility issues)**
 
+## Management API authentication
+
+The multi-cluster configuration and datum-removal APIs, `POST /shutdown/update`,
+`POST /api/emergency/shutdown`, and the push-efficiency configuration APIs require a
+deployment-provided token. This includes `GET /api/multi/cluster/query` and `queryAll`.
+
+- Inject a cryptographically random secret through `SOFA_REGISTRY_MANAGEMENT_AUTH_TOKEN`
+  in the Meta and Session server processes (or the integration process).
+- Alternatively, set the JVM system property `sofa.registry.management.auth-token`.
+  It takes precedence over the environment variable, even when explicitly empty.
+  This property is read directly from the JVM, **not** from `application.properties`.
+- Missing or blank configuration disables access to these APIs. There is no built-in token.
+- Existing POST APIs retain their `token` form parameter. The two multi-cluster GET
+  queries and the push-efficiency GET APIs use the `token` HTTP header, not a URL parameter.
+- Before upgrading, provision fresh secrets and update management clients. Do not reuse
+  the former source-code token. Keep secrets out of source control and logs; use your
+  deployment secret manager, and rotate each affected process with a restart when using
+  environment variables. Use separate secrets across deployments/trust boundaries.
+
+This configuration applies to the APIs above; it does not configure the separate
+`AuthRestFilter` mechanism used by other Meta management APIs.
+
 ## Docs
 
 - [Quick Start](https://www.sofastack.tech/sofa-registry/docs/Server-QuickStart)
