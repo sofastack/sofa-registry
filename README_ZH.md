@@ -27,6 +27,26 @@ SOFARegistry 是蚂蚁金服开源的一个生产级、高时效、高可用的�
 
 **推荐使用JDK 8，JDK 16尚未被测试，可能会有兼容性问题**
 
+## 管理接口鉴权
+
+多集群配置、跨集群发布者清理、`POST /shutdown/update`、
+`POST /api/emergency/shutdown` 和推送效率配置接口需要部署时提供的 Token。
+其中包括 `GET /api/multi/cluster/query` 和 `queryAll`。
+
+- 在 Meta、Session 进程（或一体化部署进程）中，通过环境变量
+  `SOFA_REGISTRY_MANAGEMENT_AUTH_TOKEN` 注入密码学安全的随机密钥。
+- 也可以使用 JVM 系统属性 `sofa.registry.management.auth-token`。
+  系统属性优先于环境变量，包括显式配置为空的情况。
+  该属性直接从 JVM 读取，**不读取 `application.properties` 中的同名配置**。
+- 未配置或配置为空白时，上述接口拒绝访问，没有内置默认 Token。
+- 原有 POST 接口继续通过表单参数 `token` 传递凭证；两个多集群 GET 查询接口和
+  推送效率 GET 接口通过 HTTP 请求头 `token` 传递，不接受 URL 中的 Token 参数。
+- 升级前先配置新密钥并更新管理脚本，不要复用原源码中的固定 Token。
+  密钥应由部署平台的密钥管理服务托管，不得提交到仓库或输出到日志。
+  使用环境变量时，轮换需更新密钥并重启对应进程；不同部署/信任域使用独立密钥。
+
+本配置仅作用于上述接口，不配置其他 Meta 管理接口使用的独立 `AuthRestFilter` 机制。
+
 ## 文档
 
 - [快速开始](https://www.sofastack.tech/sofa-registry/docs/Server-QuickStart)

@@ -33,6 +33,8 @@ import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataService;
 import com.alipay.sofa.registry.store.api.DBResponse;
 import com.alipay.sofa.registry.util.JsonUtils;
 import java.util.Map;
+import java.util.UUID;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,6 +44,10 @@ import org.junit.Test;
  * @version : ShutdownSwitchResourceTest.java, v 0.1 2021年10月14日 20:57 xiaojian.xj Exp $
  */
 public class ShutdownSwitchResourceTest {
+
+  private static final String AUTH_PROPERTY = "sofa.registry.management.auth-token";
+  private final String token = UUID.randomUUID().toString();
+  private String previousToken;
 
   private ShutdownSwitchResource shutdownSwitchResource;
 
@@ -54,6 +60,8 @@ public class ShutdownSwitchResourceTest {
 
   @Before
   public void beforeStopPushDataResourceTest() {
+    previousToken = System.getProperty(AUTH_PROPERTY);
+    System.setProperty(AUTH_PROPERTY, token);
     dataNotifier = mock(DefaultProvideDataNotifier.class);
     fetchStopPushService.setProvideDataService(provideDataService);
     shutdownSwitchResource =
@@ -66,7 +74,6 @@ public class ShutdownSwitchResourceTest {
   @Test
   public void testShutdown() {
 
-    String token = "6c62lk8dmQoE5B8X";
     ShutdownSwitch shutdownSwitch = new ShutdownSwitch(true, CauseEnum.FORCE.getCause());
 
     DataInfo dataInfo = DataInfo.valueOf(ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID);
@@ -92,5 +99,22 @@ public class ShutdownSwitchResourceTest {
     query = shutdownSwitchResource.query();
 
     Assert.assertEquals(query.get("switch"), JsonUtils.writeValueAsString(shutdownSwitch));
+  }
+
+  @After
+  public void restoreToken() {
+    if (previousToken == null) {
+      System.clearProperty(AUTH_PROPERTY);
+    } else {
+      System.setProperty(AUTH_PROPERTY, previousToken);
+    }
+  }
+
+  @Test
+  public void rejectsUnauthorizedShutdownBeforeSideEffects() {
+    for (String invalidToken : new String[] {null, "", "wrong-token", "6c62lk8dmQoE5B8X"}) {
+      Assert.assertFalse(shutdownSwitchResource.shutdown("true", invalidToken).isSuccess());
+    }
+    org.mockito.Mockito.verifyZeroInteractions(provideDataService, dataNotifier);
   }
 }

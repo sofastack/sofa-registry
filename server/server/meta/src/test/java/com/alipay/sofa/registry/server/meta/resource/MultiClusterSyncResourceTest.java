@@ -20,15 +20,19 @@ import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.metaserver.MultiClusterSyncInfo;
 import com.alipay.sofa.registry.test.TestUtils.MockMultiClusterSyncRepository;
+import com.google.common.base.Joiner;
 import java.util.Collections;
 import java.util.Locale;
 import java.util.Set;
-import com.google.common.base.Joiner;
+import java.util.UUID;
 import org.glassfish.jersey.internal.guava.Sets;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
+import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.runners.MockitoJUnitRunner;
 
@@ -41,12 +45,93 @@ public class MultiClusterSyncResourceTest {
 
   private static final String REMOTE_DC = "REMOTE_DC";
 
-  private static final String AUTH_TOKEN = "6c62lk8dmQoE5B8X";
+  private static final String AUTH_TOKEN = UUID.randomUUID().toString();
+  private static final String AUTH_PROPERTY = "sofa.registry.management.auth-token";
+  private String previousToken;
   private static final String FAIL_AUTH_TOKEN = "111";
 
   @InjectMocks private MultiClusterSyncResource multiClusterSyncResource;
 
   @Spy private MockMultiClusterSyncRepository mockMultiClusterSyncRepository;
+
+  @Before
+  public void configureToken() {
+    previousToken = System.getProperty(AUTH_PROPERTY);
+    System.setProperty(AUTH_PROPERTY, AUTH_TOKEN);
+  }
+
+  @After
+  public void restoreToken() {
+    if (previousToken == null) {
+      System.clearProperty(AUTH_PROPERTY);
+    } else {
+      System.setProperty(AUTH_PROPERTY, previousToken);
+    }
+  }
+
+  @Test
+  public void rejectsUnauthenticatedQueriesBeforeReadingRepository() {
+    for (String token : new String[] {null, "", FAIL_AUTH_TOKEN, "6c62lk8dmQoE5B8X"}) {
+      GenericResponse<MultiClusterSyncInfo> query =
+          multiClusterSyncResource.query(REMOTE_DC, token);
+      GenericResponse<Set<MultiClusterSyncInfo>> queryAll =
+          multiClusterSyncResource.queryAll(token);
+      Assert.assertFalse(query.isSuccess());
+      Assert.assertNull(query.getData());
+      Assert.assertFalse(queryAll.isSuccess());
+      Assert.assertNull(queryAll.getData());
+    }
+    Mockito.verifyZeroInteractions(mockMultiClusterSyncRepository);
+  }
+
+  @Test
+  public void rejectsUnauthorizedWritesBeforeAccessingRepository() {
+    for (String token : new String[] {null, "", FAIL_AUTH_TOKEN, "6c62lk8dmQoE5B8X"}) {
+      assertWritesDenied(token);
+    }
+    Mockito.verifyZeroInteractions(mockMultiClusterSyncRepository);
+  }
+
+  @Test
+  public void disablesReadsAndWritesWhenConfigurationIsBlank() {
+    System.setProperty(AUTH_PROPERTY, "");
+    assertWritesDenied(AUTH_TOKEN);
+    Assert.assertFalse(multiClusterSyncResource.query(REMOTE_DC, AUTH_TOKEN).isSuccess());
+    Assert.assertFalse(multiClusterSyncResource.queryAll(AUTH_TOKEN).isSuccess());
+    Mockito.verifyZeroInteractions(mockMultiClusterSyncRepository);
+  }
+
+  private void assertWritesDenied(String token) {
+    CommonResponse[] responses = {
+      multiClusterSyncResource.saveConfig(REMOTE_DC, "test-address-1", token),
+      multiClusterSyncResource.syncEnable(REMOTE_DC, "1", token),
+      multiClusterSyncResource.syncDisable(REMOTE_DC, "1", token),
+      multiClusterSyncResource.pushEnable(REMOTE_DC, "1", token),
+      multiClusterSyncResource.pushDisable(REMOTE_DC, "1", token),
+      multiClusterSyncResource.updateMetaAddress(REMOTE_DC, "test-address-1", token, "1"),
+      multiClusterSyncResource.addSyncDataInfoIds(REMOTE_DC, "data-id", token, "1"),
+      multiClusterSyncResource.removeSyncDataInfoIds(REMOTE_DC, "data-id", token, "1"),
+      multiClusterSyncResource.addSyncGroup(REMOTE_DC, "group", token, "1"),
+      multiClusterSyncResource.removeSyncGroup(REMOTE_DC, "group", token, "1"),
+      multiClusterSyncResource.removeConfig(REMOTE_DC, "1", token),
+      multiClusterSyncResource.addIgnoreSyncDataInfoIds(REMOTE_DC, "data-id", token, "1"),
+      multiClusterSyncResource.removeIgnoreDataInfoIds(REMOTE_DC, "data-id", token, "1")
+    };
+    for (CommonResponse response : responses) {
+      Assert.assertFalse(response.isSuccess());
+      Assert.assertEquals("auth check fail", response.getMessage());
+    }
+  }
+
+  @Test
+  public void queryAllReturnsDataWithConfiguredToken() {
+    Assert.assertTrue(
+        multiClusterSyncResource.saveConfig(REMOTE_DC, "test-address-1", AUTH_TOKEN).isSuccess());
+    GenericResponse<Set<MultiClusterSyncInfo>> response =
+        multiClusterSyncResource.queryAll(AUTH_TOKEN);
+    Assert.assertTrue(response.isSuccess());
+    Assert.assertEquals(1, response.getData().size());
+  }
 
   @Test
   public void testSaveAndQuery() {
@@ -59,12 +144,12 @@ public class MultiClusterSyncResourceTest {
     Assert.assertFalse(response.isSuccess());
 
     // query fail
-    GenericResponse<MultiClusterSyncInfo> query = multiClusterSyncResource.query("");
+    GenericResponse<MultiClusterSyncInfo> query = multiClusterSyncResource.query("", AUTH_TOKEN);
     Assert.assertFalse(query.isSuccess());
     Assert.assertNull(query.getData());
 
     // query success, no data
-    query = multiClusterSyncResource.query(REMOTE_DC);
+    query = multiClusterSyncResource.query(REMOTE_DC, AUTH_TOKEN);
     Assert.assertTrue(query.isSuccess());
     Assert.assertNull(query.getData());
 
@@ -73,7 +158,7 @@ public class MultiClusterSyncResourceTest {
     Assert.assertTrue(response.isSuccess());
 
     // query success, data exist
-    query = multiClusterSyncResource.query(REMOTE_DC);
+    query = multiClusterSyncResource.query(REMOTE_DC, AUTH_TOKEN);
     Assert.assertTrue(query.isSuccess());
     Assert.assertNotNull(query.getData());
     Assert.assertTrue(query.getData().isEnableSyncDatum());
@@ -101,7 +186,7 @@ public class MultiClusterSyncResourceTest {
         multiClusterSyncResource.removeConfig(
             REMOTE_DC, query.getData().getDataVersion() + "", AUTH_TOKEN);
     Assert.assertFalse(response.isSuccess());
-    query = multiClusterSyncResource.query(REMOTE_DC);
+    query = multiClusterSyncResource.query(REMOTE_DC, AUTH_TOKEN);
     Assert.assertTrue(query.isSuccess());
     Assert.assertNotNull(query.getData());
     Assert.assertTrue(query.getData().isEnableSyncDatum());
@@ -115,7 +200,7 @@ public class MultiClusterSyncResourceTest {
         multiClusterSyncResource.syncDisable(
             REMOTE_DC, query.getData().getDataVersion() + "", AUTH_TOKEN);
     Assert.assertTrue(response.isSuccess());
-    query = multiClusterSyncResource.query(REMOTE_DC);
+    query = multiClusterSyncResource.query(REMOTE_DC, AUTH_TOKEN);
     Assert.assertTrue(query.isSuccess());
     Assert.assertNotNull(query.getData());
     Assert.assertFalse(query.getData().isEnableSyncDatum());
@@ -129,7 +214,7 @@ public class MultiClusterSyncResourceTest {
         multiClusterSyncResource.removeConfig(
             REMOTE_DC, query.getData().getDataVersion() + "", AUTH_TOKEN);
     Assert.assertTrue(response.isSuccess());
-    query = multiClusterSyncResource.query(REMOTE_DC);
+    query = multiClusterSyncResource.query(REMOTE_DC, AUTH_TOKEN);
     Assert.assertTrue(query.isSuccess());
     Assert.assertNull(query.getData());
   }
@@ -141,7 +226,8 @@ public class MultiClusterSyncResourceTest {
     Assert.assertTrue(response.isSuccess());
 
     // query success, data exist
-    GenericResponse<MultiClusterSyncInfo> query = multiClusterSyncResource.query(REMOTE_DC);
+    GenericResponse<MultiClusterSyncInfo> query =
+        multiClusterSyncResource.query(REMOTE_DC, AUTH_TOKEN);
     Assert.assertTrue(query.isSuccess());
     Assert.assertNotNull(query.getData());
     Assert.assertTrue(query.getData().isEnableSyncDatum());
@@ -169,7 +255,7 @@ public class MultiClusterSyncResourceTest {
         multiClusterSyncResource.syncDisable(
             REMOTE_DC, query.getData().getDataVersion() + "", AUTH_TOKEN);
     Assert.assertTrue(response.isSuccess());
-    query = multiClusterSyncResource.query(REMOTE_DC);
+    query = multiClusterSyncResource.query(REMOTE_DC, AUTH_TOKEN);
     Assert.assertTrue(query.isSuccess());
     Assert.assertNotNull(query.getData());
     Assert.assertFalse(query.getData().isEnableSyncDatum());
@@ -183,7 +269,7 @@ public class MultiClusterSyncResourceTest {
         multiClusterSyncResource.syncEnable(
             REMOTE_DC, query.getData().getDataVersion() + "", AUTH_TOKEN);
     Assert.assertTrue(response.isSuccess());
-    query = multiClusterSyncResource.query(REMOTE_DC);
+    query = multiClusterSyncResource.query(REMOTE_DC, AUTH_TOKEN);
     Assert.assertTrue(query.isSuccess());
     Assert.assertNotNull(query.getData());
     Assert.assertTrue(query.getData().isEnableSyncDatum());
@@ -200,7 +286,8 @@ public class MultiClusterSyncResourceTest {
     Assert.assertTrue(response.isSuccess());
 
     // query success, data exist
-    GenericResponse<MultiClusterSyncInfo> query = multiClusterSyncResource.query(REMOTE_DC);
+    GenericResponse<MultiClusterSyncInfo> query =
+        multiClusterSyncResource.query(REMOTE_DC, AUTH_TOKEN);
     Assert.assertTrue(query.isSuccess());
     Assert.assertNotNull(query.getData());
     Assert.assertTrue(query.getData().isEnableSyncDatum());
@@ -228,13 +315,13 @@ public class MultiClusterSyncResourceTest {
         multiClusterSyncResource.syncDisable(
             REMOTE_DC, query.getData().getDataVersion() + "", AUTH_TOKEN);
     Assert.assertTrue(response.isSuccess());
-    query = multiClusterSyncResource.query(REMOTE_DC);
+    query = multiClusterSyncResource.query(REMOTE_DC, AUTH_TOKEN);
     response =
         multiClusterSyncResource.pushEnable(
             REMOTE_DC, query.getData().getDataVersion() + "", AUTH_TOKEN);
     Assert.assertFalse(response.isSuccess());
 
-    query = multiClusterSyncResource.query(REMOTE_DC);
+    query = multiClusterSyncResource.query(REMOTE_DC, AUTH_TOKEN);
     Assert.assertTrue(query.isSuccess());
     Assert.assertNotNull(query.getData());
     Assert.assertFalse(query.getData().isEnableSyncDatum());
@@ -248,12 +335,12 @@ public class MultiClusterSyncResourceTest {
         multiClusterSyncResource.syncEnable(
             REMOTE_DC, query.getData().getDataVersion() + "", AUTH_TOKEN);
     Assert.assertTrue(response.isSuccess());
-    query = multiClusterSyncResource.query(REMOTE_DC);
+    query = multiClusterSyncResource.query(REMOTE_DC, AUTH_TOKEN);
     response =
         multiClusterSyncResource.pushEnable(
             REMOTE_DC, query.getData().getDataVersion() + "", AUTH_TOKEN);
     Assert.assertTrue(response.isSuccess());
-    query = multiClusterSyncResource.query(REMOTE_DC);
+    query = multiClusterSyncResource.query(REMOTE_DC, AUTH_TOKEN);
     Assert.assertTrue(query.isSuccess());
     Assert.assertNotNull(query.getData());
     Assert.assertTrue(query.getData().isEnableSyncDatum());
@@ -267,7 +354,7 @@ public class MultiClusterSyncResourceTest {
         multiClusterSyncResource.pushDisable(
             REMOTE_DC, query.getData().getDataVersion() + "", AUTH_TOKEN);
     Assert.assertTrue(response.isSuccess());
-    query = multiClusterSyncResource.query(REMOTE_DC);
+    query = multiClusterSyncResource.query(REMOTE_DC, AUTH_TOKEN);
     Assert.assertTrue(query.isSuccess());
     Assert.assertNotNull(query.getData());
     Assert.assertTrue(query.getData().isEnableSyncDatum());
@@ -284,7 +371,8 @@ public class MultiClusterSyncResourceTest {
     Assert.assertTrue(response.isSuccess());
 
     // query success, data exist
-    GenericResponse<MultiClusterSyncInfo> query = multiClusterSyncResource.query(REMOTE_DC);
+    GenericResponse<MultiClusterSyncInfo> query =
+        multiClusterSyncResource.query(REMOTE_DC, AUTH_TOKEN);
     Assert.assertTrue(query.isSuccess());
     Assert.assertNotNull(query.getData());
     Assert.assertTrue(query.getData().isEnableSyncDatum());
@@ -298,7 +386,7 @@ public class MultiClusterSyncResourceTest {
         multiClusterSyncResource.updateMetaAddress(
             REMOTE_DC, "test-address-2", FAIL_AUTH_TOKEN, query.getData().getDataVersion() + "");
     Assert.assertFalse(response.isSuccess());
-    query = multiClusterSyncResource.query(REMOTE_DC);
+    query = multiClusterSyncResource.query(REMOTE_DC, AUTH_TOKEN);
     Assert.assertTrue(query.isSuccess());
     Assert.assertEquals("test-address-1", query.getData().getRemoteMetaAddress());
 
@@ -307,7 +395,7 @@ public class MultiClusterSyncResourceTest {
         multiClusterSyncResource.updateMetaAddress(
             REMOTE_DC, "", AUTH_TOKEN, query.getData().getDataVersion() + "");
     Assert.assertFalse(response.isSuccess());
-    query = multiClusterSyncResource.query(REMOTE_DC);
+    query = multiClusterSyncResource.query(REMOTE_DC, AUTH_TOKEN);
     Assert.assertTrue(query.isSuccess());
     Assert.assertEquals("test-address-1", query.getData().getRemoteMetaAddress());
 
@@ -315,7 +403,7 @@ public class MultiClusterSyncResourceTest {
     response =
         multiClusterSyncResource.updateMetaAddress(REMOTE_DC, "test-address-2", AUTH_TOKEN, "1");
     Assert.assertFalse(response.isSuccess());
-    query = multiClusterSyncResource.query(REMOTE_DC);
+    query = multiClusterSyncResource.query(REMOTE_DC, AUTH_TOKEN);
     Assert.assertTrue(query.isSuccess());
     Assert.assertEquals("test-address-1", query.getData().getRemoteMetaAddress());
 
@@ -324,7 +412,7 @@ public class MultiClusterSyncResourceTest {
         multiClusterSyncResource.updateMetaAddress(
             REMOTE_DC, "test-address-2", AUTH_TOKEN, query.getData().getDataVersion() + "");
     Assert.assertTrue(response.isSuccess());
-    query = multiClusterSyncResource.query(REMOTE_DC);
+    query = multiClusterSyncResource.query(REMOTE_DC, AUTH_TOKEN);
     Assert.assertTrue(query.isSuccess());
     Assert.assertEquals("test-address-2", query.getData().getRemoteMetaAddress());
   }
@@ -336,7 +424,8 @@ public class MultiClusterSyncResourceTest {
     Assert.assertTrue(response.isSuccess());
 
     // query success, data exist
-    GenericResponse<MultiClusterSyncInfo> query = multiClusterSyncResource.query(REMOTE_DC);
+    GenericResponse<MultiClusterSyncInfo> query =
+        multiClusterSyncResource.query(REMOTE_DC, AUTH_TOKEN);
     Assert.assertTrue(query.isSuccess());
     Assert.assertNotNull(query.getData());
     Assert.assertTrue(query.getData().isEnableSyncDatum());
@@ -368,7 +457,7 @@ public class MultiClusterSyncResourceTest {
             REMOTE_DC, ids1, AUTH_TOKEN, query.getData().getDataVersion() + "");
     Assert.assertTrue(response.isSuccess());
 
-    query = multiClusterSyncResource.query(REMOTE_DC);
+    query = multiClusterSyncResource.query(REMOTE_DC, AUTH_TOKEN);
     Assert.assertTrue(query.isSuccess());
     Assert.assertNotNull(query.getData());
     Assert.assertTrue(query.getData().isEnableSyncDatum());
@@ -397,7 +486,7 @@ public class MultiClusterSyncResourceTest {
             REMOTE_DC, ids1, AUTH_TOKEN, query.getData().getDataVersion() + "");
     Assert.assertTrue(response.isSuccess());
 
-    query = multiClusterSyncResource.query(REMOTE_DC);
+    query = multiClusterSyncResource.query(REMOTE_DC, AUTH_TOKEN);
     Assert.assertTrue(query.isSuccess());
     Assert.assertNotNull(query.getData());
     Assert.assertTrue(query.getData().isEnableSyncDatum());
@@ -414,7 +503,8 @@ public class MultiClusterSyncResourceTest {
     Assert.assertTrue(response.isSuccess());
 
     // query success, data exist
-    GenericResponse<MultiClusterSyncInfo> query = multiClusterSyncResource.query(REMOTE_DC);
+    GenericResponse<MultiClusterSyncInfo> query =
+        multiClusterSyncResource.query(REMOTE_DC, AUTH_TOKEN);
     Assert.assertTrue(query.isSuccess());
     Assert.assertNotNull(query.getData());
     Assert.assertTrue(query.getData().isEnableSyncDatum());
@@ -446,7 +536,7 @@ public class MultiClusterSyncResourceTest {
             REMOTE_DC, group, AUTH_TOKEN, query.getData().getDataVersion() + "");
     Assert.assertTrue(response.isSuccess());
 
-    query = multiClusterSyncResource.query(REMOTE_DC);
+    query = multiClusterSyncResource.query(REMOTE_DC, AUTH_TOKEN);
     Assert.assertTrue(query.isSuccess());
     Assert.assertNotNull(query.getData());
     Assert.assertTrue(query.getData().isEnableSyncDatum());
@@ -475,7 +565,7 @@ public class MultiClusterSyncResourceTest {
             REMOTE_DC, group, AUTH_TOKEN, query.getData().getDataVersion() + "");
     Assert.assertTrue(response.isSuccess());
 
-    query = multiClusterSyncResource.query(REMOTE_DC);
+    query = multiClusterSyncResource.query(REMOTE_DC, AUTH_TOKEN);
     Assert.assertTrue(query.isSuccess());
     Assert.assertNotNull(query.getData());
     Assert.assertTrue(query.getData().isEnableSyncDatum());

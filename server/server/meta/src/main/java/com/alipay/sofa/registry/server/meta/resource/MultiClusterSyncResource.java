@@ -51,8 +51,11 @@ public class MultiClusterSyncResource {
   @Path("query")
   @Produces(MediaType.APPLICATION_JSON)
   public GenericResponse<MultiClusterSyncInfo> query(
-      @QueryParam("remoteDataCenter") String remoteDataCenter) {
+      @QueryParam("remoteDataCenter") String remoteDataCenter, @HeaderParam("token") String token) {
     GenericResponse<MultiClusterSyncInfo> response = new GenericResponse();
+    if (!AuthChecker.authCheck(token)) {
+      return response.fillFailed("auth check fail");
+    }
     if (StringUtils.isBlank(remoteDataCenter)) {
       LOG.error("[query]remoteDataCenter is not allow empty.");
       return response.fillFailed("remoteDataCenter is not allow empty.");
@@ -65,8 +68,11 @@ public class MultiClusterSyncResource {
   @GET
   @Path("queryAll")
   @Produces(MediaType.APPLICATION_JSON)
-  public GenericResponse<Set<MultiClusterSyncInfo>> queryAll() {
+  public GenericResponse<Set<MultiClusterSyncInfo>> queryAll(@HeaderParam("token") String token) {
     GenericResponse<Set<MultiClusterSyncInfo>> response = new GenericResponse();
+    if (!AuthChecker.authCheck(token)) {
+      return response.fillFailed("auth check fail");
+    }
     Set<MultiClusterSyncInfo> queryResult = multiClusterSyncRepository.queryLocalSyncInfos();
     response.fillSucceed(queryResult);
     return response;
@@ -81,10 +87,9 @@ public class MultiClusterSyncResource {
       @FormParam("token") String token) {
     if (!AuthChecker.authCheck(token)) {
       LOG.error(
-          "save multi cluster syncs config, remoteDataCenter={}, remoteMetaAddress={}, auth check={} fail!",
+          "save multi cluster syncs config, remoteDataCenter={}, remoteMetaAddress={}, auth check fail!",
           remoteDataCenter,
-          remoteMetaAddress,
-          token);
+          remoteMetaAddress);
       return GenericResponse.buildFailedResponse("auth check fail");
     }
     if (StringUtils.isBlank(remoteDataCenter) || StringUtils.isBlank(remoteMetaAddress)) {
@@ -134,9 +139,8 @@ public class MultiClusterSyncResource {
       String token, String remoteDataCenter, String expectVersion, boolean enable) {
     if (!AuthChecker.authCheck(token)) {
       LOG.error(
-          "update multi cluster sync switch, remoteDataCenter={}, auth check={} fail!",
-          remoteDataCenter,
-          token);
+          "update multi cluster sync switch, remoteDataCenter={}, auth check fail!",
+          remoteDataCenter);
       return GenericResponse.buildFailedResponse("auth check fail");
     }
 
@@ -192,9 +196,8 @@ public class MultiClusterSyncResource {
       String token, String remoteDataCenter, String expectVersion, boolean pushEnable) {
     if (!AuthChecker.authCheck(token)) {
       LOG.error(
-          "update multi cluster push switch, remoteDataCenter={}, auth check={} fail!",
-          remoteDataCenter,
-          token);
+          "update multi cluster push switch, remoteDataCenter={}, auth check fail!",
+          remoteDataCenter);
       return GenericResponse.buildFailedResponse("auth check fail");
     }
 
@@ -247,10 +250,9 @@ public class MultiClusterSyncResource {
       @FormParam("expectVersion") String expectVersion) {
     if (!AuthChecker.authCheck(token)) {
       LOG.error(
-          "update multi cluster syncs config, remoteDataCenter={}, remoteMetaAddress={}, auth check={} fail!",
+          "update multi cluster syncs config, remoteDataCenter={}, remoteMetaAddress={}, auth check fail!",
           remoteDataCenter,
-          remoteMetaAddress,
-          token);
+          remoteMetaAddress);
       return GenericResponse.buildFailedResponse("auth check fail");
     }
 
@@ -295,10 +297,9 @@ public class MultiClusterSyncResource {
       @FormParam("expectVersion") String expectVersion) {
     if (!AuthChecker.authCheck(token)) {
       LOG.error(
-          "add sync dataInfoIds, remoteDataCenter={}, dataInfoIds={}, auth check={} fail!",
+          "add sync dataInfoIds, remoteDataCenter={}, dataInfoIds={}, auth check fail!",
           remoteDataCenter,
-          dataInfoIds,
-          token);
+          dataInfoIds);
       return GenericResponse.buildFailedResponse("auth check fail");
     }
 
@@ -343,10 +344,9 @@ public class MultiClusterSyncResource {
       @FormParam("expectVersion") String expectVersion) {
     if (!AuthChecker.authCheck(token)) {
       LOG.error(
-          "remove sync dataInfoIds, remoteDataCenter={}, dataInfoIds={}, auth check={} fail!",
+          "remove sync dataInfoIds, remoteDataCenter={}, dataInfoIds={}, auth check fail!",
           remoteDataCenter,
-          dataInfoIds,
-          token);
+          dataInfoIds);
       return GenericResponse.buildFailedResponse("auth check fail");
     }
     if (StringUtils.isBlank(remoteDataCenter)
@@ -390,10 +390,9 @@ public class MultiClusterSyncResource {
       @FormParam("expectVersion") String expectVersion) {
     if (!AuthChecker.authCheck(token)) {
       LOG.error(
-          "add sync group, remoteDataCenter={}, group={}, auth check={} fail!",
+          "add sync group, remoteDataCenter={}, group={}, auth check fail!",
           remoteDataCenter,
-          group,
-          token);
+          group);
       return GenericResponse.buildFailedResponse("auth check fail");
     }
 
@@ -438,10 +437,9 @@ public class MultiClusterSyncResource {
       @FormParam("expectVersion") String expectVersion) {
     if (!AuthChecker.authCheck(token)) {
       LOG.error(
-          "remove sync group, remoteDataCenter={}, group={}, auth check={} fail!",
+          "remove sync group, remoteDataCenter={}, group={}, auth check fail!",
           remoteDataCenter,
-          group,
-          token);
+          group);
       return GenericResponse.buildFailedResponse("auth check fail");
     }
 
@@ -485,9 +483,8 @@ public class MultiClusterSyncResource {
       @FormParam("token") String token) {
     if (!AuthChecker.authCheck(token)) {
       LOG.error(
-          "remove multi cluster syncs config, remoteDataCenter={}, auth check={} fail!",
-          remoteDataCenter,
-          token);
+          "remove multi cluster syncs config, remoteDataCenter={}, auth check fail!",
+          remoteDataCenter);
       return GenericResponse.buildFailedResponse("auth check fail");
     }
 
@@ -534,10 +531,9 @@ public class MultiClusterSyncResource {
       @FormParam("expectVersion") String expectVersion) {
     if (!AuthChecker.authCheck(token)) {
       LOG.error(
-          "add ignoreDataInfoIds, remoteDataCenter={}, ignoreDataInfoIds={}, auth check={} fail!",
+          "add ignoreDataInfoIds, remoteDataCenter={}, ignoreDataInfoIds={}, auth check fail!",
           remoteDataCenter,
-          ignoreDataInfoIds,
-          token);
+          ignoreDataInfoIds);
       return GenericResponse.buildFailedResponse("auth check fail");
     }
 
@@ -582,10 +578,9 @@ public class MultiClusterSyncResource {
       @FormParam("expectVersion") String expectVersion) {
     if (!AuthChecker.authCheck(token)) {
       LOG.error(
-          "remove ignoreDataInfoIds, remoteDataCenter={}, ignoreDataInfoIds={}, auth check={} fail!",
+          "remove ignoreDataInfoIds, remoteDataCenter={}, ignoreDataInfoIds={}, auth check fail!",
           remoteDataCenter,
-          ignoreDataInfoIds,
-          token);
+          ignoreDataInfoIds);
       return GenericResponse.buildFailedResponse("auth check fail");
     }
     if (StringUtils.isBlank(remoteDataCenter)

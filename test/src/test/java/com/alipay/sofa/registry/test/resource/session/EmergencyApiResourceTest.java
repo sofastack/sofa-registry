@@ -30,7 +30,10 @@ import com.alipay.sofa.registry.server.session.resource.EmergencyApiResource;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
+import java.util.UUID;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -41,6 +44,25 @@ import org.springframework.test.context.junit4.SpringRunner;
  */
 @RunWith(SpringRunner.class)
 public class EmergencyApiResourceTest extends BaseIntegrationTest {
+
+  private static final String AUTH_PROPERTY = "sofa.registry.management.auth-token";
+  private final String token = UUID.randomUUID().toString();
+  private String previousToken;
+
+  @Before
+  public void configureToken() {
+    previousToken = System.getProperty(AUTH_PROPERTY);
+    System.setProperty(AUTH_PROPERTY, token);
+  }
+
+  @After
+  public void restoreToken() {
+    if (previousToken == null) {
+      System.clearProperty(AUTH_PROPERTY);
+    } else {
+      System.setProperty(AUTH_PROPERTY, previousToken);
+    }
+  }
 
   private MetaServerService metaServerService = mock(MetaServerService.class);
 
@@ -75,7 +97,6 @@ public class EmergencyApiResourceTest extends BaseIntegrationTest {
   public void shutdownByRepository() throws Exception {
     startServerIfNecessary();
 
-    String token = "6c62lk8dmQoE5B8X";
     EmergencyApiResource emergencyApiResource =
         (EmergencyApiResource) sessionApplicationContext.getBean("emergencyApiResource");
     ProvideDataRepository provideDataRepository =

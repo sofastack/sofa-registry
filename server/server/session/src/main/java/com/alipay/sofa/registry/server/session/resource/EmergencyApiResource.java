@@ -118,7 +118,7 @@ public class EmergencyApiResource {
   @Produces(MediaType.APPLICATION_JSON)
   public CommonResponse shutdownByRepository(@FormParam("token") String token) {
     if (!AuthChecker.authCheck(token)) {
-      LOGGER.error("update shutdownSwitch, stop=true auth check={} fail!", token);
+      LOGGER.error("update shutdownSwitch, stop=true auth check fail!");
       return GenericResponse.buildFailedResponse("auth check fail");
     }
 

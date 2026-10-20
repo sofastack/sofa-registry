@@ -57,10 +57,9 @@ public class MultiDatumResource {
 
     if (!AuthChecker.authCheck(token)) {
       LOG.error(
-          "clear datum, remoteDataCenter={}, dataInfoId={}, auth check={} fail!",
+          "clear datum, remoteDataCenter={}, dataInfoId={}, auth check fail!",
           remoteDataCenter,
-          dataInfoId,
-          token);
+          dataInfoId);
       return GenericResponse.buildFailedResponse("auth check fail");
     }
 
@@ -88,10 +87,7 @@ public class MultiDatumResource {
 
     if (!AuthChecker.authCheck(token)) {
       LOG.error(
-          "clear datum, remoteDataCenter={}, group={}, auth check={} fail!",
-          remoteDataCenter,
-          group,
-          token);
+          "clear datum, remoteDataCenter={}, group={}, auth check fail!", remoteDataCenter, group);
       return GenericResponse.buildFailedResponse("auth check fail");
     }
 

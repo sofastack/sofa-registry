@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.server.shared.resource;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import org.apache.commons.lang.StringUtils;
 
 /**
@@ -24,9 +26,21 @@ import org.apache.commons.lang.StringUtils;
  */
 public final class AuthChecker {
 
-  private static final String AUTH_TOKEN = "6c62lk8dmQoE5B8X";
+  /** JVM property takes precedence, including an explicitly empty (disabled) value. */
+  private static final String AUTH_TOKEN_PROPERTY = "sofa.registry.management.auth-token";
+
+  private static final String AUTH_TOKEN_ENV = "SOFA_REGISTRY_MANAGEMENT_AUTH_TOKEN";
 
   public static boolean authCheck(String token) {
-    return StringUtils.equals(AUTH_TOKEN, token);
+    String expectedToken = System.getProperty(AUTH_TOKEN_PROPERTY);
+    if (expectedToken == null) {
+      expectedToken = System.getenv(AUTH_TOKEN_ENV);
+    }
+    // Management APIs are disabled until a deployment-specific secret is supplied.
+    if (StringUtils.isBlank(expectedToken) || StringUtils.isBlank(token)) {
+      return false;
+    }
+    return MessageDigest.isEqual(
+        expectedToken.getBytes(StandardCharsets.UTF_8), token.getBytes(StandardCharsets.UTF_8));
   }
 }

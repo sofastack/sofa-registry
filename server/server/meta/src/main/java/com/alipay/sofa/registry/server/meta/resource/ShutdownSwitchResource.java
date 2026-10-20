@@ -67,7 +67,7 @@ public class ShutdownSwitchResource {
   public Result shutdown(@FormParam("shutdown") String shutdown, @FormParam("token") String token) {
 
     if (!AuthChecker.authCheck(token)) {
-      DB_LOGGER.error("update shutdownSwitch, shutdown={} auth check={} fail!", shutdown, token);
+      DB_LOGGER.error("update shutdownSwitch, shutdown={} auth check fail!", shutdown);
       return Result.failed("auth check fail");
     }
 

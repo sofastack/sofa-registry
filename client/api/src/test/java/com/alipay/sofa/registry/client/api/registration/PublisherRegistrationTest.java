@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.client.api.registration;
 
+import java.util.HashSet;
+import java.util.Set;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -48,5 +50,62 @@ public class PublisherRegistrationTest {
 
     sameRegistration.setGroup("otherGroup");
     Assert.assertNotEquals(registration, sameRegistration);
+  }
+
+  @Test
+  public void rejectsNullAndOtherRegistrationTypes() {
+    PublisherRegistration registration = new PublisherRegistration("dataId");
+    Assert.assertTrue(registration.equals(registration));
+    Assert.assertFalse(registration.equals(null));
+    Assert.assertFalse(registration.equals(new BaseRegistration()));
+  }
+
+  @Test
+  public void equalIdentitiesDeduplicateWithNullableFields() {
+    String[][] identities = {
+      {"dataId", "group", "app", "instance", "127.0.0.1"},
+      {null, null, null, null, null},
+      {null, "group", "app", "instance", "127.0.0.1"},
+      {"dataId", null, "app", "instance", "127.0.0.1"},
+      {"dataId", "group", null, "instance", "127.0.0.1"},
+      {"dataId", "group", "app", null, "127.0.0.1"},
+      {"dataId", "group", "app", "instance", null}
+    };
+    for (String[] identity : identities) {
+      PublisherRegistration first = registration(identity);
+      PublisherRegistration second = registration(identity);
+      Assert.assertEquals(first, second);
+      Assert.assertEquals(second, first);
+      Assert.assertEquals(first.hashCode(), second.hashCode());
+      Set<PublisherRegistration> registrations = new HashSet<>();
+      Assert.assertTrue(registrations.add(first));
+      Assert.assertFalse(registrations.add(second));
+      Assert.assertTrue(registrations.remove(second));
+      Assert.assertTrue(registrations.isEmpty());
+    }
+  }
+
+  @Test
+  public void eachIdentityFieldDistinguishesRegistrations() {
+    String[] identity = {"dataId", "group", "app", "instance", "127.0.0.1"};
+    PublisherRegistration original = registration(identity);
+    for (int field = 0; field < identity.length; field++) {
+      for (String differentValue : new String[] {null, "different"}) {
+        String[] differentIdentity = identity.clone();
+        differentIdentity[field] = differentValue;
+        PublisherRegistration different = registration(differentIdentity);
+        Assert.assertNotEquals("Identity field " + field, original, different);
+        Assert.assertNotEquals("Identity field " + field, different, original);
+      }
+    }
+  }
+
+  private static PublisherRegistration registration(String[] identity) {
+    PublisherRegistration registration = new PublisherRegistration(identity[0]);
+    registration.setGroup(identity[1]);
+    registration.setAppName(identity[2]);
+    registration.setInstanceId(identity[3]);
+    registration.setIp(identity[4]);
+    return registration;
   }
 }
